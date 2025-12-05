@@ -459,13 +459,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             type: "single",
             entity: "campaigns",
           },
-          // {
-          //   name: "Job Dependencies",
-          //   href: "/dashboard/job-dependencies",
-          //   icon: Link2,
-          //   type: "single",
-          //   entity: "campaigns",
-          // },
+          {
+            name: "Job Dependencies",
+            href: "/dashboard/job-dependencies",
+            icon: Link2,
+            type: "single",
+            entity: "campaigns",
+          },
         ],
       },
       {
