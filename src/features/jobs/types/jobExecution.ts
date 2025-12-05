@@ -106,6 +106,15 @@ export interface RetryFailedPayload {
   userId: number;
 }
 
+export interface CreateJobExecutionPayload {
+  job_id: number; // Required
+  userId: number; // Required
+  server_instance?: string;
+  worker_node_id?: string;
+  execution_context?: Record<string, unknown>;
+  triggered_by?: TriggeredBy; // Default: "manual" or "api"
+}
+
 export interface UpdateJobExecutionPayload {
   error_message?: string;
   error_code?: string;

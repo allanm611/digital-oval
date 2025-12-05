@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertTriangle,
   Link2,
@@ -10,6 +11,10 @@ import {
   CheckCircle,
   XCircle,
   Filter,
+  CheckSquare,
+  Square,
+  X,
+  BarChart3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -20,6 +25,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { jobDependencyService } from "../services/jobDependencyService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import {
@@ -515,8 +521,15 @@ export default function JobDependenciesPage() {
     totalDependencies: 0,
     activeDependencies: 0,
     inactiveDependencies: 0,
+    blockingDependencies: 0,
+    optionalDependencies: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  // Bulk selection and batch operations
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedDependencyIds, setSelectedDependencyIds] = useState<
+    Set<number>
+  >(new Set());
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -526,9 +539,36 @@ export default function JobDependenciesPage() {
   const [dependencyTypeFilter, setDependencyTypeFilter] =
     useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Advanced filters
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filterId, setFilterId] = useState<number | "">("");
+  const [filterJobId, setFilterJobId] = useState<number | "">("");
+  const [filterDependsOnJobId, setFilterDependsOnJobId] = useState<number | "">(
+    ""
+  );
+  const [filterDependencyType, setFilterDependencyType] = useState<string>("");
+  const [filterWaitForStatus, setFilterWaitForStatus] = useState<string>("");
+  const [filterIsActive, setFilterIsActive] = useState<boolean | "">("");
+  const [filterLookbackDaysMin, setFilterLookbackDaysMin] = useState<
+    number | ""
+  >("");
+  const [filterLookbackDaysMax, setFilterLookbackDaysMax] = useState<
+    number | ""
+  >("");
+  const [filterMaxWaitMinutesMin, setFilterMaxWaitMinutesMin] = useState<
+    number | ""
+  >("");
+  const [filterMaxWaitMinutesMax, setFilterMaxWaitMinutesMax] = useState<
+    number | ""
+  >("");
+  const filterRef = useRef<HTMLDivElement>(null);
 
-  // Additional state for advanced features
-  const [selectedJobId, setSelectedJobId] = useState<number | "">("");
+  // Use click outside hook for filter modal
+  useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
+    enabled: showAdvancedFilters,
+  });
+
+  // Additional state for advanced features (kept for individual row actions)
   const [showChainModal, setShowChainModal] = useState(false);
   const [chainData, setChainData] = useState<any[]>([]);
   const [isLoadingChain, setIsLoadingChain] = useState(false);
@@ -538,30 +578,86 @@ export default function JobDependenciesPage() {
   const [showSatisfiedModal, setShowSatisfiedModal] = useState(false);
   const [satisfiedData, setSatisfiedData] = useState<any>(null);
   const [isLoadingSatisfied, setIsLoadingSatisfied] = useState(false);
+  // Analytics endpoints state
   const [showGraphModal, setShowGraphModal] = useState(false);
   const [graphData, setGraphData] = useState<any[]>([]);
   const [isLoadingGraph, setIsLoadingGraph] = useState(false);
-  const [showBulkModal, setShowBulkModal] = useState(false);
-  const [selectedDependencies, setSelectedDependencies] = useState<Set<number>>(
-    new Set()
-  );
-  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
-  const [mostDependedJobs, setMostDependedJobs] = useState<any[]>([]);
   const [orphanedJobs, setOrphanedJobs] = useState<any[]>([]);
+  const [mostDependedJobs, setMostDependedJobs] = useState<any[]>([]);
   const [complexDependencies, setComplexDependencies] = useState<
     JobDependency[]
   >([]);
+  const [selectedJobId, setSelectedJobId] = useState<number | "">("");
 
   const fetchDependencies = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const response = await jobDependencyService.listJobDependencies({
-        limit: 100,
-        skipCache: true,
-        activeOnly: false,
-      });
-      setDependencies(response.data || []);
+      // If Type or Status filters are active, use search endpoint
+      const hasQuickFilters =
+        dependencyTypeFilter !== "all" || statusFilter !== "all";
+      const hasAdvancedFilters =
+        filterId ||
+        filterJobId ||
+        filterDependsOnJobId ||
+        filterDependencyType ||
+        filterWaitForStatus ||
+        filterIsActive !== "" ||
+        filterLookbackDaysMin ||
+        filterLookbackDaysMax ||
+        filterMaxWaitMinutesMin ||
+        filterMaxWaitMinutesMax;
+
+      if (hasQuickFilters || hasAdvancedFilters) {
+        // Use search endpoint with filters
+        const searchParams: any = {
+          limit: 100,
+          skipCache: true,
+        };
+
+        // Add quick filter parameters
+        if (dependencyTypeFilter !== "all") {
+          searchParams.dependency_type = dependencyTypeFilter;
+        }
+        if (statusFilter === "active") {
+          searchParams.is_active = true;
+        } else if (statusFilter === "inactive") {
+          searchParams.is_active = false;
+        }
+
+        // Add advanced filter parameters
+        if (filterId) searchParams.id = Number(filterId);
+        if (filterJobId) searchParams.job_id = Number(filterJobId);
+        if (filterDependsOnJobId)
+          searchParams.depends_on_job_id = Number(filterDependsOnJobId);
+        if (filterDependencyType)
+          searchParams.dependency_type = filterDependencyType;
+        if (filterWaitForStatus)
+          searchParams.wait_for_status = filterWaitForStatus;
+        if (filterIsActive !== "")
+          searchParams.is_active = filterIsActive === true;
+        if (filterLookbackDaysMin)
+          searchParams.lookback_days_min = Number(filterLookbackDaysMin);
+        if (filterLookbackDaysMax)
+          searchParams.lookback_days_max = Number(filterLookbackDaysMax);
+        if (filterMaxWaitMinutesMin)
+          searchParams.max_wait_minutes_min = Number(filterMaxWaitMinutesMin);
+        if (filterMaxWaitMinutesMax)
+          searchParams.max_wait_minutes_max = Number(filterMaxWaitMinutesMax);
+
+        const response = await jobDependencyService.searchJobDependencies(
+          searchParams
+        );
+        setDependencies(response.data || []);
+      } else {
+        // No filters, use basic list endpoint
+        const response = await jobDependencyService.listJobDependencies({
+          limit: 100,
+          skipCache: true,
+          activeOnly: false,
+        });
+        setDependencies(response.data || []);
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load job dependencies";
@@ -570,31 +666,80 @@ export default function JobDependenciesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [
+    showError,
+    dependencyTypeFilter,
+    statusFilter,
+    filterId,
+    filterJobId,
+    filterDependsOnJobId,
+    filterDependencyType,
+    filterWaitForStatus,
+    filterIsActive,
+    filterLookbackDaysMin,
+    filterLookbackDaysMax,
+    filterMaxWaitMinutesMin,
+    filterMaxWaitMinutesMax,
+  ]);
 
   const searchDependencies = useCallback(
     async (term: string) => {
-      if (!term.trim()) {
-        await fetchDependencies();
-        return;
-      }
-
       setIsSearching(true);
       setLoadError(null);
       try {
-        const response = await jobDependencyService.searchJobDependencies({
+        // Build search params with all filters
+        const searchParams: any = {
           limit: 100,
           skipCache: true,
-        });
-        // Client-side filtering for search term
-        const filtered = (response.data || []).filter(
-          (dep) =>
-            dep.job_id.toString().includes(term) ||
-            dep.depends_on_job_id.toString().includes(term) ||
-            dep.dependency_type.toLowerCase().includes(term.toLowerCase()) ||
-            dep.wait_for_status.toLowerCase().includes(term.toLowerCase())
+        };
+
+        // Add quick filter parameters (Type and Status)
+        if (dependencyTypeFilter !== "all") {
+          searchParams.dependency_type = dependencyTypeFilter;
+        }
+        if (statusFilter === "active") {
+          searchParams.is_active = true;
+        } else if (statusFilter === "inactive") {
+          searchParams.is_active = false;
+        }
+
+        // Add advanced filter parameters
+        if (filterId) searchParams.id = Number(filterId);
+        if (filterJobId) searchParams.job_id = Number(filterJobId);
+        if (filterDependsOnJobId)
+          searchParams.depends_on_job_id = Number(filterDependsOnJobId);
+        if (filterDependencyType)
+          searchParams.dependency_type = filterDependencyType;
+        if (filterWaitForStatus)
+          searchParams.wait_for_status = filterWaitForStatus;
+        if (filterIsActive !== "")
+          searchParams.is_active = filterIsActive === true;
+        if (filterLookbackDaysMin)
+          searchParams.lookback_days_min = Number(filterLookbackDaysMin);
+        if (filterLookbackDaysMax)
+          searchParams.lookback_days_max = Number(filterLookbackDaysMax);
+        if (filterMaxWaitMinutesMin)
+          searchParams.max_wait_minutes_min = Number(filterMaxWaitMinutesMin);
+        if (filterMaxWaitMinutesMax)
+          searchParams.max_wait_minutes_max = Number(filterMaxWaitMinutesMax);
+
+        const response = await jobDependencyService.searchJobDependencies(
+          searchParams
         );
-        setDependencies(filtered);
+
+        // If there's a search term, filter client-side (text search)
+        if (term.trim()) {
+          const filtered = (response.data || []).filter(
+            (dep) =>
+              dep.job_id.toString().includes(term) ||
+              dep.depends_on_job_id.toString().includes(term) ||
+              dep.dependency_type.toLowerCase().includes(term.toLowerCase()) ||
+              dep.wait_for_status.toLowerCase().includes(term.toLowerCase())
+          );
+          setDependencies(filtered);
+        } else {
+          setDependencies(response.data || []);
+        }
       } catch (err) {
         const message =
           err instanceof Error
@@ -606,22 +751,72 @@ export default function JobDependenciesPage() {
         setIsSearching(false);
       }
     },
-    [fetchDependencies, showError]
+    [
+      dependencyTypeFilter,
+      statusFilter,
+      filterId,
+      filterJobId,
+      filterDependsOnJobId,
+      filterDependencyType,
+      filterWaitForStatus,
+      filterIsActive,
+      filterLookbackDaysMin,
+      filterLookbackDaysMax,
+      filterMaxWaitMinutesMin,
+      filterMaxWaitMinutesMax,
+      showError,
+    ]
   );
 
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const statsResponse = await jobDependencyService.getDependencyStatistics(
-        true
-      );
-      if (statsResponse.success && statsResponse.data) {
-        setStats({
-          totalDependencies: statsResponse.data.total_dependencies,
-          activeDependencies: statsResponse.data.active_dependencies,
-          inactiveDependencies: statsResponse.data.inactive_dependencies,
-        });
-      }
+      // Fetch stats from multiple endpoints like ScheduledJobsPage
+      const [allDeps, activeDeps, blockingDeps, optionalDeps] =
+        await Promise.all([
+          jobDependencyService
+            .listJobDependencies({
+              limit: 100,
+              skipCache: true,
+              activeOnly: false,
+            })
+            .catch(() => ({ data: [] })),
+          jobDependencyService
+            .listJobDependencies({
+              limit: 100,
+              skipCache: true,
+              activeOnly: true,
+            })
+            .catch(() => ({ data: [] })),
+          jobDependencyService
+            .searchJobDependencies({
+              dependency_type: "blocking",
+              limit: 100,
+              skipCache: true,
+            })
+            .catch(() => ({ data: [] })),
+          jobDependencyService
+            .searchJobDependencies({
+              dependency_type: "optional",
+              limit: 100,
+              skipCache: true,
+            })
+            .catch(() => ({ data: [] })),
+        ]);
+
+      const totalDependencies = allDeps.data?.length || 0;
+      const activeDependencies = activeDeps.data?.length || 0;
+      const inactiveDependencies = totalDependencies - activeDependencies;
+      const blockingDependencies = blockingDeps.data?.length || 0;
+      const optionalDependencies = optionalDeps.data?.length || 0;
+
+      setStats({
+        totalDependencies,
+        activeDependencies,
+        inactiveDependencies,
+        blockingDependencies,
+        optionalDependencies,
+      });
     } catch (err) {
       console.error("Failed to load stats:", err);
     } finally {
@@ -642,45 +837,53 @@ export default function JobDependenciesPage() {
     }
   }, [dependencies.length, fetchStats]);
 
-  // Debounced search
+  // Debounced search - triggers when search term or filters change
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    if (!searchTerm.trim()) {
-      fetchDependencies();
-      return;
+    // If there's a search term, use searchDependencies
+    // Otherwise, fetchDependencies will handle it (with filters)
+    if (searchTerm.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchDependencies(searchTerm);
+      }, 500);
+    } else {
+      // No search term, but filters might have changed - refetch
+      const timer = setTimeout(() => {
+        fetchDependencies();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-
-    searchTimeoutRef.current = setTimeout(() => {
-      searchDependencies(searchTerm);
-    }, 500);
 
     return () => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchTerm, fetchDependencies, searchDependencies]);
+  }, [
+    searchTerm,
+    dependencyTypeFilter,
+    statusFilter,
+    filterId,
+    filterJobId,
+    filterDependsOnJobId,
+    filterDependencyType,
+    filterWaitForStatus,
+    filterIsActive,
+    filterLookbackDaysMin,
+    filterLookbackDaysMax,
+    filterMaxWaitMinutesMin,
+    filterMaxWaitMinutesMax,
+    searchDependencies,
+    fetchDependencies,
+  ]);
 
   const filteredDependencies = useMemo(() => {
-    let filtered = [...dependencies];
-
-    if (dependencyTypeFilter !== "all") {
-      filtered = filtered.filter(
-        (dep) => dep.dependency_type === dependencyTypeFilter
-      );
-    }
-
-    if (statusFilter === "active") {
-      filtered = filtered.filter((dep) => dep.is_active);
-    } else if (statusFilter === "inactive") {
-      filtered = filtered.filter((dep) => !dep.is_active);
-    }
-
-    // Sort by created_at descending (newest first), then by ID descending as fallback
-    return filtered.sort((a, b) => {
+    // Filtering is now done server-side via searchJobDependencies
+    // Just sort the results
+    return [...dependencies].sort((a, b) => {
       if (a.created_at && b.created_at) {
         return (
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -688,7 +891,7 @@ export default function JobDependenciesPage() {
       }
       return b.id - a.id;
     });
-  }, [dependencies, dependencyTypeFilter, statusFilter]);
+  }, [dependencies]);
 
   const handleCreate = () => {
     setEditingDependency(null);
@@ -1039,7 +1242,72 @@ export default function JobDependenciesPage() {
     }
   };
 
-  // Handler for getDependencyGraph
+  // Bulk selection handlers
+  const handleSelectAll = () => {
+    if (selectedDependencyIds.size === filteredDependencies.length) {
+      setSelectedDependencyIds(new Set());
+    } else {
+      setSelectedDependencyIds(
+        new Set(filteredDependencies.map((dep) => dep.id))
+      );
+    }
+  };
+
+  const handleToggleSelection = (dependencyId: number) => {
+    const newSelection = new Set(selectedDependencyIds);
+    if (newSelection.has(dependencyId)) {
+      newSelection.delete(dependencyId);
+    } else {
+      newSelection.add(dependencyId);
+    }
+    setSelectedDependencyIds(newSelection);
+  };
+
+  // Handler for batchActivateDependencies
+  const handleBatchActivate = async () => {
+    if (selectedDependencyIds.size === 0) return;
+    try {
+      const response = await jobDependencyService.batchActivateDependencies({
+        dependency_ids: Array.from(selectedDependencyIds),
+      });
+      showToast(
+        "Dependencies activated",
+        `${response.data?.activated || 0} dependencies activated`
+      );
+      setSelectedDependencyIds(new Set());
+      setIsSelectionMode(false);
+      await fetchDependencies();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to activate dependencies";
+      showError("Unable to activate dependencies", message);
+    }
+  };
+
+  // Handler for batchDeactivateDependencies
+  const handleBatchDeactivate = async () => {
+    if (selectedDependencyIds.size === 0) return;
+    try {
+      const response = await jobDependencyService.batchDeactivateDependencies({
+        dependency_ids: Array.from(selectedDependencyIds),
+      });
+      showToast(
+        "Dependencies deactivated",
+        `${response.data?.deactivated || 0} dependencies deactivated`
+      );
+      setSelectedDependencyIds(new Set());
+      setIsSelectionMode(false);
+      await fetchDependencies();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to deactivate dependencies";
+      showError("Unable to deactivate dependencies", message);
+    }
+  };
+
+  // Handler for getDependencyGraph (Analytics)
   const handleGetDependencyGraph = async () => {
     setIsLoadingGraph(true);
     setShowGraphModal(true);
@@ -1056,7 +1324,7 @@ export default function JobDependenciesPage() {
     }
   };
 
-  // Handler for getOrphanedJobs
+  // Handler for getOrphanedJobs (Analytics)
   const handleGetOrphanedJobs = async () => {
     try {
       const response = await jobDependencyService.getOrphanedJobs(true);
@@ -1072,7 +1340,7 @@ export default function JobDependenciesPage() {
     }
   };
 
-  // Handler for getMostDependedOnJobs
+  // Handler for getMostDependedOnJobs (Analytics)
   const handleGetMostDependedOnJobs = async () => {
     try {
       const response = await jobDependencyService.getMostDependedOnJobs(
@@ -1093,7 +1361,7 @@ export default function JobDependenciesPage() {
     }
   };
 
-  // Handler for getComplexDependencies
+  // Handler for getComplexDependencies (Analytics)
   const handleGetComplexDependencies = async () => {
     try {
       const response = await jobDependencyService.getComplexDependencies(true);
@@ -1109,62 +1377,6 @@ export default function JobDependenciesPage() {
           ? err.message
           : "Failed to load complex dependencies";
       showError("Unable to load complex dependencies", message);
-    }
-  };
-
-  // Handler for batchActivateDependencies
-  const handleBatchActivate = async () => {
-    if (selectedDependencies.size === 0) {
-      showError("No selection", "Please select dependencies to activate");
-      return;
-    }
-    setIsBulkProcessing(true);
-    try {
-      const response = await jobDependencyService.batchActivateDependencies({
-        dependency_ids: Array.from(selectedDependencies),
-      });
-      showToast(
-        "Dependencies activated",
-        `${response.data?.activated || 0} dependencies activated`
-      );
-      setSelectedDependencies(new Set());
-      setShowBulkModal(false);
-      await fetchDependencies();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to activate dependencies";
-      showError("Unable to activate dependencies", message);
-    } finally {
-      setIsBulkProcessing(false);
-    }
-  };
-
-  // Handler for batchDeactivateDependencies
-  const handleBatchDeactivate = async () => {
-    if (selectedDependencies.size === 0) {
-      showError("No selection", "Please select dependencies to deactivate");
-      return;
-    }
-    setIsBulkProcessing(true);
-    try {
-      const response = await jobDependencyService.batchDeactivateDependencies({
-        dependency_ids: Array.from(selectedDependencies),
-      });
-      showToast(
-        "Dependencies deactivated",
-        `${response.data?.deactivated || 0} dependencies deactivated`
-      );
-      setSelectedDependencies(new Set());
-      setShowBulkModal(false);
-      await fetchDependencies();
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to deactivate dependencies";
-      showError("Unable to deactivate dependencies", message);
-    } finally {
-      setIsBulkProcessing(false);
     }
   };
 
@@ -1207,7 +1419,47 @@ export default function JobDependenciesPage() {
             order.
           </p>
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+                setSelectedDependencyIds(
+                  new Set(filteredDependencies.map((dep) => dep.id))
+                );
+              } else {
+                setIsSelectionMode(false);
+                setSelectedDependencyIds(new Set());
+              }
+            }}
+            className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm transition-colors"
+            style={{
+              backgroundColor: isSelectionMode
+                ? color.primary.action
+                : "transparent",
+              color: isSelectionMode ? "white" : color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
+          >
+            {isSelectionMode ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
+          </button>
+          <button
+            onClick={() => navigate("/dashboard/job-dependencies/analytics")}
+            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            style={{
+              backgroundColor: "transparent",
+              color: color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </button>
           <button
             onClick={handleCreate}
             className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm text-white"
@@ -1220,7 +1472,7 @@ export default function JobDependenciesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-2">
             <Link2
@@ -1263,18 +1515,46 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.inactiveDependencies}
           </p>
         </div>
+        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Link2
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Blocking Dependencies
+            </p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.blockingDependencies}
+          </p>
+        </div>
+        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Link2
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Optional Dependencies
+            </p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.optionalDependencies}
+          </p>
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search by job ID, dependency type, or status..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+            className="w-full rounded-md border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1293,6 +1573,7 @@ export default function JobDependenciesPage() {
           value={dependencyTypeFilter}
           onChange={setDependencyTypeFilter}
           placeholder="Filter by type"
+          className="w-auto min-w-[180px]"
         />
         <HeadlessSelect
           options={[
@@ -1303,66 +1584,69 @@ export default function JobDependenciesPage() {
           value={statusFilter}
           onChange={setStatusFilter}
           placeholder="Filter by status"
+          className="w-auto min-w-[180px]"
         />
+        <button
+          onClick={() => setShowAdvancedFilters(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+        >
+          <Filter className="h-4 w-4" />
+          <span>Filters</span>
+          {(filterId ||
+            filterJobId ||
+            filterDependsOnJobId ||
+            filterDependencyType ||
+            filterWaitForStatus ||
+            filterIsActive !== "" ||
+            filterLookbackDaysMin ||
+            filterLookbackDaysMax ||
+            filterMaxWaitMinutesMin ||
+            filterMaxWaitMinutesMax) && (
+            <span className="ml-1 inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
+              Active
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Advanced Actions Toolbar */}
-      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-md border border-gray-200">
-        <span className="text-sm font-medium text-gray-700 self-center">
-          Advanced Operations:
-        </span>
-        <button
-          onClick={handleGetDependencyGraph}
-          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-        >
-          View Graph
-        </button>
-        <button
-          onClick={handleGetOrphanedJobs}
-          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-        >
-          Orphaned Jobs
-        </button>
-        <button
-          onClick={handleGetMostDependedOnJobs}
-          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-        >
-          Most Depended
-        </button>
-        <button
-          onClick={handleGetComplexDependencies}
-          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-        >
-          Complex Dependencies
-        </button>
-        <button
-          onClick={() => setShowBulkModal(true)}
-          className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-        >
-          Bulk Operations
-        </button>
-        <div className="flex items-center gap-2 ml-auto">
-          <input
-            type="number"
-            placeholder="Job ID"
-            value={selectedJobId}
-            onChange={(e) =>
-              setSelectedJobId(e.target.value ? Number(e.target.value) : "")
-            }
-            className="w-24 px-2 py-1.5 text-sm border border-gray-300 rounded-md"
-          />
-          <button
-            onClick={() =>
-              selectedJobId &&
-              handleGetDependenciesForJob(Number(selectedJobId))
-            }
-            disabled={!selectedJobId}
-            className="px-3 py-1.5 text-sm rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Get Dependencies
-          </button>
+      {/* Batch Actions Toolbar */}
+      {isSelectionMode && selectedDependencyIds.size > 0 && (
+        <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">
+              {selectedDependencyIds.size} dependency(ies) selected
+            </span>
+            <button
+              onClick={() => setSelectedDependencyIds(new Set())}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleBatchActivate}
+              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-white"
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <CheckCircle className="h-4 w-4" />
+              Activate
+            </button>
+            <button
+              onClick={handleBatchDeactivate}
+              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium"
+              style={{
+                backgroundColor: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              <XCircle className="h-4 w-4" />
+              Deactivate
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="rounded-md">
         {loadError && (
@@ -1406,12 +1690,35 @@ export default function JobDependenciesPage() {
             >
               <thead>
                 <tr>
+                  {isSelectionMode && (
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                        borderTopLeftRadius: "0.375rem",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredDependencies.length > 0 &&
+                          selectedDependencyIds.size ===
+                            filteredDependencies.length
+                        }
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                      />
+                    </th>
+                  )}
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
+                      ...(!isSelectionMode && {
+                        borderTopLeftRadius: "0.375rem",
+                      }),
                     }}
                   >
                     Job ID
@@ -1477,12 +1784,31 @@ export default function JobDependenciesPage() {
               <tbody>
                 {filteredDependencies.map((dependency) => (
                   <tr key={dependency.id} className="transition-colors">
+                    {isSelectionMode && (
+                      <td
+                        className="px-6 py-4"
+                        style={{
+                          backgroundColor: color.surface.tablebodybg,
+                          borderTopLeftRadius: "0.375rem",
+                          borderBottomLeftRadius: "0.375rem",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedDependencyIds.has(dependency.id)}
+                          onChange={() => handleToggleSelection(dependency.id)}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                      </td>
+                    )}
                     <td
                       className="px-6 py-4"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
+                        ...(!isSelectionMode && {
+                          borderTopLeftRadius: "0.375rem",
+                          borderBottomLeftRadius: "0.375rem",
+                        }),
                       }}
                     >
                       <div className="flex items-center">
@@ -1763,104 +2089,277 @@ export default function JobDependenciesPage() {
         </div>
       )}
 
-      {/* Graph Modal */}
-      {showGraphModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-4xl rounded-xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Dependency Graph
-              </h2>
-              <button
-                onClick={() => setShowGraphModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            {isLoadingGraph ? (
-              <LoadingSpinner />
-            ) : (
-              <div className="space-y-3">
-                {graphData.map((node: any, idx: number) => (
-                  <div key={idx} className="p-4 bg-gray-50 rounded-md">
-                    <div className="font-medium">
-                      Job #{node.job_id} {node.job_name && `- ${node.job_name}`}
-                    </div>
-                    {node.dependencies?.length > 0 && (
-                      <div className="text-sm text-gray-600 mt-1">
-                        Depends on: {node.dependencies.join(", ")}
-                      </div>
-                    )}
-                    {node.dependents?.length > 0 && (
-                      <div className="text-sm text-gray-600 mt-1">
-                        Dependents: {node.dependents.join(", ")}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Filters Side Modal */}
+      {showAdvancedFilters &&
+        createPortal(
+          <div
+            className="fixed inset-0 overflow-hidden"
+            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
+              onClick={() => setShowAdvancedFilters(false)}
+            ></div>
+            <div
+              ref={filterRef}
+              className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
+              style={{ zIndex: 1000000 }}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Filter Dependencies
+                  </h2>
+                  <button
+                    onClick={() => setShowAdvancedFilters(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
 
-      {/* Bulk Operations Modal */}
-      {showBulkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Bulk Operations
-              </h2>
-              <button
-                onClick={() => setShowBulkModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Dependencies (IDs, comma-separated)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 1, 2, 3"
-                  onChange={(e) => {
-                    const ids = e.target.value
-                      .split(",")
-                      .map((id) => parseInt(id.trim()))
-                      .filter((id) => !isNaN(id));
-                    setSelectedDependencies(new Set(ids));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Selected: {selectedDependencies.size} dependencies
-                </p>
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-4">
+                    {/* ID Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dependency ID
+                      </label>
+                      <input
+                        type="number"
+                        value={filterId || ""}
+                        onChange={(e) =>
+                          setFilterId(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="All IDs"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Job ID Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Job ID
+                      </label>
+                      <input
+                        type="number"
+                        value={filterJobId || ""}
+                        onChange={(e) =>
+                          setFilterJobId(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="All Job IDs"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Depends On Job ID Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Depends On Job ID
+                      </label>
+                      <input
+                        type="number"
+                        value={filterDependsOnJobId || ""}
+                        onChange={(e) =>
+                          setFilterDependsOnJobId(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="All Depends On Job IDs"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Dependency Type Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dependency Type
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "All Types" },
+                          { value: "blocking", label: "Blocking" },
+                          { value: "optional", label: "Optional" },
+                          { value: "cross_day", label: "Cross Day" },
+                          { value: "conditional", label: "Conditional" },
+                        ]}
+                        value={filterDependencyType}
+                        onChange={setFilterDependencyType}
+                        placeholder="All Types"
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Wait For Status Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Wait For Status
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "All Statuses" },
+                          { value: "success", label: "Success" },
+                          { value: "completed", label: "Completed" },
+                          { value: "failed", label: "Failed" },
+                          { value: "any", label: "Any" },
+                        ]}
+                        value={filterWaitForStatus}
+                        onChange={setFilterWaitForStatus}
+                        placeholder="All Statuses"
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Is Active Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Active Status
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "All" },
+                          { value: "true", label: "Active" },
+                          { value: "false", label: "Inactive" },
+                        ]}
+                        value={
+                          filterIsActive === ""
+                            ? ""
+                            : filterIsActive === true
+                            ? "true"
+                            : "false"
+                        }
+                        onChange={(value) =>
+                          setFilterIsActive(
+                            value === "" ? "" : value === "true" ? true : false
+                          )
+                        }
+                        placeholder="All"
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Lookback Days Min Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Lookback Days (Min)
+                      </label>
+                      <input
+                        type="number"
+                        value={filterLookbackDaysMin || ""}
+                        onChange={(e) =>
+                          setFilterLookbackDaysMin(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Min"
+                        min="0"
+                        max="30"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Lookback Days Max Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Lookback Days (Max)
+                      </label>
+                      <input
+                        type="number"
+                        value={filterLookbackDaysMax || ""}
+                        onChange={(e) =>
+                          setFilterLookbackDaysMax(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Max"
+                        min="0"
+                        max="30"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Max Wait Minutes Min Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Wait Minutes (Min)
+                      </label>
+                      <input
+                        type="number"
+                        value={filterMaxWaitMinutesMin || ""}
+                        onChange={(e) =>
+                          setFilterMaxWaitMinutesMin(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Min"
+                        min="0"
+                        max="1440"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Max Wait Minutes Max Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Wait Minutes (Max)
+                      </label>
+                      <input
+                        type="number"
+                        value={filterMaxWaitMinutesMax || ""}
+                        onChange={(e) =>
+                          setFilterMaxWaitMinutesMax(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Max"
+                        min="0"
+                        max="1440"
+                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setFilterId("");
+                        setFilterJobId("");
+                        setFilterDependsOnJobId("");
+                        setFilterDependencyType("");
+                        setFilterWaitForStatus("");
+                        setFilterIsActive("");
+                        setFilterLookbackDaysMin("");
+                        setFilterLookbackDaysMax("");
+                        setFilterMaxWaitMinutesMin("");
+                        setFilterMaxWaitMinutesMax("");
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                    <button
+                      onClick={() => setShowAdvancedFilters(false)}
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors"
+                      style={{ backgroundColor: color.primary.action }}
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleBatchActivate}
-                  disabled={isBulkProcessing || selectedDependencies.size === 0}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                >
-                  {isBulkProcessing ? "Processing..." : "Activate Selected"}
-                </button>
-                <button
-                  onClick={handleBatchDeactivate}
-                  disabled={isBulkProcessing || selectedDependencies.size === 0}
-                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
-                >
-                  {isBulkProcessing ? "Processing..." : "Deactivate Selected"}
-                </button>
-              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       <JobDependencyModal
         isOpen={isModalOpen}
