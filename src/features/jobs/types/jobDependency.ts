@@ -4,7 +4,17 @@ export type DependencyType =
   | "cross_day"
   | "conditional";
 
-export type WaitForStatus = "success" | "completed" | "failed" | "any";
+export type WaitForStatus =
+  | "pending"
+  | "queued"
+  | "running"
+  | "success"
+  | "partial_success"
+  | "failure"
+  | "aborted"
+  | "timeout"
+  | "skipped"
+  | "cancelled";
 
 export interface JobDependency {
   id: number;
@@ -251,4 +261,3 @@ export interface DeleteAllResponse {
     removed: number;
   };
 }
-

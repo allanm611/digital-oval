@@ -15,6 +15,7 @@ import {
   Square,
   X,
   BarChart3,
+  MoreHorizontal,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -149,15 +150,20 @@ function JobDependencyModal({
       return;
     }
 
-    if (!user?.id) {
+    if (!user?.user_id) {
       setError("User ID is required");
       return;
     }
 
     setError(null);
 
+    console.log("🔵 JOB DEPENDENCY MODAL - Submitting payload:");
+    console.log("User object:", user);
+    console.log("user.user_id:", user.user_id);
+    console.log("user.id:", (user as any).id);
+
     try {
-      await onSubmit({
+      const payload = {
         job_id: Number(jobId),
         depends_on_job_id: Number(dependsOnJobId),
         dependency_type: dependencyType,
@@ -165,8 +171,12 @@ function JobDependencyModal({
         max_wait_minutes: maxWaitMinutes ? Number(maxWaitMinutes) : null,
         lookback_days: Number(lookbackDays),
         is_active: isActive,
-        userId: user.id,
-      });
+        userId: user.user_id, // Fixed: use user_id instead of id
+      };
+
+      console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+      await onSubmit(payload);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job dependency";
@@ -269,9 +279,15 @@ function JobDependencyModal({
             <HeadlessSelect
               options={[
                 { value: "success", label: "Success" },
-                { value: "completed", label: "Completed" },
-                { value: "failed", label: "Failed" },
-                { value: "any", label: "Any" },
+                { value: "failure", label: "Failure" },
+                { value: "partial_success", label: "Partial Success" },
+                { value: "pending", label: "Pending" },
+                { value: "queued", label: "Queued" },
+                { value: "running", label: "Running" },
+                { value: "aborted", label: "Aborted" },
+                { value: "timeout", label: "Timeout" },
+                { value: "skipped", label: "Skipped" },
+                { value: "cancelled", label: "Cancelled" },
               ]}
               value={waitForStatus}
               onChange={(value) => setWaitForStatus(value as WaitForStatus)}
@@ -324,8 +340,9 @@ function JobDependencyModal({
           </div>
 
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error}
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <div className="font-semibold mb-2">Error</div>
+              <div className="whitespace-pre-line">{error}</div>
             </div>
           )}
 
@@ -399,7 +416,7 @@ function JobDependencyViewModal({
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                Dependency #{dependency.id}
+                Dependency {dependency.id}
               </h3>
               <div className="flex items-center gap-2 mt-2">
                 {dependency.is_active ? (
@@ -532,6 +549,7 @@ export default function JobDependenciesPage() {
   >(new Set());
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [jobsMap, setJobsMap] = useState<Map<number, string>>(new Map());
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingDependency, setViewingDependency] =
     useState<JobDependency | null>(null);
@@ -562,18 +580,103 @@ export default function JobDependenciesPage() {
     number | ""
   >("");
   const filterRef = useRef<HTMLDivElement>(null);
+  const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
+  const actionMenuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const dropdownMenuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+  const [dropdownPosition, setDropdownPosition] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+    width?: number;
+  } | null>(null);
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
     enabled: showAdvancedFilters,
   });
 
+  // Use click outside hook for action menu dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showActionMenu !== null) {
+        const menuRef = dropdownMenuRefs.current[showActionMenu];
+        const buttonRef = actionMenuRefs.current[showActionMenu];
+        if (
+          menuRef &&
+          !menuRef.contains(event.target as Node) &&
+          buttonRef &&
+          !buttonRef.contains(event.target as Node)
+        ) {
+          setShowActionMenu(null);
+          setDropdownPosition(null);
+        }
+      }
+    };
+
+    if (showActionMenu !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showActionMenu]);
+
+  const handleActionMenuToggle = (
+    dependencyId: number,
+    event?: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    if (showActionMenu === dependencyId) {
+      setShowActionMenu(null);
+      setDropdownPosition(null);
+    } else {
+      setShowActionMenu(dependencyId);
+
+      // Calculate position from the clicked button
+      if (event && event.currentTarget) {
+        const button = event.currentTarget;
+        const buttonRect = button.getBoundingClientRect();
+
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const isMobile = viewportWidth < 640;
+        const dropdownWidth = isMobile
+          ? Math.min(256, viewportWidth - 32)
+          : 256;
+        const spacing = 4;
+        const padding = 8;
+
+        const spaceBelow = viewportHeight - buttonRect.bottom - padding;
+        const spaceAbove = buttonRect.top - padding;
+        const shouldPositionAbove = spaceBelow < 200 && spaceAbove > spaceBelow;
+
+        const top = shouldPositionAbove
+          ? buttonRect.top - 200 - spacing
+          : buttonRect.bottom + spacing;
+
+        let left = buttonRect.right - dropdownWidth;
+        if (left + dropdownWidth > viewportWidth - padding) {
+          left = viewportWidth - dropdownWidth - padding;
+        }
+        if (left < padding) {
+          left = padding;
+        }
+
+        setDropdownPosition({
+          top,
+          left,
+          maxHeight: 400,
+          width: dropdownWidth,
+        });
+      }
+    }
+  };
+
   // Additional state for advanced features (kept for individual row actions)
   const [showChainModal, setShowChainModal] = useState(false);
   const [chainData, setChainData] = useState<any[]>([]);
   const [isLoadingChain, setIsLoadingChain] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [statusData, setStatusData] = useState<any[]>([]);
+  const [statusData, setStatusData] = useState<any>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [showSatisfiedModal, setShowSatisfiedModal] = useState(false);
   const [satisfiedData, setSatisfiedData] = useState<any>(null);
@@ -772,7 +875,7 @@ export default function JobDependenciesPage() {
     setIsLoadingStats(true);
     try {
       // Fetch stats from multiple endpoints like ScheduledJobsPage
-      const [allDeps, activeDeps, blockingDeps, optionalDeps] =
+      const [allDeps, activeDeps, inactiveDeps, blockingDeps, optionalDeps] =
         await Promise.all([
           jobDependencyService
             .listJobDependencies({
@@ -786,6 +889,13 @@ export default function JobDependenciesPage() {
               limit: 100,
               skipCache: true,
               activeOnly: true,
+            })
+            .catch(() => ({ data: [] })),
+          jobDependencyService
+            .searchJobDependencies({
+              is_active: false,
+              limit: 100,
+              skipCache: true,
             })
             .catch(() => ({ data: [] })),
           jobDependencyService
@@ -806,7 +916,8 @@ export default function JobDependenciesPage() {
 
       const totalDependencies = allDeps.data?.length || 0;
       const activeDependencies = activeDeps.data?.length || 0;
-      const inactiveDependencies = totalDependencies - activeDependencies;
+      // Fetch inactive dependencies directly instead of calculating
+      const inactiveDependencies = Math.max(0, inactiveDeps.data?.length || 0);
       const blockingDependencies = blockingDeps.data?.length || 0;
       const optionalDependencies = optionalDeps.data?.length || 0;
 
@@ -824,12 +935,31 @@ export default function JobDependenciesPage() {
     }
   }, []);
 
+  // Fetch jobs to create a map of job_id -> job_name
+  const fetchJobsMap = useCallback(async () => {
+    try {
+      const response = await scheduledJobService.listScheduledJobs({
+        limit: 1000,
+        skipCache: true,
+      });
+      const jobs = response.data || [];
+      const map = new Map<number, string>();
+      jobs.forEach((job) => {
+        map.set(job.id, job.name);
+      });
+      setJobsMap(map);
+    } catch (err) {
+      console.error("Failed to load jobs for mapping:", err);
+    }
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchDependencies();
+      fetchJobsMap();
     }, 0);
     return () => clearTimeout(timer);
-  }, [fetchDependencies]);
+  }, [fetchDependencies, fetchJobsMap]);
 
   useEffect(() => {
     if (dependencies.length > 0) {
@@ -944,11 +1074,12 @@ export default function JobDependenciesPage() {
       await jobDependencyService.deleteJobDependency(deletingDependency.id);
       showToast(
         "Job dependency deleted",
-        `Dependency #${deletingDependency.id} has been deleted`
+        `Dependency ${deletingDependency.id} has been deleted`
       );
       setShowDeleteModal(false);
       setDeletingDependency(null);
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete job dependency";
@@ -976,7 +1107,7 @@ export default function JobDependenciesPage() {
         );
         showToast(
           "Job dependency updated",
-          `Dependency #${editingDependency.id} has been updated successfully`
+          `Dependency ${editingDependency.id} has been updated successfully`
         );
       } else {
         await jobDependencyService.createJobDependency(values);
@@ -988,6 +1119,7 @@ export default function JobDependenciesPage() {
       setIsModalOpen(false);
       setEditingDependency(null);
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to save job dependency";
@@ -1004,16 +1136,17 @@ export default function JobDependenciesPage() {
         await jobDependencyService.deactivateDependency(dependency.id);
         showToast(
           "Dependency deactivated",
-          `Dependency #${dependency.id} has been deactivated`
+          `Dependency ${dependency.id} has been deactivated`
         );
       } else {
         await jobDependencyService.activateDependency(dependency.id);
         showToast(
           "Dependency activated",
-          `Dependency #${dependency.id} has been activated`
+          `Dependency ${dependency.id} has been activated`
         );
       }
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error
@@ -1032,7 +1165,7 @@ export default function JobDependenciesPage() {
         activeOnly: false,
       });
       setDependencies(response.data || []);
-      showToast("Dependencies loaded", `Loaded dependencies for Job #${jobId}`);
+      showToast("Dependencies loaded", `Loaded dependencies for Job ${jobId}`);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependencies";
@@ -1054,7 +1187,7 @@ export default function JobDependenciesPage() {
       setDependencies(response.data || []);
       showToast(
         "Dependencies loaded",
-        `Loaded jobs depending on Job #${dependsOnJobId}`
+        `Loaded jobs depending on Job ${dependsOnJobId}`
       );
     } catch (err) {
       const message =
@@ -1096,7 +1229,7 @@ export default function JobDependenciesPage() {
       setDependencies(response.data || []);
       showToast(
         "Blocking dependencies loaded",
-        `Loaded blocking dependencies for Job #${jobId}`
+        `Loaded blocking dependencies for Job ${jobId}`
       );
     } catch (err) {
       const message =
@@ -1154,7 +1287,7 @@ export default function JobDependenciesPage() {
       setDependencies(response.data || []);
       showToast(
         "Immediate dependencies loaded",
-        `Loaded immediate dependencies for Job #${jobId}`
+        `Loaded immediate dependencies for Job ${jobId}`
       );
     } catch (err) {
       const message =
@@ -1171,7 +1304,7 @@ export default function JobDependenciesPage() {
       const response = await jobDependencyService.getAllDependents(jobId, true);
       showToast(
         "Dependents loaded",
-        `Job #${jobId} has ${response.data?.jobIds?.length || 0} dependent jobs`
+        `Job ${jobId} has ${response.data?.jobIds?.length || 0} dependent jobs`
       );
     } catch (err) {
       const message =
@@ -1231,7 +1364,11 @@ export default function JobDependenciesPage() {
         jobId,
         true
       );
-      setStatusData(response.data || []);
+      console.log("🔵 DEPENDENCY STATUS - Response:", response);
+      console.log("Response.data:", response.data);
+
+      // Response.data is an object with summary statistics
+      setStatusData(response.data || null);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load dependency status";
@@ -1277,6 +1414,7 @@ export default function JobDependenciesPage() {
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to activate dependencies";
@@ -1298,6 +1436,7 @@ export default function JobDependenciesPage() {
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error
@@ -1384,7 +1523,7 @@ export default function JobDependenciesPage() {
   const handleDeleteAllForJob = async (jobId: number) => {
     if (
       !window.confirm(
-        `Are you sure you want to delete all dependencies for Job #${jobId}?`
+        `Are you sure you want to delete all dependencies for Job ${jobId}?`
       )
     ) {
       return;
@@ -1395,9 +1534,10 @@ export default function JobDependenciesPage() {
       );
       showToast(
         "Dependencies deleted",
-        `${response.data?.removed || 0} dependencies removed for Job #${jobId}`
+        `${response.data?.removed || 0} dependencies removed for Job ${jobId}`
       );
       await fetchDependencies();
+      await fetchStats();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete dependencies";
@@ -1711,7 +1851,7 @@ export default function JobDependenciesPage() {
                       />
                     </th>
                   )}
-                  <th
+                  {/* <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
@@ -1722,7 +1862,28 @@ export default function JobDependenciesPage() {
                     }}
                   >
                     Job ID
+                  </th> */}
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      ...(!isSelectionMode && {
+                        borderTopLeftRadius: "0.375rem",
+                      }),
+                    }}
+                  >
+                    Job Name
                   </th>
+                  {/* <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Depends On Job ID
+                  </th> */}
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{
@@ -1730,7 +1891,7 @@ export default function JobDependenciesPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Depends On
+                    Depends On Job Name
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -1801,6 +1962,20 @@ export default function JobDependenciesPage() {
                         />
                       </td>
                     )}
+                    {/* <td
+                      className="px-6 py-4"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        ...(!isSelectionMode && {
+                          borderTopLeftRadius: "0.375rem",
+                          borderBottomLeftRadius: "0.375rem",
+                        }),
+                      }}
+                    >
+                      <span className="text-sm text-gray-900 font-medium">
+                        {dependency.job_id}
+                      </span>
+                    </td> */}
                     <td
                       className="px-6 py-4"
                       style={{
@@ -1811,25 +1986,25 @@ export default function JobDependenciesPage() {
                         }),
                       }}
                     >
-                      <div className="flex items-center">
-                        <div>
-                          <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
-                          >
-                            Job #{dependency.job_id}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            ID: {dependency.id}
-                          </div>
-                        </div>
-                      </div>
+                      <span className="text-sm text-gray-900">
+                        {jobsMap.get(dependency.job_id) || "Unknown Job"}
+                      </span>
                     </td>
-                    <td
+                    {/* <td
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span className="text-sm text-gray-900 font-medium">
-                        Job #{dependency.depends_on_job_id}
+                        {dependency.depends_on_job_id}
+                      </span>
+                    </td> */}
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className="text-sm text-gray-900">
+                        {jobsMap.get(dependency.depends_on_job_id) ||
+                          "Unknown Job"}
                       </span>
                     </td>
                     <td
@@ -1852,17 +2027,9 @@ export default function JobDependenciesPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {dependency.is_active ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <CheckCircle className="w-3 h-3" />
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          <XCircle className="w-3 h-3" />
-                          Inactive
-                        </span>
-                      )}
+                      <span className="text-sm text-black capitalize">
+                        {dependency.is_active ? "Active" : "Inactive"}
+                      </span>
                     </td>
                     <td
                       className="px-6 py-4"
@@ -1898,28 +2065,6 @@ export default function JobDependenciesPage() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleToggleActive(dependency)}
-                          className={`p-2 rounded-md transition-colors ${
-                            dependency.is_active
-                              ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                              : "text-green-600 hover:text-green-700 hover:bg-green-50"
-                          }`}
-                          aria-label={
-                            dependency.is_active
-                              ? "Deactivate dependency"
-                              : "Activate dependency"
-                          }
-                          title={
-                            dependency.is_active ? "Deactivate" : "Activate"
-                          }
-                        >
-                          {dependency.is_active ? (
-                            <XCircle className="w-4 h-4" />
-                          ) : (
-                            <CheckCircle className="w-4 h-4" />
-                          )}
-                        </button>
-                        <button
                           onClick={() => handleDeleteClick(dependency)}
                           className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
                           aria-label="Delete dependency"
@@ -1927,40 +2072,234 @@ export default function JobDependenciesPage() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() =>
-                            handleGetDependencyChain(dependency.job_id)
-                          }
-                          className="p-2 rounded-md text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors"
-                          aria-label="View dependency chain"
-                          title="View Chain"
+                        <div
+                          className="relative"
+                          ref={(el) => {
+                            actionMenuRefs.current[dependency.id] = el;
+                          }}
                         >
-                          <Link2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleCheckDependenciesSatisfied(dependency.job_id)
-                          }
-                          className="p-2 rounded-md text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-colors"
-                          aria-label="Check if satisfied"
-                          title="Check Satisfied"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleGetDependencyStatus(dependency.job_id)
-                          }
-                          className="p-2 rounded-md text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
-                          aria-label="View dependency status"
-                          title="View Status"
-                        >
-                          <Filter className="w-4 h-4" />
-                        </button>
+                          <button
+                            onClick={(e) =>
+                              handleActionMenuToggle(dependency.id, e)
+                            }
+                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            aria-label="More actions"
+                            title="More"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
                 ))}
+
+                {/* Render dropdown menus via portal outside the table */}
+                {filteredDependencies.map((dependency) => {
+                  if (showActionMenu === dependency.id && dropdownPosition) {
+                    return createPortal(
+                      <div
+                        ref={(el) => {
+                          dropdownMenuRefs.current[dependency.id] = el;
+                        }}
+                        className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-3"
+                        style={{
+                          zIndex: 99999,
+                          top: `${dropdownPosition.top}px`,
+                          left: `${dropdownPosition.left}px`,
+                          width: `${dropdownPosition.width || 256}px`,
+                          maxHeight: `${dropdownPosition.maxHeight}px`,
+                          overflowY: "auto",
+                          overflowX: "hidden",
+                          overscrollBehavior: "contain",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleActive(dependency);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          {dependency.is_active ? (
+                            <XCircle className="w-4 h-4 mr-4" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4 mr-4" />
+                          )}
+                          {dependency.is_active
+                            ? "Deactivate Dependency"
+                            : "Activate Dependency"}
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetDependencyChain(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          View Dependency Chain
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCheckDependenciesSatisfied(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-4" />
+                          Check Dependencies Satisfied
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetDependencyStatus(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Filter className="w-4 h-4 mr-4" />
+                          View Dependency Status
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetDependenciesForJob(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get Dependencies For Job
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetJobsDependingOn(
+                              dependency.depends_on_job_id
+                            );
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get Jobs Depending On
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetSpecificDependency(
+                              dependency.job_id,
+                              dependency.depends_on_job_id
+                            );
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Eye className="w-4 h-4 mr-4" />
+                          Get Specific Dependency
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetBlockingDependencies(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <AlertTriangle className="w-4 h-4 mr-4" />
+                          Get Blocking Dependencies
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetCriticalPath(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get Critical Path
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetImmediateDependencies(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get Immediate Dependencies
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetAllDependents(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get All Dependents
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetUnsatisfiedDependencies(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <XCircle className="w-4 h-4 mr-4" />
+                          Get Unsatisfied Dependencies
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGetComplexDependencies();
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-black"
+                        >
+                          <Link2 className="w-4 h-4 mr-4" />
+                          Get Complex Dependencies
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteAllForJob(dependency.job_id);
+                            setShowActionMenu(null);
+                          }}
+                          className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4 mr-4" />
+                          Delete All For Job
+                        </button>
+                      </div>,
+                      document.body
+                    );
+                  }
+                  return null;
+                })}
               </tbody>
             </table>
           </div>
@@ -1970,11 +2309,17 @@ export default function JobDependenciesPage() {
       {/* Chain/Path Modal */}
       {showChainModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-6xl rounded-xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Dependency Chain
-              </h2>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Dependency Chain
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Shows all dependencies for this job. Click on job names to
+                  view their details.
+                </p>
+              </div>
               <button
                 onClick={() => setShowChainModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1983,24 +2328,189 @@ export default function JobDependenciesPage() {
               </button>
             </div>
             {isLoadingChain ? (
-              <LoadingSpinner />
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
+            ) : chainData.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">
+                  No dependencies found for this job
+                </p>
+              </div>
             ) : (
-              <div className="space-y-2">
-                {chainData.map((item, idx) => (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-md">
-                    <div className="font-medium">
-                      Job #{item.job_id} {item.job_name && `- ${item.job_name}`}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Level: {item.level}
-                    </div>
-                    {item.depends_on && (
-                      <div className="text-sm text-gray-600">
-                        Depends on: Job #{item.depends_on}
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                          borderTopLeftRadius: "0.375rem",
+                        }}
+                      >
+                        Dependent Job
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Depends On Job
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Dependency Type
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Wait For Status
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Depth
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                          borderTopRightRadius: "0.375rem",
+                        }}
+                      >
+                        Lookback Days
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chainData.map((item, idx) => (
+                      <tr key={item.id || idx} className="transition-colors">
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopLeftRadius: "0.375rem",
+                            borderBottomLeftRadius: "0.375rem",
+                          }}
+                        >
+                          <button
+                            onClick={() => {
+                              navigate(
+                                `/dashboard/scheduled-jobs/${item.job_id}`
+                              );
+                              setShowChainModal(false);
+                            }}
+                            className="text-sm font-semibold text-gray-900 hover:underline transition-colors"
+                            style={{
+                              color: "inherit",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color =
+                                color.primary.accent;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = "";
+                            }}
+                          >
+                            {jobsMap.get(item.job_id) || `Job ${item.job_id}`}
+                          </button>
+                          <div className="text-xs text-gray-500 mt-1">
+                            ID: {item.job_id}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <button
+                            onClick={() => {
+                              navigate(
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                              );
+                              setShowChainModal(false);
+                            }}
+                            className="text-sm font-semibold text-gray-900 hover:underline transition-colors"
+                            style={{
+                              color: "inherit",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color =
+                                color.primary.accent;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = "";
+                            }}
+                          >
+                            {item.depends_on_job_name ||
+                              `Job ${item.depends_on_job_id}`}
+                          </button>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {item.depends_on_job_code &&
+                              `Code: ${item.depends_on_job_code} • `}
+                            ID: {item.depends_on_job_id}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-gray-900 capitalize">
+                            {item.dependency_type}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-gray-900 capitalize">
+                            {item.wait_for_status}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-gray-900">
+                            {item.depth || 0}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopRightRadius: "0.375rem",
+                            borderBottomRightRadius: "0.375rem",
+                          }}
+                        >
+                          <span className="text-sm text-gray-900">
+                            {item.lookback_days || 0}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -2010,11 +2520,16 @@ export default function JobDependenciesPage() {
       {/* Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-4xl rounded-xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Dependency Status
-              </h2>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Dependency Status
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Summary statistics of all dependencies for this job
+                </p>
+              </div>
               <button
                 onClick={() => setShowStatusModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -2023,30 +2538,68 @@ export default function JobDependenciesPage() {
               </button>
             </div>
             {isLoadingStatus ? (
-              <LoadingSpinner />
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
             ) : (
-              <div className="space-y-2">
-                {statusData.map((item: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded-md ${
-                      item.status === "satisfied" ? "bg-green-50" : "bg-red-50"
-                    }`}
-                  >
-                    <div className="font-medium">
-                      Depends on Job #{item.depends_on_job_id}
+              <div className="space-y-6">
+                {statusData ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          Total Dependencies
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900">
+                          {statusData.total_dependencies || "0"}
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          Blocking Dependencies
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900">
+                          {statusData.blocking_dependencies || "0"}
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          Optional Dependencies
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900">
+                          {statusData.optional_dependencies || "0"}
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          Satisfied Dependencies
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900">
+                          {statusData.satisfied_dependencies || "0"}
+                        </div>
+                      </div>
+                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                        <div className="text-sm font-medium text-gray-600 mb-1">
+                          Unsatisfied Blocking
+                        </div>
+                        <div className="text-3xl font-bold text-gray-900">
+                          {statusData.unsatisfied_blocking || "0"}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm">Status: {item.status}</div>
-                    <div className="text-sm">
-                      Required: {item.required_status}
-                    </div>
-                    {item.current_status && (
-                      <div className="text-sm">
-                        Current: {item.current_status}
+                    {statusData.source && (
+                      <div className="text-xs text-gray-500 text-center pt-4 border-t border-gray-200">
+                        Source: {statusData.source}
                       </div>
                     )}
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      No dependency status data available
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
@@ -2058,9 +2611,15 @@ export default function JobDependenciesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Dependencies Satisfied
-              </h2>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Dependencies Satisfied Check
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Checks if all dependencies for this job have been satisfied
+                  (completed successfully)
+                </p>
+              </div>
               <button
                 onClick={() => setShowSatisfiedModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -2069,20 +2628,41 @@ export default function JobDependenciesPage() {
               </button>
             </div>
             {isLoadingSatisfied ? (
-              <LoadingSpinner />
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
             ) : (
-              <div
-                className={`p-4 rounded-md ${
-                  satisfiedData?.satisfied
-                    ? "bg-green-50 text-green-800"
-                    : "bg-red-50 text-red-800"
-                }`}
-              >
-                <div className="font-medium text-lg">
-                  {satisfiedData?.satisfied
-                    ? "✓ All dependencies are satisfied"
-                    : "✗ Dependencies are not satisfied"}
+              <div className="space-y-4">
+                <div
+                  className={`p-6 rounded-lg border-2 ${
+                    satisfiedData?.satisfied
+                      ? "bg-green-50 border-green-200"
+                      : "bg-red-50 border-red-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    {satisfiedData?.satisfied ? (
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    ) : (
+                      <XCircle className="w-6 h-6 text-red-600" />
+                    )}
+                    <div className="font-semibold text-lg text-gray-900">
+                      {satisfiedData?.satisfied
+                        ? "All Dependencies Satisfied"
+                        : "Dependencies Not Satisfied"}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mt-2">
+                    {satisfiedData?.satisfied
+                      ? "This job can proceed with execution as all its dependencies have been completed successfully."
+                      : "This job cannot proceed yet. One or more dependencies have not been satisfied (not completed successfully)."}
+                  </p>
                 </div>
+                {satisfiedData?.source && (
+                  <div className="text-xs text-gray-500 text-center">
+                    Source: {satisfiedData.source}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2205,9 +2785,18 @@ export default function JobDependenciesPage() {
                         options={[
                           { value: "", label: "All Statuses" },
                           { value: "success", label: "Success" },
-                          { value: "completed", label: "Completed" },
-                          { value: "failed", label: "Failed" },
-                          { value: "any", label: "Any" },
+                          { value: "failure", label: "Failure" },
+                          {
+                            value: "partial_success",
+                            label: "Partial Success",
+                          },
+                          { value: "pending", label: "Pending" },
+                          { value: "queued", label: "Queued" },
+                          { value: "running", label: "Running" },
+                          { value: "aborted", label: "Aborted" },
+                          { value: "timeout", label: "Timeout" },
+                          { value: "skipped", label: "Skipped" },
+                          { value: "cancelled", label: "Cancelled" },
                         ]}
                         value={filterWaitForStatus}
                         onChange={setFilterWaitForStatus}
@@ -2393,7 +2982,7 @@ export default function JobDependenciesPage() {
         onConfirm={handleDeleteConfirm}
         title="Delete Job Dependency"
         description="Are you sure you want to delete this job dependency? This action cannot be undone."
-        itemName={`Dependency #${deletingDependency?.id || ""}`}
+        itemName={`Dependency ${deletingDependency?.id || ""}`}
         isLoading={isDeleting}
         confirmText="Delete"
         cancelText="Cancel"

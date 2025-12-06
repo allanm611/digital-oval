@@ -35,6 +35,7 @@ import {
   Server,
   Database,
   Link2,
+  PlayCircle,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color } from "../../../shared/utils/utils";
@@ -453,6 +454,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             entity: "campaigns",
           },
           {
+            name: "Job Executions",
+            href: "/dashboard/job-executions",
+            icon: PlayCircle,
+            type: "single",
+            entity: "campaigns",
+          },
+          {
             name: "Job Types",
             href: "/dashboard/job-types",
             icon: Layers,
@@ -463,6 +471,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             name: "Job Dependencies",
             href: "/dashboard/job-dependencies",
             icon: Link2,
+            type: "single",
+            entity: "campaigns",
+          },
+          {
+            name: "Job Workflow Steps",
+            href: "/dashboard/job-workflow-steps",
+            icon: Activity,
             type: "single",
             entity: "campaigns",
           },

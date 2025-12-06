@@ -453,6 +453,19 @@ class JobDependencyService {
   async createJobDependency(
     payload: CreateJobDependencyPayload
   ): Promise<JobDependency> {
+    console.log("🔵 CREATE JOB DEPENDENCY - Request Details:");
+    console.log("==========================================");
+    console.log("Full URL:", `${BASE_URL}`);
+    console.log("Method: POST");
+    console.log("Payload received:", payload);
+    console.log("Payload JSON:", JSON.stringify(payload, null, 2));
+    console.log("Has userId:", "userId" in payload);
+    console.log("userId value:", payload.userId);
+    console.log("userId type:", typeof payload.userId);
+    console.log("job_id:", payload.job_id);
+    console.log("depends_on_job_id:", payload.depends_on_job_id);
+    console.log("==========================================");
+
     return this.request<JobDependency>("", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -547,4 +560,3 @@ class JobDependencyService {
 }
 
 export const jobDependencyService = new JobDependencyService();
-

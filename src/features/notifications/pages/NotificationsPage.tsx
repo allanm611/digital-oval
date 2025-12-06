@@ -145,7 +145,7 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>
               Notifications
@@ -157,7 +157,7 @@ export default function NotificationsPage() {
             )}
           </div>
           {filteredNotifications.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <button
                 onClick={async () => {
                   try {
@@ -182,7 +182,7 @@ export default function NotificationsPage() {
                     console.error("Failed to mark all as read:", err);
                   }
                 }}
-                className={tw.button}
+                className={`${tw.button} text-sm px-4 py-2`}
               >
                 Mark all as read
               </button>
@@ -208,7 +208,7 @@ export default function NotificationsPage() {
                     console.error("Failed to delete notifications:", err);
                   }
                 }}
-                className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-6 py-2 rounded-md cursor-pointer"
+                className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer"
               >
                 Delete all notifications
               </button>
@@ -219,7 +219,7 @@ export default function NotificationsPage() {
 
       {/* Filters */}
       <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -251,7 +251,7 @@ export default function NotificationsPage() {
               })),
             ]}
             placeholder="All Types"
-            className="w-auto min-w-[150px]"
+            className="w-full"
           />
 
           {/* Priority Filter */}
@@ -271,7 +271,7 @@ export default function NotificationsPage() {
               })),
             ]}
             placeholder="All Priorities"
-            className="w-auto min-w-[150px]"
+            className="w-full"
           />
 
           {/* Read Status Filter */}
@@ -295,7 +295,7 @@ export default function NotificationsPage() {
               { label: "Read", value: "read" },
             ]}
             placeholder="All Status"
-            className="w-auto min-w-[150px]"
+            className="w-full"
           />
         </div>
 
@@ -316,11 +316,11 @@ export default function NotificationsPage() {
 
       {/* Bulk Actions */}
       {bulkMode && (
-        <div className="rounded-lg px-4 mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="rounded-lg px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <button
               onClick={handleSelectAll}
-              className="text-sm text-gray-900 hover:text-gray-700 font-medium"
+              className="text-sm text-gray-900 hover:text-gray-700 font-medium text-left sm:text-center"
             >
               {selectedNotifications.length === filteredNotifications.length
                 ? "Deselect all"
@@ -332,13 +332,13 @@ export default function NotificationsPage() {
                 : "Select notifications to perform bulk actions"}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             {selectedNotifications.length > 0 && (
               <>
                 {bulkActionType === "mark-read" && (
                   <button
                     onClick={handleMarkSelectedAsRead}
-                    className={tw.button}
+                    className={`${tw.button} text-sm px-4 py-2`}
                   >
                     Mark as read
                   </button>
@@ -346,7 +346,7 @@ export default function NotificationsPage() {
                 {bulkActionType === "delete" && (
                   <button
                     onClick={handleDeleteSelected}
-                    className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-6 py-2 rounded-md cursor-pointer flex items-center gap-2"
+                    className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete
@@ -364,7 +364,7 @@ export default function NotificationsPage() {
                 borderColor: color.primary.action,
                 color: color.primary.action,
               }}
-              className={tw.borderedButton}
+              className={`${tw.borderedButton} text-sm px-4 py-2`}
             >
               Cancel
             </button>
@@ -415,7 +415,7 @@ export default function NotificationsPage() {
                     key={notification.id}
                     className="p-4 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       {bulkMode && (
                         <input
                           type="checkbox"
@@ -423,7 +423,7 @@ export default function NotificationsPage() {
                           onChange={() =>
                             handleSelectNotification(notification.id)
                           }
-                          className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
                         />
                       )}
                       <div
@@ -434,10 +434,10 @@ export default function NotificationsPage() {
                           !bulkMode ? "cursor-pointer" : ""
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                           <div className="flex items-start gap-3 flex-1 min-w-0">
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <h3
                                   className={`text-sm font-semibold ${
                                     !notification.isRead
@@ -451,7 +451,7 @@ export default function NotificationsPage() {
                                   <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
                                 )}
                                 <span
-                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                                     notification.priority === "urgent"
                                       ? "bg-red-100 text-red-700"
                                       : notification.priority === "high"
@@ -464,11 +464,11 @@ export default function NotificationsPage() {
                                   {notification.priority}
                                 </span>
                               </div>
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-sm text-gray-600 mb-2 break-words">
                                 {notification.message}
                               </p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span>
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
+                                <span className="whitespace-nowrap">
                                   {new Date(
                                     notification.createdAt
                                   ).toLocaleString()}
@@ -488,7 +488,7 @@ export default function NotificationsPage() {
                             </div>
                           </div>
                           {!bulkMode && (
-                            <div className="flex-shrink-0 flex items-center gap-2">
+                            <div className="flex-shrink-0 flex items-center gap-2 self-start sm:self-auto">
                               <button
                                 onClick={async (e) => {
                                   e.stopPropagation();
@@ -498,7 +498,7 @@ export default function NotificationsPage() {
                                   borderColor: color.primary.action,
                                   color: color.primary.action,
                                 }}
-                                className={tw.borderedButton}
+                                className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap`}
                                 title="Mark as read"
                               >
                                 Mark as read
@@ -508,7 +508,7 @@ export default function NotificationsPage() {
                                   e.stopPropagation();
                                   await deleteNotification(notification.id);
                                 }}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
                                 title="Delete"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -525,11 +525,11 @@ export default function NotificationsPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="border-t border-gray-200 p-4 flex items-center justify-between">
+              <div className="border-t border-gray-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -539,7 +539,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= totalPages}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

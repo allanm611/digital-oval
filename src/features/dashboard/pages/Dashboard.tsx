@@ -77,6 +77,10 @@ import ScheduledJobsAnalyticsPage from "../../jobs/pages/ScheduledJobsAnalyticsP
 import JobDependenciesPage from "../../jobs/pages/JobDependenciesPage";
 import JobDependenciesAnalyticsPage from "../../jobs/pages/JobDependenciesAnalyticsPage";
 import JobWorkflowStepsPage from "../../jobs/pages/JobWorkflowStepsPage";
+import JobWorkflowStepDetailsPage from "../../jobs/pages/JobWorkflowStepDetailsPage";
+import JobExecutionsPage from "../../jobs/pages/JobExecutionsPage";
+import JobExecutionDetailsPage from "../../jobs/pages/JobExecutionDetailsPage";
+import JobExecutionsAnalyticsPage from "../../jobs/pages/JobExecutionsAnalyticsPage";
 import NotificationsPage from "../../notifications/pages/NotificationsPage";
 import DNDManagementPage from "../../campaigns/pages/DNDManagementPage";
 import VIPListManagementPage from "../../campaigns/pages/VIPListManagementPage";
@@ -274,6 +278,19 @@ export default function Dashboard() {
           element={<JobDependenciesAnalyticsPage />}
         />
         <Route path="/job-workflow-steps" element={<JobWorkflowStepsPage />} />
+        <Route
+          path="/job-workflow-steps/:id"
+          element={<JobWorkflowStepDetailsPage />}
+        />
+        <Route path="/job-executions" element={<JobExecutionsPage />} />
+        <Route
+          path="/job-executions/:id"
+          element={<JobExecutionDetailsPage />}
+        />
+        <Route
+          path="/job-executions/analytics"
+          element={<JobExecutionsAnalyticsPage />}
+        />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/dnd-management" element={<DNDManagementPage />} />
         <Route

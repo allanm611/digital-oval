@@ -177,13 +177,23 @@ export default function OfferCreativeDetailsPage() {
               {creative.channel}
             </span>
             {creative.locale && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold">
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white"
+                style={{
+                  backgroundColor: color.primary.accent,
+                }}
+              >
                 {creative.locale}
               </span>
             )}
             {renderStatusBadge(creative.is_active)}
             {creative.version && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-sm font-semibold">
+              <span
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold text-white"
+                style={{
+                  backgroundColor: color.primary.accent,
+                }}
+              >
                 Version {creative.version}
               </span>
             )}
@@ -205,7 +215,7 @@ export default function OfferCreativeDetailsPage() {
         className={`bg-white rounded-md border border-[${color.border.default}] p-6 space-y-6`}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-md p-4 space-y-4">
+          <div className="space-y-4">
             <DetailItem label="Creative ID" value={creative.id ?? "—"} />
             <DetailItem
               label="Offer"
@@ -246,27 +256,7 @@ export default function OfferCreativeDetailsPage() {
             />
           </div>
 
-          <div className="bg-gray-50 rounded-md p-4 space-y-4">
-            <DetailItem
-              label="Template Type"
-              value={
-                creative.template_type_id ? (
-                  <div className="space-y-1">
-                    <span className="font-medium text-gray-900">
-                      Template #{creative.template_type_id}
-                    </span>
-                    <p className={`text-sm ${tw.textMuted}`}>
-                      Determines the layout and content structure used when this
-                      creative is rendered.
-                    </p>
-                  </div>
-                ) : (
-                  <span className={`text-sm ${tw.textMuted}`}>
-                    Not specified
-                  </span>
-                )
-              }
-            />
+          <div className="space-y-4">
             <DetailItem
               label="Created By"
               value={
@@ -298,6 +288,26 @@ export default function OfferCreativeDetailsPage() {
                   </button>
                 ) : (
                   <span className={`text-sm ${tw.textMuted}`}>—</span>
+                )
+              }
+            />
+            <DetailItem
+              label="Template Type"
+              value={
+                creative.template_type_id ? (
+                  <div className="space-y-1">
+                    <span className="font-medium text-gray-900">
+                      Template #{creative.template_type_id}
+                    </span>
+                    <p className={`text-sm ${tw.textMuted}`}>
+                      Determines the layout and content structure used when this
+                      creative is rendered.
+                    </p>
+                  </div>
+                ) : (
+                  <span className={`text-sm ${tw.textMuted}`}>
+                    Not specified
+                  </span>
                 )
               }
             />
@@ -342,14 +352,14 @@ export default function OfferCreativeDetailsPage() {
           </div>
 
           {(creative.channel === "Email" || creative.channel === "Web") && (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <p
                 className={`text-sm font-semibold uppercase tracking-wide ${tw.textMuted}`}
               >
                 HTML Body
               </p>
               {creative.html_body ? (
-                <pre className="bg-gray-900 text-gray-100 rounded-md p-4 text-sm overflow-x-auto">
+                <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto w-full">
                   {creative.html_body}
                 </pre>
               ) : (
@@ -361,24 +371,22 @@ export default function OfferCreativeDetailsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <p
-              className={`text-sm font-semibold uppercase tracking-wide ${tw.textMuted}`}
-            >
-              Variables
-            </p>
-            {creative.variables &&
-            Object.keys(creative.variables || {}).length > 0 ? (
-              <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto">
-                {JSON.stringify(creative.variables, null, 2)}
-              </pre>
-            ) : (
-              <span className={`text-sm ${tw.textMuted}`}>
-                No variables defined
-              </span>
-            )}
-          </div>
+        <div className="space-y-2 w-full">
+          <p
+            className={`text-sm font-semibold uppercase tracking-wide ${tw.textMuted}`}
+          >
+            Variables
+          </p>
+          {creative.variables &&
+          Object.keys(creative.variables || {}).length > 0 ? (
+            <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto w-full">
+              {JSON.stringify(creative.variables, null, 2)}
+            </pre>
+          ) : (
+            <span className={`text-sm ${tw.textMuted}`}>
+              No variables defined
+            </span>
+          )}
         </div>
 
         <div className="space-y-2">

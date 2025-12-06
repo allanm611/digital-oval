@@ -77,15 +77,21 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   );
 };
 
-const COLORS = [
-  "#3b8169",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-  "#ec4899",
-];
+// Use colors from tokens instead of hardcoded values
+const getChartColors = () => {
+  return (
+    color.charts?.campaigns?.pieColors || [
+      color.charts?.campaigns?.primary || "#C38BFB",
+      color.charts?.campaigns?.secondary || "#FC9C9C",
+      color.charts?.campaigns?.accent || "#4FDFF3",
+      color.charts?.offers?.buyOneGetOne || "#94DF5A",
+      color.charts?.offers?.freeShipping || "#F7B430",
+      color.charts?.products?.color6 || "#6B8E6B",
+      color.charts?.products?.color7 || "#B84A6B",
+      color.charts?.products?.color8 || "#A66B3D",
+    ]
+  );
+};
 
 export default function JobDependenciesAnalyticsPage(): JSX.Element {
   const navigate = useNavigate();
@@ -100,10 +106,22 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
     Array<{ name: string; value: number }>
   >([]);
   const [mostDependedJobs, setMostDependedJobs] = useState<
-    Array<{ job_id: number; job_name?: string; dependent_count: number }>
+    Array<{
+      id: number;
+      name: string;
+      code: string;
+      dependent_job_count: string;
+      dependent_job_ids: number[];
+    }>
   >([]);
   const [orphanedJobs, setOrphanedJobs] = useState<
-    Array<{ job_id: number; job_name?: string }>
+    Array<{
+      id: number;
+      name: string;
+      code: string;
+      status: string;
+      is_active: boolean;
+    }>
   >([]);
   const [dependencyGraph, setDependencyGraph] = useState<any[]>([]);
   const [activeInactiveDistribution, setActiveInactiveDistribution] = useState<
@@ -287,23 +305,186 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
               </div>
               <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-2">
+                  <XCircle
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Inactive Dependencies
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.inactive_dependencies || 0}
+                </p>
+              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Link2
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Jobs Depended On
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.jobs_depended_on || 0}
+                </p>
+              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
                     style={{ color: color.primary.accent }}
                   />
                   <p className="text-sm font-medium text-gray-600">
-                    Max Dependencies per Job
+                    Blocking Count
                   </p>
                 </div>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
-                  {statistics.max_dependencies_for_single_job || 0}
+                  {statistics.blocking_count || 0}
                 </p>
               </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Link2
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Optional Count
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.optional_count || 0}
+                </p>
+              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Link2
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Conditional Count
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.conditional_count || 0}
+                </p>
+              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Link2
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Cross Day Count
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.cross_day_count || 0}
+                </p>
+              </div>
+              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="flex items-center gap-2">
+                  <Link2
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Avg Max Wait (min)
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {statistics.avg_max_wait_minutes
+                    ? parseFloat(statistics.avg_max_wait_minutes).toFixed(0)
+                    : "0"}
+                </p>
+              </div>
+              {/* Dependency Graph Summary Stat Cards */}
+              {dependencyGraph.length > 0 && (
+                <>
+                  <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Link2
+                        className="h-5 w-5"
+                        style={{ color: color.primary.accent }}
+                      />
+                      <p className="text-sm font-medium text-gray-600">
+                        Total Jobs in Graph
+                      </p>
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">
+                      {dependencyGraph.length}
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Link2
+                        className="h-5 w-5"
+                        style={{ color: color.primary.accent }}
+                      />
+                      <p className="text-sm font-medium text-gray-600">
+                        Jobs with Dependencies
+                      </p>
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">
+                      {
+                        dependencyGraph.filter(
+                          (node) => node.dependencies?.length > 0
+                        ).length
+                      }
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Link2
+                        className="h-5 w-5"
+                        style={{ color: color.primary.accent }}
+                      />
+                      <p className="text-sm font-medium text-gray-600">
+                        Jobs with Dependents
+                      </p>
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">
+                      {
+                        dependencyGraph.filter(
+                          (node) => node.dependents?.length > 0
+                        ).length
+                      }
+                    </p>
+                  </div>
+                  <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-center gap-2">
+                      <Link2
+                        className="h-5 w-5"
+                        style={{ color: color.primary.accent }}
+                      />
+                      <p className="text-sm font-medium text-gray-600">
+                        Avg Dependencies per Job
+                      </p>
+                    </div>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">
+                      {dependencyGraph.length > 0
+                        ? (
+                            dependencyGraph.reduce(
+                              (sum, node) =>
+                                sum + (node.dependencies?.length || 0),
+                              0
+                            ) / dependencyGraph.length
+                          ).toFixed(1)
+                        : "0"}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
-          {/* Charts Grid */}
-          <div className="grid gap-6 md:grid-cols-2">
+          {/* Pie Charts - Three on same line */}
+          <div className="grid gap-6 md:grid-cols-3">
             {/* Dependency Type Distribution */}
             <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -324,12 +505,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {dependencyTypeDistribution.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
+                      {dependencyTypeDistribution.map((entry, index) => {
+                        const chartColors = getChartColors();
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={chartColors[index % chartColors.length]}
+                          />
+                        );
+                      })}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -361,12 +545,15 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {waitForStatusDistribution.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                        />
-                      ))}
+                      {waitForStatusDistribution.map((entry, index) => {
+                        const chartColors = getChartColors();
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={chartColors[index % chartColors.length]}
+                          />
+                        );
+                      })}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -398,12 +585,18 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {activeInactiveDistribution.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={index === 0 ? "#10b981" : "#6b7280"}
-                        />
-                      ))}
+                      {activeInactiveDistribution.map((entry, index) => {
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              index === 0
+                                ? color.primary.accent || "#00BBCC"
+                                : color.tertiary?.tag4 || "#15803d"
+                            }
+                          />
+                        );
+                      })}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -414,145 +607,215 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                 </div>
               )}
             </div>
-
-            {/* Most Depended On Jobs */}
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Most Depended-On Jobs (Top 10)
-              </h3>
-              {mostDependedJobs.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={mostDependedJobs}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="job_id"
-                      tickFormatter={(value) => `Job ${value}`}
-                    />
-                    <YAxis />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null;
-                        const data = payload[0].payload as any;
-                        return (
-                          <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
-                            <p className="font-semibold">
-                              Job #{data.job_id}
-                              {data.job_name && ` - ${data.job_name}`}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Dependents: {data.dependent_count}
-                            </p>
-                          </div>
-                        );
-                      }}
-                    />
-                    <Bar dataKey="dependent_count" fill="#3b8169" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-[300px] text-gray-500">
-                  No data available
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Additional Information */}
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Orphaned Jobs */}
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Orphaned Jobs (No Dependencies)
-              </h3>
-              {orphanedJobs.length > 0 ? (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {orphanedJobs.map((job) => (
-                    <div
-                      key={job.job_id}
-                      className="p-3 bg-gray-50 rounded-md flex items-center justify-between"
-                    >
-                      <div>
-                        <span className="font-medium">Job #{job.job_id}</span>
-                        {job.job_name && (
-                          <span className="text-sm text-gray-600 ml-2">
-                            - {job.job_name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-8">
-                  No orphaned jobs found
-                </div>
-              )}
-            </div>
+          {/* Most Depended On Jobs - Own Row */}
+          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Most Depended-On Jobs (Top 10)
+            </h3>
+            {mostDependedJobs.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={mostDependedJobs}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="code" tickFormatter={(value) => value} />
+                  <YAxis />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const data = payload[0].payload as any;
+                      return (
+                        <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+                          <p className="mb-2 text-sm font-semibold text-gray-900">
+                            {data.name}
+                          </p>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>Code: {data.code}</p>
+                            <p>Job ID: {data.id}</p>
+                            <p>Dependent Jobs: {data.dependent_job_count}</p>
+                          </div>
+                        </div>
+                      );
+                    }}
+                    cursor={{ fill: "transparent" }}
+                  />
+                  <Bar dataKey="dependent_job_count">
+                    {mostDependedJobs.map((entry, index) => {
+                      const chartColors = getChartColors();
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            chartColors[index % chartColors.length] ||
+                            color.charts?.campaigns?.primary ||
+                            "#C38BFB"
+                          }
+                        />
+                      );
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                No data available
+              </div>
+            )}
+          </div>
 
-            {/* Dependency Graph Summary */}
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Dependency Graph Summary
-              </h3>
-              {dependencyGraph.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-blue-50 rounded-md">
-                      <p className="text-sm text-gray-600">
-                        Total Jobs in Graph
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {dependencyGraph.length}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-md">
-                      <p className="text-sm text-gray-600">
-                        Jobs with Dependencies
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {
-                          dependencyGraph.filter(
-                            (node) => node.dependencies?.length > 0
-                          ).length
-                        }
-                      </p>
-                    </div>
-                    <div className="p-3 bg-purple-50 rounded-md">
-                      <p className="text-sm text-gray-600">
-                        Jobs with Dependents
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {
-                          dependencyGraph.filter(
-                            (node) => node.dependents?.length > 0
-                          ).length
-                        }
-                      </p>
-                    </div>
-                    <div className="p-3 bg-amber-50 rounded-md">
-                      <p className="text-sm text-gray-600">
-                        Average Dependencies per Job
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {dependencyGraph.length > 0
-                          ? (
-                              dependencyGraph.reduce(
-                                (sum, node) =>
-                                  sum + (node.dependencies?.length || 0),
-                                0
-                              ) / dependencyGraph.length
-                            ).toFixed(1)
-                          : "0"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-8">
-                  No graph data available
-                </div>
-              )}
-            </div>
+          {/* Orphaned Jobs Table */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Orphaned Jobs (No Dependencies)
+            </h3>
+            {orphanedJobs.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead>
+                    <tr>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                          borderTopLeftRadius: "0.375rem",
+                        }}
+                      >
+                        Job ID
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Job Name
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Code
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Status
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                          borderTopRightRadius: "0.375rem",
+                        }}
+                      >
+                        Active
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orphanedJobs.map((job) => (
+                      <tr key={job.id} className="transition-colors">
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopLeftRadius: "0.375rem",
+                            borderBottomLeftRadius: "0.375rem",
+                          }}
+                        >
+                          <button
+                            onClick={() => {
+                              navigate(`/dashboard/scheduled-jobs/${job.id}`);
+                            }}
+                            className="text-sm font-semibold text-gray-900 hover:underline transition-colors"
+                            style={{
+                              color: "inherit",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color =
+                                color.primary.accent;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = "";
+                            }}
+                          >
+                            {job.id}
+                          </button>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <button
+                            onClick={() => {
+                              navigate(`/dashboard/scheduled-jobs/${job.id}`);
+                            }}
+                            className="text-sm font-semibold text-gray-900 hover:underline transition-colors"
+                            style={{
+                              color: "inherit",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color =
+                                color.primary.accent;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = "";
+                            }}
+                          >
+                            {job.name}
+                          </button>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-gray-900">
+                            {job.code}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          <span className="text-sm text-gray-900 capitalize">
+                            {job.status}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                            borderTopRightRadius: "0.375rem",
+                            borderBottomRightRadius: "0.375rem",
+                          }}
+                        >
+                          <span className="text-sm text-black capitalize">
+                            {job.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                No orphaned jobs found
+              </div>
+            )}
           </div>
         </>
       )}
