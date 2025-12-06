@@ -466,9 +466,17 @@ class JobDependencyService {
     console.log("depends_on_job_id:", payload.depends_on_job_id);
     console.log("==========================================");
 
+    // Some backend implementations expect fields like `created_by` or `user_id`.
+    // Add these aliases to the outgoing body to increase compatibility.
+    const body = {
+      ...payload,
+      created_by: (payload as any).userId ?? (payload as any).user_id ?? null,
+      user_id: (payload as any).userId ?? (payload as any).user_id ?? null,
+    };
+
     return this.request<JobDependency>("", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
       },
@@ -505,9 +513,17 @@ class JobDependencyService {
     id: number,
     payload: UpdateJobDependencyPayload
   ): Promise<JobDependency> {
+    // Include aliases for `updated_by` and `user_id` so backend accepting
+    // different field names still receives the user information.
+    const body = {
+      ...payload,
+      updated_by: (payload as any).userId ?? (payload as any).user_id ?? null,
+      user_id: (payload as any).userId ?? (payload as any).user_id ?? null,
+    };
+
     return this.request<JobDependency>(`/${id}`, {
       method: "PUT",
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
       },

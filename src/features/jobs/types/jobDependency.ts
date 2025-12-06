@@ -5,17 +5,20 @@ export type DependencyType =
   | "conditional";
 
 export type WaitForStatus =
-  | "pending"
-  | "queued"
-  | "running"
+  // | "pending"
+  // | "queued"
+  // | "running"
+  // | "success"
+  // | "partial_success"
+  // | "failure"
+  // | "aborted"
+  // | "timeout"
+  // | "skipped"
+  // | "cancelled";
+  | "any"
   | "success"
-  | "partial_success"
-  | "failure"
-  | "aborted"
-  | "timeout"
-  | "skipped"
-  | "cancelled";
-
+  | "completed"
+  | "failure";
 export interface JobDependency {
   id: number;
   job_id: number;

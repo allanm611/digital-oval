@@ -235,7 +235,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         <button
           onClick={() => navigate("/dashboard/job-dependencies")}
           className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
@@ -243,7 +243,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
             Job Dependencies Analytics
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
@@ -260,7 +260,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
         <>
           {/* Statistics Summary */}
           {statistics && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-2">
                   <Link2
@@ -484,7 +484,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           )}
 
           {/* Pie Charts - Three on same line */}
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Dependency Type Distribution */}
             <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -677,7 +677,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   <thead>
                     <tr>
                       <th
-                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
                           color: color.surface.tableHeaderText,
                           backgroundColor: color.surface.tableHeader,
@@ -687,7 +687,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                         Job ID
                       </th>
                       <th
-                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
                           color: color.surface.tableHeaderText,
                           backgroundColor: color.surface.tableHeader,
@@ -696,7 +696,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                         Job Name
                       </th>
                       <th
-                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
                           color: color.surface.tableHeaderText,
                           backgroundColor: color.surface.tableHeader,
@@ -705,7 +705,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                         Code
                       </th>
                       <th
-                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
                           color: color.surface.tableHeaderText,
                           backgroundColor: color.surface.tableHeader,
@@ -714,7 +714,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                         Status
                       </th>
                       <th
-                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
                         style={{
                           color: color.surface.tableHeaderText,
                           backgroundColor: color.surface.tableHeader,
@@ -729,7 +729,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                     {orphanedJobs.map((job) => (
                       <tr key={job.id} className="transition-colors">
                         <td
-                          className="px-6 py-4"
+                          className="px-3 sm:px-6 py-3 sm:py-4"
                           style={{
                             backgroundColor: color.surface.tablebodybg,
                             borderTopLeftRadius: "0.375rem",
@@ -795,7 +795,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                           </span>
                         </td>
                         <td
-                          className="px-6 py-4"
+                          className="px-3 sm:px-6 py-3 sm:py-4"
                           style={{
                             backgroundColor: color.surface.tablebodybg,
                             borderTopRightRadius: "0.375rem",

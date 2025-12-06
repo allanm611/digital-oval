@@ -1225,18 +1225,33 @@ export default function DashboardHome() {
           const statsData = statsResponse.data as any;
           const topPerformers = statsData.top_performers || {};
 
-          // Fetch all campaigns once to get status information
-          const allCampaignsResponse = await campaignService
-            .getAllCampaigns({ limit: 100 })
-            .catch(() => null);
-
-          // Create a map of campaign ID to campaign data for quick lookup
+          // Fetch campaign details for top performers to get status information
+          // Since top_performers data doesn't include status, we need to fetch individual campaign details
           const campaignsMap = new Map();
-          if (allCampaignsResponse?.data) {
-            (allCampaignsResponse.data as any[]).forEach((camp: any) => {
-              campaignsMap.set(camp.id, camp);
-            });
-          }
+
+          // Get unique campaign IDs from both by_participants and by_spend
+          const allTopPerformerIds = new Set<number>();
+          (topPerformers.by_participants || []).forEach((p: any) => {
+            if (p.id) allTopPerformerIds.add(p.id);
+          });
+          (topPerformers.by_spend || []).forEach((p: any) => {
+            if (p.id) allTopPerformerIds.add(p.id);
+          });
+
+          // Fetch campaign details for each top performer (limit to top 8 to avoid too many calls)
+          const idsToFetch = Array.from(allTopPerformerIds).slice(0, 8);
+          const campaignDetailsPromises = idsToFetch.map((id) =>
+            campaignService.getCampaignById(id, true).catch(() => null)
+          );
+
+          const campaignDetailsResults = await Promise.all(
+            campaignDetailsPromises
+          );
+          campaignDetailsResults.forEach((campaign) => {
+            if (campaign && campaign.id) {
+              campaignsMap.set(campaign.id, campaign);
+            }
+          });
 
           // Store the data so we can filter without refetching
           setTopPerformersData({
@@ -1280,10 +1295,66 @@ export default function DashboardHome() {
     const topCampaignsData = performersData
       .slice(0, 4)
       .map((performer: any) => {
-        const campaign =
-          topPerformersData.campaignsMap.get(performer.id) || performer;
-        // Get status from campaign data - should always have it from the map
-        const status = campaign.status || performer.status;
+        // Get performance metric based on filter type
+        let performanceMetric: string | undefined = undefined;
+
+        if (topPerformersFilter === "participants") {
+          // For participants tab, show participation_rate
+          if (performer.participation_rate != null) {
+            const rate =
+              typeof performer.participation_rate === "string"
+                ? parseFloat(performer.participation_rate)
+                : performer.participation_rate;
+            if (!isNaN(rate)) {
+              performanceMetric = `${rate.toFixed(1)}%`;
+            }
+          }
+        } else {
+          // For spend tab, show utilization_percentage
+          let utilizationRate: number | null = null;
+
+          // First try to get it directly from the API response (including 0)
+          if (
+            performer.utilization_percentage != null &&
+            performer.utilization_percentage !== undefined
+          ) {
+            const rate =
+              typeof performer.utilization_percentage === "string"
+                ? parseFloat(performer.utilization_percentage)
+                : performer.utilization_percentage;
+            if (!isNaN(rate)) {
+              utilizationRate = rate;
+            }
+          }
+          // If not available, calculate it from budget_allocated and budget_spent
+          else if (
+            performer.budget_allocated != null &&
+            performer.budget_spent != null
+          ) {
+            const allocated =
+              typeof performer.budget_allocated === "string"
+                ? parseFloat(performer.budget_allocated)
+                : performer.budget_allocated;
+            const spent =
+              typeof performer.budget_spent === "string"
+                ? parseFloat(performer.budget_spent)
+                : performer.budget_spent;
+
+            if (!isNaN(allocated) && !isNaN(spent)) {
+              if (allocated > 0) {
+                utilizationRate = (spent / allocated) * 100;
+              } else {
+                // If budget_allocated is 0, show 0% utilization
+                utilizationRate = 0;
+              }
+            }
+          }
+
+          // Format the rate if we have a valid value (including 0)
+          if (utilizationRate != null && !isNaN(utilizationRate)) {
+            performanceMetric = `${utilizationRate.toFixed(1)}%`;
+          }
+        }
 
         // Only use conversion rate if it exists in the API response
         let conversionRate: string | undefined = undefined;
@@ -1301,7 +1372,7 @@ export default function DashboardHome() {
           id: performer.id,
           name: performer.name || performer.code || "Unnamed Campaign",
           conversionRate: conversionRate,
-          status: status ? formatStatusLabel(status) : "Draft",
+          performanceMetric: performanceMetric, // Replaces status with actual metric from data
           participants: performer.current_participants || 0,
           budget: performer.budget_allocated || performer.budget_spent || 0,
         };
@@ -2191,13 +2262,13 @@ export default function DashboardHome() {
                 {topCampaigns.map((campaign, index) => (
                   <div
                     key={campaign.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                    className="flex flex-col gap-4 p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
                     style={{ backgroundColor: color.surface.background }}
                     onClick={() =>
                       navigate(`/dashboard/campaigns/${campaign.id}`)
                     }
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
                         style={{
@@ -2207,11 +2278,11 @@ export default function DashboardHome() {
                       >
                         {index + 1}
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-base text-black truncate">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-base text-black truncate mb-2">
                           {campaign.name}
                         </p>
-                        <div className="flex flex-wrap gap-2 text-sm text-black">
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-black">
                           {campaign.conversionRate && (
                             <span>
                               {t.dashboard.conversion}:{" "}
@@ -2232,22 +2303,21 @@ export default function DashboardHome() {
                                 <CurrencyFormatter amount={campaign.budget} />
                               </span>
                             )}
+                          {campaign.performanceMetric && (
+                            <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-semibold text-gray-700 bg-gray-100 whitespace-nowrap">
+                              {topPerformersFilter === "participants"
+                                ? `${
+                                    t.dashboard.participationRate ||
+                                    "Participation"
+                                  }: ${campaign.performanceMetric}`
+                                : `${
+                                    t.dashboard.utilization || "Utilization"
+                                  }: ${campaign.performanceMetric}`}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm flex-shrink-0 ${
-                          campaign.status.toLowerCase() === "active"
-                            ? "text-black bg-transparent border-0 font-normal"
-                            : `font-bold border ${getStatusColor(
-                                campaign.status
-                              )}`
-                        }`}
-                      >
-                        {campaign.status}
-                      </span>
-                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+                      <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-gray-600 flex-shrink-0 mt-1" />
                     </div>
                   </div>
                 ))}
