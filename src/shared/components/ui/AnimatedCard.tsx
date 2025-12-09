@@ -101,7 +101,7 @@ export default function AnimatedCard({
     lg: "rounded-md",
     xl: "rounded-md",
     "2xl": "rounded-md",
-    "3xl": "rounded-3xl",
+    "3xl": "rounded-md",
   };
 
   const shadowClasses = {

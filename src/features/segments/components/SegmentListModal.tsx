@@ -498,7 +498,7 @@ export default function SegmentListModal({
                 <div className="space-y-3">
                   <div className="rounded-md border border-gray-200 bg-white p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="rounded-lg bg-[var(--primary-color,#5EC6B1)]/10 p-2">
+                      <div className="rounded-md bg-[var(--primary-color,#5EC6B1)]/10 p-2">
                         <FileText className="h-6 w-6 text-[var(--primary-color,#5EC6B1)]" />
                       </div>
                       <div className="flex-1">

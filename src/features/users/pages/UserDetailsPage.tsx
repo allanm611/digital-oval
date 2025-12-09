@@ -552,46 +552,6 @@ export default function UserDetailsPage() {
       {/* Permissions Section */}
       {activeSection === "permissions" && (
         <div className="space-y-6">
-          <div className="bg-white rounded-md border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {t.userManagement.permissions}
-            </h3>
-            {permissions ? (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    {t.userManagement.directPermissions}
-                  </h4>
-                  <div className="space-y-2">
-                    {permissions.direct_permissions &&
-                    permissions.direct_permissions.length > 0 ? (
-                      permissions.direct_permissions.map((perm, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        >
-                          <span className="text-sm text-gray-700">{perm}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        {t.userManagement.noDirectPermissions}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">
-                {t.userManagement.loadingPermissions}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeSection === "permissions" && (
-        <div className="space-y-6">
           {permissions && permissions.data ? (
             (() => {
               const permissionsList = permissions.data.permissions || [];

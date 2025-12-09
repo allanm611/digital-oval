@@ -42,7 +42,7 @@ export default function DNDManagementPage() {
           <div
             key={channel.value}
             onClick={() => handleChannelClick(channel.value)}
-            className="cursor-pointer rounded-lg border p-6 hover:shadow-lg transition-all duration-200"
+            className="cursor-pointer rounded-md border p-6 hover:shadow-lg transition-all duration-200"
             style={{
               backgroundColor: color.surface.background,
               borderColor: color.border.default,

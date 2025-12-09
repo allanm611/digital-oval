@@ -72,7 +72,7 @@ export default function AllJobsPage() {
         </div>
 
         {/* Actions Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-md shadow-sm border border-gray-200 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             {/* Search */}
             <div className="relative flex-1 w-full sm:max-w-md">
@@ -107,7 +107,7 @@ export default function AllJobsPage() {
         </div>
 
         {/* Jobs List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-md shadow-sm border border-gray-200">
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner />

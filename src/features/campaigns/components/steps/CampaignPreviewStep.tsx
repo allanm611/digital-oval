@@ -97,7 +97,7 @@ export default function CampaignPreviewStep({
         ].map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className="rounded-xl bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4"
+            className="rounded-md bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4"
           >
             <div className="w-12 h-12 flex items-center justify-center">
               <Icon

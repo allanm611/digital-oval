@@ -260,7 +260,7 @@ export default function MultiCategorySelector({
           <button
             type="button"
             onClick={onCreateCategory ? onCreateCategory : handleCreateNew}
-            className="px-3 py-2.5 text-white rounded-r-lg flex items-center justify-center text-sm border-l-0"
+            className="px-3 py-2.5 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
             style={{
               backgroundColor: color.primary.action,
               borderColor: color.primary.action,

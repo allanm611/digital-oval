@@ -627,6 +627,117 @@ export interface Translations {
     disableHealthChecks: string;
   };
 
+  // Customer 360 Profile
+  customer360: {
+    title: string;
+    description: string;
+    searchCustomer: string;
+    searchPlaceholder: string;
+    clearSearch: string;
+    addCustomer: string;
+    uniqueCustomers: string;
+    totalSubscriptions: string;
+    activeSubscriptions: string;
+    ofBase: string;
+    pendingActivations: string;
+    awaitingSimSwap: string;
+    avgTenure: string;
+    sinceActivation: string;
+    preparingCustomerData: string;
+    noCustomersMatch: string;
+    tryDifferentQuery: string;
+    startBySearching: string;
+    customer: string;
+    msisdn: string;
+    subscriptionId: string;
+    customerType: string;
+    tariff: string;
+    simType: string;
+    status: string;
+    activationDate: string;
+    city: string;
+    actions: string;
+    customerNumber: string;
+    showing: string; // {start}-{end} of {total}
+    of: string;
+    previous: string;
+    next: string;
+    noResultsFound: string;
+    searchResults: string;
+    selectCustomer: string;
+  };
+
+  // Customer Profile Reports (Details Page)
+  customerProfileReports: {
+    title: string;
+    description: string;
+    searchPlaceholder: string;
+    search: string;
+    searching: string;
+    enterCustomerInfo: string;
+    customerNotFound: string;
+    tryDifferentSearch: string;
+    failedToSearch: string;
+    daily: string;
+    weekly: string;
+    monthly: string;
+    dataMode: string;
+    dummyData: string;
+    realData: string;
+    from: string;
+    to: string;
+    run: string;
+    clear: string;
+    viewingSubscription: string;
+    subscriptionNumber: string;
+    birth: string;
+    activeCustomers: string;
+    activityInPeriod: string;
+    avgCustomerLifetimeValue: string;
+    meanRealizedPredictedClv: string;
+    avgTransactionValue: string;
+    meanTransactionSize: string;
+    purchaseFrequency: string;
+    transactionsPerCustomerAnnually: string;
+    engagementScore: string;
+    multiChannelCompositeScore: string;
+    churnRate: string;
+    noTransactionInDays: string;
+    customerValueMatrix: string;
+    valueMatrixDescription: string;
+    customerLifetimeValueDistribution: string;
+    clvDistributionDescription: string;
+    customers: string;
+    revenueShare: string;
+    lifecycleDistribution: string;
+    lifecycleDescription: string;
+    active: string;
+    new: string;
+    reactivated: string;
+    atRisk: string;
+    dormant: string;
+    churned: string;
+    cohortRetentionComparison: string;
+    cohortDescription: string;
+    monthsSinceAcquisition: string;
+    retentionPercent: string;
+    janCohort: string;
+    aprCohort: string;
+    julCohort: string;
+    customerDetailTable: string;
+    tableDescription: string;
+    allSegments: string;
+    allRiskLevels: string;
+    highRisk: string;
+    mediumRisk: string;
+    lowRisk: string;
+    downloadCsv: string;
+    noCustomersMatchFilters: string;
+    page: string; // Page {current} of {total}
+    prev: string;
+    next: string;
+  };
+
   // Customer Identity
   customerIdentity: {
     title: string;

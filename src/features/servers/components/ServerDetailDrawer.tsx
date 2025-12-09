@@ -169,7 +169,7 @@ export default function ServerDetailDrawer({
               <p className="text-sm font-semibold uppercase tracking-wide text-gray-400">
                 Metadata
               </p>
-              <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
                 {metadataEntries.map(([key, value]) => (
                   <div
                     key={key}
@@ -193,4 +193,3 @@ export default function ServerDetailDrawer({
     </div>
   );
 }
-

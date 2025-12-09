@@ -596,7 +596,7 @@ export default function JobExecutionsPage() {
       {showAdvancedFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"
+            className="bg-white rounded-md shadow-xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -958,7 +958,7 @@ export default function JobExecutionsPage() {
       {showActionModal && selectedExecution && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md"
+            className="bg-white rounded-md shadow-xl p-6 w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

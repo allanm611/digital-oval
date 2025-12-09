@@ -338,7 +338,7 @@ export default function CustomerSearchResultsPage() {
       </button>
 
       {/* Hero Section - Clean & Modern */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
         {/* Header with name and status */}
         <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-start justify-between">
@@ -454,7 +454,7 @@ export default function CustomerSearchResultsPage() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
         <div className="border-b border-gray-200">
           <nav className="flex">
             <button
@@ -513,7 +513,7 @@ export default function CustomerSearchResultsPage() {
                   {filteredEvents.slice(0, 5).map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-start gap-4 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
                     >
                       <div className="flex-shrink-0 mt-1">
                         {event.type === "email" && (
@@ -557,7 +557,7 @@ export default function CustomerSearchResultsPage() {
                       .map((offer) => (
                         <div
                           key={offer.id}
-                          className="p-4 border border-blue-200 bg-blue-50 rounded-lg"
+                          className="p-4 border border-blue-200 bg-blue-50 rounded-md"
                         >
                           <div className="flex items-start justify-between">
                             <div>
@@ -580,19 +580,19 @@ export default function CustomerSearchResultsPage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-md">
                   <p className="text-sm text-gray-600">Total Events</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {events.length}
                   </p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-md">
                   <p className="text-sm text-gray-600">Active Segments</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {segments.length}
                   </p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-md">
                   <p className="text-sm text-gray-600">Subscribed Lists</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {lists.filter((l) => l.status === "active").length}
@@ -678,7 +678,7 @@ export default function CustomerSearchResultsPage() {
                             <div className="flex-1 h-px bg-gray-200" />
                           </div>
                         )}
-                        <div className="flex items-start gap-4 pl-4 border-l-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 p-3 rounded-r-lg transition-all">
+                        <div className="flex items-start gap-4 pl-4 border-l-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 p-3 rounded-r-md transition-all">
                           <div className="flex-shrink-0 mt-1">
                             {event.type === "email" && (
                               <Mail className="h-4 w-4 text-blue-500" />
@@ -730,7 +730,7 @@ export default function CustomerSearchResultsPage() {
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Event Distribution Pie Chart */}
-                <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="p-4 border border-gray-200 rounded-md">
                   <h4 className="font-medium text-gray-900 mb-4">
                     Event Distribution
                   </h4>
@@ -766,7 +766,7 @@ export default function CustomerSearchResultsPage() {
                 </div>
 
                 {/* Activity Timeline Bar Chart */}
-                <div className="p-4 border border-gray-200 rounded-lg">
+                <div className="p-4 border border-gray-200 rounded-md">
                   <h4 className="font-medium text-gray-900 mb-4">
                     Activity Timeline
                   </h4>
@@ -848,7 +848,7 @@ export default function CustomerSearchResultsPage() {
                             .map((offer) => (
                               <div
                                 key={offer.id}
-                                className="p-4 border border-green-200 bg-green-50 rounded-lg"
+                                className="p-4 border border-green-200 bg-green-50 rounded-md"
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <p className="font-medium text-gray-900">
@@ -886,7 +886,7 @@ export default function CustomerSearchResultsPage() {
                             .map((offer) => (
                               <div
                                 key={offer.id}
-                                className="p-4 border border-gray-200 bg-gray-50 rounded-lg"
+                                className="p-4 border border-gray-200 bg-gray-50 rounded-md"
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <p className="font-medium text-gray-900">
@@ -930,7 +930,7 @@ export default function CustomerSearchResultsPage() {
                     {lists.map((list) => (
                       <div
                         key={list.id}
-                        className="p-4 border border-gray-200 bg-white rounded-lg hover:border-gray-300 transition-colors"
+                        className="p-4 border border-gray-200 bg-white rounded-md hover:border-gray-300 transition-colors"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <p className="font-medium text-gray-900">

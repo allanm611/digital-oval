@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from "react";
-import { Upload, Edit3, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -399,55 +399,21 @@ export default function TargetAudienceStep({
 
         {/* Input Mode Toggle */}
         <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+          <label
+            className={`block text-sm font-medium ${tw.textPrimary} mb-2.5`}
+          >
             {t.manualBroadcast.inputMethodLabel}
           </label>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              type="button"
-              onClick={() => setInputMode("file")}
-              disabled={isSubmitting}
-              className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-md border-2 transition-all whitespace-nowrap"
-              style={{
-                borderColor:
-                  inputMode === "file"
-                    ? color.primary.action
-                    : color.border.default,
-                backgroundColor:
-                  inputMode === "file" ? color.primary.action : "white",
-                color: inputMode === "file" ? "white" : color.text.primary,
-                opacity: isSubmitting ? 0.5 : 1,
-                cursor: isSubmitting ? "not-allowed" : "pointer",
-              }}
-            >
-              <Upload className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm font-medium whitespace-nowrap">
-                {t.manualBroadcast.inputMethodUpload}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMode("manual")}
-              disabled={isSubmitting}
-              className="w-full sm:flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-md border-2 transition-all whitespace-nowrap"
-              style={{
-                borderColor:
-                  inputMode === "manual"
-                    ? color.primary.action
-                    : color.border.default,
-                backgroundColor:
-                  inputMode === "manual" ? color.primary.action : "white",
-                color: inputMode === "manual" ? "white" : color.text.primary,
-                opacity: isSubmitting ? 0.5 : 1,
-                cursor: isSubmitting ? "not-allowed" : "pointer",
-              }}
-            >
-              <Edit3 className="w-5 h-5 flex-shrink-0" />
-              <span className="text-sm font-medium whitespace-nowrap">
-                {t.manualBroadcast.inputMethodManual}
-              </span>
-            </button>
-          </div>
+          <HeadlessSelect
+            options={[
+              { value: "file", label: t.manualBroadcast.inputMethodUpload },
+              { value: "manual", label: t.manualBroadcast.inputMethodManual },
+            ]}
+            value={inputMode}
+            onChange={(value) => setInputMode(value as InputMode)}
+            placeholder={t.manualBroadcast.inputMethodLabel}
+            disabled={isSubmitting}
+          />
         </div>
 
         {/* File Upload */}

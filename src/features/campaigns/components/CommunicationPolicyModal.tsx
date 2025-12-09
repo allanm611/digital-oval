@@ -299,7 +299,7 @@ export default function CommunicationPolicyModal({
   const renderDNDConfig = () => {
     const dndConfig = configs.dnd;
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-visible">
         <div className="flex items-center justify-between">
           <p className={`${tw.caption} ${tw.textSecondary}`}>
             Manage customer preferences
@@ -312,6 +312,7 @@ export default function CommunicationPolicyModal({
                 name: "",
                 type: "marketing",
                 status: "stop",
+                value: "allowed",
               };
               updateConfig("dnd", (prev) => ({
                 ...prev,
@@ -324,14 +325,14 @@ export default function CommunicationPolicyModal({
             Add Category
           </button>
         </div>
-        <div className="space-y-3 max-h-60 overflow-y-auto">
+        <div className="space-y-4">
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className={`p-4 ${tw.borderDefault} border rounded-md bg-white transition-colors hover:bg-gray-50`}
+              className="p-4 rounded-md bg-white transition-colors hover:bg-gray-50"
             >
-              <div className="grid grid-cols-[1fr_1fr_auto] gap-3">
-                <div>
+              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
+                {/* <div>
                   <label
                     className={`block ${tw.label} ${tw.textSecondary} mb-1`}
                   >
@@ -354,10 +355,13 @@ export default function CommunicationPolicyModal({
                     className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                     placeholder="Enter name"
                   />
-                </div>
-                <div>
+                </div> */}
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
                   <label
-                    className={`block ${tw.label} ${tw.textSecondary} mb-1`}
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
                   >
                     Type
                   </label>
@@ -382,6 +386,66 @@ export default function CommunicationPolicyModal({
                     className="w-full"
                   />
                 </div>
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <label
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
+                  >
+                    Value
+                  </label>
+                  <HeadlessSelect
+                    value={category.value || "allowed"}
+                    onChange={(value) => {
+                      const newCategories = [...dndConfig.categories];
+                      newCategories[index] = {
+                        ...category,
+                        value: value as "allowed" | "not allowed",
+                      };
+                      updateConfig("dnd", (prev) => ({
+                        ...prev,
+                        categories: newCategories,
+                      }));
+                    }}
+                    options={[
+                      { label: "Allowed", value: "allowed" },
+                      { label: "Not Allowed", value: "not allowed" },
+                    ]}
+                    placeholder="Select value"
+                    className="w-full"
+                  />
+                </div>
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <label
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
+                  >
+                    Status
+                  </label>
+                  <HeadlessSelect
+                    value={category.status}
+                    onChange={(value) => {
+                      const newCategories = [...dndConfig.categories];
+                      newCategories[index] = {
+                        ...category,
+                        status: value as "start" | "stop",
+                      };
+                      updateConfig("dnd", (prev) => ({
+                        ...prev,
+                        categories: newCategories,
+                      }));
+                    }}
+                    options={[
+                      { label: "Start", value: "start" },
+                      { label: "Stop", value: "stop" },
+                    ]}
+                    placeholder="Select status"
+                    className="w-full"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -393,7 +457,8 @@ export default function CommunicationPolicyModal({
                       categories: newCategories,
                     }));
                   }}
-                  className={`self-end p-2 ${tw.danger} ${tw.statusDanger10} rounded hover:bg-red-200 transition-colors`}
+                  className="p-2 rounded transition-colors mb-0.5"
+                  style={{ color: "#dc2626" }}
                   title="Delete category"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -473,7 +538,7 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border rounded-md overflow-hidden transition-all duration-200 ${
+        className={`border rounded-md overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -520,7 +585,7 @@ export default function CommunicationPolicyModal({
         </button>
 
         {isExpanded && (
-          <div className="px-5 py-6 bg-white border-t border-gray-100">
+          <div className="px-5 py-6 bg-white border-t border-gray-100 overflow-visible">
             {type === "timeWindow" && renderTimeWindowConfig()}
             {type === "maximumCommunication" && renderMaxCommunicationConfig()}
             {type === "dnd" && renderDNDConfig()}
@@ -566,7 +631,10 @@ export default function CommunicationPolicyModal({
         <form
           onSubmit={handleSubmit}
           className="flex-1 overflow-y-auto"
-          style={{ backgroundColor: color.surface.background }}
+          style={{
+            backgroundColor: color.surface.background,
+            overflowX: "visible",
+          }}
         >
           <div className="space-y-6">
             {/* Basic Information */}

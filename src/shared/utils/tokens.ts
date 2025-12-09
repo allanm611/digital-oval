@@ -448,14 +448,15 @@ export const borderRadius = {
 };
 
 // Button defines consistent sizing, padding, and border radius for all buttons
+// All buttons use: paddingY: 0.625rem (py-2.5), paddingX: 1rem (px-4), borderRadius: 0.375rem (rounded-md), fontSize: 0.875rem (text-sm)
 export const buttons = {
   action: {
     background: colors.primary.action,
     color: "#FFFFFF", // White text on dark buttons
     border: "none",
-    paddingY: "0.5rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+  paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -463,9 +464,9 @@ export const buttons = {
     background: "#F5FCFF",
     color: "#000000",
     border: "none",
-    paddingY: "0.75rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -473,9 +474,9 @@ export const buttons = {
     background: "#00BBCC",
     color: "#FFFFFF",
     border: "none",
-    paddingY: "0.75rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -483,9 +484,9 @@ export const buttons = {
     background: "transparent",
     color: colors.primary.action,
     border: `1px solid ${colors.primary.action}`,
-    paddingY: "0.375rem", // py-1.5
-    paddingX: "0.75rem", // px-3
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -493,9 +494,9 @@ export const buttons = {
     background: "#DC2626", // bg-red-600
     color: "#FFFFFF",
     border: "none",
-    paddingY: "0.5rem",
-    paddingX: "1rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -503,8 +504,8 @@ export const buttons = {
     background: colors.primary.accent, // Accent color background
     color: "#FFFFFF", // White text
     border: "none",
-    paddingY: "0.5rem", // p-2
-    paddingX: "0.5rem", // p-2
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm
   },

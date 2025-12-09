@@ -96,7 +96,7 @@ export default function AnimatedInput({
       ${success ? "border-success-500 focus:border-success-500" : ""}
     `,
     minimal: `
-      bg-transparent border-0 border-b-2 border-secondary-300 rounded-none text-secondary-900
+      bg-transparent border-0 border-b-2 border-secondary-300 rounded-md text-secondary-900
        hover:border-secondary-400 px-0
       ${error ? "border-error-500 focus:border-error-500" : ""}
       ${success ? "border-success-500 focus:border-success-500" : ""}

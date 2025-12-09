@@ -19,6 +19,7 @@ interface HeadlessSelectProps {
   className?: string;
   searchable?: boolean;
   openUpward?: boolean;
+  zIndex?: number;
 }
 
 export default function HeadlessSelect({
@@ -31,6 +32,7 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
+  zIndex = 99999,
 }: HeadlessSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -43,7 +45,7 @@ export default function HeadlessSelect({
     : options;
 
   return (
-    <div className={`relative ${className}`} style={{ zIndex: 99999 }}>
+    <div className={`relative ${className}`} style={{ zIndex }}>
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative w-full">
           <Listbox.Button
@@ -81,7 +83,7 @@ export default function HeadlessSelect({
             leaveTo="opacity-0"
           >
             <Listbox.Options
-              className={`absolute z-[99999] max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
+              className={`absolute max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
                 openUpward ? "bottom-full mb-1" : "top-full mt-1"
               }`}
               style={{
@@ -89,7 +91,7 @@ export default function HeadlessSelect({
                 maxWidth: "100%",
                 left: 0,
                 right: 0,
-                zIndex: 99999,
+                zIndex: zIndex + 1,
               }}
             >
               {searchable && (

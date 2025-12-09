@@ -27,11 +27,13 @@ import {
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const pageSize = 10;
 
 export default function CustomersPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -179,15 +181,15 @@ export default function CustomersPage() {
   const statCards = useMemo(
     () => [
       {
-        title: "Unique Customers",
+        title: t.customer360.uniqueCustomers,
         value: formatNumber(customerStats.uniqueCustomers),
-        helper: `${formatNumber(
-          customerStats.totalSubscriptions
-        )} total subscriptions`,
+        helper: `${formatNumber(customerStats.totalSubscriptions)} ${
+          t.customer360.totalSubscriptions
+        }`,
         icon: Users,
       },
       {
-        title: "Active Subscriptions",
+        title: t.customer360.activeSubscriptions,
         value: formatNumber(customerStats.activeSubscriptions),
         helper:
           customerStats.totalSubscriptions > 0
@@ -195,12 +197,12 @@ export default function CustomersPage() {
                 (customerStats.activeSubscriptions /
                   customerStats.totalSubscriptions) *
                   100
-              )}% of base`
+              )}${t.customer360.ofBase}`
             : "—",
         icon: Activity,
       },
       {
-        title: "Pending Activations",
+        title: t.customer360.pendingActivations,
         value: formatNumber(customerStats.pendingActivations),
         helper:
           customerStats.totalSubscriptions > 0
@@ -208,14 +210,14 @@ export default function CustomersPage() {
                 (customerStats.pendingActivations /
                   customerStats.totalSubscriptions) *
                   100
-              )}% awaiting SIM swap`
+              )}${t.customer360.awaitingSimSwap}`
             : "—",
         icon: AlertTriangle,
       },
       {
-        title: "Avg Tenure (days)",
+        title: t.customer360.avgTenure,
         value: formatNumber(customerStats.avgTenureDays),
-        helper: "Since activation",
+        helper: t.customer360.sinceActivation,
         icon: Target,
       },
     ],
@@ -274,25 +276,25 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} mt-2`}>Customer 360 Profile</h1>
+          <h1 className={`${tw.mainHeading} mt-2`}>{t.customer360.title}</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage all customers from a single workspace.
+            {t.customer360.description}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 justify-start lg:justify-end">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleOpenSearchModal} 
+              onClick={handleOpenSearchModal}
               className={`${tw.button} inline-flex items-center gap-2`}
             >
               <Search className="h-4 w-4" />
               {searchTerm ? (
                 <span className="truncate max-w-[140px]">
-                  Search: {searchTerm}
+                  {t.customer360.searchCustomer}: {searchTerm}
                 </span>
               ) : (
-                "Search Customer"
+                t.customer360.searchCustomer
               )}
             </button>
             {searchTerm && (
@@ -300,7 +302,7 @@ export default function CustomersPage() {
                 type="button"
                 onClick={() => setSearchTerm("")}
                 className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
-                title="Clear search"
+                title={t.customer360.clearSearch}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -308,7 +310,7 @@ export default function CustomersPage() {
           </div>
           <button className={`${tw.button} flex items-center gap-2`}>
             <Plus className="h-4 w-4" />
-            Add Customer
+            {t.customer360.addCustomer}
           </button>
         </div>
       </div>
@@ -350,14 +352,14 @@ export default function CustomersPage() {
           <div className="flex flex-col items-center justify-center px-6 py-16">
             <LoadingSpinner variant="modern" size="lg" />
             <p className={`${tw.textMuted} mt-4 text-sm`}>
-              Preparing customer data...
+              {t.customer360.preparingCustomerData}
             </p>
           </div>
         ) : paginatedResults.length === 0 ? (
           <div className="px-6 py-16 text-center text-sm text-gray-500">
             {hasSearchFilters
-              ? "No customers match your search. Try a different query."
-              : "Start by searching for a customer above."}
+              ? t.customer360.noCustomersMatch
+              : t.customer360.startBySearching}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -371,16 +373,16 @@ export default function CustomersPage() {
               >
                 <tr>
                   {[
-                    "Customer",
-                    "MSISDN",
-                    "Subscription ID",
-                    "Customer Type",
-                    "Tariff",
-                    "SIM Type",
-                    "Status",
-                    "Activation Date",
-                    "City",
-                    "Actions",
+                    t.customer360.customer,
+                    t.customer360.msisdn,
+                    t.customer360.subscriptionId,
+                    t.customer360.customerType,
+                    t.customer360.tariff,
+                    t.customer360.simType,
+                    t.customer360.status,
+                    t.customer360.activationDate,
+                    t.customer360.city,
+                    t.customer360.actions,
                   ].map((header) => (
                     <th
                       key={header}
@@ -421,7 +423,8 @@ export default function CustomersPage() {
                             {name}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
-                            Customer #{row.customerId}
+                            {t.customer360.customerNumber}
+                            {row.customerId}
                           </p>
                           {row.email && (
                             <p className="text-xs text-gray-500 mt-0.5 truncate">
@@ -503,7 +506,9 @@ export default function CustomersPage() {
         {!isLoading && !error && paginatedResults.length > 0 && (
           <div className="rounded-md border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between">
             <p className={`${tw.textSecondary} text-sm`}>
-              Page {page} of {totalPages}
+              {t.customerProfileReports.page
+                .replace("{current}", page.toString())
+                .replace("{total}", totalPages.toString())}
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -512,7 +517,7 @@ export default function CustomersPage() {
                 className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
-                Prev
+                {t.customer360.previous}
               </button>
               <button
                 onClick={() =>
@@ -521,7 +526,7 @@ export default function CustomersPage() {
                 disabled={page >= totalPages}
                 className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Next
+                {t.customer360.next}
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -533,7 +538,7 @@ export default function CustomersPage() {
       <RegularModal
         isOpen={isSearchModalOpen}
         onClose={handleCloseSearchModal}
-        title="Search Customer"
+        title={t.customer360.searchCustomer}
         size="xl"
       >
         <div className="space-y-4">
@@ -544,7 +549,7 @@ export default function CustomersPage() {
               type="text"
               value={modalSearchTerm}
               onChange={(e) => setModalSearchTerm(e.target.value)}
-              placeholder="Enter customer name, ID, email, MSISDN, or phone number..."
+              placeholder={t.customer360.searchPlaceholder}
               className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]"
               style={
                 {
@@ -571,13 +576,13 @@ export default function CustomersPage() {
               <div className="flex flex-col items-center justify-center py-12">
                 <LoadingSpinner variant="modern" size="md" />
                 <p className={`${tw.textMuted} mt-3 text-sm`}>
-                  Searching customers...
+                  {t.customerProfileReports.searching}
                 </p>
               </div>
             ) : modalSearchTerm.trim() && modalSearchResults.length === 0 ? (
               <div className="px-6 py-12 text-center">
                 <p className="text-sm text-gray-500">
-                  No customers found matching "{modalSearchTerm}"
+                  {t.customer360.noResultsFound}
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
                   Try a different search term or check your spelling

@@ -276,7 +276,7 @@ export default function UserProfilePage() {
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white rounded-md shadow-sm p-6">
         {/* Profile Header */}
         <div className="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
           <div className="flex items-center gap-4">

@@ -28,6 +28,7 @@ import {
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -526,6 +527,7 @@ export default function CustomerProfileReportsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { t } = useLanguage();
   const [selectedRange, setSelectedRange] = useState<RangeOption>("90d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
@@ -623,7 +625,7 @@ export default function CustomerProfileReportsPage() {
   const handleCustomerSearch = () => {
     if (!customerSearchTerm.trim()) {
       setCustomerError(
-        "Please enter a customer ID, name, email, or phone number"
+        t.customerProfileReports.enterCustomerInfo
       );
       return;
     }
@@ -645,7 +647,7 @@ export default function CustomerProfileReportsPage() {
 
       if (!foundCustomer) {
         setCustomerError(
-          "Customer not found. Please try a different search term."
+          t.customerProfileReports.customerNotFound
         );
         setIsSearchingCustomer(false);
         return;
@@ -666,7 +668,7 @@ export default function CustomerProfileReportsPage() {
       );
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to search customer";
+        err instanceof Error ? err.message : t.customerProfileReports.failedToSearch;
       setCustomerError(errorMessage);
     } finally {
       setIsSearchingCustomer(false);
@@ -962,11 +964,10 @@ export default function CustomerProfileReportsPage() {
       <header className="space-y-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Customer Profile Reports
+            {t.customerProfileReports.title}
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Understand portfolio health, customer value distribution, and
-            engagement signals
+            {t.customerProfileReports.description}
           </p>
         </div>
 
@@ -983,7 +984,7 @@ export default function CustomerProfileReportsPage() {
                   handleCustomerSearch();
                 }
               }}
-              placeholder="Search customer by ID, name, email, or phone..."
+              placeholder={t.customerProfileReports.searchPlaceholder}
               className="w-full pl-10 pr-4 py-3.5 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#252829] cursor-pointer"
             />
           </div>
@@ -994,7 +995,7 @@ export default function CustomerProfileReportsPage() {
             className="px-6 py-3.5 text-sm font-semibold text-white rounded-md hover:opacity-95 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: color.primary.action }}
           >
-            {isSearchingCustomer ? "Searching..." : "Search"}
+            {isSearchingCustomer ? t.customerProfileReports.searching : t.customerProfileReports.search}
           </button>
         </div>
         {customerError && (
@@ -1018,7 +1019,7 @@ export default function CustomerProfileReportsPage() {
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
-                {getRangeLabel(option)}
+                {option === "7d" ? t.customerProfileReports.daily : option === "30d" ? t.customerProfileReports.weekly : t.customerProfileReports.monthly}
               </button>
             ))}
           </div>
@@ -1028,7 +1029,7 @@ export default function CustomerProfileReportsPage() {
                 htmlFor="customer-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
               >
-                Data Mode:
+                {t.customerProfileReports.dataMode}
               </label>
               <button
                 id="customer-data-toggle"
@@ -1045,7 +1046,7 @@ export default function CustomerProfileReportsPage() {
                 />
               </button>
               <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? "Dummy Data" : "Real Data"}
+                {useDummyData ? t.customerProfileReports.dummyData : t.customerProfileReports.realData}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1053,7 +1054,7 @@ export default function CustomerProfileReportsPage() {
                 htmlFor="customer-date-start"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap"
               >
-                From:
+                {t.customerProfileReports.from}
               </label>
               <input
                 id="customer-date-start"
@@ -1075,7 +1076,7 @@ export default function CustomerProfileReportsPage() {
                 htmlFor="customer-date-end"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap"
               >
-                To:
+                {t.customerProfileReports.to}
               </label>
               <input
                 id="customer-date-end"
@@ -1099,7 +1100,7 @@ export default function CustomerProfileReportsPage() {
                 className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition-colors"
                 style={{ backgroundColor: color.primary.action }}
               >
-                Run
+                {t.customerProfileReports.run}
               </button>
             )}
             {(customRange.start || customRange.end) && (
@@ -1111,7 +1112,7 @@ export default function CustomerProfileReportsPage() {
                 }}
                 className="ml-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                Clear
+                {t.customerProfileReports.clear}
               </button>
             )}
           </div>
@@ -1123,14 +1124,14 @@ export default function CustomerProfileReportsPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase text-gray-500">
-                Viewing subscription
+                {t.customerProfileReports.viewingSubscription}
               </p>
               <p className="mt-1 text-2xl font-semibold text-gray-900">
                 {getSubscriptionDisplayName(selectedSubscription, "Customer")}
               </p>
               <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-600">
                 <span>Customer #{selectedSubscription.customerId}</span>
-                <span>Subscription #{selectedSubscription.subscriptionId}</span>
+                <span>{t.customerProfileReports.subscriptionNumber}{selectedSubscription.subscriptionId}</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
                 {selectedSubscription.email && (
@@ -1138,7 +1139,7 @@ export default function CustomerProfileReportsPage() {
                 )}
                 {selectedSubscription.birthDate && (
                   <span>
-                    Birth: {selectedSubscription.birthDate.split(" ")[0]}
+                    {t.customerProfileReports.birth} {selectedSubscription.birthDate.split(" ")[0]}
                   </span>
                 )}
               </div>
@@ -1177,115 +1178,115 @@ export default function CustomerProfileReportsPage() {
           const heroMetrics: HeroMetric[] = useDummyData
             ? [
                 {
-                  label: "Active Customers",
+                  label: t.customerProfileReports.activeCustomers,
                   value: formatNumber(
                     Math.round(heroBase.activeCustomers * valueScale)
                   ),
                   trend: "+4.2% vs last 90d",
                   trendDirection: "up",
-                  description: "Activity in the selected period",
+                  description: t.customerProfileReports.activityInPeriod,
                   icon: Users,
                 },
                 {
-                  label: "Avg Customer Lifetime Value",
+                  label: t.customerProfileReports.avgCustomerLifetimeValue,
                   value: formatCurrency(
                     Math.round(heroBase.avgClv * clvAdjust)
                   ),
                   trend: "+3.1% vs last quarter",
                   trendDirection: "up",
-                  description: "Mean realized + predicted CLV",
+                  description: t.customerProfileReports.meanRealizedPredictedClv,
                   icon: DollarSign,
                 },
                 {
-                  label: "Avg Transaction Value",
+                  label: t.customerProfileReports.avgTransactionValue,
                   value: formatCurrency(
                     Math.round(heroBase.avgOrderValue * clvAdjust)
                   ),
                   trend: "+1.6% vs prior period",
                   trendDirection: "up",
-                  description: "Mean transaction size",
+                  description: t.customerProfileReports.meanTransactionSize,
                   icon: Crown,
                 },
                 {
-                  label: "Purchase Frequency",
+                  label: t.customerProfileReports.purchaseFrequency,
                   value: `${(heroBase.purchaseFrequency * clvAdjust).toFixed(
                     1
                   )} / yr`,
                   trend: "+0.2 YoY",
                   trendDirection: "up",
-                  description: "Transactions per customer annually",
+                  description: t.customerProfileReports.transactionsPerCustomerAnnually,
                   icon: Repeat,
                 },
                 {
-                  label: "Engagement Score",
+                  label: t.customerProfileReports.engagementScore,
                   value: `${Math.max(
                     0,
                     heroBase.engagementScore + engagementAdjust
                   ).toFixed(0)} / 100`,
                   trend: "-2 pts vs last 30d",
                   trendDirection: engagementAdjust < 0 ? "down" : "up",
-                  description: "Multi-channel composite score",
+                  description: t.customerProfileReports.multiChannelCompositeScore,
                   icon: Activity,
                 },
                 {
-                  label: "Churn Rate",
+                  label: t.customerProfileReports.churnRate,
                   value: `${Math.max(
                     0,
                     heroBase.churnRate + churnAdjust
                   ).toFixed(1)}%`,
                   trend: "-0.6 pts vs last quarter",
                   trendDirection: "down",
-                  description: "No transaction in 120 days",
+                  description: t.customerProfileReports.noTransactionInDays,
                   icon: BarChart3,
                 },
               ]
             : [
                 {
-                  label: "Active Customers",
+                  label: t.customerProfileReports.activeCustomers,
                   value: "0",
                   trend: "—",
                   trendDirection: "up",
-                  description: "Activity in the selected period",
+                  description: t.customerProfileReports.activityInPeriod,
                   icon: Users,
                 },
                 {
-                  label: "Avg Customer Lifetime Value",
+                  label: t.customerProfileReports.avgCustomerLifetimeValue,
                   value: formatCurrency(0),
                   trend: "—",
                   trendDirection: "up",
-                  description: "Mean realized + predicted CLV",
+                  description: t.customerProfileReports.meanRealizedPredictedClv,
                   icon: DollarSign,
                 },
                 {
-                  label: "Avg Transaction Value",
+                  label: t.customerProfileReports.avgTransactionValue,
                   value: formatCurrency(0),
                   trend: "—",
                   trendDirection: "up",
-                  description: "Mean transaction size",
+                  description: t.customerProfileReports.meanTransactionSize,
                   icon: Crown,
                 },
                 {
-                  label: "Purchase Frequency",
+                  label: t.customerProfileReports.purchaseFrequency,
                   value: "0.0 / yr",
                   trend: "—",
                   trendDirection: "up",
-                  description: "Transactions per customer annually",
+                  description: t.customerProfileReports.transactionsPerCustomerAnnually,
                   icon: Repeat,
                 },
                 {
-                  label: "Engagement Score",
+                  label: t.customerProfileReports.engagementScore,
                   value: "0 / 100",
                   trend: "—",
                   trendDirection: "up",
-                  description: "Multi-channel composite score",
+                  description: t.customerProfileReports.multiChannelCompositeScore,
                   icon: Activity,
                 },
                 {
-                  label: "Churn Rate",
+                  label: t.customerProfileReports.churnRate,
                   value: "0.0%",
                   trend: "—",
                   trendDirection: "down",
-                  description: "No transaction in 120 days",
+                  description: t.customerProfileReports.noTransactionInDays,
                   icon: BarChart3,
                 },
               ];
@@ -1337,12 +1338,10 @@ export default function CustomerProfileReportsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Customer Value Matrix
+                {t.customerProfileReports.customerValueMatrix}
               </h2>
               <p className="mt-1 text-sm text-gray-600">
-                See how many customers are in each segment (Champions,
-                Loyalists, At-Risk, etc.) to understand your customer base
-                composition
+                {t.customerProfileReports.valueMatrixDescription}
               </p>
             </div>
           </div>
@@ -1365,7 +1364,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="customers"
-                  name="Customers"
+                  name={t.customerProfileReports.customers}
                   fill={
                     colors.reportCharts.customerProfile.valueMatrix.customers
                   }
@@ -1381,11 +1380,10 @@ export default function CustomerProfileReportsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Customer Lifetime Value Distribution
+                {t.customerProfileReports.customerLifetimeValueDistribution}
               </h2>
               <p className="mt-1 text-sm text-gray-600">
-                See how customers are distributed across different value ranges
-                and which groups generate the most revenue
+                {t.customerProfileReports.clvDistributionDescription}
               </p>
             </div>
           </div>
@@ -1402,7 +1400,7 @@ export default function CustomerProfileReportsPage() {
                   tick={{ fill: "#6b7280" }}
                   tickFormatter={(value) => `${value / 1000}k`}
                   label={{
-                    value: "Customers",
+                    value: t.customerProfileReports.customers,
                     angle: -90,
                     position: "insideLeft",
                   }}
@@ -1413,7 +1411,7 @@ export default function CustomerProfileReportsPage() {
                   tick={{ fill: "#6b7280" }}
                   tickFormatter={(value) => `${value}%`}
                   label={{
-                    value: "Revenue share",
+                    value: t.customerProfileReports.revenueShare,
                     angle: 90,
                     position: "insideRight",
                   }}
@@ -1426,7 +1424,7 @@ export default function CustomerProfileReportsPage() {
                 <Bar
                   yAxisId="left"
                   dataKey="customers"
-                  name="Customers"
+                  name={t.customerProfileReports.customers}
                   fill={
                     colors.reportCharts.customerProfile.clvDistribution
                       .customers
@@ -1437,7 +1435,7 @@ export default function CustomerProfileReportsPage() {
                   yAxisId="right"
                   type="monotone"
                   dataKey="revenueShare"
-                  name="Revenue Share"
+                  name={t.customerProfileReports.revenueShare}
                   stroke={
                     colors.reportCharts.customerProfile.clvDistribution
                       .revenueShare
@@ -1456,12 +1454,10 @@ export default function CustomerProfileReportsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Lifecycle Distribution
+                {t.customerProfileReports.lifecycleDistribution}
               </h2>
               <p className="mt-1 text-sm text-gray-600">
-                Track how many customers are in each stage (Active, New,
-                At-Risk, Churned) each month to spot trends and identify issues
-                early
+                {t.customerProfileReports.lifecycleDescription}
               </p>
             </div>
           </div>
@@ -1477,7 +1473,7 @@ export default function CustomerProfileReportsPage() {
                   tick={{ fill: "#6b7280" }}
                   tickFormatter={(value) => `${value}k`}
                   label={{
-                    value: "Customers (000s)",
+                    value: `${t.customerProfileReports.customers} (000s)`,
                     angle: -90,
                     position: "insideLeft",
                   }}
@@ -1489,7 +1485,7 @@ export default function CustomerProfileReportsPage() {
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: 12 }} />
                 <Bar
                   dataKey="active"
-                  name="Active"
+                  name={t.customerProfileReports.active}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .active
@@ -1498,7 +1494,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="new"
-                  name="New"
+                  name={t.customerProfileReports.new}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .new
@@ -1507,7 +1503,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="reactivated"
-                  name="Reactivated"
+                  name={t.customerProfileReports.reactivated}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .reactivated
@@ -1516,7 +1512,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="atRisk"
-                  name="At-Risk"
+                  name={t.customerProfileReports.atRisk}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .atRisk
@@ -1525,7 +1521,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="dormant"
-                  name="Dormant"
+                  name={t.customerProfileReports.dormant}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .dormant
@@ -1534,7 +1530,7 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="churned"
-                  name="Churned"
+                  name={t.customerProfileReports.churned}
                   fill={
                     colors.reportCharts.customerProfile.lifecycleDistribution
                       .churned

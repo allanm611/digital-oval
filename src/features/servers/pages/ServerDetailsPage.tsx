@@ -365,7 +365,7 @@ export default function ServerDetailsPage() {
 
   if (errorMessage || !server) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+      <div className="rounded-md border border-gray-200 bg-white p-8 text-center shadow-sm">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
           <AlertTriangle size={20} />
         </div>
@@ -565,7 +565,7 @@ export default function ServerDetailsPage() {
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">
-          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4">
+          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Environment
             </p>
@@ -578,7 +578,7 @@ export default function ServerDetailsPage() {
               Region: {server.region || "—"}
             </p>
           </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4">
+          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Protocol
             </p>
@@ -589,7 +589,7 @@ export default function ServerDetailsPage() {
               TLS: {server.tls_enabled ? "Enabled" : "Disabled"}
             </p>
           </div>
-          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-4">
+          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Endpoint
             </p>
@@ -682,7 +682,7 @@ export default function ServerDetailsPage() {
       {/* Push Health Check Result Modal */}
       {showPushHealthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-md bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold text-black">
               Push Health Check Result
             </h3>
@@ -747,7 +747,7 @@ export default function ServerDetailsPage() {
             {Object.entries(server.metadata).map(([key, value]) => (
               <div
                 key={key}
-                className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-sm"
+                className="rounded-md border border-gray-100 bg-gray-50 p-4 text-sm"
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-black">
                   {key}

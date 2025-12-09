@@ -226,6 +226,7 @@ export default function DashboardHome() {
       id: number;
       name: string;
       conversionRate?: string;
+      performanceMetric?: string;
       status: string;
       participants?: number;
       budget?: number;
@@ -235,10 +236,24 @@ export default function DashboardHome() {
   const [topPerformersFilter, setTopPerformersFilter] = useState<
     "participants" | "spend"
   >("participants");
+  type TopPerformerItem = {
+    id: number;
+    name?: string;
+    code?: string;
+    participation_rate?: number | string;
+    utilization_percentage?: number | string;
+    budget_utilization?: number | string;
+    conversion_rate?: number | string;
+    current_participants?: number;
+    budget_allocated?: number | string;
+    budget_spent?: number | string;
+    [key: string]: unknown;
+  };
+
   const [topPerformersData, setTopPerformersData] = useState<{
-    by_participants: any[];
-    by_spend: any[];
-    campaignsMap: Map<number, any>;
+    by_participants: TopPerformerItem[];
+    by_spend: TopPerformerItem[];
+    campaignsMap: Map<number, BackendCampaignType>;
   } | null>(null);
 
   // State for top performing offers
@@ -443,7 +458,7 @@ export default function DashboardHome() {
           const response = productsResponse.value;
           if (response.success && response.data) {
             setProductsStats({
-              total: response.data.total_products || 0,
+              total: parseMetricValue(response.data.total_products) || 0,
             });
           }
         }
@@ -466,18 +481,19 @@ export default function DashboardHome() {
               return 0;
             };
             // Check overview first (like CampaignsPage does), then direct
-            const overview = statsData.overview ?? {};
-            const activityStatus = statsData.activity_status ?? {};
-            const statusBreakdown = statsData.status_breakdown ?? {};
+            const overview = (statsData.overview ?? {}) as Record<string, unknown>;
+            const activityStatus = (statsData.activity_status ?? {}) as Record<string, unknown>;
+            const statusBreakdown = (statsData.status_breakdown ?? {}) as Record<string, unknown>;
             const total = parseMetric(
-              overview.total_campaigns || statsData.total_campaigns
+              (overview.total_campaigns as number | string | undefined) || 
+              (statsData as Record<string, unknown>).total_campaigns
             );
             const active = parseMetric(
-              activityStatus.is_active_flag_true ||
-                activityStatus.currently_running ||
-                statusBreakdown.active ||
-                statsData.active_campaigns ||
-                statsData.currently_active
+              (activityStatus.is_active_flag_true as number | string | undefined) ||
+                (activityStatus.currently_running as number | string | undefined) ||
+                (statusBreakdown.active as number | string | undefined) ||
+                ((statsData as Record<string, unknown>).active_campaigns as number | string | undefined) ||
+                ((statsData as Record<string, unknown>).currently_active as number | string | undefined)
             );
             const completed = parseMetric(statsData.completed);
 
@@ -1222,19 +1238,27 @@ export default function DashboardHome() {
         const statsResponse = await campaignService.getCampaignStats(true);
 
         if (statsResponse.success && statsResponse.data) {
-          const statsData = statsResponse.data as any;
-          const topPerformers = statsData.top_performers || {};
+          const statsData = statsResponse.data as CampaignStatsSummary & {
+            top_performers?: {
+              by_participants?: TopPerformerItem[];
+              by_spend?: TopPerformerItem[];
+            };
+          };
+          const topPerformers = (statsData.top_performers || {}) as {
+            by_participants?: TopPerformerItem[];
+            by_spend?: TopPerformerItem[];
+          };
 
           // Fetch campaign details for top performers to get status information
           // Since top_performers data doesn't include status, we need to fetch individual campaign details
-          const campaignsMap = new Map();
+          const campaignsMap = new Map<number, BackendCampaignType>();
 
           // Get unique campaign IDs from both by_participants and by_spend
           const allTopPerformerIds = new Set<number>();
-          (topPerformers.by_participants || []).forEach((p: any) => {
+          (topPerformers.by_participants || []).forEach((p: TopPerformerItem) => {
             if (p.id) allTopPerformerIds.add(p.id);
           });
-          (topPerformers.by_spend || []).forEach((p: any) => {
+          (topPerformers.by_spend || []).forEach((p: TopPerformerItem) => {
             if (p.id) allTopPerformerIds.add(p.id);
           });
 
@@ -1294,7 +1318,7 @@ export default function DashboardHome() {
     // Process top performers - use data directly from API response
     const topCampaignsData = performersData
       .slice(0, 4)
-      .map((performer: any) => {
+      .map((performer: TopPerformerItem) => {
         // Get performance metric based on filter type
         let performanceMetric: string | undefined = undefined;
 
@@ -1524,7 +1548,7 @@ export default function DashboardHome() {
         <h1
           className={`${tw.mainHeading} ${tw.textPrimary} flex items-center gap-3`}
         >
-          {t.dashboard.welcome}, {getFirstName()}!
+          {t.dashboard.welcome}, {getFirstName()}
         </h1>
         {/* <p className={`${tw.textSecondary} ${tw.body}`}> */}
         <p className="text-gray-900 text-sm md:text-base">

@@ -940,7 +940,7 @@ export default function QuickListDetailsPage() {
                           className="hover:bg-gray-50/40 transition-colors rounded"
                         >
                           <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l"
+                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {index + 1}
@@ -950,7 +950,7 @@ export default function QuickListDetailsPage() {
                               key={column}
                               className={`px-6 py-4 text-gray-600 ${
                                 columnIndex === dataColumns.length - 1
-                                  ? "rounded-r"
+                                  ? "rounded-r-md"
                                   : ""
                               }`}
                               style={{ backgroundColor: tableBodyBackground }}
@@ -1055,7 +1055,7 @@ export default function QuickListDetailsPage() {
                           className="hover:bg-gray-50/30 transition-colors rounded"
                         >
                           <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l whitespace-nowrap"
+                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md whitespace-nowrap"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {log.row_number}
@@ -1083,7 +1083,7 @@ export default function QuickListDetailsPage() {
                             {log.error_message || "-"}
                           </td>
                           <td
-                            className="px-6 py-4 text-gray-600 rounded-r whitespace-nowrap"
+                            className="px-6 py-4 text-gray-600 rounded-r-md whitespace-nowrap"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {formatDate(log.created_at)}

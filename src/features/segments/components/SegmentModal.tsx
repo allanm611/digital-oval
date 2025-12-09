@@ -990,7 +990,7 @@ export default function SegmentModal({
                 }}
               >
                 <div
-                  className="bg-white rounded-lg shadow-xl w-full max-w-md"
+                  className="bg-white rounded-md shadow-xl w-full max-w-md"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Header */}

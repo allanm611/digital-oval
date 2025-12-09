@@ -1,6 +1,9 @@
 //converts the tokens into usable tailwind classes
 import { colors, fonts, spacing, borderRadius, buttons } from "./tokens";
 
+// Standardized rounded corners - use this constant instead of hardcoded "rounded-md"
+export const ROUNDED = "rounded-md";
+
 // Direct access to color values from tokens.ts - use these for custom styling
 export const color = {
   primary: colors.primary,
@@ -101,33 +104,36 @@ export const tw = {
   buttonText: "text-sm font-medium leading-[130%] tracking-[0.02em]",
   label: "text-xs font-medium leading-[120%] tracking-[0.05em] uppercase",
 
-  button: `bg-[#252829] active:bg-[#252829]/80 text-white text-sm font-medium transition-colors px-6 py-2 rounded-md cursor-pointer`,
+  // Standardized rounded corners - use this instead of hardcoded rounded-md
+  rounded: ROUNDED,
+
+  button: `bg-[#252829] active:bg-[#252829]/80 text-white text-sm font-medium transition-colors px-4 py-2.5 ${ROUNDED} cursor-pointer`,
 
   // Bordered button with transparent background and colored border
   // Use with inline styles: style={{ borderColor: color.primary.action, color: color.primary.action }}
-  borderedButton: `px-3 py-1.5 text-sm font-medium rounded-md border transition-colors bg-transparent hover:text-white`,
+  borderedButton: `px-4 py-2.5 text-sm font-medium ${ROUNDED} border transition-colors bg-transparent hover:text-white`,
 };
 
 // Complete component styles - pre-built styles for common UI elements that you can use directly
 export const components = {
   card: {
-    default: `bg-neutral-100 border border-[#E5E7EB] rounded-md p-6`,
-    surface: `bg-white border border-[#E5E7EB] rounded-md p-6`,
-    elevated: `bg-neutral-100 border border-[#E5E7EB] rounded-md p-6`,
+    default: `bg-neutral-100 border border-[#E5E7EB] ${ROUNDED} p-6`,
+    surface: `bg-white border border-[#E5E7EB] ${ROUNDED} p-6`,
+    elevated: `bg-neutral-100 border border-[#E5E7EB] ${ROUNDED} p-6`,
   },
 
   input: {
-    default: `border border-[${colors.border.default}] focus:border-[${colors.interactive.focus}] bg-white text-[${colors.text.primary}] rounded-md`,
-    error: `border border-[${colors.status.danger}] focus:border-[${colors.status.danger}] bg-white text-[${colors.text.primary}] rounded-md`,
-    accent: `border border-[${colors.border.accent}] focus:border-[${colors.border.accent}] bg-white text-[${colors.text.primary}] rounded-md`,
+    default: `border border-[${colors.border.default}] focus:border-[${colors.interactive.focus}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
+    error: `border border-[${colors.status.danger}] focus:border-[${colors.status.danger}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
+    accent: `border border-[${colors.border.accent}] focus:border-[${colors.border.accent}] bg-white text-[${colors.text.primary}] ${ROUNDED}`,
   },
 
   badge: {
-    success: `bg-[${colors.status.success}]/10 text-[${colors.status.success}] px-2 py-1 rounded-md text-sm font-medium`,
-    danger: `bg-[${colors.status.danger}]/10 text-[${colors.status.danger}] px-2 py-1 rounded-md text-sm font-medium`,
-    warning: `bg-[${colors.status.warning}]/10 text-[${colors.status.warning}] px-2 py-1 rounded-md text-sm font-medium`,
-    info: `bg-[${colors.status.info}]/10 text-[${colors.status.info}] px-2 py-1 rounded-md text-sm font-medium`,
-    accent: `bg-[${colors.primary.accent}]/10 text-[${colors.primary.accent}] px-2 py-1 rounded-md text-sm font-medium`,
+    success: `bg-[${colors.status.success}]/10 text-[${colors.status.success}] px-2 py-1 ${ROUNDED} text-sm font-medium`,
+    danger: `bg-[${colors.status.danger}]/10 text-[${colors.status.danger}] px-2 py-1 ${ROUNDED} text-sm font-medium`,
+    warning: `bg-[${colors.status.warning}]/10 text-[${colors.status.warning}] px-2 py-1 ${ROUNDED} text-sm font-medium`,
+    info: `bg-[${colors.status.info}]/10 text-[${colors.status.info}] px-2 py-1 ${ROUNDED} text-sm font-medium`,
+    accent: `bg-[${colors.primary.accent}]/10 text-[${colors.primary.accent}] px-2 py-1 ${ROUNDED} text-sm font-medium`,
   },
 };
 
