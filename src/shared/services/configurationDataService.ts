@@ -15,6 +15,7 @@ import {
   senderIdsConfig,
   smsRoutesConfig,
   languagesConfig,
+  characterSetsConfig,
 } from "../configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
@@ -32,7 +33,8 @@ export type ConfigurationType =
   | "communicationChannels"
   | "senderIds"
   | "smsRoutes"
-  | "languages";
+  | "languages"
+  | "characterSets";
 
 // Service singleton pour gérer les données de configuration
 class ConfigurationDataService {
@@ -58,6 +60,7 @@ class ConfigurationDataService {
     this.listeners.set("senderIds", new Set());
     this.listeners.set("smsRoutes", new Set());
     this.listeners.set("languages", new Set());
+    this.listeners.set("characterSets", new Set());
 
     // Charger les données depuis localStorage ou utiliser les données par défaut
     this.loadFromStorage();
@@ -127,6 +130,10 @@ class ConfigurationDataService {
           "languages",
           parsed.languages || [...languagesConfig.initialData]
         );
+        this.data.set(
+          "characterSets",
+          parsed.characterSets || [...characterSetsConfig.initialData]
+        );
       } else {
         // Première fois, utiliser les données par défaut
         this.data.set("lineOfBusiness", [...lineOfBusinessConfig.initialData]);
@@ -151,6 +158,7 @@ class ConfigurationDataService {
         this.data.set("senderIds", [...senderIdsConfig.initialData]);
         this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
         this.data.set("languages", [...languagesConfig.initialData]);
+        this.data.set("characterSets", [...characterSetsConfig.initialData]);
         this.saveToStorage();
       }
     } catch (error) {
@@ -176,6 +184,7 @@ class ConfigurationDataService {
       this.data.set("senderIds", [...senderIdsConfig.initialData]);
       this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
       this.data.set("languages", [...languagesConfig.initialData]);
+      this.data.set("characterSets", [...characterSetsConfig.initialData]);
     }
   }
 
@@ -197,6 +206,7 @@ class ConfigurationDataService {
         senderIds: this.data.get("senderIds") || [],
         smsRoutes: this.data.get("smsRoutes") || [],
         languages: this.data.get("languages") || [],
+        characterSets: this.data.get("characterSets") || [],
       };
       localStorage.setItem("configurationData", JSON.stringify(dataToSave));
     } catch (error) {
@@ -342,6 +352,9 @@ class ConfigurationDataService {
         break;
       case "languages":
         this.setData(type, [...languagesConfig.initialData]);
+        break;
+      case "characterSets":
+        this.setData(type, [...characterSetsConfig.initialData]);
         break;
     }
   }

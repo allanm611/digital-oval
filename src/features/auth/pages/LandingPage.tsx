@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import AnimatedButton from "../../../shared/components/ui/AnimatedButton";
 
+import { tw } from '../../../shared/utils/utils';
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -107,7 +108,7 @@ export default function LandingPage() {
             >
               <Link
                 to="/login"
-                className="text-secondary-600 hover:text-secondary-900 px-4 py-2 text-base font-semibold transition-all duration-300 rounded-md hover:bg-white/50"
+                className={`text-secondary-600 hover:text-secondary-900 px-4 py-2 text-base font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/50`}
               >
                 Sign In
               </Link>
@@ -151,7 +152,7 @@ export default function LandingPage() {
             >
               <Link
                 to="/login"
-                className="text-secondary-600 hover:text-secondary-900 px-3 py-2 text-sm font-semibold transition-all duration-300 rounded-md hover:bg-white/50"
+                className={`text-secondary-600 hover:text-secondary-900 px-3 py-2 text-sm font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/50`}
               >
                 Sign In
               </Link>
@@ -186,23 +187,23 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Professional floating elements */}
           <div
-            className="absolute top-20 left-20 w-16 h-16 bg-gradient-to-br from-emerald-200/30 to-green-300/20 rounded-md rotate-12 animate-pulse"
+            className={`absolute top-20 left-20 w-16 h-16 bg-gradient-to-br from-emerald-200/30 to-green-300/20 ${tw.rounded} rotate-12 animate-pulse`}
             style={{ animationDuration: "4s" }}
           ></div>
           <div
-            className="absolute top-32 right-32 w-12 h-12 bg-gradient-to-br from-teal-200/25 to-cyan-300/15 rounded-md -rotate-6 animate-pulse"
+            className={`absolute top-32 right-32 w-12 h-12 bg-gradient-to-br from-teal-200/25 to-cyan-300/15 ${tw.rounded} -rotate-6 animate-pulse`}
             style={{ animationDuration: "6s", animationDelay: "1s" }}
           ></div>
           <div
-            className="absolute bottom-40 left-16 w-20 h-20 bg-gradient-to-br from-green-200/20 to-emerald-300/25 rounded-md rotate-45 animate-pulse"
+            className={`absolute bottom-40 left-16 w-20 h-20 bg-gradient-to-br from-green-200/20 to-emerald-300/25 ${tw.rounded} rotate-45 animate-pulse`}
             style={{ animationDuration: "5s", animationDelay: "2s" }}
           ></div>
           <div
-            className="absolute bottom-20 right-20 w-14 h-14 bg-gradient-to-br from-cyan-200/30 to-teal-300/20 rounded-md -rotate-12 animate-pulse"
+            className={`absolute bottom-20 right-20 w-14 h-14 bg-gradient-to-br from-cyan-200/30 to-teal-300/20 ${tw.rounded} -rotate-12 animate-pulse`}
             style={{ animationDuration: "7s", animationDelay: "0.5s" }}
           ></div>
           <div
-            className="absolute top-1/2 left-10 w-10 h-10 bg-gradient-to-br from-emerald-200/25 to-green-300/20 rounded-md rotate-6 animate-pulse"
+            className={`absolute top-1/2 left-10 w-10 h-10 bg-gradient-to-br from-emerald-200/25 to-green-300/20 ${tw.rounded} rotate-6 animate-pulse`}
             style={{ animationDuration: "8s", animationDelay: "1.5s" }}
           ></div>
 
@@ -225,12 +226,12 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <Link
                 to="/request-account"
-                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-100 to-green-100 text-[#1a3d2e] font-semibold rounded-md shadow-lg border border-emerald-200/50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:from-emerald-200 hover:to-green-200 hover:animate-slow-bounce"
+                className={`inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-100 to-green-100 text-[#1a3d2e] font-semibold ${tw.rounded} shadow-lg border border-emerald-200/50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:from-emerald-200 hover:to-green-200 hover:animate-slow-bounce`}
               >
                 Get Started Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
-              <button className="inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 transition-all duration-200">
+              <button className={`inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold ${tw.rounded} hover:bg-gray-50 transition-all duration-200`}>
                 <Play className="mr-2 h-5 w-5" />
                 Watch Demo
               </button>
@@ -284,14 +285,14 @@ export default function LandingPage() {
               return (
                 <div
                   key={index}
-                  className={`bg-white rounded-md shadow-lg border border-gray-200 p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] group cursor-pointer ${
+                  className={`bg-white ${tw.rounded} shadow-lg border border-gray-200 p-8 hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] group cursor-pointer ${
                     index % 2 === 0
                       ? "animate-gentle-float"
                       : "animate-gentle-float-delayed"
                   }`}
                 >
                   <div className="flex items-center mb-6">
-                    <div className="flex items-center justify-center w-12 h-12 bg-[#1a3d2e]/10 rounded-md mr-4 group-hover:bg-[#1a3d2e]/20 transition-all duration-300 group-hover:scale-110">
+                    <div className={`flex items-center justify-center w-12 h-12 bg-[#1a3d2e]/10 ${tw.rounded} mr-4 group-hover:bg-[#1a3d2e]/20 transition-all duration-300 group-hover:scale-110`}>
                       <Icon className="w-6 h-6 text-[#1a3d2e] group-hover:text-[#0f2a1f] transition-colors duration-300" />
                     </div>
                     <h3 className="text-lg font-semibold text-gray-900 group-hover:text-[#1a3d2e] transition-colors duration-300">
@@ -373,14 +374,14 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/request-account"
-              className="inline-flex items-center px-4 py-2 bg-[#3b8169] hover:bg-[#2d5f4e] text-white font-semibold rounded-md shadow-lg transition-all duration-200 transform hover:scale-105 text-base"
+              className={`inline-flex items-center px-4 py-2 bg-[#3b8169] hover:bg-[#2d5f4e] text-white font-semibold ${tw.rounded} shadow-lg transition-all duration-200 transform hover:scale-105 text-base`}
             >
               Start Your Journey
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold rounded-md hover:bg-gray-50 transition-all duration-200"
+              className={`inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold ${tw.rounded} hover:bg-gray-50 transition-all duration-200`}
             >
               <Shield className="mr-2 h-5 w-5" />
               Existing User? Sign In

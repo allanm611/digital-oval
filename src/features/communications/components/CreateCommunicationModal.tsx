@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, CheckCircle, XCircle } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ChannelSelector from "./ChannelSelector";
 import MessageEditor from "./MessageEditor";
@@ -162,7 +162,7 @@ export default function CreateCommunicationModal({
 
     return createPortal(
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-        <div className="bg-white rounded-md shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col`}>
           {/* Header */}
           <div className="p-4 sm:p-6 border-b border-gray-200">
             <div className="flex items-start sm:items-center justify-between gap-2 sm:gap-4 mb-4">
@@ -185,7 +185,7 @@ export default function CreateCommunicationModal({
               </div>
               <button
                 onClick={handleClose}
-                className="p-2 hover:bg-white rounded-md transition-colors flex-shrink-0"
+                className={`p-2 hover:bg-white ${tw.rounded} transition-colors flex-shrink-0`}
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
@@ -195,7 +195,7 @@ export default function CreateCommunicationModal({
           {/* Stats */}
           <div className="flex-1 overflow-auto p-4 sm:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-md p-4">
+              <div className={`bg-gray-50 ${tw.rounded} p-4`}>
                 <p className="text-xs text-gray-500 font-medium mb-1">
                   Total Recipients
                 </p>
@@ -203,7 +203,7 @@ export default function CreateCommunicationModal({
                   {result.total_recipients}
                 </p>
               </div>
-              <div className="bg-green-50 rounded-md p-4">
+              <div className={`bg-green-50 ${tw.rounded} p-4`}>
                 <p className="text-xs text-green-600 font-medium mb-1">
                   Messages Sent
                 </p>
@@ -211,7 +211,7 @@ export default function CreateCommunicationModal({
                   {result.total_messages_sent}
                 </p>
               </div>
-              <div className="bg-red-50 rounded-md p-4">
+              <div className={`bg-red-50 ${tw.rounded} p-4`}>
                 <p className="text-xs text-red-600 font-medium mb-1">
                   Messages Failed
                 </p>
@@ -219,7 +219,7 @@ export default function CreateCommunicationModal({
                   {result.total_messages_failed}
                 </p>
               </div>
-              <div className="bg-blue-50 rounded-md p-4">
+              <div className={`bg-blue-50 ${tw.rounded} p-4`}>
                 <p className="text-xs text-blue-600 font-medium mb-1">
                   Execution Time
                 </p>
@@ -237,7 +237,7 @@ export default function CreateCommunicationModal({
               {result.channel_summaries.map((summary) => (
                 <div
                   key={summary.channel}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 bg-gray-50 rounded-md"
+                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 bg-gray-50 ${tw.rounded}`}
                 >
                   <span className="text-sm font-medium text-gray-700">
                     {summary.channel}
@@ -259,13 +259,13 @@ export default function CreateCommunicationModal({
           <div className="p-4 sm:p-6 border-t border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
             <button
               onClick={handleClose}
-              className="w-full sm:w-auto px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className={`w-full sm:w-auto px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
             >
               Close
             </button>
             <button
               onClick={() => setResult(null)}
-              className="w-full sm:w-auto px-6 py-2 text-sm font-medium text-white rounded-md transition-colors"
+              className={`w-full sm:w-auto px-6 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
             >
               Send Another
@@ -280,7 +280,7 @@ export default function CreateCommunicationModal({
   // Main form
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-md shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 sm:p-6 border-b border-gray-200">
           <div className="flex-1 min-w-0">
@@ -298,7 +298,7 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleClose}
             disabled={sending}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 self-start sm:self-auto flex-shrink-0"
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 self-start sm:self-auto flex-shrink-0`}
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
@@ -380,14 +380,14 @@ export default function CreateCommunicationModal({
           <button
             onClick={handleClose}
             disabled={sending}
-            className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors disabled:opacity-50`}
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
             disabled={sending || !messageBody.trim()}
-            className="w-full sm:w-auto px-6 sm:px-8 py-2.5 text-sm font-semibold text-white rounded-md transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 text-sm font-semibold text-white ${tw.rounded} transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
             {sending ? (

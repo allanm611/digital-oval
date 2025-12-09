@@ -28,7 +28,7 @@ function CategoryBarChartComponent({
 }: CategoryBarChartProps) {
   return (
     <div
-      className={`bg-white rounded-md border border-gray-200 overflow-hidden ${className}`.trim()}
+      className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden ${className}`.trim()}
     >
       <div className="px-6 py-4 border-b border-gray-100">
         <h2 className={tw.cardHeading}>{title}</h2>

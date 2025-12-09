@@ -190,7 +190,7 @@ export default function JobExecutionsAnalyticsPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("/dashboard/job-executions")}
-          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -206,7 +206,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-2">
             <BarChart3
               className="h-5 w-5"
@@ -220,7 +220,7 @@ export default function JobExecutionsAnalyticsPage() {
             {executionStats?.total_executions || 0}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle
               className="h-5 w-5"
@@ -234,7 +234,7 @@ export default function JobExecutionsAnalyticsPage() {
               : "—"}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className="h-5 w-5"
@@ -248,7 +248,7 @@ export default function JobExecutionsAnalyticsPage() {
               : "—"}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -267,7 +267,7 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Charts Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Status Distribution */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Status Distribution
           </h3>
@@ -298,7 +298,7 @@ export default function JobExecutionsAnalyticsPage() {
         </div>
 
         {/* Trigger Distribution */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Trigger Distribution
           </h3>
@@ -316,7 +316,7 @@ export default function JobExecutionsAnalyticsPage() {
 
         {/* Trend Data */}
         {trendData.length > 0 && (
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Execution Trends (30 Days)
             </h3>
@@ -352,7 +352,7 @@ export default function JobExecutionsAnalyticsPage() {
 
         {/* Error Analysis */}
         {errorAnalysis.length > 0 && (
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Top Errors (30 Days)
             </h3>
@@ -376,7 +376,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* SLA Compliance Details */}
       {slaCompliance && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             SLA Compliance Details
           </h3>
@@ -419,7 +419,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Additional Analytics Sections */}
       {resourceUtilization && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Utilization
           </h3>
@@ -461,7 +461,7 @@ export default function JobExecutionsAnalyticsPage() {
       )}
 
       {performanceSummary && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Performance Summary
           </h3>
@@ -509,7 +509,7 @@ export default function JobExecutionsAnalyticsPage() {
       )}
 
       {healthScore && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Health Score
           </h3>
@@ -545,7 +545,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Executions by Hour */}
       {executionsByHour.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Executions by Hour
           </h3>
@@ -566,7 +566,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Worker Node Stats */}
       {workerNodeStats.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Worker Node Statistics
           </h3>
@@ -615,7 +615,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Step Failure Analysis */}
       {stepFailureAnalysis.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Step Failure Analysis
           </h3>
@@ -633,7 +633,7 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Slowest Executions */}
       {slowestExecutions.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Slowest Executions
           </h3>

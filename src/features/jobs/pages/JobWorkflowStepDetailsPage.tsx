@@ -267,7 +267,7 @@ export default function JobWorkflowStepDetailsPage() {
                 }`
               )
             }
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -284,7 +284,7 @@ export default function JobWorkflowStepDetailsPage() {
           {step.is_active ? (
             <button
               onClick={handleDeactivate}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
             >
               <Pause className="h-4 w-4" />
               Deactivate
@@ -292,7 +292,7 @@ export default function JobWorkflowStepDetailsPage() {
           ) : (
             <button
               onClick={handleActivate}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Play className="h-4 w-4" />
@@ -305,21 +305,21 @@ export default function JobWorkflowStepDetailsPage() {
                 `/dashboard/job-workflow-steps/${step.id}/edit?job_id=${step.job_id}`
               )
             }
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
           >
             <Edit className="h-4 w-4" />
             Edit
           </button>
           <button
             onClick={handleDuplicate}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
           >
             <Copy className="h-4 w-4" />
             Duplicate
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
           >
             <Trash2 className="h-4 w-4" />
             Delete
@@ -329,7 +329,7 @@ export default function JobWorkflowStepDetailsPage() {
 
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -345,7 +345,7 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -361,7 +361,7 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
           <div className="flex items-center gap-2">
             <GitBranch
               className="h-5 w-5"
@@ -377,7 +377,7 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-4 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
             <p className="text-sm font-medium text-gray-600">Retries</p>
@@ -391,7 +391,7 @@ export default function JobWorkflowStepDetailsPage() {
       {/* Execution Status */}
       {canExecute && (
         <div
-          className={`rounded-md border p-4 ${
+          className={`${tw.rounded} border p-4 ${
             canExecute.can_execute
               ? "border-green-200 bg-green-50"
               : "border-amber-200 bg-amber-50"
@@ -423,7 +423,7 @@ export default function JobWorkflowStepDetailsPage() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Basic Information */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Basic Information
             </h2>
@@ -485,7 +485,7 @@ export default function JobWorkflowStepDetailsPage() {
           </div>
 
           {/* Execution Configuration */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Execution Configuration
             </h2>
@@ -541,7 +541,7 @@ export default function JobWorkflowStepDetailsPage() {
           {/* Dependencies & Parallel Groups */}
           {step.depends_on_step_codes &&
             step.depends_on_step_codes.length > 0 && (
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Layers className="h-5 w-5" />
                   Dependencies
@@ -550,7 +550,7 @@ export default function JobWorkflowStepDetailsPage() {
                   {step.depends_on_step_codes.map((code, idx) => (
                     <div
                       key={idx}
-                      className="rounded-md bg-gray-50 p-3 text-sm font-medium text-gray-900"
+                      className={`${tw.rounded} bg-gray-50 p-3 text-sm font-medium text-gray-900`}
                     >
                       {code}
                     </div>
@@ -560,7 +560,7 @@ export default function JobWorkflowStepDetailsPage() {
             )}
 
           {step.is_parallel && step.parallel_group_id && (
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
               <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <GitBranch className="h-5 w-5" />
                 Parallel Group
@@ -582,7 +582,7 @@ export default function JobWorkflowStepDetailsPage() {
                       .map((s) => (
                         <div
                           key={s.id}
-                          className={`rounded-md p-2 text-sm ${
+                          className={`${tw.rounded} p-2 text-sm ${
                             s.id === step.id
                               ? "bg-blue-50 border border-blue-200"
                               : "bg-gray-50"
@@ -599,7 +599,7 @@ export default function JobWorkflowStepDetailsPage() {
 
           {/* Next Step */}
           {nextStep && (
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 Next Step
               </h2>
@@ -609,7 +609,7 @@ export default function JobWorkflowStepDetailsPage() {
                     `/dashboard/job-workflow-steps/${nextStep.id}?job_id=${nextStep.job_id}`
                   )
                 }
-                className="text-left w-full rounded-md bg-gray-50 p-3 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
+                className={`text-left w-full ${tw.rounded} bg-gray-50 p-3 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors`}
               >
                 {nextStep.step_name} (Order: {nextStep.step_order})
               </button>
@@ -618,7 +618,7 @@ export default function JobWorkflowStepDetailsPage() {
 
           {/* Validation Queries */}
           {(step.pre_validation_query || step.post_validation_query) && (
-            <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 Validation Queries
               </h2>
@@ -646,7 +646,7 @@ export default function JobWorkflowStepDetailsPage() {
           )}
 
           {/* Metadata */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Metadata
             </h2>
@@ -674,7 +674,7 @@ export default function JobWorkflowStepDetailsPage() {
 
       {/* Execution Order & Workflow Structure */}
       {executionOrder.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Workflow className="h-5 w-5" />
             Execution Order
@@ -683,7 +683,7 @@ export default function JobWorkflowStepDetailsPage() {
             {executionOrder.map((item, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between rounded-md p-3 ${
+                className={`flex items-center justify-between ${tw.rounded} p-3 ${
                   item.step_id === step.id
                     ? "bg-blue-50 border-2 border-blue-300"
                     : "bg-gray-50 border border-gray-200"

@@ -97,7 +97,7 @@ export default function SchedulingStep({
           Broadcast Schedule Range
         </h3>
 
-        <div className="bg-white border border-gray-200 rounded-md p-6">
+        <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           {/* Start Options */}
           <div className="mb-6">
             <div className="flex items-center space-x-6 mb-4">
@@ -146,7 +146,7 @@ export default function SchedulingStep({
                         start_date: e.target.value + "T08:00",
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900"
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
                     style={{ minWidth: "140px", backgroundColor: "white" }}
                   />
                 </div>
@@ -162,7 +162,7 @@ export default function SchedulingStep({
                             e.target.value || "2025-09-22T" + e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900"
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
                     style={{ minWidth: "100px", backgroundColor: "white" }}
                   />
                 </div>
@@ -222,7 +222,7 @@ export default function SchedulingStep({
                     onChange={(e) =>
                       updateScheduling({ end_date: e.target.value + "T23:59" })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900"
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
                     style={{ minWidth: "140px", backgroundColor: "white" }}
                   />
                 </div>
@@ -238,7 +238,7 @@ export default function SchedulingStep({
                             e.target.value || "2025-12-31T" + e.target.value,
                       })
                     }
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900"
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
                     style={{ minWidth: "100px", backgroundColor: "white" }}
                   />
                 </div>
@@ -279,7 +279,7 @@ export default function SchedulingStep({
           Recurrence Pattern and Delivery
         </h3>
 
-        <div className="bg-white border border-gray-200 rounded-md p-6">
+        <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             {/* Recurrence Pattern */}
             <div>
@@ -312,7 +312,7 @@ export default function SchedulingStep({
                   onChange={(e) =>
                     setRecurrenceInterval(Number(e.target.value))
                   }
-                  className="w-16 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent text-center"
+                  className={`w-16 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent text-center`}
                 />
                 <span className="text-sm text-gray-600">
                   {recurrencePattern}
@@ -329,7 +329,7 @@ export default function SchedulingStep({
                 type="time"
                 value={defaultStartTime}
                 onChange={(e) => setDefaultStartTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
               />
             </div>
           </div>
@@ -396,7 +396,7 @@ export default function SchedulingStep({
           Target Render Time
         </h3>
 
-        <div className="bg-white border border-gray-200 rounded-md p-6">
+        <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="flex items-center space-x-8 mb-6">
             <label className="flex items-center">
               <input
@@ -474,7 +474,7 @@ export default function SchedulingStep({
                       onChange={(e) =>
                         console.log("Time changed:", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
                     />
                   </div>
                 ) : (
@@ -489,7 +489,7 @@ export default function SchedulingStep({
                       onChange={(e) =>
                         setHoursBeforeBroadcast(Number(e.target.value))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                     />
                   </div>
                 )}
@@ -515,7 +515,7 @@ export default function SchedulingStep({
       {/* Preview Schedule Button */}
       <div className="flex justify-center">
         <button
-          className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${tw.button.primary}`}
+          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors ${tw.button.primary}`}
         >
           <Calendar className="w-4 h-4 mr-2" />
           Preview Schedule
@@ -524,7 +524,7 @@ export default function SchedulingStep({
 
       {/* Validation Warning */}
       {(!scheduling.start_date || scheduling.start_date === "") && (
-        <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
+        <div className={`bg-amber-50 border border-amber-200 ${tw.rounded} p-4`}>
           <div className="flex items-start space-x-2">
             <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>

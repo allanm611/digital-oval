@@ -196,7 +196,7 @@ export default function ConnectionProfileFormPage({
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/dashboard/connection-profiles")}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -216,7 +216,7 @@ export default function ConnectionProfileFormPage({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Basic Information
           </h2>
@@ -231,7 +231,7 @@ export default function ConnectionProfileFormPage({
                 onChange={(e) =>
                   setFormData({ ...formData, profile_name: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
               />
             </div>
@@ -245,7 +245,7 @@ export default function ConnectionProfileFormPage({
                 onChange={(e) =>
                   setFormData({ ...formData, profile_code: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
               />
             </div>
@@ -330,13 +330,13 @@ export default function ConnectionProfileFormPage({
                       : undefined,
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Performance Settings
           </h2>
@@ -354,7 +354,7 @@ export default function ConnectionProfileFormPage({
                     batch_size: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
@@ -372,7 +372,7 @@ export default function ConnectionProfileFormPage({
                     parallel_threads: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
                 max={32}
@@ -391,7 +391,7 @@ export default function ConnectionProfileFormPage({
                     min_pool_size: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
@@ -409,7 +409,7 @@ export default function ConnectionProfileFormPage({
                     max_pool_size: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={formData.min_pool_size}
               />
@@ -427,7 +427,7 @@ export default function ConnectionProfileFormPage({
                     connection_timeout_seconds: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
@@ -445,7 +445,7 @@ export default function ConnectionProfileFormPage({
                     idle_timeout_seconds: Number(e.target.value),
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                 required
                 min={1}
               />
@@ -453,7 +453,7 @@ export default function ConnectionProfileFormPage({
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Data Governance
           </h2>
@@ -522,7 +522,7 @@ export default function ConnectionProfileFormPage({
                 onChange={(e) =>
                   setFormData({ ...formData, valid_from: e.target.value })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
                 required
                 onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
@@ -540,7 +540,7 @@ export default function ConnectionProfileFormPage({
                     valid_to: e.target.value || null,
                   })
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400 cursor-pointer`}
                 onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
             </div>
@@ -551,14 +551,14 @@ export default function ConnectionProfileFormPage({
           <button
             type="button"
             onClick={() => navigate("/dashboard/connection-profiles")}
-            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 text-white rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >
             {saving ? (

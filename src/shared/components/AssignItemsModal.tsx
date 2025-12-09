@@ -999,7 +999,7 @@ function AssignItemsModal({
         onClick={onClose}
       ></div>
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className="relative bg-white rounded-md shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}>
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
             <div className="flex-1 min-w-0">
@@ -1012,7 +1012,7 @@ function AssignItemsModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors flex-shrink-0"
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
               title="Close"
             >
               <X className="w-5 h-5 text-gray-500" />
@@ -1032,7 +1032,7 @@ function AssignItemsModal({
                   placeholder={`Search ${typeInfo.plural}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
               </div>
 
@@ -1158,7 +1158,7 @@ function AssignItemsModal({
                 <button
                   onClick={handleAssignSelected}
                   disabled={assigning || selectedItemIds.size === 0}
-                  className="px-5 py-2.5 text-white rounded-md font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap"
+                  className={`px-5 py-2.5 text-white ${tw.rounded} font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 whitespace-nowrap`}
                   style={{
                     backgroundColor:
                       assigning || selectedItemIds.size === 0
@@ -1371,7 +1371,7 @@ function AssignItemsModal({
                               <button
                                 onClick={() => handleRemoveItem(item.id)}
                                 disabled={removingItemId === item.id}
-                                className="px-3 py-1 text-red-600 hover:bg-red-50 rounded-md transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`px-3 py-1 text-red-600 hover:bg-red-50 ${tw.rounded} transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed`}
                                 title={`Remove ${typeInfo.singular} from catalog`}
                               >
                                 {removingItemId === item.id

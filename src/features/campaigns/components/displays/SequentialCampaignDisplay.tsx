@@ -1,6 +1,6 @@
 import { Target, Settings, Trash2 } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 
 interface SequentialCampaignDisplayProps {
   campaignType: "round_robin" | "multiple_level";
@@ -27,13 +27,13 @@ export default function SequentialCampaignDisplay({
 
       {segment ? (
         <div
-          className="border rounded-md p-4"
+          className={`border ${tw.rounded} p-4`}
           style={{ borderColor: color.primary.action }}
         >
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-3 flex-1">
               <div
-                className="w-10 h-10 rounded-md flex items-center justify-center"
+                className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Target className="w-5 h-5 text-white" />
@@ -65,14 +65,14 @@ export default function SequentialCampaignDisplay({
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => onConfigureControlGroup(segment.id)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+                className={`p-1.5 text-gray-400 hover:text-gray-600 ${tw.rounded} transition-colors`}
                 title="Configure Control Group"
               >
                 <Settings className="w-4 h-4" />
               </button>
               <button
                 onClick={() => onRemoveSegment(segment.id)}
-                className="p-1.5 text-gray-400 hover:text-red-500 rounded-md transition-colors"
+                className={`p-1.5 text-gray-400 hover:text-red-500 ${tw.rounded} transition-colors`}
                 title="Remove Segment"
               >
                 <Trash2 className="w-4 h-4" />
@@ -81,7 +81,7 @@ export default function SequentialCampaignDisplay({
           </div>
         </div>
       ) : (
-        <div className="border-2 border-dashed border-gray-300 rounded-md p-3">
+        <div className={`border-2 border-dashed border-gray-300 ${tw.rounded} p-3`}>
           <div className="flex items-center justify-center">
             <p className="text-sm text-gray-500">No segment defined</p>
           </div>

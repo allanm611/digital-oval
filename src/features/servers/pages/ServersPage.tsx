@@ -708,7 +708,7 @@ export default function ServersPage() {
                 setSelectedServerIds(new Set());
               }
             }}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: isSelectionMode
                 ? color.primary.action
@@ -752,7 +752,7 @@ export default function ServersPage() {
               placeholder="Search by name or code..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-md border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0"
+              className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
             />
           </div>
           <HeadlessSelect
@@ -769,7 +769,7 @@ export default function ServersPage() {
           />
           <button
             onClick={() => setShowFilters(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-md transition-colors font-medium"
+            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} transition-colors font-medium`}
             style={{
               backgroundColor: button.secondaryAction.background,
               color: button.secondaryAction.color,
@@ -786,7 +786,7 @@ export default function ServersPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedServerIds.size > 0 && (
-        <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3">
+        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedServerIds.size} server(s) selected
@@ -802,7 +802,7 @@ export default function ServersPage() {
             <button
               onClick={() => handleBulkStatusChange("activate")}
               disabled={isBulkActionLoading}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Play size={14} />
@@ -811,7 +811,7 @@ export default function ServersPage() {
             <button
               onClick={() => handleBulkStatusChange("deactivate")}
               disabled={isBulkActionLoading}
-              className="inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50`}
             >
               <PowerOff size={14} />
               Deactivate
@@ -820,7 +820,7 @@ export default function ServersPage() {
         </div>
       )}
 
-      <div className="rounded-md border border-gray-200">
+      <div className={`${tw.rounded} border border-gray-200`}>
         {isLoadingServers ? (
           <div className="flex flex-col items-center justify-center py-20">
             <LoadingSpinner variant="modern" size="lg" color="primary" />
@@ -1038,7 +1038,7 @@ export default function ServersPage() {
                             onClick={() =>
                               navigate(`/dashboard/servers/${server.id}`)
                             }
-                            className="inline-flex items-center justify-center rounded-md p-2 text-black transition-colors hover:bg-gray-100"
+                            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
                             aria-label={`View ${server.name}`}
                             title="View details"
                           >
@@ -1047,7 +1047,7 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleEdit(server, e)}
-                            className="inline-flex items-center justify-center rounded-md p-2 text-black transition-colors hover:bg-gray-100"
+                            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
                             aria-label={`Edit ${server.name}`}
                             title="Edit server"
                           >
@@ -1056,7 +1056,7 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleHealthToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center rounded-md p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
                               server.health_check_enabled
                                 ? "text-green-600 hover:bg-green-50"
                                 : "text-black hover:bg-gray-100"
@@ -1082,7 +1082,7 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleActivationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center rounded-md p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
                               server.is_active
                                 ? "text-red-600 hover:bg-red-50"
                                 : "text-green-600 hover:bg-green-50"
@@ -1106,7 +1106,7 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleDeprecationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center rounded-md p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
                               server.is_deprecated
                                 ? "text-purple-600 hover:bg-purple-50"
                                 : "text-purple-600 hover:bg-purple-50"
@@ -1141,7 +1141,7 @@ export default function ServersPage() {
       </div>
 
       {!isLoadingServers && filteredServers.length > 0 && (
-        <div className="flex flex-col items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row">
+        <div className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}>
           <p>
             Showing {(page - 1) * PAGE_SIZE + 1}-
             {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} servers
@@ -1150,7 +1150,7 @@ export default function ServersPage() {
             <button
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={page === 1}
-              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
             >
               Prev
             </button>
@@ -1160,7 +1160,7 @@ export default function ServersPage() {
             <button
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={page === totalPages}
-              className="rounded-md border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
             >
               Next
             </button>
@@ -1301,7 +1301,7 @@ export default function ServersPage() {
                 </button>
                 <button
                   onClick={closeFilters}
-                  className="rounded-md bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-black/80"
+                  className={`${tw.rounded} bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-black/80`}
                 >
                   Apply filters
                 </button>

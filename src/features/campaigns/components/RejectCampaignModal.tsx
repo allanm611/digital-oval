@@ -79,7 +79,7 @@ export default function RejectCampaignModal({
         />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-md shadow-2xl w-full max-w-md">
+        <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
           {/* Header */}
           <div
             className="flex items-center justify-between p-6 border-b"
@@ -93,7 +93,7 @@ export default function RejectCampaignModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -118,7 +118,7 @@ export default function RejectCampaignModal({
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Explain why this campaign is being rejected..."
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-none text-sm ${tw.textPrimary}`}
+                className={`w-full px-3 py-2 border ${tw.rounded} focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-none text-sm ${tw.textPrimary}`}
                 style={{ borderColor: color.border.default }}
                 rows={4}
                 disabled={isRejecting}
@@ -137,7 +137,7 @@ export default function RejectCampaignModal({
             <button
               onClick={onClose}
               disabled={isRejecting}
-              className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
               style={{ borderColor: color.border.default }}
             >
               Cancel
@@ -145,7 +145,7 @@ export default function RejectCampaignModal({
             <button
               onClick={handleReject}
               disabled={isRejecting || !rejectionReason.trim()}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: "#EF4444" }}
             >
               {isRejecting ? (

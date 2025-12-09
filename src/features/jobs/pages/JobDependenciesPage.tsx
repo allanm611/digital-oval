@@ -196,7 +196,7 @@ function JobDependencyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -308,7 +308,7 @@ function JobDependencyModal({
               type="number"
               value={maxWaitMinutes}
               onChange={(e) => setMaxWaitMinutes(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               placeholder="e.g. 60 (leave empty for no limit)"
               min="0"
               max="1440"
@@ -323,7 +323,7 @@ function JobDependencyModal({
               type="number"
               value={lookbackDays}
               onChange={(e) => setLookbackDays(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               placeholder="0"
               min="0"
               max="30"
@@ -345,7 +345,7 @@ function JobDependencyModal({
           </div>
 
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className={`${tw.rounded} border border-red-200 bg-red-50 p-4 text-sm text-red-700`}>
               <div className="font-semibold mb-2">Error</div>
               <div className="whitespace-pre-line">{error}</div>
             </div>
@@ -355,14 +355,14 @@ function JobDependencyModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
             >
               {t.genericConfig.cancel}
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              className={`${tw.rounded} px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
@@ -395,7 +395,7 @@ function JobDependencyViewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-4 sm:p-6 shadow-2xl">
+      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl`}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1730,7 +1730,7 @@ export default function JobDependenciesPage() {
                 setSelectedDependencyIds(new Set());
               }
             }}
-            className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm transition-colors"
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
             style={{
               backgroundColor: isSelectionMode
                 ? color.primary.action
@@ -1753,7 +1753,7 @@ export default function JobDependenciesPage() {
           </button>
           <button
             onClick={() => navigate("/dashboard/job-dependencies/analytics")}
-            className="inline-flex items-center gap-2 rounded-md px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: "transparent",
               color: color.primary.action,
@@ -1765,7 +1765,7 @@ export default function JobDependenciesPage() {
           </button>
           <button
             onClick={handleCreate}
-            className="px-3 sm:px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm text-white"
+            className={`px-3 sm:px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -1777,7 +1777,7 @@ export default function JobDependenciesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1791,7 +1791,7 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.totalDependencies}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -1805,7 +1805,7 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.activeDependencies}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -1819,7 +1819,7 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.inactiveDependencies}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1833,7 +1833,7 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.blockingDependencies}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1858,7 +1858,7 @@ export default function JobDependenciesPage() {
             placeholder="Search by job ID, dependency type, or status..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-md border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -1893,7 +1893,7 @@ export default function JobDependenciesPage() {
           />
           <button
             onClick={() => setShowAdvancedFilters(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 whitespace-nowrap"
+            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 whitespace-nowrap`}
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
@@ -1917,7 +1917,7 @@ export default function JobDependenciesPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedDependencyIds.size > 0 && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-4 py-3">
+        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedDependencyIds.size} dependency(ies) selected
@@ -1932,7 +1932,7 @@ export default function JobDependenciesPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleBatchActivate}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-white"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
               <CheckCircle className="h-4 w-4" />
@@ -1940,7 +1940,7 @@ export default function JobDependenciesPage() {
             </button>
             <button
               onClick={handleBatchDeactivate}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium`}
               style={{
                 backgroundColor: "transparent",
                 color: color.primary.action,
@@ -1954,7 +1954,7 @@ export default function JobDependenciesPage() {
         </div>
       )}
 
-      <div className="rounded-md">
+      <div className={`${tw.rounded}`}>
         {loadError && (
           <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
@@ -1980,7 +1980,7 @@ export default function JobDependenciesPage() {
             {!searchTerm && (
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-sm text-white"
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -2216,7 +2216,7 @@ export default function JobDependenciesPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleView(dependency)}
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View dependency"
                           title="View"
                         >
@@ -2224,7 +2224,7 @@ export default function JobDependenciesPage() {
                         </button>
                         <button
                           onClick={() => handleEdit(dependency)}
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="Edit dependency"
                           title="Edit"
                         >
@@ -2232,7 +2232,7 @@ export default function JobDependenciesPage() {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(dependency)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           aria-label="Delete dependency"
                           title="Delete"
                         >
@@ -2248,7 +2248,7 @@ export default function JobDependenciesPage() {
                             onClick={(e) =>
                               handleActionMenuToggle(dependency.id, e)
                             }
-                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                             aria-label="More actions"
                             title="More"
                           >
@@ -2268,7 +2268,7 @@ export default function JobDependenciesPage() {
                         ref={(el) => {
                           dropdownMenuRefs.current[dependency.id] = el;
                         }}
-                        className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-3"
+                        className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
                         style={{
                           zIndex: 99999,
                           top: `${dropdownPosition.top}px`,
@@ -2499,7 +2499,7 @@ export default function JobDependenciesPage() {
       {/* Chain/Path Modal */}
       {showChainModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -2710,7 +2710,7 @@ export default function JobDependenciesPage() {
       {/* Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-4xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -2736,7 +2736,7 @@ export default function JobDependenciesPage() {
                 {statusData ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Total Dependencies
                         </div>
@@ -2744,7 +2744,7 @@ export default function JobDependenciesPage() {
                           {statusData.total_dependencies || "0"}
                         </div>
                       </div>
-                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Blocking Dependencies
                         </div>
@@ -2752,7 +2752,7 @@ export default function JobDependenciesPage() {
                           {statusData.blocking_dependencies || "0"}
                         </div>
                       </div>
-                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Optional Dependencies
                         </div>
@@ -2760,7 +2760,7 @@ export default function JobDependenciesPage() {
                           {statusData.optional_dependencies || "0"}
                         </div>
                       </div>
-                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Satisfied Dependencies
                         </div>
@@ -2768,7 +2768,7 @@ export default function JobDependenciesPage() {
                           {statusData.satisfied_dependencies || "0"}
                         </div>
                       </div>
-                      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Unsatisfied Blocking
                         </div>
@@ -2799,7 +2799,7 @@ export default function JobDependenciesPage() {
       {/* Dependencies For Job Modal */}
       {showDependenciesForJobModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3048,7 +3048,7 @@ export default function JobDependenciesPage() {
       {/* Jobs Depending On Modal */}
       {showJobsDependingOnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3295,7 +3295,7 @@ export default function JobDependenciesPage() {
       {/* Blocking Dependencies Modal */}
       {showBlockingDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3526,7 +3526,7 @@ export default function JobDependenciesPage() {
       {/* Immediate Dependencies Modal */}
       {showImmediateDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-4xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3632,7 +3632,7 @@ export default function JobDependenciesPage() {
       {/* All Dependents Modal */}
       {showAllDependentsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-4xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3739,7 +3739,7 @@ export default function JobDependenciesPage() {
       {/* Unsatisfied Dependencies Modal */}
       {showUnsatisfiedDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3906,7 +3906,7 @@ export default function JobDependenciesPage() {
       {/* Complex Dependencies Modal */}
       {showComplexDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className="w-full max-w-6xl rounded-xl bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -4145,7 +4145,7 @@ export default function JobDependenciesPage() {
                           )
                         }
                         placeholder="All IDs"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4163,7 +4163,7 @@ export default function JobDependenciesPage() {
                           )
                         }
                         placeholder="All Job IDs"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4181,7 +4181,7 @@ export default function JobDependenciesPage() {
                           )
                         }
                         placeholder="All Depends On Job IDs"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4284,7 +4284,7 @@ export default function JobDependenciesPage() {
                         placeholder="Min"
                         min="0"
                         max="30"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4304,7 +4304,7 @@ export default function JobDependenciesPage() {
                         placeholder="Max"
                         min="0"
                         max="30"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4324,7 +4324,7 @@ export default function JobDependenciesPage() {
                         placeholder="Min"
                         min="0"
                         max="1440"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -4344,7 +4344,7 @@ export default function JobDependenciesPage() {
                         placeholder="Max"
                         min="0"
                         max="1440"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
                   </div>
@@ -4366,13 +4366,13 @@ export default function JobDependenciesPage() {
                         setFilterMaxWaitMinutesMin("");
                         setFilterMaxWaitMinutesMax("");
                       }}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                     >
                       Clear All
                     </button>
                     <button
                       onClick={() => setShowAdvancedFilters(false)}
-                      className="flex-1 px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors"
+                      className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors`}
                       style={{ backgroundColor: color.primary.action }}
                     >
                       Apply Filters

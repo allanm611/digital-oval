@@ -159,14 +159,14 @@ export function ConfigurationModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10050] p-4">
-      <div className="bg-white rounded-md shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
             {item ? config.modalTitle.edit : config.modalTitle.create}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -184,7 +184,7 @@ export function ConfigurationModal({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
                   "{field}",
                   config.nameLabel.toLowerCase()
@@ -206,7 +206,7 @@ export function ConfigurationModal({
                     description: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
                   "{field}",
                   config.descriptionLabel.toLowerCase()
@@ -219,7 +219,7 @@ export function ConfigurationModal({
           </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
@@ -228,14 +228,14 @@ export function ConfigurationModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
             >
               {t.genericConfig.cancel}
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 text-white rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
@@ -403,7 +403,7 @@ export default function GenericConfigurationPage({
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate(config.backPath)}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -419,7 +419,7 @@ export default function GenericConfigurationPage({
         <div className="flex items-center gap-3 w-auto">
           <button
             onClick={handleCreateItem}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -438,13 +438,13 @@ export default function GenericConfigurationPage({
             placeholder={config.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] rounded-md focus:outline-none`}
+            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
           />
         </div>
       </div>
 
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -474,7 +474,7 @@ export default function GenericConfigurationPage({
             {!searchTerm && (
               <button
                 onClick={handleCreateItem}
-                className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-sm text-white"
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -568,7 +568,7 @@ export default function GenericConfigurationPage({
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => handleEditItem(item)}
-                          className="p-2 rounded-md transition-colors"
+                          className={`p-2 ${tw.rounded} transition-colors`}
                           style={{
                             color: color.primary.action,
                             backgroundColor: "transparent",
@@ -586,7 +586,7 @@ export default function GenericConfigurationPage({
 
                         <button
                           onClick={() => handleDeleteItem(item)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                         >
                           <Trash2 className="w-4 h-4 text-red-600" />
                         </button>

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { CampaignOffer } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 import { offerService } from "../../../offers/services/offerService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -319,7 +319,7 @@ export default function OfferSelectionModal({
         height: "100vh",
       }}
     >
-      <div className="bg-white rounded-md shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
@@ -348,7 +348,7 @@ export default function OfferSelectionModal({
                 placeholder="Search offers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md"
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded}`}
               />
             </div>
             <div className="w-48">
@@ -365,7 +365,7 @@ export default function OfferSelectionModal({
             </div>
             <button
               onClick={handleCreateNew}
-              className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap"
+              className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium whitespace-nowrap`}
               style={{
                 backgroundColor: color.primary.action,
                 color: "white",
@@ -381,7 +381,7 @@ export default function OfferSelectionModal({
         {tempSelectedOffers.length > 0 && (
           <div className="px-6 flex-shrink-0 my-3">
             <div
-              className="rounded-md p-4 border text-sm"
+              className={`${tw.rounded} p-4 border text-sm`}
               style={{
                 backgroundColor: `${color.primary.accent}15`,
                 borderColor: `${color.primary.accent}40`,
@@ -420,7 +420,7 @@ export default function OfferSelectionModal({
                 <p className="text-red-600 mb-4">{error}</p>
                 <button
                   onClick={loadOffers}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                  className={`px-4 py-2 bg-gray-100 text-gray-700 ${tw.rounded} hover:bg-gray-200 transition-colors`}
                 >
                   Retry
                 </button>
@@ -440,7 +440,7 @@ export default function OfferSelectionModal({
             </div>
           ) : (
             <div
-              className="border rounded-md overflow-hidden"
+              className={`border ${tw.rounded} overflow-hidden`}
               style={{ borderColor: color.border.default }}
             >
               <table
@@ -578,7 +578,7 @@ export default function OfferSelectionModal({
                                       handleSubmitForApproval(Number(offer.id))
                                     }
                                     disabled={isUpdating}
-                                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium ${tw.rounded} text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
                                     style={{
                                       backgroundColor: color.primary.action,
                                     }}
@@ -606,7 +606,7 @@ export default function OfferSelectionModal({
                                         handleActivate(Number(offer.id))
                                       }
                                       disabled={isUpdating}
-                                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                      className={`inline-flex items-center px-3 py-1.5 text-sm font-medium ${tw.rounded} text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
                                       style={{
                                         backgroundColor: color.primary.action,
                                       }}
@@ -649,14 +649,14 @@ export default function OfferSelectionModal({
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+              className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
               disabled={tempSelectedOffers.length === 0}
-              className={`px-5 py-2 rounded-md text-sm font-medium ${
+              className={`px-5 py-2 ${tw.rounded} text-sm font-medium ${
                 tempSelectedOffers.length === 0 ? "cursor-not-allowed" : ""
               }`}
               style={{

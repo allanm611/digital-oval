@@ -38,7 +38,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
-import { color } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { roleService } from "../../roles/services/roleService";
 import { userService } from "../../users/services/userService";
@@ -490,6 +490,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         type: "single",
         entity: "segments",
       },
+      {
+        name: "Manual Rewards",
+        href: "/dashboard/manual-rewards",
+        icon: Gift,
+        type: "single",
+        entity: "offers",
+      },
 
       {
         name: "Configuration",
@@ -521,7 +528,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const getItemClasses = (isActive: boolean) => {
     return isActive
-      ? `text-white border-l-[2px] border-white/60  rounded-md font-bold`
+      ? `text-white border-l-[2px] border-white/60  ${tw.rounded} font-bold`
       : `text-white/90 hover:text-white hover:bg-white/10 transition-all duration-200 font-normal`;
   };
 
@@ -673,7 +680,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               <button
                 onClick={onClose}
-                className="rounded-md p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                className={`${tw.rounded} p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100`}
               >
                 <X className="h-6 w-6" />
               </button>
@@ -698,7 +705,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                               parentItemNames
                             )
                           }
-                          className={`group w-full flex items-center justify-between rounded-md p-3 text-sm transition-all duration-300 ease-out ${
+                          className={`group w-full flex items-center justify-between ${
+                            tw.rounded
+                          } p-3 text-sm transition-all duration-300 ease-out ${
                             !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                           } ${getItemClasses(isActive)}`}
                         >
@@ -741,7 +750,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                       onClick={() =>
                                         toggleExpanded(child.name.toLowerCase())
                                       }
-                                      className={`group w-full flex items-center justify-between rounded-md p-2.5 text-sm transition-all duration-200 ${
+                                      className={`group w-full flex items-center justify-between ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${
                                         isChildActive
                                           ? getItemClasses(isChildActive)
                                           : getItemClasses(false)
@@ -775,7 +786,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                               key={grandchild.name}
                                               to={grandchild.href}
                                               onClick={handleLinkClick}
-                                              className={`group flex items-center gap-x-3 rounded-md p-2.5 text-sm transition-all duration-200 ${
+                                              className={`group flex items-center gap-x-3 ${
+                                                tw.rounded
+                                              } p-2.5 text-sm transition-all duration-200 ${
                                                 isGrandchildActive
                                                   ? getItemClasses(
                                                       isGrandchildActive
@@ -804,7 +817,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                   key={child.name}
                                   to={child.href}
                                   onClick={handleLinkClick}
-                                  className={`group flex items-center gap-x-3 rounded-md p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                  className={`group flex items-center gap-x-3 ${
+                                    tw.rounded
+                                  } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
                                     isChildActive
                                   )}`}
                                 >
@@ -828,7 +843,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       key={item.name}
                       to={item.href}
                       onClick={handleLinkClick}
-                      className={`group flex items-center gap-x-3 rounded-md p-3 text-sm transition-all duration-300 ease-out ${
+                      className={`group flex items-center gap-x-3 ${
+                        tw.rounded
+                      } p-3 text-sm transition-all duration-300 ease-out ${
                         !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                       } ${getItemClasses(isActive)}`}
                     >
@@ -851,7 +868,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       key={item.name}
                       to={item.href}
                       onClick={handleLinkClick}
-                      className={`group flex items-center gap-x-3 rounded-md p-3 text-sm transition-all duration-300 ease-out ${
+                      className={`group flex items-center gap-x-3 ${
+                        tw.rounded
+                      } p-3 text-sm transition-all duration-300 ease-out ${
                         !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                       } ${getItemClasses(isActive)}`}
                     >
@@ -883,7 +902,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </div>
               <button
                 onClick={handleSidebarLogout}
-                className="mt-4 inline-flex w-full items-center justify-center gap-x-2 rounded-md border border-white/20 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                className={`mt-4 inline-flex w-full items-center justify-center gap-x-2 ${tw.rounded} border border-white/20 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors`}
               >
                 <LogOut className="h-4 w-4" />
                 Sign out
@@ -942,7 +961,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             parentItemNames
                           )
                         }
-                        className={`group w-full flex items-center md:justify-center xl:justify-between rounded-md md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                        className={`group w-full flex items-center md:justify-center xl:justify-between ${
+                          tw.rounded
+                        } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                           !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                         } ${getItemClasses(isActive)}`}
                         title={item.name}
@@ -964,7 +985,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                       {/* Tooltip for minimized sidebar */}
                       <div
-                        className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl"
+                        className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                         style={{
                           top: "50%",
                           transform: "translateY(-50%)",
@@ -998,7 +1019,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     onClick={() =>
                                       toggleExpanded(child.name.toLowerCase())
                                     }
-                                    className={`group w-full flex items-center md:justify-center xl:justify-between rounded-md md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${
+                                    className={`group w-full flex items-center md:justify-center xl:justify-between ${
+                                      tw.rounded
+                                    } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${
                                       isChildActive
                                         ? getItemClasses(isChildActive)
                                         : getItemClasses(false)
@@ -1024,7 +1047,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                   {/* Tooltip for child */}
                                   <div
-                                    className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl"
+                                    className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                                     style={{
                                       top: "50%",
                                       transform: "translateY(-50%)",
@@ -1049,7 +1072,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                             <Link
                                               to={grandchild.href}
                                               onClick={handleLinkClick}
-                                              className={`group flex items-center md:justify-center xl:justify-start gap-x-3 rounded-md md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                              className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                                tw.rounded
+                                              } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${getItemClasses(
                                                 isGrandchildActive
                                               )}`}
                                               title={grandchild.name}
@@ -1066,7 +1091,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                             {/* Tooltip for grandchild */}
                                             <div
-                                              className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl"
+                                              className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                                               style={{
                                                 top: "50%",
                                                 transform: "translateY(-50%)",
@@ -1091,7 +1116,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 <Link
                                   to={child.href}
                                   onClick={handleLinkClick}
-                                  className={`group flex items-center md:justify-center xl:justify-start gap-x-3 rounded-md md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${
+                                  className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                    tw.rounded
+                                  } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${
                                     isChildActive
                                       ? getItemClasses(isChildActive)
                                       : getItemClasses(false)
@@ -1110,7 +1137,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                 {/* Tooltip for child */}
                                 <div
-                                  className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl"
+                                  className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                                   style={{
                                     top: "50%",
                                     transform: "translateY(-50%)",
@@ -1141,7 +1168,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   >
                     <Link
                       to={item.href}
-                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 rounded-md md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                        tw.rounded
+                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                         isActive
                       )}`}
                       title={item.name}
@@ -1156,7 +1185,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-                      className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl"
+                      className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",
@@ -1189,7 +1218,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   >
                     <Link
                       to={item.href}
-                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 rounded-md md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                        tw.rounded
+                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                         isActive
                       )}`}
                       title={item.name}
@@ -1205,7 +1236,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-                      className="md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl"
+                      className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",

@@ -115,7 +115,7 @@ export default function CreateServerModal({
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-2xl rounded-md bg-white shadow-2xl">
+      <div className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl`}>
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Add Server</h2>
@@ -144,7 +144,7 @@ export default function CreateServerModal({
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -160,7 +160,7 @@ export default function CreateServerModal({
                 name="code"
                 value={form.code}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -198,7 +198,7 @@ export default function CreateServerModal({
                 name="host"
                 value={form.host}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -236,7 +236,7 @@ export default function CreateServerModal({
                 name="region"
                 value={form.region}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -247,7 +247,7 @@ export default function CreateServerModal({
                 name="port"
                 value={form.port}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -260,7 +260,7 @@ export default function CreateServerModal({
                 name="base_path"
                 value={form.base_path}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function CreateServerModal({
                 name="timeout_seconds"
                 value={form.timeout_seconds}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -288,12 +288,12 @@ export default function CreateServerModal({
                 name="max_retries"
                 value={form.max_retries}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           </div>
 
-          <div className="space-y-4 rounded-md border border-gray-100 p-4">
+          <div className={`space-y-4 ${tw.rounded} border border-gray-100 p-4`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">
@@ -326,7 +326,7 @@ export default function CreateServerModal({
                     name="health_check_url"
                     value={form.health_check_url}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                    className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                   />
                 </div>
 
@@ -339,14 +339,14 @@ export default function CreateServerModal({
                     name="health_check_interval_seconds"
                     value={form.health_check_interval_seconds}
                     onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                    className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <div className="space-y-4 rounded-md border border-gray-100 p-4">
+          <div className={`space-y-4 ${tw.rounded} border border-gray-100 p-4`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">
@@ -378,13 +378,13 @@ export default function CreateServerModal({
                   name="circuit_breaker_threshold"
                   value={form.circuit_breaker_threshold}
                   onChange={handleChange}
-                  className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                 />
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between rounded-md border border-gray-100 p-4">
+          <div className={`flex items-center justify-between ${tw.rounded} border border-gray-100 p-4`}>
             <div>
               <p className="text-sm font-medium text-gray-900">TLS</p>
               <p className="text-xs text-gray-500">
@@ -412,7 +412,7 @@ export default function CreateServerModal({
               name="authentication_type"
               value={form.authentication_type}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
             />
           </div>
 
@@ -420,7 +420,7 @@ export default function CreateServerModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+              className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50`}
               disabled={isSubmitting}
             >
               Cancel

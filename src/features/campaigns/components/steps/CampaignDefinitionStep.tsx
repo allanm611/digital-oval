@@ -316,7 +316,9 @@ export default function CampaignDefinitionStep({
           campaign
         </p>
       </div>
-      <div className="bg-white border border-gray-200 rounded-md p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6">
+      <div
+        className={`bg-white border border-gray-200 ${tw.rounded} p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6`}
+      >
         <h3 className="text-base font-medium text-gray-900 mb-4 md:mb-6 px-0">
           Campaign Information
         </h3>
@@ -335,7 +337,9 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-1 text-sm ${
+              className={`w-full px-3 py-2 border ${
+                tw.rounded
+              } focus:ring-1 text-sm ${
                 validationErrors.name
                   ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                   : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
@@ -357,7 +361,7 @@ export default function CampaignDefinitionStep({
             <div
               className={
                 validationErrors.category_id
-                  ? "border border-red-300 rounded-md"
+                  ? `border border-red-300 ${tw.rounded}`
                   : ""
               }
             >
@@ -393,7 +397,7 @@ export default function CampaignDefinitionStep({
                 onClick={() =>
                   setIsLineOfBusinessDropdownOpen(!isLineOfBusinessDropdownOpen)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
               >
                 <span
                   className={`text-sm ${
@@ -423,7 +427,9 @@ export default function CampaignDefinitionStep({
               </button>
 
               {isLineOfBusinessDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div
+                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                >
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -433,7 +439,7 @@ export default function CampaignDefinitionStep({
                         onChange={(e) =>
                           setLineOfBusinessSearchTerm(e.target.value)
                         }
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search line of business..."
                       />
                     </div>
@@ -498,7 +504,7 @@ export default function CampaignDefinitionStep({
                 onClick={() =>
                   setIsDepartmentDropdownOpen(!isDepartmentDropdownOpen)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
               >
                 <span
                   className={`text-sm ${
@@ -526,7 +532,9 @@ export default function CampaignDefinitionStep({
               </button>
 
               {isDepartmentDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div
+                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                >
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -536,7 +544,7 @@ export default function CampaignDefinitionStep({
                         onChange={(e) =>
                           setDepartmentSearchTerm(e.target.value)
                         }
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search departments..."
                       />
                     </div>
@@ -606,13 +614,13 @@ export default function CampaignDefinitionStep({
                     }
                   }}
                   placeholder="Enter a tag and press Enter"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm"
+                  className={`flex-1 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
                   disabled={!tagInput.trim()}
-                  className="px-3 py-2 text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-3 py-2 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />
@@ -655,7 +663,7 @@ export default function CampaignDefinitionStep({
               <button
                 type="button"
                 onClick={() => setIsProgramDropdownOpen(!isProgramDropdownOpen)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
               >
                 <span
                   className={`text-sm ${
@@ -682,7 +690,9 @@ export default function CampaignDefinitionStep({
               </button>
 
               {isProgramDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div
+                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                >
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -690,7 +700,7 @@ export default function CampaignDefinitionStep({
                         type="text"
                         value={programSearchTerm}
                         onChange={(e) => setProgramSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search programs..."
                       />
                     </div>
@@ -757,7 +767,9 @@ export default function CampaignDefinitionStep({
                 onClick={() =>
                   setIsObjectiveDropdownOpen(!isObjectiveDropdownOpen)
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
+                className={`w-full px-3 py-2 border ${
+                  tw.rounded
+                } focus:ring-1 bg-white text-sm text-left flex items-center justify-between ${
                   validationErrors.objective
                     ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                     : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
@@ -782,7 +794,9 @@ export default function CampaignDefinitionStep({
               </button>
 
               {isObjectiveDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div
+                  className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                >
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -790,7 +804,7 @@ export default function CampaignDefinitionStep({
                         type="text"
                         value={objectiveSearchTerm}
                         onChange={(e) => setObjectiveSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search objectives..."
                       />
                     </div>
@@ -902,7 +916,9 @@ export default function CampaignDefinitionStep({
                         priority_rank: 1,
                       })
                     }
-                    className={`flex-1 px-3 py-2.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center gap-2 min-h-[42px] border ${
+                    className={`flex-1 px-3 py-2.5 ${
+                      tw.rounded
+                    } text-xs font-medium transition-all duration-200 flex items-center justify-center gap-2 min-h-[42px] border ${
                       isSelected
                         ? "border-transparent text-white shadow-sm"
                         : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"
@@ -942,7 +958,9 @@ export default function CampaignDefinitionStep({
             </div>
             {/* Priority Rank - Only shows when priority is selected */}
             {formData.priority && (
-              <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+              <div
+                className={`mt-3 p-3 bg-gray-50 border border-gray-200 ${tw.rounded}`}
+              >
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Rank within{" "}
                   {formData.priority.charAt(0).toUpperCase() +
@@ -957,7 +975,9 @@ export default function CampaignDefinitionStep({
                       onClick={() =>
                         setFormData({ ...formData, priority_rank: rank })
                       }
-                      className={`w-8 h-8 rounded-md text-xs font-medium transition-all duration-200 flex items-center justify-center border ${
+                      className={`w-8 h-8 ${
+                        tw.rounded
+                      } text-xs font-medium transition-all duration-200 flex items-center justify-center border ${
                         formData.priority_rank === rank
                           ? "bg-black text-white border-black shadow-sm"
                           : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
@@ -1012,7 +1032,9 @@ export default function CampaignDefinitionStep({
             </button>
 
             {isPolicyDropdownOpen && (
-              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-64 overflow-hidden">
+              <div
+                className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
+              >
                 <button
                   type="button"
                   onClick={() => {
@@ -1066,7 +1088,7 @@ export default function CampaignDefinitionStep({
           {/* Customization Toggle */}
           {selectedPolicy && (
             <div
-              className={`flex items-center justify-between px-3 py-2 mt-2 ${tw.surfaceCards} rounded-md border ${tw.borderMuted}`}
+              className={`flex items-center justify-between px-3 py-2 mt-2 ${tw.surfaceCards} ${tw.rounded} border ${tw.borderMuted}`}
             >
               <span
                 className={`${tw.caption} ${tw.textSecondary} flex items-center gap-2`}
@@ -1077,7 +1099,7 @@ export default function CampaignDefinitionStep({
               <button
                 type="button"
                 onClick={() => handleCustomizePolicy(selectedPolicy)}
-                className={`px-3 py-1 text-xs flex items-center gap-1 rounded-md ${tw.primaryAction} hover:opacity-90`}
+                className={`px-3 py-1 text-xs flex items-center gap-1 ${tw.rounded} ${tw.primaryAction} hover:opacity-90`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Settings className="w-3 h-3" />
@@ -1096,7 +1118,7 @@ export default function CampaignDefinitionStep({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm"
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
             placeholder="Describe your campaign goals and objectives"
             rows={3}
           />
@@ -1129,7 +1151,9 @@ export default function CampaignDefinitionStep({
                   clearValidationErrors();
                 }
               }}
-              className={`w-full pl-12 pr-3 py-2 border rounded-md focus:ring-1 text-sm ${
+              className={`w-full pl-12 pr-3 py-2 border ${
+                tw.rounded
+              } focus:ring-1 text-sm ${
                 validationErrors.budget_allocated
                   ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                   : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
@@ -1172,7 +1196,7 @@ export default function CampaignDefinitionStep({
                 // Show picker when focused
                 (e.target as HTMLInputElement).showPicker?.();
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm cursor-pointer"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm cursor-pointer`}
             />
             <p className="text-xs text-gray-500 mt-1">
               When should this campaign start?
@@ -1207,7 +1231,9 @@ export default function CampaignDefinitionStep({
                 // Show picker when focused
                 (e.target as HTMLInputElement).showPicker?.();
               }}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-1 text-sm cursor-pointer ${
+              className={`w-full px-3 py-2 border ${
+                tw.rounded
+              } focus:ring-1 text-sm cursor-pointer ${
                 validationErrors.end_date
                   ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                   : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"

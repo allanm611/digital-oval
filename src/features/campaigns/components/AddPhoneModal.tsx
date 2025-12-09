@@ -1,8 +1,17 @@
-import { useState } from "react";
-import { X, Search, Phone } from "lucide-react";
-import { useToast } from "../../../contexts/ToastContext";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Eye } from "lucide-react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import RegularModal from "../../../shared/components/ui/RegularModal";
 import { color, tw } from "../../../shared/utils/utils";
+import {
+  customerSubscriptions,
+  searchCustomers as searchCustomersUtil,
+} from "../../dashboard/utils/customerDataService";
+import type { CustomerSubscriptionRecord } from "../../dashboard/types/customerSubscription";
+import {
+  getSubscriptionDisplayName,
+  formatMsisdn,
+} from "../../dashboard/utils/customerSubscriptionHelpers";
 
 interface AddPhoneModalProps {
   isOpen: boolean;
@@ -15,243 +24,179 @@ interface AddPhoneModalProps {
   }) => void;
 }
 
-interface Customer {
-  id: number;
-  name?: string;
-  email?: string;
-  phone?: string;
-  msisdn?: string;
-}
-
-// Dummy customer data for demonstration
-const DUMMY_CUSTOMERS: Customer[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+254712345678",
-    msisdn: "254712345678",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+254723456789",
-    msisdn: "254723456789",
-  },
-  {
-    id: 3,
-    name: "Bob Johnson",
-    email: "bob.johnson@example.com",
-    phone: "+254734567890",
-    msisdn: "254734567890",
-  },
-];
-
 export default function AddPhoneModal({
   isOpen,
   onClose,
   onAdd,
 }: AddPhoneModalProps) {
-  const { success: showToast, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<Customer[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
+  const [searchResults, setSearchResults] = useState<
+    CustomerSubscriptionRecord[]
+  >([]);
+
+  const searchCustomers = useCallback(
+    (term: string, customers: CustomerSubscriptionRecord[]) => {
+      return searchCustomersUtil(term, customers);
+    },
+    []
   );
 
-  if (!isOpen) return null;
+  // Debounced search
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchTerm("");
+      setSearchResults([]);
+      return;
+    }
 
-  const handleSearch = async () => {
     if (!searchTerm.trim()) {
-      showError("Please enter a phone number or MSISDN");
+      setSearchResults([]);
       return;
     }
 
     setIsSearching(true);
-    try {
-      // TODO: Replace with actual API call
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Filter dummy data based on search term
-      const filtered = DUMMY_CUSTOMERS.filter(
-        (customer) =>
-          customer.phone?.includes(searchTerm) ||
-          customer.msisdn?.includes(searchTerm) ||
-          customer.name?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-      setSearchResults(filtered);
-      if (filtered.length === 0) {
-        showError("No customer found with that phone number or MSISDN");
-      }
-    } catch (error) {
-      showError("Failed to search for customer");
-    } finally {
+    const debounceTimer = setTimeout(() => {
+      const results = searchCustomers(searchTerm, customerSubscriptions);
+      // Limit to top 50 results for performance
+      setSearchResults(results.slice(0, 50));
       setIsSearching(false);
-    }
-  };
+    }, 400); // 400ms debounce
 
-  const handleSelectCustomer = (customer: Customer) => {
-    setSelectedCustomer(customer);
-  };
+    return () => {
+      clearTimeout(debounceTimer);
+      setIsSearching(false);
+    };
+  }, [searchTerm, isOpen, searchCustomers]);
 
-  const handleAdd = () => {
-    if (!selectedCustomer) {
-      showError("Please select a customer");
-      return;
-    }
+  const handleSelectCustomer = (customer: CustomerSubscriptionRecord) => {
+    const name = getSubscriptionDisplayName(
+      customer,
+      `Customer ${customer.customerId}`
+    );
+    const phone = customer.msisdn ? formatMsisdn(customer.msisdn) : undefined;
 
     onAdd({
-      id: selectedCustomer.id,
-      name: selectedCustomer.name,
-      email: selectedCustomer.email,
-      phone: selectedCustomer.phone || selectedCustomer.msisdn,
+      id: customer.customerId,
+      name,
+      email: customer.email || undefined,
+      phone: phone || undefined,
     });
 
     // Reset state
     setSearchTerm("");
     setSearchResults([]);
-    setSelectedCustomer(null);
+    onClose();
   };
 
   const handleClose = () => {
     setSearchTerm("");
     setSearchResults([]);
-    setSelectedCustomer(null);
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
-        style={{ backgroundColor: color.surface.background }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div className="flex items-center gap-3">
-            <Phone
-              className="w-5 h-5"
-              style={{ color: color.primary.action }}
-            />
-            <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-              Add Phone to DND
-            </h2>
-          </div>
-          <button
-            onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <RegularModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Add Phone to DND"
+      size="xl"
+    >
+      <div className="space-y-4">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Enter phone number, MSISDN, customer name, ID, or email..."
+            className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
+            style={
+              {
+                "--accent-color": `${color.primary.accent}33`,
+              } as React.CSSProperties
+            }
+            autoFocus
+          />
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="space-y-4">
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Search by Phone Number or MSISDN
-              </label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter phone number or MSISDN..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearch();
-                      }
-                    }}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm"
-                  />
-                </div>
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  className="px-4 py-2 rounded-md font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  {isSearching ? "Searching..." : "Search"}
-                </button>
-              </div>
+        {/* Helper Text */}
+        <p className="text-xs text-gray-500">
+          Search by phone number, MSISDN, customer name, ID, or email address.
+        </p>
+
+        {/* Search Results */}
+        <div className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}>
+          {isSearching ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <LoadingSpinner variant="modern" size="md" />
+              <p className={`${tw.textMuted} mt-3 text-sm`}>
+                Searching customers...
+              </p>
             </div>
-
-            {/* Search Results */}
-            {isSearching && (
-              <div className="flex items-center justify-center py-8">
-                <LoadingSpinner />
-              </div>
-            )}
-
-            {!isSearching && searchResults.length > 0 && (
-              <div className="space-y-2">
-                <h3 className={`text-sm font-medium ${tw.textPrimary} mb-2`}>
-                  Search Results
-                </h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {searchResults.map((customer) => (
-                    <div
-                      key={customer.id}
-                      onClick={() => handleSelectCustomer(customer)}
-                      className={`p-4 border rounded-md cursor-pointer transition-colors ${
-                        selectedCustomer?.id === customer.id
-                          ? "border-[#588157] bg-[#588157]/10"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className={`font-medium ${tw.textPrimary} mb-1`}>
-                            {customer.name || "Unknown"}
-                          </div>
-                          <div className={`text-sm ${tw.textSecondary}`}>
-                            {customer.phone || customer.msisdn}
-                          </div>
-                          {customer.email && (
-                            <div className={`text-xs ${tw.textMuted} mt-1`}>
-                              {customer.email}
-                            </div>
-                          )}
-                        </div>
-                        {selectedCustomer?.id === customer.id && (
-                          <div className="text-[#588157]">✓</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+          ) : searchTerm.trim() && searchResults.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-sm text-gray-500">
+                No customers found matching "{searchTerm}"
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                Try a different search term or check your spelling
+              </p>
+            </div>
+          ) : searchTerm.trim() && searchResults.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {searchResults.length > 50 && (
+                <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
+                  <p className="text-xs text-yellow-800">
+                    Showing top 50 results. Use filters to narrow down your
+                    search.
+                  </p>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
-          <button
-            onClick={handleClose}
-            className="px-4 py-2 rounded-md font-semibold text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAdd}
-            disabled={!selectedCustomer}
-            className="px-4 py-2 rounded-md font-semibold text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: color.primary.action }}
-          >
-            Add to DND
-          </button>
+              )}
+              {searchResults.map((customer) => {
+                const name = getSubscriptionDisplayName(
+                  customer,
+                  `Customer ${customer.customerId}`
+                );
+                return (
+                  <button
+                    key={`${customer.customerId}-${customer.subscriptionId}`}
+                    onClick={() => handleSelectCustomer(customer)}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors focus:outline-none focus:bg-gray-50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {name}
+                        </p>
+                        <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                          <span>ID: {customer.customerId}</span>
+                          {customer.msisdn && (
+                            <span>MSISDN: {formatMsisdn(customer.msisdn)}</span>
+                          )}
+                          {customer.email && <span>{customer.email}</span>}
+                        </div>
+                      </div>
+                      <Eye className="h-4 w-4 text-gray-400 ml-2 flex-shrink-0" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-6 py-12 text-center">
+              <Search className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">
+                Start typing to search for customers
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                You can search by phone number, MSISDN, name, ID, or email
+              </p>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </RegularModal>
   );
 }

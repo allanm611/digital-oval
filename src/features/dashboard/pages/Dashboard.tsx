@@ -37,6 +37,7 @@ import RewardTypesPage from "../../offers/pages/RewardTypesPage";
 import SenderIdsPage from "../../offers/pages/SenderIdsPage";
 import SMSRoutesPage from "../../offers/pages/SMSRoutesPage";
 import LanguagesPage from "../../offers/pages/LanguagesPage";
+import CharacterSetsPage from "../../offers/pages/CharacterSetsPage";
 // import CategoryDetailsPage from "../../offers/pages/CategoryDetailsPage";
 import UserManagementPage from "../components/UserManagementPage";
 import UserDetailsPage from "../../users/pages/UserDetailsPage";
@@ -50,6 +51,8 @@ import OfferCreativeDetailsPage from "../../offers/pages/OfferCreativeDetailsPag
 import QuickListsPage from "../../quicklists/pages/QuickListsPage";
 import QuickListDetailsPage from "../../quicklists/pages/QuickListDetailsPage";
 import CreateManualBroadcastPage from "../../manual-broadcast/pages/CreateManualBroadcastPage";
+import CreateManualRewardPage from "../../manual-rewards/pages/CreateManualRewardPage";
+import ManualRewardsPage from "../../manual-rewards/pages/ManualRewardsPage";
 import CustomerIdentityPage from "../../customer/pages/CustomerIdentityPage";
 import CustomerIdentityFieldDetailsPage from "../../customer/pages/CustomerIdentityFieldDetailsPage";
 import CampaignApprovalHistoryPage from "../../campaigns/pages/CampaignApprovalHistoryPage";
@@ -188,6 +191,11 @@ export default function Dashboard() {
           path="/quicklists/create"
           element={<CreateManualBroadcastPage />}
         />
+        <Route path="/manual-rewards" element={<ManualRewardsPage />} />
+        <Route
+          path="/manual-rewards/create"
+          element={<CreateManualRewardPage />}
+        />
         <Route path="/quicklists/:id" element={<QuickListDetailsPage />} />
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/configuration" element={<ConfigurationPage />} />
@@ -204,6 +212,7 @@ export default function Dashboard() {
         <Route path="/sender-ids" element={<SenderIdsPage />} />
         <Route path="/sms-routes" element={<SMSRoutesPage />} />
         <Route path="/languages" element={<LanguagesPage />} />
+        <Route path="/character-sets" element={<CharacterSetsPage />} />
         <Route
           path="/communication-channels"
           element={<CommunicationChannelsPage />}

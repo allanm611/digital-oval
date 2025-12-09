@@ -20,7 +20,7 @@ import {
   Save,
   AlertCircle,
 } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TagInput from "../../../shared/components/ui/TagInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -344,7 +344,7 @@ export default function ObjectiveModal({
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[${
+                  className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${
                     color.primary.action
                   }] focus:border-transparent ${
                     errors.name ? "border-red-500" : "border-gray-300"
@@ -370,7 +370,7 @@ export default function ObjectiveModal({
                     handleInputChange("description", e.target.value)
                   }
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                   placeholder="Enter objective description..."
                 />
               </div>
@@ -388,7 +388,7 @@ export default function ObjectiveModal({
                         key={option.value}
                         type="button"
                         onClick={() => handleInputChange("icon", option.value)}
-                        className={`p-3 rounded-md border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                        className={`p-3 ${tw.rounded} border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
                           formData.icon === option.value
                             ? `border-[${color.primary.action}] bg-[${color.primary.action}]20`
                             : "border-gray-200 hover:border-gray-300"
@@ -485,7 +485,7 @@ export default function ObjectiveModal({
                     handleInputChange("business_rules", e.target.value)
                   }
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                   placeholder="Enter business rules or guidelines..."
                 />
               </div>
@@ -498,14 +498,14 @@ export default function ObjectiveModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white rounded-md transition-colors flex items-center justify-center"
+                className={`flex-1 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors flex items-center justify-center`}
                 style={{
                   backgroundColor: color.primary.action,
                   opacity: isLoading ? 0.7 : 1,

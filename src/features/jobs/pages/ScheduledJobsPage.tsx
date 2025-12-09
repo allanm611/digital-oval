@@ -473,7 +473,7 @@ export default function ScheduledJobsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/scheduled-jobs/analytics")}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: "transparent",
               color: color.primary.action,
@@ -495,7 +495,7 @@ export default function ScheduledJobsPage() {
                 setSelectedJobs(new Set());
               }
             }}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: isSelectionMode
                 ? color.primary.action
@@ -513,7 +513,7 @@ export default function ScheduledJobsPage() {
           </button>
           <button
             onClick={() => navigate("/dashboard/scheduled-jobs/create")}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="h-4 w-4" />
@@ -524,7 +524,7 @@ export default function ScheduledJobsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -538,7 +538,7 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.totalJobs}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -550,7 +550,7 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.activeJobs}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -562,7 +562,7 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.draftJobs}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -574,7 +574,7 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.slaBreached}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
@@ -586,7 +586,7 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.staleJobs}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -607,7 +607,7 @@ export default function ScheduledJobsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            className="w-full rounded-md border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
             placeholder="Search by name or code"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -622,7 +622,7 @@ export default function ScheduledJobsPage() {
         />
         <button
           onClick={() => setShowAdvancedFilters(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
@@ -642,7 +642,7 @@ export default function ScheduledJobsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedJobs.size > 0 && (
-        <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3">
+        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedJobs.size} job(s) selected
@@ -658,7 +658,7 @@ export default function ScheduledJobsPage() {
             <button
               onClick={() => handleBatchAction("activate")}
               disabled={isBatchProcessing}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Play className="h-4 w-4" />
@@ -667,7 +667,7 @@ export default function ScheduledJobsPage() {
             <button
               onClick={() => handleBatchAction("pause")}
               disabled={isBatchProcessing}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
               style={{
                 backgroundColor: "transparent",
                 color: color.primary.action,
@@ -680,7 +680,7 @@ export default function ScheduledJobsPage() {
             <button
               onClick={() => handleBatchAction("archive")}
               disabled={isBatchProcessing}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -688,7 +688,7 @@ export default function ScheduledJobsPage() {
             <button
               onClick={() => handleBatchAction("delete")}
               disabled={isBatchProcessing}
-              className="inline-flex items-center gap-2 rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50`}
             >
               <Trash2 className="h-4 w-4" />
               Delete
@@ -884,7 +884,7 @@ export default function ScheduledJobsPage() {
                           onClick={() =>
                             navigate(`/dashboard/scheduled-jobs/${job.id}`)
                           }
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View details"
                         >
                           <Eye className="w-4 h-4" />
@@ -893,7 +893,7 @@ export default function ScheduledJobsPage() {
                           onClick={() =>
                             navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
                           }
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="Edit job"
                         >
                           <Edit className="w-4 h-4" />
@@ -903,7 +903,7 @@ export default function ScheduledJobsPage() {
                             setDeletingJob(job);
                             setShowDeleteModal(true);
                           }}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           aria-label="Delete job"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -1026,7 +1026,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Owners"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -1040,7 +1040,7 @@ export default function ScheduledJobsPage() {
                         value={tagFilter}
                         onChange={(e) => setTagFilter(e.target.value)}
                         placeholder="All Tags"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -1082,7 +1082,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Profiles"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -1100,7 +1100,7 @@ export default function ScheduledJobsPage() {
                           )
                         }
                         placeholder="All Tenants"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -1114,7 +1114,7 @@ export default function ScheduledJobsPage() {
                         value={jobCodeFilter}
                         onChange={(e) => setJobCodeFilter(e.target.value)}
                         placeholder="Enter job code"
-                        className="w-full text-sm px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
                     </div>
 
@@ -1149,13 +1149,13 @@ export default function ScheduledJobsPage() {
                         setJobCodeFilter("");
                         setActiveJobsFilter(false);
                       }}
-                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                     >
                       Clear All
                     </button>
                     <button
                       onClick={() => setShowAdvancedFilters(false)}
-                      className="flex-1 px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors"
+                      className={`flex-1 px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors`}
                       style={{ backgroundColor: color.primary.action }}
                     >
                       Apply Filters

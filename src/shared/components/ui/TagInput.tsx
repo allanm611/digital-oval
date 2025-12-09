@@ -1,6 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from "react";
 import { X, Plus } from "lucide-react";
 
+import { tw } from '../../../shared/utils/utils';
 interface TagInputProps {
   value: string[];
   onChange: (value: string[]) => void;
@@ -65,7 +66,7 @@ export default function TagInput({
 
       <div
         className={`
-          min-h-[42px] w-full px-3 py-2 border rounded-md bg-white
+          min-h-[42px] w-full px-3 py-2 border ${tw.rounded} bg-white
           transition-all duration-200 focus-within:border-blue-500
           ${error ? "border-red-300" : "border-gray-300"}
           ${disabled ? "bg-gray-50 cursor-not-allowed" : "cursor-text"}
@@ -76,7 +77,7 @@ export default function TagInput({
           {value.map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-md animate-scale-in"
+              className={`inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 ${tw.rounded} animate-scale-in`}
             >
               {tag}
               {!disabled && (

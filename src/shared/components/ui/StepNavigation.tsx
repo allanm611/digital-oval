@@ -25,7 +25,7 @@ export default function StepNavigation({
             {showPrevButton && (
                 <button
                     onClick={onPrev}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-all duration-200"
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
                 >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Previous
@@ -36,7 +36,7 @@ export default function StepNavigation({
                 <button
                     onClick={onNext}
                     disabled={isNextDisabled}
-                    className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${isNextDisabled
+                    className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-all duration-200 ${isNextDisabled
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         : `${tw.button.primary} hover:shadow-md`
                         }`}

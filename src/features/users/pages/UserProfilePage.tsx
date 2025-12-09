@@ -228,7 +228,7 @@ export default function UserProfilePage() {
             <>
               <button
                 onClick={handleCancel}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-auto"
+                className={`inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors w-auto`}
               >
                 <X className="w-4 h-4 mr-2" />
                 {t.profile.cancel}
@@ -236,7 +236,7 @@ export default function UserProfilePage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="inline-flex items-center text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed w-auto"
+                className={`inline-flex items-center text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed w-auto`}
                 style={{
                   backgroundColor: button.action.background,
                   color: button.action.color,
@@ -260,7 +260,7 @@ export default function UserProfilePage() {
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="inline-flex items-center text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 w-auto"
+              className={`inline-flex items-center text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-2 w-auto`}
               style={{
                 backgroundColor: button.action.background,
                 color: button.action.color,
@@ -276,7 +276,7 @@ export default function UserProfilePage() {
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className={`bg-white ${tw.rounded} shadow-sm p-6`}>
         {/* Profile Header */}
         <div className="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
           <div className="flex items-center gap-4">
@@ -337,7 +337,7 @@ export default function UserProfilePage() {
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -358,7 +358,7 @@ export default function UserProfilePage() {
                   name="middle_name"
                   value={formData.middle_name || ""}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -379,7 +379,7 @@ export default function UserProfilePage() {
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -400,7 +400,7 @@ export default function UserProfilePage() {
                   name="preferred_name"
                   value={formData.preferred_name || ""}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -408,21 +408,6 @@ export default function UserProfilePage() {
                 </p>
               )}
             </div> */}
-
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
-              >
-                <Mail className="w-4 h-4" />
-                {t.profile.emailAddress}
-              </label>
-              <p className={`text-sm ${tw.textPrimary}`}>
-                {user.email_address || user.email || "N/A"}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {t.profile.emailCannotBeChanged}
-              </p>
-            </div>
 
             <div>
               <label
@@ -437,13 +422,28 @@ export default function UserProfilePage() {
                   name="phone_number"
                   value={formData.phone_number || ""}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
                   {user.phone_number || "N/A"}
                 </p>
               )}
+            </div>
+
+            <div>
+              <label
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+              >
+                <Mail className="w-4 h-4" />
+                {t.profile.emailAddress}
+              </label>
+              <p className={`text-sm ${tw.textPrimary}`}>
+                {user.email_address || user.email || "N/A"}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {t.profile.emailCannotBeChanged}
+              </p>
             </div>
           </div>
 
@@ -465,7 +465,7 @@ export default function UserProfilePage() {
                   name="department"
                   value={formData.department || ""}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -486,7 +486,7 @@ export default function UserProfilePage() {
                   name="job_title"
                   value={formData.job_title || ""}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>
@@ -508,7 +508,7 @@ export default function UserProfilePage() {
                   value={formData.timezone}
                   onChange={handleInputChange}
                   placeholder={t.profile.timezonePlaceholder}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               ) : (
                 <p className={`text-sm ${tw.textPrimary}`}>

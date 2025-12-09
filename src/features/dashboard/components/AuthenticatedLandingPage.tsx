@@ -19,6 +19,7 @@ import FixedBackground from "../../../shared/components/FixedBackground";
 
 import { GuestHeader } from "./Header";
 
+import { tw } from '../../../shared/utils/utils';
 export default function AuthenticatedLandingPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -178,9 +179,9 @@ export default function AuthenticatedLandingPage() {
                 const cardContent = (
                   <>
                     {/* Module Card Container */}
-                    <div className="bg-[#394247] border border-gray-600 rounded-md transition-all duration-200 ease-out p-8 flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden shadow-lg hover:bg-[#4A5257] hover:scale-105 hover:-translate-y-2 hover:shadow-xl hover:border-gray-500 group">
+                    <div className={`bg-[#394247] border border-gray-600 ${tw.rounded} transition-all duration-200 ease-out p-8 flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden shadow-lg hover:bg-[#4A5257] hover:scale-105 hover:-translate-y-2 hover:shadow-xl hover:border-gray-500 group`}>
                       {/* Icon */}
-                      <div className="w-14 h-14 mb-4 rounded-md flex items-center justify-center transition-all duration-300 relative overflow-hidden bg-transparent border border-gray-500 hover:scale-110 hover:rotate-3 hover:border-gray-400">
+                      <div className={`w-14 h-14 mb-4 ${tw.rounded} flex items-center justify-center transition-all duration-300 relative overflow-hidden bg-transparent border border-gray-500 hover:scale-110 hover:rotate-3 hover:border-gray-400`}>
                         <IconComponent
                           className={`${colors.iconSizes.lg} text-white`}
                         />

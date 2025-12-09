@@ -191,7 +191,7 @@ export default function CommunicationPolicyModal({
                   startTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
           <div>
@@ -207,7 +207,7 @@ export default function CommunicationPolicyModal({
                   endTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function CommunicationPolicyModal({
                   maxCount: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -299,7 +299,7 @@ export default function CommunicationPolicyModal({
   const renderDNDConfig = () => {
     const dndConfig = configs.dnd;
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-visible">
         <div className="flex items-center justify-between">
           <p className={`${tw.caption} ${tw.textSecondary}`}>
             Manage customer preferences
@@ -312,6 +312,7 @@ export default function CommunicationPolicyModal({
                 name: "",
                 type: "marketing",
                 status: "stop",
+                value: "allowed",
               };
               updateConfig("dnd", (prev) => ({
                 ...prev,
@@ -324,14 +325,14 @@ export default function CommunicationPolicyModal({
             Add Category
           </button>
         </div>
-        <div className="space-y-3 max-h-60 overflow-y-auto">
+        <div className="space-y-4">
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className={`p-4 ${tw.borderDefault} border rounded-md bg-white transition-colors hover:bg-gray-50`}
+              className={`p-4 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
             >
-              <div className="grid grid-cols-[1fr_1fr_auto] gap-3">
-                <div>
+              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
+                {/* <div>
                   <label
                     className={`block ${tw.label} ${tw.textSecondary} mb-1`}
                   >
@@ -351,13 +352,16 @@ export default function CommunicationPolicyModal({
                         categories: newCategories,
                       }));
                     }}
-                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
+                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                     placeholder="Enter name"
                   />
-                </div>
-                <div>
+                </div> */}
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
                   <label
-                    className={`block ${tw.label} ${tw.textSecondary} mb-1`}
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
                   >
                     Type
                   </label>
@@ -382,6 +386,66 @@ export default function CommunicationPolicyModal({
                     className="w-full"
                   />
                 </div>
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <label
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
+                  >
+                    Value
+                  </label>
+                  <HeadlessSelect
+                    value={category.value || "allowed"}
+                    onChange={(value) => {
+                      const newCategories = [...dndConfig.categories];
+                      newCategories[index] = {
+                        ...category,
+                        value: value as "allowed" | "not allowed",
+                      };
+                      updateConfig("dnd", (prev) => ({
+                        ...prev,
+                        categories: newCategories,
+                      }));
+                    }}
+                    options={[
+                      { label: "Allowed", value: "allowed" },
+                      { label: "Not Allowed", value: "not allowed" },
+                    ]}
+                    placeholder="Select value"
+                    className="w-full"
+                  />
+                </div>
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <label
+                    className={`block text-sm font-medium text-gray-700 mb-2`}
+                  >
+                    Status
+                  </label>
+                  <HeadlessSelect
+                    value={category.status}
+                    onChange={(value) => {
+                      const newCategories = [...dndConfig.categories];
+                      newCategories[index] = {
+                        ...category,
+                        status: value as "start" | "stop",
+                      };
+                      updateConfig("dnd", (prev) => ({
+                        ...prev,
+                        categories: newCategories,
+                      }));
+                    }}
+                    options={[
+                      { label: "Start", value: "start" },
+                      { label: "Stop", value: "stop" },
+                    ]}
+                    placeholder="Select status"
+                    className="w-full"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -393,7 +457,8 @@ export default function CommunicationPolicyModal({
                       categories: newCategories,
                     }));
                   }}
-                  className={`self-end p-2 ${tw.danger} ${tw.statusDanger10} rounded hover:bg-red-200 transition-colors`}
+                  className="p-2 rounded transition-colors mb-0.5"
+                  style={{ color: "#dc2626" }}
                   title="Delete category"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -450,11 +515,11 @@ export default function CommunicationPolicyModal({
                   priority: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
-        <div className={`p-3 rounded-md ${tw.statusInfo10}`}>
+        <div className={`p-3 ${tw.rounded} ${tw.statusInfo10}`}>
           <p className={`${tw.caption} ${tw.textSecondary}`}>
             VIP lists will be managed separately. This configuration defines how
             VIP customers are handled.
@@ -473,7 +538,7 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border rounded-md overflow-hidden transition-all duration-200 ${
+        className={`border ${tw.rounded} overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -490,7 +555,7 @@ export default function CommunicationPolicyModal({
         >
           <div className="flex items-center gap-3">
             <div
-              className="p-2.5 rounded-md transition-all duration-200"
+              className={`p-2.5 ${tw.rounded} transition-all duration-200`}
               style={{
                 color: isExpanded ? color.primary.accent : "#6b7280",
               }}
@@ -520,7 +585,7 @@ export default function CommunicationPolicyModal({
         </button>
 
         {isExpanded && (
-          <div className="px-5 py-6 bg-white border-t border-gray-100">
+          <div className="px-5 py-6 bg-white border-t border-gray-100 overflow-visible">
             {type === "timeWindow" && renderTimeWindowConfig()}
             {type === "maximumCommunication" && renderMaxCommunicationConfig()}
             {type === "dnd" && renderDNDConfig()}
@@ -536,7 +601,7 @@ export default function CommunicationPolicyModal({
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
       <div
-        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-md`}
+        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${tw.rounded}`}
         style={{ zIndex: 10000, position: "relative" }}
       >
         {/* Header */}
@@ -554,7 +619,7 @@ export default function CommunicationPolicyModal({
             </div>
             <button
               onClick={onClose}
-              className={`p-2 ${tw.hover} rounded-md transition-colors hover:bg-gray-100`}
+              className={`p-2 ${tw.hover} ${tw.rounded} transition-colors hover:bg-gray-100`}
               title="Close"
             >
               <X className={`w-5 h-5 ${tw.textMuted}`} />
@@ -566,7 +631,10 @@ export default function CommunicationPolicyModal({
         <form
           onSubmit={handleSubmit}
           className="flex-1 overflow-y-auto"
-          style={{ backgroundColor: color.surface.background }}
+          style={{
+            backgroundColor: color.surface.background,
+            overflowX: "visible",
+          }}
         >
           <div className="space-y-6">
             {/* Basic Information */}
@@ -579,7 +647,7 @@ export default function CommunicationPolicyModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   placeholder="Enter policy name"
                   required
                 />
@@ -592,7 +660,7 @@ export default function CommunicationPolicyModal({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white"
+                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white`}
                   placeholder="Enter policy description"
                   rows={3}
                 />
@@ -609,7 +677,7 @@ export default function CommunicationPolicyModal({
                     onClick={() =>
                       setIsChannelDropdownOpen(!isChannelDropdownOpen)
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-md text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+                    className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   >
                     <div className="flex items-center space-x-2">
                       {channels.length === 0 ? (
@@ -643,7 +711,7 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div className="absolute z-[10000] w-full mt-1 bg-white border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                    <div className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}>
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}
@@ -742,7 +810,7 @@ export default function CommunicationPolicyModal({
 
             {error && (
               <div
-                className={`px-4 p-4 ${tw.statusDanger10} ${tw.borderDefault} border rounded-md`}
+                className={`px-4 p-4 ${tw.statusDanger10} ${tw.borderDefault} border ${tw.rounded}`}
               >
                 <p className={`${tw.caption} ${tw.danger}`}>{error}</p>
               </div>
@@ -757,14 +825,14 @@ export default function CommunicationPolicyModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className={`px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className={`px-6 py-2.5 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed transition-all`}
               style={{ backgroundColor: color.primary.action }}
               onMouseEnter={(e) => {
                 if (!isSaving) {

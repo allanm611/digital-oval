@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import { Program } from "../types/program";
 
 interface ProgramModalProps {
@@ -100,14 +100,14 @@ export default function ProgramModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-md shadow-2xl w-full max-w-md">
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
             {program ? "Edit Program" : "Create New Program"}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-md transition-colors"
+            className={`p-2 ${tw.rounded} transition-colors`}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -125,7 +125,7 @@ export default function ProgramModal({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter program name"
                 maxLength={128}
                 required
@@ -142,7 +142,7 @@ export default function ProgramModal({
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, code: e.target.value }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter program code (e.g., PROG-Q4-2024)"
                 required
               />
@@ -161,7 +161,7 @@ export default function ProgramModal({
                     budget_total: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter budget amount"
                 min="0"
                 step="0.01"
@@ -180,7 +180,7 @@ export default function ProgramModal({
                     description: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder="Enter program description"
                 rows={3}
               />
@@ -200,7 +200,7 @@ export default function ProgramModal({
                       start_date: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 />
               </div>
               <div>
@@ -216,14 +216,14 @@ export default function ProgramModal({
                       end_date: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 />
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
@@ -232,14 +232,14 @@ export default function ProgramModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md transition-colors"
+              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} transition-colors`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = color.primary.action;

@@ -12,6 +12,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
+import { tw } from "../../../../shared/utils/utils";
 interface UniversalControlGroup {
   id: string;
   name: string;
@@ -105,7 +106,9 @@ export default function UniversalControlGroupModal({
         height: "100vh",
       }}
     >
-      <div className="bg-white rounded-md shadow-xl w-full max-w-6xl h-[90vh] flex flex-col">
+      <div
+        className={`bg-white ${tw.rounded} shadow-xl w-full max-w-6xl h-[90vh] flex flex-col`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -119,7 +122,7 @@ export default function UniversalControlGroupModal({
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+              className={`inline-flex items-center px-4 py-2 bg-blue-500 text-white ${tw.rounded} hover:bg-blue-600 transition-colors text-sm font-medium`}
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Control Group
@@ -146,7 +149,7 @@ export default function UniversalControlGroupModal({
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                className={`inline-flex items-center px-4 py-2 bg-blue-500 text-white ${tw.rounded} hover:bg-blue-600 transition-colors`}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Control Group
@@ -155,7 +158,9 @@ export default function UniversalControlGroupModal({
           ) : (
             <div className="space-y-4">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 rounded-md text-sm font-medium text-gray-700">
+              <div
+                className={`grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 ${tw.rounded} text-sm font-medium text-gray-700`}
+              >
                 <div className="col-span-3">Control Group</div>
                 <div className="col-span-2">Status</div>
                 <div className="col-span-2">Generation Time</div>
@@ -168,7 +173,7 @@ export default function UniversalControlGroupModal({
               {controlGroups.map((group) => (
                 <div
                   key={group.id}
-                  className="grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 rounded-md hover:shadow-sm transition-shadow"
+                  className={`grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 ${tw.rounded} hover:shadow-sm transition-shadow`}
                 >
                   <div className="col-span-3">
                     <div className="font-medium text-gray-900">
@@ -355,7 +360,9 @@ function CreateControlGroupModal({
         height: "100vh",
       }}
     >
-      <div className="bg-white rounded-md shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div
+        className={`bg-white ${tw.rounded} shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -435,7 +442,7 @@ function CreateControlGroupModal({
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                   placeholder="Enter control group name"
                 />
               </div>
@@ -464,7 +471,7 @@ function CreateControlGroupModal({
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
+                      className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
                       <input
                         type="radio"
@@ -520,7 +527,7 @@ function CreateControlGroupModal({
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
+                      className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
                       <input
                         type="radio"
@@ -566,7 +573,7 @@ function CreateControlGroupModal({
                           percentage: parseInt(e.target.value),
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                     />
                   </div>
                 )}
@@ -663,7 +670,7 @@ function CreateControlGroupModal({
                     </label>
                     <input
                       type="date"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                     />
                   </div>
                   <div>
@@ -672,7 +679,7 @@ function CreateControlGroupModal({
                     </label>
                     <input
                       type="time"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                     />
                   </div>
                 </div>
@@ -707,7 +714,7 @@ function CreateControlGroupModal({
                   ].map((option) => (
                     <label
                       key={option.value}
-                      className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50"
+                      className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
                     >
                       <input
                         type="radio"
@@ -747,21 +754,21 @@ function CreateControlGroupModal({
           <button
             onClick={handlePrev}
             disabled={currentStep === 1}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Previous
           </button>
           <div className="flex space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50`}
             >
               Cancel
             </button>
             {currentStep === 3 ? (
               <button
                 onClick={handleSave}
-                className="px-4 py-2  text-white rounded-md hover:bg-[#3A5A40]"
+                className={`px-4 py-2  text-white ${tw.rounded} hover:bg-[#3A5A40]`}
               >
                 {editingGroup ? "Update" : "Create"} Control Group
               </button>
@@ -769,7 +776,7 @@ function CreateControlGroupModal({
               <button
                 onClick={handleNext}
                 disabled={!canProceedToNextStep()}
-                className="px-4 py-2  text-white rounded-md hover:bg-[#3A5A40] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400"
+                className={`px-4 py-2  text-white ${tw.rounded} hover:bg-[#3A5A40] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400`}
               >
                 Next
               </button>

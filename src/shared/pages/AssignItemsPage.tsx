@@ -822,7 +822,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 rounded-md transition-colors"
+            className={`p-2 ${tw.rounded} transition-colors`}
             title="Go back"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -850,7 +850,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               placeholder={`Search ${typeInfo.plural}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
             />
           </div>
 
@@ -975,7 +975,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
             <button
               onClick={handleAssignSelected}
               disabled={assigning || selectedItemIds.size === 0}
-              className="px-5 py-2.5 text-white rounded-md font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed  flex items-center gap-2 whitespace-nowrap"
+              className={`px-5 py-2.5 text-white ${tw.rounded} font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed  flex items-center gap-2 whitespace-nowrap`}
               style={{
                 backgroundColor:
                   assigning || selectedItemIds.size === 0
@@ -1000,7 +1000,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
+      <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}>
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner />

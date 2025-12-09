@@ -3,6 +3,7 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
+import { tw } from '../../../shared/utils/utils';
 interface RegularModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -37,7 +38,8 @@ export default function RegularModal({
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog
         as="div"
-        className="relative z-[9999]"
+        className="relative"
+        style={{ zIndex: 999999 }}
         onClose={closeOnOverlayClick ? onClose : () => {}}
       >
         <Transition.Child
@@ -49,11 +51,15 @@ export default function RegularModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-50" />
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50"
+            style={{ zIndex: 999999 }}
+            aria-hidden="true"
+          />
         </Transition.Child>
 
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
+        <div className="fixed inset-0" style={{ zIndex: 999999 }}>
+          <div className="flex min-h-full items-center justify-center p-4 overflow-y-auto">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -64,7 +70,8 @@ export default function RegularModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className={`relative transform overflow-visible rounded-md bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
+                className={`relative transform overflow-visible ${tw.rounded} bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
+                style={{ zIndex: 1000000 }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
@@ -74,7 +81,7 @@ export default function RegularModal({
                   {showCloseButton && (
                     <button
                       type="button"
-                      className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+                      className={`${tw.rounded} text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white`}
                       onClick={onClose}
                     >
                       <span className="sr-only">Close</span>

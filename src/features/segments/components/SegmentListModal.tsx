@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, FileText, AlertCircle } from "lucide-react";
-import { button as buttonTokens, color } from "../../../shared/utils/utils";
+import { button as buttonTokens, color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export type SegmentListFormValues = {
@@ -259,7 +259,7 @@ export default function SegmentListModal({
         }
       }}
     >
-      <div className="w-full max-w-2xl rounded-md bg-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}>
         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">
@@ -299,7 +299,7 @@ export default function SegmentListModal({
                   handleInputChange("list_label", e.target.value)
                 }
                 placeholder="e.g., High Value Customers"
-                className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
                   errors.list_label
                     ? "border-red-400 focus:ring-red-200"
                     : "border-gray-300 focus:ring-[var(--primary-color,#5EC6B1)]"
@@ -345,7 +345,7 @@ export default function SegmentListModal({
                 }
                 rows={4}
                 placeholder="Describe who belongs in this list and how you'll use it."
-                className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
                   errors.list_description
                     ? "border-red-400 focus:ring-red-200"
                     : "border-gray-300 focus:ring-[var(--primary-color,#5EC6B1)]"
@@ -464,7 +464,7 @@ export default function SegmentListModal({
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`flex flex-col items-center justify-center rounded-md border-2 border-dashed py-10 text-center cursor-pointer transition ${
+                  className={`flex flex-col items-center justify-center ${tw.rounded} border-2 border-dashed py-10 text-center cursor-pointer transition ${
                     isDragging
                       ? "border-[var(--primary-color,#5EC6B1)] bg-[var(--primary-color,#5EC6B1)]/5"
                       : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100"
@@ -496,9 +496,9 @@ export default function SegmentListModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="rounded-md border border-gray-200 bg-white p-4 flex items-center justify-between">
+                  <div className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}>
                     <div className="flex items-center space-x-3">
-                      <div className="rounded-lg bg-[var(--primary-color,#5EC6B1)]/10 p-2">
+                      <div className={`${tw.rounded} bg-[var(--primary-color,#5EC6B1)]/10 p-2`}>
                         <FileText className="h-6 w-6 text-[var(--primary-color,#5EC6B1)]" />
                       </div>
                       <div className="flex-1">
@@ -587,7 +587,7 @@ export default function SegmentListModal({
                           <label className="text-sm font-medium text-black mb-2 block">
                             File Preview
                           </label>
-                          <div className="overflow-x-auto border border-gray-200 rounded-md">
+                          <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
                             <table className="w-full">
                               <thead
                                 style={{
@@ -676,7 +676,7 @@ export default function SegmentListModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
               >
                 Cancel
               </button>

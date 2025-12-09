@@ -214,7 +214,7 @@ export default function NotificationsPage() {
                     console.error("Failed to delete notifications:", err);
                   }
                 }}
-                className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer"
+                className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer`}
               >
                 {t.notifications.deleteAll}
               </button>
@@ -236,7 +236,7 @@ export default function NotificationsPage() {
               onChange={(e) =>
                 setFilter((prev) => ({ ...prev, search: e.target.value }))
               }
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full pl-10 pr-4 py-2 bg-white border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           </div>
 
@@ -322,7 +322,7 @@ export default function NotificationsPage() {
 
       {/* Bulk Actions */}
       {bulkMode && (
-        <div className="rounded-lg px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className={`${tw.rounded} px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <button
               onClick={handleSelectAll}
@@ -355,7 +355,7 @@ export default function NotificationsPage() {
                 {bulkActionType === "delete" && (
                   <button
                     onClick={handleDeleteSelected}
-                    className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer flex items-center justify-center gap-2"
+                    className={`bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 ${tw.rounded} cursor-pointer flex items-center justify-center gap-2`}
                   >
                     <Trash2 className="h-4 w-4" />
                     {t.notifications.bulkDelete}
@@ -382,7 +382,7 @@ export default function NotificationsPage() {
       )}
 
       {/* Notifications List */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
         {error && (
           <div className="p-4 bg-red-50 border-b border-red-200">
             <p className="text-sm text-red-800">{error}</p>
@@ -539,7 +539,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full sm:w-auto px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {t.notifications.previous}
                 </button>
@@ -551,7 +551,7 @@ export default function NotificationsPage() {
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= totalPages}
-                  className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full sm:w-auto px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {t.notifications.next}
                 </button>

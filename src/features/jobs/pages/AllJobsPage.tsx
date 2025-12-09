@@ -72,7 +72,7 @@ export default function AllJobsPage() {
         </div>
 
         {/* Actions Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 p-4 mb-6`}>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             {/* Search */}
             <div className="relative flex-1 w-full sm:max-w-md">
@@ -82,13 +82,13 @@ export default function AllJobsPage() {
                 placeholder="Search jobs by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
               />
             </div>
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors">
+              <button className={`flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 ${tw.rounded} hover:bg-gray-200 transition-colors`}>
                 <Filter className="h-4 w-4" />
                 Filter
               </button>
@@ -96,7 +96,7 @@ export default function AllJobsPage() {
                 onClick={() => {
                   // Navigate to create job page when implemented
                 }}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-md transition-colors"
+                className={`flex items-center gap-2 px-4 py-2 text-white ${tw.rounded} transition-colors`}
                 style={{ backgroundColor: color.primary.main }}
               >
                 <Plus className="h-4 w-4" />
@@ -107,7 +107,7 @@ export default function AllJobsPage() {
         </div>
 
         {/* Jobs List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200`}>
           {isLoading ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner />
@@ -128,7 +128,7 @@ export default function AllJobsPage() {
                   onClick={() => {
                     // Navigate to create job page when implemented
                   }}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-md transition-colors"
+                  className={`inline-flex items-center gap-2 px-4 py-2 text-white ${tw.rounded} transition-colors`}
                   style={{ backgroundColor: color.primary.main }}
                 >
                   <Plus className="h-4 w-4" />

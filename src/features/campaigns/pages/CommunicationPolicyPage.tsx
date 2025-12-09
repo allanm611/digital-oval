@@ -201,7 +201,7 @@ export default function CommunicationPolicyPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/configuration")}
-            className={`p-2 ${tw.textSecondary} rounded-md transition-colors`}
+            className={`p-2 ${tw.textSecondary} ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -217,7 +217,7 @@ export default function CommunicationPolicyPage() {
         <div className="flex items-center gap-3 w-auto">
           <button
             onClick={handleCreatePolicy}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -242,7 +242,7 @@ export default function CommunicationPolicyPage() {
       </div>
 
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -375,7 +375,7 @@ export default function CommunicationPolicyPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEditPolicy(policy)}
-                            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             style={{ color: color.primary.action }}
                             title="Edit"
                           >
@@ -383,7 +383,7 @@ export default function CommunicationPolicyPage() {
                           </button>
                           <button
                             onClick={() => handleDeletePolicy(policy)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all duration-200"
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -433,13 +433,13 @@ export default function CommunicationPolicyPage() {
                     <div className="flex items-center space-x-2 ml-4">
                       <button
                         onClick={() => handleEditPolicy(policy)}
-                        className="p-2 text-[#588157] hover:text-[#3A5A40] hover:bg-[#588157]/10 rounded-md transition-colors"
+                        className={`p-2 text-[#588157] hover:text-[#3A5A40] hover:bg-[#588157]/10 ${tw.rounded} transition-colors`}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeletePolicy(policy)}
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                       >
                         <Trash2 className="w-4 h-4 text-red-600" />
                       </button>

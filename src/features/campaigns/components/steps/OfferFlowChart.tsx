@@ -15,7 +15,7 @@ import {
   ConditionConfig,
   SequentialOfferMapping,
 } from "../../types/campaign";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 
 interface OfferFlowChartProps {
@@ -83,7 +83,7 @@ export default function OfferFlowChart({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-6">
+    <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
@@ -97,7 +97,7 @@ export default function OfferFlowChart({
         </div>
         <button
           onClick={onAddOffer}
-          className="inline-flex items-center px-4 py-2 text-white rounded-md text-sm font-medium"
+          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
           style={{ backgroundColor: color.primary.action }}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -116,7 +116,7 @@ export default function OfferFlowChart({
               <div className="w-0.5 h-12 bg-gray-300"></div>
             )}
           </div>
-          <div className="flex-1 ml-4 bg-gray-50 border border-gray-200 rounded-md p-4">
+          <div className={`flex-1 ml-4 bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
             <div className="flex items-center space-x-3">
               <div className="font-semibold text-gray-900">{segment.name}</div>
               <span className="text-sm text-gray-600">
@@ -151,7 +151,7 @@ export default function OfferFlowChart({
               <div className="flex-1 ml-4 space-y-3">
                 {/* Interval/Condition Display */}
                 {campaignType === "round_robin" && mapping.interval_config && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
+                  <div className={`bg-amber-50 border border-amber-200 ${tw.rounded} p-3`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Clock className="w-4 h-4 text-amber-600" />
@@ -177,7 +177,7 @@ export default function OfferFlowChart({
 
                 {campaignType === "multiple_level" &&
                   mapping.condition_config && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <div className={`bg-blue-50 border border-blue-200 ${tw.rounded} p-3`}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                           <GitBranch className="w-4 h-4 text-blue-600" />
@@ -203,7 +203,7 @@ export default function OfferFlowChart({
                   )}
 
                 {/* Offer Card */}
-                <div className="bg-white border border-gray-200 rounded-md p-4">
+                <div className={`bg-white border border-gray-200 ${tw.rounded} p-4`}>
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => toggleNode(index)}
@@ -287,7 +287,7 @@ export default function OfferFlowChart({
                 <span className="text-white font-bold text-sm">END</span>
               </div>
             </div>
-            <div className="flex-1 ml-4 bg-gray-50 border border-gray-200 rounded-md p-4">
+            <div className={`flex-1 ml-4 bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
               <div className="text-sm text-gray-600">
                 Campaign sequence complete
               </div>
@@ -323,7 +323,7 @@ function IntervalConfigPanel({
   const [localConfig, setLocalConfig] = useState<IntervalConfig>(config);
 
   return (
-    <div className="bg-amber-50 border border-amber-300 rounded-md p-4 space-y-4">
+    <div className={`bg-amber-50 border border-amber-300 ${tw.rounded} p-4 space-y-4`}>
       <h4 className="font-semibold text-gray-900">Configure Time Interval</h4>
 
       <div className="grid grid-cols-2 gap-4">
@@ -341,7 +341,7 @@ function IntervalConfigPanel({
                 interval_value: parseInt(e.target.value) || 1,
               })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           />
         </div>
 
@@ -378,7 +378,7 @@ function IntervalConfigPanel({
           onChange={(e) =>
             setLocalConfig({ ...localConfig, description: e.target.value })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., Wait for customer to open first email"
         />
       </div>
@@ -386,13 +386,13 @@ function IntervalConfigPanel({
       <div className="flex justify-end space-x-3">
         <button
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+          className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
         >
           Cancel
         </button>
         <button
           onClick={() => onSave(localConfig)}
-          className="px-4 py-2 text-white rounded-md text-sm font-medium"
+          className={`px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
           style={{ backgroundColor: color.primary.action }}
         >
           Save Interval
@@ -417,7 +417,7 @@ function ConditionConfigPanel({
   const [localConfig, setLocalConfig] = useState<ConditionConfig>(config);
 
   return (
-    <div className="bg-blue-50 border border-blue-300 rounded-md p-4 space-y-4">
+    <div className={`bg-blue-50 border border-blue-300 ${tw.rounded} p-4 space-y-4`}>
       <h4 className="font-semibold text-gray-900">Configure Condition</h4>
 
       <div>
@@ -453,7 +453,7 @@ function ConditionConfigPanel({
           onChange={(e) =>
             setLocalConfig({ ...localConfig, field: e.target.value })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., purchase_amount, email_opened, tier_level"
         />
       </div>
@@ -500,7 +500,7 @@ function ConditionConfigPanel({
                 value: isNaN(numVal) ? val : numVal,
               });
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
             placeholder="e.g., 100, premium, true"
           />
         </div>
@@ -516,7 +516,7 @@ function ConditionConfigPanel({
           onChange={(e) =>
             setLocalConfig({ ...localConfig, description: e.target.value })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
           placeholder="e.g., Only for premium customers"
         />
       </div>
@@ -524,13 +524,13 @@ function ConditionConfigPanel({
       <div className="flex justify-end space-x-3">
         <button
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+          className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
         >
           Cancel
         </button>
         <button
           onClick={() => onSave(localConfig)}
-          className="px-4 py-2 text-white rounded-md text-sm font-medium"
+          className={`px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
           style={{ backgroundColor: color.primary.action }}
         >
           Save Condition

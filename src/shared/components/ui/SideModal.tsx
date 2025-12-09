@@ -3,6 +3,7 @@ import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
+import { tw } from '../../../shared/utils/utils';
 interface SideModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -67,7 +68,7 @@ export default function SideModal({
                                         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
                                         <button
                                             type="button"
-                                            className="rounded-md text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white"
+                                            className={`${tw.rounded} text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-white`}
                                             onClick={onClose}
                                         >
                                             <span className="sr-only">Close</span>

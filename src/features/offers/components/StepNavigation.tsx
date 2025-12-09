@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { colors as color } from "../../../shared/utils/tokens";
 
+import { tw } from '../../../shared/utils/utils';
 interface StepNavigationProps {
   onPrev: () => void;
   onNext: () => void;
@@ -27,7 +28,7 @@ export default function StepNavigation({
       {showPrev && (
         <button
           onClick={onPrev}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-md font-semibold flex items-center gap-2"
+          className={`px-6 py-3 border border-gray-300 text-gray-700 ${tw.rounded} font-semibold flex items-center gap-2`}
         >
           <ArrowLeft className="w-5 h-5" />
           {prevText}
@@ -38,7 +39,7 @@ export default function StepNavigation({
         <button
           onClick={onNext}
           disabled={isNextDisabled || isLoading}
-          className="text-white px-6 py-3 rounded-md font-semibold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`text-white px-6 py-3 ${tw.rounded} font-semibold shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
           style={{
             backgroundColor: color.primary.action,
             color: "white",

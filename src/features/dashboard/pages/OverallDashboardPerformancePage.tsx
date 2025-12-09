@@ -32,6 +32,7 @@ import type {
   OverallDashboardPerformanceResponse,
 } from "../types/ReportsAPI";
 
+import { tw } from '../../../shared/utils/utils';
 // Extract types from API response type
 type PerformanceSnapshot = OverallDashboardPerformanceResponse;
 type SMSDeliveryPoint = {
@@ -612,7 +613,7 @@ type ChartTooltipProps = {
 const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -1006,7 +1007,7 @@ export default function OverallDashboardPerformancePage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
                   !(appliedCustomRange.start && appliedCustomRange.end) &&
                   selectedRange === option
                     ? "border-[#252829] bg-[#252829] text-white"
@@ -1018,7 +1019,7 @@ export default function OverallDashboardPerformancePage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
+            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
               <label
                 htmlFor="overall-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -1062,7 +1063,7 @@ export default function OverallDashboardPerformancePage() {
                     start: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -1084,14 +1085,14 @@ export default function OverallDashboardPerformancePage() {
                     end: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             {customRange.start && customRange.end && (
               <button
                 type="button"
                 onClick={handleRun}
-                className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition-colors"
+                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
                 style={{ backgroundColor: colors.primary.accent }}
               >
                 Run
@@ -1104,7 +1105,7 @@ export default function OverallDashboardPerformancePage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className="ml-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
               >
                 Clear
               </button>
@@ -1114,7 +1115,7 @@ export default function OverallDashboardPerformancePage() {
       </header>
 
       {/* KPI Snapshot */}
-      <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1129,7 +1130,7 @@ export default function OverallDashboardPerformancePage() {
               <button
                 key={option}
                 onClick={() => handleKpiChannelChange(option)}
-                className={`rounded-md border px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={`${tw.rounded} border px-4 py-1.5 text-sm font-medium transition-colors ${
                   kpiChannel === option
                     ? "border-[#252829] bg-[#252829] text-white"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
@@ -1150,7 +1151,7 @@ export default function OverallDashboardPerformancePage() {
           {kpiCards.map(({ label, value, subtext, Icon }) => (
             <div
               key={label}
-              className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <Icon
@@ -1167,7 +1168,7 @@ export default function OverallDashboardPerformancePage() {
       </section>
 
       {/* Channel Performance Comparison */}
-      <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1183,7 +1184,7 @@ export default function OverallDashboardPerformancePage() {
             <button
               key={option}
               onClick={() => setChannelFilter(option)}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`${tw.rounded} border px-3 py-1.5 text-xs font-medium transition-colors ${
                 channelFilter === option
                   ? "border-[#252829] bg-[#252829] text-white"
                   : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
@@ -1298,7 +1299,7 @@ export default function OverallDashboardPerformancePage() {
       </section>
 
       {/* SMS Delivery */}
-      <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1373,7 +1374,7 @@ export default function OverallDashboardPerformancePage() {
       </section>
 
       {/* Time Series Trend */}
-      <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">

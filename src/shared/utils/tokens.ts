@@ -448,14 +448,15 @@ export const borderRadius = {
 };
 
 // Button defines consistent sizing, padding, and border radius for all buttons
+// All buttons use: paddingY: 0.625rem (py-2.5), paddingX: 1rem (px-4), borderRadius: 0.375rem (rounded-md), fontSize: 0.875rem (text-sm)
 export const buttons = {
   action: {
     background: colors.primary.action,
     color: "#FFFFFF", // White text on dark buttons
     border: "none",
-    paddingY: "0.5rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -463,9 +464,9 @@ export const buttons = {
     background: "#F5FCFF",
     color: "#000000",
     border: "none",
-    paddingY: "0.75rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -473,9 +474,9 @@ export const buttons = {
     background: "#00BBCC",
     color: "#FFFFFF",
     border: "none",
-    paddingY: "0.75rem",
-    paddingX: "1.5rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -483,9 +484,9 @@ export const buttons = {
     background: "transparent",
     color: colors.primary.action,
     border: `1px solid ${colors.primary.action}`,
-    paddingY: "0.375rem", // py-1.5
-    paddingX: "0.75rem", // px-3
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -493,9 +494,9 @@ export const buttons = {
     background: "#DC2626", // bg-red-600
     color: "#FFFFFF",
     border: "none",
-    paddingY: "0.5rem",
-    paddingX: "1rem",
-    borderRadius: "0.5rem",
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
+    borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm (14px)
   },
 
@@ -503,8 +504,8 @@ export const buttons = {
     background: colors.primary.accent, // Accent color background
     color: "#FFFFFF", // White text
     border: "none",
-    paddingY: "0.5rem", // p-2
-    paddingX: "0.5rem", // p-2
+    paddingY: "0.625rem", // py-2.5
+    paddingX: "1rem", // px-4
     borderRadius: "0.375rem", // rounded-md
     fontSize: "0.875rem", // text-sm
   },
@@ -519,4 +520,35 @@ export const cards = {
     borderRadius: "1rem",
     padding: "1.5rem",
   },
+};
+
+// Z-Index system for consistent layering across the platform
+// Use these values instead of hardcoded z-index numbers
+export const zIndex = {
+  // Base layer - default stacking context
+  base: 0,
+
+  // Dropdowns and select menus (HeadlessUI, custom dropdowns)
+  dropdown: 1000,
+
+  // Sticky elements (headers, navigation bars)
+  sticky: 1100,
+
+  // Fixed elements (sidebars, fixed headers)
+  fixed: 1200,
+
+  // Overlay/backdrop (modal backgrounds, dimmers)
+  overlay: 2000,
+
+  // Modals and dialogs (should be above overlays)
+  modal: 3000,
+
+  // Popovers and tooltips (contextual UI that appears above modals)
+  popover: 4000,
+
+  // Notifications and toasts (should always be visible)
+  notification: 5000,
+
+  // Maximum priority (use sparingly, only for critical UI)
+  max: 9999,
 };

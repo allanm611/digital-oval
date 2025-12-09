@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { LucideIcon } from "lucide-react";
 
+import { tw } from '../../../shared/utils/utils';
 interface AnimatedCardProps {
   children: React.ReactNode;
   className?: string;
@@ -101,7 +102,7 @@ export default function AnimatedCard({
     lg: "rounded-md",
     xl: "rounded-md",
     "2xl": "rounded-md",
-    "3xl": "rounded-3xl",
+    "3xl": "rounded-md",
   };
 
   const shadowClasses = {
@@ -146,7 +147,7 @@ export default function AnimatedCard({
             {Icon && (
               <div
                 className={`
-                flex items-center justify-center w-12 h-12 rounded-md
+                flex items-center justify-center w-12 h-12 ${tw.rounded}
                 bg-gradient-to-br from-primary-100 to-accent-100
                 transition-all duration-500 ease-smooth
                 ${isHovered ? "scale-125 rotate-6 animate-bounce-subtle" : ""}

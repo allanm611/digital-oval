@@ -181,7 +181,7 @@ export default function PolicyCustomizationPanel({
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className={`p-3 ${tw.borderDefault} border rounded-md`}
+              className={`p-3 ${tw.borderDefault} border ${tw.rounded}`}
             >
               <div className="grid grid-cols-3 gap-3">
                 <div>

@@ -35,7 +35,7 @@ export default function ServerStatsCards({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex items-center gap-2">
           <Layers
             className="h-5 w-5"
@@ -52,7 +52,7 @@ export default function ServerStatsCards({
         </p>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex items-center gap-2">
           <ShieldCheck
             className="h-5 w-5"
@@ -83,7 +83,7 @@ export default function ServerStatsCards({
         </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex items-center gap-2">
           <Signal
             className="h-5 w-5"
@@ -99,7 +99,7 @@ export default function ServerStatsCards({
           {protocolCounts.slice(0, 4).map((protocol) => (
             <div
               key={protocol.protocol}
-              className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+              className={`flex items-center justify-between ${tw.rounded} bg-gray-50 px-3 py-2`}
             >
               <span className="font-medium text-black uppercase">
                 {protocol.protocol}
@@ -115,7 +115,7 @@ export default function ServerStatsCards({
         </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex items-center gap-2">
           <Globe
             className="h-5 w-5"
@@ -131,7 +131,7 @@ export default function ServerStatsCards({
           {environmentCounts.slice(0, 3).map((env) => (
             <div
               key={`${env.environment}-stat`}
-              className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+              className={`flex items-center justify-between ${tw.rounded} bg-gray-50 px-3 py-2`}
             >
               <div className="flex items-center gap-2">
                 <Activity

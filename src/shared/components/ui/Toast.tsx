@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { CheckCircle, XCircle, AlertCircle, Info, X } from "lucide-react";
 
+import { tw } from '../../../shared/utils/utils';
 export type ToastType = "success" | "error" | "warning" | "info";
 
 export interface Toast {
@@ -63,7 +64,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
         ${
           isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
         }
-        max-w-sm w-full ${getStyles()} border rounded-md shadow-lg p-4 mb-3
+        max-w-sm w-full ${getStyles()} border ${tw.rounded} shadow-lg p-4 mb-3
       `}
     >
       <div className="flex items-start">

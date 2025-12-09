@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X, Check } from "lucide-react";
 
+import { tw } from '../../../shared/utils/utils';
 interface Option {
   id: string | number;
   label: string;
@@ -83,7 +84,7 @@ export default function MultiSelect({
       <div ref={dropdownRef} className="relative">
         <div
           className={`
-            relative min-h-[42px] w-full px-3 py-2 border rounded-md bg-white cursor-pointer
+            relative min-h-[42px] w-full px-3 py-2 border ${tw.rounded} bg-white cursor-pointer
             transition-all duration-200 focus-within:border-blue-500
             ${
               error ? "border-red-300" : "border-gray-300 hover:border-gray-400"
@@ -97,7 +98,7 @@ export default function MultiSelect({
               selectedOptions.map((option) => (
                 <span
                   key={option.id}
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-md"
+                  className={`inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 ${tw.rounded}`}
                 >
                   {option.label}
                   {!disabled && (
@@ -141,7 +142,7 @@ export default function MultiSelect({
         </div>
 
         {isOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
+          <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
             <div className="p-2 border-b border-gray-100">
               <input
                 ref={inputRef}
@@ -149,7 +150,7 @@ export default function MultiSelect({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search options..."
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none "
+                className={`w-full px-3 py-2 text-sm border border-gray-200 ${tw.rounded} focus:outline-none `}
               />
             </div>
 

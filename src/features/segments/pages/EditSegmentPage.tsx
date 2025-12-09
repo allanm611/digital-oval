@@ -136,7 +136,7 @@ export default function EditSegmentPage() {
         </p>
         <button
           onClick={() => navigate("/dashboard/segments")}
-          className="inline-flex items-center px-4 py-2 text-white rounded-md"
+          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
           style={{ backgroundColor: color.primary.action }}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -153,7 +153,7 @@ export default function EditSegmentPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={handleCancel}
-            className={`p-2 rounded-md ${tw.textMuted} hover:bg-gray-100 transition-colors`}
+            className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -171,7 +171,7 @@ export default function EditSegmentPage() {
           <button
             onClick={handleCancel}
             disabled={isSaving}
-            className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${tw.textSecondary} hover:bg-gray-50`}
+            className={`px-4 py-2 text-sm font-medium ${tw.rounded} border transition-colors ${tw.textSecondary} hover:bg-gray-50`}
           >
             <X className="w-4 h-4 inline mr-2" />
             Cancel
@@ -179,7 +179,7 @@ export default function EditSegmentPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {
               if (!isSaving)
@@ -207,7 +207,7 @@ export default function EditSegmentPage() {
       </div>
 
       {/* Form */}
-      <div className="bg-white rounded-md border border-gray-200 p-6">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
         <div className="space-y-6">
           {/* Basic Information Section */}
           <div>
@@ -227,7 +227,7 @@ export default function EditSegmentPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter segment name"
-                  className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
+                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
                   disabled={isSaving}
                 />
               </div>
@@ -244,7 +244,7 @@ export default function EditSegmentPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Enter segment description"
                   rows={3}
-                  className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
+                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
                   disabled={isSaving}
                 />
               </div>
@@ -258,7 +258,7 @@ export default function EditSegmentPage() {
                 </label>
                 <div className="flex items-center space-x-2">
                   <span
-                    className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium ${
+                    className={`inline-flex items-center px-3 py-2 ${tw.rounded} text-sm font-medium ${
                       type === "dynamic"
                         ? "bg-purple-100 text-purple-700"
                         : type === "static"
@@ -339,13 +339,13 @@ export default function EditSegmentPage() {
                         (e.preventDefault(), handleAddTag())
                       }
                       placeholder="Enter a tag and press Enter"
-                      className={`flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
+                      className={`flex-1 px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20`}
                       disabled={isSaving}
                     />
                     <button
                       onClick={handleAddTag}
                       disabled={!tagInput.trim() || isSaving}
-                      className="px-4 py-2 text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
                       style={{ backgroundColor: color.primary.action }}
                     >
                       <Plus className="w-4 h-4" />
@@ -409,7 +409,7 @@ export default function EditSegmentPage() {
                   onChange={(e) => setBusinessPurpose(e.target.value)}
                   placeholder="Describe the business purpose of this segment"
                   rows={3}
-                  className={`w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
+                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.action}]/20 resize-none`}
                   disabled={isSaving}
                 />
               </div>
@@ -420,7 +420,7 @@ export default function EditSegmentPage() {
 
       {/* Current Criteria (Read-only) */}
       {(segment.criteria || segment.definition) && (
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h3
             className={`text-lg font-semibold ${tw.textPrimary} mb-4 flex items-center`}
           >
@@ -467,7 +467,7 @@ export default function EditSegmentPage() {
 
                 return (
                   <div key={index} className="relative">
-                    <div className="flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-white rounded-md border border-gray-200">
+                    <div className={`flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-white ${tw.rounded} border border-gray-200`}>
                       <div
                         className={`mt-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0`}
                         style={{ backgroundColor: `${color.primary.accent}20` }}
@@ -519,7 +519,7 @@ export default function EditSegmentPage() {
               })}
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-md p-4">
+            <div className={`bg-gray-50 ${tw.rounded} p-4`}>
               <p className={`text-sm ${tw.textMuted}`}>
                 No conditions defined or criteria format not supported for
                 display
@@ -539,7 +539,7 @@ export default function EditSegmentPage() {
         <button
           onClick={handleCancel}
           disabled={isSaving}
-          className={`flex-1 px-4 py-2 text-sm font-medium rounded-md border transition-colors ${tw.textSecondary} hover:bg-gray-50`}
+          className={`flex-1 px-4 py-2 text-sm font-medium ${tw.rounded} border transition-colors ${tw.textSecondary} hover:bg-gray-50`}
         >
           <X className="w-4 h-4 inline mr-2" />
           Cancel
@@ -547,7 +547,7 @@ export default function EditSegmentPage() {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="flex-1 px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50"
+          className={`flex-1 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50`}
           style={{ backgroundColor: color.primary.action }}
         >
           {isSaving ? (

@@ -578,7 +578,7 @@ export default function ConnectionProfilesPage() {
 
   const renderEmptyState = () => (
     <div
-      className="rounded-md shadow-sm border border-gray-200 text-center py-16 px-4"
+      className={`${tw.rounded} shadow-sm border border-gray-200 text-center py-16 px-4`}
       style={{ backgroundColor: color.surface.cards }}
     >
       <Server className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -593,7 +593,7 @@ export default function ConnectionProfilesPage() {
       {!profiles.length && (
         <button
           onClick={handleCreate}
-          className="inline-flex items-center px-4 py-2 text-white rounded-md transition-all"
+          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
           style={{ backgroundColor: color.primary.action }}
         >
           <Plus className="w-5 h-5 mr-2" />
@@ -631,7 +631,7 @@ export default function ConnectionProfilesPage() {
                   setSelectedProfileIds(new Set());
                 }
               }}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
               style={{
                 backgroundColor: isSelectionMode
                   ? color.primary.action
@@ -651,7 +651,7 @@ export default function ConnectionProfilesPage() {
               onClick={() =>
                 navigate("/dashboard/connection-profiles/analytics")
               }
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
               style={{
                 backgroundColor: "transparent",
                 color: color.primary.action,
@@ -663,7 +663,7 @@ export default function ConnectionProfilesPage() {
             </button>
             <button
               onClick={handleCreate}
-              className="px-4 py-2 rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white whitespace-nowrap"
+              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white whitespace-nowrap`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4" />
@@ -679,7 +679,7 @@ export default function ConnectionProfilesPage() {
             return (
               <div
                 key={card.name}
-                className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <div className="flex items-center gap-2">
                   <Icon className="h-5 w-5" style={{ color: card.color }} />
@@ -694,7 +694,7 @@ export default function ConnectionProfilesPage() {
         </div>
 
         {isSelectionMode && selectedProfileIds.size > 0 && (
-          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}>
             <div className="flex items-center gap-3 text-sm text-black">
               <span>
                 {selectedCount} selected / {filteredProfiles.length} visible
@@ -705,7 +705,7 @@ export default function ConnectionProfilesPage() {
                 type="button"
                 onClick={handleBulkActivateSelected}
                 disabled={!selectedCount || bulkActionLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} text-white disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {bulkActionLoading && bulkActionType === "activate" && (
@@ -717,7 +717,7 @@ export default function ConnectionProfilesPage() {
                 type="button"
                 onClick={handleAutoDeactivateExpired}
                 disabled={bulkActionLoading}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
+                className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap`}
               >
                 {bulkActionLoading && bulkActionType === "auto" ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -740,7 +740,7 @@ export default function ConnectionProfilesPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by profile name, code, or type..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
               />
             </div>
             <HeadlessSelect
@@ -763,7 +763,7 @@ export default function ConnectionProfilesPage() {
               <button
                 type="button"
                 onClick={openFiltersPanel}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-md whitespace-nowrap"
+                className={`flex items-center gap-2 px-4 py-2 text-sm text-gray-700 bg-gray-100 ${tw.rounded} whitespace-nowrap`}
               >
                 <Filter className="w-4 h-4" />
                 Filters
@@ -916,21 +916,21 @@ export default function ConnectionProfilesPage() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleView(profile.id)}
-                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4 text-black" />
                           </button>
                           <button
                             onClick={() => handleEdit(profile.id)}
-                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4 text-black" />
                           </button>
                           <button
                             onClick={(e) => handleToggleActive(profile, e)}
-                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                             title={
                               profile.is_active ? "Deactivate" : "Activate"
                             }
@@ -1070,7 +1070,7 @@ export default function ConnectionProfilesPage() {
                     value={serverFilter}
                     onChange={(e) => setServerFilter(e.target.value)}
                     placeholder="Enter server ID"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none text-sm"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -1118,14 +1118,14 @@ export default function ConnectionProfilesPage() {
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className={`px-4 py-2 text-sm text-gray-700 border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                 >
                   Clear Filters
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyFilters}
-                  className="px-4 py-2 text-sm text-white rounded-md"
+                  className={`px-4 py-2 text-sm text-white ${tw.rounded}`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   Apply Filters

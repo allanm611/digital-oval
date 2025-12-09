@@ -15,7 +15,7 @@ This document tracks the translation status of all pages in the CVM application.
 ## 📊 Summary Statistics
 
 - **Total Pages**: ~80+ pages
-- **Fully Translated**: TBD (to be audited)
+- **Fully Translated**: 15+ pages (see below)
 - **Partially Translated**: TBD (to be audited)
 - **Not Translated**: TBD (to be audited)
 
@@ -107,15 +107,15 @@ This document tracks the translation status of all pages in the CVM application.
 
 ## 👤 Users & Customers
 
-| Page                            | File                                   | Status | Notes                                                 |
-| ------------------------------- | -------------------------------------- | ------ | ----------------------------------------------------- |
-| User Management                 | `UserManagementPage.tsx`               | ⚠️     | Uses some `t.userManagement.*` but has hardcoded text |
-| User Details                    | `UserDetailsPage.tsx`                  | ❌     | Needs audit                                           |
-| User Profile                    | `UserProfilePage.tsx`                  | ❌     | Needs audit                                           |
-| Customers                       | `CustomersPage.tsx`                    | ❌     | Needs audit                                           |
-| Customer Identity               | `CustomerIdentityPage.tsx`             | ❌     | Needs audit                                           |
-| Customer Identity Field Details | `CustomerIdentityFieldDetailsPage.tsx` | ❌     | Needs audit                                           |
-| Customer Search Results         | `CustomerSearchResultsPage.tsx`        | ❌     | Needs audit                                           |
+| Page                            | File                                   | Status | Notes                                         |
+| ------------------------------- | -------------------------------------- | ------ | --------------------------------------------- |
+| User Management                 | `UserManagementPage.tsx`               | ✅     | Completed 2025-01-XX - All strings translated |
+| User Details                    | `UserDetailsPage.tsx`                  | ✅     | Completed 2025-01-XX - All strings translated |
+| User Profile                    | `UserProfilePage.tsx`                  | ✅     | Completed 2025-01-XX - All strings translated |
+| Customers (360 Profile)         | `CustomersPage.tsx`                    | ✅     | Completed 2025-01-XX - All strings translated |
+| Customer Identity               | `CustomerIdentityPage.tsx`             | ✅     | Completed 2025-01-XX - All strings translated |
+| Customer Identity Field Details | `CustomerIdentityFieldDetailsPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
+| Customer Search Results         | `CustomerSearchResultsPage.tsx`        | ❌     | Needs audit                                   |
 
 ---
 
@@ -130,22 +130,23 @@ This document tracks the translation status of all pages in the CVM application.
 
 ## 🔔 Notifications
 
-| Page          | File                    | Status | Notes                |
-| ------------- | ----------------------- | ------ | -------------------- |
-| Notifications | `NotificationsPage.tsx` | ❌     | No translations used |
+| Page                  | File                       | Status | Notes                                         |
+| --------------------- | -------------------------- | ------ | --------------------------------------------- |
+| Notifications         | `NotificationsPage.tsx`    | ✅     | Completed 2025-01-XX - All strings translated |
+| Notification Dropdown | `NotificationDropdown.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
 
 ---
 
 ## 📊 Reports
 
-| Page                          | File                                  | Status | Notes       |
-| ----------------------------- | ------------------------------------- | ------ | ----------- |
-| Overall Dashboard Performance | `OverallDashboardPerformancePage.tsx` | ❌     | Needs audit |
-| Customer Profile Reports      | `CustomerProfileReportsPage.tsx`      | ❌     | Needs audit |
-| Campaign Reports              | `CampaignReportsPage.tsx`             | ❌     | Needs audit |
-| Offer Reports                 | `OfferReportsPage.tsx`                | ❌     | Needs audit |
-| Delivery SMS Reports          | `DeliverySMSReportsPage.tsx`          | ❌     | Needs audit |
-| Delivery Email Reports        | `DeliveryEmailReportsPage.tsx`        | ❌     | Needs audit |
+| Page                          | File                                  | Status | Notes                                         |
+| ----------------------------- | ------------------------------------- | ------ | --------------------------------------------- |
+| Overall Dashboard Performance | `OverallDashboardPerformancePage.tsx` | ❌     | Needs audit                                   |
+| Customer Profile Reports      | `CustomerProfileReportsPage.tsx`      | ✅     | Completed 2025-01-XX - All strings translated |
+| Campaign Reports              | `CampaignReportsPage.tsx`             | ❌     | Needs audit                                   |
+| Offer Reports                 | `OfferReportsPage.tsx`                | ❌     | Needs audit                                   |
+| Delivery SMS Reports          | `DeliverySMSReportsPage.tsx`          | ❌     | Needs audit                                   |
+| Delivery Email Reports        | `DeliveryEmailReportsPage.tsx`        | ❌     | Needs audit                                   |
 
 ---
 
@@ -193,20 +194,27 @@ This document tracks the translation status of all pages in the CVM application.
 
 ## 📋 Quick Lists
 
-| Page                    | File                            | Status | Notes                                         |
-| ----------------------- | ------------------------------- | ------ | --------------------------------------------- |
-| Quick Lists             | `QuickListsPage.tsx`            | ❌     | Needs audit                                   |
-| Quick List Details      | `QuickListDetailsPage.tsx`      | ❌     | Needs audit                                   |
-| Create Manual Broadcast | `CreateManualBroadcastPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
+| Page                      | File                            | Status | Notes                                         |
+| ------------------------- | ------------------------------- | ------ | --------------------------------------------- |
+| Quick Lists               | `QuickListsPage.tsx`            | ❌     | Needs audit                                   |
+| Quick List Details        | `QuickListDetailsPage.tsx`      | ❌     | Needs audit                                   |
+| Create Manual Broadcast   | `CreateManualBroadcastPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
+| Target Audience Step      | `TargetAudienceStep.tsx`        | ✅     | Completed 2025-01-XX - All strings translated |
+| Define Communication Step | `DefineCommunicationStep.tsx`   | ✅     | Completed 2025-01-XX - All strings translated |
+| Test Broadcast Step       | `TestBroadcastStep.tsx`         | ✅     | Completed 2025-01-XX - All strings translated |
+| Schedule Step             | `ScheduleStep.tsx`              | ✅     | Completed 2025-01-XX - All strings translated |
 
 ---
 
-## 🔍 Shared Pages
+## 🔍 Shared Components
 
-| Page           | File                    | Status | Notes       |
-| -------------- | ----------------------- | ------ | ----------- |
-| Search Results | `SearchResultsPage.tsx` | ❌     | Needs audit |
-| Assign Items   | `AssignItemsPage.tsx`   | ❌     | Needs audit |
+| Component                | File                           | Status | Notes                                         |
+| ------------------------ | ------------------------------ | ------ | --------------------------------------------- |
+| GenericConfigurationPage | `GenericConfigurationPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
+| TypeConfigurationPage    | `TypeConfigurationPage.tsx`    | ✅     | Completed 2025-01-XX - All strings translated |
+| Footer                   | `Footer.tsx`                   | ✅     | Completed 2025-01-XX - All strings translated |
+| Search Results           | `SearchResultsPage.tsx`        | ❌     | Needs audit                                   |
+| Assign Items             | `AssignItemsPage.tsx`          | ❌     | Needs audit                                   |
 
 ---
 

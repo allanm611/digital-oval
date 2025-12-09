@@ -1317,7 +1317,7 @@ export default function OfferDetailsPage() {
           </p>
           <button
             onClick={() => navigate("/dashboard/offers")}
-            className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200"
+            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200`}
             style={{ backgroundColor: color.primary.action }}
           >
             Back to Offers
@@ -1367,7 +1367,7 @@ export default function OfferDetailsPage() {
             <button
               onClick={handleRequestApproval}
               disabled={isRequestApprovalLoading}
-              className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isRequestApprovalLoading ? (
@@ -1387,7 +1387,7 @@ export default function OfferDetailsPage() {
               <button
                 onClick={handleApprove}
                 disabled={isApproveLoading}
-                className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isApproveLoading ? (
@@ -1407,7 +1407,7 @@ export default function OfferDetailsPage() {
               <button
                 onClick={handleActivate}
                 disabled={isActivateLoading}
-                className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isActivateLoading ? (
@@ -1424,7 +1424,7 @@ export default function OfferDetailsPage() {
             <button
               onClick={handleRequestApproval}
               disabled={isRequestApprovalLoading}
-              className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isRequestApprovalLoading ? (
@@ -1444,7 +1444,7 @@ export default function OfferDetailsPage() {
                 <button
                   onClick={handleActivate}
                   disabled={isActivateLoading}
-                  className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   {isActivateLoading ? (
@@ -1463,7 +1463,7 @@ export default function OfferDetailsPage() {
                   <button
                     onClick={handlePause}
                     disabled={isPauseLoading}
-                    className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     {isPauseLoading ? (
@@ -1481,7 +1481,7 @@ export default function OfferDetailsPage() {
           {/* Edit Button */}
           <button
             onClick={() => navigate(`/dashboard/offers/${id}/edit`)}
-            className="px-4 py-2 rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white"
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Edit className="w-4 h-4" />
@@ -1492,12 +1492,12 @@ export default function OfferDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               <MoreVertical className="w-5 h-5" />
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
                 {/* Reject - Only for pending offers */}
                 {isPending && (
                   <button
@@ -1560,7 +1560,7 @@ export default function OfferDetailsPage() {
 
       {/* Main Offer Info */}
       <div
-        className={`bg-white rounded-md border border-[${color.border.default}] p-6`}
+        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6`}
       >
         <div className="flex items-start space-x-4">
           <div className="flex-1">
@@ -1597,7 +1597,7 @@ export default function OfferDetailsPage() {
 
       {/* Offer Details */}
       <div
-        className={`bg-white rounded-md border border-[${color.border.default}] p-6`}
+        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6`}
       >
         <h3 className={`${tw.cardHeading} mb-4`}>Offer Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1658,7 +1658,7 @@ export default function OfferDetailsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsAddProductModalOpen(true)}
-              className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
               type="button"
             >
@@ -1668,7 +1668,7 @@ export default function OfferDetailsPage() {
         </div>
 
         <div
-          className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
         >
           {productsLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -1932,7 +1932,7 @@ export default function OfferDetailsPage() {
                 resetNewCreativeForm();
                 setIsAddCreativeModalOpen(true);
               }}
-              className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
               type="button"
             >
@@ -1942,7 +1942,7 @@ export default function OfferDetailsPage() {
         </div>
 
         <div
-          className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
         >
           {creativesLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -2320,7 +2320,7 @@ export default function OfferDetailsPage() {
                   }))
                 }
                 placeholder="Enter creative title..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
             </div>
           )}
@@ -2394,7 +2394,7 @@ export default function OfferDetailsPage() {
               }
               placeholder="Enter text content..."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
             {newCreativeForm.channel === "SMS" &&
               (() => {
@@ -2434,7 +2434,7 @@ export default function OfferDetailsPage() {
               }
               placeholder="Enter HTML content..."
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
             />
           </div>
 
@@ -2447,7 +2447,7 @@ export default function OfferDetailsPage() {
               onChange={(e) => setNewCreativeVariables(e.target.value)}
               placeholder='{"variable_name": "value"}'
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
             />
             <div className="text-xs text-gray-500 mt-1">
               Provide key/value pairs for template variables. Example:{" "}
@@ -2485,7 +2485,7 @@ export default function OfferDetailsPage() {
                 !newCreativeForm.text_body &&
                 !newCreativeForm.html_body
               }
-              className="px-4 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50"
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
             >
               <Eye className="w-4 h-4" />
               Preview
@@ -2497,14 +2497,14 @@ export default function OfferDetailsPage() {
                   resetNewCreativeForm();
                 }}
                 disabled={isCreatingCreative}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+                className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateCreative}
                 disabled={isCreatingCreative}
-                className="px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+                className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isCreatingCreative ? (
@@ -2540,7 +2540,7 @@ export default function OfferDetailsPage() {
                 setEditFormData({ ...editFormData, title: e.target.value })
               }
               placeholder="Enter creative title..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           </div>
 
@@ -2556,7 +2556,7 @@ export default function OfferDetailsPage() {
               }
               placeholder="Enter text content..."
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
           </div>
 
@@ -2577,7 +2577,7 @@ export default function OfferDetailsPage() {
                 }
                 placeholder="Enter HTML content..."
                 rows={6}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
               />
             </div>
           )}
@@ -2592,7 +2592,7 @@ export default function OfferDetailsPage() {
               onChange={(e) => setVariablesJson(e.target.value)}
               placeholder='{"variable_name": "value"}'
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
             />
             <div className="text-xs text-gray-500 mt-1">
               {(() => {
@@ -2612,14 +2612,14 @@ export default function OfferDetailsPage() {
             <button
               onClick={() => setIsEditCreativeModalOpen(false)}
               disabled={isSavingCreative}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               onClick={handleSaveCreative}
               disabled={isSavingCreative}
-              className="px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+              className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isSavingCreative ? (
@@ -2661,7 +2661,7 @@ export default function OfferDetailsPage() {
                 value={productSearchTerm}
                 onChange={(e) => setProductSearchTerm(e.target.value)}
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
             </div>
 
@@ -2679,7 +2679,7 @@ export default function OfferDetailsPage() {
           {/* Selected Products Count */}
           {selectedProductsToAdd.length > 0 && (
             <div
-              className="rounded-md p-3"
+              className={`${tw.rounded} p-3`}
               style={{ backgroundColor: color.primary.accent }}
             >
               <p className="text-sm text-black font-medium">
@@ -2690,7 +2690,7 @@ export default function OfferDetailsPage() {
           )}
 
           {/* Products List */}
-          <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-md">
+          <div className={`max-h-96 overflow-y-auto border border-gray-200 ${tw.rounded}`}>
             {productsSearchLoading ? (
               <div className="flex justify-center items-center py-12">
                 <LoadingSpinner />
@@ -2730,7 +2730,7 @@ export default function OfferDetailsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
                           <div
-                            className={`w-10 h-10 rounded-md flex items-center justify-center ${
+                            className={`w-10 h-10 ${tw.rounded} flex items-center justify-center ${
                               isAlreadyLinked ? "bg-gray-200" : "bg-gray-100"
                             }`}
                           >
@@ -2820,14 +2820,14 @@ export default function OfferDetailsPage() {
                 setProductSearchTerm("");
               }}
               disabled={isLinkingProducts}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors disabled:opacity-50"
+              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               onClick={handleConfirmAddProducts}
               disabled={isLinkingProducts || selectedProductsToAdd.length === 0}
-              className="px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+              className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isLinkingProducts ? (
@@ -2989,7 +2989,7 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Title
                       </label>
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
                         <p className="text-gray-900">
                           {previewResult.rendered_title}
                         </p>
@@ -3002,7 +3002,7 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Text Body
                       </label>
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
                         <p className="text-gray-900 whitespace-pre-wrap">
                           {previewResult.rendered_text_body}
                         </p>
@@ -3015,7 +3015,7 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered HTML Body
                       </label>
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
                         <div
                           className="prose max-w-none"
                           dangerouslySetInnerHTML={{

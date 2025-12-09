@@ -3,6 +3,7 @@ import { ChevronDown, Search } from "lucide-react";
 import StepFlowLayout from "../../../../shared/components/ui/StepFlowLayout";
 import { CreateOfferRequest } from "../../../types/offer";
 
+import { tw } from '../../../shared/utils/utils';
 interface OfferDefinitionStepProps {
   currentStep: number;
   totalSteps: number;
@@ -67,7 +68,7 @@ export default function OfferDefinitionStep({
       nextButtonText="Next Step"
     >
       {/* Offer Information */}
-      <div className="bg-white border border-gray-200 rounded-md p-6 space-y-4">
+      <div className={`bg-white border border-gray-200 ${tw.rounded} p-6 space-y-4`}>
         <h3 className="text-base font-medium text-gray-900 mb-4">
           Offer Information
         </h3>
@@ -84,7 +85,7 @@ export default function OfferDefinitionStep({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
               placeholder="Enter offer name"
               required
             />
@@ -99,7 +100,7 @@ export default function OfferDefinitionStep({
               <button
                 type="button"
                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between"
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] bg-white text-sm text-left flex items-center justify-between`}
               >
                 <span
                   className={formData.type ? "text-gray-900" : "text-gray-500"}
@@ -116,7 +117,7 @@ export default function OfferDefinitionStep({
               </button>
 
               {isTypeDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}>
                   <div className="p-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -124,7 +125,7 @@ export default function OfferDefinitionStep({
                         type="text"
                         value={typeSearchTerm}
                         onChange={(e) => setTypeSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]"
+                        className={`w-full pl-10 pr-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
                         placeholder="Search types..."
                       />
                     </div>
@@ -174,7 +175,7 @@ export default function OfferDefinitionStep({
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm"
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm`}
             placeholder="Describe your offer details and benefits"
             rows={3}
             required

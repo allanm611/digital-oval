@@ -1,6 +1,6 @@
 import { Award, Target, Gift, Plus, X, ArrowRight } from "lucide-react";
 import { CampaignSegment, CampaignOffer } from "../../types/campaign";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 
 interface ChampionChallengerOfferMappingProps {
   champion: CampaignSegment | null;
@@ -30,7 +30,7 @@ export default function ChampionChallengerOfferMapping({
 
   if (!champion) {
     return (
-      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-12">
+      <div className={`bg-gray-50 border-2 border-dashed border-gray-300 ${tw.rounded} p-12`}>
         <div className="text-center text-gray-500">
           <Award className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p className="font-medium">No Champion segment configured</p>
@@ -51,7 +51,7 @@ export default function ChampionChallengerOfferMapping({
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="bg-gray-50 rounded-md p-6 border border-gray-200">
+      <div className={`bg-gray-50 ${tw.rounded} p-6 border border-gray-200`}>
         <div className="grid grid-cols-3 gap-6">
           <div>
             <div className="text-2xl font-bold text-gray-900">
@@ -83,7 +83,7 @@ export default function ChampionChallengerOfferMapping({
           </h3>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-md p-6">
+        <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <Award
@@ -106,7 +106,7 @@ export default function ChampionChallengerOfferMapping({
             </div>
             <button
               onClick={() => onMapOffers(champion.id)}
-              className="inline-flex items-center px-4 py-2 text-white rounded-md text-sm font-medium"
+              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -122,7 +122,7 @@ export default function ChampionChallengerOfferMapping({
               {getOffersForSegment(champion.id).map((offer) => (
                 <div
                   key={offer.id}
-                  className="bg-white border border-gray-200 rounded-md p-4 flex items-center justify-between"
+                  className={`bg-white border border-gray-200 ${tw.rounded} p-4 flex items-center justify-between`}
                 >
                   <div className="flex items-center space-x-3">
                     <Gift
@@ -150,7 +150,7 @@ export default function ChampionChallengerOfferMapping({
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-8 text-center">
+            <div className={`bg-gray-50 border-2 border-dashed border-gray-300 ${tw.rounded} p-8 text-center`}>
               <Gift className="w-10 h-10 mx-auto mb-2 text-gray-400" />
               <p className="text-sm text-gray-600">No offers mapped yet</p>
             </div>
@@ -178,11 +178,11 @@ export default function ChampionChallengerOfferMapping({
             {challengers.map((challenger, index) => (
               <div
                 key={challenger.id}
-                className="bg-white border border-gray-200 rounded-md p-5"
+                className={`bg-white border border-gray-200 ${tw.rounded} p-5`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-md flex items-center justify-center border border-gray-200">
+                    <div className={`w-8 h-8 ${tw.rounded} flex items-center justify-center border border-gray-200`}>
                       <span className="text-gray-700 font-bold text-sm">
                         C{index + 1}
                       </span>
@@ -203,7 +203,7 @@ export default function ChampionChallengerOfferMapping({
                   </div>
                   <button
                     onClick={() => onMapOffers(challenger.id)}
-                    className="inline-flex items-center px-3 py-1.5 text-white rounded-md text-xs font-medium"
+                    className={`inline-flex items-center px-3 py-1.5 text-white ${tw.rounded} text-xs font-medium`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     <Plus className="w-3.5 h-3.5 mr-1" />
@@ -217,7 +217,7 @@ export default function ChampionChallengerOfferMapping({
                     {getOffersForSegment(challenger.id).map((offer) => (
                       <div
                         key={offer.id}
-                        className="bg-white border border-gray-200 rounded-md p-3 flex items-center justify-between"
+                        className={`bg-white border border-gray-200 ${tw.rounded} p-3 flex items-center justify-between`}
                       >
                         <div className="flex items-center space-x-2 flex-1 min-w-0">
                           <Gift
@@ -245,7 +245,7 @@ export default function ChampionChallengerOfferMapping({
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-dashed border-gray-300 rounded-md p-6 text-center">
+                  <div className={`bg-gray-50 border border-dashed border-gray-300 ${tw.rounded} p-6 text-center`}>
                     <Gift className="w-8 h-8 mx-auto mb-1 text-gray-400" />
                     <p className="text-sm text-gray-500">No offers</p>
                   </div>
@@ -258,7 +258,7 @@ export default function ChampionChallengerOfferMapping({
 
       {/* Mapping Visualization */}
       {totalOffersMapped > 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+        <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
           <div className="flex items-start space-x-3">
             <ArrowRight
               className="w-4 h-4 mt-1"

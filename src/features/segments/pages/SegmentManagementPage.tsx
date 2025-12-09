@@ -978,7 +978,7 @@ export default function SegmentManagementPage() {
                   setSelectedSegmentIds(new Set());
                 }
               }}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
                 backgroundColor: isSelectionMode
                   ? color.primary.action
@@ -1009,7 +1009,7 @@ export default function SegmentManagementPage() {
       {!isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Segments */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <Layers
                 className="h-5 w-5"
@@ -1035,7 +1035,7 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Active Segments */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <Activity
                 className="h-5 w-5"
@@ -1055,7 +1055,7 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Total Customers */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <Users
                 className="h-5 w-5"
@@ -1074,7 +1074,7 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Top Segment */}
-          <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <TrendingUp
                 className="h-5 w-5"
@@ -1117,7 +1117,7 @@ export default function SegmentManagementPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
             />
           </div>
 
@@ -1152,7 +1152,7 @@ export default function SegmentManagementPage() {
             />
             <button
               onClick={() => setShowAdvancedFilters(true)}
-              className="flex items-center gap-2 rounded-md transition-colors font-medium"
+              className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -1196,7 +1196,7 @@ export default function SegmentManagementPage() {
 
       {/* Bulk Actions Toolbar */}
       {isSelectionMode && selectedSegmentIds.size > 0 && (
-        <div className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3">
+        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedSegmentIds.size} segment(s) selected
@@ -1211,7 +1211,7 @@ export default function SegmentManagementPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleBulkRefresh}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               <RefreshCw size={14} />
@@ -1223,7 +1223,7 @@ export default function SegmentManagementPage() {
 
       {/* Content */}
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -1248,7 +1248,7 @@ export default function SegmentManagementPage() {
         ) : filteredSegments.length === 0 ? (
           <div className="p-8 md:p-16 text-center">
             <div
-              className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 rounded-md p-6 md:p-12`}
+              className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
             >
               <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>
                 No segments found
@@ -1485,7 +1485,7 @@ export default function SegmentManagementPage() {
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             onClick={() => handleViewSegment(segment.id)}
-                            className={`group p-3 rounded-md ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4 " />
@@ -1493,7 +1493,7 @@ export default function SegmentManagementPage() {
                           {/* COMMENTED OUT: Activate/Deactivate button temporarily disabled */}
                           {/* <button
                             onClick={() => handleToggleStatus(segment)}
-                            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title={
                               segment.is_active ? "Deactivate" : "Activate"
                             }
@@ -1506,7 +1506,7 @@ export default function SegmentManagementPage() {
                           </button> */}
                           <button
                             onClick={() => handleEditSegment(segment.id)}
-                            className={`group p-3 rounded-md ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4 " />
@@ -1521,7 +1521,7 @@ export default function SegmentManagementPage() {
                               onClick={(e) =>
                                 handleActionMenuToggle(segment.id, e)
                               }
-                              className={`group p-3 rounded-md ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             >
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
@@ -1542,7 +1542,7 @@ export default function SegmentManagementPage() {
                     ref={(el) => {
                       dropdownMenuRefs.current[segment.id] = el;
                     }}
-                    className="fixed bg-white border border-gray-200 rounded-md shadow-xl py-3 w-64"
+                    className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
                     style={{
                       zIndex: 99999,
                       top: `${dropdownPosition.top}px`,
@@ -1634,7 +1634,7 @@ export default function SegmentManagementPage() {
               {filteredSegments.map((segment) => (
                 <div
                   key={segment.id}
-                  className={`bg-white border ${tw.borderDefault} rounded-md p-4 shadow-sm hover:shadow-md transition-shadow`}
+                  className={`bg-white border ${tw.borderDefault} ${tw.rounded} p-4 shadow-sm hover:shadow-md transition-shadow`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     {isSelectionMode && (
@@ -1665,7 +1665,7 @@ export default function SegmentManagementPage() {
                       {/* COMMENTED OUT: Activate/Deactivate button temporarily disabled */}
                       {/* <button
                         onClick={() => handleToggleStatus(segment)}
-                        className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+                        className={`p-2 ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title={segment.is_active ? "Deactivate" : "Activate"}
                       >
                         {segment.is_active ? (
@@ -1676,14 +1676,14 @@ export default function SegmentManagementPage() {
                       </button> */}
                       <button
                         onClick={() => handleViewSegment(segment.id)}
-                        className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+                        className={`p-2 ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title="View Details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleEditSegment(segment.id)}
-                        className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+                        className={`p-2 ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -1696,7 +1696,7 @@ export default function SegmentManagementPage() {
                       >
                         <button
                           onClick={(e) => handleActionMenuToggle(segment.id, e)}
-                          className="p-2 rounded-md text-gray-500 hover:bg-gray-100"
+                          className={`p-2 ${tw.rounded} text-gray-500 hover:bg-gray-100`}
                         >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
@@ -1767,7 +1767,7 @@ export default function SegmentManagementPage() {
       {/* Pagination */}
       {!isLoading && !error && filteredSegments.length > 0 && (
         <div
-          className={`bg-white rounded-md shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
+          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div
@@ -1787,7 +1787,7 @@ export default function SegmentManagementPage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page <= 1}
-                className={`p-2 border ${tw.borderDefault} rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -1797,7 +1797,7 @@ export default function SegmentManagementPage() {
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages}
-                className={`p-2 border ${tw.borderDefault} rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -1843,7 +1843,7 @@ export default function SegmentManagementPage() {
                   </h3>
                   <button
                     onClick={handleCloseModal}
-                    className={`p-2 ${tw.textMuted} hover:bg-gray-50 rounded-md transition-colors`}
+                    className={`p-2 ${tw.textMuted} hover:bg-gray-50 ${tw.rounded} transition-colors`}
                   >
                     ×
                   </button>
@@ -1930,7 +1930,7 @@ export default function SegmentManagementPage() {
                       setTypeFilter("all");
                       setSelectedTags([]);
                     }}
-                    className={`flex-1 px-4 py-2 text-sm border border-gray-300 ${tw.textSecondary} rounded-md hover:bg-gray-50 transition-colors`}
+                    className={`flex-1 px-4 py-2 text-sm border border-gray-300 ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors`}
                   >
                     Clear All
                   </button>

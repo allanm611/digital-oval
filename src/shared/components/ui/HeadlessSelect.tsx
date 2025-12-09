@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { components } from "../../utils/utils";
+import { components, tw } from "../../utils/utils";
 
 interface SelectOption {
   value: string | number;
@@ -19,6 +19,7 @@ interface HeadlessSelectProps {
   className?: string;
   searchable?: boolean;
   openUpward?: boolean;
+  zIndex?: number;
 }
 
 export default function HeadlessSelect({
@@ -31,6 +32,7 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
+  zIndex = 10,
 }: HeadlessSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -43,12 +45,12 @@ export default function HeadlessSelect({
     : options;
 
   return (
-    <div className={`relative ${className}`} style={{ zIndex: 99999 }}>
+    <div className={`relative ${className}`} style={{ zIndex }}>
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative w-full">
           <Listbox.Button
             className={`
-            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm
+            relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
             ${
               disabled
@@ -81,7 +83,9 @@ export default function HeadlessSelect({
             leaveTo="opacity-0"
           >
             <Listbox.Options
-              className={`absolute z-[99999] max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
+              className={`absolute max-h-60 w-full overflow-auto ${
+                tw.rounded
+              } bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
                 openUpward ? "bottom-full mb-1" : "top-full mt-1"
               }`}
               style={{
@@ -89,7 +93,7 @@ export default function HeadlessSelect({
                 maxWidth: "100%",
                 left: 0,
                 right: 0,
-                zIndex: 99999,
+                zIndex: zIndex + 1,
               }}
             >
               {searchable && (
@@ -99,7 +103,7 @@ export default function HeadlessSelect({
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search options..."
-                    className="w-full px-2 py-1 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-0 focus:border-gray-200"
+                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>

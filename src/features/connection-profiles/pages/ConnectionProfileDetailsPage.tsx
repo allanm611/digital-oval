@@ -267,7 +267,7 @@ export default function ConnectionProfileDetailsPage() {
         </p>
         <button
           onClick={() => navigate("/dashboard/connection-profiles")}
-          className="inline-flex items-center px-4 py-2 text-white rounded-md transition-all"
+          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
           style={{ backgroundColor: color.primary.action }}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -286,7 +286,7 @@ export default function ConnectionProfileDetailsPage() {
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => navigate("/dashboard/connection-profiles")}
-              className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+              className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -322,7 +322,7 @@ export default function ConnectionProfileDetailsPage() {
             </button>
             <button
               onClick={handleEdit}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white transition-colors"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-2 text-sm font-semibold text-white transition-colors`}
               style={{ backgroundColor: color.primary.action }}
               title="Edit profile"
             >
@@ -333,14 +333,14 @@ export default function ConnectionProfileDetailsPage() {
             <div className="relative" ref={moreMenuRef}>
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="inline-flex items-center gap-2 justify-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                className={`inline-flex items-center gap-2 justify-center ${tw.rounded} px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors`}
                 title="More actions"
               >
                 <MoreVertical size={16} />
                 <span>More</span>
               </button>
               {showMoreMenu && (
-                <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+                <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
                   <button
                     onClick={() => {
                       handleMarkUsed();
@@ -390,7 +390,7 @@ export default function ConnectionProfileDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
           <div
-            className="rounded-md border border-gray-200 p-6"
+            className={`${tw.rounded} border border-gray-200 p-6`}
             style={{ backgroundColor: color.surface.cards }}
           >
             <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -464,7 +464,7 @@ export default function ConnectionProfileDetailsPage() {
 
           {/* Performance Settings */}
           <div
-            className="rounded-md border border-gray-200 p-6"
+            className={`${tw.rounded} border border-gray-200 p-6`}
             style={{ backgroundColor: color.surface.cards }}
           >
             <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -521,7 +521,7 @@ export default function ConnectionProfileDetailsPage() {
         <div className="space-y-6">
           {/* Data Governance */}
           <div
-            className="rounded-md border border-gray-200 p-6"
+            className={`${tw.rounded} border border-gray-200 p-6`}
             style={{ backgroundColor: color.surface.cards }}
           >
             <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -574,7 +574,7 @@ export default function ConnectionProfileDetailsPage() {
           {/* Health Check */}
           {profile.health_check_enabled && (
             <div
-              className="rounded-md border border-gray-200 p-6"
+              className={`${tw.rounded} border border-gray-200 p-6`}
               style={{ backgroundColor: color.surface.cards }}
             >
               <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -609,7 +609,7 @@ export default function ConnectionProfileDetailsPage() {
 
           {/* Validity Period */}
           <div
-            className="rounded-md border border-gray-200 p-6"
+            className={`${tw.rounded} border border-gray-200 p-6`}
             style={{ backgroundColor: color.surface.cards }}
           >
             <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
@@ -667,7 +667,7 @@ export default function ConnectionProfileDetailsPage() {
               type="button"
               onClick={handleHealthUpdate}
               disabled={healthSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm text-white ${tw.rounded} disabled:opacity-60 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {healthSaving && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -696,7 +696,7 @@ export default function ConnectionProfileDetailsPage() {
                   valid_from: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
             />
           </div>
           <div>
@@ -712,7 +712,7 @@ export default function ConnectionProfileDetailsPage() {
                   valid_to: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
             />
           </div>
           <div className="flex items-center justify-end gap-2">
@@ -727,7 +727,7 @@ export default function ConnectionProfileDetailsPage() {
               type="button"
               onClick={handleSaveValidity}
               disabled={validitySaving}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm text-white rounded-md disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 px-4 py-2 text-sm text-white ${tw.rounded} disabled:opacity-60 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {validitySaving && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -29,7 +29,7 @@ export default function ErrorState({
 
   return (
     <div
-      className={`rounded-md border border-gray-200 bg-white px-5 py-6 text-left shadow-sm ${className}`}
+      className={`${tw.rounded} border border-gray-200 bg-white px-5 py-6 text-left shadow-sm ${className}`}
     >
       <div className="flex items-start gap-3">
         <div>{Icon}</div>
@@ -43,7 +43,7 @@ export default function ErrorState({
             <button
               type="button"
               onClick={onRetry}
-              className="mt-4 inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50`}
             >
               {actionLabel}
             </button>

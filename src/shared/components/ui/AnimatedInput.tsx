@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { LucideIcon, Eye, EyeOff } from "lucide-react";
 
+import { tw } from '../../../shared/utils/utils';
 interface AnimatedInputProps {
   label?: string;
   placeholder?: string;
@@ -71,7 +72,7 @@ export default function AnimatedInput({
   };
 
   const baseInputClasses = `
-    w-full rounded-md border transition-all duration-300 ease-smooth
+    w-full ${tw.rounded} border transition-all duration-300 ease-smooth
     focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed
     ${sizeClasses[size]}
     ${Icon && iconPosition === "left" ? "pl-11" : ""}
@@ -96,7 +97,7 @@ export default function AnimatedInput({
       ${success ? "border-success-500 focus:border-success-500" : ""}
     `,
     minimal: `
-      bg-transparent border-0 border-b-2 border-secondary-300 rounded-none text-secondary-900
+      bg-transparent border-0 border-b-2 border-secondary-300 ${tw.rounded} text-secondary-900
        hover:border-secondary-400 px-0
       ${error ? "border-error-500 focus:border-error-500" : ""}
       ${success ? "border-success-500 focus:border-success-500" : ""}
@@ -210,7 +211,7 @@ export default function AnimatedInput({
         {/* Focus Ring Animation */}
         <div
           className={`
-          absolute inset-0 rounded-md pointer-events-none transition-all duration-300
+          absolute inset-0 ${tw.rounded} pointer-events-none transition-all duration-300
           ${isFocused && !error && !success ? "ring-0" : ""}
           ${isFocused && error ? "ring-0" : ""}
           ${isFocused && success ? "ring-0" : ""}

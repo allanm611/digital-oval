@@ -78,7 +78,7 @@ export default function OfferLifecycleHistoryPage() {
       <div className="flex items-center space-x-4">
         <button
           onClick={() => navigate(`/dashboard/offers/${id}`)}
-          className="p-2 rounded-md transition-colors"
+          className={`p-2 ${tw.rounded} transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -91,7 +91,7 @@ export default function OfferLifecycleHistoryPage() {
       </div>
 
       {/* Timeline */}
-      <div className="bg-white rounded-md border border-gray-200 p-6">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner
@@ -120,7 +120,7 @@ export default function OfferLifecycleHistoryPage() {
                   />
 
                   {/* Content */}
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-200">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         {entry.previous_status && (

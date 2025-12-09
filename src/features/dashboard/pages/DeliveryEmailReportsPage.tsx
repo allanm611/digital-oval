@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import type {
   RangeOption,
   DeliveryEmailReportsResponse,
@@ -223,7 +223,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -569,7 +569,7 @@ export default function DeliveryEmailReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
                   !(appliedCustomRange.start && appliedCustomRange.end) &&
                   deliveryRange === option
                     ? "border-[#252829] bg-[#252829] text-white"
@@ -581,7 +581,7 @@ export default function DeliveryEmailReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
+            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
               <label
                 htmlFor="email-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -625,7 +625,7 @@ export default function DeliveryEmailReportsPage() {
                     start: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -647,14 +647,14 @@ export default function DeliveryEmailReportsPage() {
                     end: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             {customRange.start && customRange.end && (
               <button
                 type="button"
                 onClick={handleRun}
-                className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition-colors"
+                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
                 style={{ backgroundColor: colors.primary.accent }}
               >
                 Run
@@ -667,7 +667,7 @@ export default function DeliveryEmailReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className="ml-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
               >
                 Clear
               </button>
@@ -681,7 +681,7 @@ export default function DeliveryEmailReportsPage() {
           {summaryStats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <stat.icon
@@ -701,7 +701,7 @@ export default function DeliveryEmailReportsPage() {
         </div>
       </section>
 
-      <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -787,7 +787,7 @@ export default function DeliveryEmailReportsPage() {
               value={campaignQuery}
               onChange={(event) => setCampaignQuery(event.target.value)}
               placeholder="Search campaign"
-              className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80"
+              className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
             />
             <HeadlessSelect
               value={statusFilter}
@@ -804,7 +804,7 @@ export default function DeliveryEmailReportsPage() {
             <button
               type="button"
               onClick={handleDownloadCsv}
-              className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors"
+              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white transition-colors`}
               style={{ backgroundColor: colors.primary.action }}
             >
               <Download className="h-4 w-4" />
@@ -813,7 +813,7 @@ export default function DeliveryEmailReportsPage() {
           </div>
         </div>
         <div
-          className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
         >
           <div className="hidden lg:block overflow-x-auto">
             <table

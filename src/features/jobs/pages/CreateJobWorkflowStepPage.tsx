@@ -336,7 +336,7 @@ export default function CreateJobWorkflowStepPage() {
               }`
             )
           }
-          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -346,7 +346,7 @@ export default function CreateJobWorkflowStepPage() {
       </div>
 
       {batchMode && batchSteps.length === 0 && (
-        <div className="rounded-md border border-blue-200 bg-blue-50 p-4 mb-6">
+        <div className={`${tw.rounded} border border-blue-200 bg-blue-50 p-4 mb-6`}>
           <div className="flex items-center justify-between">
             <p className="text-sm text-blue-800">
               Batch mode: Create multiple steps at once
@@ -354,7 +354,7 @@ export default function CreateJobWorkflowStepPage() {
             <button
               type="button"
               onClick={addBatchStep}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4" />
@@ -365,7 +365,7 @@ export default function CreateJobWorkflowStepPage() {
       )}
 
       {batchMode && batchSteps.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm mb-6">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Batch Steps ({batchSteps.length})
@@ -373,7 +373,7 @@ export default function CreateJobWorkflowStepPage() {
             <button
               type="button"
               onClick={addBatchStep}
-              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
             >
               <Plus className="h-4 w-4" />
               Add Another
@@ -383,7 +383,7 @@ export default function CreateJobWorkflowStepPage() {
             {batchSteps.map((step, idx) => (
               <div
                 key={idx}
-                className="rounded-md border border-gray-200 bg-gray-50 p-4"
+                className={`${tw.rounded} border border-gray-200 bg-gray-50 p-4`}
               >
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">
@@ -408,7 +408,7 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(e) =>
                         updateBatchStep(idx, "step_name", e.target.value)
                       }
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
                       placeholder="Enter step name"
                     />
                   </div>
@@ -426,7 +426,7 @@ export default function CreateJobWorkflowStepPage() {
                           e.target.value.toUpperCase().replace(/\s/g, "_")
                         )
                       }
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
                       placeholder="STEP_CODE"
                     />
                   </div>
@@ -445,7 +445,7 @@ export default function CreateJobWorkflowStepPage() {
                           Number(e.target.value) || idx + 1
                         )
                       }
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
                     />
                   </div>
                   <div>
@@ -457,7 +457,7 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(e) =>
                         updateBatchStep(idx, "step_type", e.target.value)
                       }
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
                     >
                       {STEP_TYPES.map((type) => (
                         <option key={type.value} value={type.value}>
@@ -476,7 +476,7 @@ export default function CreateJobWorkflowStepPage() {
                         updateBatchStep(idx, "step_action", e.target.value)
                       }
                       rows={2}
-                      className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm font-mono"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm font-mono`}
                       placeholder="Enter step action"
                     />
                   </div>
@@ -493,7 +493,7 @@ export default function CreateJobWorkflowStepPage() {
             {/* Left Column */}
             <div className="space-y-6">
               {/* Basic Information */}
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Basic Information
                 </h2>
@@ -511,7 +511,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       disabled={!!jobIdParam || isEditMode}
-                      className={`w-full rounded-md border ${
+                      className={`w-full ${tw.rounded} border ${
                         errors.job_id ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169] disabled:bg-gray-100`}
                     >
@@ -539,7 +539,7 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, step_name: e.target.value })
                       }
-                      className={`w-full rounded-md border ${
+                      className={`w-full ${tw.rounded} border ${
                         errors.step_name ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="Enter step name"
@@ -566,7 +566,7 @@ export default function CreateJobWorkflowStepPage() {
                             .replace(/\s/g, "_"),
                         })
                       }
-                      className={`w-full rounded-md border ${
+                      className={`w-full ${tw.rounded} border ${
                         errors.step_code ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="STEP_CODE"
@@ -592,7 +592,7 @@ export default function CreateJobWorkflowStepPage() {
                           step_order: Number(e.target.value) || 1,
                         })
                       }
-                      className={`w-full rounded-md border ${
+                      className={`w-full ${tw.rounded} border ${
                         errors.step_order ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                     />
@@ -614,7 +614,7 @@ export default function CreateJobWorkflowStepPage() {
                       }
                     >
                       <div className="relative">
-                        <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                        <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                           <span className="block truncate">
                             {STEP_TYPES.find(
                               (t) => t.value === formData.step_type
@@ -633,7 +633,7 @@ export default function CreateJobWorkflowStepPage() {
                           leaveFrom="opacity-100"
                           leaveTo="opacity-0"
                         >
-                          <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                          <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
                             {STEP_TYPES.map((type) => (
                               <Listbox.Option
                                 key={type.value}
@@ -686,7 +686,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       rows={3}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="Enter step description"
                     />
                   </div>
@@ -694,7 +694,7 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Execution Configuration */}
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Execution Configuration
                 </h2>
@@ -712,7 +712,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       rows={4}
-                      className={`w-full rounded-md border ${
+                      className={`w-full ${tw.rounded} border ${
                         errors.step_action
                           ? "border-red-300"
                           : "border-gray-300"
@@ -743,7 +743,7 @@ export default function CreateJobWorkflowStepPage() {
                             timeout_seconds: Number(e.target.value) || 300,
                           })
                         }
-                        className={`w-full rounded-md border ${
+                        className={`w-full ${tw.rounded} border ${
                           errors.timeout_seconds
                             ? "border-red-300"
                             : "border-gray-300"
@@ -767,7 +767,7 @@ export default function CreateJobWorkflowStepPage() {
                         }
                       >
                         <div className="relative">
-                          <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                          <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                             <span className="block truncate">
                               {FAILURE_ACTIONS.find(
                                 (a) => a.value === formData.on_failure_action
@@ -786,7 +786,7 @@ export default function CreateJobWorkflowStepPage() {
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                            <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
                               {FAILURE_ACTIONS.map((action) => (
                                 <Listbox.Option
                                   key={action.value}
@@ -845,7 +845,7 @@ export default function CreateJobWorkflowStepPage() {
                             retry_count: Number(e.target.value) || 0,
                           })
                         }
-                        className={`w-full rounded-md border ${
+                        className={`w-full ${tw.rounded} border ${
                           errors.retry_count
                             ? "border-red-300"
                             : "border-gray-300"
@@ -872,7 +872,7 @@ export default function CreateJobWorkflowStepPage() {
                             retry_delay_seconds: Number(e.target.value) || 0,
                           })
                         }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       />
                     </div>
                   </div>
@@ -883,7 +883,7 @@ export default function CreateJobWorkflowStepPage() {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Dependencies & Parallel Execution */}
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Dependencies & Parallel Execution
                 </h2>
@@ -924,7 +924,7 @@ export default function CreateJobWorkflowStepPage() {
                               : null,
                           })
                         }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                         placeholder="Enter parallel group ID"
                       />
                     </div>
@@ -946,7 +946,7 @@ export default function CreateJobWorkflowStepPage() {
                           }
                         }}
                         list="step-codes"
-                        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                        className={`flex-1 ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                         placeholder="Enter step code"
                       />
                       <datalist id="step-codes">
@@ -957,7 +957,7 @@ export default function CreateJobWorkflowStepPage() {
                       <button
                         type="button"
                         onClick={addDependency}
-                        className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                       >
                         Add
                       </button>
@@ -966,7 +966,7 @@ export default function CreateJobWorkflowStepPage() {
                       {formData.depends_on_step_codes?.map((code) => (
                         <div
                           key={code}
-                          className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+                          className={`flex items-center justify-between ${tw.rounded} bg-gray-50 px-3 py-2`}
                         >
                           <span className="text-sm text-gray-900">{code}</span>
                           <button
@@ -990,7 +990,7 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Validation */}
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Validation
                 </h2>
@@ -1008,7 +1008,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       rows={3}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="SQL query to run before execution"
                     />
                   </div>
@@ -1026,7 +1026,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       rows={3}
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="SQL query to run after execution"
                     />
                   </div>
@@ -1048,7 +1048,7 @@ export default function CreateJobWorkflowStepPage() {
                               : null,
                           })
                         }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       />
                     </div>
 
@@ -1068,7 +1068,7 @@ export default function CreateJobWorkflowStepPage() {
                               : null,
                           })
                         }
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                        className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       />
                     </div>
                   </div>
@@ -1076,7 +1076,7 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Status */}
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Status
                 </h2>
@@ -1121,7 +1121,7 @@ export default function CreateJobWorkflowStepPage() {
         ) : null}
 
         {batchMode ? (
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+          <div className={`${tw.rounded} border border-amber-200 bg-amber-50 p-4`}>
             <p className="text-sm text-amber-800">
               <strong>Note:</strong> In batch mode, only the job selection and
               batch steps above will be used. Individual step configuration
@@ -1141,14 +1141,14 @@ export default function CreateJobWorkflowStepPage() {
                 }`
               )
             }
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className={`${tw.rounded} border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving || (batchMode && batchSteps.length === 0)}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
             style={{ backgroundColor: color.primary.action }}
           >
             {isSaving ? (

@@ -378,11 +378,11 @@ export default function QuickListDetailsPage() {
   if (!quicklist && !isLoading) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
+        <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-6 text-center`}>
           <p className="text-red-600">QuickList not found</p>
           <button
             onClick={navigateBack}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            className={`mt-4 px-4 py-2 bg-red-600 text-white ${tw.rounded} hover:bg-red-700`}
           >
             Back to QuickLists
           </button>
@@ -406,7 +406,7 @@ export default function QuickListDetailsPage() {
         <div className="flex items-start gap-4 flex-wrap">
           <button
             onClick={navigateBack}
-            className="p-2 text-gray-600 rounded-md transition-colors"
+            className={`p-2 text-gray-600 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -426,14 +426,14 @@ export default function QuickListDetailsPage() {
         <div className="flex flex-wrap gap-3 w-full lg:w-auto">
           <button
             onClick={handleEdit}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
           >
             <Edit className="w-4 h-4" />
             Edit
           </button>
           <button
             onClick={handleCommunicate}
-            className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+            className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Send className="w-4 h-4" />
@@ -443,13 +443,13 @@ export default function QuickListDetailsPage() {
           <div className="relative flex-shrink-0" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+              className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 whitespace-nowrap`}
             >
               <MoreVertical className="w-4 h-4" />
               More
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+              <div className={`absolute right-0 top-full mt-1 w-48 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
                 <button
                   onClick={() => {
                     handleDelete();
@@ -529,13 +529,13 @@ export default function QuickListDetailsPage() {
 
       {/* Content */}
       {activeSection === "overview" && (
-        <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}>
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column */}
               <div className="space-y-6">
                 {/* QuickList Information */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     QuickList Information
                   </h3>
@@ -584,7 +584,7 @@ export default function QuickListDetailsPage() {
                 </div>
 
                 {/* File Information */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     File Information
                   </h3>
@@ -683,7 +683,7 @@ export default function QuickListDetailsPage() {
 
                 {/* Commented out - Table Mapping Information */}
                 {/* {tableMapping && (
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                     <h3 className="text-base font-semibold text-gray-900 mb-3">
                       Table Mapping
                     </h3>
@@ -728,7 +728,7 @@ export default function QuickListDetailsPage() {
 
                 {/* Commented out - Upload Type Schema */}
                 {/* {uploadTypeSchema && (
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                     <h3 className="text-base font-semibold text-gray-900 mb-3">
                       Upload Type Schema
                     </h3>
@@ -819,14 +819,14 @@ export default function QuickListDetailsPage() {
               <div className="space-y-6">
                 {/* Statistics Cards */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                     <p className="text-xs text-gray-500">Upload Type</p>
                     <p className="text-sm font-semibold text-gray-900">
                       {quicklist.upload_type}
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                     <p className="text-xs text-gray-500">Rows Imported</p>
                     <p className="text-sm font-semibold text-gray-900">
                       {quicklist.rows_imported != null
@@ -835,7 +835,7 @@ export default function QuickListDetailsPage() {
                     </p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                     <p className="text-xs text-gray-500">Created</p>
                     <p className="text-sm font-semibold text-gray-900">
                       {formatDate(quicklist.created_at)}
@@ -844,7 +844,7 @@ export default function QuickListDetailsPage() {
                 </div>
 
                 {/* Activity Timeline */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}>
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     Activity Timeline
                   </h3>
@@ -902,7 +902,7 @@ export default function QuickListDetailsPage() {
                   </p>
                 </div>
               )}
-              <div className="border border-gray-200 rounded-md overflow-hidden">
+              <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
                 <div className="overflow-x-auto">
                   <table
                     className="w-full text-sm"
@@ -940,7 +940,7 @@ export default function QuickListDetailsPage() {
                           className="hover:bg-gray-50/40 transition-colors rounded"
                         >
                           <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l"
+                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {index + 1}
@@ -950,7 +950,7 @@ export default function QuickListDetailsPage() {
                               key={column}
                               className={`px-6 py-4 text-gray-600 ${
                                 columnIndex === dataColumns.length - 1
-                                  ? "rounded-r"
+                                  ? "rounded-r-md"
                                   : ""
                               }`}
                               style={{ backgroundColor: tableBodyBackground }}
@@ -1008,7 +1008,7 @@ export default function QuickListDetailsPage() {
                   </p>
                 </div>
               )}
-              <div className="border border-gray-200 rounded-md overflow-hidden">
+              <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
                 <div className="overflow-x-auto">
                   <table
                     className="w-full text-sm min-w-[720px]"
@@ -1055,7 +1055,7 @@ export default function QuickListDetailsPage() {
                           className="hover:bg-gray-50/30 transition-colors rounded"
                         >
                           <td
-                            className="px-6 py-4 text-gray-900 font-medium rounded-l whitespace-nowrap"
+                            className="px-6 py-4 text-gray-900 font-medium rounded-l-md whitespace-nowrap"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {log.row_number}
@@ -1083,7 +1083,7 @@ export default function QuickListDetailsPage() {
                             {log.error_message || "-"}
                           </td>
                           <td
-                            className="px-6 py-4 text-gray-600 rounded-r whitespace-nowrap"
+                            className="px-6 py-4 text-gray-600 rounded-r-md whitespace-nowrap"
                             style={{ backgroundColor: tableBodyBackground }}
                           >
                             {formatDate(log.created_at)}

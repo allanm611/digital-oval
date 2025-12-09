@@ -151,7 +151,7 @@ export default function ControlGroupsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/configuration")}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -167,7 +167,7 @@ export default function ControlGroupsPage() {
         <div className="flex items-center gap-3 w-auto">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white transition-colors hover:opacity-90 w-auto"
+            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors hover:opacity-90 w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -178,10 +178,10 @@ export default function ControlGroupsPage() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-center">
             <div
-              className="p-3 rounded-md"
+              className={`p-3 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.action}10` }}
             >
               <Shield
@@ -200,10 +200,10 @@ export default function ControlGroupsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-center">
             <div
-              className="p-3 rounded-md"
+              className={`p-3 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.action}10` }}
             >
               <Users
@@ -220,9 +220,9 @@ export default function ControlGroupsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-center">
-            <div className="p-3 rounded-md bg-blue-100">
+            <div className={`p-3 ${tw.rounded} bg-blue-100`}>
               <Percent className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
@@ -254,7 +254,7 @@ export default function ControlGroupsPage() {
               placeholder="Search control groups..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
           </div>
 
@@ -276,7 +276,7 @@ export default function ControlGroupsPage() {
 
       {/* Control Groups Table */}
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {filteredGroups.length > 0 ? (
           <div className="overflow-x-auto">
@@ -346,7 +346,7 @@ export default function ControlGroupsPage() {
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
                           <div
-                            className="h-10 w-10 rounded-md flex items-center justify-center"
+                            className={`h-10 w-10 ${tw.rounded} flex items-center justify-center`}
                             style={{
                               backgroundColor: `${color.primary.action}10`,
                             }}
@@ -446,19 +446,19 @@ export default function ControlGroupsPage() {
                     >
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                           title="Edit"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all duration-200"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                         <button
-                          className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                           title="More options"
                         >
                           <MoreVertical className="h-4 w-4" />
@@ -483,7 +483,7 @@ export default function ControlGroupsPage() {
             </p>
             <button
               onClick={() => setShowCreateModal(true)}
-              className={`inline-flex items-center px-4 py-2 ${tw.primaryAction} rounded-md text-sm font-medium transition-colors hover:opacity-90`}
+              className={`inline-flex items-center px-4 py-2 ${tw.primaryAction} ${tw.rounded} text-sm font-medium transition-colors hover:opacity-90`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -497,7 +497,7 @@ export default function ControlGroupsPage() {
       {showCreateModal &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-md shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className={`bg-white ${tw.rounded} shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden`}>
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
@@ -564,7 +564,7 @@ export default function ControlGroupsPage() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-0"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-offset-0`}
                       style={
                         {
                           "--tw-ring-color": color.primary.action,
@@ -587,7 +587,7 @@ export default function ControlGroupsPage() {
                       Select the Customer Base for your Control Group
                     </label>
                     <div className="space-y-3">
-                      <label className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
                         <input
                           type="radio"
                           name="customerBase"
@@ -610,7 +610,7 @@ export default function ControlGroupsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
                         <input
                           type="radio"
                           name="customerBase"
@@ -632,7 +632,7 @@ export default function ControlGroupsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className="flex items-start p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
                         <input
                           type="radio"
                           name="customerBase"
@@ -663,19 +663,19 @@ export default function ControlGroupsPage() {
               <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
                 <button
                   disabled
-                  className="px-4 py-2 border border-gray-300 text-gray-400 rounded-md cursor-not-allowed"
+                  className={`px-4 py-2 border border-gray-300 text-gray-400 ${tw.rounded} cursor-not-allowed`}
                 >
                   Previous
                 </button>
                 <div className="flex space-x-3">
                   <button
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+                    className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
                   >
                     Cancel
                   </button>
                   <button
-                    className={`px-4 py-2 ${tw.primaryAction} rounded-md text-sm font-medium hover:opacity-90 transition-colors`}
+                    className={`px-4 py-2 ${tw.primaryAction} ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     Next

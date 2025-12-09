@@ -4,7 +4,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { setLanguageSettings } from "../../../shared/services/languageService";
 import { formatDate } from "../../../shared/services/dateService";
-import {  tw } from "../../../shared/utils/utils";
+import { tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 // import DateFormatter from "../../../shared/components/DateFormatter";
 import countries from "world-countries";
@@ -285,14 +285,14 @@ export default function SettingsPage() {
         <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
           <button
             onClick={handleReset}
-            className="px-5 py-2.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap"
+            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
           >
             {t.common.cancel}
           </button>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-5 py-2.5 text-sm font-medium rounded-md text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]"
+            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
           >
             {isSaving ? (
               <>
@@ -312,7 +312,9 @@ export default function SettingsPage() {
       {/* Settings Cards Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mt-0">
         {/* Location Card */}
-        <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 lg:p-8">
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
           <div className="mb-6 pb-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.location}
@@ -351,7 +353,7 @@ export default function SettingsPage() {
                 type="text"
                 value={settings.country_code}
                 readOnly
-                className="w-full px-4 py-3 border border-gray-300 rounded-md bg-gray-50 text-sm text-gray-700 cursor-not-allowed"
+                className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} bg-gray-50 text-sm text-gray-700 cursor-not-allowed`}
               />
               <p className="text-xs text-gray-400 mt-2">
                 Automatically set based on selected country
@@ -361,7 +363,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Localization Card */}
-        <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 lg:p-8">
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
           <div className="mb-6 pb-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Localization
@@ -384,6 +388,7 @@ export default function SettingsPage() {
                 onChange={(value) => handleLanguageChange(value as string)}
                 options={languageOptions}
                 placeholder="Select language"
+                zIndex={100000}
               />
             </div>
 
@@ -406,7 +411,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Date Format Card */}
-        <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 lg:p-8">
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
           <div className="mb-6 pb-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.dateFormat}
@@ -429,7 +436,9 @@ export default function SettingsPage() {
               options={dateFormatOptions}
               placeholder="Select date format"
             />
-            <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+            <div
+              className={`mt-3 p-3 bg-gray-50 ${tw.rounded} border border-gray-200`}
+            >
               <p className="text-xs text-gray-500 mb-1">Preview:</p>
               <p className="text-sm font-semibold text-gray-900">
                 {formatDate(new Date(), { customFormat: settings.date_format })}
@@ -439,7 +448,9 @@ export default function SettingsPage() {
         </div>
 
         {/* Currency & Number Formatting Card */}
-        <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 lg:p-8">
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
           <div className="mb-6 pb-4 border-b border-gray-100">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.currency} & Formatting
@@ -463,6 +474,7 @@ export default function SettingsPage() {
                 options={currencyOptions}
                 placeholder="Select currency"
                 searchable={true}
+                zIndex={100000}
               />
             </div>
 
@@ -479,7 +491,9 @@ export default function SettingsPage() {
                 options={numberFormatOptions}
                 placeholder="Select number format"
               />
-              <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-200">
+              <div
+                className={`mt-3 p-3 bg-gray-50 ${tw.rounded} border border-gray-200`}
+              >
                 <p className="text-xs text-gray-500 mb-1">Preview:</p>
                 <p className="text-sm font-semibold text-gray-900">
                   {(() => {

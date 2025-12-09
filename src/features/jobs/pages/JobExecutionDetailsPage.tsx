@@ -149,7 +149,7 @@ export default function JobExecutionDetailsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/dashboard/job-executions")}
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -189,7 +189,7 @@ export default function JobExecutionDetailsPage() {
                   );
                 }
               }}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700`}
             >
               <Ban className="h-4 w-4" />
               Abort
@@ -216,7 +216,7 @@ export default function JobExecutionDetailsPage() {
                   );
                 }
               }}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
               style={{ backgroundColor: color.primary.action }}
             >
               <RotateCcw className="h-4 w-4" />
@@ -241,7 +241,7 @@ export default function JobExecutionDetailsPage() {
                   );
                 }
               }}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50`}
             >
               <Archive className="h-4 w-4" />
               Archive
@@ -251,7 +251,7 @@ export default function JobExecutionDetailsPage() {
       </div>
 
       {/* Status Card */}
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span
@@ -285,7 +285,7 @@ export default function JobExecutionDetailsPage() {
 
       {/* Main Info Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Information
           </h3>
@@ -349,7 +349,7 @@ export default function JobExecutionDetailsPage() {
           </dl>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             System Information
           </h3>
@@ -412,7 +412,7 @@ export default function JobExecutionDetailsPage() {
 
       {/* Progress (if running) */}
       {execution.execution_status === "running" && progress && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Progress
           </h3>
@@ -456,7 +456,7 @@ export default function JobExecutionDetailsPage() {
 
       {/* Resource Usage */}
       {resourceUsage && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Usage
           </h3>
@@ -485,7 +485,7 @@ export default function JobExecutionDetailsPage() {
 
       {/* Error Information */}
       {execution.error_message && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Error Information
@@ -525,7 +525,7 @@ export default function JobExecutionDetailsPage() {
       {(execution.rows_processed !== null ||
         execution.rows_read !== null ||
         execution.steps_total !== null) && (
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Processing Metrics
           </h3>

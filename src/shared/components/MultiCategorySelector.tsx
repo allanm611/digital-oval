@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronDown, Search, Plus, X, Check } from "lucide-react";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color } from "../utils/utils";
+import { color , tw} from "../utils/utils";
 
 interface MultiCategorySelectorProps {
   value?: number[]; // Array of selected category IDs
@@ -185,7 +185,7 @@ export default function MultiCategorySelector({
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`flex-1 px-4 py-2.5 text-left border rounded-md text-sm transition-all min-h-[42px] ${
+          className={`flex-1 px-4 py-2.5 text-left border ${tw.rounded} text-sm transition-all min-h-[42px] ${
             disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
           }`}
           style={{
@@ -260,7 +260,7 @@ export default function MultiCategorySelector({
           <button
             type="button"
             onClick={onCreateCategory ? onCreateCategory : handleCreateNew}
-            className="px-3 py-2.5 text-white rounded-r-lg flex items-center justify-center text-sm border-l-0"
+            className="px-3 py-2.5 text-white rounded-r-md flex items-center justify-center text-sm border-l-0"
             style={{
               backgroundColor: color.primary.action,
               borderColor: color.primary.action,
@@ -273,7 +273,7 @@ export default function MultiCategorySelector({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-hidden">
+        <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -283,7 +283,7 @@ export default function MultiCategorySelector({
                 placeholder="Search categories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className={`w-full pl-10 pr-3 py-2 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-500`}
               />
             </div>
           </div>

@@ -77,7 +77,7 @@ export default function MessageEditor({
             <button
               type="button"
               onClick={onToggleRichText}
-              className="flex items-center space-x-2 px-3 py-1.5 text-sm rounded-md border transition-colors whitespace-nowrap"
+              className={`flex items-center space-x-2 px-3 py-1.5 text-sm ${tw.rounded} border transition-colors whitespace-nowrap`}
               style={{
                 backgroundColor: isRichText
                   ? `${color.primary.accent}15`
@@ -101,7 +101,7 @@ export default function MessageEditor({
             <button
               type="button"
               onClick={() => setShowVariables(!showVariables)}
-              className="flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors whitespace-nowrap"
+              className={`flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors whitespace-nowrap`}
             >
               <Type className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">Insert Variable</span>
@@ -109,7 +109,7 @@ export default function MessageEditor({
               <ChevronDown className="w-4 h-4 flex-shrink-0" />
             </button>
             {showVariables && (
-              <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-2 w-full sm:w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10 overflow-hidden">
+              <div className={`absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-2 w-full sm:w-56 bg-white border border-gray-200 ${tw.rounded} shadow-lg z-10 overflow-hidden`}>
                 <div className="p-2 bg-gray-50 border-b border-gray-200">
                   <p className="text-xs font-medium text-gray-600 uppercase">
                     Available Variables
@@ -169,7 +169,7 @@ export default function MessageEditor({
               setCursorPosition(e.currentTarget.selectionStart || 0)
             }
             placeholder="Enter email subject..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-transparent transition-all"
+            className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:border-transparent transition-all`}
             style={{
               boxShadow: "none",
             }}
@@ -214,7 +214,7 @@ export default function MessageEditor({
             }
             placeholder="Enter your message... Use {{variable}} to insert dynamic content."
             rows={8}
-            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:border-transparent transition-all font-mono text-sm resize-none"
+            className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:border-transparent transition-all font-mono text-sm resize-none`}
             style={{
               boxShadow: "none",
             }}

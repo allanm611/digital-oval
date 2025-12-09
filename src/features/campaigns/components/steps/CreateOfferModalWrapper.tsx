@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import CreateOfferPage from "../../../offers/pages/CreateOfferPage";
 
+import { tw } from "../../../../shared/utils/utils";
 interface CreateOfferModalWrapperProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,7 +34,9 @@ export default function CreateOfferModalWrapper({
       />
 
       {/* Modal Container */}
-      <div className="relative bg-white rounded-md shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden">
+      <div
+        className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden`}
+      >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div>
@@ -46,7 +49,7 @@ export default function CreateOfferModalWrapper({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
           >
             <X className="w-6 h-6 text-gray-500" />
           </button>

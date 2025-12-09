@@ -494,7 +494,7 @@ export default function CampaignDetailsPage() {
           </p>
           <button
             onClick={() => navigate("/dashboard/campaigns")}
-            className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-base text-white"
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-base text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -509,7 +509,7 @@ export default function CampaignDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button onClick={handleBack} className="p-2 text-gray-600 rounded-md">
+          <button onClick={handleBack} className={`p-2 text-gray-600 ${tw.rounded}`}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
@@ -528,7 +528,7 @@ export default function CampaignDetailsPage() {
               <button
                 onClick={handleApproveCampaign}
                 disabled={isApproveLoading}
-                className="flex items-center gap-2 rounded-md font-semibold text-sm disabled:opacity-50"
+                className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
                 style={{
                   backgroundColor: button.secondaryAction.background,
                   color: button.secondaryAction.color,
@@ -552,7 +552,7 @@ export default function CampaignDetailsPage() {
               <button
                 onClick={handleActivateCampaign}
                 disabled={isActionLoading}
-                className="px-4 py-2 text-white rounded-md font-semibold flex items-center gap-2 text-sm disabled:opacity-50"
+                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm disabled:opacity-50`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isActionLoading ? (
@@ -569,7 +569,7 @@ export default function CampaignDetailsPage() {
                         <button
                             onClick={handleRunCampaign}
                             disabled={isRunLoading}
-                            className="px-4 py-2 text-white rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50"
+                            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50`}
                             style={{ backgroundColor: '#059669' }}
                         >
                             {isRunLoading ? (
@@ -585,7 +585,7 @@ export default function CampaignDetailsPage() {
             <button
               onClick={handlePauseCampaign}
               disabled={isActionLoading}
-              className="flex items-center gap-2 rounded-md font-semibold text-sm disabled:opacity-50"
+              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -608,7 +608,7 @@ export default function CampaignDetailsPage() {
             <button
               onClick={handleResumeCampaign}
               disabled={isActionLoading}
-              className="flex items-center gap-2 rounded-md font-semibold text-sm disabled:opacity-50"
+              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -634,7 +634,7 @@ export default function CampaignDetailsPage() {
                 state: { campaign: campaign },
               })
             }
-            className="px-4 py-2 text-white rounded-md font-semibold flex items-center gap-2 text-sm"
+            className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Edit className="w-4 h-4" />
@@ -644,7 +644,7 @@ export default function CampaignDetailsPage() {
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="flex items-center gap-2 rounded-md font-semibold text-sm"
+              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm`}
               style={{
                 backgroundColor: button.secondaryAction.background,
                 color: button.secondaryAction.color,
@@ -659,7 +659,7 @@ export default function CampaignDetailsPage() {
             </button>
 
             {showMoreMenu && (
-              <div className="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-md shadow-xl py-2 z-50">
+              <div className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}>
                 {/* Reject - Only if pending and not already rejected */}
                 {campaign.approval_status === "pending" &&
                   campaign.status !== "rejected" && (
@@ -698,7 +698,7 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Sent Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -712,7 +712,7 @@ export default function CampaignDetailsPage() {
               )}
             </div>
             <div
-              className="w-12 h-12 rounded-md flex items-center justify-center"
+              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <Send
@@ -725,7 +725,7 @@ export default function CampaignDetailsPage() {
 
         {/* Delivered Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -741,7 +741,7 @@ export default function CampaignDetailsPage() {
               )}
             </div>
             <div
-              className="w-12 h-12 rounded-md flex items-center justify-center"
+              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <CheckCircle
@@ -754,7 +754,7 @@ export default function CampaignDetailsPage() {
 
         {/* Converted Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -770,7 +770,7 @@ export default function CampaignDetailsPage() {
               )}
             </div>
             <div
-              className="w-12 h-12 rounded-md flex items-center justify-center"
+              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <TrendingUp
@@ -783,7 +783,7 @@ export default function CampaignDetailsPage() {
 
         {/* Conversion Rate Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -806,7 +806,7 @@ export default function CampaignDetailsPage() {
               )}
             </div>
             <div
-              className="w-12 h-12 rounded-md flex items-center justify-center"
+              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <TrendingUp
@@ -819,7 +819,7 @@ export default function CampaignDetailsPage() {
 
         {/* Revenue Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -835,7 +835,7 @@ export default function CampaignDetailsPage() {
               )}
             </div>
             <div
-              className="w-12 h-12 rounded-md flex items-center justify-center"
+              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <DollarSign
@@ -851,7 +851,7 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
         {/* Campaign Information Card */}
         <div
-          className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
         >
           {/* Campaign Header */}
           <div className="mb-3 pb-3 border-b border-gray-200">
@@ -898,7 +898,7 @@ export default function CampaignDetailsPage() {
             </p>
             {/* Rejection Reason Display */}
             {campaign.status === "rejected" && campaign.rejection_reason && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}>
                 <div className="flex items-start gap-2">
                   <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -1028,7 +1028,7 @@ export default function CampaignDetailsPage() {
         {/* Budget Utilization Card */}
         {budgetUtilisation && (
           <div
-            className={`bg-white rounded-md border border-[${color.border.default}] p-6 shadow-sm`}
+            className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Budget Utilization
@@ -1126,7 +1126,7 @@ export default function CampaignDetailsPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto rounded-md border border-[${color.border.default}]`}
+            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
           >
             <table
               className="w-full"
@@ -1276,7 +1276,7 @@ export default function CampaignDetailsPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto rounded-md border border-[${color.border.default}]`}
+            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
           >
             <table
               className="w-full"
@@ -1408,7 +1408,7 @@ export default function CampaignDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setShowRejectModal(false)}
             />
-            <div className="relative bg-white rounded-md shadow-xl max-w-md w-full p-6">
+            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}>
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                   <XCircle className="w-6 h-6 text-red-600" />
@@ -1433,7 +1433,7 @@ export default function CampaignDetailsPage() {
                   value={rejectComments}
                   onChange={(e) => setRejectComments(e.target.value)}
                   placeholder="Explain why this campaign is being rejected..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className={`w-full px-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent`}
                   rows={4}
                   maxLength={500}
                 />
@@ -1449,14 +1449,14 @@ export default function CampaignDetailsPage() {
                     setRejectComments("");
                   }}
                   disabled={isActionLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium transition-colors disabled:opacity-50"
+                  className={`flex-1 px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 font-medium transition-colors disabled:opacity-50`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRejectCampaign}
                   disabled={isActionLoading || !rejectComments.trim()}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors disabled:opacity-50"
+                  className={`flex-1 px-4 py-2 bg-red-600 text-white ${tw.rounded} hover:bg-red-700 font-medium transition-colors disabled:opacity-50`}
                 >
                   {isActionLoading ? "Rejecting..." : "Reject Campaign"}
                 </button>

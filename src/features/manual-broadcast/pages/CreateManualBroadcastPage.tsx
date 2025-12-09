@@ -154,7 +154,7 @@ export default function CreateManualBroadcastPage() {
   return (
     <div className="min-h-screen">
       <div
-        className="bg-white rounded-md border p-4"
+        className={`bg-white ${tw.rounded} border p-4`}
         style={{ borderColor: color.border.default }}
       >
         <div className="px-4 sm:px-6 lg:px-8">

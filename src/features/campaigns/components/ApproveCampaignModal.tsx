@@ -73,7 +73,7 @@ export default function ApproveCampaignModal({
         />
 
         {/* Modal */}
-        <div className="relative bg-white rounded-md shadow-2xl w-full max-w-md">
+        <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
           {/* Header */}
           <div
             className="flex items-center justify-between p-6 border-b"
@@ -81,7 +81,7 @@ export default function ApproveCampaignModal({
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-md flex items-center justify-center"
+                className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
                 style={{ backgroundColor: "#10B98120" }}
               >
                 <CheckCircle className="w-5 h-5 text-green-600" />
@@ -92,7 +92,7 @@ export default function ApproveCampaignModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -120,7 +120,7 @@ export default function ApproveCampaignModal({
             <button
               onClick={onClose}
               disabled={isApproving}
-              className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
               style={{ borderColor: color.border.default }}
             >
               Cancel
@@ -128,7 +128,7 @@ export default function ApproveCampaignModal({
             <button
               onClick={handleApprove}
               disabled={isApproving}
-              className="px-4 py-2 rounded-md text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: "#10B981" }}
             >
               {isApproving ? (

@@ -127,7 +127,7 @@ export default function DefineCommunicationStep({
 
   return (
     <div
-      className="bg-white rounded-md shadow-sm border"
+      className={`bg-white ${tw.rounded} shadow-sm border`}
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -162,7 +162,7 @@ export default function DefineCommunicationStep({
                       key={channel.id}
                       type="button"
                       onClick={() => handleChannelSelect(channel.id)}
-                      className="flex flex-col items-center justify-center gap-1.5 p-2.5 rounded-md border-2 transition-all"
+                      className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} border-2 transition-all`}
                       style={{
                         borderColor: isSelected
                           ? color.primary.accent
@@ -244,7 +244,7 @@ export default function DefineCommunicationStep({
         {/* Error Message */}
         {error && (
           <div
-            className="mt-4 sm:mt-6 p-3 rounded-md flex items-start space-x-2"
+            className={`mt-4 sm:mt-6 p-3 ${tw.rounded} flex items-start space-x-2`}
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -268,7 +268,7 @@ export default function DefineCommunicationStep({
       >
         <button
           onClick={onPrevious}
-          className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold whitespace-nowrap"
+          className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-semibold whitespace-nowrap`}
           style={{
             backgroundColor: color.surface.cards,
             border: `1px solid ${color.border.default}`,
@@ -283,7 +283,7 @@ export default function DefineCommunicationStep({
             !messageBody.trim() ||
             (selectedChannel === "EMAIL" && !messageTitle.trim())
           }
-          className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className={`w-full sm:w-auto px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
           style={{ backgroundColor: color.primary.action }}
         >
           {t.manualBroadcast.nextTest}

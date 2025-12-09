@@ -40,7 +40,7 @@ export default function CampaignApprovalHistoryPage() {
             <LoadingSpinner />
           </div>
         ) : (
-          <div className="bg-white rounded-md shadow-sm border border-gray-200 p-6">
+          <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 p-6`}>
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
