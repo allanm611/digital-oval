@@ -149,7 +149,8 @@ function TypeConfigurationModal({
   const getCharacterSetsOptions = () => {
     if (!isLanguage || !config.customFields) return [];
     const characterSetField = config.customFields.find(
-      (f) => f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets"
+      (f) =>
+        f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets"
     );
     if (characterSetField) {
       const characterSets = configurationDataService.getData("characterSets");

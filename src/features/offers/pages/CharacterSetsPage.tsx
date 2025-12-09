@@ -4,4 +4,3 @@ import { characterSetsConfig } from "../../../shared/configs/configurationPageCo
 export default function CharacterSetsPage() {
   return <TypeConfigurationPage config={characterSetsConfig} />;
 }
-

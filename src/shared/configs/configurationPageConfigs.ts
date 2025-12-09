@@ -1968,7 +1968,8 @@ const hardcodedCharacterSets: TypeConfigurationItem[] = [
   {
     id: 2,
     name: "ISO-8859-1 (Latin-1)",
-    description: "Western European languages (English, French, Spanish, German, etc.)",
+    description:
+      "Western European languages (English, French, Spanish, German, etc.)",
     isActive: true,
     metadataValue: "ISO-8859-1",
     created_at: "2025-01-16T09:15:00Z",
@@ -2040,7 +2041,8 @@ const hardcodedCharacterSets: TypeConfigurationItem[] = [
   {
     id: 10,
     name: "Windows-1251 (Cyrillic)",
-    description: "Windows Cyrillic encoding for Russian and other Cyrillic languages",
+    description:
+      "Windows Cyrillic encoding for Russian and other Cyrillic languages",
     isActive: true,
     metadataValue: "Windows-1251",
     created_at: "2025-01-24T09:00:00Z",

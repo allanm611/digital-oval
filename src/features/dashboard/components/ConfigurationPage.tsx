@@ -194,6 +194,16 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/languages",
       },
+      {
+        id: "character-sets",
+        name: "Character Sets",
+        description:
+          "Manage character encoding sets for language support and text display",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/character-sets",
+      },
       // Product-related configs
       {
         id: "product-types",

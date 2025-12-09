@@ -16,6 +16,7 @@
 8. [Job Management Infrastructure](#job-management-infrastructure)
 9. [Complete Data Flow](#complete-data-flow)
 10. [Real-World Example](#real-world-example)
+11. [Manual Broadcasts](#manual-broadcasts)
 
 ---
 
