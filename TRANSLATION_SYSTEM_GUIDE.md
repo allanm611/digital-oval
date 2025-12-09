@@ -388,4 +388,3 @@ const languages = [
 ✅ **Extensible**: Easy to add new languages or translation keys
 
 The translation system is production-ready and can be extended as needed!
-
