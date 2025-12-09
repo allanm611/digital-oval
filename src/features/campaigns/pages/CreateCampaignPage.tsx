@@ -1217,7 +1217,7 @@ export default function CreateCampaignPage() {
   return (
     <div className="min-h-screen">
       <div
-        className={`bg-white rounded-md border border-[${color.border.default}] p-4`}
+        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-4`}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
@@ -1240,14 +1240,14 @@ export default function CreateCampaignPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
                 <button
                   onClick={handleCancel}
-                  className="inline-flex w-full items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-all duration-200 sm:w-auto"
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 sm:w-auto`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveDraft}
                   disabled={isSavingDraft}
-                  className="inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium rounded-md text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   {isSavingDraft ? (
@@ -1282,14 +1282,14 @@ export default function CreateCampaignPage() {
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 1}
-                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
               >
                 Previous
               </button>
               <button
                 onClick={currentStep === 5 ? handleSubmit : handleNext}
                 disabled={isLoading || !validateCurrentStep().isValid}
-                className="inline-flex items-center justify-center px-5 py-2 text-sm font-medium rounded-md text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
+                className={`inline-flex items-center justify-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isLoading ? (

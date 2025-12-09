@@ -51,7 +51,7 @@ export default function PolicyNameModal({
 
       {/* Modal */}
       <div
-        className={`relative bg-white rounded-md shadow-2xl w-full max-w-md mx-4 z-10`}
+        className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md mx-4 z-10`}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
@@ -59,7 +59,7 @@ export default function PolicyNameModal({
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-200 rounded-md transition-colors"
+            className={`p-1 hover:bg-gray-200 ${tw.rounded} transition-colors`}
           >
             <X className="w-4 h-4 text-gray-500" />
           </button>
@@ -75,7 +75,7 @@ export default function PolicyNameModal({
               type="text"
               value={policyName}
               onChange={(e) => setPolicyName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               placeholder="Enter a name for the new policy"
               autoFocus
               required
@@ -87,7 +87,7 @@ export default function PolicyNameModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              className={`px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               Cancel
             </button>

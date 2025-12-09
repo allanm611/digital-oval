@@ -382,7 +382,7 @@ export default function ProgramsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/configuration")}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -396,7 +396,7 @@ export default function ProgramsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleCreateProgram}
-            className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm text-white"
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -412,7 +412,7 @@ export default function ProgramsPage() {
           return (
             <div
               key={stat.name}
-              className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <Icon
@@ -440,12 +440,12 @@ export default function ProgramsPage() {
               placeholder="Search programs by name or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] rounded-md focus:outline-none`}
+              className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
             />
           </div>
           <button
             onClick={() => setShowAdvancedFilters(true)}
-            className="flex items-center justify-center gap-2 rounded-md transition-colors font-medium whitespace-nowrap sm:w-auto w-full"
+            className={`flex items-center justify-center gap-2 ${tw.rounded} transition-colors font-medium whitespace-nowrap sm:w-auto w-full`}
             style={{
               backgroundColor: button.secondaryAction.background,
               color: button.secondaryAction.color,
@@ -462,7 +462,7 @@ export default function ProgramsPage() {
       </div>
 
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -487,7 +487,7 @@ export default function ProgramsPage() {
             {!searchTerm && (
               <button
                 onClick={handleCreateProgram}
-                className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-sm text-white"
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -571,7 +571,7 @@ export default function ProgramsPage() {
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             onClick={() => handleEditProgram(program)}
-                            className="p-2 rounded-md transition-colors"
+                            className={`p-2 ${tw.rounded} transition-colors`}
                             style={{
                               color: color.primary.action,
                               backgroundColor: "transparent",
@@ -591,7 +591,7 @@ export default function ProgramsPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteProgram(program)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           >
                             <Trash2 className="w-4 h-4 text-red-600" />
                           </button>
@@ -643,7 +643,7 @@ export default function ProgramsPage() {
                   </h3>
                   <button
                     onClick={handleCloseModal}
-                    className={`p-2 ${tw.textMuted} rounded-md transition-colors`}
+                    className={`p-2 ${tw.textMuted} ${tw.rounded} transition-colors`}
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -706,7 +706,7 @@ export default function ProgramsPage() {
                       )
                     }
                     placeholder="Enter program type"
-                    className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                    className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                   />
                 </div>
 
@@ -727,7 +727,7 @@ export default function ProgramsPage() {
                       )
                     }
                     placeholder="Enter user ID"
-                    className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                    className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                   />
                 </div>
 
@@ -748,7 +748,7 @@ export default function ProgramsPage() {
                           e.target.value || undefined
                         )
                       }
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                     <input
                       type="date"
@@ -760,7 +760,7 @@ export default function ProgramsPage() {
                         )
                       }
                       placeholder="To"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                   </div>
                 </div>
@@ -782,7 +782,7 @@ export default function ProgramsPage() {
                           e.target.value || undefined
                         )
                       }
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                     <input
                       type="date"
@@ -794,7 +794,7 @@ export default function ProgramsPage() {
                         )
                       }
                       placeholder="To"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                   </div>
                 </div>
@@ -817,7 +817,7 @@ export default function ProgramsPage() {
                         )
                       }
                       placeholder="Min Budget"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                     <input
                       type="number"
@@ -829,7 +829,7 @@ export default function ProgramsPage() {
                         )
                       }
                       placeholder="Max Budget"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} rounded-md focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                   </div>
                 </div>
@@ -838,7 +838,7 @@ export default function ProgramsPage() {
                 <div className="flex space-x-3 pt-4 border-t border-gray-200">
                   <button
                     onClick={handleClearFilters}
-                    className={`flex-1 px-4 py-2 text-sm border border-gray-300 ${tw.textSecondary} rounded-md transition-colors`}
+                    className={`flex-1 px-4 py-2 text-sm border border-gray-300 ${tw.textSecondary} ${tw.rounded} transition-colors`}
                   >
                     Clear All
                   </button>

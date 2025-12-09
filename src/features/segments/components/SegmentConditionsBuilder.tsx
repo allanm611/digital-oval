@@ -426,7 +426,7 @@ export default function SegmentConditionsBuilder({
               });
             }}
             placeholder="Enter value"
-            className={`px-3 py-2 border border-[${tw.borderDefault}] rounded-md focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
+            className={`px-3 py-2 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
           />
         )}
       </>
@@ -453,7 +453,7 @@ export default function SegmentConditionsBuilder({
           <button
             type="button"
             onClick={handleOpenSegmentModal}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors"
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
           >
             <span
               className={
@@ -512,7 +512,7 @@ export default function SegmentConditionsBuilder({
           <button
             type="button"
             onClick={handleOpenQuickListModal}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors"
+            className={`flex-1 px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
           >
             <span
               className={
@@ -526,7 +526,7 @@ export default function SegmentConditionsBuilder({
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="px-4 py-2 text-sm font-medium rounded-md text-white whitespace-nowrap"
+            className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white whitespace-nowrap`}
             style={{ backgroundColor: color.primary.action }}
           >
             Create List
@@ -581,7 +581,7 @@ export default function SegmentConditionsBuilder({
         <button
           type="button"
           onClick={addConditionGroup}
-          className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md transition-colors"
+          className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
           style={{
             backgroundColor: color.primary.action,
           }}
@@ -598,7 +598,7 @@ export default function SegmentConditionsBuilder({
       {conditions.map((group, groupIndex) => (
         <div
           key={group.id}
-          className="border border-gray-200 rounded-md p-4 bg-gray-50"
+          className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
         >
           {/* Group Header */}
           <div className="flex items-center justify-between mb-4">
@@ -675,7 +675,7 @@ export default function SegmentConditionsBuilder({
               return (
                 <div
                   key={condition.id}
-                  className="flex items-center flex-wrap gap-3 p-3 rounded-md border transition-colors hover:border-gray-300"
+                  className={`flex items-center flex-wrap gap-3 p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
                   style={{
                     backgroundColor: color.surface.background,
                     borderColor: color.border.muted,
@@ -683,7 +683,7 @@ export default function SegmentConditionsBuilder({
                 >
                   {conditionIndex > 0 && (
                     <span
-                      className="px-2.5 py-1 text-xs font-semibold rounded-md"
+                      className={`px-2.5 py-1 text-xs font-semibold ${tw.rounded}`}
                       style={{
                         backgroundColor: `${color.primary.accent}15`,
                         color: color.text.primary,
@@ -695,7 +695,7 @@ export default function SegmentConditionsBuilder({
 
                   {/* Condition Type Badge - Selectable appearance */}
                   <div
-                    className="flex items-center gap-2 px-3 py-2 rounded-md min-w-[160px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md"
+                    className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[160px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
                     style={{
                       backgroundColor: color.surface.background,
                       border: `1px solid ${color.border.default}`,
@@ -804,7 +804,7 @@ export default function SegmentConditionsBuilder({
           <button
             type="button"
             onClick={() => addCondition(group.id)}
-            className="mt-3 inline-flex items-center px-3 py-2 text-sm text-white rounded-md transition-colors"
+            className={`mt-3 inline-flex items-center px-3 py-2 text-sm text-white ${tw.rounded} transition-colors`}
             style={{
               backgroundColor: color.primary.action,
             }}
@@ -819,7 +819,7 @@ export default function SegmentConditionsBuilder({
       <button
         type="button"
         onClick={addConditionGroup}
-        className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md transition-colors"
+        className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} transition-colors`}
         style={{ backgroundColor: color.primary.action }}
       >
         <Plus className="w-4 h-4 mr-2" />

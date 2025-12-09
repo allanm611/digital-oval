@@ -373,7 +373,7 @@ export default function ConfigurationPage() {
       <div className="mb-8">
         <div className="flex items-center mb-4">
           <div
-            className="rounded-md"
+            className={`${tw.rounded}`}
             style={{ backgroundColor: color.primary.accent }}
           ></div>
           <div>
@@ -400,7 +400,7 @@ export default function ConfigurationPage() {
               placeholder={t.configuration.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-4 ${components.input.default} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+              className={`w-full pl-10 pr-4 py-4 ${components.input.default} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
             />
           </div>
 
@@ -408,7 +408,7 @@ export default function ConfigurationPage() {
           <div className="flex items-center space-x-2 lg:ml-6">
             <button
               onClick={() => setViewMode("grid")}
-              className={`rounded-md transition-all duration-200 ${
+              className={`${tw.rounded} transition-all duration-200 ${
                 viewMode === "grid"
                   ? ""
                   : `${tw.textMuted} hover:${tw.textSecondary}`
@@ -428,7 +428,7 @@ export default function ConfigurationPage() {
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`rounded-md transition-all duration-200 ${
+              className={`${tw.rounded} transition-all duration-200 ${
                 viewMode === "list"
                   ? ""
                   : `${tw.textMuted} hover:${tw.textSecondary}`
@@ -532,7 +532,7 @@ export default function ConfigurationPage() {
               <div
                 key={config.id}
                 onClick={() => handleConfigurationClick(config)}
-                className="bg-white border border-gray-200 rounded-md p-4 hover:shadow-md transition-all cursor-pointer flex items-center justify-between"
+                className={`bg-white border border-gray-200 ${tw.rounded} p-4 hover:shadow-md transition-all cursor-pointer flex items-center justify-between`}
                 style={{
                   animation: `fadeInUp 0.6s ease-out forwards ${index * 0.1}s`,
                   opacity: 0,

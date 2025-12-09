@@ -1,5 +1,6 @@
 import React from "react";
 
+import { tw } from '../../../shared/utils/utils';
 interface SMSButtonPhonePreviewProps {
   message: string;
   title?: string;
@@ -10,7 +11,7 @@ export function SMSButtonPhonePreview({
   title,
 }: SMSButtonPhonePreviewProps) {
   return (
-    <div className="flex justify-center items-center p-8 bg-gray-100 rounded-md">
+    <div className={`flex justify-center items-center p-8 bg-gray-100 ${tw.rounded}`}>
       <div className="relative">
         {/* Feature Phone Mockup */}
         <div className="w-64 h-[500px] bg-blue-600 rounded-[2.5rem] p-3 shadow-2xl">
@@ -22,7 +23,7 @@ export function SMSButtonPhonePreview({
             </div>
 
             {/* Message Display Area */}
-            <div className="flex-1 bg-gray-900 rounded-md p-4 overflow-y-auto">
+            <div className={`flex-1 bg-gray-900 ${tw.rounded} p-4 overflow-y-auto`}>
               <div className="space-y-3">
                 {/* Date Label */}
                 <div className="text-center text-gray-500 text-xs mb-2">
@@ -31,7 +32,7 @@ export function SMSButtonPhonePreview({
 
                 {/* Message Bubble */}
                 <div className="flex justify-start">
-                  <div className="bg-gray-700 text-white rounded-md rounded-tl-md px-4 py-2 max-w-[85%]">
+                  <div className={`bg-gray-700 text-white ${tw.rounded} rounded-tl-md px-4 py-2 max-w-[85%]`}>
                     <div className="text-xs font-semibold mb-1">Equitel</div>
                     {title && (
                       <div className="font-semibold text-sm mb-1">{title}</div>
@@ -79,7 +80,7 @@ export function SMSSmartphonePreview({
   title,
 }: SMSSmartphonePreviewProps) {
   return (
-    <div className="flex justify-center items-center p-8 bg-gray-100 rounded-md">
+    <div className={`flex justify-center items-center p-8 bg-gray-100 ${tw.rounded}`}>
       <div className="relative">
         {/* Smartphone Mockup */}
         <div className="w-72 h-[600px] bg-gray-800 rounded-[3rem] p-2 shadow-2xl">
@@ -89,8 +90,8 @@ export function SMSSmartphonePreview({
             <div className="bg-gray-50 px-4 py-2 flex justify-between items-center text-xs text-gray-600">
               <span>9:41</span>
               <div className="flex items-center gap-1">
-                <div className="w-4 h-2 border border-gray-600 rounded-md">
-                  <div className="w-3/4 h-full bg-gray-600 rounded-md"></div>
+                <div className={`w-4 h-2 border border-gray-600 ${tw.rounded}`}>
+                  <div className={`w-3/4 h-full bg-gray-600 ${tw.rounded}`}></div>
                 </div>
                 <svg
                   className="w-4 h-4"
@@ -122,7 +123,7 @@ export function SMSSmartphonePreview({
 
                 {/* SMS Message Bubble (from Equitel - left side) */}
                 <div className="flex justify-start">
-                  <div className="bg-gray-200 text-gray-900 rounded-md rounded-tl-md px-4 py-2 max-w-[80%] shadow-sm">
+                  <div className={`bg-gray-200 text-gray-900 ${tw.rounded} rounded-tl-md px-4 py-2 max-w-[80%] shadow-sm`}>
                     {title && (
                       <div className="font-semibold text-sm mb-1">{title}</div>
                     )}
@@ -152,7 +153,7 @@ export function EmailLaptopPreview({
   textBody,
 }: EmailLaptopPreviewProps) {
   return (
-    <div className="flex justify-center items-center p-8 bg-gray-100 rounded-md">
+    <div className={`flex justify-center items-center p-8 bg-gray-100 ${tw.rounded}`}>
       <div className="relative">
         {/* Laptop Mockup */}
         <div className="w-[800px]">
@@ -166,7 +167,7 @@ export function EmailLaptopPreview({
                   <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
-                <div className="flex-1 bg-white rounded-md px-3 py-1 text-xs text-gray-600 border border-gray-300 ml-4">
+                <div className={`flex-1 bg-white ${tw.rounded} px-3 py-1 text-xs text-gray-600 border border-gray-300 ml-4`}>
                   mail.example.com
                 </div>
               </div>

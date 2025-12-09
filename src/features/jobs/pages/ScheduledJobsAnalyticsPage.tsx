@@ -46,7 +46,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -343,7 +343,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
       <div className="flex items-center space-x-2 sm:space-x-4">
         <button
           onClick={() => navigate("/dashboard/scheduled-jobs")}
-          className="rounded-md p-2 text-gray-600 hover:text-gray-800 transition-colors"
+          className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -366,7 +366,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
         <div className="space-y-6">
           {slaCompliance && (
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
@@ -380,7 +380,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                   {slaCompliance.within_sla || 0}
                 </p>
               </div>
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
@@ -394,7 +394,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                   {slaCompliance.breached || 0}
                 </p>
               </div>
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <div className="flex items-center gap-2">
                   <TrendingUp
                     className="h-5 w-5"
@@ -668,7 +668,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {statusCounts.length > 0 && (
-                <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Status Distribution
                   </h3>
@@ -741,7 +741,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
               )}
 
               {typeCounts.length > 0 && (
-                <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Job Type Distribution
                   </h3>
@@ -790,7 +790,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
             </div>
 
             {ownerCounts.length > 0 && (
-              <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Jobs by Owner
                 </h3>
@@ -839,7 +839,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
             {executionStats && Object.keys(executionStats).length > 0 && (
               <div className="space-y-6">
-                <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Execution Counts
                   </h3>
@@ -895,7 +895,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
                   </div>
                 </div>
 
-                <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Performance Metrics
                   </h3>
@@ -955,7 +955,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
             {resourceUtilization &&
               Object.keys(resourceUtilization).length > 0 && (
-                <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Resource Utilization
                   </h3>

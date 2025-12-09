@@ -1,6 +1,6 @@
 import { Gift, Plus, X, TrendingUp, ArrowRight } from "lucide-react";
 import { CampaignSegment, CampaignOffer } from "../../types/campaign";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 
 interface ABTestOfferMappingProps {
   variantA: CampaignSegment | null;
@@ -30,7 +30,7 @@ export default function ABTestOfferMapping({
 
   if (!variantA || !variantB) {
     return (
-      <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-12">
+      <div className={`bg-gray-50 border-2 border-dashed border-gray-300 ${tw.rounded} p-12`}>
         <div className="text-center text-gray-500">
           <TrendingUp className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p className="font-medium">A/B Test variants not configured</p>
@@ -50,7 +50,7 @@ export default function ABTestOfferMapping({
   return (
     <div className="space-y-6">
       {/* Stats Overview */}
-      <div className="bg-gray-50 rounded-md p-6 border border-gray-200">
+      <div className={`bg-gray-50 ${tw.rounded} p-6 border border-gray-200`}>
         <div className="grid grid-cols-3 gap-6">
           <div>
             <div className="text-2xl font-bold text-gray-900">
@@ -79,7 +79,7 @@ export default function ABTestOfferMapping({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-md flex items-center justify-center border border-gray-200">
+              <div className={`w-8 h-8 ${tw.rounded} flex items-center justify-center border border-gray-200`}>
                 <span className="text-gray-700 font-bold text-sm">A</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -88,7 +88,7 @@ export default function ABTestOfferMapping({
             </div>
             <button
               onClick={() => onMapOffers(variantA.id)}
-              className="inline-flex items-center px-3 py-1.5 text-white rounded-md text-sm font-medium"
+              className={`inline-flex items-center px-3 py-1.5 text-white ${tw.rounded} text-sm font-medium`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 mr-1.5" />
@@ -96,7 +96,7 @@ export default function ABTestOfferMapping({
             </button>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-md p-6 min-h-[300px]">
+          <div className={`bg-white border border-gray-200 ${tw.rounded} p-6 min-h-[300px]`}>
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="font-bold text-gray-900">{variantA.name}</span>
@@ -114,7 +114,7 @@ export default function ABTestOfferMapping({
                 {getOffersForSegment(variantA.id).map((offer) => (
                   <div
                     key={offer.id}
-                    className="bg-white border border-gray-200 rounded-md p-4 flex items-start justify-between"
+                    className={`bg-white border border-gray-200 ${tw.rounded} p-4 flex items-start justify-between`}
                   >
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
                       <Gift
@@ -145,7 +145,7 @@ export default function ABTestOfferMapping({
                 ))}
               </div>
             ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-8 text-center h-full flex flex-col items-center justify-center">
+              <div className={`bg-gray-50 border-2 border-dashed border-gray-300 ${tw.rounded} p-8 text-center h-full flex flex-col items-center justify-center`}>
                 <Gift className="w-12 h-12 mb-2 text-gray-400" />
                 <p className="text-sm text-gray-700 font-medium">
                   No offers mapped
@@ -162,7 +162,7 @@ export default function ABTestOfferMapping({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-md flex items-center justify-center border border-gray-200">
+              <div className={`w-8 h-8 ${tw.rounded} flex items-center justify-center border border-gray-200`}>
                 <span className="text-gray-700 font-bold text-sm">B</span>
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -171,7 +171,7 @@ export default function ABTestOfferMapping({
             </div>
             <button
               onClick={() => onMapOffers(variantB.id)}
-              className="inline-flex items-center px-3 py-1.5 text-white rounded-md text-sm font-medium"
+              className={`inline-flex items-center px-3 py-1.5 text-white ${tw.rounded} text-sm font-medium`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 mr-1.5" />
@@ -179,7 +179,7 @@ export default function ABTestOfferMapping({
             </button>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-md p-6 min-h-[300px]">
+          <div className={`bg-white border border-gray-200 ${tw.rounded} p-6 min-h-[300px]`}>
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-2">
                 <span className="font-bold text-gray-900">{variantB.name}</span>
@@ -197,7 +197,7 @@ export default function ABTestOfferMapping({
                 {getOffersForSegment(variantB.id).map((offer) => (
                   <div
                     key={offer.id}
-                    className="bg-white border border-gray-200 rounded-md p-4 flex items-start justify-between"
+                    className={`bg-white border border-gray-200 ${tw.rounded} p-4 flex items-start justify-between`}
                   >
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
                       <Gift
@@ -228,7 +228,7 @@ export default function ABTestOfferMapping({
                 ))}
               </div>
             ) : (
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-8 text-center h-full flex flex-col items-center justify-center">
+              <div className={`bg-gray-50 border-2 border-dashed border-gray-300 ${tw.rounded} p-8 text-center h-full flex flex-col items-center justify-center`}>
                 <Gift className="w-12 h-12 mb-2 text-gray-400" />
                 <p className="text-sm text-gray-700 font-medium">
                   No offers mapped
@@ -244,7 +244,7 @@ export default function ABTestOfferMapping({
 
       {/* Test Summary */}
       {(hasOffersA || hasOffersB) && (
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-6">
+        <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-6`}>
           <div className="flex items-center justify-center space-x-8">
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-900 mb-1">
@@ -280,7 +280,7 @@ export default function ABTestOfferMapping({
 
       {/* Mapping Info */}
       {hasOffersA && hasOffersB && (
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+        <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
           <div className="flex items-start space-x-3">
             <ArrowRight
               className="w-4 h-4 mt-1"
@@ -304,7 +304,7 @@ export default function ABTestOfferMapping({
       {/* Incomplete Warning */}
       {(hasOffersA && !hasOffersB) ||
         (!hasOffersA && hasOffersB && (
-          <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+          <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
             <div className="flex items-start space-x-3">
               <ArrowRight
                 className="w-4 h-4 mt-1"

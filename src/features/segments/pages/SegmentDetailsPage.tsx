@@ -420,7 +420,7 @@ export default function SegmentDetailsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={handleBack}
-            className="p-2 rounded-md transition-colors"
+            className={`p-2 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
@@ -434,7 +434,7 @@ export default function SegmentDetailsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleEdit}
-            className="text-sm font-medium text-white rounded-md flex items-center gap-2"
+            className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
             style={{
               backgroundColor: button.action.background,
               color: button.action.color,
@@ -448,7 +448,7 @@ export default function SegmentDetailsPage() {
 
           <button
             onClick={handleDelete}
-            className="rounded-md font-medium transition-all duration-200 flex items-center gap-2 text-sm"
+            className={`${tw.rounded} font-medium transition-all duration-200 flex items-center gap-2 text-sm`}
             style={{
               backgroundColor: button.delete.background,
               color: button.delete.color,
@@ -472,7 +472,7 @@ export default function SegmentDetailsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -498,7 +498,7 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -519,7 +519,7 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -554,10 +554,10 @@ export default function SegmentDetailsPage() {
       {/* Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-6">
             <div
-              className="p-2 rounded-md"
+              className={`p-2 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <Layers
@@ -724,10 +724,10 @@ export default function SegmentDetailsPage() {
 
         {/* Query Information */}
         {segment.query || segment.count_query ? (
-          <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
             <div className="flex items-center gap-2 mb-6">
               <div
-                className="p-2 rounded-md"
+                className={`p-2 ${tw.rounded}`}
                 style={{ backgroundColor: `${color.primary.accent}15` }}
               >
                 <Activity
@@ -747,7 +747,7 @@ export default function SegmentDetailsPage() {
                   >
                     Query
                   </label>
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-200 overflow-x-auto">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}>
                     <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
                       {segment.query}
                     </code>
@@ -761,7 +761,7 @@ export default function SegmentDetailsPage() {
                   >
                     Count Query
                   </label>
-                  <div className="bg-gray-50 rounded-md p-4 border border-gray-200 overflow-x-auto">
+                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}>
                     <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
                       {segment.count_query}
                     </code>
@@ -771,10 +771,10 @@ export default function SegmentDetailsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
             <div className="flex items-center gap-2 mb-6">
               <div
-                className="p-2 rounded-md"
+                className={`p-2 ${tw.rounded}`}
                 style={{ backgroundColor: `${color.primary.accent}15` }}
               >
                 <Activity
@@ -788,7 +788,7 @@ export default function SegmentDetailsPage() {
             </div>
             <div className="flex flex-col items-center justify-center py-12">
               <div
-                className="p-4 rounded-md mb-4"
+                className={`p-4 ${tw.rounded} mb-4`}
                 style={{ backgroundColor: `${color.primary.accent}10` }}
               >
                 <Activity
@@ -809,10 +809,10 @@ export default function SegmentDetailsPage() {
 
       {/* Criteria/Definition Section */}
       {(segment.criteria || segment.definition) && (
-        <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <div className="flex items-center gap-2 mb-6">
             <div
-              className="p-2 rounded-md"
+              className={`p-2 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <Activity
@@ -858,9 +858,9 @@ export default function SegmentDetailsPage() {
 
                 return (
                   <div key={index} className="relative">
-                    <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-md border border-gray-200">
+                    <div className={`flex items-start space-x-3 p-4 bg-gray-50 ${tw.rounded} border border-gray-200`}>
                       <div
-                        className={`mt-1 w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0`}
+                        className={`mt-1 w-6 h-6 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                         style={{ backgroundColor: `${color.primary.accent}20` }}
                       >
                         <span
@@ -895,7 +895,7 @@ export default function SegmentDetailsPage() {
                         1 && (
                       <div className="flex items-center justify-center py-2">
                         <span
-                          className={`px-3 py-1 text-xs font-semibold rounded-md`}
+                          className={`px-3 py-1 text-xs font-semibold ${tw.rounded}`}
                           style={{
                             backgroundColor: `${color.primary.accent}15`,
                             color: color.primary.accent,
@@ -910,7 +910,7 @@ export default function SegmentDetailsPage() {
               })}
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-md p-4">
+            <div className={`bg-gray-50 ${tw.rounded} p-4`}>
               <p className={`text-sm ${tw.textMuted}`}>
                 No conditions defined or criteria format not supported for
                 display
@@ -921,11 +921,11 @@ export default function SegmentDetailsPage() {
       )}
 
       {/* Segment Members Section */}
-      <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
-              className="p-2 rounded-md"
+              className={`p-2 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.accent}15` }}
             >
               <Users
@@ -949,7 +949,7 @@ export default function SegmentDetailsPage() {
                 setShowMembersModal(true);
                 loadMembers();
               }}
-              className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md transition-all text-sm font-medium flex items-center gap-2 hover:bg-gray-50"
+              className={`px-4 py-2 bg-white border border-gray-300 text-gray-700 ${tw.rounded} transition-all text-sm font-medium flex items-center gap-2 hover:bg-gray-50`}
             >
               <Eye className="w-4 h-4" />
               View Members
@@ -960,7 +960,7 @@ export default function SegmentDetailsPage() {
                 setSelectedCustomers([]);
                 setCustomerSearchTerm("");
               }}
-              className="text-sm font-medium text-white rounded-md flex items-center gap-2"
+              className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
               style={{
                 backgroundColor: button.action.background,
                 color: button.action.color,
@@ -986,7 +986,7 @@ export default function SegmentDetailsPage() {
       {showMembersModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-md shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}>
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
@@ -999,7 +999,7 @@ export default function SegmentDetailsPage() {
                 </div>
                 <button
                   onClick={() => setShowMembersModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -1018,12 +1018,12 @@ export default function SegmentDetailsPage() {
                         value={customerIdsInput}
                         onChange={(e) => setCustomerIdsInput(e.target.value)}
                         placeholder="e.g., 12345, 67890, 11111"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none"
+                        className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                       />
                     </div>
                     <button
                       onClick={handleAddMembers}
-                      className="text-sm font-medium text-white rounded-md"
+                      className={`text-sm font-medium text-white ${tw.rounded}`}
                       style={{
                         backgroundColor: button.action.background,
                         color: button.action.color,
@@ -1046,7 +1046,7 @@ export default function SegmentDetailsPage() {
                     value={membersSearchTerm}
                     onChange={(e) => setMembersSearchTerm(e.target.value)}
                     placeholder="Search members by name, email, or ID..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
                   />
                   {membersSearchTerm && (
                     <button
@@ -1080,7 +1080,7 @@ export default function SegmentDetailsPage() {
                     {members.map((member, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                        className={`flex items-center justify-between p-4 border border-gray-200 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -1131,7 +1131,7 @@ export default function SegmentDetailsPage() {
                                 handleRemoveMembers([customerId]);
                               }
                             }}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                            className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} transition-colors`}
                             title="Remove member"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1158,7 +1158,7 @@ export default function SegmentDetailsPage() {
                           loadMembers();
                         }}
                         disabled={membersPage <= 1}
-                        className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`px-3 py-1 border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         Previous
                       </button>
@@ -1169,7 +1169,7 @@ export default function SegmentDetailsPage() {
                           loadMembers();
                         }}
                         disabled={membersPage >= membersTotalPages}
-                        className="px-3 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`px-3 py-1 border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
                         Next
                       </button>
@@ -1186,7 +1186,7 @@ export default function SegmentDetailsPage() {
       {showCustomerSelection &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-md shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}>
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
@@ -1198,7 +1198,7 @@ export default function SegmentDetailsPage() {
                 </div>
                 <button
                   onClick={() => setShowCustomerSelection(false)}
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -1213,7 +1213,7 @@ export default function SegmentDetailsPage() {
                       value={customerSearchTerm}
                       onChange={(e) => setCustomerSearchTerm(e.target.value)}
                       placeholder="Search customers by name or email..."
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     />
                   </div>
                   <div className="text-sm text-gray-500">
@@ -1246,7 +1246,7 @@ export default function SegmentDetailsPage() {
                       return (
                         <div
                           key={`${customer.customerId}-${customer.subscriptionId}`}
-                          className={`p-4 border rounded-md cursor-pointer transition-colors ${
+                          className={`p-4 border ${tw.rounded} cursor-pointer transition-colors ${
                             isSelected
                               ? "border-blue-500 bg-blue-50"
                               : "border-gray-200 hover:border-gray-300"
@@ -1307,7 +1307,7 @@ export default function SegmentDetailsPage() {
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setShowCustomerSelection(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
+                    className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 transition-colors text-sm font-medium`}
                   >
                     Cancel
                   </button>
@@ -1341,7 +1341,7 @@ export default function SegmentDetailsPage() {
                       }
                     }}
                     disabled={selectedCustomers.length === 0}
-                    className="text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{
                       backgroundColor: button.action.background,
                       color: button.action.color,
@@ -1363,14 +1363,14 @@ export default function SegmentDetailsPage() {
       {showExportModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className="bg-white rounded-md shadow-2xl w-full max-w-md">
+            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">
                   Export Segment
                 </h2>
                 <button
                   onClick={() => setShowExportModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
@@ -1383,7 +1383,7 @@ export default function SegmentDetailsPage() {
                       Export Format
                     </label>
                     <div className="space-y-2">
-                      <label className="flex items-center p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
                         <input
                           type="radio"
                           value="csv"
@@ -1402,7 +1402,7 @@ export default function SegmentDetailsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className="flex items-center p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
                         <input
                           type="radio"
                           value="json"
@@ -1421,7 +1421,7 @@ export default function SegmentDetailsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className="flex items-center p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
                         <input
                           type="radio"
                           value="xml"
@@ -1455,14 +1455,14 @@ export default function SegmentDetailsPage() {
                   <button
                     onClick={() => setShowExportModal(false)}
                     disabled={isExporting}
-                    className="px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50 text-sm font-medium"
+                    className={`px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 ${tw.rounded} transition-colors disabled:opacity-50 text-sm font-medium`}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCustomExport}
                     disabled={isExporting}
-                    className="text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                     style={{
                       backgroundColor: button.action.background,
                       color: button.action.color,

@@ -255,7 +255,7 @@ export default function EditProductPage() {
           </p>
           <button
             onClick={() => navigate("/dashboard/products")}
-            className="bg-[#3b8169] hover:bg-[#2d5f4e] text-white px-4 py-2 rounded-md text-base font-semibold transition-all duration-200"
+            className={`bg-[#3b8169] hover:bg-[#2d5f4e] text-white px-4 py-2 ${tw.rounded} text-base font-semibold transition-all duration-200`}
           >
             Back to Products
           </button>
@@ -271,7 +271,7 @@ export default function EditProductPage() {
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={navigateBack}
-            className="p-2 rounded-md transition-colors"
+            className={`p-2 ${tw.rounded} transition-colors`}
             style={{ color: color.text.secondary }}
           >
             <ArrowLeft className="w-5 h-5" />

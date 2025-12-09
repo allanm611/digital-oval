@@ -293,7 +293,7 @@ export default function CreateScheduledJobPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800"
+            className={`${tw.rounded} p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-800`}
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -314,7 +314,7 @@ export default function CreateScheduledJobPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Basic Information
           </h2>
@@ -329,7 +329,7 @@ export default function CreateScheduledJobPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className={`w-full rounded-md border px-3 py-2 text-sm ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
                   errors.name
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -354,7 +354,7 @@ export default function CreateScheduledJobPage() {
                     code: e.target.value.toUpperCase(),
                   })
                 }
-                className={`w-full rounded-md border px-3 py-2 text-sm font-mono ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm font-mono ${
                   errors.code
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -376,7 +376,7 @@ export default function CreateScheduledJobPage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 rows={3}
-                className={`w-full rounded-md border px-3 py-2 text-sm ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
                   errors.description
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -404,7 +404,7 @@ export default function CreateScheduledJobPage() {
                 }
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                  <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                     <span className="block truncate">
                       {formData.job_type_id
                         ? jobTypes.find((jt) => jt.id === formData.job_type_id)
@@ -421,7 +421,7 @@ export default function CreateScheduledJobPage() {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}>
                       <Listbox.Option
                         value={null}
                         className={({ active }) =>
@@ -503,7 +503,7 @@ export default function CreateScheduledJobPage() {
                 }
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                  <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                     <span className="block truncate">
                       {
                         STATUS_OPTIONS.find(
@@ -521,7 +521,7 @@ export default function CreateScheduledJobPage() {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}>
                       {STATUS_OPTIONS.map((option) => (
                         <Listbox.Option
                           key={option.value}
@@ -563,7 +563,7 @@ export default function CreateScheduledJobPage() {
         </div>
 
         {/* Schedule Configuration */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Schedule Configuration
           </h2>
@@ -582,7 +582,7 @@ export default function CreateScheduledJobPage() {
                 }
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                  <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                     <span className="block truncate">
                       {
                         SCHEDULE_TYPES.find(
@@ -600,7 +600,7 @@ export default function CreateScheduledJobPage() {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}>
                       {SCHEDULE_TYPES.map((option) => (
                         <Listbox.Option
                           key={option.value}
@@ -653,7 +653,7 @@ export default function CreateScheduledJobPage() {
                       cron_expression: e.target.value,
                     })
                   }
-                  className={`w-full rounded-md border px-3 py-2 text-sm font-mono ${
+                  className={`w-full ${tw.rounded} border px-3 py-2 text-sm font-mono ${
                     errors.cron_expression
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -691,7 +691,7 @@ export default function CreateScheduledJobPage() {
                         : undefined,
                     })
                   }
-                  className={`w-full rounded-md border px-3 py-2 text-sm ${
+                  className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
                     errors.interval_seconds
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -709,7 +709,7 @@ export default function CreateScheduledJobPage() {
         </div>
 
         {/* Execution Settings */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Execution Settings
           </h2>
@@ -725,7 +725,7 @@ export default function CreateScheduledJobPage() {
                 }
               >
                 <div className="relative mt-1">
-                  <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]">
+                  <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
                     <span className="block truncate">
                       {
                         PROCESSING_MODE_OPTIONS.find(
@@ -745,7 +745,7 @@ export default function CreateScheduledJobPage() {
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                   >
-                    <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}>
                       {PROCESSING_MODE_OPTIONS.map((option) => (
                         <Listbox.Option
                           key={option.value}
@@ -799,7 +799,7 @@ export default function CreateScheduledJobPage() {
                     priority: Number(e.target.value),
                   })
                 }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               />
             </div>
 
@@ -817,7 +817,7 @@ export default function CreateScheduledJobPage() {
                     max_concurrent_executions: Number(e.target.value),
                   })
                 }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               />
             </div>
 
@@ -835,14 +835,14 @@ export default function CreateScheduledJobPage() {
                     execution_timeout_minutes: Number(e.target.value),
                   })
                 }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               />
             </div>
           </div>
         </div>
 
         {/* Tags */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Tags
           </h2>
@@ -878,13 +878,13 @@ export default function CreateScheduledJobPage() {
                 }
               }}
               placeholder="Enter tag name"
-              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`flex-1 ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
             />
             <button
               type="button"
               onClick={handleAddTag}
               disabled={!newTag.trim()}
-              className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className={`${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
             >
               Add
             </button>
@@ -892,7 +892,7 @@ export default function CreateScheduledJobPage() {
         </div>
 
         {/* Active Status */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -917,7 +917,7 @@ export default function CreateScheduledJobPage() {
           <button
             type="button"
             onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className="inline-flex items-center gap-2 text-sm font-medium rounded-md focus:outline-none"
+            className={`inline-flex items-center gap-2 text-sm font-medium ${tw.rounded} focus:outline-none`}
             style={{
               backgroundColor: "transparent",
               color: color.primary.action,
@@ -932,7 +932,7 @@ export default function CreateScheduledJobPage() {
           <button
             type="submit"
             disabled={isSaving}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Save className="h-4 w-4" />

@@ -83,7 +83,7 @@ export default function CustomerIdentityFieldDetailsPage() {
         <button
           type="button"
           onClick={handleBack}
-          className="p-2 rounded-md transition-colors"
+          className={`p-2 ${tw.rounded} transition-colors`}
         >
           <ArrowLeft className="h-5 w-5 text-gray-700" />
         </button>
@@ -96,14 +96,14 @@ export default function CustomerIdentityFieldDetailsPage() {
 
       {isLoading ? (
         <div
-          className="bg-white border rounded-md p-12 flex items-center justify-center"
+          className={`bg-white border ${tw.rounded} p-12 flex items-center justify-center`}
           style={{ borderColor: color.border.default }}
         >
           <LoadingSpinner variant="modern" size="lg" color="primary" />
         </div>
       ) : error ? (
         <div
-          className="bg-white border rounded-md p-8 text-center space-y-3"
+          className={`bg-white border ${tw.rounded} p-8 text-center space-y-3`}
           style={{ borderColor: color.border.default }}
         >
           <h3 className="text-lg font-semibold text-gray-900">
@@ -113,7 +113,7 @@ export default function CustomerIdentityFieldDetailsPage() {
           <button
             type="button"
             onClick={loadField}
-            className="px-4 py-2 text-sm font-semibold text-white rounded-md hover:opacity-95 transition-colors"
+            className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} hover:opacity-95 transition-colors`}
             style={{ backgroundColor: color.primary.action }}
           >
             {t.customerIdentity.retry}
@@ -189,7 +189,7 @@ export default function CustomerIdentityFieldDetailsPage() {
           <section className="space-y-4">
             <div className="flex items-center gap-3">
               <div
-                className="p-2 rounded-md"
+                className={`p-2 ${tw.rounded}`}
                 style={{ backgroundColor: color.primary.accent }}
               >
                 <ListChecks className="h-5 w-5 text-white" />
@@ -199,14 +199,14 @@ export default function CustomerIdentityFieldDetailsPage() {
               </h2>
             </div>
             {field.operators.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-md p-6">
+              <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
                 <p className={`${tw.textSecondary} text-sm`}>
                   {t.customerIdentity.noOperatorsConfigured}
                 </p>
               </div>
             ) : (
               <div
-                className={`rounded-md border border-[${color.border.default}] overflow-hidden`}
+                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
               >
                 <div className="hidden lg:block overflow-x-auto">
                   <table
@@ -310,12 +310,12 @@ type InfoCardProps = {
 function InfoCard({ icon, title, items }: InfoCardProps) {
   return (
     <div
-      className="bg-white border rounded-md p-5 space-y-4"
+      className={`bg-white border ${tw.rounded} p-5 space-y-4`}
       style={{ borderColor: color.border.default }}
     >
       <div className="flex items-center gap-3">
         <div
-          className="p-2 rounded-md"
+          className={`p-2 ${tw.rounded}`}
           style={{ backgroundColor: color.primary.accent }}
         >
           {icon}

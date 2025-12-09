@@ -1,6 +1,6 @@
 import { Eye, Mail, MessageSquare, Phone, Bell } from "lucide-react";
 import { CommunicationChannel } from "../types/communication";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 
 interface PreviewPanelProps {
   channel: CommunicationChannel;
@@ -71,7 +71,7 @@ export default function PreviewPanel({
         <h3 className="text-xs sm:text-sm font-semibold">Message Preview</h3>
       </div>
 
-      <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
         {/* Header */}
         <div
           className={`px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center space-x-2 ${getChannelColor()}`}

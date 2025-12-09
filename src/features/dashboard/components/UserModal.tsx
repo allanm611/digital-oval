@@ -284,7 +284,7 @@ export default function UserModal({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
           style={{ top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          <div className="bg-white rounded-md shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className={`bg-white ${tw.rounded} shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}>
             {/* Header */}
             <div
               className={`flex items-center justify-between p-6 border-b ${tw.borderDefault}`}
@@ -296,7 +296,7 @@ export default function UserModal({
               </div>
               <button
                 onClick={onClose}
-                className={`p-2 hover:bg-gray-50 rounded-md transition-colors`}
+                className={`p-2 hover:bg-gray-50 ${tw.rounded} transition-colors`}
               >
                 <X className={`w-5 h-5 ${tw.textMuted}`} />
               </button>
@@ -320,7 +320,7 @@ export default function UserModal({
                       value={formData.first_name}
                       onChange={handleChange}
                       required
-                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="First Name"
                     />
                   </div>
@@ -340,7 +340,7 @@ export default function UserModal({
                       value={formData.last_name}
                       onChange={handleChange}
                       required
-                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+                      className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="Last Name"
                     />
                   </div>
@@ -366,7 +366,7 @@ export default function UserModal({
                     disabled={!!user}
                     className={`block w-full pl-10 pr-3 py-3 border ${
                       tw.borderDefault
-                    } rounded-md focus:outline-none transition-all duration-200 text-sm ${
+                    } ${tw.rounded} focus:outline-none transition-all duration-200 text-sm ${
                       user ? "bg-gray-100 cursor-not-allowed opacity-75" : ""
                     }`}
                     placeholder="email@example.com"
@@ -392,7 +392,7 @@ export default function UserModal({
                       type="text"
                       value={formData.username}
                       onChange={handleChange}
-                      className={`block w-full px-3 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+                      className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                       placeholder="Leave empty to auto-generate from email"
                     />
                   </div>
@@ -417,7 +417,7 @@ export default function UserModal({
                         onChange={handleChange}
                         required
                         minLength={8}
-                        className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+                        className={`block w-full pl-10 pr-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                         placeholder="Password"
                       />
                     </div>
@@ -471,7 +471,7 @@ export default function UserModal({
                     type="text"
                     value={formData.department}
                     onChange={handleChange}
-                    className={`block w-full px-3 py-3 border ${tw.borderDefault} rounded-md focus:outline-none transition-all duration-200 text-sm`}
+                    className={`block w-full px-3 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 text-sm`}
                     placeholder="Department"
                   />
                 </div>
@@ -482,14 +482,14 @@ export default function UserModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`flex-1 px-4 py-3 border ${tw.borderDefault} ${tw.textSecondary} rounded-md hover:bg-gray-50 transition-colors font-medium text-sm`}
+                  className={`flex-1 px-4 py-3 border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors font-medium text-sm`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 text-white rounded-md transition-all duration-200 font-medium text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 text-white ${tw.rounded} transition-all duration-200 font-medium text-sm flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
                   onMouseEnter={(e) => {
                     if (!isLoading) {

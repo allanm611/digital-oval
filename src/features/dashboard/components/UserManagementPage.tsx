@@ -1064,7 +1064,7 @@ export default function UserManagementPage() {
           return (
             <div
               key={stat.name}
-              className="rounded-md border border-gray-200 bg-white p-4 sm:p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-4 sm:p-6 shadow-sm`}
             >
               <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-2 min-w-0">
@@ -1248,7 +1248,7 @@ export default function UserManagementPage() {
 
       {/* Content */}
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {!rolesReady || isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -1289,7 +1289,7 @@ export default function UserManagementPage() {
                     setSelectedUser(null);
                     setIsModalOpen(true);
                   }}
-                  className="px-4 py-2 rounded-md font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white"
+                  className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />
@@ -1452,7 +1452,7 @@ export default function UserManagementPage() {
                               <button
                                 onClick={() => handleToggleStatus(user)}
                                 disabled={loadingActions.toggling.has(user.id)}
-                                className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                 style={{
                                   color: userIsActive
                                     ? deactivateColor
@@ -1480,7 +1480,7 @@ export default function UserManagementPage() {
                               </button>
                               <button
                                 onClick={() => handleViewUser(user)}
-                                className="p-2 rounded-md transition-colors"
+                                className={`p-2 ${tw.rounded} transition-colors`}
                                 style={{
                                   color: color.primary.action,
                                   backgroundColor: "transparent",
@@ -1494,7 +1494,7 @@ export default function UserManagementPage() {
                                   setSelectedUser(user);
                                   setIsModalOpen(true);
                                 }}
-                                className="p-2 rounded-md transition-colors"
+                                className={`p-2 ${tw.rounded} transition-colors`}
                                 style={{
                                   color: color.primary.action,
                                   backgroundColor: "transparent",
@@ -1506,7 +1506,7 @@ export default function UserManagementPage() {
                               <button
                                 onClick={() => handleDeleteUser(user)}
                                 disabled={loadingActions.deleting.has(user.id)}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                 title={
                                   loadingActions.deleting.has(user.id)
                                     ? t.profile.saving
@@ -1597,7 +1597,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleToggleStatus(user)}
                             disabled={loadingActions.toggling.has(user.id)}
-                            className="p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`p-2 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             style={{
                               color: userIsActive
                                 ? deactivateColor
@@ -1625,7 +1625,7 @@ export default function UserManagementPage() {
                           </button>
                           <button
                             onClick={() => handleViewUser(user)}
-                            className="p-2 rounded-md transition-colors"
+                            className={`p-2 ${tw.rounded} transition-colors`}
                             style={{
                               color: color.primary.action,
                               backgroundColor: "transparent",
@@ -1639,7 +1639,7 @@ export default function UserManagementPage() {
                               setSelectedUser(user);
                               setIsModalOpen(true);
                             }}
-                            className="p-2 rounded-md transition-colors"
+                            className={`p-2 ${tw.rounded} transition-colors`}
                             style={{
                               color: color.primary.action,
                               backgroundColor: "transparent",
@@ -1651,7 +1651,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleDeleteUser(user)}
                             disabled={loadingActions.deleting.has(user.id)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                             title={
                               loadingActions.deleting.has(user.id)
                                 ? t.profile.saving
@@ -1808,7 +1808,7 @@ export default function UserManagementPage() {
                               <button
                                 onClick={() => handleApproveRequest(request)}
                                 disabled={actionDisabled || approvingLoading}
-                                className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                 title={
                                   actionDisabled
                                     ? "Missing request identifier"
@@ -1830,7 +1830,7 @@ export default function UserManagementPage() {
                               <button
                                 onClick={() => handleRejectRequest(request)}
                                 disabled={actionDisabled || rejectingLoading}
-                                className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                 title={
                                   actionDisabled
                                     ? "Missing request identifier"
@@ -1912,7 +1912,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleApproveRequest(request)}
                             disabled={actionDisabled || approvingLoading}
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {approvingLoading ? (
                               <>
@@ -1934,7 +1934,7 @@ export default function UserManagementPage() {
                           <button
                             onClick={() => handleRejectRequest(request)}
                             disabled={actionDisabled || rejectingLoading}
-                            className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className={`inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                           >
                             {rejectingLoading ? (
                               <>
@@ -1978,7 +1978,7 @@ export default function UserManagementPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Users by Status */}
-                <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 min-w-0">
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
                   {Object.keys(statusCounts).length > 0 ? (
                     (() => {
                       const statusColors: Record<string, string> = {
@@ -2096,7 +2096,7 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Users by Department */}
-                <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 min-w-0">
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
                   {Object.keys(departmentCounts).length > 0 ? (
                     (() => {
                       const departmentColors = [
@@ -2219,7 +2219,7 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Users by Role */}
-                <div className="bg-white rounded-md border border-gray-200 p-5 sm:p-6 min-w-0">
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
                   {Object.keys(roleCounts).length > 0 ? (
                     (() => {
                       const roleColors = [

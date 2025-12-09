@@ -378,7 +378,7 @@ export default function AudienceConfigurationStep({
           </button>
 
           {isCampaignTypeDropdownOpen && (
-            <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-xl max-h-64 overflow-hidden">
+            <div className={`absolute z-[100] w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}>
               {campaignTypeOptions.map((option) => {
                 const IconComponent = option.icon;
                 return (
@@ -423,7 +423,7 @@ export default function AudienceConfigurationStep({
 
       {/* Mutually Exclusive Segments Checkbox */}
       {selectedSegments.length > 1 && (
-        <div className="rounded-md p-3">
+        <div className={`${tw.rounded} p-3`}>
           <label className="flex items-start space-x-3 cursor-pointer">
             <input
               type="checkbox"
@@ -491,7 +491,7 @@ export default function AudienceConfigurationStep({
                 selectedSegments.length === 0)) && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 text-white rounded-md text-sm font-medium"
+                className={`flex items-center gap-2 px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -505,7 +505,7 @@ export default function AudienceConfigurationStep({
             )}
             <button
               onClick={() => setShowCreateSegmentModal(true)}
-              className={`px-4 py-2 text-sm font-medium rounded-md flex items-center gap-2`}
+              className={`px-4 py-2 text-sm font-medium ${tw.rounded} flex items-center gap-2`}
               style={{
                 backgroundColor: color.primary.action,
                 color: "white",
@@ -563,14 +563,14 @@ export default function AudienceConfigurationStep({
         {formData.campaign_type === "multiple_target_group" &&
           selectedSegments.length === 0 && (
             <div
-              className={`border-2 border-dashed rounded-md p-4 ${
+              className={`border-2 border-dashed ${tw.rounded} p-4 ${
                 validationErrors.segments
                   ? "border-red-300 bg-red-50"
                   : "border-gray-300"
               }`}
             >
               <div className="flex items-center justify-center gap-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
+                <div className={`w-8 h-8 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
                   <Users className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="text-center">
@@ -587,14 +587,14 @@ export default function AudienceConfigurationStep({
 
         {/* Validation Error Message */}
         {validationErrors.segments && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
             <p className="text-sm text-red-600">{validationErrors.segments}</p>
           </div>
         )}
 
         {formData.campaign_type === "multiple_target_group" &&
           selectedSegments.length > 0 && (
-            <div className="border border-gray-200 rounded-md overflow-hidden">
+            <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -854,7 +854,7 @@ function ControlGroupConfigModal({
         height: "100vh",
       }}
     >
-      <div className="bg-white rounded-md max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300">
+      <div className={`bg-white ${tw.rounded} max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}>
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-900">
             Configure Control Group
@@ -939,7 +939,7 @@ function ControlGroupConfigModal({
 
           {/* Control Group Method Selection */}
           {config.type === "with_control_group" && (
-            <div className="space-y-4 p-4 rounded-md">
+            <div className={`space-y-4 p-4 ${tw.rounded}`}>
               <h4 className="text-sm font-medium text-gray-900">
                 Control Group Configuration Method
               </h4>
@@ -1029,7 +1029,7 @@ function ControlGroupConfigModal({
           {/* Fixed Percentage Configuration */}
           {config.type === "with_control_group" &&
             config.control_group_method === "fixed_percentage" && (
-              <div className="space-y-4 p-4 rounded-md">
+              <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
                   Fixed Percentage Configuration
                 </h4>
@@ -1051,7 +1051,7 @@ function ControlGroupConfigModal({
                           percentage: Number(e.target.value),
                         })
                       }
-                      className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+                      className={`w-24 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {calculateControlGroupSize().toLocaleString()} customers
@@ -1099,7 +1099,7 @@ function ControlGroupConfigModal({
                               lower_limit: Number(e.target.value),
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                           placeholder="Lower limit"
                         />
                       </div>
@@ -1117,7 +1117,7 @@ function ControlGroupConfigModal({
                               upper_limit: Number(e.target.value),
                             })
                           }
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                           placeholder="Upper limit"
                         />
                       </div>
@@ -1130,7 +1130,7 @@ function ControlGroupConfigModal({
           {/* Fixed Number Configuration */}
           {config.type === "with_control_group" &&
             config.control_group_method === "fixed_number" && (
-              <div className="space-y-4 p-4 rounded-md">
+              <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
                   Fixed Number Configuration
                 </h4>
@@ -1150,7 +1150,7 @@ function ControlGroupConfigModal({
                         fixed_number: Number(e.target.value),
                       })
                     }
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+                    className={`w-32 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {(
@@ -1171,20 +1171,20 @@ function ControlGroupConfigModal({
                 Select Universal Control Group
               </h4>
 
-              <div className="border border-gray-300 rounded-md p-4 space-y-3">
+              <div className={`border border-gray-300 ${tw.rounded} p-4 space-y-3`}>
                 <input
                   type="text"
                   placeholder="Search universal control groups..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-transparent"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                 />
 
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {filteredControlGroups.map((group) => (
                     <label
                       key={group.id}
-                      className="flex items-start space-x-3 p-3 border border-gray-200 rounded-md hover:bg-white cursor-pointer"
+                      className={`flex items-start space-x-3 p-3 border border-gray-200 ${tw.rounded} hover:bg-white cursor-pointer`}
                     >
                       <input
                         type="radio"
@@ -1221,7 +1221,7 @@ function ControlGroupConfigModal({
           {/* Advanced Parameters Configuration */}
           {config.type === "with_control_group" &&
             config.control_group_method === "advanced_parameters" && (
-              <div className="space-y-4 p-4 rounded-md">
+              <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
                   Advanced Parameters
                 </h4>
@@ -1288,7 +1288,7 @@ function ControlGroupConfigModal({
 
           {/* Summary */}
           {config.type !== "none" && (
-            <div className="rounded-md p-4">
+            <div className={`${tw.rounded} p-4`}>
               <h4 className="font-medium text-gray-900 mb-2">Summary</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
@@ -1349,7 +1349,7 @@ function ControlGroupConfigModal({
         <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
           >
             Cancel
           </button>

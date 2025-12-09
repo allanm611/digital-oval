@@ -27,6 +27,7 @@ import type {
   CampaignRow,
 } from "../types/ReportsAPI";
 
+import { tw } from '../../../shared/utils/utils';
 // Extract types from API response type
 type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
@@ -371,7 +372,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -752,7 +753,7 @@ export default function CampaignReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
                   !(appliedCustomRange.start && appliedCustomRange.end) &&
                   selectedRange === option
                     ? "border-[#252829] bg-[#252829] text-white"
@@ -764,7 +765,7 @@ export default function CampaignReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
+            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
               <label
                 htmlFor="campaign-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -808,7 +809,7 @@ export default function CampaignReportsPage() {
                     start: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -830,14 +831,14 @@ export default function CampaignReportsPage() {
                     end: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             {customRange.start && customRange.end && (
               <button
                 type="button"
                 onClick={handleRun}
-                className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition-colors"
+                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
                 style={{ backgroundColor: colors.primary.accent }}
               >
                 Run
@@ -850,7 +851,7 @@ export default function CampaignReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className="ml-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
               >
                 Clear
               </button>
@@ -871,7 +872,7 @@ export default function CampaignReportsPage() {
             return (
               <div
                 key={card.label}
-                className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
@@ -903,7 +904,7 @@ export default function CampaignReportsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -944,7 +945,7 @@ export default function CampaignReportsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -984,7 +985,7 @@ export default function CampaignReportsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1036,7 +1037,7 @@ export default function CampaignReportsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1097,7 +1098,7 @@ export default function CampaignReportsPage() {
               value={tableQuery}
               onChange={(event) => setTableQuery(event.target.value)}
               placeholder="Search campaign"
-              className="w-full rounded-md border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80"
+              className={`w-full ${tw.rounded} border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
             />
             <HeadlessSelect
               value={segmentFilter}
@@ -1112,7 +1113,7 @@ export default function CampaignReportsPage() {
             <button
               type="button"
               onClick={handleDownloadCsv}
-              className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-semibold text-white"
+              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-3 text-sm font-semibold text-white`}
               style={{ backgroundColor: colors.primary.action }}
             >
               <Download className="h-4 w-4" />

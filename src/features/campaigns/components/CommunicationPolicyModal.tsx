@@ -191,7 +191,7 @@ export default function CommunicationPolicyModal({
                   startTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
           <div>
@@ -207,7 +207,7 @@ export default function CommunicationPolicyModal({
                   endTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function CommunicationPolicyModal({
                   maxCount: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function CommunicationPolicyModal({
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className="p-4 rounded-md bg-white transition-colors hover:bg-gray-50"
+              className={`p-4 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
             >
               <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
                 {/* <div>
@@ -352,7 +352,7 @@ export default function CommunicationPolicyModal({
                         categories: newCategories,
                       }));
                     }}
-                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
+                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                     placeholder="Enter name"
                   />
                 </div> */}
@@ -515,11 +515,11 @@ export default function CommunicationPolicyModal({
                   priority: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
-        <div className={`p-3 rounded-md ${tw.statusInfo10}`}>
+        <div className={`p-3 ${tw.rounded} ${tw.statusInfo10}`}>
           <p className={`${tw.caption} ${tw.textSecondary}`}>
             VIP lists will be managed separately. This configuration defines how
             VIP customers are handled.
@@ -538,7 +538,7 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border rounded-md overflow-visible transition-all duration-200 ${
+        className={`border ${tw.rounded} overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -555,7 +555,7 @@ export default function CommunicationPolicyModal({
         >
           <div className="flex items-center gap-3">
             <div
-              className="p-2.5 rounded-md transition-all duration-200"
+              className={`p-2.5 ${tw.rounded} transition-all duration-200`}
               style={{
                 color: isExpanded ? color.primary.accent : "#6b7280",
               }}
@@ -601,7 +601,7 @@ export default function CommunicationPolicyModal({
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
       <div
-        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-md`}
+        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${tw.rounded}`}
         style={{ zIndex: 10000, position: "relative" }}
       >
         {/* Header */}
@@ -619,7 +619,7 @@ export default function CommunicationPolicyModal({
             </div>
             <button
               onClick={onClose}
-              className={`p-2 ${tw.hover} rounded-md transition-colors hover:bg-gray-100`}
+              className={`p-2 ${tw.hover} ${tw.rounded} transition-colors hover:bg-gray-100`}
               title="Close"
             >
               <X className={`w-5 h-5 ${tw.textMuted}`} />
@@ -647,7 +647,7 @@ export default function CommunicationPolicyModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   placeholder="Enter policy name"
                   required
                 />
@@ -660,7 +660,7 @@ export default function CommunicationPolicyModal({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white"
+                  className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white`}
                   placeholder="Enter policy description"
                   rows={3}
                 />
@@ -677,7 +677,7 @@ export default function CommunicationPolicyModal({
                     onClick={() =>
                       setIsChannelDropdownOpen(!isChannelDropdownOpen)
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-md text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
+                    className={`w-full px-4 py-2.5 border border-gray-300 ${tw.rounded} text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
                   >
                     <div className="flex items-center space-x-2">
                       {channels.length === 0 ? (
@@ -711,7 +711,7 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div className="absolute z-[10000] w-full mt-1 bg-white border border-gray-200 rounded-md max-h-64 overflow-y-auto">
+                    <div className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}>
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}
@@ -810,7 +810,7 @@ export default function CommunicationPolicyModal({
 
             {error && (
               <div
-                className={`px-4 p-4 ${tw.statusDanger10} ${tw.borderDefault} border rounded-md`}
+                className={`px-4 p-4 ${tw.statusDanger10} ${tw.borderDefault} border ${tw.rounded}`}
               >
                 <p className={`${tw.caption} ${tw.danger}`}>{error}</p>
               </div>
@@ -825,14 +825,14 @@ export default function CommunicationPolicyModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className={`px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 text-sm font-medium text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className={`px-6 py-2.5 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed transition-all`}
               style={{ backgroundColor: color.primary.action }}
               onMouseEnter={(e) => {
                 if (!isSaving) {

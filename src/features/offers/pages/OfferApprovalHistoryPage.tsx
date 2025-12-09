@@ -102,7 +102,7 @@ export default function OfferApprovalHistoryPage() {
       <div className="flex items-center space-x-4">
         <button
           onClick={() => navigate(`/dashboard/offers/${id}`)}
-          className="p-2 rounded-md transition-colors"
+          className={`p-2 ${tw.rounded} transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -115,7 +115,7 @@ export default function OfferApprovalHistoryPage() {
       </div>
 
       {/* Content */}
-      <div className="bg-white rounded-md border border-gray-200 p-6">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner
@@ -133,7 +133,7 @@ export default function OfferApprovalHistoryPage() {
             {history.map((entry, index) => (
               <div
                 key={entry.id || index}
-                className="flex items-start space-x-4 p-4 rounded-md border border-gray-200 hover:border-gray-300 transition-colors"
+                className={`flex items-start space-x-4 p-4 ${tw.rounded} border border-gray-200 hover:border-gray-300 transition-colors`}
               >
                 <div className="flex-shrink-0 mt-1">
                   {getActionIcon(entry.new_status)}

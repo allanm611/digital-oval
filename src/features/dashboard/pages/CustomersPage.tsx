@@ -301,7 +301,7 @@ export default function CustomersPage() {
               <button
                 type="button"
                 onClick={() => setSearchTerm("")}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                className={`p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                 title={t.customer360.clearSearch}
               >
                 <X className="h-4 w-4" />
@@ -320,7 +320,7 @@ export default function CustomersPage() {
         {statCards.map(({ title, value, helper, icon: Icon }) => (
           <div
             key={title}
-            className="rounded-md border border-gray-100 bg-white p-5 shadow-sm"
+            className={`${tw.rounded} border border-gray-100 bg-white p-5 shadow-sm`}
           >
             <div className="flex items-center justify-between">
               <p className={`${tw.textMuted} text-xs font-semibold uppercase`}>
@@ -504,7 +504,7 @@ export default function CustomersPage() {
 
         {/* Pagination */}
         {!isLoading && !error && paginatedResults.length > 0 && (
-          <div className="rounded-md border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between">
+          <div className={`${tw.rounded} border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between`}>
             <p className={`${tw.textSecondary} text-sm`}>
               {t.customerProfileReports.page
                 .replace("{current}", page.toString())
@@ -514,7 +514,7 @@ export default function CustomersPage() {
               <button
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 <ChevronLeft className="h-4 w-4" />
                 {t.customer360.previous}
@@ -524,7 +524,7 @@ export default function CustomersPage() {
                   setPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={page >= totalPages}
-                className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {t.customer360.next}
                 <ChevronRight className="h-4 w-4" />
@@ -550,7 +550,7 @@ export default function CustomersPage() {
               value={modalSearchTerm}
               onChange={(e) => setModalSearchTerm(e.target.value)}
               placeholder={t.customer360.searchPlaceholder}
-              className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]"
+              className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
               style={
                 {
                   "--accent-color": `${color.primary.accent}33`,
@@ -571,7 +571,7 @@ export default function CustomersPage() {
           </p>
 
           {/* Search Results */}
-          <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-md">
+          <div className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}>
             {isSearching ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <LoadingSpinner variant="modern" size="md" />
@@ -645,7 +645,7 @@ export default function CustomersPage() {
             <button
               type="button"
               onClick={handleCloseSearchModal}
-              className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className={`px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
             >
               Cancel
             </button>
@@ -653,7 +653,7 @@ export default function CustomersPage() {
               type="button"
               onClick={handleApplySearch}
               disabled={!modalSearchTerm.trim()}
-              className="px-4 py-2 text-sm text-white rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-sm text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               Apply Search

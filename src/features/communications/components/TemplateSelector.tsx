@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileText, Plus, Eye, Trash2 } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import { MessageTemplate } from "../types/template";
 import { CommunicationChannel } from "../types/communication";
 import { templateService } from "../services/templateService";
@@ -78,7 +78,7 @@ export default function TemplateSelector({
           <button
             type="button"
             onClick={onCreateNew}
-            className="flex items-center space-x-1 px-3 py-1.5 text-sm rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
+            className={`flex items-center space-x-1 px-3 py-1.5 text-sm ${tw.rounded} border border-gray-300 hover:bg-gray-50 transition-colors`}
           >
             <Plus className="w-4 h-4" />
             <span>New Template</span>
@@ -107,7 +107,7 @@ export default function TemplateSelector({
               key={template.id}
               onClick={() => handleSelect(template)}
               className={`
-                p-3 rounded-md border-2 cursor-pointer transition-all
+                p-3 ${tw.rounded} border-2 cursor-pointer transition-all
                 ${
                   selectedId === template.id
                     ? "shadow-md"
@@ -177,7 +177,7 @@ export default function TemplateSelector({
           onClick={() => setPreviewTemplate(null)}
         >
           <div
-            className="bg-white rounded-md shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto"
+            className={`bg-white ${tw.rounded} shadow-xl max-w-2xl w-full max-h-[80vh] overflow-auto`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 border-b border-gray-200">
@@ -205,7 +205,7 @@ export default function TemplateSelector({
             <div className="p-4 border-t border-gray-200 flex justify-end">
               <button
                 onClick={() => setPreviewTemplate(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50`}
               >
                 Close
               </button>

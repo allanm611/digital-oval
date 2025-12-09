@@ -301,7 +301,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., Summer Data Bundle"
-            className={`w-full px-3 py-1.5 border rounded-md focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.name ? "border-red-500" : "border-gray-300"
             }`}
             required
@@ -325,7 +325,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., SUMMER_DATA_2024"
-            className={`w-full px-3 py-1.5 border rounded-md focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.code ? "border-red-500" : "border-gray-300"
             }`}
             required
@@ -350,7 +350,7 @@ function BasicInfoStep({
             }
             placeholder="Describe what this offer provides to customers..."
             rows={3}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none transition-all duration-200 text-sm placeholder:text-sm"
+            className={`w-full px-3 py-1.5 border border-gray-300 ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm`}
           />
         </div>
 
@@ -440,7 +440,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., 1, 5, 10"
-            className={`w-full px-3 py-1.5 border rounded-md focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.max_usage_per_customer
                 ? "border-red-500"
                 : "border-gray-300"
@@ -821,7 +821,7 @@ function ReviewStep({
 
       {/* Validation Error Display */}
       {hasValidationErrors && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-4`}>
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg
@@ -887,7 +887,7 @@ function ReviewStep({
         ].map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className="rounded-md bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4"
+            className={`${tw.rounded} bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4`}
           >
             <div className="w-12 h-12 flex items-center justify-center">
               <Icon
@@ -1003,7 +1003,7 @@ function ReviewStep({
                   return (
                     <div
                       key={creative.id}
-                      className="flex items-start justify-between p-4 rounded-md border border-gray-100 bg-white mb-3"
+                      className={`flex items-start justify-between p-4 ${tw.rounded} border border-gray-100 bg-white mb-3`}
                     >
                       <div className="flex items-center gap-3 flex-1">
                         <Palette
@@ -1027,13 +1027,13 @@ function ReviewStep({
                         <div className="flex gap-2">
                           <button
                             onClick={handleSaveCreative}
-                            className="text-sm px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                            className={`text-sm px-3 py-1 bg-blue-600 text-white ${tw.rounded} hover:bg-blue-700 transition-colors`}
                           >
                             Save
                           </button>
                           <button
                             onClick={handleCancelEdit}
-                            className="text-sm px-3 py-1 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-md transition-colors"
+                            className={`text-sm px-3 py-1 text-gray-600 hover:text-gray-700 hover:bg-gray-50 ${tw.rounded} transition-colors`}
                           >
                             Cancel
                           </button>
@@ -1052,7 +1052,7 @@ function ReviewStep({
               Products
             </h3>
             {formData.primary_product_id ? (
-              <div className="flex items-center justify-between p-3 rounded-md border border-gray-100 bg-white">
+              <div className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}>
                 <div className="flex items-center gap-3">
                   <Package
                     className="w-5 h-5"
@@ -1084,7 +1084,7 @@ function ReviewStep({
                 {trackingSources.map((source) => (
                   <div
                     key={source.id}
-                    className="flex items-center justify-between p-3 rounded-md border border-gray-100 bg-white"
+                    className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
                   >
                     <div className="flex items-center gap-3">
                       <BarChart
@@ -1134,7 +1134,7 @@ function ReviewStep({
                 {rewards.map((reward) => (
                   <div
                     key={reward.id}
-                    className="flex items-center justify-between p-3 rounded-md border border-gray-100 bg-white"
+                    className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
                   >
                     <div className="flex items-center gap-3">
                       <DollarSign
@@ -1161,7 +1161,7 @@ function ReviewStep({
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <div className="rounded-md border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Offer Settings
             </h3>
@@ -1191,7 +1191,7 @@ function ReviewStep({
             </div>
           </div>
 
-          <div className="rounded-md border border-gray-200 bg-white shadow-sm p-5 space-y-3">
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Readiness Checklist
             </h3>
@@ -2113,7 +2113,7 @@ export default function CreateOfferPage() {
   return (
     <div className="min-h-screen">
       <div
-        className={`bg-white rounded-md border border-[${color.border.default}] p-4`}
+        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-4`}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center pb-6 min-h-[48px]">
@@ -2122,14 +2122,14 @@ export default function CreateOfferPage() {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={handleCancel}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-all duration-200"
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveDraft}
                   disabled={isSavingDraft}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
                   onMouseEnter={(e) => {
                     if (!isSavingDraft)
@@ -2186,7 +2186,7 @@ export default function CreateOfferPage() {
           />
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}>
               <p className="text-red-700">{error}</p>
             </div>
           )}
@@ -2214,7 +2214,7 @@ export default function CreateOfferPage() {
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 1}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Previous
               </button>
@@ -2225,7 +2225,7 @@ export default function CreateOfferPage() {
                     ? isLoading || !validateCurrentStep()
                     : !validateCurrentStep()
                 }
-                className="inline-flex items-center px-5 py-2 text-sm font-medium rounded-md text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
                 onMouseEnter={(e) => {
                   const btn = e.currentTarget;

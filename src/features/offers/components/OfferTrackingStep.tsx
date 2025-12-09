@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, BarChart3, Settings, Edit, X } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface TrackingRule {
@@ -161,7 +161,7 @@ export default function OfferTrackingStep({
   return (
     <div className="space-y-6">
       {trackingSources.length === 0 ? (
-        <div className="bg-white rounded-md border border-gray-200 p-8 text-center">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}>
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <BarChart3 className="w-8 h-8 text-gray-400" />
           </div>
@@ -174,7 +174,7 @@ export default function OfferTrackingStep({
           </p>
           <button
             onClick={addTrackingSource}
-            className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md font-medium"
+            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -185,14 +185,14 @@ export default function OfferTrackingStep({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tracking Sources List */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-md border border-gray-200 p-4">
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">
                   Tracking Sources
                 </h3>
                 <button
                   onClick={addTrackingSource}
-                  className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md font-medium"
+                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
@@ -205,7 +205,7 @@ export default function OfferTrackingStep({
                   <div
                     key={source.id}
                     onClick={() => setSelectedSource(source.id)}
-                    className={`p-3 rounded-md border cursor-pointer transition-all ${
+                    className={`p-3 ${tw.rounded} border cursor-pointer transition-all ${
                       selectedSource === source.id
                         ? "border-gray-300 bg-gray-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -214,7 +214,7 @@ export default function OfferTrackingStep({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div
-                          className={`w-8 h-8 rounded-md flex items-center justify-center ${
+                          className={`w-8 h-8 ${tw.rounded} flex items-center justify-center ${
                             source.enabled ? "bg-gray-100" : "bg-gray-100"
                           }`}
                         >
@@ -260,7 +260,7 @@ export default function OfferTrackingStep({
           {/* Tracking Configuration */}
           <div className="lg:col-span-2">
             {selectedSourceData ? (
-              <div className="bg-white rounded-md border border-gray-200 p-6 w-full">
+              <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
                 <div className="space-y-6">
                   {/* Source Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,7 +276,7 @@ export default function OfferTrackingStep({
                             name: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                       />
                     </div>
 
@@ -331,7 +331,7 @@ export default function OfferTrackingStep({
                       </h4>
                       <button
                         onClick={() => addRule()}
-                        className="inline-flex items-center px-3 py-1 text-sm text-white rounded-md transition-colors"
+                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors`}
                         style={{ backgroundColor: color.primary.action }}
                         onMouseEnter={(e) => {
                           (
@@ -350,14 +350,14 @@ export default function OfferTrackingStep({
                     </div>
 
                     {selectedSourceData.rules.length === 0 ? (
-                      <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-md">
+                      <div className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}>
                         <Settings className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                         <p className="text-gray-500 text-sm mb-4">
                           No rules configured
                         </p>
                         <button
                           onClick={() => addRule()}
-                          className="inline-flex items-center px-4 py-2 text-white rounded-md"
+                          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
                           style={{ backgroundColor: color.primary.action }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -369,7 +369,7 @@ export default function OfferTrackingStep({
                         {selectedSourceData.rules.map((rule) => (
                           <div
                             key={rule.id}
-                            className="p-4 border border-gray-200 rounded-md"
+                            className={`p-4 border border-gray-200 ${tw.rounded}`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-3">
@@ -424,7 +424,7 @@ export default function OfferTrackingStep({
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-md border border-gray-200 p-8 text-center">
+              <div className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}>
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <BarChart3 className="w-8 h-8 text-gray-400" />
                 </div>
@@ -446,7 +446,7 @@ export default function OfferTrackingStep({
         editingRule &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-md p-6 w-full max-w-md mx-4">
+            <div className={`bg-white ${tw.rounded} p-6 w-full max-w-md mx-4`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {editingRule.id ? "Edit Rule" : "Add Rule"}
@@ -473,7 +473,7 @@ export default function OfferTrackingStep({
                     onChange={(e) =>
                       setEditingRule({ ...editingRule, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -491,7 +491,7 @@ export default function OfferTrackingStep({
                         priority: parseInt(e.target.value) || 1,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -551,7 +551,7 @@ export default function OfferTrackingStep({
                       setEditingRule({ ...editingRule, value: e.target.value })
                     }
                     placeholder="Enter value..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -583,7 +583,7 @@ export default function OfferTrackingStep({
                     setShowRuleModal(false);
                     setEditingRule(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md"
+                  className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                 >
                   Cancel
                 </button>
@@ -592,7 +592,7 @@ export default function OfferTrackingStep({
                     selectedSourceData &&
                     saveRule(selectedSourceData.id, editingRule)
                   }
-                  className="px-4 py-2 text-white rounded-md"
+                  className={`px-4 py-2 text-white ${tw.rounded}`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   Save Rule

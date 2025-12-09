@@ -131,7 +131,7 @@ export default function QuickListDetailsModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-md shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex-1">
@@ -146,7 +146,7 @@ export default function QuickListDetailsModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors ml-4"
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors ml-4`}
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -155,7 +155,7 @@ export default function QuickListDetailsModal({
         {/* Info Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gray-50 border-b">
           <div className="flex items-start space-x-3">
-            <div className="p-2 bg-blue-100 rounded-md">
+            <div className={`p-2 bg-blue-100 ${tw.rounded}`}>
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <div>
@@ -167,7 +167,7 @@ export default function QuickListDetailsModal({
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 bg-green-100 rounded-md">
+            <div className={`p-2 bg-green-100 ${tw.rounded}`}>
               <Database className="w-5 h-5 text-green-600" />
             </div>
             <div>
@@ -181,7 +181,7 @@ export default function QuickListDetailsModal({
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 bg-purple-100 rounded-md">
+            <div className={`p-2 bg-purple-100 ${tw.rounded}`}>
               <Calendar className="w-5 h-5 text-purple-600" />
             </div>
             <div>
@@ -193,7 +193,7 @@ export default function QuickListDetailsModal({
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="p-2 bg-orange-100 rounded-md">
+            <div className={`p-2 bg-orange-100 ${tw.rounded}`}>
               <User className="w-5 h-5 text-orange-600" />
             </div>
             <div>
@@ -309,21 +309,21 @@ export default function QuickListDetailsModal({
         <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50">
           <button
             onClick={() => onExport(currentQuickList, "csv")}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center space-x-2`}
           >
             <Download className="w-4 h-4" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={() => onExport(currentQuickList, "json")}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center space-x-2"
+            className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors flex items-center space-x-2`}
           >
             <Download className="w-4 h-4" />
             <span>Export JSON</span>
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-md hover:bg-gray-900 transition-colors"
+            className={`px-4 py-2 text-sm font-medium text-white bg-gray-800 ${tw.rounded} hover:bg-gray-900 transition-colors`}
           >
             Close
           </button>

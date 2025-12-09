@@ -117,7 +117,7 @@ export default function NotificationDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2.5 text-white/90 hover:text-white rounded-md transition-colors"
+        className={`relative p-2.5 text-white/90 hover:text-white ${tw.rounded} transition-colors`}
         title={t.notifications.dropdownTitle}
       >
         <Bell className="h-5 w-5" />
@@ -130,7 +130,7 @@ export default function NotificationDropdown({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-md shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
+        <div className={`absolute right-0 top-full mt-2 w-96 bg-white ${tw.rounded} shadow-xl border border-gray-200 z-50 max-h-[600px] flex flex-col`}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center gap-2">

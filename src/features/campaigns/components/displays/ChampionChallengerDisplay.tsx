@@ -1,6 +1,6 @@
 import { Award, Target, Users, Settings, Trash2 } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
-import { color } from "../../../../shared/utils/utils";
+import { color , tw} from "../../../../shared/utils/utils";
 
 interface ChampionChallengerDisplayProps {
   champion: CampaignSegment | null;
@@ -30,11 +30,11 @@ export default function ChampionChallengerDisplay({
         </div>
 
         {champion ? (
-          <div className="border border-[#588157] rounded-md p-4">
+          <div className={`border border-[#588157] ${tw.rounded} p-4`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1">
                 <div
-                  className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+                  className={`w-10 h-10 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                   style={{ backgroundColor: `${color.primary.accent}20` }}
                 >
                   <Award
@@ -79,14 +79,14 @@ export default function ChampionChallengerDisplay({
               <div className="flex items-center space-x-1">
                 <button
                   onClick={() => onConfigureControlGroup(champion.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+                  className={`p-2 text-gray-400 hover:text-gray-600 ${tw.rounded} transition-colors`}
                   title="Configure Control Group"
                 >
                   <Settings className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => onRemoveSegment(champion.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 rounded-md transition-colors"
+                  className={`p-2 text-gray-400 hover:text-red-500 ${tw.rounded} transition-colors`}
                   title="Remove Champion"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -95,9 +95,9 @@ export default function ChampionChallengerDisplay({
             </div>
           </div>
         ) : (
-          <div className="border-2 border-dashed border-gray-300 rounded-md p-4">
+          <div className={`border-2 border-dashed border-gray-300 ${tw.rounded} p-4`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+              <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
                 <Award className="w-5 h-5 text-gray-400" />
               </div>
               <div>
@@ -128,7 +128,7 @@ export default function ChampionChallengerDisplay({
             </div>
             <button
               onClick={onAddChallenger}
-              className="inline-flex items-center px-4 py-2 text-white rounded-md text-sm font-medium"
+              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Target className="w-4 h-4 mr-2" />
@@ -137,7 +137,7 @@ export default function ChampionChallengerDisplay({
           </div>
 
           {challengers.length > 0 ? (
-            <div className="border border-gray-200 rounded-md overflow-hidden">
+            <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -177,7 +177,7 @@ export default function ChampionChallengerDisplay({
                       <td className="px-4 py-3">
                         <div className="flex items-center space-x-3">
                           <div
-                            className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
+                            className={`w-8 h-8 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                             style={{
                               backgroundColor: `${color.primary.accent}20`,
                             }}
@@ -249,7 +249,7 @@ export default function ChampionChallengerDisplay({
               </table>
             </div>
           ) : (
-            <div className=" border border-gray-300 rounded-md p-8">
+            <div className={` border border-gray-300 ${tw.rounded} p-8`}>
               <div className="flex flex-col items-center justify-center text-center">
                 <Target className="w-12 h-12 text-[#588157] mb-3" />
                 <h4 className="font-medium text-gray-900 mb-2">
@@ -261,7 +261,7 @@ export default function ChampionChallengerDisplay({
                 </p>
                 <button
                   onClick={onAddChallenger}
-                  className="inline-flex items-center px-4 py-2 text-white rounded-md text-sm font-medium"
+                  className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} text-sm font-medium`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Target className="w-4 h-4 mr-2" />

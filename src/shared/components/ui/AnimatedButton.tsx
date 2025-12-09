@@ -34,7 +34,7 @@ export default function AnimatedButton({
   const [isPressed, setIsPressed] = useState(false);
 
   const baseClasses = `
-    relative inline-flex items-center justify-center font-semibold rounded-md
+    relative inline-flex items-center justify-center font-semibold ${tw.rounded}
     transition-all duration-300 ease-smooth focus-visible:outline-none 
     disabled:pointer-events-none disabled:opacity-50 overflow-hidden group transform-gpu
     ${fullWidth ? "w-full" : ""}

@@ -409,7 +409,7 @@ export default function JobExecutionsPage() {
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/job-executions/analytics")}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
               backgroundColor: "transparent",
               color: color.primary.action,
@@ -424,7 +424,7 @@ export default function JobExecutionsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <PlayCircle
               className="h-5 w-5"
@@ -438,7 +438,7 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.totalExecutions}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -450,7 +450,7 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.runningExecutions}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -462,7 +462,7 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.successfulExecutions}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -474,7 +474,7 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.failedExecutions}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
@@ -486,7 +486,7 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.queuedExecutions}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Pause
               className="h-5 w-5"
@@ -509,7 +509,7 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "sla-breached"
               ? "bg-red-100 text-red-700 border border-red-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -525,7 +525,7 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "long-running"
               ? "bg-orange-100 text-orange-700 border border-orange-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -541,7 +541,7 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "currently-running"
               ? "bg-blue-100 text-blue-700 border border-blue-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -557,7 +557,7 @@ export default function JobExecutionsPage() {
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            className="w-full rounded-md border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+            className={`w-full ${tw.rounded} border border-gray-200 py-3 pl-10 pr-4 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
             placeholder="Search by execution ID, job ID, status, trace ID, or correlation ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -575,7 +575,7 @@ export default function JobExecutionsPage() {
         />
         <button
           onClick={() => setShowAdvancedFilters(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+          className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
@@ -596,7 +596,7 @@ export default function JobExecutionsPage() {
       {showAdvancedFilters && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="bg-white rounded-md shadow-xl p-6 w-full max-w-md"
+            className={`bg-white ${tw.rounded} shadow-xl p-6 w-full max-w-md`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -615,7 +615,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="number"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   placeholder="Filter by job ID"
                   value={jobIdFilter}
                   onChange={(e) =>
@@ -629,7 +629,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="number"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   placeholder="7"
                   value={daysBackFilter}
                   onChange={(e) =>
@@ -643,7 +643,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="date"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   value={startDateFilter}
                   onChange={(e) => setStartDateFilter(e.target.value)}
                 />
@@ -654,7 +654,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="date"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   value={endDateFilter}
                   onChange={(e) => setEndDateFilter(e.target.value)}
                 />
@@ -665,7 +665,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   placeholder="Filter by correlation ID"
                   value={correlationIdFilter}
                   onChange={(e) => setCorrelationIdFilter(e.target.value)}
@@ -677,7 +677,7 @@ export default function JobExecutionsPage() {
                 </label>
                 <input
                   type="text"
-                  className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                   placeholder="Filter by trace ID"
                   value={traceIdFilter}
                   onChange={(e) => setTraceIdFilter(e.target.value)}
@@ -690,7 +690,7 @@ export default function JobExecutionsPage() {
                   </label>
                   <input
                     type="number"
-                    className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm"
+                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
                     placeholder="60"
                     value={longRunningThreshold}
                     onChange={(e) =>
@@ -711,13 +711,13 @@ export default function JobExecutionsPage() {
                   setTraceIdFilter("");
                   setLongRunningThreshold(60);
                 }}
-                className="flex-1 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
               >
                 Clear
               </button>
               <button
                 onClick={() => setShowAdvancedFilters(false)}
-                className="flex-1 rounded-md px-4 py-2 text-sm font-medium text-white"
+                className={`flex-1 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 Apply
@@ -912,7 +912,7 @@ export default function JobExecutionsPage() {
                               `/dashboard/job-executions/${execution.id}`
                             )
                           }
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View details"
                         >
                           <Eye className="w-4 h-4" />
@@ -920,7 +920,7 @@ export default function JobExecutionsPage() {
                         {execution.execution_status === "running" && (
                           <button
                             onClick={() => handleAction(execution, "abort")}
-                            className="p-2 rounded-md text-red-600 hover:text-red-900 hover:bg-red-50 transition-colors"
+                            className={`p-2 ${tw.rounded} text-red-600 hover:text-red-900 hover:bg-red-50 transition-colors`}
                             aria-label="Abort execution"
                           >
                             <Ban className="w-4 h-4" />
@@ -929,7 +929,7 @@ export default function JobExecutionsPage() {
                         {execution.execution_status === "failure" && (
                           <button
                             onClick={() => handleAction(execution, "retry")}
-                            className="p-2 rounded-md text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition-colors"
+                            className={`p-2 ${tw.rounded} text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition-colors`}
                             aria-label="Retry execution"
                           >
                             <RotateCcw className="w-4 h-4" />
@@ -938,7 +938,7 @@ export default function JobExecutionsPage() {
                         {!execution.archived && (
                           <button
                             onClick={() => handleAction(execution, "archive")}
-                            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                             aria-label="Archive execution"
                           >
                             <Archive className="w-4 h-4" />
@@ -958,7 +958,7 @@ export default function JobExecutionsPage() {
       {showActionModal && selectedExecution && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div
-            className="bg-white rounded-md shadow-xl p-6 w-full max-w-md"
+            className={`bg-white ${tw.rounded} shadow-xl p-6 w-full max-w-md`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -993,7 +993,7 @@ export default function JobExecutionsPage() {
                   setSelectedExecution(null);
                   setActionType(null);
                 }}
-                className="flex-1 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                 disabled={isProcessingAction}
               >
                 Cancel
@@ -1001,7 +1001,7 @@ export default function JobExecutionsPage() {
               <button
                 onClick={confirmAction}
                 disabled={isProcessingAction}
-                className="flex-1 rounded-md px-4 py-2 text-sm font-medium text-white"
+                className={`flex-1 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
                 style={{
                   backgroundColor: isProcessingAction
                     ? "#9ca3af"

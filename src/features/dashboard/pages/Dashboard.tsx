@@ -37,6 +37,7 @@ import RewardTypesPage from "../../offers/pages/RewardTypesPage";
 import SenderIdsPage from "../../offers/pages/SenderIdsPage";
 import SMSRoutesPage from "../../offers/pages/SMSRoutesPage";
 import LanguagesPage from "../../offers/pages/LanguagesPage";
+import CharacterSetsPage from "../../offers/pages/CharacterSetsPage";
 // import CategoryDetailsPage from "../../offers/pages/CategoryDetailsPage";
 import UserManagementPage from "../components/UserManagementPage";
 import UserDetailsPage from "../../users/pages/UserDetailsPage";
@@ -204,6 +205,7 @@ export default function Dashboard() {
         <Route path="/sender-ids" element={<SenderIdsPage />} />
         <Route path="/sms-routes" element={<SMSRoutesPage />} />
         <Route path="/languages" element={<LanguagesPage />} />
+        <Route path="/character-sets" element={<CharacterSetsPage />} />
         <Route
           path="/communication-channels"
           element={<CommunicationChannelsPage />}

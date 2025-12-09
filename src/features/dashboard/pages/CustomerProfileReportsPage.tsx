@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
@@ -222,7 +222,7 @@ const baseCohortRetention: CohortPoint[] = [
 ];
 
 // Generate comprehensive dummy data that covers all filter combinations
- 
+
 const generateCustomerRows = (): CustomerRow[] => {
   const segments = [
     "Champions",
@@ -394,18 +394,7 @@ const customerTypeOptions = [
   ).sort(),
 ];
 const CUSTOMER_TABLE_PAGE_SIZE = 10;
-const customerTableHeaders = [
-  "Customer",
-  "MSISDN",
-  "Subscription ID",
-  "Customer Type",
-  "Tariff",
-  "SIM Type",
-  "Status",
-  "Activation Date",
-  "City",
-  "Actions",
-] as const;
+// Table headers will be translated inside the component
 const tableCellBackground: CSSProperties = {
   backgroundColor: color.surface.tablebodybg,
 };
@@ -428,7 +417,9 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg">
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -567,27 +558,27 @@ export default function CustomerProfileReportsPage() {
     if (!selectedSubscription) return [];
     return [
       {
-        label: "MSISDN",
+        label: t.customer360.msisdn,
         value: formatMsisdn(selectedSubscription.msisdn),
       },
       {
-        label: "Status",
+        label: t.customer360.status,
         value: selectedSubscription.status ?? "—",
       },
       {
-        label: "Activation Date",
+        label: t.customer360.activationDate,
         value: formatDateTime(selectedSubscription.activationDate),
       },
       {
-        label: "Customer Type",
+        label: t.customer360.customerType,
         value: selectedSubscription.customerType ?? "—",
       },
       {
-        label: "Tariff",
+        label: t.customer360.tariff,
         value: selectedSubscription.tariff ?? "—",
       },
       {
-        label: "SIM Type",
+        label: t.customer360.simType,
         value: selectedSubscription.simType ?? "—",
       },
       {
@@ -599,7 +590,7 @@ export default function CustomerProfileReportsPage() {
         value: selectedSubscription.preferredLanguage ?? "—",
       },
       {
-        label: "City",
+        label: t.customer360.city,
         value: selectedSubscription.city ?? "—",
       },
       {
@@ -624,9 +615,7 @@ export default function CustomerProfileReportsPage() {
   // Customer search function - searches in existing customer data
   const handleCustomerSearch = () => {
     if (!customerSearchTerm.trim()) {
-      setCustomerError(
-        t.customerProfileReports.enterCustomerInfo
-      );
+      setCustomerError(t.customerProfileReports.enterCustomerInfo);
       return;
     }
 
@@ -646,9 +635,7 @@ export default function CustomerProfileReportsPage() {
       });
 
       if (!foundCustomer) {
-        setCustomerError(
-          t.customerProfileReports.customerNotFound
-        );
+        setCustomerError(t.customerProfileReports.customerNotFound);
         setIsSearchingCustomer(false);
         return;
       }
@@ -668,7 +655,9 @@ export default function CustomerProfileReportsPage() {
       );
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : t.customerProfileReports.failedToSearch;
+        err instanceof Error
+          ? err.message
+          : t.customerProfileReports.failedToSearch;
       setCustomerError(errorMessage);
     } finally {
       setIsSearchingCustomer(false);
@@ -985,17 +974,19 @@ export default function CustomerProfileReportsPage() {
                 }
               }}
               placeholder={t.customerProfileReports.searchPlaceholder}
-              className="w-full pl-10 pr-4 py-3.5 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#252829] cursor-pointer"
+              className={`w-full pl-10 pr-4 py-3.5 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#252829] cursor-pointer`}
             />
           </div>
           <button
             type="button"
             onClick={handleCustomerSearch}
             disabled={isSearchingCustomer}
-            className="px-6 py-3.5 text-sm font-semibold text-white rounded-md hover:opacity-95 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-6 py-3.5 text-sm font-semibold text-white ${tw.rounded} hover:opacity-95 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{ backgroundColor: color.primary.action }}
           >
-            {isSearchingCustomer ? t.customerProfileReports.searching : t.customerProfileReports.search}
+            {isSearchingCustomer
+              ? t.customerProfileReports.searching
+              : t.customerProfileReports.search}
           </button>
         </div>
         {customerError && (
@@ -1012,19 +1003,27 @@ export default function CustomerProfileReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`${
+                  tw.rounded
+                } border px-3 py-1.5 text-sm font-medium transition-colors ${
                   !(appliedCustomRange.start && appliedCustomRange.end) &&
                   selectedRange === option
                     ? "border-[#252829] bg-[#252829] text-white"
                     : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
                 }`}
               >
-                {option === "7d" ? t.customerProfileReports.daily : option === "30d" ? t.customerProfileReports.weekly : t.customerProfileReports.monthly}
+                {option === "7d"
+                  ? t.customerProfileReports.daily
+                  : option === "30d"
+                  ? t.customerProfileReports.weekly
+                  : t.customerProfileReports.monthly}
               </button>
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5">
+            <div
+              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
+            >
               <label
                 htmlFor="customer-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -1046,7 +1045,9 @@ export default function CustomerProfileReportsPage() {
                 />
               </button>
               <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData ? t.customerProfileReports.dummyData : t.customerProfileReports.realData}
+                {useDummyData
+                  ? t.customerProfileReports.dummyData
+                  : t.customerProfileReports.realData}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1068,7 +1069,7 @@ export default function CustomerProfileReportsPage() {
                     start: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -1090,14 +1091,14 @@ export default function CustomerProfileReportsPage() {
                     end: event.target.value,
                   }))
                 }
-                className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]"
+                className={`cursor-pointer ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm text-gray-900 focus:border-[#252829] focus:outline-none focus:ring-1 focus:ring-[#252829]`}
               />
             </div>
             {customRange.start && customRange.end && (
               <button
                 type="button"
                 onClick={handleRun}
-                className="rounded-md px-4 py-1.5 text-sm font-medium text-white transition-colors"
+                className={`${tw.rounded} px-4 py-1.5 text-sm font-medium text-white transition-colors`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {t.customerProfileReports.run}
@@ -1110,7 +1111,7 @@ export default function CustomerProfileReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className="ml-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                className={`ml-1 ${tw.rounded} px-2.5 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors`}
               >
                 {t.customerProfileReports.clear}
               </button>
@@ -1131,7 +1132,10 @@ export default function CustomerProfileReportsPage() {
               </p>
               <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-600">
                 <span>Customer #{selectedSubscription.customerId}</span>
-                <span>{t.customerProfileReports.subscriptionNumber}{selectedSubscription.subscriptionId}</span>
+                <span>
+                  {t.customerProfileReports.subscriptionNumber}
+                  {selectedSubscription.subscriptionId}
+                </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-500">
                 {selectedSubscription.email && (
@@ -1139,7 +1143,8 @@ export default function CustomerProfileReportsPage() {
                 )}
                 {selectedSubscription.birthDate && (
                   <span>
-                    {t.customerProfileReports.birth} {selectedSubscription.birthDate.split(" ")[0]}
+                    {t.customerProfileReports.birth}{" "}
+                    {selectedSubscription.birthDate.split(" ")[0]}
                   </span>
                 )}
               </div>
@@ -1194,7 +1199,8 @@ export default function CustomerProfileReportsPage() {
                   ),
                   trend: "+3.1% vs last quarter",
                   trendDirection: "up",
-                  description: t.customerProfileReports.meanRealizedPredictedClv,
+                  description:
+                    t.customerProfileReports.meanRealizedPredictedClv,
                   icon: DollarSign,
                 },
                 {
@@ -1214,7 +1220,8 @@ export default function CustomerProfileReportsPage() {
                   )} / yr`,
                   trend: "+0.2 YoY",
                   trendDirection: "up",
-                  description: t.customerProfileReports.transactionsPerCustomerAnnually,
+                  description:
+                    t.customerProfileReports.transactionsPerCustomerAnnually,
                   icon: Repeat,
                 },
                 {
@@ -1225,7 +1232,8 @@ export default function CustomerProfileReportsPage() {
                   ).toFixed(0)} / 100`,
                   trend: "-2 pts vs last 30d",
                   trendDirection: engagementAdjust < 0 ? "down" : "up",
-                  description: t.customerProfileReports.multiChannelCompositeScore,
+                  description:
+                    t.customerProfileReports.multiChannelCompositeScore,
                   icon: Activity,
                 },
                 {
@@ -1254,7 +1262,8 @@ export default function CustomerProfileReportsPage() {
                   value: formatCurrency(0),
                   trend: "—",
                   trendDirection: "up",
-                  description: t.customerProfileReports.meanRealizedPredictedClv,
+                  description:
+                    t.customerProfileReports.meanRealizedPredictedClv,
                   icon: DollarSign,
                 },
                 {
@@ -1270,7 +1279,8 @@ export default function CustomerProfileReportsPage() {
                   value: "0.0 / yr",
                   trend: "—",
                   trendDirection: "up",
-                  description: t.customerProfileReports.transactionsPerCustomerAnnually,
+                  description:
+                    t.customerProfileReports.transactionsPerCustomerAnnually,
                   icon: Repeat,
                 },
                 {
@@ -1278,7 +1288,8 @@ export default function CustomerProfileReportsPage() {
                   value: "0 / 100",
                   trend: "—",
                   trendDirection: "up",
-                  description: t.customerProfileReports.multiChannelCompositeScore,
+                  description:
+                    t.customerProfileReports.multiChannelCompositeScore,
                   icon: Activity,
                 },
                 {
@@ -1296,7 +1307,7 @@ export default function CustomerProfileReportsPage() {
               {heroMetrics.map((metric) => (
                 <div
                   key={metric.label}
-                  className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
                 >
                   <div className="flex items-center gap-2">
                     <span style={{ color: colors.primary.accent }}>
@@ -1334,7 +1345,9 @@ export default function CustomerProfileReportsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1376,7 +1389,9 @@ export default function CustomerProfileReportsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1450,7 +1465,9 @@ export default function CustomerProfileReportsPage() {
       </section>
 
       <section className="space-y-6">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1541,16 +1558,16 @@ export default function CustomerProfileReportsPage() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                Cohort Retention Comparison
+                {t.customerProfileReports.cohortRetentionComparison}
               </h2>
               <p className="mt-1 text-sm text-gray-600">
-                See how well customers acquired in different months stay active
-                over time - helps identify if your retention efforts are
-                improving
+                {t.customerProfileReports.cohortDescription}
               </p>
             </div>
           </div>
@@ -1567,7 +1584,7 @@ export default function CustomerProfileReportsPage() {
                   dataKey="month"
                   tick={{ fill: "#6b7280" }}
                   label={{
-                    value: "Months since acquisition",
+                    value: t.customerProfileReports.monthsSinceAcquisition,
                     position: "bottom",
                     style: { marginTop: 8, marginBottom: 8 },
                   }}
@@ -1577,7 +1594,7 @@ export default function CustomerProfileReportsPage() {
                   domain={[0, 100]}
                   tickFormatter={(value) => `${value}%`}
                   label={{
-                    value: "Retention %",
+                    value: t.customerProfileReports.retentionPercent,
                     angle: -90,
                     position: "insideLeft",
                   }}
@@ -1592,19 +1609,19 @@ export default function CustomerProfileReportsPage() {
                 />
                 <Bar
                   dataKey="Jan"
-                  name="Jan Cohort"
+                  name={t.customerProfileReports.janCohort}
                   fill={colors.reportCharts.customerProfile.cohortRetention.jan}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="Apr"
-                  name="Apr Cohort"
+                  name={t.customerProfileReports.aprCohort}
                   fill={colors.reportCharts.customerProfile.cohortRetention.apr}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="Jul"
-                  name="Jul Cohort"
+                  name={t.customerProfileReports.julCohort}
                   fill={colors.reportCharts.customerProfile.cohortRetention.jul}
                   radius={[4, 4, 0, 0]}
                 />
@@ -1618,10 +1635,10 @@ export default function CustomerProfileReportsPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Customer Detail Table
+              {t.customerProfileReports.customerDetailTable}
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              Explore high-value, at-risk, and emerging customers in one view
+              {t.customerProfileReports.tableDescription}
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -1632,27 +1649,29 @@ export default function CustomerProfileReportsPage() {
                 label: segment,
                 value: segment,
               }))}
-              placeholder="All Segments"
+              placeholder={t.customerProfileReports.allSegments}
               className="w-full md:w-48"
             />
             <HeadlessSelect
               value={tableRiskFilter}
               onChange={(value) => setTableRiskFilter(value as string)}
-              options={["All", "High", "Medium", "Low"].map((option) => ({
-                label: `${option} Risk`,
-                value: option,
-              }))}
-              placeholder="All Risk Levels"
+              options={[
+                { label: t.customerProfileReports.allRiskLevels, value: "All" },
+                { label: t.customerProfileReports.highRisk, value: "High" },
+                { label: t.customerProfileReports.mediumRisk, value: "Medium" },
+                { label: t.customerProfileReports.lowRisk, value: "Low" },
+              ]}
+              placeholder={t.customerProfileReports.allRiskLevels}
               className="w-full md:w-48"
             />
             <button
               type="button"
               onClick={handleDownloadCsv}
-              className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-3 text-sm font-semibold text-white"
+              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-3 text-sm font-semibold text-white`}
               style={{ backgroundColor: colors.primary.action }}
             >
               <Download className="h-4 w-4" />
-              Download CSV
+              {t.customerProfileReports.downloadCsv}
             </button>
           </div>
         </div>
@@ -1668,7 +1687,18 @@ export default function CustomerProfileReportsPage() {
                 style={{ background: color.surface.tableHeader }}
               >
                 <tr>
-                  {customerTableHeaders.map((header) => (
+                  {[
+                    t.customer360.customer,
+                    t.customer360.msisdn,
+                    t.customer360.subscriptionId,
+                    t.customer360.customerType,
+                    t.customer360.tariff,
+                    t.customer360.simType,
+                    t.customer360.status,
+                    t.customer360.activationDate,
+                    t.customer360.city,
+                    t.customer360.actions,
+                  ].map((header) => (
                     <th
                       key={header}
                       className="px-6 py-3 text-left font-semibold text-gray-900"
@@ -1783,24 +1813,26 @@ export default function CustomerProfileReportsPage() {
           </div>
           {!filteredCustomers.length && (
             <div className="px-6 py-10 text-center text-sm text-gray-500">
-              No customers match your filters yet.
+              {t.customerProfileReports.noCustomersMatchFilters}
             </div>
           )}
         </div>
         {filteredCustomers.length > 0 && (
           <div className="px-4 py-3 sm:flex sm:items-center sm:justify-between">
             <p className="text-sm text-gray-600">
-              Page {tablePage} of {totalPages}
+              {t.customerProfileReports.page
+                .replace("{current}", tablePage.toString())
+                .replace("{total}", totalPages.toString())}
             </p>
             <div className="mt-2 flex items-center gap-2 sm:mt-0">
               <button
                 type="button"
                 onClick={() => setTablePage((prev) => Math.max(1, prev - 1))}
                 disabled={tablePage === 1}
-                className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Prev
+                {t.customerProfileReports.prev}
               </button>
               <button
                 type="button"
@@ -1808,9 +1840,9 @@ export default function CustomerProfileReportsPage() {
                   setTablePage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={tablePage >= totalPages}
-                className="flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                Next
+                {t.customerProfileReports.next}
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>

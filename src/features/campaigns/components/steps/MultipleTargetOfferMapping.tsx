@@ -135,7 +135,7 @@ export default function MultipleTargetOfferMapping({
                   </div>
                   <button
                     onClick={() => handleAddOffer(segment.id)}
-                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md`}
+                    className={`inline-flex items-center px-3 py-1.5 text-sm font-medium ${tw.rounded}`}
                     style={{
                       backgroundColor: color.primary.action,
                       color: "white",
@@ -155,7 +155,7 @@ export default function MultipleTargetOfferMapping({
                   </div>
                   {mappedOffers.length === 0 ? (
                     <div
-                      className="text-center py-4 border-2 border-dashed rounded-md"
+                      className={`text-center py-4 border-2 border-dashed ${tw.rounded}`}
                       style={{ borderColor: color.border.default }}
                     >
                       <p className={`text-sm ${tw.textSecondary}`}>
@@ -167,7 +167,7 @@ export default function MultipleTargetOfferMapping({
                       {mappedOffers.map((offer) => (
                         <div
                           key={offer.id}
-                          className="flex items-center justify-between p-3 rounded-md"
+                          className={`flex items-center justify-between p-3 ${tw.rounded}`}
                           style={{ backgroundColor: color.surface.cards }}
                         >
                           <div className="flex items-center gap-3">
@@ -194,7 +194,7 @@ export default function MultipleTargetOfferMapping({
                                 parseInt(offer.id)
                               )
                             }
-                            className="p-1.5 rounded-md"
+                            className={`p-1.5 ${tw.rounded}`}
                           >
                             <X className="w-4 h-4 text-red-600" />
                           </button>

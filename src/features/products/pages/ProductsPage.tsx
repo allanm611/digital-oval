@@ -274,7 +274,7 @@ export default function ProductsPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => navigate("/dashboard/products/create")}
-            className="px-4 py-2 rounded-md font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white"
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {
               (e.target as HTMLButtonElement).style.backgroundColor =
@@ -294,7 +294,7 @@ export default function ProductsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Total Products Card */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Package
               className="h-5 w-5"
@@ -312,7 +312,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Active Products Card */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <TrendingUp
               className="h-5 w-5"
@@ -330,7 +330,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Inactive Products Card */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -350,7 +350,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Average Price Card */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <DollarSign
               className="h-5 w-5"
@@ -368,7 +368,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Top Selling Products Card */}
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <BarChart3
               className="h-5 w-5"
@@ -404,7 +404,7 @@ export default function ProductsPage() {
               placeholder="Search products..."
               value={filters.search || ""}
               onChange={(e) => handleSearch(e.target.value)}
-              className={`w-full pl-10 pr-4 py-3 text-sm  border border-[${tw.borderDefault}] rounded-md focus:outline-none`}
+              className={`w-full pl-10 pr-4 py-3 text-sm  border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none`}
             />
           </div>
 
@@ -483,7 +483,7 @@ export default function ProductsPage() {
 
       {/* Products Table */}
       <div
-        className={` rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -508,7 +508,7 @@ export default function ProductsPage() {
             </p>
             <button
               onClick={() => navigate("/dashboard/products/create")}
-              className="px-4 py-2 rounded-md font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-base text-white"
+              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-base text-white`}
               style={{ backgroundColor: color.primary.action }}
               onMouseEnter={(e) => {
                 (e.target as HTMLButtonElement).style.backgroundColor =
@@ -656,7 +656,7 @@ export default function ProductsPage() {
                             onClick={() =>
                               navigate(`/dashboard/products/${product.id}`)
                             }
-                            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -665,14 +665,14 @@ export default function ProductsPage() {
                             onClick={() =>
                               navigate(`/dashboard/products/${product.id}/edit`)
                             }
-                            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title="Edit Product"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(product)}
-                            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-all duration-200"
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             title={
                               product.is_active ? "Deactivate" : "Activate"
                             }
@@ -685,7 +685,7 @@ export default function ProductsPage() {
                           </button>
                           <button
                             onClick={() => handleDelete(product.id)}
-                            className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-all duration-200"
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
                             title="Delete Product"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -704,7 +704,7 @@ export default function ProductsPage() {
       {/* Pagination */}
       {!loading && !error && (products.length > 0 || total > 0) && (
         <div
-          className={`bg-white rounded-md shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
+          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div
@@ -728,7 +728,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => handlePageChange((filters.page || 1) - 1)}
                 disabled={filters.page === 1}
-                className={`p-2 border ${tw.borderDefault} rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -738,7 +738,7 @@ export default function ProductsPage() {
               <button
                 onClick={() => handlePageChange((filters.page || 1) + 1)}
                 disabled={(filters.page || 1) >= (totalPages || 1)}
-                className={`p-2 border ${tw.borderDefault} rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

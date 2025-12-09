@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, Users } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
 import { SegmentType } from "../types/segment";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -90,7 +90,7 @@ export default function SegmentPickerModal({
         height: "100vh",
       }}
     >
-      <div className="bg-white rounded-md w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
@@ -119,7 +119,7 @@ export default function SegmentPickerModal({
                 placeholder="Search segments..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-opacity-50`}
               />
             </div>
             <div className="w-48">
@@ -201,7 +201,7 @@ export default function SegmentPickerModal({
                         <td className="px-4 py-4">
                           <div className="flex items-center space-x-3">
                             <div
-                              className="w-10 h-10 rounded-md flex items-center justify-center flex-shrink-0"
+                              className={`w-10 h-10 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                               style={{
                                 backgroundColor: `${color.primary.accent}20`,
                               }}
@@ -262,7 +262,7 @@ export default function SegmentPickerModal({
         <div className="flex items-center justify-end p-6 border-t border-gray-200 flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors"
+            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
           >
             Cancel
           </button>

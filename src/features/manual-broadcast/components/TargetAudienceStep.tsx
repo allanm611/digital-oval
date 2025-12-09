@@ -331,7 +331,7 @@ export default function TargetAudienceStep({
   if (loading) {
     return (
       <div
-        className="bg-white rounded-md shadow-sm border p-8"
+        className={`bg-white ${tw.rounded} shadow-sm border p-8`}
         style={{ borderColor: color.border.default }}
       >
         <div className="text-center py-12">
@@ -343,7 +343,7 @@ export default function TargetAudienceStep({
 
   return (
     <div
-      className="bg-white rounded-md shadow-sm border"
+      className={`bg-white ${tw.rounded} shadow-sm border`}
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -368,7 +368,7 @@ export default function TargetAudienceStep({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+            className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
             style={{
               borderColor: color.border.default,
               color: color.text.primary,
@@ -440,7 +440,7 @@ export default function TargetAudienceStep({
             {uploadType ? (
               <label
                 htmlFor="audience-file-upload"
-                className="block border-2 border-dashed rounded-md p-6 text-center transition-colors cursor-pointer"
+                className={`block border-2 border-dashed ${tw.rounded} p-6 text-center transition-colors cursor-pointer`}
                 style={{
                   borderColor: color.border.default,
                   opacity: isSubmitting ? 0.5 : 1,
@@ -511,7 +511,7 @@ export default function TargetAudienceStep({
               </label>
             ) : (
               <div
-                className="border-2 border-dashed rounded-md p-6 text-center opacity-50 cursor-not-allowed"
+                className={`border-2 border-dashed ${tw.rounded} p-6 text-center opacity-50 cursor-not-allowed`}
                 style={{ borderColor: color.border.default }}
               >
                 <Upload
@@ -542,7 +542,7 @@ export default function TargetAudienceStep({
             <textarea
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              className="w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 font-mono"
+              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 font-mono`}
               style={{
                 borderColor: color.border.default,
                 color: color.text.primary,
@@ -599,7 +599,7 @@ export default function TargetAudienceStep({
         {/* Error Message */}
         {error && (
           <div
-            className="p-3 rounded-md flex items-start space-x-2"
+            className={`p-3 ${tw.rounded} flex items-start space-x-2`}
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -630,7 +630,7 @@ export default function TargetAudienceStep({
             (inputMode === "file" && !file) ||
             (inputMode === "manual" && manualInputValidation.validCount === 0)
           }
-          className="px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          className={`px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
           style={{ backgroundColor: color.primary.action }}
         >
           {isSubmitting

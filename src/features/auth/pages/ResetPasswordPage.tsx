@@ -13,6 +13,7 @@ import AnimatedButton from "../../../shared/components/ui/AnimatedButton";
 import AnimatedInput from "../../../shared/components/ui/AnimatedInput";
 import AnimatedCard from "../../../shared/components/ui/AnimatedCard";
 
+import { tw } from '../../../shared/utils/utils';
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -118,7 +119,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center px-4 py-12">
         <div className="max-w-md w-full text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-md shadow-lg mb-6">
+          <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 ${tw.rounded} shadow-lg mb-6`}>
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -133,7 +134,7 @@ export default function ResetPasswordPage() {
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-[#3b8169] hover:bg-[#2d5f4e] transition-all duration-200 transform hover:scale-105"
+            className={`inline-flex items-center px-4 py-2 border border-transparent ${tw.rounded} shadow-sm text-base font-medium text-white bg-[#3b8169] hover:bg-[#2d5f4e] transition-all duration-200 transform hover:scale-105`}
           >
             Go to Login
             <ArrowRight className="ml-2 h-5 w-5" />
@@ -194,7 +195,7 @@ export default function ResetPasswordPage() {
           {/* Security illustration */}
           <div className="relative">
             {/* Main security card */}
-            <div className="bg-white rounded-md p-8 shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 mb-4 w-80">
+            <div className={`bg-white ${tw.rounded} p-8 shadow-2xl transform rotate-2 hover:rotate-0 transition-all duration-500 mb-4 w-80`}>
               <div className="text-center">
                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-8 h-8 text-emerald-600" />
@@ -235,7 +236,7 @@ export default function ResetPasswordPage() {
             </div>
 
             {/* Secondary card */}
-            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-md p-6 shadow-2xl transform -rotate-3 hover:rotate-0 transition-all duration-500 absolute -top-4 -right-8 w-48">
+            <div className={`bg-gradient-to-r from-emerald-500 to-teal-600 ${tw.rounded} p-6 shadow-2xl transform -rotate-3 hover:rotate-0 transition-all duration-500 absolute -top-4 -right-8 w-48`}>
               <div className="text-white text-center">
                 <Shield className="w-8 h-8 mb-2 mx-auto" />
                 <div className="text-lg font-bold">Secure</div>
@@ -302,7 +303,7 @@ export default function ResetPasswordPage() {
           >
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className={`mb-6 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}>
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}

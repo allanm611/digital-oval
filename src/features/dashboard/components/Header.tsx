@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import logo from "../../../assets/Effortel_logo.svg";
 import { User as UserType } from "../../../features/auth/types/auth";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
@@ -83,7 +83,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex items-center gap-x-3 flex-1">
           <button
             onClick={onMenuClick}
-            className="md:hidden rounded-md p-2 text-white/90 hover:text-white hover:bg-white/10 transition-colors"
+            className={`md:hidden ${tw.rounded} p-2 text-white/90 hover:text-white hover:bg-white/10 transition-colors`}
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -112,7 +112,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             </div>
             <button
               onClick={logout}
-              className="p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+              className={`p-2 text-white/90 hover:text-white hover:bg-white/10 ${tw.rounded} transition-colors`}
               title="Sign out"
             >
               <LogOut className="h-4 w-4" />
@@ -200,7 +200,7 @@ export function GuestHeader({
 
               <button
                 onClick={handleLogout}
-                className="flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors p-2 rounded-md hover:bg-white/10"
+                className={`flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors p-2 ${tw.rounded} hover:bg-white/10`}
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" />
                 <span className="hidden sm:inline">Logout</span>

@@ -365,7 +365,7 @@ export default function ServerDetailsPage() {
 
   if (errorMessage || !server) {
     return (
-      <div className="rounded-md border border-gray-200 bg-white p-8 text-center shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center shadow-sm`}>
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
           <AlertTriangle size={20} />
         </div>
@@ -377,7 +377,7 @@ export default function ServerDetailsPage() {
         </p>
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 inline-flex items-center gap-2 rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50"
+          className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
         >
           <ArrowLeft size={16} />
           Go back
@@ -400,7 +400,7 @@ export default function ServerDetailsPage() {
           <button
             onClick={handleActivationToggle}
             disabled={isActivationLoading}
-            className="inline-flex items-center gap-2 rounded-md text-sm font-medium transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium transition-colors`}
             style={{
               backgroundColor: button.secondaryAction.background,
               color: button.secondaryAction.color,
@@ -421,7 +421,7 @@ export default function ServerDetailsPage() {
           </button>
           <button
             onClick={handleEdit}
-            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white transition-colors"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-2 text-sm font-semibold text-white transition-colors`}
             style={{ backgroundColor: color.primary.action }}
             title="Edit server"
           >
@@ -432,14 +432,14 @@ export default function ServerDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="inline-flex items-center gap-2 justify-center rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-black hover:bg-gray-50 transition-colors"
+              className={`inline-flex items-center gap-2 justify-center ${tw.rounded} border border-gray-200 px-3 py-2 text-sm font-medium text-black hover:bg-gray-50 transition-colors`}
               title="More actions"
             >
               <MoreVertical size={16} />
               <span>More</span>
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
                 <button
                   onClick={() => {
                     handleHealthToggle();
@@ -533,7 +533,7 @@ export default function ServerDetailsPage() {
         </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
         <div className="flex flex-col gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
@@ -565,7 +565,7 @@ export default function ServerDetailsPage() {
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">
-          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
+          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Environment
             </p>
@@ -578,7 +578,7 @@ export default function ServerDetailsPage() {
               Region: {server.region || "—"}
             </p>
           </div>
-          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
+          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Protocol
             </p>
@@ -589,7 +589,7 @@ export default function ServerDetailsPage() {
               TLS: {server.tls_enabled ? "Enabled" : "Disabled"}
             </p>
           </div>
-          <div className="rounded-md border border-gray-100 bg-gray-50/80 p-4">
+          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Endpoint
             </p>
@@ -601,7 +601,7 @@ export default function ServerDetailsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className="space-y-4 rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <section className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Activity size={20} style={{ color: color.status.info }} />
             <h2 className="text-base font-semibold text-black">
@@ -635,7 +635,7 @@ export default function ServerDetailsPage() {
           </div>
         </section>
 
-        <section className="space-y-4 rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <section className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             {server.health_check_enabled ? (
               <ShieldCheck size={20} style={{ color: color.status.success }} />
@@ -682,7 +682,7 @@ export default function ServerDetailsPage() {
       {/* Push Health Check Result Modal */}
       {showPushHealthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-md bg-white p-6 shadow-xl">
+          <div className={`w-full max-w-md ${tw.rounded} bg-white p-6 shadow-xl`}>
             <h3 className="text-lg font-semibold text-black">
               Push Health Check Result
             </h3>
@@ -713,7 +713,7 @@ export default function ServerDetailsPage() {
                   value={healthResultDetails}
                   onChange={(e) => setHealthResultDetails(e.target.value)}
                   placeholder="Additional details about the health check..."
-                  className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                   rows={3}
                 />
               </div>
@@ -724,14 +724,14 @@ export default function ServerDetailsPage() {
                   setShowPushHealthModal(false);
                   setHealthResultDetails("");
                 }}
-                className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50"
+                className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
               >
                 Cancel
               </button>
               <button
                 onClick={handlePushHealthCheckResult}
                 disabled={isResetHealthLoading}
-                className="rounded-md bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className={`${tw.rounded} bg-black px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
               >
                 {isResetHealthLoading ? "Pushing..." : "Push Result"}
               </button>
@@ -741,13 +741,13 @@ export default function ServerDetailsPage() {
       )}
 
       {server.metadata && Object.keys(server.metadata).length > 0 && (
-        <section className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="text-base font-semibold text-black">Metadata</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {Object.entries(server.metadata).map(([key, value]) => (
               <div
                 key={key}
-                className="rounded-md border border-gray-100 bg-gray-50 p-4 text-sm"
+                className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4 text-sm`}
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-black">
                   {key}

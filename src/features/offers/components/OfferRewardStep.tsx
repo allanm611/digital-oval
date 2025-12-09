@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface RewardRule {
@@ -161,7 +161,7 @@ export default function OfferRewardStep({
   return (
     <div className="space-y-6">
       {rewards.length === 0 ? (
-        <div className="bg-white rounded-md border border-gray-200 p-8 text-center">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}>
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Gift className="w-8 h-8 text-gray-400" />
           </div>
@@ -173,7 +173,7 @@ export default function OfferRewardStep({
           </p>
           <button
             onClick={addReward}
-            className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md font-medium"
+            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -184,12 +184,12 @@ export default function OfferRewardStep({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Rewards List */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-md border border-gray-200 p-4">
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Rewards</h3>
                 <button
                   onClick={addReward}
-                  className="inline-flex items-center px-4 py-2 text-sm text-white rounded-md font-medium"
+                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
@@ -202,7 +202,7 @@ export default function OfferRewardStep({
                   <div
                     key={reward.id}
                     onClick={() => setSelectedReward(reward.id)}
-                    className={`p-3 rounded-md border cursor-pointer transition-all ${
+                    className={`p-3 ${tw.rounded} border cursor-pointer transition-all ${
                       selectedReward === reward.id
                         ? "border-gray-300 bg-gray-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -210,7 +210,7 @@ export default function OfferRewardStep({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-md flex items-center justify-center bg-gray-100">
+                        <div className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}>
                           <Gift className="w-4 h-4 text-gray-600" />
                         </div>
                         <div>
@@ -248,7 +248,7 @@ export default function OfferRewardStep({
           {/* Reward Configuration */}
           <div className="lg:col-span-2">
             {selectedRewardData ? (
-              <div className="bg-white rounded-md border border-gray-200 p-6">
+              <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
                 <div className="space-y-6">
                   {/* Reward Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -264,7 +264,7 @@ export default function OfferRewardStep({
                             name: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                       />
                     </div>
 
@@ -296,7 +296,7 @@ export default function OfferRewardStep({
                       </h4>
                       <button
                         onClick={() => addRule()}
-                        className="inline-flex items-center px-3 py-1 text-sm text-white rounded-md"
+                        className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded}`}
                         style={{ backgroundColor: color.primary.action }}
                       >
                         <Plus className="w-4 h-4 mr-1" />
@@ -305,13 +305,13 @@ export default function OfferRewardStep({
                     </div>
 
                     {selectedRewardData.rules.length === 0 ? (
-                      <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-md">
+                      <div className={`text-center py-8 border-2 border-dashed border-gray-200 ${tw.rounded}`}>
                         <p className="text-gray-500 text-sm mb-4">
                           No rules configured
                         </p>
                         <button
                           onClick={() => addRule()}
-                          className="inline-flex items-center px-4 py-2 text-white rounded-md"
+                          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
                           style={{ backgroundColor: color.primary.action }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -323,7 +323,7 @@ export default function OfferRewardStep({
                         {selectedRewardData.rules.map((rule) => (
                           <div
                             key={rule.id}
-                            className="p-4 border border-gray-200 rounded-md"
+                            className={`p-4 border border-gray-200 ${tw.rounded}`}
                           >
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-3">
@@ -382,7 +382,7 @@ export default function OfferRewardStep({
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-md border border-gray-200 p-8 text-center">
+              <div className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}>
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Gift className="w-8 h-8 text-gray-400" />
                 </div>
@@ -403,7 +403,7 @@ export default function OfferRewardStep({
         editingRule &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-md p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className={`bg-white ${tw.rounded} p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   {editingRule.id ? "Edit Reward Rule" : "Add Reward Rule"}
@@ -431,7 +431,7 @@ export default function OfferRewardStep({
                       onChange={(e) =>
                         setEditingRule({ ...editingRule, name: e.target.value })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     />
                   </div>
 
@@ -449,7 +449,7 @@ export default function OfferRewardStep({
                           priority: parseInt(e.target.value) || 1,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     />
                   </div>
                 </div>
@@ -513,7 +513,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="Enter reward value..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     />
                   </div>
                 </div>
@@ -532,7 +532,7 @@ export default function OfferRewardStep({
                     }
                     placeholder="Enter success message..."
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -551,7 +551,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="e.g., Low balance Failure [01]"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     />
                   </div>
 
@@ -569,7 +569,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="Enter failure message..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                     />
                   </div>
                 </div>
@@ -602,7 +602,7 @@ export default function OfferRewardStep({
                     setShowRuleModal(false);
                     setEditingRule(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md"
+                  className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded}`}
                 >
                   Cancel
                 </button>
@@ -611,7 +611,7 @@ export default function OfferRewardStep({
                     selectedRewardData &&
                     saveRule(selectedRewardData.id, editingRule)
                   }
-                  className="px-4 py-2 text-white rounded-md"
+                  className={`px-4 py-2 text-white ${tw.rounded}`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   Save Rule

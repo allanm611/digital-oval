@@ -16,6 +16,7 @@ import ABTestOfferMapping from "../displays/ABTestOfferMapping";
 import MultipleTargetOfferMapping from "./MultipleTargetOfferMapping";
 import { SegmentOfferMapping } from "../../pages/CreateCampaignPage";
 
+import { tw } from "../../../../shared/utils/utils";
 interface OfferMappingStepProps {
   currentStep: number;
   totalSteps: number;
@@ -313,7 +314,9 @@ export default function OfferMappingStep({
     <div className="space-y-8">
       {/* Validation Error Message */}
       {validationErrors.offers && (
-        <div className="mt-8 p-3 bg-red-50 border border-red-200 rounded-md">
+        <div
+          className={`mt-8 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+        >
           <p className="text-sm text-red-600">{validationErrors.offers}</p>
         </div>
       )}
@@ -395,7 +398,7 @@ export default function OfferMappingStep({
         formData.campaign_type !== "multiple_target_group" &&
         selectedSegments.length === 0 && (
           <div
-            className={`border-2 border-dashed rounded-md p-12 ${
+            className={`border-2 border-dashed ${tw.rounded} p-12 ${
               validationErrors.offers
                 ? "border-red-300 bg-red-50"
                 : "border-gray-300 bg-gray-50"

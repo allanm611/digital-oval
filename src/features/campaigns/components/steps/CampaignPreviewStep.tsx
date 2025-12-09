@@ -97,7 +97,7 @@ export default function CampaignPreviewStep({
         ].map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className="rounded-md bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4"
+            className={`${tw.rounded} bg-white shadow-sm border border-gray-100 p-5 flex items-center gap-4`}
           >
             <div className="w-12 h-12 flex items-center justify-center">
               <Icon
@@ -194,7 +194,7 @@ export default function CampaignPreviewStep({
                 {selectedSegments.map((segment) => (
                   <div
                     key={segment.id}
-                    className="flex items-center justify-between p-4 rounded-md border border-gray-100 bg-white"
+                    className={`flex items-center justify-between p-4 ${tw.rounded} border border-gray-100 bg-white`}
                   >
                     <div className="flex items-center gap-3">
                       <Users
@@ -243,7 +243,7 @@ export default function CampaignPreviewStep({
                 {selectedOffers.map((offer) => (
                   <div
                     key={offer.id}
-                    className="flex items-center justify-between p-3 rounded-md border border-gray-100 bg-white"
+                    className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
                   >
                     <div className="flex items-center gap-3">
                       <Gift
@@ -283,7 +283,7 @@ export default function CampaignPreviewStep({
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <div className="rounded-md border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm">
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Schedule Overview
             </h3>
@@ -324,7 +324,7 @@ export default function CampaignPreviewStep({
             </div>
           </div>
 
-          <div className="rounded-md border border-gray-200 bg-white shadow-sm p-5 space-y-3">
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Launch Checklist
             </h3>

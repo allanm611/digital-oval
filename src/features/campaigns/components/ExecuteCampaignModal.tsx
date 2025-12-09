@@ -213,7 +213,7 @@ export default function ExecuteCampaignModal({
 
         {/* Modal */}
         <div
-          className="relative bg-white rounded-md shadow-2xl w-full max-w-2xl"
+          className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-2xl`}
           style={{ maxHeight: "90vh", overflow: "auto" }}
         >
           {/* Header */}
@@ -223,7 +223,7 @@ export default function ExecuteCampaignModal({
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-md flex items-center justify-center"
+                className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
                 style={{ backgroundColor: `${color.primary.accent}20` }}
               >
                 <Play
@@ -242,7 +242,7 @@ export default function ExecuteCampaignModal({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -252,7 +252,7 @@ export default function ExecuteCampaignModal({
           <div className="p-6 space-y-6">
             {/* Warning Alert */}
             <div
-              className="flex items-start gap-3 p-4 rounded-md"
+              className={`flex items-start gap-3 p-4 ${tw.rounded}`}
               style={{
                 backgroundColor: "#FEF3C7",
                 border: "1px solid #FCD34D",
@@ -280,7 +280,7 @@ export default function ExecuteCampaignModal({
               <div className="flex gap-3">
                 <button
                   onClick={() => setExecutionMode("immediate")}
-                  className={`flex-1 p-3 rounded-md border-2 transition-all ${
+                  className={`flex-1 p-3 ${tw.rounded} border-2 transition-all ${
                     executionMode === "immediate"
                       ? "border-current"
                       : "border-gray-200 hover:border-gray-300"
@@ -296,7 +296,7 @@ export default function ExecuteCampaignModal({
                 </button>
                 <button
                   onClick={() => setExecutionMode("scheduled")}
-                  className={`flex-1 p-3 rounded-md border-2 transition-all ${
+                  className={`flex-1 p-3 ${tw.rounded} border-2 transition-all ${
                     executionMode === "scheduled"
                       ? "border-current"
                       : "border-gray-200 hover:border-gray-300"
@@ -399,7 +399,7 @@ export default function ExecuteCampaignModal({
                                       channel.code
                                     )
                                   }
-                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all border-2 ${
+                                  className={`flex items-center gap-2 px-3 py-1.5 ${tw.rounded} text-sm transition-all border-2 ${
                                     isSelected ? "" : "hover:bg-gray-100"
                                   }`}
                                   style={
@@ -440,7 +440,7 @@ export default function ExecuteCampaignModal({
             <button
               onClick={onClose}
               disabled={isExecuting}
-              className="px-4 py-2 border rounded-md text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
               style={{ borderColor: color.border.default }}
             >
               Cancel
@@ -452,7 +452,7 @@ export default function ExecuteCampaignModal({
                 segments.filter((s) => s.selected && s.channels.length > 0)
                   .length === 0
               }
-              className="px-4 py-2 rounded-md text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isExecuting ? (

@@ -111,7 +111,7 @@ export default function AddPhoneModal({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Enter phone number, MSISDN, customer name, ID, or email..."
-            className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]"
+            className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
             style={
               {
                 "--accent-color": `${color.primary.accent}33`,
@@ -127,7 +127,7 @@ export default function AddPhoneModal({
         </p>
 
         {/* Search Results */}
-        <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-md">
+        <div className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}>
           {isSearching ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="md" />

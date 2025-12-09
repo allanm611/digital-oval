@@ -9,7 +9,7 @@ import {
   AlignCenter,
   AlignRight,
 } from "lucide-react";
-import { color } from "../../../shared/utils/utils";
+import { color , tw} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface RichTextEditorProps {
@@ -67,7 +67,7 @@ export default function RichTextEditor({
   ];
 
   return (
-    <div className="border border-gray-300 rounded-md overflow-hidden">
+    <div className={`border border-gray-300 ${tw.rounded} overflow-hidden`}>
       {/* Toolbar */}
       <div className="bg-gray-50 border-b border-gray-300 p-2 flex items-center gap-1 flex-wrap">
         {toolbarButtons.map((button, index) => {

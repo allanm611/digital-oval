@@ -210,7 +210,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         <button
           type="button"
           onClick={() => navigate("/dashboard/servers")}
-          className="p-2 rounded-md text-gray-600"
+          className={`p-2 ${tw.rounded} text-gray-600`}
           aria-label="Back to servers"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -228,7 +228,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Basic Information
           </h2>
@@ -242,7 +242,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.name && (
                 <p className="mt-1 text-xs text-red-500">{errors.name}</p>
@@ -258,7 +258,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="code"
                 value={form.code}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.code && (
                 <p className="mt-1 text-xs text-red-500">{errors.code}</p>
@@ -301,7 +301,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="host"
                 value={form.host}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
               {errors.host && (
                 <p className="mt-1 text-xs text-red-500">{errors.host}</p>
@@ -340,7 +340,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="region"
                 value={form.region}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -351,7 +351,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="port"
                 value={form.port}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -364,13 +364,13 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="base_path"
                 value={form.base_path}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Connection Settings
           </h2>
@@ -384,7 +384,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="timeout_seconds"
                 value={form.timeout_seconds}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -397,13 +397,13 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="max_retries"
                 value={form.max_retries}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
@@ -436,7 +436,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                   name="health_check_url"
                   value={form.health_check_url}
                   onChange={handleChange}
-                  className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                 />
               </div>
 
@@ -449,14 +449,14 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                   name="health_check_interval_seconds"
                   value={form.health_check_interval_seconds}
                   onChange={handleChange}
-                  className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                  className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
                 />
               </div>
             </div>
           )}
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
@@ -488,13 +488,13 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 name="circuit_breaker_threshold"
                 value={form.circuit_breaker_threshold}
                 onChange={handleChange}
-                className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           )}
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">TLS</h2>
@@ -523,7 +523,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               name="authentication_type"
               value={form.authentication_type}
               onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
             />
           </div>
         </div>
@@ -532,7 +532,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           <button
             type="button"
             onClick={() => navigate("/dashboard/servers")}
-            className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50`}
             disabled={isSubmitting}
           >
             Cancel

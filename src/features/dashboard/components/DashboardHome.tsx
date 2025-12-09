@@ -253,7 +253,10 @@ export default function DashboardHome() {
   const [topPerformersData, setTopPerformersData] = useState<{
     by_participants: TopPerformerItem[];
     by_spend: TopPerformerItem[];
-    campaignsMap: Map<number, BackendCampaignType>;
+    campaignsMap: Map<
+      number,
+      { id: number; status?: string; [key: string]: unknown }
+    >;
   } | null>(null);
 
   // State for top performing offers
@@ -481,19 +484,38 @@ export default function DashboardHome() {
               return 0;
             };
             // Check overview first (like CampaignsPage does), then direct
-            const overview = (statsData.overview ?? {}) as Record<string, unknown>;
-            const activityStatus = (statsData.activity_status ?? {}) as Record<string, unknown>;
-            const statusBreakdown = (statsData.status_breakdown ?? {}) as Record<string, unknown>;
+            const overview = (statsData.overview ?? {}) as Record<
+              string,
+              unknown
+            >;
+            const activityStatus = (statsData.activity_status ?? {}) as Record<
+              string,
+              unknown
+            >;
+            const statusBreakdown = (statsData.status_breakdown ??
+              {}) as Record<string, unknown>;
             const total = parseMetric(
-              (overview.total_campaigns as number | string | undefined) || 
-              (statsData as Record<string, unknown>).total_campaigns
+              (overview.total_campaigns as number | string | undefined) ||
+                (statsData as Record<string, unknown>).total_campaigns
             );
             const active = parseMetric(
-              (activityStatus.is_active_flag_true as number | string | undefined) ||
-                (activityStatus.currently_running as number | string | undefined) ||
+              (activityStatus.is_active_flag_true as
+                | number
+                | string
+                | undefined) ||
+                (activityStatus.currently_running as
+                  | number
+                  | string
+                  | undefined) ||
                 (statusBreakdown.active as number | string | undefined) ||
-                ((statsData as Record<string, unknown>).active_campaigns as number | string | undefined) ||
-                ((statsData as Record<string, unknown>).currently_active as number | string | undefined)
+                ((statsData as Record<string, unknown>).active_campaigns as
+                  | number
+                  | string
+                  | undefined) ||
+                ((statsData as Record<string, unknown>).currently_active as
+                  | number
+                  | string
+                  | undefined)
             );
             const completed = parseMetric(statsData.completed);
 
@@ -1251,13 +1273,18 @@ export default function DashboardHome() {
 
           // Fetch campaign details for top performers to get status information
           // Since top_performers data doesn't include status, we need to fetch individual campaign details
-          const campaignsMap = new Map<number, BackendCampaignType>();
+          const campaignsMap = new Map<
+            number,
+            { id: number; status?: string; [key: string]: unknown }
+          >();
 
           // Get unique campaign IDs from both by_participants and by_spend
           const allTopPerformerIds = new Set<number>();
-          (topPerformers.by_participants || []).forEach((p: TopPerformerItem) => {
-            if (p.id) allTopPerformerIds.add(p.id);
-          });
+          (topPerformers.by_participants || []).forEach(
+            (p: TopPerformerItem) => {
+              if (p.id) allTopPerformerIds.add(p.id);
+            }
+          );
           (topPerformers.by_spend || []).forEach((p: TopPerformerItem) => {
             if (p.id) allTopPerformerIds.add(p.id);
           });
@@ -1273,7 +1300,17 @@ export default function DashboardHome() {
           );
           campaignDetailsResults.forEach((campaign) => {
             if (campaign && campaign.id) {
-              campaignsMap.set(campaign.id, campaign);
+              const campaignId =
+                typeof campaign.id === "string"
+                  ? parseInt(campaign.id, 10)
+                  : campaign.id;
+              if (!isNaN(campaignId)) {
+                campaignsMap.set(campaignId, {
+                  id: campaignId,
+                  status: campaign.status,
+                  ...campaign,
+                });
+              }
             }
           });
 
@@ -1345,7 +1382,9 @@ export default function DashboardHome() {
             const rate =
               typeof performer.utilization_percentage === "string"
                 ? parseFloat(performer.utilization_percentage)
-                : performer.utilization_percentage;
+                : typeof performer.utilization_percentage === "number"
+                ? performer.utilization_percentage
+                : NaN;
             if (!isNaN(rate)) {
               utilizationRate = rate;
             }
@@ -1386,19 +1425,51 @@ export default function DashboardHome() {
           const rate =
             typeof performer.conversion_rate === "string"
               ? parseFloat(performer.conversion_rate)
-              : performer.conversion_rate;
+              : typeof performer.conversion_rate === "number"
+              ? performer.conversion_rate
+              : NaN;
           if (!isNaN(rate) && rate > 0) {
             conversionRate = `${rate.toFixed(1)}%`;
           }
         }
 
+        // Get status from campaign details if available
+        const campaignDetails = topPerformersData.campaignsMap.get(
+          performer.id
+        );
+        const status = campaignDetails?.status
+          ? formatStatusLabel(campaignDetails.status)
+          : (t.dashboard.unknown as string) || "Unknown";
+
+        // Parse budget values
+        const budgetAllocated =
+          typeof performer.budget_allocated === "string"
+            ? parseFloat(performer.budget_allocated)
+            : typeof performer.budget_allocated === "number"
+            ? performer.budget_allocated
+            : 0;
+        const budgetSpent =
+          typeof performer.budget_spent === "string"
+            ? parseFloat(performer.budget_spent)
+            : typeof performer.budget_spent === "number"
+            ? performer.budget_spent
+            : 0;
+        const finalBudget = budgetAllocated || budgetSpent || 0;
+
         return {
           id: performer.id,
-          name: performer.name || performer.code || t.dashboard.unknown,
+          name: (performer.name ||
+            performer.code ||
+            (t.dashboard.unknown as string) ||
+            "Unknown") as string,
           conversionRate: conversionRate,
-          performanceMetric: performanceMetric, // Replaces status with actual metric from data
+          performanceMetric: performanceMetric,
+          status: status,
           participants: performer.current_participants || 0,
-          budget: performer.budget_allocated || performer.budget_spent || 0,
+          budget:
+            typeof finalBudget === "number"
+              ? finalBudget
+              : parseFloat(String(finalBudget)) || 0,
         };
       });
 
@@ -1567,7 +1638,7 @@ export default function DashboardHome() {
           return (
             <div
               key={stat.name}
-              className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -1613,7 +1684,7 @@ export default function DashboardHome() {
           return (
             <div
               key={insight.label}
-              className="rounded-md border border-gray-200 bg-white p-6 shadow-sm"
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
                 <InsightIcon
@@ -1639,7 +1710,7 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Recently Added - Takes 2 columns */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-md border border-gray-200 overflow-hidden h-full">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden h-full`}>
             <div className="px-6 py-4 border-b border-gray-100">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -1660,7 +1731,7 @@ export default function DashboardHome() {
                     onClick={() =>
                       setIsFilterDropdownOpen(!isFilterDropdownOpen)
                     }
-                    className="w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all border border-gray-200"
+                    className={`w-full sm:w-auto flex items-center justify-between gap-2 px-4 py-2 ${tw.rounded} text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all border border-gray-200`}
                   >
                     <span>
                       {[
@@ -1679,7 +1750,7 @@ export default function DashboardHome() {
                   </button>
 
                   {isFilterDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <div className={`absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 ${tw.rounded} shadow-lg z-10`}>
                       {[
                         { key: "campaigns", label: t.pages.campaigns },
                         { key: "offers", label: t.pages.offers },
@@ -1734,7 +1805,7 @@ export default function DashboardHome() {
                             | "products"
                         )
                       }
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-all ${
                         latestItemsFilter === tab.key
                           ? "bg-gray-900 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -1771,7 +1842,7 @@ export default function DashboardHome() {
                   recentCampaigns.slice(0, 3).map((campaign) => (
                     <div
                       key={campaign.id}
-                      className="flex items-start gap-4 flex-wrap p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                      className={`flex items-start gap-4 flex-wrap p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                       style={{ backgroundColor: color.surface.background }}
                       onClick={() =>
                         navigate(`/dashboard/campaigns/${campaign.id}`)
@@ -1823,7 +1894,7 @@ export default function DashboardHome() {
                   recentOffers.slice(0, 3).map((offer) => (
                     <div
                       key={offer.id}
-                      className="flex items-start gap-4 flex-wrap p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                      className={`flex items-start gap-4 flex-wrap p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                       style={{ backgroundColor: color.surface.background }}
                       onClick={() => navigate(`/dashboard/offers/${offer.id}`)}
                     >
@@ -1866,7 +1937,7 @@ export default function DashboardHome() {
                   recentSegments.slice(0, 3).map((segment) => (
                     <div
                       key={segment.id}
-                      className="flex items-start gap-4 flex-wrap p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                      className={`flex items-start gap-4 flex-wrap p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                       style={{ backgroundColor: color.surface.background }}
                       onClick={() =>
                         navigate(`/dashboard/segments/${segment.id}`)
@@ -1912,7 +1983,7 @@ export default function DashboardHome() {
                   recentProducts.slice(0, 3).map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-start gap-4 flex-wrap p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                      className={`flex items-start gap-4 flex-wrap p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                       style={{ backgroundColor: color.surface.background }}
                       onClick={() =>
                         navigate(`/dashboard/products/${product.id}`)
@@ -2002,7 +2073,7 @@ export default function DashboardHome() {
 
         {/* Quick Actions - Takes 1 column */}
         <div>
-          <div className="bg-white rounded-md border border-gray-200 overflow-hidden h-full">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden h-full`}>
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className={tw.cardHeading}>{t.dashboard.quickActions}</h2>
               <p className={`${tw.cardSubHeading} text-black mt-1`}>
@@ -2016,7 +2087,7 @@ export default function DashboardHome() {
                   <button
                     key={action.name}
                     onClick={() => navigate(action.href)}
-                    className="w-full flex items-center gap-3 p-4 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all"
+                    className={`w-full flex items-center gap-3 p-4 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all`}
                     style={{ backgroundColor: color.surface.background }}
                   >
                     <div
@@ -2041,7 +2112,7 @@ export default function DashboardHome() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Offer Type */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>
               {t.dashboard.offerTypeDistribution}
@@ -2114,7 +2185,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Segment Type */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>
               {t.dashboard.segmentTypeDistribution}
@@ -2182,7 +2253,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Campaign Status */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>{t.dashboard.campaignStatus}</h2>
             <p className={`${tw.cardSubHeading} text-black mt-1`}>
@@ -2249,7 +2320,7 @@ export default function DashboardHome() {
       {/* Top Performers + Requires Attention */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Top Performing Campaigns */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden self-start">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden self-start`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-1">
               <h2 className={tw.cardHeading}>
@@ -2258,7 +2329,7 @@ export default function DashboardHome() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setTopPerformersFilter("participants")}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors ${
                     topPerformersFilter === "participants"
                       ? "bg-gray-900 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -2268,7 +2339,7 @@ export default function DashboardHome() {
                 </button>
                 <button
                   onClick={() => setTopPerformersFilter("spend")}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors ${
                     topPerformersFilter === "spend"
                       ? "bg-gray-900 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -2305,7 +2376,7 @@ export default function DashboardHome() {
                 {topCampaigns.map((campaign, index) => (
                   <div
                     key={campaign.id}
-                    className="flex flex-col gap-4 p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                    className={`flex flex-col gap-4 p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                     style={{ backgroundColor: color.surface.background }}
                     onClick={() =>
                       navigate(`/dashboard/campaigns/${campaign.id}`)
@@ -2370,7 +2441,7 @@ export default function DashboardHome() {
         </div>
 
         {/* Top Performing Offers */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden self-start">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden self-start`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>
               {t.dashboard.topPerformingOffers}
@@ -2384,7 +2455,7 @@ export default function DashboardHome() {
               {topOffers.map((offer, index) => (
                 <div
                   key={offer.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 rounded-md border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group"
+                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 ${tw.rounded} border border-gray-200 cursor-pointer hover:bg-gray-100 transition-all group`}
                   style={{ backgroundColor: color.surface.background }}
                   onClick={() => navigate(`/dashboard/offers/${offer.id}`)}
                 >
@@ -2434,7 +2505,7 @@ export default function DashboardHome() {
           </div>
         </div>
         {/* Requires Attention */}
-        <div className="bg-white rounded-md border border-gray-200 overflow-hidden self-start">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden self-start`}>
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className={tw.cardHeading}>{t.dashboard.requiresAttention}</h2>
             <p className={`${tw.cardSubHeading} text-black mt-1`}>
@@ -2445,7 +2516,7 @@ export default function DashboardHome() {
             {requiresAttention.map((item) => (
               <div
                 key={item.id}
-                className="rounded-md p-5 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                className={`${tw.rounded} p-5 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">

@@ -168,7 +168,7 @@ export default function CommunicationPolicyModal({
                       config: { ...timeConfig, startTime: e.target.value },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 />
               </div>
               <div>
@@ -184,7 +184,7 @@ export default function CommunicationPolicyModal({
                       config: { ...timeConfig, endTime: e.target.value },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 />
               </div>
             </div>
@@ -250,7 +250,7 @@ export default function CommunicationPolicyModal({
                       },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 >
                   <option value="daily">Daily Maximum</option>
                   <option value="weekly">Weekly Maximum</option>
@@ -274,7 +274,7 @@ export default function CommunicationPolicyModal({
                       },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 />
               </div>
             </div>
@@ -316,7 +316,7 @@ export default function CommunicationPolicyModal({
               {dndConfig.categories.map((category, index) => (
                 <div
                   key={category.id}
-                  className={`p-3 ${tw.borderDefault} border rounded-md`}
+                  className={`p-3 ${tw.borderDefault} border ${tw.rounded}`}
                 >
                   <div className="grid grid-cols-3 gap-3">
                     <div>
@@ -452,7 +452,7 @@ export default function CommunicationPolicyModal({
                       },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 >
                   <option value="include">Include VIP List</option>
                   <option value="exclude">Exclude VIP List</option>
@@ -475,7 +475,7 @@ export default function CommunicationPolicyModal({
                       },
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157]"
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157]`}
                 />
               </div>
             </div>
@@ -514,7 +514,7 @@ export default function CommunicationPolicyModal({
           </h2>
           <button
             onClick={onClose}
-            className={`p-2 ${tw.hover} rounded-md transition-colors`}
+            className={`p-2 ${tw.hover} ${tw.rounded} transition-colors`}
           >
             <X className={`w-5 h-5 ${tw.textMuted}`} />
           </button>
@@ -567,7 +567,7 @@ export default function CommunicationPolicyModal({
                   <button
                     type="button"
                     onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#588157] focus:border-[#588157] bg-white text-left flex items-center justify-between"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-[#588157] bg-white text-left flex items-center justify-between`}
                   >
                     <div className="flex items-center space-x-2">
                       {getTypeIcon(formData.type)}
@@ -581,7 +581,7 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isTypeDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}>
                       {COMMUNICATION_POLICY_TYPES.map((type) => (
                         <button
                           key={type.value}
@@ -638,7 +638,7 @@ export default function CommunicationPolicyModal({
           </div>
 
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
@@ -647,7 +647,7 @@ export default function CommunicationPolicyModal({
             <button
               type="button"
               onClick={onClose}
-              className={`px-4 py-2 ${tw.textSecondary} ${tw.hover} rounded-md transition-colors`}
+              className={`px-4 py-2 ${tw.textSecondary} ${tw.hover} ${tw.rounded} transition-colors`}
             >
               Cancel
             </button>

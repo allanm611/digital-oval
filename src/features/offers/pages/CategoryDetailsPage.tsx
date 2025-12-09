@@ -256,7 +256,7 @@ export default function CategoryDetailsPage() {
         </h3>
         <button
           onClick={() => navigate("/dashboard/offer-catalogs")}
-          className="px-4 py-2 rounded-md font-medium transition-colors"
+          className={`px-4 py-2 ${tw.rounded} font-medium transition-colors`}
           style={{
             backgroundColor: color.primary.action,
             color: color.text.inverse,
@@ -275,7 +275,7 @@ export default function CategoryDetailsPage() {
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
           <button
             onClick={() => navigate("/dashboard/offer-catalogs")}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors flex-shrink-0"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors flex-shrink-0`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -293,7 +293,7 @@ export default function CategoryDetailsPage() {
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
             onClick={handleEditCategory}
-            className="px-3 sm:px-4 py-2 rounded-md transition-colors font-medium text-sm sm:text-base whitespace-nowrap"
+            className={`px-3 sm:px-4 py-2 ${tw.rounded} transition-colors font-medium text-sm sm:text-base whitespace-nowrap`}
             style={{
               backgroundColor: color.primary.action,
               color: color.text.inverse,
@@ -303,7 +303,7 @@ export default function CategoryDetailsPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-3 sm:px-4 py-2 rounded-md transition-colors font-medium text-sm sm:text-base whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 ${tw.rounded} transition-colors font-medium text-sm sm:text-base whitespace-nowrap ${
               category.is_active
                 ? "text-white border"
                 : "text-green-700 bg-green-100 border border-green-300 hover:bg-green-200"
@@ -323,12 +323,12 @@ export default function CategoryDetailsPage() {
           <div className="relative" ref={moreMenuRef}>
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             >
               <MoreVertical className="w-5 h-5" />
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-10">
+              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
                 <button
                   onClick={() => {
                     handleViewOffers();
@@ -358,7 +358,7 @@ export default function CategoryDetailsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
-          className="rounded-md border border-gray-200 p-4"
+          className={`${tw.rounded} border border-gray-200 p-4`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <div className="flex items-center justify-between">
@@ -366,14 +366,14 @@ export default function CategoryDetailsPage() {
               <p className="text-sm font-medium text-gray-600">Total Offers</p>
               <p className="text-2xl font-bold text-gray-900">{offerCount}</p>
             </div>
-            <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
               <Package className="w-6 h-6 text-gray-900" />
             </div>
           </div>
         </div>
 
         <div
-          className="rounded-md border border-gray-200 p-4"
+          className={`${tw.rounded} border border-gray-200 p-4`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <div className="flex items-center justify-between">
@@ -383,14 +383,14 @@ export default function CategoryDetailsPage() {
                 {activeOfferCount}
               </p>
             </div>
-            <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
               <CheckCircle className="w-6 h-6 text-gray-900" />
             </div>
           </div>
         </div>
 
         <div
-          className="rounded-md border border-gray-200 p-4"
+          className={`${tw.rounded} border border-gray-200 p-4`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <div className="flex items-center justify-between">
@@ -402,14 +402,14 @@ export default function CategoryDetailsPage() {
                 {offerCount - activeOfferCount}
               </p>
             </div>
-            <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
               <XCircle className="w-6 h-6 text-gray-900" />
             </div>
           </div>
         </div>
 
         <div
-          className="rounded-md border border-gray-200 p-4"
+          className={`${tw.rounded} border border-gray-200 p-4`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <div className="flex items-center justify-between">
@@ -419,7 +419,7 @@ export default function CategoryDetailsPage() {
                 {category.is_active ? "Active" : "Inactive"}
               </p>
             </div>
-            <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
+            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
               {category.is_active ? (
                 <CheckCircle className="w-6 h-6 text-green-600" />
               ) : (
@@ -434,7 +434,7 @@ export default function CategoryDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Usage Trends */}
         <div
-          className="rounded-md border border-gray-200 p-6"
+          className={`${tw.rounded} border border-gray-200 p-6`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -481,7 +481,7 @@ export default function CategoryDetailsPage() {
 
         {/* Performance by Type */}
         <div
-          className="rounded-md border border-gray-200 p-6"
+          className={`${tw.rounded} border border-gray-200 p-6`}
           style={{ backgroundColor: color.surface.cards }}
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -496,7 +496,7 @@ export default function CategoryDetailsPage() {
               {analytics.performanceByType.map((item: any, index: number) => (
                 <div
                   key={index}
-                  className="space-y-2 p-3 bg-gray-50 rounded-md"
+                  className={`space-y-2 p-3 bg-gray-50 ${tw.rounded}`}
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-900 capitalize">
@@ -535,7 +535,7 @@ export default function CategoryDetailsPage() {
 
       {/* Offers List */}
       <div
-        className="rounded-md border border-gray-200 p-6"
+        className={`${tw.rounded} border border-gray-200 p-6`}
         style={{ backgroundColor: color.surface.cards }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -544,7 +544,7 @@ export default function CategoryDetailsPage() {
           </h2>
           <button
             onClick={handleViewOffers}
-            className="flex items-center px-4 py-2 rounded-md font-medium transition-colors"
+            className={`flex items-center px-4 py-2 ${tw.rounded} font-medium transition-colors`}
             style={{
               backgroundColor: color.primary.action,
               color: color.text.inverse,
@@ -566,7 +566,7 @@ export default function CategoryDetailsPage() {
             </p>
             <button
               onClick={handleViewOffers}
-              className="inline-flex items-center px-4 py-2 text-white rounded-md transition-all"
+              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -578,7 +578,7 @@ export default function CategoryDetailsPage() {
             {offers.map((offer, index) => (
               <div
                 key={offer.id || index}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                className={`flex items-center justify-between p-4 border border-gray-200 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900">
@@ -603,7 +603,7 @@ export default function CategoryDetailsPage() {
                       // TODO: Navigate to offer details
                       showToast("Offer details coming soon");
                     }}
-                    className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                   >
                     <Eye className="w-4 h-4 text-gray-600" />
                   </button>
@@ -622,7 +622,7 @@ export default function CategoryDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setIsEditModalOpen(false)}
             ></div>
-            <div className="relative bg-white rounded-md shadow-xl max-w-md w-full p-6">
+            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Edit Category
               </h3>
@@ -638,7 +638,7 @@ export default function CategoryDetailsPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
 
@@ -652,7 +652,7 @@ export default function CategoryDetailsPage() {
                       setFormData({ ...formData, description: e.target.value })
                     }
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
               </div>
@@ -660,13 +660,13 @@ export default function CategoryDetailsPage() {
               <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                  className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleCategorySaved(formData)}
-                  className="px-4 py-2 text-white rounded-md transition-colors"
+                  className={`px-4 py-2 text-white ${tw.rounded} transition-colors`}
                   style={{ backgroundColor: color.primary.action }}
                 >
                   Save Changes
@@ -685,7 +685,7 @@ export default function CategoryDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setIsOffersModalOpen(false)}
             ></div>
-            <div className="relative bg-white rounded-md shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden`}>
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -699,7 +699,7 @@ export default function CategoryDetailsPage() {
                   </div>
                   <button
                     onClick={() => setIsOffersModalOpen(false)}
-                    className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                   >
                     <X className="w-5 h-5 text-gray-500" />
                   </button>
@@ -722,7 +722,7 @@ export default function CategoryDetailsPage() {
                         // TODO: Open assign offers modal
                         showToast("Assign offers functionality coming soon");
                       }}
-                      className="px-4 py-2 text-white rounded-md transition-colors"
+                      className={`px-4 py-2 text-white ${tw.rounded} transition-colors`}
                       style={{ backgroundColor: color.primary.action }}
                     >
                       Assign Offers
@@ -733,7 +733,7 @@ export default function CategoryDetailsPage() {
                     {offers.map((offer, index) => (
                       <div
                         key={offer.id || index}
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                        className={`flex items-center justify-between p-4 border border-gray-200 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                       >
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">
@@ -758,7 +758,7 @@ export default function CategoryDetailsPage() {
                               // TODO: Navigate to offer details
                               showToast("Offer details coming soon");
                             }}
-                            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                           >
                             <Eye className="w-4 h-4 text-gray-600" />
                           </button>

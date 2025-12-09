@@ -1,5 +1,5 @@
 //converts the tokens into usable tailwind classes
-import { colors, fonts, spacing, borderRadius, buttons } from "./tokens";
+import { colors, fonts, spacing, borderRadius, buttons, zIndex } from "./tokens";
 
 // Standardized rounded corners - use this constant instead of hardcoded "rounded-md"
 export const ROUNDED = "rounded-md";

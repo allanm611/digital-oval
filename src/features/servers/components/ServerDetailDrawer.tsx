@@ -169,11 +169,11 @@ export default function ServerDetailDrawer({
               <p className="text-sm font-semibold uppercase tracking-wide text-gray-400">
                 Metadata
               </p>
-              <div className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+              <div className={`space-y-3 ${tw.rounded} border border-gray-200 bg-gray-50 p-4`}>
                 {metadataEntries.map(([key, value]) => (
                   <div
                     key={key}
-                    className="flex flex-col gap-1 rounded-md bg-white p-3 text-sm"
+                    className={`flex flex-col gap-1 ${tw.rounded} bg-white p-3 text-sm`}
                   >
                     <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                       {key}

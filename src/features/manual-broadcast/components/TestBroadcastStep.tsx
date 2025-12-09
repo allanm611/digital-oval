@@ -190,7 +190,7 @@ export default function TestBroadcastStep({
 
   return (
     <div
-      className="bg-white rounded-md shadow-sm border"
+      className={`bg-white ${tw.rounded} shadow-sm border`}
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -226,7 +226,7 @@ export default function TestBroadcastStep({
                   handleAddContact();
                 }
               }}
-              className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
+              className={`flex-1 px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
               style={{
                 borderColor: color.border.default,
                 color: color.text.primary,
@@ -243,7 +243,7 @@ export default function TestBroadcastStep({
             <button
               onClick={handleAddContact}
               disabled={isTesting}
-              className="w-full sm:w-auto px-4 py-2 text-white rounded-md transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className={`w-full sm:w-auto px-4 py-2 text-white ${tw.rounded} transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
@@ -274,14 +274,14 @@ export default function TestBroadcastStep({
               {testContacts.map((contact, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 rounded-md"
+                  className={`flex items-center justify-between p-3 ${tw.rounded}`}
                   style={{ backgroundColor: color.surface.cards }}
                 >
                   <span className={`text-sm ${tw.textPrimary}`}>{contact}</span>
                   <button
                     onClick={() => handleRemoveContact(contact)}
                     disabled={isTesting}
-                    className="p-1 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
+                    className={`p-1 hover:bg-red-100 ${tw.rounded} transition-colors disabled:opacity-50`}
                   >
                     <X className="w-4 h-4 text-red-600" />
                   </button>
@@ -296,7 +296,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleSendTest}
             disabled={testContacts.length === 0 || isTesting}
-            className="w-full sm:w-auto sm:min-w-[200px] px-6 py-3 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className={`w-full sm:w-auto sm:min-w-[200px] px-6 py-3 text-white ${tw.rounded} transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             style={{ backgroundColor: color.primary.accent }}
           >
             {isTesting ? (
@@ -325,7 +325,7 @@ export default function TestBroadcastStep({
               {testResults.map((result, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 rounded-md"
+                  className={`flex items-start gap-3 p-3 ${tw.rounded}`}
                   style={{
                     backgroundColor:
                       result.status === "success"
@@ -371,7 +371,7 @@ export default function TestBroadcastStep({
 
             {/* Success Summary */}
             <div
-              className="mt-4 p-4 rounded-md"
+              className={`mt-4 p-4 ${tw.rounded}`}
               style={{ backgroundColor: `${color.primary.accent}10` }}
             >
               <p
@@ -397,7 +397,7 @@ export default function TestBroadcastStep({
         {/* Error Message */}
         {error && (
           <div
-            className="p-3 rounded-md flex items-start space-x-2"
+            className={`p-3 ${tw.rounded} flex items-start space-x-2`}
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -422,7 +422,7 @@ export default function TestBroadcastStep({
         <button
           onClick={onPrevious}
           disabled={isTesting}
-          className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
+          className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap`}
           style={{
             backgroundColor: color.surface.cards,
             border: `1px solid ${color.border.default}`,
@@ -435,7 +435,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleSkipTest}
             disabled={isTesting}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-medium disabled:opacity-50 whitespace-nowrap"
+            className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-medium disabled:opacity-50 whitespace-nowrap`}
             style={{
               color: color.text.secondary,
             }}
@@ -445,7 +445,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleNext}
             disabled={isTesting}
-            className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            className={`w-full sm:w-auto px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
             style={{ backgroundColor: color.primary.action }}
           >
             {t.manualBroadcast.nextSchedule}

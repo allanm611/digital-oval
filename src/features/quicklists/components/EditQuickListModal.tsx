@@ -67,13 +67,13 @@ export default function EditQuickListModal({
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-md shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+      <div className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Edit QuickList</h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+            className={`p-1 text-gray-400 hover:text-gray-600 ${tw.rounded} transition-colors`}
           >
             <X className="w-5 h-5" />
           </button>
@@ -82,7 +82,7 @@ export default function EditQuickListModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+            <div className={`p-3 bg-red-50 border border-red-200 ${tw.rounded} text-sm text-red-600`}>
               {error}
             </div>
           )}
@@ -100,7 +100,7 @@ export default function EditQuickListModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
               placeholder="Enter QuickList name"
               required
             />
@@ -119,7 +119,7 @@ export default function EditQuickListModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 ${tw.textPrimary}`}
               placeholder="Enter description (optional)"
             />
           </div>
@@ -129,14 +129,14 @@ export default function EditQuickListModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
               disabled={isSubmitting}
             >

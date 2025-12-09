@@ -170,7 +170,7 @@ export default function SeedListManagementPage() {
             onClick={() =>
               navigateBackOrFallback(navigate, "/dashboard/configuration")
             }
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -189,7 +189,7 @@ export default function SeedListManagementPage() {
             onClick={() =>
               showToast("Add test recipient functionality will be implemented")
             }
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -214,7 +214,7 @@ export default function SeedListManagementPage() {
                 placeholder="Search by name, email, or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm"
+                className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
               />
             </div>
 
@@ -317,7 +317,7 @@ export default function SeedListManagementPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-gray-200 overflow-hidden">
+      <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
@@ -483,7 +483,7 @@ export default function SeedListManagementPage() {
                     >
                       <button
                         onClick={() => handleRemoveRecipient(recipient)}
-                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                         title={
                           recipient.status === "active"
                             ? "Remove from Seed List"

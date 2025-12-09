@@ -17,6 +17,7 @@ import {
 import { colors } from "../../../shared/utils/tokens";
 import { CustomerRow } from "./CustomerProfileReportsPage";
 
+import { tw } from '../../../shared/utils/utils';
 // Types for customer search data
 type CustomerSegment = {
   id: string;
@@ -300,7 +301,7 @@ export default function CustomerSearchResultsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/dashboard/reports/customer-profiles")}
-            className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+            className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors`}
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
           </button>
@@ -311,7 +312,7 @@ export default function CustomerSearchResultsPage() {
             <p className="mt-2 text-sm text-gray-600">No customer data found</p>
           </div>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 text-center">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 text-center`}>
           <p className="text-gray-600">
             Please search for a customer from the Customer Profile Reports page.
           </p>
@@ -338,7 +339,7 @@ export default function CustomerSearchResultsPage() {
       </button>
 
       {/* Hero Section - Clean & Modern */}
-      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 shadow-sm overflow-hidden`}>
         {/* Header with name and status */}
         <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-start justify-between">
@@ -454,7 +455,7 @@ export default function CustomerSearchResultsPage() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="bg-white rounded-md border border-gray-200 shadow-sm overflow-hidden">
+      <div className={`bg-white ${tw.rounded} border border-gray-200 shadow-sm overflow-hidden`}>
         <div className="border-b border-gray-200">
           <nav className="flex">
             <button
@@ -513,7 +514,7 @@ export default function CustomerSearchResultsPage() {
                   {filteredEvents.slice(0, 5).map((event) => (
                     <div
                       key={event.id}
-                      className="flex items-start gap-4 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+                      className={`flex items-start gap-4 p-3 bg-gray-50 ${tw.rounded} hover:bg-gray-100 transition-colors`}
                     >
                       <div className="flex-shrink-0 mt-1">
                         {event.type === "email" && (
@@ -557,7 +558,7 @@ export default function CustomerSearchResultsPage() {
                       .map((offer) => (
                         <div
                           key={offer.id}
-                          className="p-4 border border-blue-200 bg-blue-50 rounded-md"
+                          className={`p-4 border border-blue-200 bg-blue-50 ${tw.rounded}`}
                         >
                           <div className="flex items-start justify-between">
                             <div>
@@ -580,19 +581,19 @@ export default function CustomerSearchResultsPage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-gray-50 rounded-md">
+                <div className={`p-4 bg-gray-50 ${tw.rounded}`}>
                   <p className="text-sm text-gray-600">Total Events</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {events.length}
                   </p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-md">
+                <div className={`p-4 bg-gray-50 ${tw.rounded}`}>
                   <p className="text-sm text-gray-600">Active Segments</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {segments.length}
                   </p>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-md">
+                <div className={`p-4 bg-gray-50 ${tw.rounded}`}>
                   <p className="text-sm text-gray-600">Subscribed Lists</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">
                     {lists.filter((l) => l.status === "active").length}
@@ -613,13 +614,13 @@ export default function CustomerSearchResultsPage() {
                     value={eventSearchTerm}
                     onChange={(e) => setEventSearchTerm(e.target.value)}
                     placeholder="Search events..."
-                    className="w-full pl-10 pr-4 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full pl-10 pr-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
                 <select
                   value={eventTypeFilter}
                   onChange={(e) => setEventTypeFilter(e.target.value)}
-                  className="px-4 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`px-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
                   <option value="all">All Types</option>
                   <option value="email">Email</option>
@@ -632,14 +633,14 @@ export default function CustomerSearchResultsPage() {
                   value={eventDateFrom}
                   onChange={(e) => setEventDateFrom(e.target.value)}
                   max={getDateConstraints().maxDate}
-                  className="px-4 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`px-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
                 <input
                   type="date"
                   value={eventDateTo}
                   onChange={(e) => setEventDateTo(e.target.value)}
                   max={getDateConstraints().maxDate}
-                  className="px-4 py-2 text-sm rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={`px-4 py-2 text-sm ${tw.rounded} border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 />
               </div>
 
@@ -730,7 +731,7 @@ export default function CustomerSearchResultsPage() {
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Event Distribution Pie Chart */}
-                <div className="p-4 border border-gray-200 rounded-md">
+                <div className={`p-4 border border-gray-200 ${tw.rounded}`}>
                   <h4 className="font-medium text-gray-900 mb-4">
                     Event Distribution
                   </h4>
@@ -766,7 +767,7 @@ export default function CustomerSearchResultsPage() {
                 </div>
 
                 {/* Activity Timeline Bar Chart */}
-                <div className="p-4 border border-gray-200 rounded-md">
+                <div className={`p-4 border border-gray-200 ${tw.rounded}`}>
                   <h4 className="font-medium text-gray-900 mb-4">
                     Activity Timeline
                   </h4>
@@ -848,7 +849,7 @@ export default function CustomerSearchResultsPage() {
                             .map((offer) => (
                               <div
                                 key={offer.id}
-                                className="p-4 border border-green-200 bg-green-50 rounded-md"
+                                className={`p-4 border border-green-200 bg-green-50 ${tw.rounded}`}
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <p className="font-medium text-gray-900">
@@ -886,7 +887,7 @@ export default function CustomerSearchResultsPage() {
                             .map((offer) => (
                               <div
                                 key={offer.id}
-                                className="p-4 border border-gray-200 bg-gray-50 rounded-md"
+                                className={`p-4 border border-gray-200 bg-gray-50 ${tw.rounded}`}
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <p className="font-medium text-gray-900">
@@ -930,7 +931,7 @@ export default function CustomerSearchResultsPage() {
                     {lists.map((list) => (
                       <div
                         key={list.id}
-                        className="p-4 border border-gray-200 bg-white rounded-md hover:border-gray-300 transition-colors"
+                        className={`p-4 border border-gray-200 bg-white ${tw.rounded} hover:border-gray-300 transition-colors`}
                       >
                         <div className="flex items-start justify-between mb-2">
                           <p className="font-medium text-gray-900">

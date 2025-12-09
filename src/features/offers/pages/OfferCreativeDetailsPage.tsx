@@ -203,7 +203,7 @@ export default function OfferCreativeDetailsPage() {
           <button
             type="button"
             onClick={handleViewOffer}
-            className="px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors"
+            className={`px-4 py-2 text-sm font-semibold text-white ${tw.rounded} transition-colors`}
             style={{ backgroundColor: color.primary.action }}
           >
             View Offer
@@ -212,7 +212,7 @@ export default function OfferCreativeDetailsPage() {
       </div>
 
       <div
-        className={`bg-white rounded-md border border-[${color.border.default}] p-6 space-y-6`}
+        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 space-y-6`}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
@@ -338,7 +338,7 @@ export default function OfferCreativeDetailsPage() {
             </p>
             {creative.text_body ? (
               <div
-                className={`rounded-md border border-[${color.border.default}] bg-gray-50 p-4 text-sm ${tw.textPrimary}`}
+                className={`${tw.rounded} border border-[${color.border.default}] bg-gray-50 p-4 text-sm ${tw.textPrimary}`}
               >
                 <pre className="whitespace-pre-wrap font-sans text-sm">
                   {creative.text_body}
@@ -359,7 +359,7 @@ export default function OfferCreativeDetailsPage() {
                 HTML Body
               </p>
               {creative.html_body ? (
-                <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto w-full">
+                <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}>
                   {creative.html_body}
                 </pre>
               ) : (
@@ -379,7 +379,7 @@ export default function OfferCreativeDetailsPage() {
           </p>
           {creative.variables &&
           Object.keys(creative.variables || {}).length > 0 ? (
-            <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto w-full">
+            <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}>
               {JSON.stringify(creative.variables, null, 2)}
             </pre>
           ) : (
@@ -397,7 +397,7 @@ export default function OfferCreativeDetailsPage() {
           </p>
           {creative.default_values &&
           Object.keys(creative.default_values || {}).length > 0 ? (
-            <pre className="bg-gray-50 border border-gray-200 rounded-md p-4 text-sm overflow-x-auto">
+            <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto`}>
               {JSON.stringify(creative.default_values, null, 2)}
             </pre>
           ) : (

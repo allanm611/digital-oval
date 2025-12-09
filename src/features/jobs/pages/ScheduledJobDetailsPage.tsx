@@ -497,7 +497,7 @@ export default function ScheduledJobDetailsPage() {
           </p>
           <button
             onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className="mt-4 px-4 py-2 rounded-md font-semibold text-white"
+            className={`mt-4 px-4 py-2 ${tw.rounded} font-semibold text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             Back to Scheduled Jobs
@@ -514,7 +514,7 @@ export default function ScheduledJobDetailsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className="rounded-md p-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -526,7 +526,7 @@ export default function ScheduledJobDetailsPage() {
         <div className="flex items-center gap-3 flex-wrap relative">
           <button
             onClick={() => navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)}
-            className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium ${tw.primaryAction}`}
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium ${tw.primaryAction}`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Edit className="h-4 w-4" />
@@ -538,13 +538,13 @@ export default function ScheduledJobDetailsPage() {
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
               disabled={isActionLoading}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <MoreVertical className="h-4 w-4" />
               More
             </button>
             {showMoreMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              <div className={`absolute right-0 mt-2 w-48 ${tw.rounded} bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10`}>
                 <div className="py-1">
                   {job?.status !== "active" && (
                     <button
@@ -601,7 +601,7 @@ export default function ScheduledJobDetailsPage() {
 
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white bg-red-600"
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white bg-red-600`}
           >
             <Trash2 className="h-4 w-4" />
             Delete
@@ -612,7 +612,7 @@ export default function ScheduledJobDetailsPage() {
       {/* Main Content */}
       <div className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Basic Information
           </h2>
@@ -657,7 +657,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Schedule Configuration */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Schedule Configuration
           </h2>
@@ -720,7 +720,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Execution Details */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Execution Details
           </h2>
@@ -789,7 +789,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Execution History */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Execution History
           </h2>
@@ -870,7 +870,7 @@ export default function ScheduledJobDetailsPage() {
                 <button
                   onClick={handleResetFailureCount}
                   disabled={isActionLoading}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
                 >
                   <RefreshCw className="h-4 w-4" />
                   Reset Failure Count
@@ -881,7 +881,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Ownership */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Ownership
           </h2>
@@ -909,7 +909,7 @@ export default function ScheduledJobDetailsPage() {
         {(job.depends_on_jobs && job.depends_on_jobs.length > 0) ||
         (job.triggers_on_success && job.triggers_on_success.length > 0) ||
         (job.triggers_on_failure && job.triggers_on_failure.length > 0) ? (
-          <div className="bg-white rounded-md border border-gray-200 p-6">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Dependencies
             </h2>
@@ -982,7 +982,7 @@ export default function ScheduledJobDetailsPage() {
         ) : null}
 
         {/* Notifications */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Notifications
           </h2>
@@ -1049,13 +1049,13 @@ export default function ScheduledJobDetailsPage() {
                     }
                   }}
                   placeholder="Enter email address"
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                  className={`flex-1 ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                 />
                 <button
                   type="button"
                   onClick={handleAddRecipient}
                   disabled={isAddingRecipient || !newRecipient.trim()}
-                  className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  className={`${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
                 >
                   Add
                 </button>
@@ -1065,7 +1065,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Tags */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Tags
           </h2>
@@ -1100,13 +1100,13 @@ export default function ScheduledJobDetailsPage() {
                 }
               }}
               placeholder="Enter tag name"
-              className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`flex-1 ${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
             />
             <button
               type="button"
               onClick={handleAddTag}
               disabled={isAddingTag || !newTag.trim()}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className={`${tw.rounded} border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
             >
               Add
             </button>
@@ -1114,7 +1114,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* Metadata */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Metadata
           </h2>
@@ -1137,7 +1137,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {showHealthCard && (
-          <div className="bg-white rounded-md border border-gray-200 p-6">
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <h2
               className={`text-lg font-semibold ${tw.textPrimary} mb-4 flex items-center gap-2`}
             >
@@ -1218,7 +1218,7 @@ export default function ScheduledJobDetailsPage() {
         )}
 
         {/* Versions */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <div className="flex items-center justify-between mb-4">
             <h2
               className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
@@ -1229,7 +1229,7 @@ export default function ScheduledJobDetailsPage() {
             <button
               onClick={handleCreateVersion}
               disabled={isActionLoading}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
             >
               <History className="h-4 w-4" />
               Create Snapshot
@@ -1244,7 +1244,7 @@ export default function ScheduledJobDetailsPage() {
               {versions.map((version) => (
                 <div
                   key={version.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-md"
+                  className={`flex items-center justify-between p-3 border border-gray-200 ${tw.rounded}`}
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
@@ -1265,7 +1265,7 @@ export default function ScheduledJobDetailsPage() {
                     <button
                       onClick={() => handleRollbackVersion(version.id)}
                       disabled={isActionLoading}
-                      className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      className={`inline-flex items-center gap-1 ${tw.rounded} border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
                     >
                       <RotateCcw className="h-3 w-3" />
                       Rollback
@@ -1282,7 +1282,7 @@ export default function ScheduledJobDetailsPage() {
         </div>
 
         {/* System Info */}
-        <div className="bg-white rounded-md border border-gray-200 p-6">
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             System Information
           </h2>

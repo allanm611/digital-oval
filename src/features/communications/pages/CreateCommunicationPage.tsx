@@ -139,7 +139,7 @@ export default function CreateCommunicationPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-white rounded-md shadow-sm border border-gray-200 overflow-hidden">
+          <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}>
             {/* Header */}
             <div
               className={`p-6 ${
@@ -178,7 +178,7 @@ export default function CreateCommunicationPage() {
             {/* Stats */}
             <div className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-50 rounded-md p-4">
+                <div className={`bg-gray-50 ${tw.rounded} p-4`}>
                   <p className="text-xs text-gray-500 font-medium mb-1">
                     Total Recipients
                   </p>
@@ -186,7 +186,7 @@ export default function CreateCommunicationPage() {
                     {result.total_recipients}
                   </p>
                 </div>
-                <div className="bg-green-50 rounded-md p-4">
+                <div className={`bg-green-50 ${tw.rounded} p-4`}>
                   <p className="text-xs text-green-600 font-medium mb-1">
                     Messages Sent
                   </p>
@@ -194,7 +194,7 @@ export default function CreateCommunicationPage() {
                     {result.total_messages_sent}
                   </p>
                 </div>
-                <div className="bg-red-50 rounded-md p-4">
+                <div className={`bg-red-50 ${tw.rounded} p-4`}>
                   <p className="text-xs text-red-600 font-medium mb-1">
                     Messages Failed
                   </p>
@@ -202,7 +202,7 @@ export default function CreateCommunicationPage() {
                     {result.total_messages_failed}
                   </p>
                 </div>
-                <div className="bg-blue-50 rounded-md p-4">
+                <div className={`bg-blue-50 ${tw.rounded} p-4`}>
                   <p className="text-xs text-blue-600 font-medium mb-1">
                     Execution Time
                   </p>
@@ -220,7 +220,7 @@ export default function CreateCommunicationPage() {
                 {result.channel_summaries.map((summary) => (
                   <div
                     key={summary.channel}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                    className={`flex items-center justify-between p-3 bg-gray-50 ${tw.rounded}`}
                   >
                     <span className="text-sm font-medium text-gray-700">
                       {summary.channel}
@@ -242,13 +242,13 @@ export default function CreateCommunicationPage() {
             <div className="p-6 bg-gray-50 border-t flex items-center justify-between">
               <button
                 onClick={() => navigate("/dashboard/quicklists")}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Back to QuickLists
               </button>
               <button
                 onClick={() => setResult(null)}
-                className="px-6 py-2 text-sm font-medium text-white rounded-md transition-colors"
+                className={`px-6 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 Send Another
@@ -290,7 +290,7 @@ export default function CreateCommunicationPage() {
           {/* Left Column - Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Channel Selection */}
-            <div className="bg-white rounded-md border border-gray-200 p-6">
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
               <ChannelSelector
                 selectedChannel={selectedChannel}
                 onChannelChange={setSelectedChannel}
@@ -298,7 +298,7 @@ export default function CreateCommunicationPage() {
             </div>
 
             {/* Message Editor */}
-            <div className="bg-white rounded-md border border-gray-200 p-6">
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
               <MessageEditor
                 title={messageTitle}
                 body={messageBody}
@@ -315,14 +315,14 @@ export default function CreateCommunicationPage() {
             <div className="flex items-center justify-end space-x-3">
               <button
                 onClick={() => navigate("/dashboard/quicklists")}
-                className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className={`px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSend}
                 disabled={sending || !messageBody.trim()}
-                className="px-8 py-3 text-sm font-semibold text-white rounded-md transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-8 py-3 text-sm font-semibold text-white ${tw.rounded} transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {sending ? (
@@ -344,7 +344,7 @@ export default function CreateCommunicationPage() {
 
           {/* Right Column - Preview */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-md border border-gray-200 p-6 sticky top-6">
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 sticky top-6`}>
               <PreviewPanel
                 channel={selectedChannel}
                 title={messageTitle}

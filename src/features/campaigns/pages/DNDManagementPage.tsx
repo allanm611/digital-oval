@@ -20,7 +20,7 @@ export default function DNDManagementPage() {
             onClick={() =>
               navigateBackOrFallback(navigate, "/dashboard/configuration")
             }
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -42,7 +42,7 @@ export default function DNDManagementPage() {
           <div
             key={channel.value}
             onClick={() => handleChannelClick(channel.value)}
-            className="cursor-pointer rounded-md border p-6 hover:shadow-lg transition-all duration-200"
+            className={`cursor-pointer ${tw.rounded} border p-6 hover:shadow-lg transition-all duration-200`}
             style={{
               backgroundColor: color.surface.background,
               borderColor: color.border.default,

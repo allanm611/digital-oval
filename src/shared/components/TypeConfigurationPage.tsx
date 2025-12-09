@@ -29,12 +29,28 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   variables?: Record<string, string | number | boolean>;
   // Locale for templates (matches language metadataValue)
   locale?: string;
+  // Language-specific fields
+  languageCode?: string;
+  country?: string;
+  characterSet?: string;
+  whatsappLanguageCode?: string;
 }
 
 interface MetadataFieldConfig {
   label: string;
-  type: "text" | "number";
+  type: "text" | "number" | "select";
   placeholder?: string;
+  options?: { value: string; label: string }[];
+}
+
+interface CustomFieldConfig {
+  label: string;
+  type: "text" | "select";
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  required?: boolean;
+  fieldKey: string;
+  dynamicOptions?: string; // Configuration type to load options from (e.g., "characterSets")
 }
 
 export interface TypeConfigurationPageConfig {
@@ -60,6 +76,7 @@ export interface TypeConfigurationPageConfig {
   descriptionMaxLength: number;
   statusLabel?: string;
   metadataField?: MetadataFieldConfig;
+  customFields?: CustomFieldConfig[];
   deleteConfirmTitle: string;
   deleteConfirmMessage: (name: string) => string;
   deleteSuccessMessage: (name: string) => string;
@@ -84,6 +101,13 @@ interface TypeConfigurationModalProps {
     html_body?: string;
     variables?: Record<string, string | number | boolean>;
     locale?: string;
+    // Language-specific fields
+    languageCode?: string;
+    country?: string;
+    characterSet?: string;
+    whatsappLanguageCode?: string;
+    // Generic custom fields
+    [key: string]: unknown;
   }) => Promise<void>;
   isSaving: boolean;
   config: TypeConfigurationPageConfig;
@@ -111,11 +135,33 @@ function TypeConfigurationModal({
   const { t } = useLanguage();
 
   const isCreativeTemplate = config.configType === "creativeTemplates";
+  const isLanguage = config.configType === "languages";
+
+  // Custom fields state for languages
+  const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
   // Load languages for template locale selection
   const languages = isCreativeTemplate
     ? configurationDataService.getData("languages")
     : [];
+
+  // Load character sets dynamically for language configuration
+  const getCharacterSetsOptions = () => {
+    if (!isLanguage || !config.customFields) return [];
+    const characterSetField = config.customFields.find(
+      (f) => f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets"
+    );
+    if (characterSetField) {
+      const characterSets = configurationDataService.getData("characterSets");
+      return (characterSets as TypeConfigurationItem[])
+        .filter((cs) => cs.isActive)
+        .map((cs) => ({
+          value: cs.metadataValue as string,
+          label: cs.name,
+        }));
+    }
+    return [];
+  };
 
   useEffect(() => {
     if (item) {
@@ -134,6 +180,14 @@ function TypeConfigurationModal({
         );
         setLocale(item.locale || "");
       }
+      if (isLanguage && config.customFields) {
+        const fields: Record<string, string> = {};
+        config.customFields.forEach((field) => {
+          fields[field.fieldKey] =
+            ((item as Record<string, unknown>)[field.fieldKey] as string) || "";
+        });
+        setCustomFields(fields);
+      }
     } else {
       setName("");
       setDescription("");
@@ -146,9 +200,16 @@ function TypeConfigurationModal({
         setVariablesText("");
         setLocale("");
       }
+      if (isLanguage && config.customFields) {
+        const fields: Record<string, string> = {};
+        config.customFields.forEach((field) => {
+          fields[field.fieldKey] = "";
+        });
+        setCustomFields(fields);
+      }
     }
     setError("");
-  }, [item, isOpen, isCreativeTemplate]);
+  }, [item, isOpen, isCreativeTemplate, isLanguage, config.customFields]);
 
   if (!isOpen) return null;
 
@@ -217,6 +278,7 @@ function TypeConfigurationModal({
       text_body?: string;
       html_body?: string;
       variables?: Record<string, string | number | boolean>;
+      [key: string]: unknown;
     } = {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -236,6 +298,18 @@ function TypeConfigurationModal({
       payload.html_body = htmlBody.trim() || undefined;
       payload.variables = parsedVariables;
       payload.locale = locale.trim() || undefined;
+    }
+
+    // Add custom fields for languages
+    if (isLanguage && config.customFields) {
+      for (const field of config.customFields) {
+        const value = customFields[field.fieldKey]?.trim() || "";
+        if (field.required && !value) {
+          setError(t.genericConfig.isRequired.replace("{field}", field.label));
+          return;
+        }
+        payload[field.fieldKey] = value || undefined;
+      }
     }
 
     if (
@@ -258,7 +332,7 @@ function TypeConfigurationModal({
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
       <div
-        className={`rounded-md shadow-2xl w-full bg-white ${
+        className={`${tw.rounded} shadow-2xl w-full bg-white ${
           isCreativeTemplate
             ? "max-w-4xl max-h-[90vh] flex flex-col"
             : "max-w-md"
@@ -274,7 +348,7 @@ function TypeConfigurationModal({
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -295,7 +369,7 @@ function TypeConfigurationModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
                 config.nameLabel.toLowerCase()
@@ -312,7 +386,7 @@ function TypeConfigurationModal({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
                 config.descriptionLabel.toLowerCase()
@@ -328,14 +402,67 @@ function TypeConfigurationModal({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {config.metadataField.label}
               </label>
-              <input
-                type={config.metadataField.type}
-                value={metadataValue}
-                onChange={(e) => setMetadataValue(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder={config.metadataField.placeholder}
-              />
+              {config.metadataField.type === "select" ? (
+                <HeadlessSelect
+                  value={metadataValue}
+                  onChange={(value) => setMetadataValue(value || "")}
+                  options={config.metadataField.options || []}
+                  placeholder={config.metadataField.placeholder}
+                />
+              ) : (
+                <input
+                  type={config.metadataField.type}
+                  value={metadataValue}
+                  onChange={(e) => setMetadataValue(e.target.value)}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  placeholder={config.metadataField.placeholder}
+                />
+              )}
             </div>
+          )}
+
+          {/* Custom Fields (for Languages) */}
+          {isLanguage && config.customFields && (
+            <>
+              {config.customFields.map((field) => (
+                <div key={field.fieldKey}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {field.label} {field.required && "*"}
+                  </label>
+                  {field.type === "select" ? (
+                    <HeadlessSelect
+                      value={customFields[field.fieldKey] || ""}
+                      onChange={(value) =>
+                        setCustomFields((prev) => ({
+                          ...prev,
+                          [field.fieldKey]: value || "",
+                        }))
+                      }
+                      options={
+                        field.dynamicOptions === "characterSets"
+                          ? getCharacterSetsOptions()
+                          : field.options || []
+                      }
+                      placeholder={field.placeholder}
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={customFields[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setCustomFields((prev) => ({
+                          ...prev,
+                          [field.fieldKey]: e.target.value,
+                        }))
+                      }
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                    />
+                  )}
+                </div>
+              ))}
+            </>
           )}
 
           {/* Template Content Fields (for Creative Templates only) */}
@@ -383,7 +510,7 @@ function TypeConfigurationModal({
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                   placeholder={t.genericConfig.enterTemplateTitle}
                   maxLength={160}
                 />
@@ -399,7 +526,7 @@ function TypeConfigurationModal({
                 <textarea
                   value={textBody}
                   onChange={(e) => setTextBody(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono`}
                   placeholder={t.genericConfig.enterTextContent}
                   rows={6}
                 />
@@ -412,7 +539,7 @@ function TypeConfigurationModal({
                 <textarea
                   value={htmlBody}
                   onChange={(e) => setHtmlBody(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono`}
                   placeholder={t.genericConfig.enterHtmlContent}
                   rows={8}
                 />
@@ -425,7 +552,7 @@ function TypeConfigurationModal({
                 <textarea
                   value={variablesText}
                   onChange={(e) => setVariablesText(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono"
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono`}
                   placeholder='{"variable_name": "default_value"}'
                   rows={4}
                 />
@@ -454,7 +581,9 @@ function TypeConfigurationModal({
           )}
 
           {error && (
-            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div
+              className={`mt-2 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+            >
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
@@ -467,14 +596,14 @@ function TypeConfigurationModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="px-4 py-2 text-white rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving ? "Saving..." : item ? "Update" : "Create"}
@@ -586,6 +715,7 @@ export default function TypeConfigurationPage({
     description?: string;
     isActive: boolean;
     metadataValue?: number | string;
+    [key: string]: unknown;
   }) => {
     try {
       setIsSaving(true);
@@ -616,7 +746,7 @@ export default function TypeConfigurationPage({
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate(config.backPath)}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -633,7 +763,7 @@ export default function TypeConfigurationPage({
         <div className="flex items-center gap-3 w-auto">
           <button
             onClick={handleCreateItem}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -652,13 +782,13 @@ export default function TypeConfigurationPage({
             placeholder={config.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] rounded-md focus:outline-none`}
+            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
           />
         </div>
       </div>
 
       <div
-        className={`rounded-md border border-[${color.border.default}] overflow-hidden`}
+        className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
         {filteredItems.length === 0 ? (
           <div className="text-center py-12">
@@ -676,7 +806,7 @@ export default function TypeConfigurationPage({
             {!searchTerm && (
               <button
                 onClick={handleCreateItem}
-                className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-sm text-white"
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -809,7 +939,7 @@ export default function TypeConfigurationPage({
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEditItem(item)}
-                          className="p-2 rounded-md transition-colors"
+                          className={`p-2 ${tw.rounded} transition-colors`}
                           style={{
                             color: color.primary.action,
                             backgroundColor: "transparent",
@@ -827,7 +957,7 @@ export default function TypeConfigurationPage({
                         </button>
                         <button
                           onClick={() => handleDeleteItem(item)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title="Delete template"
                         >
                           <Trash2 className="w-4 h-4" />

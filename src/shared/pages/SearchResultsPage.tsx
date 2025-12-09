@@ -869,7 +869,7 @@ export default function SearchResultsPage() {
             <button
               key={`${item.type}-${item.id}`}
               onClick={() => navigate(item.url)}
-              className="text-left p-4 border border-gray-200 rounded-md hover:bg-gray-50 transition-all"
+              className={`text-left p-4 border border-gray-200 ${tw.rounded} hover:bg-gray-50 transition-all`}
               style={{ backgroundColor: color.surface.cards }}
             >
               <div className="flex items-start gap-3 mb-2">
@@ -958,7 +958,7 @@ export default function SearchResultsPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-gray-50 border border-gray-200 rounded-md p-4">
+        <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
           <p className="text-gray-900">{error}</p>
         </div>
       )}

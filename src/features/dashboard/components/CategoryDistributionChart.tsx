@@ -46,7 +46,7 @@ function CategoryDistributionChartComponent({
   onViewChange,
 }: CategoryDistributionChartProps) {
   return (
-    <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
+    <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
       <div className="px-6 py-4 border-b border-gray-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h2 className={tw.cardHeading}>{title}</h2>

@@ -13,7 +13,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+// import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import {
@@ -190,7 +190,7 @@ export default function DNDChannelPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
             onClick={() => navigate("/dashboard/dnd-management")}
-            className="p-2 text-gray-600 hover:text-gray-800 rounded-md transition-colors"
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -208,7 +208,7 @@ export default function DNDChannelPage() {
           {channelValue === "SMS" && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Phone className="w-4 h-4" />
@@ -218,7 +218,7 @@ export default function DNDChannelPage() {
           {channelValue === "EMAIL" && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Mail className="w-4 h-4" />
@@ -228,7 +228,7 @@ export default function DNDChannelPage() {
           {(channelValue === "USSD" || channelValue === "APP") && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-sm text-white w-auto"
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4" />
@@ -255,7 +255,7 @@ export default function DNDChannelPage() {
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm"
+              className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
             />
           </div>
 
@@ -295,7 +295,7 @@ export default function DNDChannelPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-gray-200 overflow-hidden">
+      <div className={`${tw.rounded} border border-gray-200 overflow-hidden`}>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <LoadingSpinner />
@@ -467,7 +467,7 @@ export default function DNDChannelPage() {
                       {subscription.status === "active" ? (
                         <button
                           onClick={() => handleRemoveCustomer(subscription)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title="Remove from DND"
                         >
                           <UserCheck className="w-4 h-4" />
@@ -475,7 +475,7 @@ export default function DNDChannelPage() {
                       ) : (
                         <button
                           onClick={() => handleRemoveCustomer(subscription)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           title="Delete from DND list"
                         >
                           <Trash2 className="w-4 h-4" />

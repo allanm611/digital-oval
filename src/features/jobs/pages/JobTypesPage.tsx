@@ -188,7 +188,7 @@ function JobTypeModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-md bg-white p-6 shadow-2xl">
+      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-6 shadow-2xl`}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -218,7 +218,7 @@ function JobTypeModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               placeholder="e.g. ETL Pipeline"
               maxLength={255}
               required
@@ -234,7 +234,7 @@ function JobTypeModal({
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 ${
+                className={`mt-1 w-full ${tw.rounded} border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 ${
                   codeValidationError
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -264,7 +264,7 @@ function JobTypeModal({
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+              className={`mt-1 w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
               rows={4}
               placeholder="Optional context for this job type"
               maxLength={500}
@@ -272,7 +272,7 @@ function JobTypeModal({
           </div>
 
           {error && (
-            <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className={`${tw.rounded} border border-red-200 bg-red-50 p-3 text-sm text-red-700`}>
               {error}
             </div>
           )}
@@ -281,14 +281,14 @@ function JobTypeModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
             >
               {t.genericConfig.cancel}
             </button>
             <button
               type="submit"
               disabled={isSaving}
-              className="rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              className={`${tw.rounded} px-4 py-2 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60`}
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
@@ -323,7 +323,7 @@ function JobTypeViewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-md bg-white p-6 shadow-2xl">
+      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-6 shadow-2xl`}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -667,7 +667,7 @@ export default function JobTypesPage() {
         <div className="flex justify-end">
           <button
             onClick={handleCreate}
-            className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 text-sm text-white"
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
@@ -678,7 +678,7 @@ export default function JobTypesPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -690,7 +690,7 @@ export default function JobTypesPage() {
             {isLoadingStats ? "..." : stats.totalJobTypes}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -704,7 +704,7 @@ export default function JobTypesPage() {
             {isLoadingStats ? "..." : stats.totalJobs}
           </p>
         </div>
-        <div className="rounded-md border border-gray-200 bg-white p-6 shadow-sm">
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -728,7 +728,7 @@ export default function JobTypesPage() {
             placeholder="Search job types by name, code, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent"
+            className={`w-full pl-10 pr-4 py-3 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -738,7 +738,7 @@ export default function JobTypesPage() {
         </div>
       </div>
 
-      <div className="rounded-md">
+      <div className={`${tw.rounded}`}>
         {loadError && (
           <div className="border-b border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4" />
@@ -764,7 +764,7 @@ export default function JobTypesPage() {
             {!searchTerm && (
               <button
                 onClick={handleCreate}
-                className="px-4 py-2 rounded-md font-semibold flex items-center gap-2 mx-auto text-sm text-white"
+                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
@@ -889,7 +889,7 @@ export default function JobTypesPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleView(jobType)}
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="View job type"
                           title="View"
                         >
@@ -897,7 +897,7 @@ export default function JobTypesPage() {
                         </button>
                         <button
                           onClick={() => handleEdit(jobType)}
-                          className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
                           aria-label="Edit job type"
                           title="Edit"
                         >
@@ -905,7 +905,7 @@ export default function JobTypesPage() {
                         </button>
                         <button
                           onClick={() => handleDeleteClick(jobType)}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors"
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
                           aria-label="Delete job type"
                           title="Delete"
                         >

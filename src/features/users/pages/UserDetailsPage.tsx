@@ -172,11 +172,13 @@ export default function UserDetailsPage() {
   if (!user && !isLoading) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
+        <div
+          className={`bg-red-50 border border-red-200 ${tw.rounded} p-6 text-center`}
+        >
           <p className="text-red-600">{t.userManagement.userNotFound}</p>
           <button
             onClick={navigateBack}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            className={`mt-4 px-4 py-2 bg-red-600 text-white ${tw.rounded} hover:bg-red-700`}
           >
             {t.userManagement.backToUserManagement}
           </button>
@@ -265,7 +267,7 @@ export default function UserDetailsPage() {
         <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={navigateBack}
-            className="p-2 text-gray-600 rounded-md transition-colors"
+            className={`p-2 text-gray-600 ${tw.rounded} transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -338,13 +340,17 @@ export default function UserDetailsPage() {
 
       {/* Content */}
       {activeSection === "overview" && (
-        <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div
+          className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
+        >
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column */}
               <div className="space-y-6">
                 {/* Personal Information */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div
+                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                >
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     {t.userManagement.personalInformation}
                   </h3>
@@ -389,7 +395,9 @@ export default function UserDetailsPage() {
                 </div>
 
                 {/* Work Information */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div
+                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                >
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     {t.userManagement.workInformation}
                   </h3>
@@ -441,7 +449,9 @@ export default function UserDetailsPage() {
               {/* Right Column */}
               <div className="space-y-6">
                 {/* Security & Access */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div
+                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                >
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     {t.userManagement.securityAccess}
                   </h3>
@@ -492,7 +502,9 @@ export default function UserDetailsPage() {
                 </div>
 
                 {/* Activity Timeline */}
-                <div className="bg-gray-50 rounded-md p-4 border border-gray-100">
+                <div
+                  className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-100`}
+                >
                   <h3 className="text-base font-semibold text-gray-900 mb-3">
                     {t.userManagement.activityTimeline}
                   </h3>
@@ -588,7 +600,9 @@ export default function UserDetailsPage() {
                   {/* Summary Stat Cards */}
                   {permissionsSummary?.data ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <div className="group bg-white rounded-md border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <div
+                        className={`group bg-white ${tw.rounded} border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300`}
+                      >
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -615,7 +629,9 @@ export default function UserDetailsPage() {
                         </div>
                       </div>
 
-                      <div className="group bg-white rounded-md border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <div
+                        className={`group bg-white ${tw.rounded} border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300`}
+                      >
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -642,7 +658,9 @@ export default function UserDetailsPage() {
                         </div>
                       </div>
 
-                      <div className="group bg-white rounded-md border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <div
+                        className={`group bg-white ${tw.rounded} border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300`}
+                      >
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -669,7 +687,9 @@ export default function UserDetailsPage() {
                         </div>
                       </div>
 
-                      <div className="group bg-white rounded-md border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                      <div
+                        className={`group bg-white ${tw.rounded} border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300`}
+                      >
                         <div className="space-y-4">
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
@@ -697,7 +717,9 @@ export default function UserDetailsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="group bg-white rounded-md border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300">
+                    <div
+                      className={`group bg-white ${tw.rounded} border border-gray-200 p-6 relative overflow-hidden hover:shadow-lg transition-all duration-300`}
+                    >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-3">
@@ -735,7 +757,7 @@ export default function UserDetailsPage() {
                           .map(([category, count]) => (
                             <div
                               key={category}
-                              className="bg-white rounded-md p-4 border border-gray-200 hover:shadow-sm transition-shadow"
+                              className={`bg-white ${tw.rounded} p-4 border border-gray-200 hover:shadow-sm transition-shadow`}
                             >
                               <p className="text-xs text-gray-600 mb-2 capitalize font-medium">
                                 {category.replace(/_/g, " ")}
@@ -759,7 +781,7 @@ export default function UserDetailsPage() {
                         )}
                       </h3>
                       <div
-                        className={`rounded-md border border-[${color.border.default}] overflow-hidden`}
+                        className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
                       >
                         <div className="hidden lg:block overflow-x-auto">
                           <table
@@ -871,7 +893,7 @@ export default function UserDetailsPage() {
                           {permissionsList.map((perm) => (
                             <div
                               key={perm.id}
-                              className="bg-gray-50 rounded-md p-3 border border-gray-200"
+                              className={`bg-gray-50 ${tw.rounded} p-3 border border-gray-200`}
                             >
                               <div className="flex items-start justify-between mb-2">
                                 <div className="flex-1">
@@ -912,7 +934,7 @@ export default function UserDetailsPage() {
                         {rolesList.map((role) => (
                           <span
                             key={role.id}
-                            className="px-3 py-1.5 rounded-md text-sm font-medium"
+                            className={`px-3 py-1.5 ${tw.rounded} text-sm font-medium`}
                             style={{
                               backgroundColor: `${color.primary.accent}15`,
                               color: color.primary.accent,
@@ -942,7 +964,9 @@ export default function UserDetailsPage() {
       )}
 
       {activeSection === "reports" && (
-        <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+        <div
+          className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
+        >
           <div className="p-6">
             {directReports.length > 0 && (
               <div className="mb-6">
@@ -957,7 +981,7 @@ export default function UserDetailsPage() {
                   {directReports.map((report) => (
                     <div
                       key={report.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className={`flex items-center justify-between p-3 bg-gray-50 ${tw.rounded} border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer`}
                       onClick={() =>
                         navigate(`/dashboard/user-management/${report.id}`, {
                           state: { returnTo },
@@ -1007,7 +1031,9 @@ export default function UserDetailsPage() {
                     return (
                       <div
                         key={report.id}
-                        className={`flex items-center justify-between p-3 rounded-md border transition-colors cursor-pointer ${
+                        className={`flex items-center justify-between p-3 ${
+                          tw.rounded
+                        } border transition-colors cursor-pointer ${
                           isDirectReport
                             ? "bg-gray-50 border-gray-200 hover:bg-gray-100"
                             : "bg-blue-50 border-blue-200 hover:bg-blue-100"
@@ -1062,7 +1088,7 @@ export default function UserDetailsPage() {
                   {managerChain.map((manager) => (
                     <div
                       key={manager.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer"
+                      className={`flex items-center justify-between p-3 bg-gray-50 ${tw.rounded} border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer`}
                       onClick={() =>
                         navigate(`/dashboard/user-management/${manager.id}`, {
                           state: { returnTo },

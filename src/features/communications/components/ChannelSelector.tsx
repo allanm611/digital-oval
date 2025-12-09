@@ -35,7 +35,7 @@ export default function ChannelSelector({
               type="button"
               onClick={() => onChannelChange(value)}
               className={`
-                relative p-4 rounded-md border-2 transition-all duration-200
+                relative p-4 ${tw.rounded} border-2 transition-all duration-200
                 ${
                   isSelected
                     ? "shadow-md"
@@ -54,7 +54,7 @@ export default function ChannelSelector({
               <div className="flex flex-col items-center space-y-2">
                 <div
                   className={`
-                    p-3 rounded-md transition-colors
+                    p-3 ${tw.rounded} transition-colors
                     ${isSelected ? "bg-white" : "bg-gray-50"}
                   `}
                   style={{ color: isSelected ? channelColor : "#9CA3AF" }}

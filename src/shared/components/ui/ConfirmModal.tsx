@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle, XCircle, Info, X } from "lucide-react";
-import { color } from "../../utils/utils";
+import { color , tw} from "../../utils/utils";
 
 export type ConfirmType = "danger" | "warning" | "success" | "info";
 
@@ -110,7 +110,7 @@ export default function ConfirmModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative w-full max-w-md transform overflow-hidden rounded-md bg-white shadow-2xl transition-all duration-300 ${
+          className={`relative w-full max-w-md transform overflow-hidden ${tw.rounded} bg-white shadow-2xl transition-all duration-300 ${
             isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
           }`}
         >
@@ -141,7 +141,7 @@ export default function ConfirmModal({
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="p-1 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`p-1 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -158,14 +158,14 @@ export default function ConfirmModal({
             <button
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-0 focus:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 focus:outline-none focus:ring-0 focus:border-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {cancelText}
             </button>
             <button
               onClick={handleConfirm}
               disabled={isLoading}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 config.confirmButtonColor || ""
               }`}
               style={
