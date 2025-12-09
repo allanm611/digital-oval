@@ -191,7 +191,7 @@ export default function CommunicationPolicyModal({
                   startTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
             />
           </div>
           <div>
@@ -207,7 +207,7 @@ export default function CommunicationPolicyModal({
                   endTime: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
             />
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function CommunicationPolicyModal({
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <div className="relative" style={{ zIndex: 99999 }}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Period Type
             </label>
@@ -288,7 +288,7 @@ export default function CommunicationPolicyModal({
                   maxCount: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
             />
           </div>
         </div>
@@ -328,7 +328,7 @@ export default function CommunicationPolicyModal({
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className={`p-3 ${tw.borderDefault} border rounded-md bg-gray-50`}
+              className={`p-4 ${tw.borderDefault} border rounded-md bg-white transition-colors hover:bg-gray-50`}
             >
               <div className="grid grid-cols-[1fr_1fr_auto] gap-3">
                 <div>
@@ -351,7 +351,7 @@ export default function CommunicationPolicyModal({
                         categories: newCategories,
                       }));
                     }}
-                    className={`${components.input.default} w-full px-2 py-1 text-sm`}
+                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
                     placeholder="Enter name"
                   />
                 </div>
@@ -450,7 +450,7 @@ export default function CommunicationPolicyModal({
                   priority: parseInt(e.target.value) || 1,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
             />
           </div>
         </div>
@@ -473,36 +473,26 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`${tw.borderDefault} border rounded-md overflow-hidden ${
-          isExpanded ? `border-2 shadow-md` : ""
+        className={`border rounded-md overflow-hidden transition-all duration-200 ${
+          isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
+          backgroundColor: isExpanded ? "white" : "white",
           borderColor: isExpanded ? color.primary.accent : undefined,
-          backgroundColor: isExpanded ? `${color.primary.accent}05` : "white",
         }}
       >
         <button
           type="button"
           onClick={() => toggleSection(type)}
-          className={`w-full px-4 py-4 flex items-center justify-between transition-all duration-200 rounded-md ${
-            isExpanded ? "" : "bg-white hover:bg-gray-50"
+          className={`w-full px-5 py-4 flex items-center justify-between transition-all duration-200 ${
+            isExpanded ? "bg-gray-50" : "bg-white hover:bg-gray-50"
           }`}
-          style={
-            isExpanded
-              ? {
-                  backgroundColor: `${color.primary.accent}05`,
-                }
-              : {}
-          }
         >
           <div className="flex items-center gap-3">
             <div
-              className={`p-2.5 rounded-md transition-all duration-200 ${
-                isExpanded ? "shadow-sm" : "bg-gray-100"
-              }`}
+              className="p-2.5 rounded-md transition-all duration-200"
               style={{
-                backgroundColor: isExpanded ? color.primary.accent : undefined,
-                color: isExpanded ? "white" : color.primary.accent,
+                color: isExpanded ? color.primary.accent : "#6b7280",
               }}
             >
               {getTypeIcon(type)}
@@ -530,7 +520,7 @@ export default function CommunicationPolicyModal({
         </button>
 
         {isExpanded && (
-          <div className="px-4 py-5 bg-gray-50">
+          <div className="px-5 py-6 bg-white border-t border-gray-100">
             {type === "timeWindow" && renderTimeWindowConfig()}
             {type === "maximumCommunication" && renderMaxCommunicationConfig()}
             {type === "dnd" && renderDNDConfig()}
@@ -544,9 +534,10 @@ export default function CommunicationPolicyModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
       <div
-        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col`}
+        className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-md`}
+        style={{ zIndex: 10000, position: "relative" }}
       >
         {/* Header */}
         <div style={{ backgroundColor: color.surface.background }}>
@@ -588,7 +579,7 @@ export default function CommunicationPolicyModal({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
                   placeholder="Enter policy name"
                   required
                 />
@@ -601,7 +592,7 @@ export default function CommunicationPolicyModal({
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm resize-none transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm resize-none transition-all bg-white"
                   placeholder="Enter policy description"
                   rows={3}
                 />
@@ -618,7 +609,7 @@ export default function CommunicationPolicyModal({
                     onClick={() =>
                       setIsChannelDropdownOpen(!isChannelDropdownOpen)
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-md text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm transition-all bg-white"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-md text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white"
                   >
                     <div className="flex items-center space-x-2">
                       {channels.length === 0 ? (
@@ -652,7 +643,7 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-y-auto">
+                    <div className="absolute z-[10000] w-full mt-1 bg-white border border-gray-200 rounded-md max-h-64 overflow-y-auto">
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}
@@ -693,11 +684,17 @@ export default function CommunicationPolicyModal({
             </div>
 
             {/* All Policy Type Configurations */}
-            <div className="px-4 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Policy Configurations
-                </h3>
+            <div className="px-4 space-y-4 pb-2">
+              <div className="flex items-center justify-between pb-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Policy Configurations
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Configure different policy types. Expand a section to
+                    configure it.
+                  </p>
+                </div>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"

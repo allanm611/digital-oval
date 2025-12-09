@@ -29,6 +29,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
+import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -38,6 +39,7 @@ import RejectCampaignModal from "../components/RejectCampaignModal";
 import {
   CampaignApprovalStatus,
   CampaignCollection,
+  CampaignSegmentDetail,
   CampaignStatsSummary,
   CampaignStatus,
   CampaignSuperSearchQuery,
@@ -62,6 +64,8 @@ interface CampaignDisplay {
   approval_status?: string;
   code?: string;
   created_at?: string;
+  offer_count?: number;
+  segment_count?: number;
   performance?: {
     sent: number;
     delivered: number;
@@ -327,6 +331,88 @@ export default function CampaignsPage() {
     }
   }, [showToast]);
 
+  // Fetch offer and segment counts for campaigns
+  const fetchCampaignCounts = useCallback(
+    async (
+      campaignIds: number[]
+    ): Promise<Map<number, { offers: number; segments: number }>> => {
+      const countsMap = new Map<number, { offers: number; segments: number }>();
+
+      // Fetch counts in parallel for all campaigns
+      const countPromises = campaignIds.map(async (campaignId) => {
+        try {
+          // Fetch segments count
+          const segmentsResponse = await campaignService.getCampaignSegments(
+            campaignId,
+            true
+          );
+
+          let segmentCount = 0;
+          if (
+            segmentsResponse &&
+            typeof segmentsResponse === "object" &&
+            "data" in segmentsResponse &&
+            segmentsResponse.success
+          ) {
+            // Handle both nested and direct array responses
+            if (Array.isArray(segmentsResponse.data)) {
+              // Direct array: { data: [...] }
+              segmentCount = segmentsResponse.data.length;
+            } else if (
+              segmentsResponse.data &&
+              typeof segmentsResponse.data === "object" &&
+              "data" in segmentsResponse.data &&
+              Array.isArray(
+                (segmentsResponse.data as { data?: CampaignSegmentDetail[] })
+                  .data
+              )
+            ) {
+              // Nested: { data: { data: [...] } }
+              segmentCount = (
+                segmentsResponse.data as { data: CampaignSegmentDetail[] }
+              ).data.length;
+            } else if (
+              segmentsResponse.data &&
+              typeof segmentsResponse.data === "object" &&
+              "total" in segmentsResponse.data
+            ) {
+              // If we have a total field, use that
+              segmentCount =
+                typeof (segmentsResponse.data as { total?: number }).total ===
+                "number"
+                  ? (segmentsResponse.data as { total: number }).total
+                  : 0;
+            }
+          }
+
+          // Fetch offer mappings count
+          const offersResponse =
+            await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
+          const offerCount =
+            offersResponse.success && offersResponse.data
+              ? new Set(offersResponse.data.map((m) => m.offer_id)).size
+              : 0;
+
+          return { campaignId, offers: offerCount, segments: segmentCount };
+        } catch (error) {
+          console.error(
+            `Failed to fetch counts for campaign ${campaignId}:`,
+            error
+          );
+          return { campaignId, offers: 0, segments: 0 };
+        }
+      });
+
+      const results = await Promise.all(countPromises);
+      results.forEach(({ campaignId, offers, segments }) => {
+        countsMap.set(campaignId, { offers, segments });
+      });
+
+      return countsMap;
+    },
+    []
+  );
+
   // Fetch campaigns from API
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -416,10 +502,10 @@ export default function CampaignsPage() {
           approval_status: campaign.approval_status,
           code: campaign.code,
           created_at: campaign.created_at,
+          offer_count: 0, // Will be updated below
+          segment_count: 0, // Will be updated below
         })
       );
-
-      setAllCampaignsUnfiltered(campaignsData);
 
       // When status is "all", exclude archived campaigns from default view
       // Users can still see archived campaigns by selecting "Archived" filter
@@ -435,7 +521,22 @@ export default function CampaignsPage() {
       const endIndex = startIndex + pageSize;
       const paginatedCampaigns = campaignsToDisplay.slice(startIndex, endIndex);
 
-      setCampaigns(paginatedCampaigns);
+      // Fetch counts for the displayed campaigns
+      const campaignIds = paginatedCampaigns.map((c) => c.id);
+      const countsMap = await fetchCampaignCounts(campaignIds);
+
+      // Update campaigns with counts
+      const campaignsWithCounts = paginatedCampaigns.map((campaign) => {
+        const counts = countsMap.get(campaign.id);
+        return {
+          ...campaign,
+          offer_count: counts?.offers ?? 0,
+          segment_count: counts?.segments ?? 0,
+        };
+      });
+
+      setCampaigns(campaignsWithCounts);
+      setAllCampaignsUnfiltered(campaignsData);
 
       // Get total from pagination response
       // When filtering client-side, use the filtered count to match displayed items
@@ -456,7 +557,15 @@ export default function CampaignsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedStatus, searchQuery, currentPage, pageSize, filters, showToast]);
+  }, [
+    selectedStatus,
+    searchQuery,
+    currentPage,
+    pageSize,
+    filters,
+    showToast,
+    fetchCampaignCounts,
+  ]);
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -1098,7 +1207,7 @@ export default function CampaignsPage() {
                   >
                     Campaign name
                   </th>
-                  <th
+                  {/* <th
                     className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
@@ -1109,7 +1218,7 @@ export default function CampaignsPage() {
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Description
-                  </th>
+                  </th> */}
                   <th
                     className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
@@ -1121,6 +1230,24 @@ export default function CampaignsPage() {
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Status
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Offers
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Segments
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Performance
                   </th>
                   <th
                     className="px-6 py-4 text-center text-sm font-medium uppercase tracking-wider"
@@ -1144,7 +1271,7 @@ export default function CampaignsPage() {
                         {campaign.name}
                       </div>
                     </td>
-                    <td
+                    {/* <td
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
@@ -1171,7 +1298,7 @@ export default function CampaignsPage() {
                           No description
                         </span>
                       )}
-                    </td>
+                    </td> */}
                     <td
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
@@ -1194,6 +1321,35 @@ export default function CampaignsPage() {
                         {campaign.status.charAt(0).toUpperCase() +
                           campaign.status.slice(1)}
                       </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textPrimary} font-medium`}>
+                        {campaign.offer_count ?? 0}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textPrimary} font-medium`}>
+                        {campaign.segment_count ?? 0}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-sm ${tw.textPrimary}`}>
+                          Conversion: <span className="font-medium">0%</span>
+                        </span>
+                        <span className={`text-sm ${tw.textPrimary}`}>
+                          Revenue: <span className="font-medium">0</span>
+                        </span>
+                      </div>
                     </td>
                     <td
                       className="px-6 py-4"

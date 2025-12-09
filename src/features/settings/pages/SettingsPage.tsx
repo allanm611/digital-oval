@@ -4,9 +4,9 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { setLanguageSettings } from "../../../shared/services/languageService";
 import { formatDate } from "../../../shared/services/dateService";
-import { color, tw } from "../../../shared/utils/utils";
+import {  tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import DateFormatter from "../../../shared/components/DateFormatter";
+// import DateFormatter from "../../../shared/components/DateFormatter";
 import countries from "world-countries";
 import currencyCodes from "currency-codes";
 
@@ -195,11 +195,8 @@ export default function SettingsPage() {
   };
 
   const handleLanguageChange = (language: string) => {
-    // Language and currency are independent - only update language
+    // Only update local state - don't apply until Save is clicked
     setSettings({ ...settings, language });
-    // Update language context immediately
-    setLanguageSettings(language);
-    setLanguage(language);
   };
 
   const handleTimezoneChange = (timezone: string) => {

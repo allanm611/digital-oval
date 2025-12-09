@@ -50,6 +50,41 @@ const replaceVariables = (
   return result;
 };
 
+// Helper function to calculate SMS segments
+// Rules: First segment = 160 chars, subsequent segments = 153 chars each
+// Sender ID is automatically prepended, so it counts toward the total
+const calculateSMSSegments = (
+  messageText: string,
+  senderId: string = ""
+): { totalChars: number; smsCount: number } => {
+  if (!messageText && !senderId) {
+    return { totalChars: 0, smsCount: 0 };
+  }
+
+  // Sender ID is prepended with ": " (2 chars) if message exists
+  const senderIdPrefix = senderId ? `${senderId}: ` : "";
+  const fullMessage = senderIdPrefix + messageText;
+  const totalChars = fullMessage.length;
+
+  if (totalChars === 0) {
+    return { totalChars: 0, smsCount: 0 };
+  }
+
+  // Calculate SMS segments
+  // First segment: 160 characters
+  // Subsequent segments: 153 characters each
+  if (totalChars <= 160) {
+    return { totalChars, smsCount: 1 };
+  }
+
+  // More than 160 chars - calculate segments
+  const remainingChars = totalChars - 160;
+  const additionalSegments = Math.ceil(remainingChars / 153);
+  const smsCount = 1 + additionalSegments;
+
+  return { totalChars, smsCount };
+};
+
 interface OfferCreativeStepProps {
   creatives: LocalOfferCreative[];
   onCreativesChange: (creatives: LocalOfferCreative[]) => void;
@@ -72,8 +107,18 @@ const CHANNELS: Array<{
   { value: "WhatsApp", label: "WhatsApp", icon: MessageSquare },
 ];
 
-// Locale labels for display
-const getLocaleLabel = (locale: Locale): string => {
+// Locale labels for display - will use languages from config
+const getLocaleLabel = (
+  locale: Locale,
+  languages?: TypeConfigurationItem[]
+): string => {
+  // If languages config is available, use it
+  if (languages && languages.length > 0) {
+    const language = languages.find((lang) => lang.metadataValue === locale);
+    if (language) return language.name;
+  }
+
+  // Fallback to hardcoded map
   const localeMap: Record<string, string> = {
     en: "English",
     "en-US": "English (US)",
@@ -97,11 +142,6 @@ const getLocaleLabel = (locale: Locale): string => {
   };
   return localeMap[locale] || locale;
 };
-
-const LOCALE_OPTIONS = COMMON_LOCALES.map((locale) => ({
-  value: locale,
-  label: getLocaleLabel(locale),
-}));
 
 // Template content mapping - provides actual template content for each template
 interface TemplateContent {
@@ -452,6 +492,11 @@ export default function OfferCreativeStep({
 }: OfferCreativeStepProps) {
   // Load creative templates from configuration
   const { data: templates } = useConfigurationData("creativeTemplates");
+  // Load sender IDs and SMS routes from configuration
+  const { data: senderIds } = useConfigurationData("senderIds");
+  const { data: smsRoutes } = useConfigurationData("smsRoutes");
+  // Load languages from configuration
+  const { data: languages } = useConfigurationData("languages");
   // Initialize selectedCreative from creatives if available, otherwise null
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
     () => {
@@ -489,7 +534,7 @@ export default function OfferCreativeStep({
   const addCreative = () => {
     const newCreative: LocalOfferCreative = {
       id: generateId(),
-      channel: "Email", // Default to Email (backend format)
+      channel: "SMS", // Default to SMS
       locale: "en", // Default locale
       title: "",
       text_body: "",
@@ -542,20 +587,37 @@ export default function OfferCreativeStep({
   const getChannelConfig = (channel: CreativeChannel) =>
     CHANNELS.find((c) => c.value === channel);
 
-  // Filter templates by channel (metadataValue matches channel)
-  const getTemplatesForChannel = (channel: CreativeChannel) => {
-    return (templates as TypeConfigurationItem[]).filter(
-      (template) =>
-        template.isActive &&
-        template.metadataValue?.toLowerCase() === channel.toLowerCase()
-    );
+  // Filter templates by channel and locale
+  // Templates use metadataValue for channel, and locale field for language matching
+  const getTemplatesForChannelAndLocale = (
+    channel: CreativeChannel,
+    locale: Locale
+  ) => {
+    return (templates as TypeConfigurationItem[]).filter((template) => {
+      if (!template.isActive) return false;
+
+      // Check if template matches channel
+      const matchesChannel =
+        template.metadataValue?.toLowerCase() === channel.toLowerCase();
+
+      // Check if template has locale field
+      // If template doesn't have locale specified, show it for all locales (backward compatibility)
+      // If template has locale, it must match the creative's locale
+      const templateLocale = template.locale;
+      const matchesLocale = !templateLocale || templateLocale === locale;
+
+      return matchesChannel && matchesLocale;
+    });
   };
 
-  // Get available templates for current creative's channel
+  // Get available templates for current creative's channel and locale
   const availableTemplates = useMemo(() => {
     if (!selectedCreativeData) return [];
-    return getTemplatesForChannel(selectedCreativeData.channel);
-  }, [selectedCreativeData?.channel, templates]);
+    return getTemplatesForChannelAndLocale(
+      selectedCreativeData.channel,
+      selectedCreativeData.locale
+    );
+  }, [selectedCreativeData?.channel, selectedCreativeData?.locale, templates]);
 
   // Handle template selection
   const handleTemplateSelect = (templateId: number | null) => {
@@ -977,13 +1039,35 @@ export default function OfferCreativeStep({
                       </label>
                       <HeadlessSelect
                         value={selectedCreativeData.locale}
-                        onChange={(value) =>
+                        onChange={(value) => {
                           updateCreative(selectedCreativeData.id, {
                             locale: value as Locale,
-                          })
-                        }
-                        options={LOCALE_OPTIONS}
-                        placeholder="Select locale"
+                          });
+                          // Clear template selection when locale changes
+                          // so user can select a template matching the new locale
+                          setSelectedTemplates((prev) => {
+                            const updated = { ...prev };
+                            delete updated[selectedCreativeData.id];
+                            return updated;
+                          });
+                        }}
+                        options={[
+                          ...((languages as TypeConfigurationItem[]) || [])
+                            .filter((lang) => lang.isActive)
+                            .map((lang) => ({
+                              label: lang.name,
+                              value: lang.metadataValue as string,
+                            })),
+                          // Fallback to COMMON_LOCALES if languages config is empty
+                          ...((languages as TypeConfigurationItem[])?.length ===
+                          0
+                            ? COMMON_LOCALES.map((locale) => ({
+                                label: getLocaleLabel(locale),
+                                value: locale,
+                              }))
+                            : []),
+                        ]}
+                        placeholder="Select language"
                       />
                     </div>
                   </div>
@@ -1018,14 +1102,29 @@ export default function OfferCreativeStep({
                           }
                           options={[
                             { value: "", label: "Select template" },
-                            ...availableTemplates.map((template) => ({
-                              value: template.id.toString(),
-                              label: `${template.name}${
-                                template.description
-                                  ? ` - ${template.description}`
-                                  : ""
-                              }`,
-                            })),
+                            ...availableTemplates.map((template) => {
+                              // Get language name if template has locale
+                              let languageLabel = "";
+                              if (template.locale && languages) {
+                                const language = (
+                                  languages as TypeConfigurationItem[]
+                                ).find(
+                                  (lang) =>
+                                    lang.metadataValue === template.locale
+                                );
+                                if (language) {
+                                  languageLabel = ` (${language.name})`;
+                                }
+                              }
+                              return {
+                                value: template.id.toString(),
+                                label: `${template.name}${languageLabel}${
+                                  template.description
+                                    ? ` - ${template.description}`
+                                    : ""
+                                }`,
+                              };
+                            }),
                           ]}
                           placeholder="Select a template to start with..."
                         />
@@ -1042,41 +1141,147 @@ export default function OfferCreativeStep({
                     </div>
                   )}
 
-                  {/* Title */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Title
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={160}
-                      value={selectedCreativeData.title}
-                      onChange={(e) =>
-                        updateCreative(selectedCreativeData.id, {
-                          title: e.target.value,
-                        })
-                      }
-                      placeholder="Enter creative title..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
-                    />
-                  </div>
+                  {/* Sender ID (for SMS) or Title (for other channels) */}
+                  {selectedCreativeData.channel === "SMS" ? (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Sender ID
+                      </label>
+                      <HeadlessSelect
+                        value={selectedCreativeData.title || ""}
+                        onChange={(value) =>
+                          updateCreative(selectedCreativeData.id, {
+                            title: value || "",
+                          })
+                        }
+                        options={[
+                          { label: "Select Sender ID", value: "" },
+                          ...((senderIds as TypeConfigurationItem[]) || [])
+                            .filter(
+                              (senderId) =>
+                                senderId.isActive &&
+                                senderId.metadataValue === "active"
+                            )
+                            .map((senderId) => ({
+                              label: senderId.name,
+                              value: senderId.name,
+                            })),
+                        ]}
+                        placeholder="Select Sender ID..."
+                        className="w-full"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={160}
+                        value={selectedCreativeData.title}
+                        onChange={(e) =>
+                          updateCreative(selectedCreativeData.id, {
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="Enter creative title..."
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* SMS Route (for SMS channel only) */}
+                  {selectedCreativeData.channel === "SMS" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SMS Route
+                      </label>
+                      <HeadlessSelect
+                        value={
+                          (selectedCreativeData.variables as any)?.sms_route ||
+                          ""
+                        }
+                        onChange={(value) =>
+                          updateCreative(selectedCreativeData.id, {
+                            variables: {
+                              ...selectedCreativeData.variables,
+                              sms_route: value || undefined,
+                            },
+                          })
+                        }
+                        options={[
+                          { label: "Select Route", value: "" },
+                          ...((smsRoutes as TypeConfigurationItem[]) || [])
+                            .filter((route) => route.isActive)
+                            .map((route) => ({
+                              label: route.name,
+                              value: route.name,
+                            })),
+                        ]}
+                        placeholder="Select SMS Route..."
+                        className="w-full"
+                      />
+                    </div>
+                  )}
 
                   {/* Text Body */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Text Body
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Text Body
+                      </label>
+                      {selectedCreativeData.channel === "SMS" &&
+                        (() => {
+                          const senderId = selectedCreativeData.title || "";
+                          const { totalChars, smsCount } = calculateSMSSegments(
+                            selectedCreativeData.text_body || "",
+                            senderId
+                          );
+                          return (
+                            <span
+                              className={`text-xs font-medium ${
+                                smsCount > 1
+                                  ? "text-orange-600"
+                                  : totalChars > 150
+                                  ? "text-yellow-600"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              {totalChars} / {smsCount} SMS
+                            </span>
+                          );
+                        })()}
+                    </div>
                     <textarea
                       value={selectedCreativeData.text_body}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        // Allow any length - messages will split into multiple SMS
                         updateCreative(selectedCreativeData.id, {
                           text_body: e.target.value,
-                        })
-                      }
+                        });
+                      }}
                       placeholder="Enter the text content..."
                       rows={4}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none"
                     />
+                    {selectedCreativeData.channel === "SMS" &&
+                      (() => {
+                        const senderId = selectedCreativeData.title || "";
+                        const { totalChars, smsCount } = calculateSMSSegments(
+                          selectedCreativeData.text_body || "",
+                          senderId
+                        );
+                        if (smsCount > 1) {
+                          return (
+                            <p className="mt-1 text-xs text-orange-600">
+                              Message will be sent as {smsCount} SMS
+                              {smsCount > 1 ? "es" : ""} (charged separately)
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
                   </div>
 
                   {/* HTML Body (for email/web) */}

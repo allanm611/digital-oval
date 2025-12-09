@@ -113,19 +113,23 @@ export function ConfigurationModal({
     e.preventDefault();
 
     if (config.nameRequired && !formData.name.trim()) {
-      setError(`${config.nameLabel} is required`);
+      setError(t.genericConfig.isRequired.replace("{field}", config.nameLabel));
       return;
     }
 
     if (formData.name.length > config.nameMaxLength) {
       setError(
-        `${config.nameLabel} must be ${config.nameMaxLength} characters or less`
+        t.genericConfig.mustBeCharactersOrLess
+          .replace("{field}", config.nameLabel)
+          .replace("{maxLength}", config.nameMaxLength.toString())
       );
       return;
     }
 
     if (config.descriptionRequired && !formData.description.trim()) {
-      setError(`${config.descriptionLabel} is required`);
+      setError(
+        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel)
+      );
       return;
     }
 
@@ -134,7 +138,9 @@ export function ConfigurationModal({
       formData.description.length > config.descriptionMaxLength
     ) {
       setError(
-        `${config.descriptionLabel} must be ${config.descriptionMaxLength} characters or less`
+        t.genericConfig.mustBeCharactersOrLess
+          .replace("{field}", config.descriptionLabel)
+          .replace("{maxLength}", config.descriptionMaxLength.toString())
       );
       return;
     }
@@ -179,7 +185,10 @@ export function ConfigurationModal({
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder={`Enter ${config.nameLabel.toLowerCase()}`}
+                placeholder={t.genericConfig.enter.replace(
+                  "{field}",
+                  config.nameLabel.toLowerCase()
+                )}
                 maxLength={config.nameMaxLength}
                 required={config.nameRequired}
               />
@@ -198,7 +207,10 @@ export function ConfigurationModal({
                   }))
                 }
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder={`Enter ${config.descriptionLabel.toLowerCase()}`}
+                placeholder={t.genericConfig.enter.replace(
+                  "{field}",
+                  config.descriptionLabel.toLowerCase()
+                )}
                 rows={3}
                 maxLength={config.descriptionMaxLength}
                 required={config.descriptionRequired}
@@ -227,10 +239,16 @@ export function ConfigurationModal({
               style={{ backgroundColor: color.primary.action }}
             >
               {isSaving
-                ? "Saving..."
+                ? t.genericConfig.saving
                 : item
-                ? `Update ${config.entityName}`
-                : `Create ${config.entityName}`}
+                ? t.genericConfig.update.replace(
+                    "{entityName}",
+                    config.entityName
+                  )
+                : t.genericConfig.create.replace(
+                    "{entityName}",
+                    config.entityName
+                  )}
             </button>
           </div>
         </form>
@@ -312,7 +330,7 @@ export default function GenericConfigurationPage({
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
-        "Error",
+        t.genericConfig.error,
         err instanceof Error ? err.message : config.deleteErrorMessage
       );
     }
@@ -361,7 +379,10 @@ export default function GenericConfigurationPage({
       setEditingItem(undefined);
     } catch (err) {
       console.error(`Failed to save ${config.entityName}:`, err);
-      showError(`Failed to save ${config.entityName}`, config.saveErrorMessage);
+      showError(
+        t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
+        config.saveErrorMessage
+      );
     } finally {
       setIsSaving(false);
     }
@@ -486,7 +507,7 @@ export default function GenericConfigurationPage({
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Description
+                    {t.genericConfig.description}
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
@@ -496,7 +517,7 @@ export default function GenericConfigurationPage({
                       borderTopRightRadius: "0.375rem",
                     }}
                   >
-                    Actions
+                    {t.genericConfig.actions}
                   </th>
                 </tr>
               </thead>
@@ -532,7 +553,7 @@ export default function GenericConfigurationPage({
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {item.description || "No description"}
+                        {item.description || t.genericConfig.noDescription}
                       </div>
                     </td>
 

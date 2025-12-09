@@ -128,6 +128,48 @@ export default function CreateCampaignPage() {
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const hasRestoredDataRef = useRef(false);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    // Function to perform scroll
+    const performScroll = () => {
+      // Scroll window
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      // Scroll document elements
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+      }
+      if (document.body) {
+        document.body.scrollTop = 0;
+      }
+      // Scroll any scrollable containers
+      const scrollableContainers = document.querySelectorAll(
+        '[style*="overflow"], [class*="overflow"]'
+      );
+      scrollableContainers.forEach((container) => {
+        if (container instanceof HTMLElement && container.scrollTop > 0) {
+          container.scrollTop = 0;
+        }
+      });
+    };
+
+    // Immediate scroll
+    performScroll();
+
+    // Scroll after render (using requestAnimationFrame)
+    requestAnimationFrame(() => {
+      performScroll();
+    });
+
+    // Also scroll after delays to catch any delayed renders
+    const timeoutId1 = setTimeout(performScroll, 50);
+    const timeoutId2 = setTimeout(performScroll, 150);
+
+    return () => {
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+    };
+  }, [currentStep]);
+
   // Get params from URL
   const categoryIdParam = searchParams.get("categoryId");
   const duplicateIdParam = searchParams.get("duplicateId");

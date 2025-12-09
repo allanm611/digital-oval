@@ -274,7 +274,7 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className={`${tw.mainHeading} mt-2`}>Customer Management</h1>
+          <h1 className={`${tw.mainHeading} mt-2`}>Customer 360 Profile</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Manage all customers from a single workspace.
           </p>
@@ -283,7 +283,7 @@ export default function CustomersPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleOpenSearchModal}
+              onClick={handleOpenSearchModal} 
               className={`${tw.button} inline-flex items-center gap-2`}
             >
               <Search className="h-4 w-4" />

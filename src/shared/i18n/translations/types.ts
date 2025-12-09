@@ -111,9 +111,60 @@ export interface Translations {
     areYouSure: string;
   };
 
+  // Notifications
+  notifications: {
+    title: string;
+    markAllAsRead: string;
+    deleteAll: string;
+    totalLabel: string;
+    unreadLabel: string;
+    searchPlaceholder: string;
+    typeAll: string;
+    priorityAll: string;
+    statusAll: string;
+    statusUnread: string;
+    statusRead: string;
+    clearFilters: string;
+    deselectAll: string;
+    selectAll: string;
+    selectedCount: string; // {count}
+    selectPrompt: string;
+    bulkMarkAsRead: string;
+    bulkDelete: string;
+    cancel: string;
+    loading: string;
+    loadingNotifications: string;
+    emptyTitle: string;
+    emptyFiltered: string;
+    emptyNoData: string;
+    viewDetails: string;
+    previous: string;
+    next: string;
+    pageOf: string; // {page} {total}
+    dropdownTitle: string;
+    dropdownNew: string; // {count}
+    dropdownMarkAllAsRead: string;
+    dropdownViewAll: string;
+    dropdownUnread: string;
+    dropdownAll: string;
+    dropdownLoading: string;
+    dropdownNoUnread: string;
+    dropdownNoNotifications: string;
+    dropdownAllCaughtUp: string;
+    dropdownNoNotificationsYet: string;
+    dropdownViewAllNotifications: string;
+    priority: {
+      low: string;
+      medium: string;
+      high: string;
+      urgent: string;
+    };
+  };
+
   // Dashboard
   dashboard: {
     welcome: string;
+    welcomeMessage: string;
     overview: string;
     activeCampaigns: string;
     pendingApprovals: string;
@@ -138,12 +189,12 @@ export interface Translations {
     recentSegments: string;
     recentProducts: string;
     quickActions: string;
+    quickActionsDescription: string;
     createCampaign: string;
     newOffer: string;
     buildSegment: string;
     createProduct: string;
     configuration: string;
-    requiresAttention: string;
     campaignExpiringSoon: string;
     offerExpiring: string;
     pendingApproval: string;
@@ -159,6 +210,7 @@ export interface Translations {
     campaignsByParticipants: string;
     campaignsBySpend: string;
     conversion: string;
+    converted: string;
     loadingTopCampaigns: string;
     quickInsights: string;
     instantHighlights: string;
@@ -171,6 +223,27 @@ export interface Translations {
     offersByAcceptanceRate: string;
     actionItemsNeedReview: string;
     acceptance: string;
+    totalCampaigns: string;
+    totalOffers: string;
+    totalSegments: string;
+    totalProducts: string;
+    conversionRate: string;
+    vsLastMonth: string;
+    loading: string;
+    noItemsFound: string;
+    createFirst: string;
+    offerTypeDistribution: string;
+    offerTypeDistributionDescription: string;
+    segmentTypeDistribution: string;
+    segmentTypeDistributionDescription: string;
+    loadingDistribution: string;
+    noOfferTypeData: string;
+    noSegmentTypeData: string;
+    participationRate: string;
+    utilization: string;
+    priorityHigh: string;
+    priorityMedium: string;
+    unknown: string;
   };
 
   // Page Titles
@@ -237,6 +310,82 @@ export interface Translations {
     activateUser: string;
     deactivateUser: string;
     cached: string;
+    allDepartments: string;
+    allRoles: string;
+    allStatus: string;
+    selectDepartment: string;
+    selectRole: string;
+    selectStatus: string;
+    active: string;
+    inactive: string;
+    loading: string; // {tab}
+    unableToLoad: string; // {tab}
+    noUsersFound: string;
+    noUsers: string;
+    tryAdjustingSearch: string;
+    createFirstUser: string;
+    editUser: string;
+    deactivateUserTitle: string;
+    activateUserTitle: string;
+    requestApproved: string;
+    requestRejected: string;
+    userDeactivated: string;
+    userActivated: string;
+    userDeleted: string;
+    statusUnknown: string;
+    overview: string;
+    permissions: string;
+    reports: string;
+    personalInformation: string;
+    workInformation: string;
+    securityAccess: string;
+    activityTimeline: string;
+    fullName: string;
+    username: string;
+    email: string;
+    phone: string;
+    department: string;
+    role: string;
+    jobTitle: string;
+    dataAccess: string;
+    status: string;
+    mfa: string;
+    enabled: string;
+    disabled: string;
+    canLogin: string;
+    yes: string;
+    no: string;
+    piiAccess: string;
+    allowed: string;
+    restricted: string;
+    created: string;
+    updated: string;
+    lastLogin: string;
+    directPermissions: string;
+    noDirectPermissions: string;
+    loadingPermissions: string;
+    noPermissions: string;
+    noPermissionsOrRoles: string;
+    totalPermissions: string;
+    sensitivePermissions: string;
+    mfaRequired: string;
+    totalRoles: string;
+    permissionsByCategory: string;
+    allPermissions: string; // {count}
+    permission: string;
+    code: string;
+    permissionDescription: string;
+    assignedRoles: string; // {count}
+    noPermissionsData: string;
+    permissionInfoNotAvailable: string;
+    directReports: string; // {count}
+    allReports: string; // {count}
+    fullHierarchy: string;
+    includesDirectAndIndirect: string;
+    direct: string;
+    managerChain: string; // {count}
+    noReportsOrManagers: string;
+    noDirectReportsYet: string;
   };
 
   // Configuration
@@ -265,6 +414,45 @@ export interface Translations {
     noItems: string;
     tryAdjustingSearch: string;
     createFirstItem: string;
+    saving: string;
+    update: string; // {entityName}
+    create: string; // {entityName}
+    description: string;
+    actions: string;
+    noDescription: string;
+    error: string;
+    failedToSave: string; // {entityName}
+    isRequired: string; // {field}
+    mustBeCharactersOrLess: string; // {field} {maxLength}
+    enter: string; // {field}
+    status: string;
+    active: string;
+    inactive: string;
+    selectStatus: string;
+    templateContent: string;
+    languageOptional: string;
+    selectLanguageOptional: string;
+    title: string;
+    textBody: string;
+    htmlBody: string;
+    variables: string;
+    variablesPlaceholder: string;
+    invalidJson: string;
+    mustBeValidNumber: string; // {field}
+    mustBeValidJsonObject: string;
+    titleOptional: string;
+    enterTemplateTitle: string;
+    characters: string; // {count}/{max}
+    textBodyOptional: string;
+    enterTextContent: string;
+    htmlBodyOptional: string;
+    enterHtmlContent: string;
+    variablesJsonFormat: string;
+    defineDefaultVariables: string;
+    validJson: string;
+    invalidJsonWarning: string;
+    selectLanguageForTemplate: string;
+    templatesWithoutLanguage: string;
   };
 
   // Profile
@@ -277,6 +465,31 @@ export interface Translations {
     cancel: string;
     profileUpdated: string;
     profileUpdatedSuccess: string;
+    unableToLoad: string;
+    errorUserInfoNotAvailable: string;
+    errorLoadProfile: string;
+    errorUpdateProfile: string;
+    personalInformation: string;
+    professionalInformation: string;
+    accountInformation: string;
+    firstName: string;
+    lastName: string;
+    emailAddress: string;
+    emailCannotBeChanged: string;
+    phoneNumber: string;
+    department: string;
+    jobTitle: string;
+    timezone: string;
+    timezonePlaceholder: string;
+    languagePreference: string;
+    selectLanguage: string;
+    username: string;
+    dataAccessLevel: string;
+    piiAccess: string;
+    lastLogin: string;
+    accountCreated: string;
+    lastUpdated: string;
+    statusUnknown: string;
   };
 
   // Manual Broadcast
@@ -292,6 +505,112 @@ export interface Translations {
     scheduleDesc: string;
     createdSuccess: string;
     createFailed: string;
+    loading: string;
+    targetAudienceTitle: string;
+    targetAudienceSubtitle: string;
+    listNameLabel: string;
+    listNamePlaceholder: string;
+    listTypeLabel: string;
+    listTypeStandard: string;
+    listTypePremium: string;
+    listTypeVIP: string;
+    listTypePlaceholder: string;
+    inputMethodLabel: string;
+    inputMethodUpload: string;
+    inputMethodManual: string;
+    uploadFileLabel: string;
+    uploadFileHelper: string;
+    downloadTemplate: string;
+    selectUploadTypeFirst: string;
+    clickToUpload: string;
+    dragAndDrop: string;
+    changeFile: string;
+    maxFileSize: string; // {size}
+    manualEntryLabel: string;
+    manualEntryPlaceholder: string;
+    manualEntryHelp: string;
+    validationValid: string; // {count}
+    validationInvalid: string; // {count}
+    errorSelectFile: string;
+    errorEnterManual: string;
+    errorNoValidContacts: string;
+    errorSelectUploadType: string;
+    errorEnterName: string;
+    errorCreateAudience: string;
+    errorLoadUploadTypes: string;
+    nextDefineCommunication: string;
+    creatingAudience: string;
+    defineCommunicationTitle: string;
+    defineCommunicationSubtitle: string;
+    channelLabel: string;
+    channelEmail: string;
+    channelSMS: string;
+    channelWhatsApp: string;
+    channelPush: string;
+    channelEmailDesc: string;
+    channelSMSDesc: string;
+    channelWhatsAppDesc: string;
+    channelPushDesc: string;
+    errorMessageBodyRequired: string;
+    errorSubjectRequired: string;
+    previous: string;
+    nextTest: string;
+    testBroadcastTitle: string;
+    testBroadcastSubtitle: string;
+    testInputLabelEmail: string;
+    testInputLabelPhone: string;
+    testInputLabelGeneric: string;
+    testPlaceholderEmail: string;
+    testPlaceholderPhone: string;
+    testPlaceholderGeneric: string;
+    testHelperEmail: string;
+    testHelperPhone: string;
+    testHelperGeneric: string;
+    addContact: string;
+    contactAlreadyAdded: string;
+    testRecipientsLabel: string; // {count}
+    sendTest: string;
+    sendingTest: string;
+    testResults: string;
+    testCompleted: string;
+    testSummary: string; // {success} {total}
+    testMessageSuccess: string;
+    testMessageFailed: string;
+    errorEnterContact: string;
+    errorInvalidEmail: string;
+    errorInvalidPhone: string;
+    errorInvalidContact: string;
+    errorAddAtLeastOne: string;
+    errorAudienceNotCreated: string;
+    errorSendTestFailed: string;
+    skipTest: string;
+    nextSchedule: string;
+    scheduleTitle: string;
+    scheduleSubtitle: string;
+    scheduleQuestion: string;
+    sendNowTitle: string;
+    sendNowDesc: string;
+    scheduleLaterTitle: string;
+    scheduleLaterDesc: string;
+    dateLabel: string;
+    timeLabel: string;
+    broadcastSummary: string;
+    summaryAudience: string;
+    summaryRecipients: string;
+    summaryChannel: string;
+    summarySchedule: string;
+    summaryNotSet: string;
+    summarySendNow: string;
+    summaryScheduled: string; // {dateTime}
+    warningTitle: string;
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    launchBroadcast: string;
+    creating: string;
+    errorSelectDate: string;
+    errorSelectTime: string;
+    errorFutureDateTime: string;
+    errorCreateBroadcast: string;
   };
 
   // Servers
@@ -306,6 +625,47 @@ export interface Translations {
     deactivateServers: string;
     enableHealthChecks: string;
     disableHealthChecks: string;
+  };
+
+  // Customer Identity
+  customerIdentity: {
+    title: string;
+    description: string;
+    searchFields: string;
+    allFieldTypes: string;
+    filterByFieldType: string;
+    unableToLoadFields: string;
+    retry: string;
+    noFieldsAvailable: string;
+    noFieldsConfigured: string;
+    noMatchingFields: string;
+    tryAdjustingSearch: string;
+    id: string;
+    fieldName: string;
+    fieldValue: string;
+    fieldType: string;
+    sourceTable: string;
+    description: string;
+    actions: string;
+    viewDetails: string;
+    fieldDetails: string;
+    fieldOverview: string;
+    coreMetadata: string;
+    typeInformation: string;
+    sourceValidation: string;
+    operatorSupport: string;
+    noOperatorsConfigured: string;
+    label: string;
+    symbol: string;
+    requiresValue: string;
+    requiresTwoValues: string;
+    applicableTypes: string;
+    yes: string;
+    no: string;
+    invalidFieldIdentifier: string;
+    fieldNotFound: string;
+    unableToLoadField: string;
+    unableToLoadFieldDetails: string;
   };
 
   // Jobs
@@ -323,5 +683,32 @@ export interface Translations {
     allJobTypes: string;
     updateJobTypeDesc: string;
     createJobTypeDesc: string;
+  };
+
+  // Landing Page
+  landing: {
+    corePlatform: string;
+    corePlatformDescription: string;
+    sentraCM: string;
+    sentraCMSubtitle: string;
+    sentraCMDescription: string;
+    analytics: string;
+    analyticsSubtitle: string;
+    analyticsDescription: string;
+    sentra360: string;
+    sentra360Subtitle: string;
+    sentra360Description: string;
+    sentraXM: string;
+    sentraXMSubtitle: string;
+    sentraXMDescription: string;
+    sentraTarget: string;
+    sentraTargetSubtitle: string;
+    sentraTargetDescription: string;
+    sentraConnect: string;
+    sentraConnectSubtitle: string;
+    sentraConnectDescription: string;
+    sentraConfig: string;
+    sentraConfigSubtitle: string;
+    sentraConfigDescription: string;
   };
 }

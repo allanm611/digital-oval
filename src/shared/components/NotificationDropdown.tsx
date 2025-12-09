@@ -11,6 +11,7 @@ import {
 import { useNotifications } from "../../contexts/NotificationContext";
 import { Notification } from "../../features/notifications/types/notification";
 import { color, tw } from "../utils/utils";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface NotificationDropdownProps {
   onClose?: () => void;
@@ -20,6 +21,7 @@ export default function NotificationDropdown({
   onClose,
 }: NotificationDropdownProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const {
     notifications,
     stats,
@@ -116,7 +118,7 @@ export default function NotificationDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2.5 text-white/90 hover:text-white rounded-md transition-colors"
-        title="Notifications"
+        title={t.notifications.dropdownTitle}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -132,10 +134,15 @@ export default function NotificationDropdown({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-900">Notifications</h3>
+              <h3 className="font-semibold text-gray-900">
+                {t.notifications.dropdownTitle}
+              </h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                  {unreadCount} new
+                  {t.notifications.dropdownNew.replace(
+                    "{count}",
+                    unreadCount.toString()
+                  )}
                 </span>
               )}
             </div>
@@ -151,7 +158,7 @@ export default function NotificationDropdown({
                     }
                   }}
                   className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                  title="Mark all as read"
+                  title={t.notifications.dropdownMarkAllAsRead}
                 >
                   <CheckCheck className="h-4 w-4" />
                 </button>
@@ -162,7 +169,7 @@ export default function NotificationDropdown({
                   navigate("/dashboard/notifications");
                 }}
                 className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-                title="View all notifications"
+                title={t.notifications.dropdownViewAll}
               >
                 <Settings className="h-4 w-4" />
               </button>
@@ -192,7 +199,7 @@ export default function NotificationDropdown({
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
-              Unread
+              {t.notifications.dropdownUnread}
             </button>
             <button
               onClick={() => setFilter("all")}
@@ -206,7 +213,7 @@ export default function NotificationDropdown({
                   : "border-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
-              All
+              {t.notifications.dropdownAll}
             </button>
           </div>
 
@@ -216,7 +223,7 @@ export default function NotificationDropdown({
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
                 <p className="mt-3 text-sm text-gray-600">
-                  Loading notifications...
+                  {t.notifications.dropdownLoading}
                 </p>
               </div>
             ) : displayNotifications.length === 0 ? (
@@ -224,13 +231,13 @@ export default function NotificationDropdown({
                 <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm font-medium text-gray-900 mb-1">
                   {filter === "unread"
-                    ? "No unread notifications"
-                    : "No notifications"}
+                    ? t.notifications.dropdownNoUnread
+                    : t.notifications.dropdownNoNotifications}
                 </p>
                 <p className="text-xs text-gray-600">
                   {filter === "unread"
-                    ? "You're all caught up!"
-                    : "You don't have any notifications yet"}
+                    ? t.notifications.dropdownAllCaughtUp
+                    : t.notifications.dropdownNoNotificationsYet}
                 </p>
               </div>
             ) : (
@@ -274,7 +281,8 @@ export default function NotificationDropdown({
                             <div className="mt-2 flex items-center gap-2">
                               <ExternalLink className={`h-3 w-3 ${tw.link}`} />
                               <span className={`text-sm ${tw.link}`}>
-                                {notification.actionLabel || "View details"}
+                                {notification.actionLabel ||
+                                  t.notifications.viewDetails}
                               </span>
                             </div>
                           )}
@@ -286,13 +294,13 @@ export default function NotificationDropdown({
                                 handleMarkAsRead(notification.id, e)
                               }
                               className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                              title="Mark as read"
+                              title={t.notifications.markAllAsRead}
                             ></button>
                           )}
                           <button
                             onClick={(e) => handleDelete(notification.id, e)}
                             className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
+                            title={t.notifications.bulkDelete}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -315,7 +323,7 @@ export default function NotificationDropdown({
                 }}
                 className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2 hover:bg-blue-50 rounded transition-colors"
               >
-                View all notifications
+                {t.notifications.dropdownViewAllNotifications}
               </button>
             </div>
           )}

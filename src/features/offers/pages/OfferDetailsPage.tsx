@@ -79,10 +79,7 @@ const creativeChannelOptions = VALID_CHANNELS.map((channel) => ({
   label: channel,
 }));
 
-const localeOptions = COMMON_LOCALES.map((locale) => ({
-  value: locale,
-  label: getLocaleLabel(locale),
-}));
+// Locale options will be generated from languages config
 
 export default function OfferDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -181,13 +178,15 @@ export default function OfferDetailsPage() {
     text_body: string;
     html_body: string;
     is_active: boolean;
+    variables?: Record<string, string | number | boolean>;
   }>({
-    channel: "Email" as CreativeChannel,
+    channel: "SMS" as CreativeChannel, // Default to SMS instead of Email
     locale: "en",
     title: "",
     text_body: "",
     html_body: "",
     is_active: true,
+    variables: {},
   });
   const [newCreativeVariables, setNewCreativeVariables] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
@@ -204,6 +203,42 @@ export default function OfferDetailsPage() {
 
   // Load creative templates from configuration
   const { data: templates } = useConfigurationData("creativeTemplates");
+  // Load sender IDs and SMS routes from configuration
+  const { data: senderIds } = useConfigurationData("senderIds");
+  const { data: smsRoutes } = useConfigurationData("smsRoutes");
+  // Load languages from configuration
+  const { data: languages } = useConfigurationData("languages");
+
+  // Helper function to calculate SMS segments
+  const calculateSMSSegments = (
+    messageText: string,
+    senderId: string = ""
+  ): { totalChars: number; smsCount: number } => {
+    if (!messageText && !senderId) {
+      return { totalChars: 0, smsCount: 0 };
+    }
+
+    // Sender ID is prepended with ": " (2 chars) if message exists
+    const senderIdPrefix = senderId ? `${senderId}: ` : "";
+    const fullMessage = senderIdPrefix + messageText;
+    const totalChars = fullMessage.length;
+
+    if (totalChars === 0) {
+      return { totalChars: 0, smsCount: 0 };
+    }
+
+    // Calculate SMS segments
+    // First segment: 160 characters
+    // Subsequent segments: 153 characters each
+    if (totalChars <= 160) {
+      return { totalChars, smsCount: 1 };
+    }
+
+    // More than 160 chars - calculate segments
+    const remainingChars = totalChars - 160;
+    const additionalSegments = Math.ceil(remainingChars / 153);
+    return { totalChars, smsCount: 1 + additionalSegments };
+  };
 
   // Helper to replace variables in text
   const replaceVariables = (
@@ -220,19 +255,36 @@ export default function OfferDetailsPage() {
     return result;
   };
 
-  // Filter templates by channel
-  const getTemplatesForChannel = (channel: CreativeChannel) => {
-    return (templates as TypeConfigurationItem[]).filter(
-      (template) =>
-        template.isActive &&
-        template.metadataValue?.toLowerCase() === channel.toLowerCase()
-    );
+  // Filter templates by channel and locale
+  const getTemplatesForChannelAndLocale = (
+    channel: CreativeChannel,
+    locale: string
+  ) => {
+    return (templates as TypeConfigurationItem[]).filter((template) => {
+      if (!template.isActive) return false;
+
+      // Check if template matches channel
+      const matchesChannel =
+        template.metadataValue?.toLowerCase() === channel.toLowerCase();
+
+      // Check if template has locale field
+      // If template doesn't have locale specified, show it for all locales (backward compatibility)
+      // If template has locale, it must match the creative's locale
+      const templateLocale = template.locale;
+      const matchesLocale = !templateLocale || templateLocale === locale;
+
+      return matchesChannel && matchesLocale;
+    });
   };
 
-  // Get available templates for current channel
+  // Get available templates for current channel and locale
   const availableTemplates = useMemo(
-    () => getTemplatesForChannel(newCreativeForm.channel),
-    [newCreativeForm.channel, templates]
+    () =>
+      getTemplatesForChannelAndLocale(
+        newCreativeForm.channel,
+        newCreativeForm.locale
+      ),
+    [newCreativeForm.channel, newCreativeForm.locale, templates]
   );
 
   // Add product modal state
@@ -255,7 +307,7 @@ export default function OfferDetailsPage() {
 
   const resetNewCreativeForm = () => {
     setNewCreativeForm({
-      channel: "Email" as CreativeChannel,
+      channel: "SMS" as CreativeChannel, // Default to SMS instead of Email
       locale: "en",
       title: "",
       text_body: "",
@@ -667,6 +719,15 @@ export default function OfferDetailsPage() {
 
     let parsedVariables: Record<string, string | number | boolean> | undefined;
 
+    // Start with variables from form (e.g., SMS route)
+    if (
+      newCreativeForm.variables &&
+      Object.keys(newCreativeForm.variables).length > 0
+    ) {
+      parsedVariables = { ...newCreativeForm.variables };
+    }
+
+    // Merge with variables from JSON textarea
     if (newCreativeVariables.trim()) {
       try {
         const parsed = JSON.parse(newCreativeVariables);
@@ -678,7 +739,10 @@ export default function OfferDetailsPage() {
           showError("Variables JSON must be an object with key/value pairs.");
           return;
         }
-        parsedVariables = parsed;
+        parsedVariables = {
+          ...(parsedVariables || {}),
+          ...parsed,
+        };
       } catch {
         showError("Invalid JSON in variables field");
         return;
@@ -2114,18 +2178,34 @@ export default function OfferDetailsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Locale
+                Locale / Language
               </label>
               <HeadlessSelect
                 value={newCreativeForm.locale}
-                onChange={(value) =>
+                onChange={(value) => {
                   setNewCreativeForm((prev) => ({
                     ...prev,
                     locale: String(value),
-                  }))
-                }
-                options={localeOptions}
-                placeholder="Select a locale"
+                  }));
+                  // Clear template selection when locale changes
+                  setSelectedTemplateId(null);
+                }}
+                options={[
+                  ...((languages as TypeConfigurationItem[]) || [])
+                    .filter((lang) => lang.isActive)
+                    .map((lang) => ({
+                      label: lang.name,
+                      value: lang.metadataValue as string,
+                    })),
+                  // Fallback to COMMON_LOCALES if languages config is empty
+                  ...((languages as TypeConfigurationItem[])?.length === 0
+                    ? COMMON_LOCALES.map((locale) => ({
+                        label: getLocaleLabel(locale),
+                        value: locale,
+                      }))
+                    : []),
+                ]}
+                placeholder="Select language"
                 searchable
               />
             </div>
@@ -2157,12 +2237,28 @@ export default function OfferDetailsPage() {
                   }
                   options={[
                     { value: "", label: "Select template" },
-                    ...availableTemplates.map((template) => ({
-                      value: template.id.toString(),
-                      label: `${template.name}${
-                        template.description ? ` - ${template.description}` : ""
-                      }`,
-                    })),
+                    ...availableTemplates.map((template) => {
+                      // Get language name if template has locale
+                      let languageLabel = "";
+                      if (template.locale && languages) {
+                        const language = (
+                          languages as TypeConfigurationItem[]
+                        ).find(
+                          (lang) => lang.metadataValue === template.locale
+                        );
+                        if (language) {
+                          languageLabel = ` (${language.name})`;
+                        }
+                      }
+                      return {
+                        value: template.id.toString(),
+                        label: `${template.name}${languageLabel}${
+                          template.description
+                            ? ` - ${template.description}`
+                            : ""
+                        }`,
+                      };
+                    }),
                   ]}
                   placeholder="Select a template to start with..."
                 />
@@ -2178,28 +2274,116 @@ export default function OfferDetailsPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Title
-            </label>
-            <input
-              type="text"
-              value={newCreativeForm.title}
-              onChange={(e) =>
-                setNewCreativeForm((prev) => ({
-                  ...prev,
-                  title: e.target.value,
-                }))
-              }
-              placeholder="Enter creative title..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          {/* Sender ID (for SMS) or Title (for other channels) */}
+          {newCreativeForm.channel === "SMS" ? (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Sender ID
+              </label>
+              <HeadlessSelect
+                value={newCreativeForm.title || ""}
+                onChange={(value) =>
+                  setNewCreativeForm((prev) => ({
+                    ...prev,
+                    title: value || "",
+                  }))
+                }
+                options={[
+                  { label: "Select Sender ID", value: "" },
+                  ...((senderIds as TypeConfigurationItem[]) || [])
+                    .filter(
+                      (senderId) =>
+                        senderId.isActive && senderId.metadataValue === "active"
+                    )
+                    .map((senderId) => ({
+                      label: senderId.name,
+                      value: senderId.name,
+                    })),
+                ]}
+                placeholder="Select Sender ID..."
+                className="w-full"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                maxLength={160}
+                value={newCreativeForm.title}
+                onChange={(e) =>
+                  setNewCreativeForm((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                placeholder="Enter creative title..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          )}
+
+          {/* SMS Route (for SMS channel only) */}
+          {newCreativeForm.channel === "SMS" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                SMS Route
+              </label>
+              <HeadlessSelect
+                value={(newCreativeForm.variables as any)?.sms_route || ""}
+                onChange={(value) =>
+                  setNewCreativeForm((prev) => ({
+                    ...prev,
+                    variables: {
+                      ...(prev.variables || {}),
+                      sms_route: value || undefined,
+                    },
+                  }))
+                }
+                options={[
+                  { label: "Select Route", value: "" },
+                  ...((smsRoutes as TypeConfigurationItem[]) || [])
+                    .filter((route) => route.isActive)
+                    .map((route) => ({
+                      label: route.name,
+                      value: route.name,
+                    })),
+                ]}
+                placeholder="Select SMS Route..."
+                className="w-full"
+              />
+            </div>
+          )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Text Body
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Text Body
+              </label>
+              {newCreativeForm.channel === "SMS" &&
+                (() => {
+                  const senderId = newCreativeForm.title || "";
+                  const { totalChars, smsCount } = calculateSMSSegments(
+                    newCreativeForm.text_body || "",
+                    senderId
+                  );
+                  return (
+                    <span
+                      className={`text-xs font-medium ${
+                        smsCount > 1
+                          ? "text-orange-600"
+                          : totalChars > 150
+                          ? "text-yellow-600"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {totalChars} / {smsCount} SMS
+                    </span>
+                  );
+                })()}
+            </div>
             <textarea
               value={newCreativeForm.text_body}
               onChange={(e) =>
@@ -2212,9 +2396,28 @@ export default function OfferDetailsPage() {
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Provide at least one of Title, Text Body, or HTML Body.
-            </p>
+            {newCreativeForm.channel === "SMS" &&
+              (() => {
+                const senderId = newCreativeForm.title || "";
+                const { totalChars, smsCount } = calculateSMSSegments(
+                  newCreativeForm.text_body || "",
+                  senderId
+                );
+                if (smsCount > 1) {
+                  return (
+                    <p className="mt-1 text-xs text-orange-600">
+                      Message will be sent as {smsCount} SMS
+                      {smsCount > 1 ? "es" : ""} (charged separately)
+                    </p>
+                  );
+                }
+                return null;
+              })()}
+            {newCreativeForm.channel !== "SMS" && (
+              <p className="text-xs text-gray-500 mt-1">
+                Provide at least one of Title, Text Body, or HTML Body.
+              </p>
+            )}
           </div>
 
           <div>

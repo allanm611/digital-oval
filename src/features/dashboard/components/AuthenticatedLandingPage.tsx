@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { colors } from "../../../shared/utils/tokens";
 import {
   Target,
@@ -21,6 +22,7 @@ import { GuestHeader } from "./Header";
 export default function AuthenticatedLandingPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { t } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
 
   React.useEffect(() => {
@@ -34,10 +36,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "cm",
       code: "CM",
-      name: "Sentra CM",
-      subtitle: "Campaign Management",
-      description:
-        "The central module where campaigns are created, scheduled, executed, and tracked.",
+      name: t.landing.sentraCM,
+      subtitle: t.landing.sentraCMSubtitle,
+      description: t.landing.sentraCMDescription,
       icon: "target",
       path: "/dashboard/campaigns",
       color: "from-teal-500 to-emerald-600",
@@ -46,10 +47,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "analytics",
       code: "Analytics",
-      name: "Analytics & Reporting",
-      subtitle: "Data Insights",
-      description:
-        "Gain insights with powerful analytics and customizable reporting tools.",
+      name: t.landing.analytics,
+      subtitle: t.landing.analyticsSubtitle,
+      description: t.landing.analyticsDescription,
       icon: "bar-chart",
       path: "/dashboard/reports/overview",
       color: "from-purple-500 to-blue-600",
@@ -58,10 +58,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "360",
       code: "360",
-      name: "Sentra 360",
-      subtitle: "Unified Customer View",
-      description:
-        "Complete profile with demographics, usage, engagement, and behavioral insights.",
+      name: t.landing.sentra360,
+      subtitle: t.landing.sentra360Subtitle,
+      description: t.landing.sentra360Description,
       icon: "users",
       path: "/dashboard/customers",
       color: "from-purple-500 to-blue-600",
@@ -70,10 +69,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "xm",
       code: "XM",
-      name: "Sentra XM",
-      subtitle: "Experience Management",
-      description:
-        "Design, deliver, and optimize customer journeys with integrated experience management.",
+      name: t.landing.sentraXM,
+      subtitle: t.landing.sentraXMSubtitle,
+      description: t.landing.sentraXMDescription,
       icon: "heart",
       path: "/dashboard/experiences",
       color: "from-orange-500 to-red-600",
@@ -82,10 +80,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "target",
       code: "Target",
-      name: "Sentra Target",
-      subtitle: "Customer Segmentation",
-      description:
-        "Advanced targeting with AI-driven segmentation and propensity modeling.",
+      name: t.landing.sentraTarget,
+      subtitle: t.landing.sentraTargetSubtitle,
+      description: t.landing.sentraTargetDescription,
       icon: "filter",
       path: "/dashboard/segments",
       color: "from-red-500 to-pink-600",
@@ -94,10 +91,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "connect",
       code: "Connect",
-      name: "Sentra Connect",
-      subtitle: "Engagement Hub",
-      description:
-        "Omnichannel campaign execution with real-time tracking and adaptive optimization.",
+      name: t.landing.sentraConnect,
+      subtitle: t.landing.sentraConnectSubtitle,
+      description: t.landing.sentraConnectDescription,
       icon: "send",
       path: "/dashboard/engagement",
       color: "from-blue-500 to-cyan-600",
@@ -106,10 +102,9 @@ export default function AuthenticatedLandingPage() {
     {
       id: "config",
       code: "Config",
-      name: "Sentra Configuration",
-      subtitle: "Management",
-      description:
-        "System-wide configuration management for all platform modules and settings.",
+      name: t.landing.sentraConfig,
+      subtitle: t.landing.sentraConfigSubtitle,
+      description: t.landing.sentraConfigDescription,
       icon: "settings",
       path: "/dashboard/configuration",
       color: "from-gray-500 to-slate-600",
@@ -161,10 +156,10 @@ export default function AuthenticatedLandingPage() {
             {/* Title Section */}
             <div className="text-center mb-12">
               <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-                Core Platform
+                {t.landing.corePlatform}
               </h1>
               <p className="text-xl text-white/80 max-w-2xl mx-auto">
-                Discover the powerful modules that make up the Sentra ecosystem.
+                {t.landing.corePlatformDescription}
               </p>
             </div>
 

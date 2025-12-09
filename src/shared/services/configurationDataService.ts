@@ -12,6 +12,9 @@ import {
   creativeTemplatesConfig,
   rewardTypesConfig,
   communicationChannelsConfig,
+  senderIdsConfig,
+  smsRoutesConfig,
+  languagesConfig,
 } from "../configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
@@ -26,7 +29,10 @@ export type ConfigurationType =
   | "trackingSources"
   | "creativeTemplates"
   | "rewardTypes"
-  | "communicationChannels";
+  | "communicationChannels"
+  | "senderIds"
+  | "smsRoutes"
+  | "languages";
 
 // Service singleton pour gérer les données de configuration
 class ConfigurationDataService {
@@ -49,6 +55,9 @@ class ConfigurationDataService {
     this.listeners.set("creativeTemplates", new Set());
     this.listeners.set("rewardTypes", new Set());
     this.listeners.set("communicationChannels", new Set());
+    this.listeners.set("senderIds", new Set());
+    this.listeners.set("smsRoutes", new Set());
+    this.listeners.set("languages", new Set());
 
     // Charger les données depuis localStorage ou utiliser les données par défaut
     this.loadFromStorage();
@@ -106,6 +115,18 @@ class ConfigurationDataService {
             ...communicationChannelsConfig.initialData,
           ]
         );
+        this.data.set(
+          "senderIds",
+          parsed.senderIds || [...senderIdsConfig.initialData]
+        );
+        this.data.set(
+          "smsRoutes",
+          parsed.smsRoutes || [...smsRoutesConfig.initialData]
+        );
+        this.data.set(
+          "languages",
+          parsed.languages || [...languagesConfig.initialData]
+        );
       } else {
         // Première fois, utiliser les données par défaut
         this.data.set("lineOfBusiness", [...lineOfBusinessConfig.initialData]);
@@ -127,6 +148,9 @@ class ConfigurationDataService {
         this.data.set("communicationChannels", [
           ...communicationChannelsConfig.initialData,
         ]);
+        this.data.set("senderIds", [...senderIdsConfig.initialData]);
+        this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+        this.data.set("languages", [...languagesConfig.initialData]);
         this.saveToStorage();
       }
     } catch (error) {
@@ -149,6 +173,9 @@ class ConfigurationDataService {
       this.data.set("communicationChannels", [
         ...communicationChannelsConfig.initialData,
       ]);
+      this.data.set("senderIds", [...senderIdsConfig.initialData]);
+      this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+      this.data.set("languages", [...languagesConfig.initialData]);
     }
   }
 
@@ -167,6 +194,9 @@ class ConfigurationDataService {
         creativeTemplates: this.data.get("creativeTemplates") || [],
         rewardTypes: this.data.get("rewardTypes") || [],
         communicationChannels: this.data.get("communicationChannels") || [],
+        senderIds: this.data.get("senderIds") || [],
+        smsRoutes: this.data.get("smsRoutes") || [],
+        languages: this.data.get("languages") || [],
       };
       localStorage.setItem("configurationData", JSON.stringify(dataToSave));
     } catch (error) {
@@ -303,6 +333,15 @@ class ConfigurationDataService {
         break;
       case "rewardTypes":
         this.setData(type, [...rewardTypesConfig.initialData]);
+        break;
+      case "senderIds":
+        this.setData(type, [...senderIdsConfig.initialData]);
+        break;
+      case "smsRoutes":
+        this.setData(type, [...smsRoutesConfig.initialData]);
+        break;
+      case "languages":
+        this.setData(type, [...languagesConfig.initialData]);
         break;
     }
   }

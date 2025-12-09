@@ -579,10 +579,10 @@ export default function DashboardHome() {
                   id: offer.id,
                   name: offer.name,
                   status: offer.status?.toLowerCase() || "draft",
-                  type: offer.offer_type || "Unknown",
+                  type: offer.offer_type || t.dashboard.unknown,
                   created: offer.created_at
                     ? formatDate(offer.created_at)
-                    : "Unknown",
+                    : t.dashboard.unknown,
                   created_at: offer.created_at,
                 };
               }
@@ -617,11 +617,11 @@ export default function DashboardHome() {
                 return {
                   id: segment.id,
                   name: segment.name,
-                  type: segment.type || "Unknown",
+                  type: segment.type || t.dashboard.unknown,
                   members: segment.size_estimate ?? 0,
                   created: segment.created_at
                     ? formatDate(segment.created_at)
-                    : "Unknown",
+                    : t.dashboard.unknown,
                   created_at: segment.created_at,
                 };
               }
@@ -660,7 +660,7 @@ export default function DashboardHome() {
                   status: product.is_active ? "active" : "inactive",
                   created: product.created_at
                     ? formatDate(product.created_at)
-                    : "Unknown",
+                    : t.dashboard.unknown,
                   created_at: product.created_at,
                 };
               }
@@ -1081,7 +1081,7 @@ export default function DashboardHome() {
   // Stats data - using real data from API
   const stats = [
     {
-      name: "Total Campaigns",
+      name: t.dashboard.totalCampaigns,
       value: campaignsStats?.total?.toLocaleString() ?? "",
       change:
         percentageChanges.campaigns !== null
@@ -1098,7 +1098,7 @@ export default function DashboardHome() {
       icon: Target,
     },
     {
-      name: "Total Offers",
+      name: t.dashboard.totalOffers,
       value: offersStats?.total?.toLocaleString() || "0",
       change:
         percentageChanges.offers !== null
@@ -1115,7 +1115,7 @@ export default function DashboardHome() {
       icon: Package,
     },
     {
-      name: "Total Segments",
+      name: t.dashboard.totalSegments,
       value: segmentsStats?.total?.toLocaleString() || "0",
       change:
         percentageChanges.segments !== null
@@ -1132,7 +1132,7 @@ export default function DashboardHome() {
       icon: Users,
     },
     {
-      name: "Total Products",
+      name: t.dashboard.totalProducts,
       value: productsStats?.total?.toLocaleString() || "0",
       change:
         percentageChanges.products !== null
@@ -1149,7 +1149,7 @@ export default function DashboardHome() {
       icon: ShoppingBag,
     },
     {
-      name: "Conversion Rate",
+      name: t.dashboard.conversionRate,
       value: conversionRate !== null ? `${conversionRate.toFixed(1)}%` : "",
       change: "N/A",
       changeType: "positive" as const,
@@ -1370,7 +1370,7 @@ export default function DashboardHome() {
 
         return {
           id: performer.id,
-          name: performer.name || performer.code || "Unnamed Campaign",
+          name: performer.name || performer.code || t.dashboard.unknown,
           conversionRate: conversionRate,
           performanceMetric: performanceMetric, // Replaces status with actual metric from data
           participants: performer.current_participants || 0,
@@ -1418,7 +1418,7 @@ export default function DashboardHome() {
     {
       id: 1,
       title: t.dashboard.campaignExpiringSoon,
-      description: "Q2 Customer Acquisition ends in 3 days",
+      description: t.dashboard.campaignExpiringSoon,
       type: "campaign",
       action: t.dashboard.reviewAndExtend,
       priority: "high",
@@ -1426,7 +1426,7 @@ export default function DashboardHome() {
     {
       id: 2,
       title: t.dashboard.offerExpiring,
-      description: "Spring Sale - 20% Off expires tomorrow",
+      description: t.dashboard.offerExpiring,
       type: "offer",
       action: t.dashboard.review,
       priority: "high",
@@ -1434,7 +1434,7 @@ export default function DashboardHome() {
     {
       id: 3,
       title: t.dashboard.pendingApproval,
-      description: "Premium Member Campaign awaiting approval",
+      description: t.dashboard.pendingApproval,
       type: "approval",
       action: t.dashboard.approve,
       priority: "medium",
@@ -1442,7 +1442,7 @@ export default function DashboardHome() {
     {
       id: 4,
       title: t.dashboard.segmentUpdateNeeded,
-      description: "High Value Customers segment requires refresh",
+      description: t.dashboard.segmentUpdateNeeded,
       type: "segment",
       action: t.dashboard.update,
       priority: "medium",
@@ -1528,8 +1528,7 @@ export default function DashboardHome() {
         </h1>
         {/* <p className={`${tw.textSecondary} ${tw.body}`}> */}
         <p className="text-gray-900 text-sm md:text-base">
-          Here's what's happening with your campaigns today. Your performance is
-          looking great!
+          {t.dashboard.welcomeMessage}
         </p>
       </div>
 
@@ -1563,7 +1562,9 @@ export default function DashboardHome() {
               <p className="mt-3 text-3xl font-bold text-gray-900">
                 {stat.value}
               </p>
-              <p className="mt-1 text-sm text-gray-500">vs last month</p>
+              <p className="mt-1 text-sm text-gray-500">
+                {t.dashboard.vsLastMonth}
+              </p>
             </div>
           );
         })}
@@ -1693,10 +1694,10 @@ export default function DashboardHome() {
                 {/* Filter Tabs - Desktop (lg and above) */}
                 <div className="hidden lg:flex gap-2">
                   {[
-                    { key: "campaigns", label: "Campaigns" },
-                    { key: "offers", label: "Offers" },
-                    { key: "segments", label: "Segments" },
-                    { key: "products", label: "Products" },
+                    { key: "campaigns", label: t.pages.campaigns },
+                    { key: "offers", label: t.pages.offers },
+                    { key: "segments", label: t.pages.segments },
+                    { key: "products", label: t.pages.products },
                   ].map((tab) => (
                     <button
                       key={tab.key}
@@ -1729,7 +1730,13 @@ export default function DashboardHome() {
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
                     <span className="ml-3 text-sm text-gray-500">
-                      Loading {latestItemsFilter}...
+                      {t.dashboard.loading}{" "}
+                      {(() => {
+                        const pageKey =
+                          latestItemsFilter as keyof typeof t.pages;
+                        return t.pages[pageKey] || latestItemsFilter;
+                      })()}
+                      ...
                     </span>
                   </div>
                 )}
@@ -1777,7 +1784,7 @@ export default function DashboardHome() {
                           {campaign.performance && (
                             <span className="text-black/80">
                               {campaign.performance.converted.toLocaleString()}{" "}
-                              converted
+                              {t.dashboard.converted}
                             </span>
                           )}
                         </div>
@@ -1937,7 +1944,10 @@ export default function DashboardHome() {
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
                         <p className="text-sm text-gray-500 mb-2">
-                          No {latestItemsFilter} found
+                          {t.dashboard.noItemsFound.replace(
+                            "{type}",
+                            t.pages[latestItemsFilter as keyof typeof t.pages]
+                          )}
                         </p>
                         <button
                           onClick={() => {
@@ -1953,7 +1963,10 @@ export default function DashboardHome() {
                           }}
                           className="text-sm font-medium text-black hover:text-gray-700"
                         >
-                          Create your first {latestItemsFilter.slice(0, -1)} →
+                          {t.dashboard.createFirst.replace(
+                            "{type}",
+                            latestItemsFilter.slice(0, -1)
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1969,7 +1982,7 @@ export default function DashboardHome() {
             <div className="px-6 py-4 border-b border-gray-100">
               <h2 className={tw.cardHeading}>{t.dashboard.quickActions}</h2>
               <p className={`${tw.cardSubHeading} text-black mt-1`}>
-                Common tasks and shortcuts
+                {t.dashboard.quickActionsDescription}
               </p>
             </div>
             <div className="p-6 space-y-3">
@@ -2006,9 +2019,11 @@ export default function DashboardHome() {
         {/* Offer Type */}
         <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className={tw.cardHeading}>Offer Type Distribution</h2>
+            <h2 className={tw.cardHeading}>
+              {t.dashboard.offerTypeDistribution}
+            </h2>
             <p className={`${tw.cardSubHeading} text-black mt-1`}>
-              Breakdown by offer type
+              {t.dashboard.offerTypeDistributionDescription}
             </p>
           </div>
           <div className="p-6">
@@ -2016,14 +2031,16 @@ export default function DashboardHome() {
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                  <p className="text-sm text-black">Loading distribution...</p>
+                  <p className="text-sm text-black">
+                    {t.dashboard.loadingDistribution}
+                  </p>
                 </div>
               </div>
             ) : offerTypeDistribution.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <p className="text-sm text-black">
-                    No offer type data available
+                    {t.dashboard.noOfferTypeData}
                   </p>
                 </div>
               </div>
@@ -2075,9 +2092,11 @@ export default function DashboardHome() {
         {/* Segment Type */}
         <div className="bg-white rounded-md border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className={tw.cardHeading}>Segment Type Distribution</h2>
+            <h2 className={tw.cardHeading}>
+              {t.dashboard.segmentTypeDistribution}
+            </h2>
             <p className={`${tw.cardSubHeading} text-black mt-1`}>
-              Breakdown by segment type
+              {t.dashboard.segmentTypeDistributionDescription}
             </p>
           </div>
           <div className="p-6">
@@ -2085,7 +2104,7 @@ export default function DashboardHome() {
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <p className="text-sm text-black">
-                    No segment type data available
+                    {t.dashboard.noSegmentTypeData}
                   </p>
                 </div>
               </div>
@@ -2417,7 +2436,9 @@ export default function DashboardHome() {
                             : "bg-yellow-100 text-yellow-700 border-yellow-200"
                         }`}
                       >
-                        {item.priority === "high" ? "High" : "Medium"}
+                        {item.priority === "high"
+                          ? t.dashboard.priorityHigh
+                          : t.dashboard.priorityMedium}
                       </span>
                     </div>
                     <p className="text-sm text-black mb-2">

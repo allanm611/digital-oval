@@ -11,6 +11,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { communicationService } from "../../communications/services/communicationService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface TestBroadcastStepProps {
   data: ManualBroadcastData;
@@ -31,6 +32,7 @@ export default function TestBroadcastStep({
   onNext,
   onPrevious,
 }: TestBroadcastStepProps) {
+  const { t } = useLanguage();
   const [testContacts, setTestContacts] = useState<string[]>(
     data.testContacts || []
   );
@@ -55,23 +57,23 @@ export default function TestBroadcastStep({
     const trimmedContact = currentContact.trim();
 
     if (!trimmedContact) {
-      setError("Please enter a contact");
+      setError(t.manualBroadcast.errorEnterContact);
       return;
     }
 
     if (!validateContact(trimmedContact)) {
       if (data.channel === "EMAIL") {
-        setError("Please enter a valid email address");
+        setError(t.manualBroadcast.errorInvalidEmail);
       } else if (data.channel === "SMS" || data.channel === "WHATSAPP") {
-        setError("Please enter a valid phone number");
+        setError(t.manualBroadcast.errorInvalidPhone);
       } else {
-        setError("Please enter a valid email or phone number");
+        setError(t.manualBroadcast.errorInvalidContact);
       }
       return;
     }
 
     if (testContacts.includes(trimmedContact)) {
-      setError("This contact is already added");
+      setError(t.manualBroadcast.contactAlreadyAdded);
       return;
     }
 
@@ -86,12 +88,12 @@ export default function TestBroadcastStep({
 
   const handleSendTest = async () => {
     if (testContacts.length === 0) {
-      setError("Please add at least one test contact");
+      setError(t.manualBroadcast.errorAddAtLeastOne);
       return;
     }
 
     if (!data.quicklistId) {
-      setError("Audience not created. Please go back to Step 1.");
+      setError(t.manualBroadcast.errorAudienceNotCreated);
       return;
     }
 
@@ -128,7 +130,7 @@ export default function TestBroadcastStep({
           results.push({
             contact,
             status: "success",
-            message: "Message sent successfully",
+            message: t.manualBroadcast.testMessageSuccess,
           });
         } catch (err) {
           console.error(`Failed to send test to ${contact}:`, err);
@@ -136,7 +138,9 @@ export default function TestBroadcastStep({
             contact,
             status: "failed",
             message:
-              err instanceof Error ? err.message : "Failed to send message",
+              err instanceof Error
+                ? err.message
+                : t.manualBroadcast.testMessageFailed,
           });
         }
       }
@@ -144,7 +148,7 @@ export default function TestBroadcastStep({
       setTestResults(results);
     } catch (err) {
       console.error("Failed to send test broadcasts:", err);
-      setError("Failed to send test messages. Please try again.");
+      setError(t.manualBroadcast.errorSendTestFailed);
     } finally {
       setIsTesting(false);
     }
@@ -175,12 +179,12 @@ export default function TestBroadcastStep({
   const getChannelLabel = () => {
     switch (data.channel) {
       case "EMAIL":
-        return "email address";
+        return t.manualBroadcast.testInputLabelEmail.toLowerCase();
       case "SMS":
       case "WHATSAPP":
-        return "phone number";
+        return t.manualBroadcast.testInputLabelPhone.toLowerCase();
       default:
-        return "contact";
+        return t.manualBroadcast.testInputLabelGeneric.toLowerCase();
     }
   };
 
@@ -194,10 +198,10 @@ export default function TestBroadcastStep({
         style={{ borderColor: color.border.default }}
       >
         <h2 className={`text-lg sm:text-xl font-semibold ${tw.textPrimary}`}>
-          Test Broadcast
+          {t.manualBroadcast.testBroadcastTitle}
         </h2>
         <p className={`text-xs sm:text-sm ${tw.textSecondary} mt-1`}>
-          Send a test message before launching your broadcast
+          {t.manualBroadcast.testBroadcastSubtitle}
         </p>
       </div>
 
@@ -205,9 +209,11 @@ export default function TestBroadcastStep({
         {/* Test Contact Input */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            Test{" "}
-            {getChannelLabel().charAt(0).toUpperCase() +
-              getChannelLabel().slice(1)}
+            {data.channel === "EMAIL"
+              ? t.manualBroadcast.testInputLabelEmail
+              : data.channel === "SMS" || data.channel === "WHATSAPP"
+              ? t.manualBroadcast.testInputLabelPhone
+              : t.manualBroadcast.testInputLabelGeneric}
           </label>
           <div className="flex flex-col sm:flex-row gap-2">
             <input
@@ -225,7 +231,13 @@ export default function TestBroadcastStep({
                 borderColor: color.border.default,
                 color: color.text.primary,
               }}
-              placeholder={`Enter ${getChannelLabel()}...`}
+              placeholder={
+                data.channel === "EMAIL"
+                  ? t.manualBroadcast.testPlaceholderEmail
+                  : data.channel === "SMS" || data.channel === "WHATSAPP"
+                  ? t.manualBroadcast.testPlaceholderPhone
+                  : t.manualBroadcast.testPlaceholderGeneric
+              }
               disabled={isTesting}
             />
             <button
@@ -235,15 +247,15 @@ export default function TestBroadcastStep({
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
-              <span>Add</span>
+              <span>{t.manualBroadcast.addContact}</span>
             </button>
           </div>
           <p className={`text-xs ${tw.textSecondary} mt-1`}>
             {data.channel === "EMAIL"
-              ? "Enter a valid email address (e.g., test@example.com)"
+              ? t.manualBroadcast.testHelperEmail
               : data.channel === "SMS" || data.channel === "WHATSAPP"
-              ? "Enter a valid phone number (e.g., +1234567890)"
-              : "Enter a valid email or phone number"}
+              ? t.manualBroadcast.testHelperPhone
+              : t.manualBroadcast.testHelperGeneric}
           </p>
         </div>
 
@@ -253,7 +265,10 @@ export default function TestBroadcastStep({
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
             >
-              Test Recipients ({testContacts.length})
+              {t.manualBroadcast.testRecipientsLabel.replace(
+                "{count}",
+                String(testContacts.length)
+              )}
             </label>
             <div className="space-y-2">
               {testContacts.map((contact, index) => (
@@ -287,12 +302,12 @@ export default function TestBroadcastStep({
             {isTesting ? (
               <>
                 <Loader className="w-5 h-5 animate-spin flex-shrink-0" />
-                <span>Sending Test...</span>
+                <span>{t.manualBroadcast.sendingTest}</span>
               </>
             ) : (
               <>
                 <Send className="w-5 h-5 flex-shrink-0" />
-                <span>Send Test Broadcast</span>
+                <span>{t.manualBroadcast.sendTest}</span>
               </>
             )}
           </button>
@@ -304,7 +319,7 @@ export default function TestBroadcastStep({
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
             >
-              Test Results
+              {t.manualBroadcast.testResults}
             </label>
             <div className="space-y-2">
               {testResults.map((result, index) => (
@@ -363,11 +378,17 @@ export default function TestBroadcastStep({
                 className="text-sm font-medium"
                 style={{ color: color.primary.accent }}
               >
-                ✓ Test completed successfully!
+                {t.manualBroadcast.testCompleted}
               </p>
               <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                {testResults.filter((r) => r.status === "success").length} of{" "}
-                {testResults.length} test messages sent successfully.
+                {t.manualBroadcast.testSummary
+                  .replace(
+                    "{success}",
+                    String(
+                      testResults.filter((r) => r.status === "success").length
+                    )
+                  )
+                  .replace("{total}", String(testResults.length))}
               </p>
             </div>
           </div>
@@ -408,7 +429,7 @@ export default function TestBroadcastStep({
             color: color.text.primary,
           }}
         >
-          Previous
+          {t.manualBroadcast.previous}
         </button>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <button
@@ -419,7 +440,7 @@ export default function TestBroadcastStep({
               color: color.text.secondary,
             }}
           >
-            Skip Test
+            {t.manualBroadcast.skipTest}
           </button>
           <button
             onClick={handleNext}
@@ -427,7 +448,7 @@ export default function TestBroadcastStep({
             className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{ backgroundColor: color.primary.action }}
           >
-            Next: Schedule Broadcast
+            {t.manualBroadcast.nextSchedule}
           </button>
         </div>
       </div>

@@ -665,8 +665,8 @@ export default function UserManagementPage() {
 
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
-        "Request approved",
-        `Account approved for ${request.first_name} ${request.last_name}`
+        t.userManagement.requestApproved,
+        `${t.userManagement.requestApproved} - ${request.first_name} ${request.last_name}`
       );
     } catch (err) {
       showError(
@@ -725,8 +725,8 @@ export default function UserManagementPage() {
 
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
-        "Request rejected",
-        `Request from ${request.first_name} ${request.last_name} rejected`
+        t.userManagement.requestRejected,
+        `${t.userManagement.requestRejected} - ${request.first_name} ${request.last_name}`
       );
     } catch (err) {
       showError(
@@ -756,13 +756,13 @@ export default function UserManagementPage() {
       if (isActive) {
         await userService.deactivateUser(user.id);
         success(
-          "User deactivated",
+          t.userManagement.userDeactivated,
           `User ${user.first_name} ${user.last_name} deactivated successfully`
         );
       } else {
         await userService.activateUser(user.id);
         success(
-          "User activated",
+          t.userManagement.userActivated,
           `User ${user.first_name} ${user.last_name} activated successfully`
         );
       }
@@ -804,7 +804,7 @@ export default function UserManagementPage() {
       await userService.deleteUser(userToDelete.id, authUser.user_id);
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
-        "User deleted",
+        t.userManagement.userDeleted,
         `${userToDelete.first_name} ${userToDelete.last_name} deleted successfully`
       );
       setShowDeleteModal(false);
@@ -1203,7 +1203,7 @@ export default function UserManagementPage() {
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <HeadlessSelect
               options={[
-                { value: "all", label: "All Departments" },
+                { value: "all", label: t.userManagement.allDepartments },
                 ...uniqueDepartments.map((dept) => ({
                   value: dept.toLowerCase(),
                   label: dept,
@@ -1211,13 +1211,13 @@ export default function UserManagementPage() {
               ]}
               value={filterDepartment}
               onChange={(value) => setFilterDepartment(value as string)}
-              placeholder="Select department"
+              placeholder={t.userManagement.selectDepartment}
               className="w-full sm:min-w-[160px] sm:w-auto"
             />
 
             <HeadlessSelect
               options={[
-                { value: "all", label: "All Roles" },
+                { value: "all", label: t.userManagement.allRoles },
                 ...uniqueRoles.map((role) => ({
                   value: role.toLowerCase(),
                   label: role,
@@ -1225,21 +1225,21 @@ export default function UserManagementPage() {
               ]}
               value={filterRole}
               onChange={(value) => setFilterRole(value as string)}
-              placeholder="Select role"
+              placeholder={t.userManagement.selectRole}
               className="w-full sm:min-w-[160px] sm:w-auto"
             />
 
             <HeadlessSelect
               options={[
-                { value: "all", label: "All Status" },
-                { value: "active", label: "Active" },
-                { value: "inactive", label: "Inactive" },
+                { value: "all", label: t.userManagement.allStatus },
+                { value: "active", label: t.userManagement.active },
+                { value: "inactive", label: t.userManagement.inactive },
               ]}
               value={filterStatus}
               onChange={(value) =>
                 setFilterStatus(value as "all" | "active" | "inactive")
               }
-              placeholder="Select status"
+              placeholder={t.userManagement.selectStatus}
               className="w-full sm:min-w-[140px] sm:w-auto"
             />
           </div>
@@ -1259,13 +1259,13 @@ export default function UserManagementPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading {activeTab}...
+              {t.userManagement.loading.replace("{tab}", activeTab)}
             </p>
           </div>
         ) : errorState ? (
           <div className="p-8">
             <ErrorState
-              title={`Unable to load ${activeTab}`}
+              title={t.userManagement.unableToLoad.replace("{tab}", activeTab)}
               message={errorState}
               onRetry={() => loadData({ skipCache: true })}
             />
@@ -1274,12 +1274,14 @@ export default function UserManagementPage() {
           filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {searchTerm ? "No Users Found" : "No Users"}
+                {searchTerm
+                  ? t.userManagement.noUsersFound
+                  : t.userManagement.noUsers}
               </h3>
               <p className="text-sm text-gray-600 mb-6">
                 {searchTerm
-                  ? "Try adjusting your search criteria."
-                  : "Create your first user to get started."}
+                  ? t.userManagement.tryAdjustingSearch
+                  : t.userManagement.createFirstUser}
               </p>
               {!searchTerm && (
                 <button
@@ -1291,7 +1293,7 @@ export default function UserManagementPage() {
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Plus className="w-4 h-4" />
-                  Add User
+                  {t.userManagement.addUser}
                 </button>
               )}
             </div>
@@ -1458,10 +1460,10 @@ export default function UserManagementPage() {
                                 }}
                                 title={
                                   loadingActions.toggling.has(user.id)
-                                    ? "Updating..."
+                                    ? t.profile.saving
                                     : userIsActive
-                                    ? "Deactivate user"
-                                    : "Activate user"
+                                    ? t.userManagement.deactivateUserTitle
+                                    : t.userManagement.activateUserTitle
                                 }
                               >
                                 {loadingActions.toggling.has(user.id) ? (
@@ -1497,7 +1499,7 @@ export default function UserManagementPage() {
                                   color: color.primary.action,
                                   backgroundColor: "transparent",
                                 }}
-                                title="Edit user"
+                                title={t.userManagement.editUser}
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
@@ -1507,8 +1509,8 @@ export default function UserManagementPage() {
                                 className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title={
                                   loadingActions.deleting.has(user.id)
-                                    ? "Deleting..."
-                                    : "Delete user"
+                                    ? t.profile.saving
+                                    : t.userManagement.deleteUser
                                 }
                               >
                                 {loadingActions.deleting.has(user.id) ? (
@@ -1603,10 +1605,10 @@ export default function UserManagementPage() {
                             }}
                             title={
                               loadingActions.toggling.has(user.id)
-                                ? "Updating..."
+                                ? t.profile.saving
                                 : userIsActive
-                                ? "Deactivate user"
-                                : "Activate user"
+                                ? t.userManagement.deactivateUserTitle
+                                : t.userManagement.activateUserTitle
                             }
                           >
                             {loadingActions.toggling.has(user.id) ? (
@@ -1652,8 +1654,8 @@ export default function UserManagementPage() {
                             className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title={
                               loadingActions.deleting.has(user.id)
-                                ? "Deleting..."
-                                : "Delete user"
+                                ? t.profile.saving
+                                : t.userManagement.deleteUser
                             }
                           >
                             {loadingActions.deleting.has(user.id) ? (
@@ -1811,8 +1813,8 @@ export default function UserManagementPage() {
                                   actionDisabled
                                     ? "Missing request identifier"
                                     : approvingLoading
-                                    ? "Approving..."
-                                    : "Approve request"
+                                    ? t.profile.saving
+                                    : t.userManagement.approveRequest
                                 }
                               >
                                 {approvingLoading ? (
@@ -1833,8 +1835,8 @@ export default function UserManagementPage() {
                                   actionDisabled
                                     ? "Missing request identifier"
                                     : rejectingLoading
-                                    ? "Rejecting..."
-                                    : "Reject request"
+                                    ? t.profile.saving
+                                    : t.userManagement.rejectRequest
                                 }
                               >
                                 {rejectingLoading ? (

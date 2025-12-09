@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Trash2, Filter, X, ExternalLink, Search } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { notificationService } from "../services/notificationService";
 import {
   Notification,
@@ -14,6 +15,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const {
     notifications,
     stats,
@@ -141,6 +143,9 @@ export default function NotificationsPage() {
     "urgent",
   ];
 
+  const priorityLabel = (priority: NotificationPriority) =>
+    t.notifications.priority[priority] || priority;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -148,11 +153,12 @@ export default function NotificationsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>
-              Notifications
+              {t.notifications.title}
             </h1>
             {stats && (
               <p className={`${tw.textSecondary} text-sm`}>
-                {stats.total} total • {stats.unread} unread
+                {stats.total} {t.notifications.totalLabel} • {stats.unread}{" "}
+                {t.notifications.unreadLabel}
               </p>
             )}
           </div>
@@ -184,7 +190,7 @@ export default function NotificationsPage() {
                 }}
                 className={`${tw.button} text-sm px-4 py-2`}
               >
-                Mark all as read
+                {t.notifications.markAllAsRead}
               </button>
               <button
                 onClick={async () => {
@@ -210,7 +216,7 @@ export default function NotificationsPage() {
                 }}
                 className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer"
               >
-                Delete all notifications
+                {t.notifications.deleteAll}
               </button>
             </div>
           )}
@@ -225,7 +231,7 @@ export default function NotificationsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search notifications..."
+              placeholder={t.notifications.searchPlaceholder}
               value={filter.search || ""}
               onChange={(e) =>
                 setFilter((prev) => ({ ...prev, search: e.target.value }))
@@ -244,13 +250,13 @@ export default function NotificationsPage() {
               }))
             }
             options={[
-              { label: "All Types", value: "" },
+              { label: t.notifications.typeAll, value: "" },
               ...notificationTypes.map((type) => ({
                 label: NOTIFICATION_TYPE_METADATA[type].label,
                 value: type,
               })),
             ]}
-            placeholder="All Types"
+            placeholder={t.notifications.typeAll}
             className="w-full"
           />
 
@@ -264,13 +270,13 @@ export default function NotificationsPage() {
               }))
             }
             options={[
-              { label: "All Priorities", value: "" },
+              { label: t.notifications.priorityAll, value: "" },
               ...priorities.map((priority) => ({
-                label: priority.charAt(0).toUpperCase() + priority.slice(1),
+                label: priorityLabel(priority),
                 value: priority,
               })),
             ]}
-            placeholder="All Priorities"
+            placeholder={t.notifications.priorityAll}
             className="w-full"
           />
 
@@ -290,11 +296,11 @@ export default function NotificationsPage() {
               }))
             }
             options={[
-              { label: "All Status", value: "" },
-              { label: "Unread", value: "unread" },
-              { label: "Read", value: "read" },
+              { label: t.notifications.statusAll, value: "" },
+              { label: t.notifications.statusUnread, value: "unread" },
+              { label: t.notifications.statusRead, value: "read" },
             ]}
-            placeholder="All Status"
+            placeholder={t.notifications.statusAll}
             className="w-full"
           />
         </div>
@@ -309,7 +315,7 @@ export default function NotificationsPage() {
             className="mt-3 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
           >
             <X className="h-4 w-4" />
-            Clear filters
+            {t.notifications.clearFilters}
           </button>
         )}
       </div>
@@ -323,13 +329,16 @@ export default function NotificationsPage() {
               className="text-sm text-gray-900 hover:text-gray-700 font-medium text-left sm:text-center"
             >
               {selectedNotifications.length === filteredNotifications.length
-                ? "Deselect all"
-                : "Select all"}
+                ? t.notifications.deselectAll
+                : t.notifications.selectAll}
             </button>
             <span className="text-sm font-medium text-gray-900">
               {selectedNotifications.length > 0
-                ? `${selectedNotifications.length} notification(s) selected`
-                : "Select notifications to perform bulk actions"}
+                ? t.notifications.selectedCount.replace(
+                    "{count}",
+                    String(selectedNotifications.length)
+                  )
+                : t.notifications.selectPrompt}
             </span>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -340,7 +349,7 @@ export default function NotificationsPage() {
                     onClick={handleMarkSelectedAsRead}
                     className={`${tw.button} text-sm px-4 py-2`}
                   >
-                    Mark as read
+                    {t.notifications.bulkMarkAsRead}
                   </button>
                 )}
                 {bulkActionType === "delete" && (
@@ -349,7 +358,7 @@ export default function NotificationsPage() {
                     className="bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors px-4 py-2 rounded-md cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete
+                    {t.notifications.bulkDelete}
                   </button>
                 )}
               </>
@@ -366,7 +375,7 @@ export default function NotificationsPage() {
               }}
               className={`${tw.borderedButton} text-sm px-4 py-2`}
             >
-              Cancel
+              {t.notifications.cancel}
             </button>
           </div>
         </div>
@@ -384,19 +393,19 @@ export default function NotificationsPage() {
           <div className="p-12 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
             <p className="mt-3 text-sm text-gray-600">
-              Loading notifications...
+              {t.notifications.loadingNotifications}
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center">
             <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">
-              No notifications found
+              {t.notifications.emptyTitle}
             </p>
             <p className="text-sm text-gray-600">
               {Object.keys(filter).length > 0
-                ? "Try adjusting your filters"
-                : "You don't have any notifications yet"}
+                ? t.notifications.emptyFiltered
+                : t.notifications.emptyNoData}
             </p>
           </div>
         ) : (
@@ -461,7 +470,7 @@ export default function NotificationsPage() {
                                       : "bg-gray-100 text-gray-700"
                                   }`}
                                 >
-                                  {notification.priority}
+                                  {priorityLabel(notification.priority)}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600 mb-2 break-words">
@@ -481,7 +490,8 @@ export default function NotificationsPage() {
                                     className={`flex items-center gap-1 text-sm ${tw.link}`}
                                   >
                                     <ExternalLink className="h-3 w-3" />
-                                    {notification.actionLabel || "View details"}
+                                    {notification.actionLabel ||
+                                      t.notifications.viewDetails}
                                   </span>
                                 )}
                               </div>
@@ -499,9 +509,9 @@ export default function NotificationsPage() {
                                   color: color.primary.action,
                                 }}
                                 className={`${tw.borderedButton} text-xs sm:text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap`}
-                                title="Mark as read"
+                                title={t.notifications.bulkMarkAsRead}
                               >
-                                Mark as read
+                                {t.notifications.bulkMarkAsRead}
                               </button>
                               <button
                                 onClick={async (e) => {
@@ -509,7 +519,7 @@ export default function NotificationsPage() {
                                   await deleteNotification(notification.id);
                                 }}
                                 className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex-shrink-0"
-                                title="Delete"
+                                title={t.notifications.bulkDelete}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -531,17 +541,19 @@ export default function NotificationsPage() {
                   disabled={page === 1}
                   className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t.notifications.previous}
                 </button>
                 <span className="text-sm text-gray-600">
-                  Page {page} of {totalPages}
+                  {t.notifications.pageOf
+                    .replace("{page}", String(page))
+                    .replace("{total}", String(totalPages))}
                 </span>
                 <button
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= totalPages}
                   className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t.notifications.next}
                 </button>
               </div>
             )}

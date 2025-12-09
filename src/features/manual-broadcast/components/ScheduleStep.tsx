@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Calendar, Clock, Send, AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface ScheduleStepProps {
   data: ManualBroadcastData;
@@ -16,6 +17,7 @@ export default function ScheduleStep({
   onSubmit,
   onPrevious,
 }: ScheduleStepProps) {
+  const { t } = useLanguage();
   const [scheduleType, setScheduleType] = useState<"now" | "later">(
     data.scheduleType || "now"
   );
@@ -28,11 +30,11 @@ export default function ScheduleStep({
     // Validation
     if (scheduleType === "later") {
       if (!scheduleDate) {
-        setError("Please select a date");
+        setError(t.manualBroadcast.errorSelectDate);
         return;
       }
       if (!scheduleTime) {
-        setError("Please select a time");
+        setError(t.manualBroadcast.errorSelectTime);
         return;
       }
 
@@ -40,7 +42,7 @@ export default function ScheduleStep({
       const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`);
       const now = new Date();
       if (scheduledDateTime <= now) {
-        setError("Please select a future date and time");
+        setError(t.manualBroadcast.errorFutureDateTime);
         return;
       }
     }
@@ -60,7 +62,7 @@ export default function ScheduleStep({
       await onSubmit();
     } catch (err) {
       console.error("Failed to submit:", err);
-      setError("Failed to create broadcast. Please try again.");
+      setError(t.manualBroadcast.errorCreateBroadcast);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,10 +93,10 @@ export default function ScheduleStep({
         style={{ borderColor: color.border.default }}
       >
         <h2 className={`text-lg sm:text-xl font-semibold ${tw.textPrimary}`}>
-          Schedule Broadcast
+          {t.manualBroadcast.scheduleTitle}
         </h2>
         <p className={`text-sm ${tw.textSecondary} mt-1`}>
-          Choose when to launch your broadcast
+          {t.manualBroadcast.scheduleSubtitle}
         </p>
       </div>
 
@@ -102,7 +104,7 @@ export default function ScheduleStep({
         {/* Schedule Type Selection */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            When do you want to send this broadcast? *
+            {t.manualBroadcast.scheduleQuestion}
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Send Now */}
@@ -147,10 +149,10 @@ export default function ScheduleStep({
                     scheduleType === "now" ? tw.textPrimary : tw.textSecondary
                   }`}
                 >
-                  Send Now
+                  {t.manualBroadcast.sendNowTitle}
                 </p>
                 <p className={`text-sm ${tw.textMuted} mt-1 break-words`}>
-                  Send the broadcast immediately to all recipients
+                  {t.manualBroadcast.sendNowDesc}
                 </p>
               </div>
               {scheduleType === "now" && (
@@ -203,10 +205,10 @@ export default function ScheduleStep({
                     scheduleType === "later" ? tw.textPrimary : tw.textSecondary
                   }`}
                 >
-                  Schedule for Later
+                  {t.manualBroadcast.scheduleLaterTitle}
                 </p>
                 <p className={`text-sm ${tw.textMuted} mt-1 break-words`}>
-                  Choose a specific date and time for sending
+                  {t.manualBroadcast.scheduleLaterDesc}
                 </p>
               </div>
               {scheduleType === "later" && (
@@ -226,7 +228,7 @@ export default function ScheduleStep({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Date *
+                {t.manualBroadcast.dateLabel}
               </label>
               <div className="relative">
                 <Calendar
@@ -252,7 +254,7 @@ export default function ScheduleStep({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Time *
+                {t.manualBroadcast.timeLabel}
               </label>
               <div className="relative">
                 <Clock
@@ -285,37 +287,48 @@ export default function ScheduleStep({
             className="text-sm font-semibold mb-2 sm:mb-3"
             style={{ color: color.primary.accent }}
           >
-            Broadcast Summary
+            {t.manualBroadcast.broadcastSummary}
           </h3>
           <div className="space-y-2 text-sm">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-              <span className={tw.textSecondary}>Audience:</span>
+              <span className={tw.textSecondary}>
+                {t.manualBroadcast.summaryAudience}
+              </span>
               <span className={`font-medium ${tw.textPrimary} break-words`}>
-                {data.audienceName || "N/A"}
+                {data.audienceName || t.manualBroadcast.summaryNotSet}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-              <span className={tw.textSecondary}>Recipients:</span>
+              <span className={tw.textSecondary}>
+                {t.manualBroadcast.summaryRecipients}
+              </span>
               <span className={`font-medium ${tw.textPrimary}`}>
                 {data.rowCount || 0}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-              <span className={tw.textSecondary}>Channel:</span>
+              <span className={tw.textSecondary}>
+                {t.manualBroadcast.summaryChannel}
+              </span>
               <span className={`font-medium ${tw.textPrimary}`}>
-                {data.channel || "N/A"}
+                {data.channel || t.manualBroadcast.summaryNotSet}
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-              <span className={tw.textSecondary}>Schedule:</span>
+              <span className={tw.textSecondary}>
+                {t.manualBroadcast.summarySchedule}
+              </span>
               <span className={`font-medium ${tw.textPrimary} break-words`}>
                 {scheduleType === "now"
-                  ? "Send immediately"
+                  ? t.manualBroadcast.summarySendNow
                   : scheduleDate && scheduleTime
-                  ? `${new Date(
-                      `${scheduleDate}T${scheduleTime}`
-                    ).toLocaleString()}`
-                  : "Not set"}
+                  ? t.manualBroadcast.summaryScheduled.replace(
+                      "{dateTime}",
+                      `${new Date(
+                        `${scheduleDate}T${scheduleTime}`
+                      ).toLocaleString()}`
+                    )
+                  : t.manualBroadcast.summaryNotSet}
               </span>
             </div>
           </div>
@@ -357,12 +370,12 @@ export default function ScheduleStep({
               className="text-sm font-medium"
               style={{ color: color.status.warning }}
             >
-              Ready to launch?
+              {t.manualBroadcast.warningTitle}
             </p>
             <p className={`text-sm ${tw.textMuted} mt-1 break-words`}>
-              Once you click "Launch Broadcast", the message will be{" "}
-              {scheduleType === "now" ? "sent immediately" : "scheduled"} and
-              cannot be cancelled. Please review all details carefully.
+              {scheduleType === "now"
+                ? t.manualBroadcast.warningBodyNow
+                : t.manualBroadcast.warningBodyScheduled}
             </p>
           </div>
         </div>
@@ -383,7 +396,7 @@ export default function ScheduleStep({
             color: color.text.primary,
           }}
         >
-          Previous
+          {t.manualBroadcast.previous}
         </button>
         <button
           onClick={handleSubmit}
@@ -397,12 +410,12 @@ export default function ScheduleStep({
           {isSubmitting ? (
             <>
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0" />
-              <span>Creating...</span>
+              <span>{t.manualBroadcast.creating}</span>
             </>
           ) : (
             <>
               <Send className="w-4 h-4 flex-shrink-0" />
-              <span>Launch Broadcast</span>
+              <span>{t.manualBroadcast.launchBroadcast}</span>
             </>
           )}
         </button>

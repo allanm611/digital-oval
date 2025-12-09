@@ -5,6 +5,7 @@ import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import MessageEditor from "../../communications/components/MessageEditor";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import { quicklistService } from "../../quicklists/services/quicklistService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -15,39 +16,39 @@ interface DefineCommunicationStepProps {
 
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
 
-const CHANNELS = [
-  {
-    id: "EMAIL" as Channel,
-    name: "Email",
-    icon: Mail,
-    description: "Send via email",
-  },
-  {
-    id: "SMS" as Channel,
-    name: "SMS",
-    icon: MessageSquare,
-    description: "Send via SMS",
-  },
-  {
-    id: "WHATSAPP" as Channel,
-    name: "WhatsApp",
-    icon: Phone,
-    description: "Send via WhatsApp",
-  },
-  {
-    id: "PUSH" as Channel,
-    name: "Push Notification",
-    icon: Bell,
-    description: "Send push notification",
-  },
-];
-
 export default function DefineCommunicationStep({
   data,
   onUpdate,
   onNext,
   onPrevious,
 }: DefineCommunicationStepProps) {
+  const { t } = useLanguage();
+  const channels = [
+    {
+      id: "EMAIL" as Channel,
+      name: t.manualBroadcast.channelEmail,
+      icon: Mail,
+      description: t.manualBroadcast.channelEmailDesc,
+    },
+    {
+      id: "SMS" as Channel,
+      name: t.manualBroadcast.channelSMS,
+      icon: MessageSquare,
+      description: t.manualBroadcast.channelSMSDesc,
+    },
+    {
+      id: "WHATSAPP" as Channel,
+      name: t.manualBroadcast.channelWhatsApp,
+      icon: Phone,
+      description: t.manualBroadcast.channelWhatsAppDesc,
+    },
+    {
+      id: "PUSH" as Channel,
+      name: t.manualBroadcast.channelPush,
+      icon: Bell,
+      description: t.manualBroadcast.channelPushDesc,
+    },
+  ];
   const [selectedChannel, setSelectedChannel] = useState<Channel>(
     data.channel || "EMAIL"
   );
@@ -101,12 +102,12 @@ export default function DefineCommunicationStep({
   const handleNext = () => {
     // Validation
     if (!messageBody.trim()) {
-      setError("Please enter a message body");
+      setError(t.manualBroadcast.errorMessageBodyRequired);
       return;
     }
 
     if (selectedChannel === "EMAIL" && !messageTitle.trim()) {
-      setError("Please enter a subject line for email");
+      setError(t.manualBroadcast.errorSubjectRequired);
       return;
     }
 
@@ -134,10 +135,10 @@ export default function DefineCommunicationStep({
         style={{ borderColor: color.border.default }}
       >
         <h2 className={`text-lg sm:text-xl font-semibold ${tw.textPrimary}`}>
-          Define Communication
+          {t.manualBroadcast.defineCommunicationTitle}
         </h2>
         <p className={`text-xs sm:text-sm ${tw.textSecondary} mt-1`}>
-          Choose a channel and create your message
+          {t.manualBroadcast.defineCommunicationSubtitle}
         </p>
       </div>
 
@@ -150,10 +151,10 @@ export default function DefineCommunicationStep({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Communication Channel *
+                {t.manualBroadcast.channelLabel}
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2">
-                {CHANNELS.map((channel) => {
+                {channels.map((channel) => {
                   const Icon = channel.icon;
                   const isSelected = selectedChannel === channel.id;
                   return (
@@ -274,7 +275,7 @@ export default function DefineCommunicationStep({
             color: color.text.primary,
           }}
         >
-          Previous
+          {t.manualBroadcast.previous}
         </button>
         <button
           onClick={handleNext}
@@ -285,7 +286,7 @@ export default function DefineCommunicationStep({
           className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           style={{ backgroundColor: color.primary.action }}
         >
-          Next: Test Broadcast
+          {t.manualBroadcast.nextTest}
         </button>
       </div>
     </div>

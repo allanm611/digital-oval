@@ -13,9 +13,11 @@ import { customerIdentityService } from "../services/customerIdentityService";
 import { CustomerIdentityField } from "../types/customerIdentity";
 import { AlertTriangle } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CustomerIdentityPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [fields, setFields] = useState<CustomerIdentityField[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,9 @@ export default function CustomerIdentityPage() {
     } catch (err) {
       console.error("Failed to load customer identity fields", err);
       const message =
-        err instanceof Error ? err.message : "Unable to load fields";
+        err instanceof Error
+          ? err.message
+          : t.customerIdentity.unableToLoadFields;
       setError(message);
     } finally {
       setIsLoading(false);
@@ -81,9 +85,11 @@ export default function CustomerIdentityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className={`${tw.mainHeading} text-gray-900`}>Customer Identity</h1>
+        <h1 className={`${tw.mainHeading} text-gray-900`}>
+          {t.customerIdentity.title}
+        </h1>
         <p className={`${tw.textSecondary} mt-2 text-sm`}>
-          Basic customer identification fields
+          {t.customerIdentity.description}
         </p>
       </div>
 
@@ -94,7 +100,7 @@ export default function CustomerIdentityPage() {
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search fields..."
+            placeholder={t.customerIdentity.searchFields}
             className={`w-full pl-10 pr-4 py-3.5 text-sm rounded-md border border-[${color.border.default}] focus:outline-none focus:ring-2`}
             style={
               {
@@ -107,7 +113,7 @@ export default function CustomerIdentityPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <HeadlessSelect
             options={[
-              { value: "all", label: "All field types" },
+              { value: "all", label: t.customerIdentity.allFieldTypes },
               ...availableFieldTypes.map((type) => ({
                 value: type,
                 label: type.charAt(0).toUpperCase() + type.slice(1),
@@ -115,7 +121,7 @@ export default function CustomerIdentityPage() {
             ]}
             value={selectedFieldType}
             onChange={(value) => setSelectedFieldType(value as string)}
-            placeholder="Filter by field type"
+            placeholder={t.customerIdentity.filterByFieldType}
             className="sm:min-w-[200px]"
           />
         </div>
@@ -139,7 +145,7 @@ export default function CustomerIdentityPage() {
                 <AlertTriangle className="h-10 w-10 text-red-500" />
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Unable to load fields
+                    {t.customerIdentity.unableToLoadFields}
                   </h3>
                   <p className={`${tw.textSecondary} mt-2`}>{error}</p>
                 </div>
@@ -149,25 +155,25 @@ export default function CustomerIdentityPage() {
                   className="px-4 py-2 text-sm font-semibold text-white rounded-md hover:opacity-95 transition-colors"
                   style={{ backgroundColor: color.primary.action }}
                 >
-                  Retry
+                  {t.customerIdentity.retry}
                 </button>
               </div>
             ) : hasNoFields ? (
               <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  No fields available
+                  {t.customerIdentity.noFieldsAvailable}
                 </h3>
                 <p className={`${tw.textSecondary}`}>
-                  Customer identity fields will appear here once configured.
+                  {t.customerIdentity.noFieldsConfigured}
                 </p>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center space-y-2">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  No matching fields
+                  {t.customerIdentity.noMatchingFields}
                 </h3>
                 <p className={`${tw.textSecondary}`}>
-                  Try adjusting your search or filter selections.
+                  {t.customerIdentity.tryAdjustingSearch}
                 </p>
               </div>
             )}
@@ -186,12 +192,12 @@ export default function CustomerIdentityPage() {
                 <thead style={{ background: color.surface.tableHeader }}>
                   <tr>
                     {[
-                      "ID",
-                      "Field Name",
-                      "Field Type",
-                      "Source Table",
-                      "Description",
-                      "Actions",
+                      t.customerIdentity.id,
+                      t.customerIdentity.fieldName,
+                      t.customerIdentity.fieldType,
+                      t.customerIdentity.sourceTable,
+                      t.customerIdentity.description,
+                      t.customerIdentity.actions,
                     ].map((header) => (
                       <th
                         key={header}
@@ -265,7 +271,7 @@ export default function CustomerIdentityPage() {
                             )
                           }
                           className="p-2 rounded-md text-black transition-colors hover:bg-gray-100"
-                          title="View details"
+                          title={t.customerIdentity.viewDetails}
                         >
                           <Eye className="h-4 w-4" />
                         </button>

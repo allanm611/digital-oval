@@ -319,7 +319,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ],
       },
       {
-        name: "Customer Management",
+        name: "Customer 360 profile",
         href: "/dashboard/customers",
         icon: Users,
         type: "parent",
@@ -896,16 +896,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Desktop Sidebar - Minimized on md/lg, Full on xl */}
       <div className="hidden md:fixed md:inset-y-0 md:z-50 md:flex md:w-32 xl:w-80 md:flex-col">
         <div
-          className="flex flex-col h-screen md:px-3 xl:px-6 md:pt-2 xl:pt-4 pb-6"
+          className="flex flex-col h-screen md:px-3 xl:px-6 md:pt-2 xl:pt-0 pb-6"
           style={{
             background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
           }}
         >
-          <div className="md:h-0 xl:h-16 md:hidden xl:flex items-center flex-shrink-0 xl:justify-start xl:pt-0">
+          <div className="md:h-0 xl:h-16 md:hidden xl:flex items-center flex-shrink-0 xl:justify-start xl:px-5">
             <Link
               to="/landingpage"
               onClick={handleLinkClick}
-              className="w-32 h-32 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-28 h-28 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
             >
               <img
                 src={logo}

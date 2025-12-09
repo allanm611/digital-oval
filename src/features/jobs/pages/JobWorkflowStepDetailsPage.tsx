@@ -61,6 +61,7 @@ export default function JobWorkflowStepDetailsPage() {
     reason?: string;
   } | null>(null);
   const [nextStep, setNextStep] = useState<JobWorkflowStep | null>(null);
+  const [parallelSteps, setParallelSteps] = useState<JobWorkflowStep[]>([]);
   const [isLoadingRelated, setIsLoadingRelated] = useState(false);
 
   useEffect(() => {
@@ -89,29 +90,37 @@ export default function JobWorkflowStepDetailsPage() {
         // Load related data
         setIsLoadingRelated(true);
         try {
-          const [order, groups, deps, health, canExec] = await Promise.all([
-            jobWorkflowStepService
-              .getExecutionOrder(stepData.job_id, true)
-              .catch(() => ({ success: true, data: [] })),
-            jobWorkflowStepService
-              .getParallelGroups(stepData.job_id, true)
-              .catch(() => ({ success: true, data: [] })),
-            jobWorkflowStepService
-              .getDependencies(stepData.job_id, true)
-              .catch(() => ({ success: true, data: [] })),
-            jobWorkflowStepService
-              .getHealthSummary(stepData.job_id, true)
-              .catch(() => null),
-            jobWorkflowStepService
-              .canStepExecute(stepData.job_id, stepData.step_order, true)
-              .catch(() => null),
-          ]);
+          const [order, groups, deps, health, canExec, parallelSteps] =
+            await Promise.all([
+              jobWorkflowStepService
+                .getExecutionOrder(stepData.job_id, true)
+                .catch(() => ({ success: true, data: [] })),
+              jobWorkflowStepService
+                .getParallelGroups(stepData.job_id, true)
+                .catch(() => ({ success: true, data: [] })),
+              jobWorkflowStepService
+                .getDependencies(stepData.job_id, true)
+                .catch(() => ({ success: true, data: [] })),
+              jobWorkflowStepService
+                .getHealthSummary(stepData.job_id, true)
+                .catch(() => null),
+              jobWorkflowStepService
+                .canStepExecute(stepData.job_id, stepData.step_order, true)
+                .catch(() => null),
+              stepData.is_parallel && stepData.parallel_group_id
+                ? jobWorkflowStepService
+                    .getParallelSteps(stepData.job_id, true)
+                    .catch(() => ({ data: [] }))
+                : Promise.resolve({ data: [] }),
+            ]);
 
           setExecutionOrder(order.data || []);
           setParallelGroups(groups.data || []);
           setDependencies(deps.data || []);
           setHealthSummary(health?.data || null);
           setCanExecute(canExec);
+          const parallelStepsData = (parallelStepsResponse as any).data || [];
+          setParallelSteps(parallelStepsData as JobWorkflowStep[]);
 
           // Try to get next step
           try {
@@ -556,10 +565,35 @@ export default function JobWorkflowStepDetailsPage() {
                 <GitBranch className="h-5 w-5" />
                 Parallel Group
               </h2>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-gray-700 mb-3">
                 Group ID:{" "}
                 <span className="font-semibold">{step.parallel_group_id}</span>
               </p>
+              {parallelSteps.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-gray-500 mb-2">
+                    Parallel Steps in Group:
+                  </p>
+                  <div className="space-y-1">
+                    {parallelSteps
+                      .filter(
+                        (s) => s.parallel_group_id === step.parallel_group_id
+                      )
+                      .map((s) => (
+                        <div
+                          key={s.id}
+                          className={`rounded-md p-2 text-sm ${
+                            s.id === step.id
+                              ? "bg-blue-50 border border-blue-200"
+                              : "bg-gray-50"
+                          }`}
+                        >
+                          {s.step_name} (Order: {s.step_order})
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

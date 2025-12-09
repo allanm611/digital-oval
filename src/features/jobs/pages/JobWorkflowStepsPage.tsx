@@ -139,6 +139,16 @@ export default function JobWorkflowStepsPage() {
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
   const [deleteAllJobId, setDeleteAllJobId] = useState<number | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  // Batch update modal
+  const [showBatchUpdateModal, setShowBatchUpdateModal] = useState(false);
+  const [batchUpdateFields, setBatchUpdateFields] = useState<{
+    is_active?: boolean;
+    is_critical?: boolean;
+    timeout_seconds?: number;
+    retry_count?: number;
+    on_failure_action?: FailureAction;
+  }>({});
+  const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState<{
     mostFailed: Array<{
@@ -161,6 +171,29 @@ export default function JobWorkflowStepsPage() {
       step_type: StepType;
       count: number;
       percentage: number;
+    }>;
+    complexWorkflows: Array<{
+      job_id: number;
+      job_name: string;
+      total_steps: number;
+      parallel_groups: number;
+      dependencies: number;
+      complexity_score: number;
+    }>;
+    dependencyComplexity: Array<{
+      job_id: number;
+      job_name: string;
+      max_depth: number;
+      total_dependencies: number;
+      circular_dependencies: boolean;
+    }>;
+    timeoutAnalysis: Array<{
+      step_id: number;
+      step_name: string;
+      configured_timeout: number;
+      average_execution_time: number;
+      timeout_utilization_percent: number;
+      risk_level: "low" | "medium" | "high";
     }>;
   } | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
@@ -253,6 +286,18 @@ export default function JobWorkflowStepsPage() {
           }
           if (failureActionFilter) {
             params.on_failure_action = failureActionFilter;
+            // Also use dedicated endpoint for better results
+            try {
+              const failureActionResponse = await jobWorkflowStepService.getStepsByFailureAction(
+                failureActionFilter,
+                true
+              );
+              if (failureActionResponse.data && failureActionResponse.data.length > 0) {
+                response = failureActionResponse;
+              }
+            } catch {
+              // Fall back to search
+            }
           }
           if (parallelGroupIdFilter) {
             params.parallel_group_id = Number(parallelGroupIdFilter);
@@ -409,7 +454,14 @@ export default function JobWorkflowStepsPage() {
     if (!showAnalytics) return;
     setIsLoadingAnalytics(true);
     try {
-      const [mostFailed, longestRunning, typeDistribution] = await Promise.all([
+      const [
+        mostFailed,
+        longestRunning,
+        typeDistribution,
+        complexWorkflows,
+        dependencyComplexity,
+        timeoutAnalysis,
+      ] = await Promise.all([
         jobWorkflowStepService
           .getMostFailedSteps({ limit: 10, days_back: 30, skipCache: true })
           .catch(() => ({ success: true, data: [] })),
@@ -419,19 +471,38 @@ export default function JobWorkflowStepsPage() {
         jobWorkflowStepService
           .getTypeDistribution({ skipCache: true })
           .catch(() => ({ success: true, data: [] })),
+        jobWorkflowStepService
+          .getComplexWorkflows({ limit: 10, skipCache: true })
+          .catch(() => ({ success: true, data: [] })),
+        jobWorkflowStepService
+          .getDependencyComplexity({
+            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
+            limit: 10,
+            skipCache: true,
+          })
+          .catch(() => ({ success: true, data: [] })),
+        jobWorkflowStepService
+          .getTimeoutAnalysis({
+            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
+            skipCache: true,
+          })
+          .catch(() => ({ success: true, data: [] })),
       ]);
 
       setAnalyticsData({
         mostFailed: mostFailed.data || [],
         longestRunning: longestRunning.data || [],
         typeDistribution: typeDistribution.data || [],
+        complexWorkflows: complexWorkflows.data || [],
+        dependencyComplexity: dependencyComplexity.data || [],
+        timeoutAnalysis: timeoutAnalysis.data || [],
       });
     } catch (err) {
       console.error("Failed to load analytics:", err);
     } finally {
       setIsLoadingAnalytics(false);
     }
-  }, [showAnalytics]);
+  }, [showAnalytics, jobIdFilter]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -482,7 +553,7 @@ export default function JobWorkflowStepsPage() {
   };
 
   const handleBatchAction = async (
-    action: "activate" | "deactivate" | "delete"
+    action: "activate" | "deactivate" | "delete" | "update"
   ) => {
     if (selectedSteps.size === 0) return;
 
@@ -514,6 +585,11 @@ export default function JobWorkflowStepsPage() {
           }
         }
         result = { success: successCount, failed: failedCount };
+      } else if (action === "update") {
+        // Open batch update modal
+        setShowBatchUpdateModal(true);
+        setIsBatchProcessing(false);
+        return;
       }
 
       showToast(
@@ -654,6 +730,44 @@ export default function JobWorkflowStepsPage() {
     }
   };
 
+  const handleBatchUpdate = async () => {
+    if (selectedSteps.size === 0) return;
+
+    const stepIds = Array.from(selectedSteps);
+    setIsBatchUpdating(true);
+
+    try {
+      const updates = stepIds.map((stepId) => ({
+        id: stepId,
+        ...batchUpdateFields,
+      }));
+
+      const result = await jobWorkflowStepService.batchUpdateSteps({
+        updates,
+        userId: user?.user_id || 0,
+      });
+
+      showToast(
+        "Batch update completed",
+        `${result.success} step(s) updated successfully${
+          result.failed > 0 ? `, ${result.failed} failed` : ""
+        }`
+      );
+
+      setShowBatchUpdateModal(false);
+      setBatchUpdateFields({});
+      setSelectedSteps(new Set());
+      fetchSteps();
+    } catch (err) {
+      showError(
+        "Batch update failed",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+    } finally {
+      setIsBatchUpdating(false);
+    }
+  };
+
   const handleDuplicateStep = async (step: JobWorkflowStep) => {
     try {
       await jobWorkflowStepService.duplicateStep(step.id, {
@@ -787,13 +901,36 @@ export default function JobWorkflowStepsPage() {
             {isSelectionMode ? "Exit Selection" : "Select Steps"}
           </button>
           <button
-            onClick={() => navigate("/dashboard/job-workflow-steps/create")}
+            onClick={() => {
+              if (jobIdFilter) {
+                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`);
+              } else {
+                navigate("/dashboard/job-workflow-steps/create");
+              }
+            }}
             className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white"
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="h-4 w-4" />
             Create Step
           </button>
+          {jobIdFilter && (
+            <button
+              onClick={() => {
+                // Open batch create modal - for now navigate to create page
+                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`);
+              }}
+              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors"
+              style={{
+                backgroundColor: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Batch Create
+            </button>
+          )}
         </div>
       </div>
 
@@ -896,88 +1033,196 @@ export default function JobWorkflowStepsPage() {
               <LoadingSpinner />
             </div>
           ) : analyticsData ? (
-            <div className="grid gap-6 md:grid-cols-3">
-              {/* Most Failed Steps */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  Most Failed Steps
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.mostFailed.length > 0 ? (
-                    analyticsData.mostFailed.slice(0, 5).map((item) => (
-                      <div
-                        key={item.step_id}
-                        className="rounded-md border border-gray-200 bg-gray-50 p-3"
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.step_name}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Failures: {item.failure_count} | Job:{" "}
-                          {jobMap[item.job_id]?.name || `#${item.job_id}`}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      No failed steps found
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Longest Running Steps */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-blue-500" />
-                  Longest Running Steps
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.longestRunning.length > 0 ? (
-                    analyticsData.longestRunning.slice(0, 5).map((item) => (
-                      <div
-                        key={item.step_id}
-                        className="rounded-md border border-gray-200 bg-gray-50 p-3"
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.step_name}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Avg: {Math.round(item.average_duration_seconds)}s |
-                          Max: {Math.round(item.max_duration_seconds)}s
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No data available</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Type Distribution */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  Step Type Distribution
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.typeDistribution.length > 0 ? (
-                    analyticsData.typeDistribution.map((item) => (
-                      <div
-                        key={item.step_type}
-                        className="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3"
-                      >
-                        <div>
+            <Fragment>
+              <div className="grid gap-6 md:grid-cols-3">
+                {/* Most Failed Steps */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    Most Failed Steps
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.mostFailed.length > 0 ? (
+                      analyticsData.mostFailed.slice(0, 5).map((item) => (
+                        <div
+                          key={item.step_id}
+                          className="rounded-md border border-gray-200 bg-gray-50 p-3"
+                        >
                           <div className="text-sm font-medium text-gray-900">
-                            {getStepTypeLabel(item.step_type)}
+                            {item.step_name}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {item.count} steps
+                          <div className="mt-1 text-xs text-gray-500">
+                            Failures: {item.failure_count} | Job:{" "}
+                            {jobMap[item.job_id]?.name || `#${item.job_id}`}
                           </div>
                         </div>
-                        <div className="text-sm font-semibold text-gray-700">
-                          {item.percentage.toFixed(1)}%
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No failed steps found
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Longest Running Steps */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-500" />
+                    Longest Running Steps
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.longestRunning.length > 0 ? (
+                      analyticsData.longestRunning.slice(0, 5).map((item) => (
+                        <div
+                          key={item.step_id}
+                          className="rounded-md border border-gray-200 bg-gray-50 p-3"
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.step_name}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            Avg: {Math.round(item.average_duration_seconds)}s |
+                            Max: {Math.round(item.max_duration_seconds)}s
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No data available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Type Distribution */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    Step Type Distribution
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.typeDistribution.length > 0 ? (
+                      analyticsData.typeDistribution.map((item) => (
+                        <div
+                          key={item.step_type}
+                          className="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3"
+                        >
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {getStepTypeLabel(item.step_type)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {item.count} steps
+                            </div>
+                          </div>
+                          <div className="text-sm font-semibold text-gray-700">
+                            {item.percentage.toFixed(1)}%
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No data available</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Analytics - Second Row */}
+              <div className="grid gap-6 md:grid-cols-3 mt-6">
+              {/* Complex Workflows */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Workflow className="h-4 w-4 text-purple-500" />
+                  Complex Workflows
+                </h3>
+                <div className="space-y-2">
+                  {analyticsData.complexWorkflows && analyticsData.complexWorkflows.length > 0 ? (
+                    analyticsData.complexWorkflows.slice(0, 5).map((item) => (
+                      <div
+                        key={item.job_id}
+                        className="rounded-md border border-gray-200 bg-gray-50 p-3"
+                      >
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.job_name || `Job #${item.job_id}`}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Steps: {item.total_steps} | Parallel: {item.parallel_groups} | Dependencies: {item.dependencies}
+                        </div>
+                        <div className="mt-1 text-xs font-semibold text-purple-600">
+                          Complexity: {item.complexity_score.toFixed(1)}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No complex workflows found</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Dependency Complexity */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <GitBranch className="h-4 w-4 text-indigo-500" />
+                  Dependency Complexity
+                </h3>
+                <div className="space-y-2">
+                  {analyticsData.dependencyComplexity && analyticsData.dependencyComplexity.length > 0 ? (
+                    analyticsData.dependencyComplexity.slice(0, 5).map((item) => (
+                      <div
+                        key={item.job_id}
+                        className="rounded-md border border-gray-200 bg-gray-50 p-3"
+                      >
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.job_name || `Job #${item.job_id}`}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Max Depth: {item.max_depth} | Total: {item.total_dependencies}
+                        </div>
+                        {item.circular_dependencies && (
+                          <div className="mt-1 text-xs font-semibold text-red-600">
+                            ⚠️ Circular Dependencies
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No data available</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Timeout Analysis */}
+              <div>
+                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-orange-500" />
+                  Timeout Analysis
+                </h3>
+                <div className="space-y-2">
+                  {analyticsData.timeoutAnalysis && analyticsData.timeoutAnalysis.length > 0 ? (
+                    analyticsData.timeoutAnalysis.slice(0, 5).map((item) => (
+                      <div
+                        key={item.step_id}
+                        className={`rounded-md border p-3 ${
+                          item.risk_level === "high"
+                            ? "border-red-200 bg-red-50"
+                            : item.risk_level === "medium"
+                            ? "border-amber-200 bg-amber-50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.step_name}
+                        </div>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Utilization: {item.timeout_utilization_percent.toFixed(1)}%
+                        </div>
+                        <div className={`mt-1 text-xs font-semibold ${
+                          item.risk_level === "high"
+                            ? "text-red-600"
+                            : item.risk_level === "medium"
+                            ? "text-amber-600"
+                            : "text-green-600"
+                        }`}>
+                          Risk: {item.risk_level.toUpperCase()}
                         </div>
                       </div>
                     ))
@@ -986,7 +1231,8 @@ export default function JobWorkflowStepsPage() {
                   )}
                 </div>
               </div>
-            </div>
+              </div>
+            </Fragment>
           ) : (
             <p className="text-sm text-gray-500">No analytics data available</p>
           )}
@@ -1141,6 +1387,19 @@ export default function JobWorkflowStepsPage() {
             >
               <Trash2 className="h-4 w-4" />
               Delete
+            </button>
+            <button
+              onClick={() => handleBatchAction("update")}
+              disabled={isBatchProcessing}
+              className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+              style={{
+                backgroundColor: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              <Edit className="h-4 w-4" />
+              Batch Update
             </button>
           </div>
         </div>
@@ -1831,6 +2090,262 @@ export default function JobWorkflowStepsPage() {
           variant="delete"
         />
       )}
+
+      {/* Batch Update Modal */}
+      {showBatchUpdateModal &&
+        createPortal(
+          <div
+            className="fixed inset-0 overflow-hidden"
+            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
+              onClick={() => setShowBatchUpdateModal(false)}
+            ></div>
+            <div
+              className="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
+              style={{ zIndex: 1000000 }}
+            >
+              <div className="flex flex-col max-h-[80vh]">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Batch Update Steps
+                  </h2>
+                  <button
+                    onClick={() => setShowBatchUpdateModal(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <p className="mb-4 text-sm text-gray-600">
+                    Update {selectedSteps.size} selected step(s). Leave fields
+                    empty to keep current values.
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={batchUpdateFields.is_active !== undefined}
+                          onChange={(e) =>
+                            setBatchUpdateFields({
+                              ...batchUpdateFields,
+                              is_active: e.target.checked
+                                ? true
+                                : undefined,
+                            })
+                          }
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Set Active Status
+                        </span>
+                      </label>
+                      {batchUpdateFields.is_active !== undefined && (
+                        <div className="mt-2 ml-6">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={batchUpdateFields.is_active}
+                              onChange={(e) =>
+                                setBatchUpdateFields({
+                                  ...batchUpdateFields,
+                                  is_active: e.target.checked,
+                                })
+                              }
+                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                            />
+                            <span className="text-sm text-gray-600">Active</span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={batchUpdateFields.is_critical !== undefined}
+                          onChange={(e) =>
+                            setBatchUpdateFields({
+                              ...batchUpdateFields,
+                              is_critical: e.target.checked ? true : undefined,
+                            })
+                          }
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Set Critical Status
+                        </span>
+                      </label>
+                      {batchUpdateFields.is_critical !== undefined && (
+                        <div className="mt-2 ml-6">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={batchUpdateFields.is_critical}
+                              onChange={(e) =>
+                                setBatchUpdateFields({
+                                  ...batchUpdateFields,
+                                  is_critical: e.target.checked,
+                                })
+                              }
+                              className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                            />
+                            <span className="text-sm text-gray-600">
+                              Critical
+                            </span>
+                          </label>
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={batchUpdateFields.timeout_seconds !== undefined}
+                          onChange={(e) =>
+                            setBatchUpdateFields({
+                              ...batchUpdateFields,
+                              timeout_seconds: e.target.checked ? 300 : undefined,
+                            })
+                          }
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Set Timeout
+                        </span>
+                      </label>
+                      {batchUpdateFields.timeout_seconds !== undefined && (
+                        <div className="mt-2 ml-6">
+                          <input
+                            type="number"
+                            min="1"
+                            max="86400"
+                            value={batchUpdateFields.timeout_seconds || 300}
+                            onChange={(e) =>
+                              setBatchUpdateFields({
+                                ...batchUpdateFields,
+                                timeout_seconds: Number(e.target.value) || 300,
+                              })
+                            }
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={batchUpdateFields.retry_count !== undefined}
+                          onChange={(e) =>
+                            setBatchUpdateFields({
+                              ...batchUpdateFields,
+                              retry_count: e.target.checked ? 0 : undefined,
+                            })
+                          }
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Set Retry Count
+                        </span>
+                      </label>
+                      {batchUpdateFields.retry_count !== undefined && (
+                        <div className="mt-2 ml-6">
+                          <input
+                            type="number"
+                            min="0"
+                            max="10"
+                            value={batchUpdateFields.retry_count || 0}
+                            onChange={(e) =>
+                              setBatchUpdateFields({
+                                ...batchUpdateFields,
+                                retry_count: Number(e.target.value) || 0,
+                              })
+                            }
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={batchUpdateFields.on_failure_action !== undefined}
+                          onChange={(e) =>
+                            setBatchUpdateFields({
+                              ...batchUpdateFields,
+                              on_failure_action: e.target.checked
+                                ? "abort"
+                                : undefined,
+                            })
+                          }
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Set Failure Action
+                        </span>
+                      </label>
+                      {batchUpdateFields.on_failure_action !== undefined && (
+                        <div className="mt-2 ml-6">
+                          <HeadlessSelect
+                            value={batchUpdateFields.on_failure_action}
+                            onChange={(value) =>
+                              setBatchUpdateFields({
+                                ...batchUpdateFields,
+                                on_failure_action: value as FailureAction,
+                              })
+                            }
+                            options={FAILURE_ACTION_OPTIONS.map((opt) => ({
+                              value: opt.value,
+                              label: opt.label,
+                            }))}
+                            placeholder="Select failure action"
+                            className="w-full"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-4 border-t border-gray-200 bg-gray-50">
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowBatchUpdateModal(false);
+                        setBatchUpdateFields({});
+                      }}
+                      className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBatchUpdate}
+                      disabled={isBatchUpdating}
+                      className="flex-1 px-4 py-2 text-sm font-semibold text-white rounded-md transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: color.primary.action }}
+                    >
+                      {isBatchUpdating ? "Updating..." : "Update Steps"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

@@ -76,7 +76,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     <header
       className="sticky top-0 z-[100] m-0 p-0"
       style={{
-        background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
+        backgroundColor: color.gradients.sidebar.top,
       }}
     >
       <div className="flex h-16 items-center justify-between px-5 lg:px-8">

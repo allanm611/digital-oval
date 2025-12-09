@@ -3,14 +3,63 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { color } from "./shared/utils/utils";
+
+// ScrollToTop component to scroll to top on route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Function to perform scroll
+    const performScroll = () => {
+      // Scroll window
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      // Scroll document elements
+      if (document.documentElement) {
+        document.documentElement.scrollTop = 0;
+      }
+      if (document.body) {
+        document.body.scrollTop = 0;
+      }
+      // Scroll any scrollable containers
+      const scrollableContainers = document.querySelectorAll(
+        '[style*="overflow"], [class*="overflow"]'
+      );
+      scrollableContainers.forEach((container) => {
+        if (container instanceof HTMLElement && container.scrollTop > 0) {
+          container.scrollTop = 0;
+        }
+      });
+    };
+
+    // Immediate scroll
+    performScroll();
+
+    // Scroll after render (using requestAnimationFrame)
+    requestAnimationFrame(() => {
+      performScroll();
+    });
+
+    // Also scroll after a delay to catch any delayed renders
+    const timeoutId1 = setTimeout(performScroll, 50);
+    const timeoutId2 = setTimeout(performScroll, 150);
+
+    return () => {
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+    };
+  }, [pathname]);
+
+  return null;
+}
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -47,34 +96,37 @@ function AppRoutes() {
   }
 
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/landingpage" /> : <LoginPage />
-          }
-        />
-        <Route path="/request-account" element={<RequestAccountPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route
-          path="/landingpage"
-          element={
-            isAuthenticated ? (
-              <AuthenticatedLandingPage />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
-        <Route
-          path="/dashboard/*"
-          element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
-        />
-        <Route path="/" element={<Navigate to="/login" />} />
-      </Routes>
-    </Suspense>
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              isAuthenticated ? <Navigate to="/landingpage" /> : <LoginPage />
+            }
+          />
+          <Route path="/request-account" element={<RequestAccountPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/landing" element={<LandingPage />} />
+          <Route
+            path="/landingpage"
+            element={
+              isAuthenticated ? (
+                <AuthenticatedLandingPage />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/dashboard/*"
+            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route path="/" element={<Navigate to="/login" />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 }
 

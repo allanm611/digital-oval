@@ -11,6 +11,7 @@ import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { CustomerIdentityField } from "../types/customerIdentity";
 import { customerIdentityService } from "../services/customerIdentityService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type LocationState = {
   field?: CustomerIdentityField;
@@ -20,6 +21,7 @@ export default function CustomerIdentityFieldDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const initialField = (location.state as LocationState | undefined)?.field;
 
   const [field, setField] = useState<CustomerIdentityField | null>(
@@ -35,7 +37,7 @@ export default function CustomerIdentityFieldDetailsPage() {
 
   const loadField = useCallback(async () => {
     if (fieldId == null) {
-      setError("Invalid field identifier.");
+      setError(t.customerIdentity.invalidFieldIdentifier);
       setIsLoading(false);
       return;
     }
@@ -47,7 +49,7 @@ export default function CustomerIdentityFieldDetailsPage() {
       const matchedField = fields.find((candidate) => candidate.id === fieldId);
 
       if (!matchedField) {
-        setError("Field not found.");
+        setError(t.customerIdentity.fieldNotFound);
         setField(null);
         return;
       }
@@ -56,7 +58,9 @@ export default function CustomerIdentityFieldDetailsPage() {
     } catch (err) {
       console.error("Failed to load customer identity field", err);
       const message =
-        err instanceof Error ? err.message : "Unable to load field details.";
+        err instanceof Error
+          ? err.message
+          : t.customerIdentity.unableToLoadFieldDetails;
       setError(message);
     } finally {
       setIsLoading(false);
@@ -85,7 +89,7 @@ export default function CustomerIdentityFieldDetailsPage() {
         </button>
         <div>
           <h1 className={`${tw.mainHeading} text-gray-900`}>
-            {field ? field.field_name : "Field Details"}
+            {field ? field.field_name : t.customerIdentity.fieldDetails}
           </h1>
         </div>
       </div>
@@ -103,7 +107,7 @@ export default function CustomerIdentityFieldDetailsPage() {
           style={{ borderColor: color.border.default }}
         >
           <h3 className="text-lg font-semibold text-gray-900">
-            Unable to load field
+            {t.customerIdentity.unableToLoadField}
           </h3>
           <p className={`${tw.textSecondary}`}>{error}</p>
           <button
@@ -112,39 +116,42 @@ export default function CustomerIdentityFieldDetailsPage() {
             className="px-4 py-2 text-sm font-semibold text-white rounded-md hover:opacity-95 transition-colors"
             style={{ backgroundColor: color.primary.action }}
           >
-            Retry
+            {t.customerIdentity.retry}
           </button>
         </div>
       ) : field ? (
         <div className="space-y-8">
           <section className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Field Overview
+              {t.customerIdentity.fieldOverview}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <InfoCard
                 icon={<Database className="h-5 w-5 text-white" />}
-                title="Core Metadata"
+                title={t.customerIdentity.coreMetadata}
                 items={[
                   {
-                    label: "Field Name",
+                    label: t.customerIdentity.fieldName,
                     value: field.field_name,
                   },
                   {
-                    label: "Field Value",
+                    label: t.customerIdentity.fieldValue,
                     value: field.field_value,
                   },
                   {
-                    label: "Description",
+                    label: t.customerIdentity.description,
                     value: field.description || "—",
                   },
                 ]}
               />
               <InfoCard
                 icon={<FileText className="h-5 w-5 text-white" />}
-                title="Type Information"
+                title={t.customerIdentity.typeInformation}
                 items={[
-                  { label: "Field Type", value: field.field_type },
+                  {
+                    label: t.customerIdentity.fieldType,
+                    value: field.field_type,
+                  },
                   { label: "Postgres Type", value: field.field_pg_type || "—" },
                   {
                     label: "Type Precision",
@@ -157,9 +164,12 @@ export default function CustomerIdentityFieldDetailsPage() {
               />
               <InfoCard
                 icon={<SettingsIcon className="h-5 w-5 text-white" />}
-                title="Source & Validation"
+                title={t.customerIdentity.sourceValidation}
                 items={[
-                  { label: "Source Table", value: field.source_table },
+                  {
+                    label: t.customerIdentity.sourceTable,
+                    value: field.source_table,
+                  },
                   {
                     label: "Validation Strategy",
                     value: field.validation?.strategy || "none",
@@ -185,13 +195,13 @@ export default function CustomerIdentityFieldDetailsPage() {
                 <ListChecks className="h-5 w-5 text-white" />
               </div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Operator Support
+                {t.customerIdentity.operatorSupport}
               </h2>
             </div>
             {field.operators.length === 0 ? (
               <div className="bg-white border border-gray-200 rounded-md p-6">
                 <p className={`${tw.textSecondary} text-sm`}>
-                  No operators configured for this field.
+                  {t.customerIdentity.noOperatorsConfigured}
                 </p>
               </div>
             ) : (
@@ -209,11 +219,11 @@ export default function CustomerIdentityFieldDetailsPage() {
                     <thead style={{ background: color.surface.tableHeader }}>
                       <tr>
                         {[
-                          "Label",
-                          "Symbol",
-                          "Requires Value",
-                          "Requires Two Values",
-                          "Applicable Types",
+                          t.customerIdentity.label,
+                          t.customerIdentity.symbol,
+                          t.customerIdentity.requiresValue,
+                          t.customerIdentity.requiresTwoValues,
+                          t.customerIdentity.applicableTypes,
                         ].map((header) => (
                           <th
                             key={header}
@@ -250,7 +260,9 @@ export default function CustomerIdentityFieldDetailsPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {operator.requires_value ? "Yes" : "No"}
+                            {operator.requires_value
+                              ? t.customerIdentity.yes
+                              : t.customerIdentity.no}
                           </td>
                           <td
                             className="px-6 py-4 text-sm text-gray-700"
@@ -258,7 +270,9 @@ export default function CustomerIdentityFieldDetailsPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {operator.requires_two_values ? "Yes" : "No"}
+                            {operator.requires_two_values
+                              ? t.customerIdentity.yes
+                              : t.customerIdentity.no}
                           </td>
                           <td
                             className="px-6 py-4 text-sm text-gray-700"

@@ -54,10 +54,7 @@ export default function UserProfilePage() {
       loadUserProfile();
     } else {
       setIsLoading(false);
-      showError(
-        "Error",
-        "User information not available. Please log in again."
-      );
+      showError(t.profile.profileUpdated, t.profile.errorUserInfoNotAvailable);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser]);
@@ -86,10 +83,7 @@ export default function UserProfilePage() {
       }
     } catch (err) {
       console.error("Error loading user profile:", err);
-      showError(
-        "Error",
-        "Failed to load user profile. Please try again later."
-      );
+      showError(t.profile.profileUpdated, t.profile.errorLoadProfile);
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +145,7 @@ export default function UserProfilePage() {
       }
     } catch (err) {
       console.error("Error updating profile:", err);
-      showError("Error", "Failed to update profile. Please try again later.");
+      showError(t.profile.profileUpdated, t.profile.errorUpdateProfile);
     } finally {
       setIsSaving(false);
     }
@@ -200,7 +194,7 @@ export default function UserProfilePage() {
   if (!user) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Unable to load user profile.</p>
+        <p className="text-gray-600">{t.profile.unableToLoad}</p>
       </div>
     );
   }
@@ -210,7 +204,7 @@ export default function UserProfilePage() {
     "unknown";
   const statusLabel =
     statusValue === "unknown"
-      ? "Status Unknown"
+      ? t.profile.statusUnknown
       : statusValue
           .split("_")
           .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -328,14 +322,14 @@ export default function UserProfilePage() {
           {/* Personal Information */}
           <div className="space-y-4">
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Personal Information
+              {t.profile.personalInformation}
             </h3>
 
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                First Name
+                {t.profile.firstName}
               </label>
               {isEditing ? (
                 <input
@@ -377,7 +371,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Last Name
+                {t.profile.lastName}
               </label>
               {isEditing ? (
                 <input
@@ -420,13 +414,13 @@ export default function UserProfilePage() {
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
               >
                 <Mail className="w-4 h-4" />
-                Email Address
+                {t.profile.emailAddress}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.email_address || user.email || "N/A"}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                Email cannot be changed
+                {t.profile.emailCannotBeChanged}
               </p>
             </div>
 
@@ -435,7 +429,7 @@ export default function UserProfilePage() {
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
               >
                 <Phone className="w-4 h-4" />
-                Phone Number
+                {t.profile.phoneNumber}
               </label>
               {isEditing ? (
                 <input
@@ -456,14 +450,14 @@ export default function UserProfilePage() {
           {/* Professional Information */}
           <div className="space-y-4">
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Professional Information
+              {t.profile.professionalInformation}
             </h3>
 
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Department
+                {t.profile.department}
               </label>
               {isEditing ? (
                 <input
@@ -484,7 +478,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Job Title
+                {t.profile.jobTitle}
               </label>
               {isEditing ? (
                 <input
@@ -505,7 +499,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Timezone
+                {t.profile.timezone}
               </label>
               {isEditing ? (
                 <input
@@ -513,7 +507,7 @@ export default function UserProfilePage() {
                   name="timezone"
                   value={formData.timezone}
                   onChange={handleInputChange}
-                  placeholder="e.g., UTC, America/New_York"
+                  placeholder={t.profile.timezonePlaceholder}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               ) : (
@@ -527,7 +521,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Language Preference
+                {t.profile.languagePreference}
               </label>
               {isEditing ? (
                 <HeadlessSelect
@@ -539,7 +533,7 @@ export default function UserProfilePage() {
                       (value as string) || ""
                     )
                   }
-                  placeholder="Select language"
+                  placeholder={t.profile.selectLanguage}
                   searchable
                 />
               ) : (
@@ -556,14 +550,14 @@ export default function UserProfilePage() {
         {/* Account Information (Read-only) */}
         <div className="mt-8 pt-6 border-t border-gray-200">
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-            Account Information
+            {t.profile.accountInformation}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Username
+                {t.profile.username}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>{user.username}</p>
             </div>
@@ -572,7 +566,7 @@ export default function UserProfilePage() {
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
               >
                 <Shield className="w-4 h-4" />
-                Data Access Level
+                {t.profile.dataAccessLevel}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.data_access_level || "N/A"}
@@ -583,7 +577,7 @@ export default function UserProfilePage() {
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
               >
                 <CheckCircle className="w-4 h-4" />
-                PII Access
+                {t.profile.piiAccess}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.can_access_pii || user.pii_access ? "Yes" : "No"}
@@ -594,7 +588,7 @@ export default function UserProfilePage() {
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
               >
                 <Clock className="w-4 h-4" />
-                Last Login
+                {t.profile.lastLogin}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {lastLoginValue ? (
@@ -608,7 +602,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Account Created
+                {t.profile.accountCreated}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.created_at ? (
@@ -622,7 +616,7 @@ export default function UserProfilePage() {
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                Last Updated
+                {t.profile.lastUpdated}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
                 {user.updated_at ? (

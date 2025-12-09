@@ -162,22 +162,22 @@ export default function CommunicationPolicyPage() {
     switch (policy.type) {
       case "timeWindow": {
         const timeConfig = policy.config as TimeWindowConfig;
-        summaryParts.push(`🕐 ${timeConfig.startTime}-${timeConfig.endTime}`);
+        summaryParts.push(`${timeConfig.startTime}-${timeConfig.endTime}`);
         break;
       }
       case "maximumCommunication": {
         const maxConfig = policy.config as MaximumCommunicationConfig;
-        summaryParts.push(`📊 Max ${maxConfig.maxCount}/${maxConfig.type}`);
+        summaryParts.push(`Max ${maxConfig.maxCount}/${maxConfig.type}`);
         break;
       }
       case "dnd": {
         const dndConfig = policy.config as DNDConfig;
-        summaryParts.push(`🔕 ${dndConfig.categories.length} categories`);
+        summaryParts.push(`${dndConfig.categories.length} categories`);
         break;
       }
       case "vipList": {
         const vipConfig = policy.config as VIPListConfig;
-        summaryParts.push(`⭐ ${vipConfig.action} (P:${vipConfig.priority})`);
+        summaryParts.push(`${vipConfig.action} (P:${vipConfig.priority})`);
         break;
       }
     }

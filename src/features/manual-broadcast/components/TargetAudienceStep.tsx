@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { UploadType } from "../../quicklists/types/quicklist";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface TargetAudienceStepProps {
   data: ManualBroadcastData;
@@ -21,6 +22,7 @@ export default function TargetAudienceStep({
   onUpdate,
   onNext,
 }: TargetAudienceStepProps) {
+  const { t } = useLanguage();
   const { error: showError } = useToast();
   const [inputMode, setInputMode] = useState<InputMode>("file");
   const [file, setFile] = useState<File | null>(data.audienceFile || null);
@@ -54,7 +56,7 @@ export default function TargetAudienceStep({
       }
     } catch (err) {
       console.error("Failed to load upload types:", err);
-      showError("Failed to load upload types");
+      showError(t.manualBroadcast.errorLoadUploadTypes);
     } finally {
       setLoading(false);
     }
@@ -69,7 +71,7 @@ export default function TargetAudienceStep({
         "application/vnd.ms-excel",
       ];
       if (!validTypes.includes(selectedFile.type)) {
-        setError("Please select a valid Excel file (.xlsx or .xls)");
+        setError(t.manualBroadcast.errorSelectFile);
         setFile(null);
         return;
       }
@@ -79,7 +81,7 @@ export default function TargetAudienceStep({
         (t) => t.upload_type === uploadType
       );
       if (!selectedUploadType) {
-        setError("Please select an upload type first");
+        setError(t.manualBroadcast.selectUploadTypeFirst);
         setFile(null);
         return;
       }
@@ -88,7 +90,9 @@ export default function TargetAudienceStep({
       const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
       if (selectedFile.size > maxSizeBytes) {
-        setError(`File size must be less than ${maxSizeMB}MB`);
+        setError(
+          t.manualBroadcast.maxFileSize.replace("{size}", String(maxSizeMB))
+        );
         setFile(null);
         return;
       }
@@ -202,27 +206,27 @@ export default function TargetAudienceStep({
     // Validation
     if (inputMode === "file") {
       if (!file) {
-        setError("Please select a file");
+        setError(t.manualBroadcast.errorSelectFile);
         return;
       }
     } else {
       if (!manualInput.trim()) {
-        setError("Please enter at least one email or phone number");
+        setError(t.manualBroadcast.errorEnterManual);
         return;
       }
       if (manualInputValidation.validCount === 0) {
-        setError("No valid emails or phone numbers found");
+        setError(t.manualBroadcast.errorNoValidContacts);
         return;
       }
     }
 
     if (!uploadType) {
-      setError("Please select an upload type");
+      setError(t.manualBroadcast.errorSelectUploadType);
       return;
     }
 
     if (!name.trim()) {
-      setError("Please enter a name");
+      setError(t.manualBroadcast.errorEnterName);
       return;
     }
 
@@ -264,7 +268,9 @@ export default function TargetAudienceStep({
     } catch (err) {
       console.error("Failed to create audience:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to create audience";
+        err instanceof Error
+          ? err.message
+          : t.manualBroadcast.errorCreateAudience;
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -329,7 +335,7 @@ export default function TargetAudienceStep({
         style={{ borderColor: color.border.default }}
       >
         <div className="text-center py-12">
-          <p className={tw.textMuted}>Loading...</p>
+          <p className={tw.textMuted}>{t.manualBroadcast.loading}</p>
         </div>
       </div>
     );
@@ -345,11 +351,10 @@ export default function TargetAudienceStep({
         style={{ borderColor: color.border.default }}
       >
         <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-          Target Audience
+          {t.manualBroadcast.targetAudienceTitle}
         </h2>
         <p className={`text-sm ${tw.textSecondary} mt-1`}>
-          Define who will receive your broadcast by uploading a file or entering
-          contacts manually
+          {t.manualBroadcast.targetAudienceSubtitle}
         </p>
       </div>
 
@@ -357,7 +362,7 @@ export default function TargetAudienceStep({
         {/* List Name */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            List Name *
+            {t.manualBroadcast.listNameLabel}
           </label>
           <input
             type="text"
@@ -368,7 +373,7 @@ export default function TargetAudienceStep({
               borderColor: color.border.default,
               color: color.text.primary,
             }}
-            placeholder="e.g., High Value Customers"
+            placeholder={t.manualBroadcast.listNamePlaceholder}
             required
             disabled={isSubmitting}
           />
@@ -377,17 +382,17 @@ export default function TargetAudienceStep({
         {/* List Type */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            List Type *
+            {t.manualBroadcast.listTypeLabel}
           </label>
           <HeadlessSelect
             options={[
-              { value: "Standard", label: "Standard" },
-              { value: "Premium", label: "Premium" },
-              { value: "VIP", label: "VIP" },
+              { value: "Standard", label: t.manualBroadcast.listTypeStandard },
+              { value: "Premium", label: t.manualBroadcast.listTypePremium },
+              { value: "VIP", label: t.manualBroadcast.listTypeVIP },
             ]}
             value={listType}
             onChange={(value) => setListType(value as string)}
-            placeholder="Select list type"
+            placeholder={t.manualBroadcast.listTypePlaceholder}
             disabled={isSubmitting}
           />
         </div>
@@ -395,7 +400,7 @@ export default function TargetAudienceStep({
         {/* Input Mode Toggle */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
-            Input Method *
+            {t.manualBroadcast.inputMethodLabel}
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
@@ -417,7 +422,7 @@ export default function TargetAudienceStep({
             >
               <Upload className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium whitespace-nowrap">
-                Upload File
+                {t.manualBroadcast.inputMethodUpload}
               </span>
             </button>
             <button
@@ -439,7 +444,7 @@ export default function TargetAudienceStep({
             >
               <Edit3 className="w-5 h-5 flex-shrink-0" />
               <span className="text-sm font-medium whitespace-nowrap">
-                Manual Entry
+                {t.manualBroadcast.inputMethodManual}
               </span>
             </button>
           </div>
@@ -450,7 +455,7 @@ export default function TargetAudienceStep({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-                Upload Your File *
+                {t.manualBroadcast.uploadFileLabel}
               </label>
               {uploadType && (
                 <button
@@ -459,12 +464,12 @@ export default function TargetAudienceStep({
                   className="text-xs font-medium hover:underline"
                   style={{ color: color.primary.accent }}
                 >
-                  Download Template
+                  {t.manualBroadcast.downloadTemplate}
                 </button>
               )}
             </div>
             <p className={`text-xs ${tw.textSecondary} mb-3`}>
-              Supported formats: CSV, TSV, TXT, or XLSX up to 10MB.
+              {t.manualBroadcast.uploadFileHelper}
             </p>
             {uploadType ? (
               <label
@@ -509,7 +514,7 @@ export default function TargetAudienceStep({
                       className="text-sm font-medium cursor-pointer"
                       style={{ color: color.primary.accent }}
                     >
-                      Change file
+                      {t.manualBroadcast.changeFile}
                     </span>
                   </div>
                 ) : (
@@ -520,17 +525,20 @@ export default function TargetAudienceStep({
                     />
                     <div>
                       <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                        Click to upload
+                        {t.manualBroadcast.clickToUpload}
                       </p>
                       <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                        or drag and drop
+                        {t.manualBroadcast.dragAndDrop}
                       </p>
                     </div>
                     <p className={`text-xs ${tw.textSecondary}`}>
-                      Excel files (.xlsx, .xls) up to{" "}
-                      {uploadTypes.find((t) => t.upload_type === uploadType)
-                        ?.max_file_size_mb || 10}
-                      MB
+                      {t.manualBroadcast.maxFileSize.replace(
+                        "{size}",
+                        String(
+                          uploadTypes.find((t) => t.upload_type === uploadType)
+                            ?.max_file_size_mb || 10
+                        )
+                      )}
                     </p>
                   </div>
                 )}
@@ -546,10 +554,10 @@ export default function TargetAudienceStep({
                 />
                 <div className="space-y-3 mt-3">
                   <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                    Click to upload
+                    {t.manualBroadcast.clickToUpload}
                   </p>
                   <p className={`text-xs ${tw.textSecondary}`}>
-                    Please select an upload type first
+                    {t.manualBroadcast.selectUploadTypeFirst}
                   </p>
                 </div>
               </div>
@@ -563,7 +571,7 @@ export default function TargetAudienceStep({
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
             >
-              Enter Contacts Manually *
+              {t.manualBroadcast.manualEntryLabel}
             </label>
             <textarea
               value={manualInput}
@@ -573,7 +581,7 @@ export default function TargetAudienceStep({
                 borderColor: color.border.default,
                 color: color.text.primary,
               }}
-              placeholder="Enter emails or phone numbers (one per line)&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;+33612345678&#10;+1234567890"
+              placeholder={t.manualBroadcast.manualEntryPlaceholder}
               rows={10}
               disabled={isSubmitting}
             />
@@ -590,8 +598,10 @@ export default function TargetAudienceStep({
                     className="font-medium"
                     style={{ color: color.status.success }}
                   >
-                    {manualInputValidation.validCount} valid contact
-                    {manualInputValidation.validCount !== 1 ? "s" : ""}
+                    {t.manualBroadcast.validationValid.replace(
+                      "{count}",
+                      String(manualInputValidation.validCount)
+                    )}
                   </span>
                 </div>
                 {manualInputValidation.invalidCount > 0 && (
@@ -604,7 +614,10 @@ export default function TargetAudienceStep({
                       className="font-medium"
                       style={{ color: color.status.danger }}
                     >
-                      {manualInputValidation.invalidCount} invalid
+                      {t.manualBroadcast.validationInvalid.replace(
+                        "{count}",
+                        String(manualInputValidation.invalidCount)
+                      )}
                     </span>
                   </div>
                 )}
@@ -612,8 +625,7 @@ export default function TargetAudienceStep({
             )}
 
             <p className={`mt-2 text-xs ${tw.textSecondary}`}>
-              Enter one email address or phone number per line. Valid formats:
-              email@domain.com or +1234567890
+              {t.manualBroadcast.manualEntryHelp}
             </p>
           </div>
         )}
@@ -655,7 +667,9 @@ export default function TargetAudienceStep({
           className="px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           style={{ backgroundColor: color.primary.action }}
         >
-          {isSubmitting ? "Creating Audience..." : "Next: Define Communication"}
+          {isSubmitting
+            ? t.manualBroadcast.creatingAudience
+            : t.manualBroadcast.nextDefineCommunication}
         </button>
       </div>
     </div>
