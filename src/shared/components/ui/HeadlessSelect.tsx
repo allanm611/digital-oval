@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { components , tw} from "../../utils/utils";
+import { components, tw } from "../../utils/utils";
 
 interface SelectOption {
   value: string | number;
@@ -32,7 +32,7 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
-  zIndex = 99999,
+  zIndex = 10,
 }: HeadlessSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -50,7 +50,7 @@ export default function HeadlessSelect({
         <div className="relative w-full">
           <Listbox.Button
             className={`
-            relative w-full cursor-default py-2 px-3 pr-10 text-left transition-all duration-200 text-sm
+            relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
             ${
               disabled
@@ -83,7 +83,9 @@ export default function HeadlessSelect({
             leaveTo="opacity-0"
           >
             <Listbox.Options
-              className={`absolute max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
+              className={`absolute max-h-60 w-full overflow-auto ${
+                tw.rounded
+              } bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
                 openUpward ? "bottom-full mb-1" : "top-full mt-1"
               }`}
               style={{

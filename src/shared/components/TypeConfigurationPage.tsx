@@ -45,7 +45,7 @@ interface MetadataFieldConfig {
 
 interface CustomFieldConfig {
   label: string;
-  type: "text" | "select";
+  type: "text" | "select" | "number" | "textarea";
   placeholder?: string;
   options?: { value: string; label: string }[];
   required?: boolean;
@@ -136,8 +136,9 @@ function TypeConfigurationModal({
 
   const isCreativeTemplate = config.configType === "creativeTemplates";
   const isLanguage = config.configType === "languages";
+  const isCharacterSet = config.configType === "characterSets";
 
-  // Custom fields state for languages
+  // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
   // Load languages for template locale selection
@@ -157,7 +158,7 @@ function TypeConfigurationModal({
       return (characterSets as TypeConfigurationItem[])
         .filter((cs) => cs.isActive)
         .map((cs) => ({
-          value: cs.metadataValue as string,
+          value: cs.name,
           label: cs.name,
         }));
     }
@@ -181,7 +182,7 @@ function TypeConfigurationModal({
         );
         setLocale(item.locale || "");
       }
-      if (isLanguage && config.customFields) {
+      if ((isLanguage || isCharacterSet) && config.customFields) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] =
@@ -201,7 +202,7 @@ function TypeConfigurationModal({
         setVariablesText("");
         setLocale("");
       }
-      if (isLanguage && config.customFields) {
+      if ((isLanguage || isCharacterSet) && config.customFields) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] = "";
@@ -210,7 +211,14 @@ function TypeConfigurationModal({
       }
     }
     setError("");
-  }, [item, isOpen, isCreativeTemplate, isLanguage, config.customFields]);
+  }, [
+    item,
+    isOpen,
+    isCreativeTemplate,
+    isLanguage,
+    isCharacterSet,
+    config.customFields,
+  ]);
 
   if (!isOpen) return null;
 
@@ -301,8 +309,8 @@ function TypeConfigurationModal({
       payload.locale = locale.trim() || undefined;
     }
 
-    // Add custom fields for languages
-    if (isLanguage && config.customFields) {
+    // Add custom fields for languages and character sets
+    if ((isLanguage || isCharacterSet) && config.customFields) {
       for (const field of config.customFields) {
         const value = customFields[field.fieldKey]?.trim() || "";
         if (field.required && !value) {
@@ -336,6 +344,8 @@ function TypeConfigurationModal({
         className={`${tw.rounded} shadow-2xl w-full bg-white ${
           isCreativeTemplate
             ? "max-w-4xl max-h-[90vh] flex flex-col"
+            : isLanguage
+            ? "max-w-lg"
             : "max-w-md"
         }`}
       >
@@ -390,7 +400,7 @@ function TypeConfigurationModal({
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
-                config.descriptionLabel.toLowerCase()
+                config.descriptionLabel?.toLowerCase() || "description"
               )}
               rows={3}
               maxLength={config.descriptionMaxLength}
@@ -422,11 +432,17 @@ function TypeConfigurationModal({
             </div>
           )}
 
-          {/* Custom Fields (for Languages) */}
-          {isLanguage && config.customFields && (
+          {/* Custom Fields (for Languages and Character Sets) */}
+          {(isLanguage || isCharacterSet) && config.customFields && (
             <>
-              {config.customFields.map((field) => (
-                <div key={field.fieldKey}>
+              {config.customFields.map((field, index) => (
+                <div
+                  key={field.fieldKey}
+                  style={{
+                    position: "relative",
+                    zIndex: config.customFields!.length - index,
+                  }}
+                >
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     {field.label} {field.required && "*"}
                   </label>
@@ -445,6 +461,37 @@ function TypeConfigurationModal({
                           : field.options || []
                       }
                       placeholder={field.placeholder}
+                      zIndex={
+                        10020 + (config.customFields!.length - index) * 10
+                      }
+                    />
+                  ) : field.type === "number" ? (
+                    <input
+                      type="number"
+                      value={customFields[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setCustomFields((prev) => ({
+                          ...prev,
+                          [field.fieldKey]: e.target.value,
+                        }))
+                      }
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      placeholder={field.placeholder}
+                      required={field.required}
+                    />
+                  ) : field.type === "textarea" ? (
+                    <textarea
+                      value={customFields[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setCustomFields((prev) => ({
+                          ...prev,
+                          [field.fieldKey]: e.target.value,
+                        }))
+                      }
+                      rows={3}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
+                      placeholder={field.placeholder}
+                      required={field.required}
                     />
                   ) : (
                     <input
@@ -831,37 +878,55 @@ export default function TypeConfigurationPage({
                       borderTopLeftRadius: "0.375rem",
                     }}
                   >
-                    {config.entityName}
+                    {config.configType === "characterSets"
+                      ? "Character Set Name"
+                      : config.entityName}
                   </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    Description
-                  </th>
-                  {config.metadataField && (
-                    <th
-                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                      style={{
-                        color: color.surface.tableHeaderText,
-                        backgroundColor: color.surface.tableHeader,
-                      }}
-                    >
-                      {config.metadataField.label}
-                    </th>
+                  {config.configType === "characterSets" ? (
+                    <>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Message Type
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Character Set Type
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        Description
+                      </th>
+                      {config.metadataField && (
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{
+                            color: color.surface.tableHeaderText,
+                            backgroundColor: color.surface.tableHeader,
+                          }}
+                        >
+                          {config.metadataField.label}
+                        </th>
+                      )}
+                    </>
                   )}
-                  <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{
-                      color: color.surface.tableHeaderText,
-                      backgroundColor: color.surface.tableHeader,
-                    }}
-                  >
-                    {config.statusLabel || t.genericConfig.status}
-                  </th>
                   <th
                     className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
                     style={{
@@ -899,29 +964,66 @@ export default function TypeConfigurationPage({
                         </div>
                       </div>
                     </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <div className={`text-sm ${tw.textSecondary} max-w-md`}>
-                        {item.description || t.genericConfig.noDescription}
-                      </div>
-                    </td>
-                    {config.metadataField && (
-                      <td
-                        className="px-6 py-4"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                        }}
-                      >
-                        <div className={`text-sm ${tw.textPrimary}`}>
-                          {item.metadataValue ?? "—"}
-                        </div>
-                      </td>
+                    {config.configType === "characterSets" ? (
+                      <>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <div className={`text-sm ${tw.textPrimary}`}>
+                            {(item as unknown as Record<string, unknown>)
+                              .messageType || "—"}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <div className={`text-sm ${tw.textPrimary}`}>
+                            {(item as unknown as Record<string, unknown>)
+                              .characterSetType || "—"}
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <div
+                            className={`text-sm ${tw.textSecondary} max-w-md`}
+                          >
+                            {item.description || t.genericConfig.noDescription}
+                          </div>
+                        </td>
+                        {config.metadataField && (
+                          <td
+                            className="px-6 py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <div className={`text-sm ${tw.textPrimary}`}>
+                              {item.metadataValue ?? "—"}
+                            </div>
+                          </td>
+                        )}
+                      </>
                     )}
                     <td
                       className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopRightRadius: "0.375rem",
+                        borderBottomRightRadius: "0.375rem",
+                      }}
                     >
                       <span className={`text-sm ${tw.textPrimary}`}>
                         {item.isActive ?? true

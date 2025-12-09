@@ -139,7 +139,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                     value: field.field_value,
                   },
                   {
-                    label: t.customerIdentity.description,
+                    label: t.customerIdentity.descriptionLabel,
                     value: field.description || "—",
                   },
                 ]}
@@ -199,7 +199,9 @@ export default function CustomerIdentityFieldDetailsPage() {
               </h2>
             </div>
             {field.operators.length === 0 ? (
-              <div className={`bg-white border border-gray-200 ${tw.rounded} p-6`}>
+              <div
+                className={`bg-white border border-gray-200 ${tw.rounded} p-6`}
+              >
                 <p className={`${tw.textSecondary} text-sm`}>
                   {t.customerIdentity.noOperatorsConfigured}
                 </p>

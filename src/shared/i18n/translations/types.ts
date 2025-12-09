@@ -436,6 +436,18 @@ export interface Translations {
     textBody: string;
     htmlBody: string;
     variables: string;
+    characterSetName: string;
+    characterSetSize: string;
+    standardChars: string;
+    doubleChars: string;
+    tripleChars: string;
+    quadChars: string;
+    messageType: string;
+    characterSetType: string;
+    languageCode: string;
+    country: string;
+    characterSet: string;
+    whatsappLanguageCode: string;
     variablesPlaceholder: string;
     invalidJson: string;
     mustBeValidNumber: string; // {field}
@@ -627,6 +639,116 @@ export interface Translations {
     disableHealthChecks: string;
   };
 
+  // Manual Rewards
+  manualRewards: {
+    title: string;
+    selectCustomers: string;
+    defineReward: string;
+    preview: string;
+    apply: string;
+    selectCustomersDesc: string;
+    defineRewardDesc: string;
+    previewDesc: string;
+    applyDesc: string;
+    createdSuccess: string;
+    createFailed: string;
+    loading: string;
+    selectCustomersTitle: string;
+    selectCustomersSubtitle: string;
+    listNameLabel: string;
+    listNamePlaceholder: string;
+    inputMethodLabel: string;
+    inputMethodUpload: string;
+    inputMethodManual: string;
+    uploadFileLabel: string;
+    clickToUpload: string;
+    dragAndDrop: string;
+    changeFile: string;
+    maxFileSize: string; // {size}
+    selectUploadTypeFirst: string;
+    manualEntryLabel: string;
+    manualEntryPlaceholder: string;
+    manualEntryHelp: string;
+    validationValid: string; // {count}
+    validationInvalid: string; // {count}
+    errorSelectFile: string;
+    errorEnterManual: string;
+    errorNoValidContacts: string;
+    errorSelectUploadType: string;
+    errorEnterName: string;
+    errorCreateAudience: string;
+    errorLoadUploadTypes: string;
+    nextDefineReward: string;
+    creatingAudience: string;
+    defineRewardTitle: string;
+    defineRewardSubtitle: string;
+    rewardTypeLabel: string;
+    rewardTypeBundle: string;
+    rewardTypeBundleDesc: string;
+    rewardTypePoints: string;
+    rewardTypePointsDesc: string;
+    rewardTypeDiscount: string;
+    rewardTypeDiscountDesc: string;
+    rewardTypeCashback: string;
+    rewardTypeCashbackDesc: string;
+    rewardValueLabel: string;
+    rewardValuePlaceholderBundle: string;
+    rewardValuePlaceholderPoints: string;
+    rewardValuePlaceholderDiscount: string;
+    rewardValuePlaceholderCashback: string;
+    rewardValueHelperBundle: string;
+    rewardValueHelperPoints: string;
+    rewardValueHelperDiscount: string;
+    rewardValueHelperCashback: string;
+    bundleTrackLabel: string;
+    bundleTrackPlaceholder: string;
+    bundleTrackHelper: string;
+    descriptionLabel: string;
+    descriptionPlaceholder: string;
+    optional: string;
+    errorRewardValueRequired: string;
+    errorRewardValueInvalid: string;
+    errorBundleTrackRequired: string;
+    previous: string;
+    nextPreview: string;
+    previewTitle: string;
+    previewSubtitle: string;
+    rewardSummary: string;
+    summaryAudience: string;
+    summaryRecipients: string;
+    summaryReward: string;
+    summarySchedule: string;
+    summaryNotSet: string;
+    recipients: string;
+    bundleTrack: string;
+    validating: string;
+    validateReward: string;
+    validationSuccess: string;
+    validationFailed: string;
+    warningTitle: string;
+    warningBody: string;
+    nextApply: string;
+    applyTitle: string;
+    applySubtitle: string;
+    applyQuestion: string;
+    applyNowTitle: string;
+    applyNowDesc: string;
+    scheduleLaterTitle: string;
+    scheduleLaterDesc: string;
+    dateLabel: string;
+    timeLabel: string;
+    errorSelectDate: string;
+    errorSelectTime: string;
+    errorFutureDateTime: string;
+    errorCreateReward: string;
+    summaryApplyNow: string;
+    summaryScheduled: string; // {dateTime}
+    warningBodyNow: string;
+    warningBodyScheduled: string;
+    applying: string;
+    applyReward: string;
+  };
+
   // Customer 360 Profile
   customer360: {
     title: string;
@@ -756,7 +878,7 @@ export interface Translations {
     fieldValue: string;
     fieldType: string;
     sourceTable: string;
-    description: string;
+    descriptionLabel: string;
     actions: string;
     viewDetails: string;
     fieldDetails: string;

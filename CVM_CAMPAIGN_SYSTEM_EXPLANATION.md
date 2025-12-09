@@ -2399,3 +2399,210 @@ offer_redemptions
    - Track analytics → measure success
 
 Everything is connected through database relationships and executed automatically by the job management system!
+
+---
+
+## Manual Broadcasts
+
+### What are Manual Broadcasts?
+
+**Manual Broadcasts** are a way to send **messages directly to customers** without going through the campaign system. They're designed for quick, one-off communications that don't require the full campaign infrastructure.
+
+### Key Characteristics:
+
+- ✅ **Send messages only** (SMS, Email, WhatsApp, Push)
+- ✅ **Bypass campaigns** - no segment evaluation needed
+- ✅ **Direct customer list** - upload CSV or enter manually
+- ✅ **Immediate or scheduled** - send now or later
+- ❌ **No offers/products** - just messages
+- ❌ **No rewards** - no incentives attached
+- ❌ **No campaign tracking** - basic delivery tracking only
+
+### When to Use Manual Broadcasts:
+
+| Use Case                   | Example                                              |
+| -------------------------- | ---------------------------------------------------- |
+| **System Announcements**   | "System maintenance tonight 2-4 AM"                  |
+| **Urgent Notifications**   | "Your payment failed. Please update payment method." |
+| **Quick Promotions**       | "Flash sale! 50% off for next 2 hours only"          |
+| **Event Reminders**        | "Don't forget: Webinar tomorrow at 3 PM"             |
+| **One-off Communications** | "Thank you for your feedback!"                       |
+
+### Manual Broadcast Flow:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ STEP 1: SELECT TARGET AUDIENCE                          │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  Option A: Upload CSV File                               │
+│  - Excel file with customer contacts                    │
+│  - Columns: email, phone, name, etc.                    │
+│  - Example: "customer_list.xlsx" with 1,000 rows        │
+│                                                           │
+│  Option B: Manual Entry                                  │
+│  - Type/paste email addresses or phone numbers          │
+│  - One per line                                          │
+│  - Example:                                              │
+│    john@example.com                                       │
+│    +254712345678                                          │
+│    jane@example.com                                       │
+│                                                           │
+│  Creates a "Quick List" in the system                    │
+│  - List Name: "VIP Customers Q4"                        │
+│  - Row Count: 1,000 recipients                           │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ STEP 2: DEFINE COMMUNICATION                             │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  Select Channel:                                         │
+│  - SMS (Short Message Service)                          │
+│  - Email                                                  │
+│  - WhatsApp                                               │
+│  - Push Notification                                      │
+│                                                           │
+│  Write Message:                                           │
+│  - Subject (for Email): "Happy New Year!"              │
+│  - Body: "Dear {{name}}, Get 20% off all products..."   │
+│  - Can use variables from CSV columns                    │
+│  - Rich text formatting (for Email)                      │
+│                                                           │
+│  Preview:                                                 │
+│  - See how message looks on device                      │
+│  - Test variable replacement                             │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ STEP 3: TEST BROADCAST (Optional)                        │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  Send test to your own contact:                          │
+│  - Your email: admin@company.com                        │
+│  - Your phone: +254712345678                            │
+│                                                           │
+│  Verify:                                                  │
+│  - Message format looks correct                          │
+│  - Variables replaced properly                           │
+│  - Links work (if included)                             │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ STEP 4: SCHEDULE & SEND                                  │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  Option A: Send Now                                      │
+│  - Immediate delivery                                    │
+│  - All recipients get message right away                 │
+│                                                           │
+│  Option B: Schedule for Later                            │
+│  - Date: 2024-12-25                                      │
+│  - Time: 08:00 AM                                        │
+│  - Timezone: Africa/Nairobi                              │
+│  - Message sent automatically at scheduled time          │
+│                                                           │
+│  Summary:                                                 │
+│  - Audience: "VIP Customers Q4" (1,000 recipients)     │
+│  - Channel: SMS                                          │
+│  - Schedule: Send Now                                    │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Real-World Example: System Maintenance Announcement
+
+**Scenario:** You need to notify all customers about scheduled system maintenance tonight.
+
+#### Step 1: Select Audience
+
+- **Upload CSV file:** `maintenance_notification_list.xlsx`
+- **File contains:** 50,000 customer phone numbers
+- **Quick List created:** "Maintenance Notification - Dec 2024"
+- **Recipients:** 50,000 customers
+
+#### Step 2: Define Communication
+
+- **Channel:** SMS (fastest way to reach everyone)
+- **Message Body:**
+
+  ```
+  Dear {{name}},
+
+  We'll be performing system maintenance tonight from 2:00 AM to 4:00 AM.
+  Services may be temporarily unavailable.
+
+  Thank you for your patience.
+
+  - Equitel Team
+  ```
+
+#### Step 3: Test Broadcast
+
+- **Test sent to:** Admin phone (+254712345678)
+- **Result:** ✅ Message received, format looks good
+
+#### Step 4: Schedule & Send
+
+- **Schedule:** Send Now
+- **Action:** Click "Launch Broadcast"
+- **Result:**
+  - 50,000 SMS messages queued
+  - Messages sent over next 30 minutes
+  - Delivery status tracked
+
+### Manual Broadcasts vs Campaigns:
+
+| Feature            | Manual Broadcasts        | Campaigns                                   |
+| ------------------ | ------------------------ | ------------------------------------------- |
+| **Purpose**        | Send messages            | Send offers/products                        |
+| **Audience**       | Direct list (CSV/manual) | Segments (dynamic, rule-based)              |
+| **Content**        | Simple message           | Full offer with products/rewards            |
+| **Setup Time**     | 5-10 minutes             | 30-60 minutes                               |
+| **Tracking**       | Basic delivery status    | Full analytics (opens, clicks, conversions) |
+| **Use Case**       | Quick announcements      | Strategic marketing                         |
+| **Segments**       | ❌ Not used              | ✅ Required                                 |
+| **Offers**         | ❌ Not used              | ✅ Required                                 |
+| **Products**       | ❌ Not used              | ✅ Required                                 |
+| **Rewards**        | ❌ Not used              | ✅ Optional                                 |
+| **Job Management** | Simple queue             | Complex job workflows                       |
+
+### Technical Implementation:
+
+**Database Tables:**
+
+```
+quicklists
+  ├─ id, name, upload_type, rows_imported, created_at, ...
+
+manual_broadcasts
+  ├─ id, quicklist_id, channel, message_title, message_body,
+  ├─ schedule_type, schedule_date, schedule_time, status, ...
+
+broadcast_recipients
+  ├─ broadcast_id, customer_id, contact_info, status, sent_at, ...
+```
+
+**Flow:**
+
+1. User uploads CSV → Creates `quicklist` record
+2. User writes message → Stored in `manual_broadcast` record
+3. User schedules → Broadcast queued
+4. System sends messages → Creates `broadcast_recipient` records
+5. Delivery tracked → Status updated in `broadcast_recipients`
+
+### Key Takeaways:
+
+1. **Manual Broadcasts are for messages only** - They don't send offers, products, or rewards
+2. **Direct customer lists** - You provide the exact list of recipients (CSV or manual)
+3. **No segment evaluation** - No need to define rules or conditions
+4. **Quick setup** - Perfect for urgent or one-off communications
+5. **Basic tracking** - Delivery status only, no campaign analytics
+6. **Use campaigns for offers** - If you need to send products/rewards, use campaigns instead
+
+---
+
+## Summary

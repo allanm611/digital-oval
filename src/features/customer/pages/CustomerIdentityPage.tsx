@@ -196,7 +196,7 @@ export default function CustomerIdentityPage() {
                       t.customerIdentity.fieldName,
                       t.customerIdentity.fieldType,
                       t.customerIdentity.sourceTable,
-                      t.customerIdentity.description,
+                      t.customerIdentity.descriptionLabel,
                       t.customerIdentity.actions,
                     ].map((header) => (
                       <th
