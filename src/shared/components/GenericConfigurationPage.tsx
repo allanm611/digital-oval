@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  X,
-  ArrowLeft,
-  LucideIcon,
-} from "lucide-react";
+import { Plus, Search, Edit, Trash2, X, LucideIcon } from "lucide-react";
 import { color, tw } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -19,6 +10,7 @@ import {
   type ConfigurationType,
 } from "../services/configurationDataService";
 import LoadingSpinner from "./ui/LoadingSpinner";
+import BackButton from "./ui/BackButton";
 
 export interface ConfigurationItem {
   id: number;
@@ -159,7 +151,9 @@ export function ConfigurationModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10050] p-4">
-      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+      <div
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">
             {item ? config.modalTitle.edit : config.modalTitle.create}
@@ -219,7 +213,9 @@ export function ConfigurationModal({
           </div>
 
           {error && (
-            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
+            <div
+              className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+            >
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
@@ -265,7 +261,6 @@ interface GenericConfigurationPageProps {
 export default function GenericConfigurationPage({
   config,
 }: GenericConfigurationPageProps) {
-  const navigate = useNavigate();
   const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
@@ -401,12 +396,7 @@ export default function GenericConfigurationPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate(config.backPath)}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo={config.backPath} />
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}

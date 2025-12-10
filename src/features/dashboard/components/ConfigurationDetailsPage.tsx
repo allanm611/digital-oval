@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Search, ChevronRight, Settings } from "lucide-react";
+import { Search, ChevronRight, Settings } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, components } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
 interface ConfigurationItem {
   id: string;
@@ -161,7 +163,9 @@ export default function ConfigurationDetailsPage() {
             Configuration not found
           </h2>
           <button
-            onClick={() => navigate("/dashboard/configuration")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/configuration")
+            }
             className={`px-4 py-2 text-white ${tw.rounded} transition-all mt-4`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -177,12 +181,7 @@ export default function ConfigurationDetailsPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 sm:gap-4 mb-4">
-          <button
-            onClick={() => navigate("/dashboard/configuration")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/configuration" />
           <div className="flex-1">
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {config.name}
@@ -239,7 +238,9 @@ export default function ConfigurationDetailsPage() {
           </p>
         </div>
       ) : (
-        <div className={`overflow-x-auto ${tw.rounded} border border-gray-200 overflow-hidden`}>
+        <div
+          className={`overflow-x-auto ${tw.rounded} border border-gray-200 overflow-hidden`}
+        >
           <table className="w-full">
             <thead
               className={`border-b ${tw.borderDefault}`}

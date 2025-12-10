@@ -21,7 +21,7 @@ import {
   TypeConfigurationPageConfig,
 } from "../components/TypeConfigurationPage";
 
-// Hardcoded objectives data
+// Hardcoded objectives data (legacy - use getCampaignObjectivesData instead)
 const hardcodedObjectives: ConfigurationItem[] = [
   {
     id: 1,
@@ -60,7 +60,50 @@ const hardcodedObjectives: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded departments data
+// Translated campaign objectives data function
+export function getCampaignObjectivesData(t: any): ConfigurationItem[] {
+  return [
+    {
+      id: 1,
+      name: t.configPages.campaignObjectives.items.newCustomerAcquisition,
+      description:
+        t.configPages.campaignObjectives.items.newCustomerAcquisitionDesc,
+      created_at: "2025-01-15T10:30:00Z",
+      updated_at: "2025-01-20T14:45:00Z",
+    },
+    {
+      id: 2,
+      name: t.configPages.campaignObjectives.items.customerRetention,
+      description: t.configPages.campaignObjectives.items.customerRetentionDesc,
+      created_at: "2025-01-10T09:15:00Z",
+      updated_at: "2025-01-18T16:20:00Z",
+    },
+    {
+      id: 3,
+      name: t.configPages.campaignObjectives.items.churnPrevention,
+      description: t.configPages.campaignObjectives.items.churnPreventionDesc,
+      created_at: "2025-01-12T11:00:00Z",
+      updated_at: "2025-01-19T13:30:00Z",
+    },
+    {
+      id: 4,
+      name: t.configPages.campaignObjectives.items.upsellCrossSell,
+      description: t.configPages.campaignObjectives.items.upsellCrossSellDesc,
+      created_at: "2025-01-14T15:30:00Z",
+      updated_at: "2025-01-21T10:15:00Z",
+    },
+    {
+      id: 5,
+      name: t.configPages.campaignObjectives.items.dormantCustomerReactivation,
+      description:
+        t.configPages.campaignObjectives.items.dormantCustomerReactivationDesc,
+      created_at: "2025-01-08T08:45:00Z",
+      updated_at: "2025-01-15T12:00:00Z",
+    },
+  ];
+}
+
+// Hardcoded departments data (legacy - use getDepartmentsData instead)
 const hardcodedDepartments: ConfigurationItem[] = [
   {
     id: 1,
@@ -99,7 +142,48 @@ const hardcodedDepartments: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded team roles data
+// Translated departments data function
+export function getDepartmentsData(t: any): ConfigurationItem[] {
+  return [
+    {
+      id: 1,
+      name: t.configPages.departments.items.marketing,
+      description: t.configPages.departments.items.marketingDesc,
+      created_at: "2025-01-15T10:30:00Z",
+      updated_at: "2025-01-20T14:45:00Z",
+    },
+    {
+      id: 2,
+      name: t.configPages.departments.items.sales,
+      description: t.configPages.departments.items.salesDesc,
+      created_at: "2025-01-10T09:15:00Z",
+      updated_at: "2025-01-18T16:20:00Z",
+    },
+    {
+      id: 3,
+      name: t.configPages.departments.items.customerSupport,
+      description: t.configPages.departments.items.customerSupportDesc,
+      created_at: "2025-01-12T11:00:00Z",
+      updated_at: "2025-01-19T13:30:00Z",
+    },
+    {
+      id: 4,
+      name: t.configPages.departments.items.productManagement,
+      description: t.configPages.departments.items.productManagementDesc,
+      created_at: "2025-01-14T15:30:00Z",
+      updated_at: "2025-01-21T10:15:00Z",
+    },
+    {
+      id: 5,
+      name: t.configPages.departments.items.finance,
+      description: t.configPages.departments.items.financeDesc,
+      created_at: "2025-01-08T08:45:00Z",
+      updated_at: "2025-01-15T12:00:00Z",
+    },
+  ];
+}
+
+// Hardcoded team roles data (legacy - use getTeamRolesData instead)
 const hardcodedTeamRoles: ConfigurationItem[] = [
   {
     id: 1,
@@ -131,7 +215,41 @@ const hardcodedTeamRoles: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded line of business data
+// Translated team roles data function
+export function getTeamRolesData(t: any): ConfigurationItem[] {
+  return [
+    {
+      id: 1,
+      name: t.configPages.teamRoles.items.campaignManager,
+      description: t.configPages.teamRoles.items.campaignManagerDesc,
+      created_at: "2025-01-15T10:30:00Z",
+      updated_at: "2025-01-20T14:45:00Z",
+    },
+    {
+      id: 2,
+      name: t.configPages.teamRoles.items.contentCreator,
+      description: t.configPages.teamRoles.items.contentCreatorDesc,
+      created_at: "2025-01-10T09:15:00Z",
+      updated_at: "2025-01-18T16:20:00Z",
+    },
+    {
+      id: 3,
+      name: t.configPages.teamRoles.items.dataAnalyst,
+      description: t.configPages.teamRoles.items.dataAnalystDesc,
+      created_at: "2025-01-12T11:00:00Z",
+      updated_at: "2025-01-19T13:30:00Z",
+    },
+    {
+      id: 4,
+      name: t.configPages.teamRoles.items.designer,
+      description: t.configPages.teamRoles.items.designerDesc,
+      created_at: "2025-01-14T15:30:00Z",
+      updated_at: "2025-01-21T10:15:00Z",
+    },
+  ];
+}
+
+// Hardcoded line of business data (legacy - use getLineOfBusinessData instead)
 const hardcodedLineOfBusiness: ConfigurationItem[] = [
   {
     id: 1,
@@ -172,7 +290,48 @@ const hardcodedLineOfBusiness: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded tracking sources data (for offer performance measurement)
+// Translated line of business data function
+export function getLineOfBusinessData(t: any): ConfigurationItem[] {
+  return [
+    {
+      id: 1,
+      name: t.configPages.lineOfBusiness.items.gsm,
+      description: t.configPages.lineOfBusiness.items.gsmDesc,
+      created_at: "2025-01-15T10:30:00Z",
+      updated_at: "2025-01-20T14:45:00Z",
+    },
+    {
+      id: 2,
+      name: t.configPages.lineOfBusiness.items.internet,
+      description: t.configPages.lineOfBusiness.items.internetDesc,
+      created_at: "2025-01-10T09:15:00Z",
+      updated_at: "2025-01-18T16:20:00Z",
+    },
+    {
+      id: 3,
+      name: t.configPages.lineOfBusiness.items.fixedLine,
+      description: t.configPages.lineOfBusiness.items.fixedLineDesc,
+      created_at: "2025-01-12T11:00:00Z",
+      updated_at: "2025-01-19T13:30:00Z",
+    },
+    {
+      id: 4,
+      name: t.configPages.lineOfBusiness.items.enterpriseSolutions,
+      description: t.configPages.lineOfBusiness.items.enterpriseSolutionsDesc,
+      created_at: "2025-01-14T15:30:00Z",
+      updated_at: "2025-01-21T10:15:00Z",
+    },
+    {
+      id: 5,
+      name: t.configPages.lineOfBusiness.items.digitalServices,
+      description: t.configPages.lineOfBusiness.items.digitalServicesDesc,
+      created_at: "2025-01-08T08:45:00Z",
+      updated_at: "2025-01-15T12:00:00Z",
+    },
+  ];
+}
+
+// Hardcoded tracking sources data (legacy - use getTrackingSourcesData instead)
 const hardcodedTrackingSources: ConfigurationItem[] = [
   {
     id: 1,
@@ -222,6 +381,55 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     updated_at: "2025-02-06T15:00:00Z",
   },
 ];
+
+// Translated tracking sources data function
+export function getTrackingSourcesData(t: any): ConfigurationItem[] {
+  return [
+    {
+      id: 1,
+      name: t.configPages.trackingSources.items.rechargeTracking,
+      description: t.configPages.trackingSources.items.rechargeTrackingDesc,
+      created_at: "2025-02-01T09:00:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+    {
+      id: 2,
+      name: t.configPages.trackingSources.items.usageMetricTracking,
+      description: t.configPages.trackingSources.items.usageMetricTrackingDesc,
+      created_at: "2025-02-02T11:15:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+    {
+      id: 3,
+      name: t.configPages.trackingSources.items.channelPerformance,
+      description: t.configPages.trackingSources.items.channelPerformanceDesc,
+      created_at: "2025-02-03T12:40:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+    {
+      id: 4,
+      name: t.configPages.trackingSources.items.customerSegmentTracking,
+      description:
+        t.configPages.trackingSources.items.customerSegmentTrackingDesc,
+      created_at: "2025-02-04T13:20:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+    {
+      id: 5,
+      name: t.configPages.trackingSources.items.productTypeTracking,
+      description: t.configPages.trackingSources.items.productTypeTrackingDesc,
+      created_at: "2025-02-05T08:10:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+    {
+      id: 6,
+      name: t.configPages.trackingSources.items.customTrackingSource,
+      description: t.configPages.trackingSources.items.customTrackingSourceDesc,
+      created_at: "2025-02-06T10:30:00Z",
+      updated_at: "2025-02-06T15:00:00Z",
+    },
+  ];
+}
 
 // Hardcoded creative templates data
 const hardcodedCreativeTemplates: TypeConfigurationItem[] = [
@@ -1107,7 +1315,7 @@ const hardcodedLanguages: TypeConfigurationItem[] = [
   },
 ];
 
-// Campaign Objectives Configuration
+// Campaign Objectives Configuration (legacy - use getCampaignObjectivesConfig instead)
 export const campaignObjectivesConfig: ConfigurationPageConfig = {
   // Page configuration
   title: "Campaign Objectives",
@@ -1153,7 +1361,48 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Departments Configuration
+// Translated campaign objectives config function
+export function getCampaignObjectivesConfig(t: any): ConfigurationPageConfig {
+  return {
+    title: t.configPages.campaignObjectives.title,
+    subtitle: t.configPages.campaignObjectives.subtitle,
+    entityName: t.configPages.campaignObjectives.entityName,
+    entityNamePlural: t.configPages.campaignObjectives.entityNamePlural,
+    configType: "campaignObjectives",
+    backPath: "/dashboard/configuration",
+    icon: Flag,
+    searchPlaceholder: t.configPages.campaignObjectives.searchPlaceholder,
+    initialData: getCampaignObjectivesData(t),
+    createButtonText: t.configPages.campaignObjectives.createButtonText,
+    modalTitle: {
+      create: t.configPages.campaignObjectives.modalTitleCreate,
+      edit: t.configPages.campaignObjectives.modalTitleEdit,
+    },
+    nameLabel: t.configPages.campaignObjectives.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.campaignObjectives.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    deleteConfirmTitle: t.configPages.campaignObjectives.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.campaignObjectives.deleteConfirmMessage.replace(
+        "{name}",
+        name
+      ),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.campaignObjectives.deleteSuccessMessage.replace(
+        "{name}",
+        name
+      ),
+    createSuccessMessage: t.configPages.campaignObjectives.createSuccessMessage,
+    updateSuccessMessage: t.configPages.campaignObjectives.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.campaignObjectives.deleteErrorMessage,
+    saveErrorMessage: t.configPages.campaignObjectives.saveErrorMessage,
+  };
+}
+
+// Departments Configuration (legacy - use getDepartmentsConfig instead)
 export const departmentsConfig: ConfigurationPageConfig = {
   // Page configuration
   title: "Departments",
@@ -1199,7 +1448,42 @@ export const departmentsConfig: ConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Team Roles Configuration
+// Translated departments config function
+export function getDepartmentsConfig(t: any): ConfigurationPageConfig {
+  return {
+    title: t.configPages.departments.title,
+    subtitle: t.configPages.departments.subtitle,
+    entityName: t.configPages.departments.entityName,
+    entityNamePlural: t.configPages.departments.entityNamePlural,
+    configType: "departments",
+    backPath: "/dashboard/configuration",
+    icon: Building2,
+    searchPlaceholder: t.configPages.departments.searchPlaceholder,
+    initialData: getDepartmentsData(t),
+    createButtonText: t.configPages.departments.createButtonText,
+    modalTitle: {
+      create: t.configPages.departments.modalTitleCreate,
+      edit: t.configPages.departments.modalTitleEdit,
+    },
+    nameLabel: t.configPages.departments.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.departments.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    deleteConfirmTitle: t.configPages.departments.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.departments.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.departments.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.departments.createSuccessMessage,
+    updateSuccessMessage: t.configPages.departments.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.departments.deleteErrorMessage,
+    saveErrorMessage: t.configPages.departments.saveErrorMessage,
+  };
+}
+
+// Team Roles Configuration (legacy - use getTeamRolesConfig instead)
 export const teamRolesConfig: ConfigurationPageConfig = {
   // Page configuration
   title: "Team Roles",
@@ -1244,7 +1528,42 @@ export const teamRolesConfig: ConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Translated team roles config function
+export function getTeamRolesConfig(t: any): ConfigurationPageConfig {
+  return {
+    title: t.configPages.teamRoles.title,
+    subtitle: t.configPages.teamRoles.subtitle,
+    entityName: t.configPages.teamRoles.entityName,
+    entityNamePlural: t.configPages.teamRoles.entityNamePlural,
+    backPath: "/dashboard/configuration",
+    icon: Users,
+    searchPlaceholder: t.configPages.teamRoles.searchPlaceholder,
+    initialData: getTeamRolesData(t),
+    createButtonText: t.configPages.teamRoles.createButtonText,
+    modalTitle: {
+      create: t.configPages.teamRoles.modalTitleCreate,
+      edit: t.configPages.teamRoles.modalTitleEdit,
+    },
+    nameLabel: t.configPages.teamRoles.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.teamRoles.descriptionLabel,
+    descriptionRequired: true,
+    nameMaxLength: 80,
+    descriptionMaxLength: 300,
+    deleteConfirmTitle: t.configPages.teamRoles.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.teamRoles.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.teamRoles.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.teamRoles.createSuccessMessage,
+    updateSuccessMessage: t.configPages.teamRoles.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.teamRoles.deleteErrorMessage,
+    saveErrorMessage: t.configPages.teamRoles.saveErrorMessage,
+  };
+}
+
 // Line of Business Configuration
+// Legacy export (for backward compatibility)
 export const lineOfBusinessConfig: ConfigurationPageConfig = {
   // Page configuration
   title: "Line of Business",
@@ -1290,7 +1609,55 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Tracking Sources Configuration (Offer)
+// Translated config function
+export function getLineOfBusinessConfig(t: any): ConfigurationPageConfig {
+  return {
+    // Page configuration
+    title: t.configPages.lineOfBusiness.title,
+    subtitle: t.configPages.lineOfBusiness.subtitle,
+    entityName: t.configPages.lineOfBusiness.entityName,
+    entityNamePlural: t.configPages.lineOfBusiness.entityNamePlural,
+    configType: "lineOfBusiness",
+
+    // Navigation
+    backPath: "/dashboard/configuration",
+
+    // UI
+    icon: Briefcase,
+    searchPlaceholder: t.configPages.lineOfBusiness.searchPlaceholder,
+
+    // Data
+    initialData: getLineOfBusinessData(t),
+
+    // Labels
+    createButtonText: t.configPages.lineOfBusiness.createButtonText,
+    modalTitle: {
+      create: t.configPages.lineOfBusiness.modalTitleCreate,
+      edit: t.configPages.lineOfBusiness.modalTitleEdit,
+    },
+    nameLabel: t.configPages.lineOfBusiness.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.lineOfBusiness.descriptionLabel,
+    descriptionRequired: false,
+
+    // Validation
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+
+    // Messages
+    deleteConfirmTitle: t.configPages.lineOfBusiness.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.lineOfBusiness.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.lineOfBusiness.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.lineOfBusiness.createSuccessMessage,
+    updateSuccessMessage: t.configPages.lineOfBusiness.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.lineOfBusiness.deleteErrorMessage,
+    saveErrorMessage: t.configPages.lineOfBusiness.saveErrorMessage,
+  };
+}
+
+// Tracking Sources Configuration (Offer) (legacy - use getTrackingSourcesConfig instead)
 export const trackingSourcesConfig: ConfigurationPageConfig = {
   title: "Offer Tracking Sources",
   subtitle:
@@ -1324,7 +1691,48 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Creative Templates Configuration
+// Translated tracking sources config function
+export function getTrackingSourcesConfig(t: any): ConfigurationPageConfig {
+  return {
+    title: t.configPages.trackingSources.title,
+    subtitle: t.configPages.trackingSources.subtitle,
+    entityName: t.configPages.trackingSources.entityName,
+    entityNamePlural: t.configPages.trackingSources.entityNamePlural,
+    configType: "trackingSources",
+    backPath: "/dashboard/configuration",
+    icon: Share2,
+    searchPlaceholder: t.configPages.trackingSources.searchPlaceholder,
+    initialData: getTrackingSourcesData(t),
+    createButtonText: t.configPages.trackingSources.createButtonText,
+    modalTitle: {
+      create: t.configPages.trackingSources.modalTitleCreate,
+      edit: t.configPages.trackingSources.modalTitleEdit,
+    },
+    nameLabel: t.configPages.trackingSources.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.trackingSources.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 120,
+    descriptionMaxLength: 600,
+    deleteConfirmTitle: t.configPages.trackingSources.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.trackingSources.deleteConfirmMessage.replace(
+        "{name}",
+        name
+      ),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.trackingSources.deleteSuccessMessage.replace(
+        "{name}",
+        name
+      ),
+    createSuccessMessage: t.configPages.trackingSources.createSuccessMessage,
+    updateSuccessMessage: t.configPages.trackingSources.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.trackingSources.deleteErrorMessage,
+    saveErrorMessage: t.configPages.trackingSources.saveErrorMessage,
+  };
+}
+
+// Creative Templates Configuration (legacy - use getCreativeTemplatesConfig instead)
 export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   title: "Creative Templates",
   subtitle:
@@ -1364,7 +1772,56 @@ export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
-// Reward Types Configuration
+// Translated creative templates config function
+export function getCreativeTemplatesConfig(
+  t: any
+): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.creativeTemplates.title,
+    subtitle: t.configPages.creativeTemplates.subtitle,
+    entityName: t.configPages.creativeTemplates.entityName,
+    entityNamePlural: t.configPages.creativeTemplates.entityNamePlural,
+    configType: "creativeTemplates",
+    backPath: "/dashboard/configuration",
+    icon: Palette,
+    searchPlaceholder: t.configPages.creativeTemplates.searchPlaceholder,
+    initialData: hardcodedCreativeTemplates, // Creative templates are user-created, no translation needed
+    createButtonText: t.configPages.creativeTemplates.createButtonText,
+    modalTitle: {
+      create: t.configPages.creativeTemplates.modalTitleCreate,
+      edit: t.configPages.creativeTemplates.modalTitleEdit,
+    },
+    nameLabel: t.configPages.creativeTemplates.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.creativeTemplates.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 120,
+    descriptionMaxLength: 600,
+    metadataField: {
+      label: t.configPages.creativeTemplates.primaryChannelLabel,
+      type: "text",
+      placeholder: t.configPages.creativeTemplates.primaryChannelPlaceholder,
+    },
+    statusLabel: t.configPages.creativeTemplates.statusLabel,
+    deleteConfirmTitle: t.configPages.creativeTemplates.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.creativeTemplates.deleteConfirmMessage.replace(
+        "{name}",
+        name
+      ),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.creativeTemplates.deleteSuccessMessage.replace(
+        "{name}",
+        name
+      ),
+    createSuccessMessage: t.configPages.creativeTemplates.createSuccessMessage,
+    updateSuccessMessage: t.configPages.creativeTemplates.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.creativeTemplates.deleteErrorMessage,
+    saveErrorMessage: t.configPages.creativeTemplates.saveErrorMessage,
+  };
+}
+
+// Reward Types Configuration (legacy - use getRewardTypesConfig instead)
 export const rewardTypesConfig: TypeConfigurationPageConfig = {
   title: "Reward Types",
   subtitle: "Define reusable reward fulfilment types for offer rewards",
@@ -1402,6 +1859,47 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete reward type",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated reward types config function
+export function getRewardTypesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.rewardTypes.title,
+    subtitle: t.configPages.rewardTypes.subtitle,
+    entityName: t.configPages.rewardTypes.entityName,
+    entityNamePlural: t.configPages.rewardTypes.entityNamePlural,
+    configType: "rewardTypes",
+    backPath: "/dashboard/configuration",
+    icon: Gift,
+    searchPlaceholder: t.configPages.rewardTypes.searchPlaceholder,
+    initialData: hardcodedRewardTypes, // Reward types are user-created, no translation needed
+    createButtonText: t.configPages.rewardTypes.createButtonText,
+    modalTitle: {
+      create: t.configPages.rewardTypes.modalTitleCreate,
+      edit: t.configPages.rewardTypes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.rewardTypes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.rewardTypes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 120,
+    descriptionMaxLength: 600,
+    metadataField: {
+      label: t.configPages.rewardTypes.rewardTypeLabel,
+      type: "text",
+      placeholder: t.configPages.rewardTypes.rewardTypePlaceholder,
+    },
+    statusLabel: t.configPages.rewardTypes.statusLabel,
+    deleteConfirmTitle: t.configPages.rewardTypes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.rewardTypes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.rewardTypes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.rewardTypes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.rewardTypes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.rewardTypes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.rewardTypes.saveErrorMessage,
+  };
+}
 
 // Hardcoded offer types data
 const hardcodedOfferTypes: TypeConfigurationItem[] = [
@@ -1681,6 +2179,47 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Translated offer types config function
+export function getOfferTypesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.offerTypes.title,
+    subtitle: t.configPages.offerTypes.subtitle,
+    entityName: t.configPages.offerTypes.entityName,
+    entityNamePlural: t.configPages.offerTypes.entityNamePlural,
+    configType: "offerTypes",
+    backPath: "/dashboard/configuration",
+    icon: Tag,
+    searchPlaceholder: t.configPages.offerTypes.searchPlaceholder,
+    initialData: hardcodedOfferTypes, // Offer types are user-created, no translation needed
+    createButtonText: t.configPages.offerTypes.createButtonText,
+    modalTitle: {
+      create: t.configPages.offerTypes.modalTitleCreate,
+      edit: t.configPages.offerTypes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.offerTypes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.offerTypes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    metadataField: {
+      label: t.configPages.offerTypes.offerTypeLabel,
+      type: "text",
+      placeholder: t.configPages.offerTypes.offerTypePlaceholder,
+    },
+    statusLabel: t.configPages.offerTypes.statusLabel,
+    deleteConfirmTitle: t.configPages.offerTypes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.offerTypes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.offerTypes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.offerTypes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.offerTypes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.offerTypes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.offerTypes.saveErrorMessage,
+  };
+}
+
 // Campaign Types Configuration
 export const campaignTypesConfig: TypeConfigurationPageConfig = {
   // Page configuration
@@ -1727,6 +2266,47 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete campaign type",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated campaign types config function
+export function getCampaignTypesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.campaignTypes.title,
+    subtitle: t.configPages.campaignTypes.subtitle,
+    entityName: t.configPages.campaignTypes.entityName,
+    entityNamePlural: t.configPages.campaignTypes.entityNamePlural,
+    configType: "campaignTypes",
+    backPath: "/dashboard/configuration",
+    icon: Megaphone,
+    searchPlaceholder: t.configPages.campaignTypes.searchPlaceholder,
+    initialData: hardcodedCampaignTypes, // Campaign types are user-created, no translation needed
+    createButtonText: t.configPages.campaignTypes.createButtonText,
+    modalTitle: {
+      create: t.configPages.campaignTypes.modalTitleCreate,
+      edit: t.configPages.campaignTypes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.campaignTypes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.campaignTypes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    metadataField: {
+      label: t.configPages.campaignTypes.campaignTypeLabel,
+      type: "text",
+      placeholder: t.configPages.campaignTypes.campaignTypePlaceholder,
+    },
+    statusLabel: t.configPages.campaignTypes.statusLabel,
+    deleteConfirmTitle: t.configPages.campaignTypes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.campaignTypes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.campaignTypes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.campaignTypes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.campaignTypes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.campaignTypes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.campaignTypes.saveErrorMessage,
+  };
+}
 
 // Segment Types Configuration
 export const segmentTypesConfig: TypeConfigurationPageConfig = {
@@ -1775,6 +2355,47 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Translated segment types config function
+export function getSegmentTypesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.segmentTypes.title,
+    subtitle: t.configPages.segmentTypes.subtitle,
+    entityName: t.configPages.segmentTypes.entityName,
+    entityNamePlural: t.configPages.segmentTypes.entityNamePlural,
+    configType: "segmentTypes",
+    backPath: "/dashboard/configuration",
+    icon: Layers,
+    searchPlaceholder: t.configPages.segmentTypes.searchPlaceholder,
+    initialData: hardcodedSegmentTypes, // Segment types are user-created, no translation needed
+    createButtonText: t.configPages.segmentTypes.createButtonText,
+    modalTitle: {
+      create: t.configPages.segmentTypes.modalTitleCreate,
+      edit: t.configPages.segmentTypes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.segmentTypes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.segmentTypes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    metadataField: {
+      label: t.configPages.segmentTypes.segmentTypeLabel,
+      type: "text",
+      placeholder: t.configPages.segmentTypes.segmentTypePlaceholder,
+    },
+    statusLabel: t.configPages.segmentTypes.statusLabel,
+    deleteConfirmTitle: t.configPages.segmentTypes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.segmentTypes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.segmentTypes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.segmentTypes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.segmentTypes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.segmentTypes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.segmentTypes.saveErrorMessage,
+  };
+}
+
 // Product Types Configuration
 export const productTypesConfig: TypeConfigurationPageConfig = {
   title: "Product Types",
@@ -1814,6 +2435,47 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Translated product types config function
+export function getProductTypesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.productTypes.title,
+    subtitle: t.configPages.productTypes.subtitle,
+    entityName: t.configPages.productTypes.entityName,
+    entityNamePlural: t.configPages.productTypes.entityNamePlural,
+    configType: "productTypes",
+    backPath: "/dashboard/products",
+    icon: Briefcase,
+    searchPlaceholder: t.configPages.productTypes.searchPlaceholder,
+    initialData: hardcodedProductTypes, // Product types are user-created, no translation needed
+    createButtonText: t.configPages.productTypes.createButtonText,
+    modalTitle: {
+      create: t.configPages.productTypes.modalTitleCreate,
+      edit: t.configPages.productTypes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.productTypes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.productTypes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 120,
+    descriptionMaxLength: 600,
+    statusLabel: t.configPages.productTypes.statusLabel,
+    metadataField: {
+      label: "Associated Products",
+      type: "number",
+      placeholder: "Enter number of products",
+    },
+    deleteConfirmTitle: t.configPages.productTypes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.productTypes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.productTypes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.productTypes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.productTypes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.productTypes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.productTypes.saveErrorMessage,
+  };
+}
+
 // Communication Channels Configuration
 export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   title: "Communication Channels",
@@ -1847,6 +2509,52 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete communication channel",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated communication channels config function
+export function getCommunicationChannelsConfig(
+  t: any
+): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.communicationChannels.title,
+    subtitle: t.configPages.communicationChannels.subtitle,
+    entityName: t.configPages.communicationChannels.entityName,
+    entityNamePlural: t.configPages.communicationChannels.entityNamePlural,
+    configType: "communicationChannels",
+    backPath: "/dashboard/configuration",
+    icon: MessageSquare,
+    searchPlaceholder: t.configPages.communicationChannels.searchPlaceholder,
+    initialData: hardcodedCommunicationChannels, // Communication channels are user-created, no translation needed
+    createButtonText: t.configPages.communicationChannels.createButtonText,
+    modalTitle: {
+      create: t.configPages.communicationChannels.modalTitleCreate,
+      edit: t.configPages.communicationChannels.modalTitleEdit,
+    },
+    nameLabel: t.configPages.communicationChannels.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.communicationChannels.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 120,
+    descriptionMaxLength: 600,
+    statusLabel: t.configPages.communicationChannels.statusLabel,
+    deleteConfirmTitle: t.configPages.communicationChannels.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.communicationChannels.deleteConfirmMessage.replace(
+        "{name}",
+        name
+      ),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.communicationChannels.deleteSuccessMessage.replace(
+        "{name}",
+        name
+      ),
+    createSuccessMessage:
+      t.configPages.communicationChannels.createSuccessMessage,
+    updateSuccessMessage:
+      t.configPages.communicationChannels.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.communicationChannels.deleteErrorMessage,
+    saveErrorMessage: t.configPages.communicationChannels.saveErrorMessage,
+  };
+}
 
 // Sender IDs Configuration
 export const senderIdsConfig: TypeConfigurationPageConfig = {
@@ -1882,6 +2590,47 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete sender ID",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated sender IDs config function
+export function getSenderIdsConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.senderIds.title,
+    subtitle: t.configPages.senderIds.subtitle,
+    entityName: t.configPages.senderIds.entityName,
+    entityNamePlural: t.configPages.senderIds.entityNamePlural,
+    configType: "senderIds",
+    backPath: "/dashboard/configuration",
+    icon: MessageSquare,
+    searchPlaceholder: t.configPages.senderIds.searchPlaceholder,
+    initialData: hardcodedSenderIds, // Sender IDs are user-created, no translation needed
+    createButtonText: t.configPages.senderIds.createButtonText,
+    modalTitle: {
+      create: t.configPages.senderIds.modalTitleCreate,
+      edit: t.configPages.senderIds.modalTitleEdit,
+    },
+    nameLabel: t.configPages.senderIds.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.senderIds.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 12,
+    descriptionMaxLength: 500,
+    statusLabel: t.configPages.senderIds.statusLabel,
+    metadataField: {
+      label: t.configPages.senderIds.senderIdLabel,
+      type: "text",
+      placeholder: t.configPages.senderIds.senderIdPlaceholder,
+    },
+    deleteConfirmTitle: t.configPages.senderIds.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.senderIds.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.senderIds.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.senderIds.createSuccessMessage,
+    updateSuccessMessage: t.configPages.senderIds.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.senderIds.deleteErrorMessage,
+    saveErrorMessage: t.configPages.senderIds.saveErrorMessage,
+  };
+}
 
 // SMS Routes/Gateways Configuration
 export const smsRoutesConfig: TypeConfigurationPageConfig = {
@@ -1922,6 +2671,47 @@ export const smsRoutesConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete SMS route",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated SMS routes config function
+export function getSmsRoutesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.smsRoutes.title,
+    subtitle: t.configPages.smsRoutes.subtitle,
+    entityName: t.configPages.smsRoutes.entityName,
+    entityNamePlural: t.configPages.smsRoutes.entityNamePlural,
+    configType: "smsRoutes",
+    backPath: "/dashboard/configuration",
+    icon: MessageSquare,
+    searchPlaceholder: t.configPages.smsRoutes.searchPlaceholder,
+    initialData: hardcodedSMSRoutes, // SMS routes are user-created, no translation needed
+    createButtonText: t.configPages.smsRoutes.createButtonText,
+    modalTitle: {
+      create: t.configPages.smsRoutes.modalTitleCreate,
+      edit: t.configPages.smsRoutes.modalTitleEdit,
+    },
+    nameLabel: t.configPages.smsRoutes.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.smsRoutes.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    metadataField: {
+      label: "Gateway Provider",
+      type: "text",
+      placeholder: "e.g., MTN, Airtel, Aggregator",
+    },
+    statusLabel: t.configPages.smsRoutes.statusLabel,
+    deleteConfirmTitle: t.configPages.smsRoutes.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.smsRoutes.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.smsRoutes.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.smsRoutes.createSuccessMessage,
+    updateSuccessMessage: t.configPages.smsRoutes.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.smsRoutes.deleteErrorMessage,
+    saveErrorMessage: t.configPages.smsRoutes.saveErrorMessage,
+  };
+}
 
 // Countries list for language configuration
 const countriesList = [
@@ -2177,6 +2967,57 @@ export const languagesConfig: TypeConfigurationPageConfig = {
   saveErrorMessage: "Please try again later.",
 };
 
+// Translated languages config function
+export function getLanguagesConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.languages.title,
+    subtitle: t.configPages.languages.subtitle,
+    entityName: t.configPages.languages.entityName,
+    entityNamePlural: t.configPages.languages.entityNamePlural,
+    configType: "languages",
+    backPath: "/dashboard/configuration",
+    icon: Globe,
+    searchPlaceholder: t.configPages.languages.searchPlaceholder,
+    initialData: hardcodedLanguages, // Languages are user-created, no translation needed
+    createButtonText: t.configPages.languages.createButtonText,
+    modalTitle: {
+      create: t.configPages.languages.modalTitleCreate,
+      edit: t.configPages.languages.modalTitleEdit,
+    },
+    nameLabel: t.configPages.languages.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.languages.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    metadataField: {
+      label: t.configPages.languages.languageCodeLabel,
+      type: "text",
+      placeholder: t.configPages.languages.languageCodePlaceholder,
+    },
+    customFields: [
+      {
+        label: "Country",
+        type: "select",
+        fieldKey: "country",
+        required: false,
+        options: countriesList,
+        placeholder: "Select country (optional)",
+      },
+    ],
+    statusLabel: t.configPages.languages.statusLabel,
+    deleteConfirmTitle: t.configPages.languages.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.languages.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.languages.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.languages.createSuccessMessage,
+    updateSuccessMessage: t.configPages.languages.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.languages.deleteErrorMessage,
+    saveErrorMessage: t.configPages.languages.saveErrorMessage,
+  };
+}
+
 // Character Sets Configuration
 export const characterSetsConfig: TypeConfigurationPageConfig = {
   title: "Character Sets",
@@ -2244,6 +3085,75 @@ export const characterSetsConfig: TypeConfigurationPageConfig = {
   deleteErrorMessage: "Failed to delete character set",
   saveErrorMessage: "Please try again later.",
 };
+
+// Translated character sets config function
+export function getCharacterSetsConfig(t: any): TypeConfigurationPageConfig {
+  return {
+    title: t.configPages.characterSets.title,
+    subtitle: t.configPages.characterSets.subtitle,
+    entityName: t.configPages.characterSets.entityName,
+    entityNamePlural: t.configPages.characterSets.entityNamePlural,
+    configType: "characterSets",
+    backPath: "/dashboard/configuration",
+    icon: Globe,
+    searchPlaceholder: t.configPages.characterSets.searchPlaceholder,
+    initialData: hardcodedCharacterSets, // Character sets are user-created, no translation needed
+    createButtonText: t.configPages.characterSets.createButtonText,
+    modalTitle: {
+      create: t.configPages.characterSets.modalTitleCreate,
+      edit: t.configPages.characterSets.modalTitleEdit,
+    },
+    nameLabel: t.configPages.characterSets.nameLabel,
+    nameRequired: true,
+    descriptionLabel: t.configPages.characterSets.descriptionLabel,
+    descriptionRequired: false,
+    nameMaxLength: 100,
+    descriptionMaxLength: 500,
+    customFields: [
+      {
+        label: t.configPages.characterSets.characterSetSizeLabel,
+        type: "number",
+        fieldKey: "characterSetSize",
+        required: true,
+        placeholder: "e.g., 160, 300",
+      },
+      {
+        label: "Message Type",
+        type: "select",
+        fieldKey: "messageType",
+        required: true,
+        options: [
+          { value: "SMS", label: "SMS" },
+          { value: "USSD", label: "USSD" },
+        ],
+        placeholder: "Select message type",
+      },
+      {
+        label: "Character Set Type",
+        type: "select",
+        fieldKey: "characterSetType",
+        required: true,
+        options: [
+          { value: "GSM", label: "GSM" },
+          { value: "UNICODE", label: "UNICODE" },
+          { value: "BINARY", label: "BINARY" },
+          { value: "LATIN-9", label: "LATIN-9" },
+        ],
+        placeholder: "Select character set type",
+      },
+    ],
+    statusLabel: t.configPages.characterSets.statusLabel,
+    deleteConfirmTitle: t.configPages.characterSets.deleteConfirmTitle,
+    deleteConfirmMessage: (name: string) =>
+      t.configPages.characterSets.deleteConfirmMessage.replace("{name}", name),
+    deleteSuccessMessage: (name: string) =>
+      t.configPages.characterSets.deleteSuccessMessage.replace("{name}", name),
+    createSuccessMessage: t.configPages.characterSets.createSuccessMessage,
+    updateSuccessMessage: t.configPages.characterSets.updateSuccessMessage,
+    deleteErrorMessage: t.configPages.characterSets.deleteErrorMessage,
+    saveErrorMessage: t.configPages.characterSets.saveErrorMessage,
+  };
+}
 
 // Helper function to create new configuration easily
 export function createConfigurationPageConfig(

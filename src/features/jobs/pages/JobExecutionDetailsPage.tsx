@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   AlertCircle,
   CheckCircle,
   XCircle,
@@ -19,6 +18,7 @@ import { JobExecution } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -148,7 +148,9 @@ export default function JobExecutionDetailsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/dashboard/job-executions")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/job-executions")
+            }
             className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
@@ -251,7 +253,9 @@ export default function JobExecutionDetailsPage() {
       </div>
 
       {/* Status Card */}
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span
@@ -285,7 +289,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Main Info Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Information
           </h3>
@@ -349,7 +355,9 @@ export default function JobExecutionDetailsPage() {
           </dl>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             System Information
           </h3>
@@ -412,7 +420,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Progress (if running) */}
       {execution.execution_status === "running" && progress && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Progress
           </h3>
@@ -456,7 +466,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Resource Usage */}
       {resourceUsage && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Usage
           </h3>
@@ -485,7 +497,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Error Information */}
       {execution.error_message && (
-        <div className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Error Information
@@ -525,7 +539,9 @@ export default function JobExecutionDetailsPage() {
       {(execution.rows_processed !== null ||
         execution.rows_read !== null ||
         execution.steps_total !== null) && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Processing Metrics
           </h3>

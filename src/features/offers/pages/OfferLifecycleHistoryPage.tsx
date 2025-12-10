@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, History, User, FileText } from "lucide-react";
+import { History, User, FileText } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { offerService } from "../services/offerService";
@@ -76,12 +77,7 @@ export default function OfferLifecycleHistoryPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <button
-          onClick={() => navigate(`/dashboard/offers/${id}`)}
-          className={`p-2 ${tw.rounded} transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <BackButton fallbackTo={`/dashboard/offers/${id}`} />
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             Lifecycle History
@@ -120,7 +116,9 @@ export default function OfferLifecycleHistoryPage() {
                   />
 
                   {/* Content */}
-                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200`}>
+                  <div
+                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200`}
+                  >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         {entry.previous_status && (

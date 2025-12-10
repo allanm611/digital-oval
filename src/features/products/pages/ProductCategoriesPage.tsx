@@ -19,6 +19,7 @@ import {
   PowerOff,
 } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   CategoryStats,
   ProductCategory,
@@ -919,12 +920,7 @@ export default function ProductCatalogsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate("/dashboard/products")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors flex items-center gap-2`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
+          <BackButton fallbackTo="/dashboard/products" iconSize="w-4 h-4" />
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               Product Catalogs
@@ -1178,7 +1174,9 @@ export default function ProductCatalogsPage() {
           <p className={`${tw.textMuted} font-medium`}>Loading catalogs...</p>
         </div>
       ) : filteredCatalogs.length === 0 ? (
-        <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 text-center py-16 px-4`}>
+        <div
+          className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 text-center py-16 px-4`}
+        >
           <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>
             {searchTerm ? "No catalogs found" : "No catalogs yet"}
           </h3>
@@ -1415,7 +1413,9 @@ export default function ProductCatalogsPage() {
       {editingCatalog &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999] backdrop-blur-sm">
-            <div className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100`}
+            >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900">
                   Edit Catalog

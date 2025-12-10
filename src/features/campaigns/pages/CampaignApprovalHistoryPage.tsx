@@ -1,8 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 
 export default function CampaignApprovalHistoryPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,13 +21,13 @@ export default function CampaignApprovalHistoryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </button>
+          <div className="mb-4">
+            <BackButton
+              fallbackTo={`/dashboard/campaigns/${id}`}
+              iconSize="w-4 h-4"
+              className="flex items-center text-sm text-gray-600 hover:text-gray-900"
+            />
+          </div>
           <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
             Campaign Approval History
           </h1>
@@ -40,7 +41,9 @@ export default function CampaignApprovalHistoryPage() {
             <LoadingSpinner />
           </div>
         ) : (
-          <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 p-6`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 p-6`}
+          >
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -28,6 +29,7 @@ import EditQuickListModal from "../components/EditQuickListModal";
 export default function QuickListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(
     null
@@ -202,12 +204,17 @@ export default function QuickListsPage() {
             .join("\n") || "";
 
         showError(
-          `QuickList created but ${errorCount} row(s) failed validation. ${
-            errorDetails ? `\n\nFirst few errors:\n${errorDetails}` : ""
+          `${t.quickList.validationErrors.replace(
+            "{count}",
+            String(errorCount)
+          )} ${
+            errorDetails
+              ? `\n\n${t.quickList.firstFewErrors}\n${errorDetails}`
+              : ""
           }`
         );
       } else {
-        showToast("QuickList created successfully!");
+        showToast(t.quickList.createdSuccess);
       }
 
       setIsCreateModalOpen(false);
@@ -238,13 +245,13 @@ export default function QuickListsPage() {
     } catch (err) {
       console.error("Failed to create quicklist:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to create QuickList";
+        err instanceof Error ? err.message : t.quickList.createdFailed;
       // Filter out HTTP errors
       const userMessage =
         errorMessage.includes("HTTP error") || errorMessage.includes("status:")
-          ? "Failed to create QuickList"
+          ? t.quickList.createdFailed
           : errorMessage;
-      showError("Failed to create QuickList", userMessage);
+      showError(t.quickList.createdFailed, userMessage);
       throw err; // Re-throw so the modal can handle it
     }
   };
@@ -264,13 +271,15 @@ export default function QuickListsPage() {
     setIsDeleting(true);
     try {
       await quicklistService.deleteQuickList(quicklistToDelete.id);
-      showToast(`QuickList "${quicklistToDelete.name}" deleted successfully!`);
+      showToast(
+        t.quickList.deletedSuccess.replace("{name}", quicklistToDelete.name)
+      );
       setShowDeleteModal(false);
       setQuicklistToDelete(null);
       await loadQuickLists();
     } catch (err) {
       console.error("Failed to delete quicklist:", err);
-      showError("Failed to delete QuickList", "Please try again later.");
+      showError(t.quickList.deletedFailed, t.common.loading);
     } finally {
       setIsDeleting(false);
     }
@@ -292,10 +301,12 @@ export default function QuickListsPage() {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      showToast(`QuickList exported as ${format.toUpperCase()}`);
+      showToast(
+        t.quickList.exportSuccess.replace("{format}", format.toUpperCase())
+      );
     } catch (err) {
       console.error("Failed to export quicklist:", err);
-      showError("Failed to export QuickList");
+      showError(t.quickList.exportFailed);
     }
   };
 
@@ -321,7 +332,7 @@ export default function QuickListsPage() {
         request
       );
       if (response.success) {
-        showToast("QuickList updated successfully");
+        showToast(t.quickList.updatedSuccess);
         setIsEditModalOpen(false);
         setEditQuickList(null);
         await loadQuickLists(pagination.page);
@@ -330,20 +341,20 @@ export default function QuickListsPage() {
     } catch (err) {
       console.error("Failed to update QuickList:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to update QuickList";
+        err instanceof Error ? err.message : t.quickList.updatedFailed;
       // Filter out HTTP errors
       const userMessage =
         errorMessage.includes("HTTP error") || errorMessage.includes("status:")
-          ? "Please try again later."
+          ? t.common.loading
           : errorMessage;
-      showError("Error updating quicklist", userMessage);
+      showError(t.quickList.updatedFailed, userMessage);
       throw err;
     }
   };
 
   const quicklistStatsCards = [
     {
-      name: "Total Manual Broadcasts",
+      name: t.quickList.totalManualBroadcasts,
       value: statsLoading
         ? "..."
         : (stats?.overall.total_quicklists || 0).toLocaleString(),
@@ -351,7 +362,7 @@ export default function QuickListsPage() {
       color: color.tertiary.tag1,
     },
     {
-      name: "Rows Imported",
+      name: t.quickList.rowsImported,
       value: statsLoading
         ? "..."
         : (stats?.overall.total_rows_imported || 0).toLocaleString(),
@@ -359,7 +370,7 @@ export default function QuickListsPage() {
       color: color.tertiary.tag4,
     },
     {
-      name: "Rows Failed",
+      name: t.quickList.rowsFailed,
       value: statsLoading
         ? "..."
         : (stats?.overall.total_rows_failed || 0).toLocaleString(),
@@ -367,7 +378,7 @@ export default function QuickListsPage() {
       color: color.tertiary.tag2,
     },
     {
-      name: "Upload Types",
+      name: t.quickList.uploadTypes,
       value: statsLoading
         ? "..."
         : (stats?.overall.unique_upload_types || 0).toLocaleString(),
@@ -384,10 +395,10 @@ export default function QuickListsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Manual Broadcast
+            {t.quickList.title}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Upload and manage customer data lists for quick communication
+            {t.quickList.description}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -396,7 +407,7 @@ export default function QuickListsPage() {
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
-            Create Manual Broadcast
+            {t.quickList.createManualBroadcast}
           </button>
         </div>
       </div>
@@ -433,7 +444,7 @@ export default function QuickListsPage() {
           />
           <input
             type="text"
-            placeholder="Search manual broadcasts by name..."
+            placeholder={t.quickList.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
@@ -443,7 +454,7 @@ export default function QuickListsPage() {
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <HeadlessSelect
             options={[
-              { value: "", label: "All Upload Types" },
+              { value: "", label: t.quickList.allUploadTypes },
               ...uploadTypes.map((type) => ({
                 value: type.upload_type,
                 label: type.upload_type,
@@ -451,7 +462,7 @@ export default function QuickListsPage() {
             ]}
             value={selectedUploadType}
             onChange={(value) => setSelectedUploadType(value as string)}
-            placeholder="Select upload type"
+            placeholder={t.quickList.selectUploadType}
             className="w-full sm:min-w-[220px]"
           />
         </div>
@@ -470,7 +481,7 @@ export default function QuickListsPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading manual broadcasts...
+              {t.quickList.loadingManualBroadcasts}
             </p>
           </div>
         ) : quicklists.length === 0 ? (
@@ -478,8 +489,8 @@ export default function QuickListsPage() {
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? "No manual broadcasts match your search."
-                : "No manual broadcasts yet. Upload your first list to get started."}
+                ? t.quickList.noManualBroadcastsMatch
+                : t.quickList.noManualBroadcastsYet}
             </p>
             {!searchTerm && (
               <button
@@ -488,7 +499,7 @@ export default function QuickListsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Upload className="w-4 h-4" />
-                Create Manual Broadcast
+                {t.quickList.createManualBroadcast}
               </button>
             )}
           </div>
@@ -504,37 +515,37 @@ export default function QuickListsPage() {
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Name
+                    {t.quickList.name}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Upload Type
+                    {t.quickList.uploadType}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Rows
+                    {t.quickList.rows}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Status
+                    {t.quickList.status}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Created At
+                    {t.quickList.createdAt}
                   </th>
                   <th
                     className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Actions
+                    {t.quickList.actions}
                   </th>
                 </tr>
               </thead>
@@ -619,35 +630,35 @@ export default function QuickListsPage() {
                         <button
                           onClick={() => handleCommunicate(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="Send Communication"
+                          title={t.quickList.sendCommunication}
                         >
                           <Send className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEdit(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="Edit"
+                          title={t.quickList.edit}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleViewDetails(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="View Details"
+                          title={t.quickList.viewDetails}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleExport(quicklist, "csv")}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="Export"
+                          title={t.quickList.export}
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(quicklist)}
                           className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                          title="Delete"
+                          title={t.quickList.delete}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -757,12 +768,12 @@ export default function QuickListsPage() {
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete QuickList"
+        title={t.quickList.deleteQuickList}
         description="Are you sure you want to delete this QuickList? This action cannot be undone."
         itemName={quicklistToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete QuickList"
-        cancelText="Cancel"
+        confirmText={t.quickList.deleteConfirmText}
+        cancelText={t.common.cancel}
       />
     </div>
   );

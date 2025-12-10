@@ -1,13 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import {
-  ArrowLeft,
-  CheckCircle,
-  XCircle,
-  Clock,
-  User,
-  AlertCircle,
-} from "lucide-react";
+import { CheckCircle, XCircle, Clock, User, AlertCircle } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { offerService } from "../services/offerService";
@@ -100,12 +94,7 @@ export default function OfferApprovalHistoryPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4">
-        <button
-          onClick={() => navigate(`/dashboard/offers/${id}`)}
-          className={`p-2 ${tw.rounded} transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <BackButton fallbackTo={`/dashboard/offers/${id}`} />
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             Approval History

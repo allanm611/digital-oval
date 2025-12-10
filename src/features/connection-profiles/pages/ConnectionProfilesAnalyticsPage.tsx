@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Database,
-  Activity,
-  Shield,
-  AlertTriangle,
-} from "lucide-react";
+import { Database, Activity, Shield, AlertTriangle } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
   Pie,
@@ -53,7 +48,9 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -210,13 +207,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-2 sm:space-x-4">
-        <button
-          onClick={() => navigate("/dashboard/connection-profiles")}
-          className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <BackButton fallbackTo="/dashboard/connection-profiles" />
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             Connection Profiles Analytics
@@ -236,7 +227,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
           {/* Summary Cards */}
           {dataGovernanceStats && (
             <div className="grid gap-4 md:grid-cols-4">
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Database
                     className="h-5 w-5"
@@ -250,7 +243,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                   {dataGovernanceStats.total || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Activity
                     className="h-5 w-5"
@@ -262,7 +257,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                   {activeProfiles.length}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Shield
                     className="h-5 w-5"
@@ -274,7 +271,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                   {piiProfiles.length}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
@@ -291,7 +290,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
 
           {/* Charts */}
           <div className="grid gap-6 md:grid-cols-2">
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Connection Type Distribution
               </h3>
@@ -345,7 +346,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
               </div>
             </div>
 
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Environment Distribution
               </h3>
@@ -399,7 +402,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
               </div>
             </div>
 
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Status Distribution
               </h3>
@@ -453,7 +458,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
               </div>
             </div>
 
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-black mb-4">
                 Health Check Status
               </h3>
@@ -509,7 +516,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
           </div>
 
           {/* Bar Charts */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h3 className="text-lg font-semibold text-black mb-4">
               Classification Distribution
             </h3>

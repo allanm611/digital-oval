@@ -19,6 +19,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { programService } from "../services/programService";
 import { Program } from "../types/program";
@@ -365,9 +366,7 @@ export default function ProgramDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button onClick={handleBack} className={`p-2 text-gray-600 ${tw.rounded}`}>
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/programs" onClick={handleBack} />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {program.name}
@@ -729,7 +728,9 @@ export default function ProgramDetailsPage() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className={`w-full border border-gray-200 ${tw.rounded} overflow-hidden`}>
+            <table
+              className={`w-full border border-gray-200 ${tw.rounded} overflow-hidden`}
+            >
               <thead
                 className={`border-b ${tw.borderDefault}`}
                 style={{ background: color.surface.tableHeader }}

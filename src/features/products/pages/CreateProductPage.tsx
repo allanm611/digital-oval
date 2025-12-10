@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { CreateProductRequest } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
@@ -156,13 +156,10 @@ export default function CreateProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button
-            onClick={() => navigate("/dashboard/products")}
-            className={`p-2 ${tw.rounded} transition-colors`}
+          <BackButton
+            fallbackTo="/dashboard/products"
             style={{ color: color.text.secondary }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               Create New Product

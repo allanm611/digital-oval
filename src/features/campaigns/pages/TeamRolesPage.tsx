@@ -1,7 +1,9 @@
-import React from 'react';
-import GenericConfigurationPage from '../../../shared/components/GenericConfigurationPage';
-import { teamRolesConfig } from '../../../shared/configs/configurationPageConfigs';
+import React from "react";
+import GenericConfigurationPage from "../../../shared/components/GenericConfigurationPage";
+import { getTeamRolesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function TeamRolesPage() {
-    return <GenericConfigurationPage config={teamRolesConfig} />;
+  const { t } = useLanguage();
+  return <GenericConfigurationPage config={getTeamRolesConfig(t)} />;
 }

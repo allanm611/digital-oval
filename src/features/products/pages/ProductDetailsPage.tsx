@@ -19,6 +19,7 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -208,12 +209,7 @@ export default function ProductDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={navigateBack}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/products" onClick={navigateBack} />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {t.pages.productDetails}

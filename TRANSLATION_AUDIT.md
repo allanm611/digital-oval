@@ -94,14 +94,14 @@ This document tracks the translation status of all pages in the CVM application.
 
 ## 👥 Segments
 
-| Page               | File                        | Status | Notes                                   |
-| ------------------ | --------------------------- | ------ | --------------------------------------- |
-| Segment Management | `SegmentManagementPage.tsx` | ❌     | Needs audit                             |
-| Segment Details    | `SegmentDetailsPage.tsx`    | ❌     | Needs audit                             |
-| Edit Segment       | `EditSegmentPage.tsx`       | ❌     | Needs audit                             |
-| Segment Categories | `SegmentCategoriesPage.tsx` | ❌     | Needs audit                             |
-| Segment List       | `SegmentListPage.tsx`       | ❌     | Needs audit                             |
-| Segment Types      | `SegmentTypesPage.tsx`      | ✅     | Uses TypeConfigurationPage (translated) |
+| Page               | File                        | Status | Notes                                         |
+| ------------------ | --------------------------- | ------ | --------------------------------------------- |
+| Segment Management | `SegmentManagementPage.tsx` | ❌     | Needs audit                                   |
+| Segment Details    | `SegmentDetailsPage.tsx`    | ❌     | Needs audit                                   |
+| Edit Segment       | `EditSegmentPage.tsx`       | ❌     | Needs audit                                   |
+| Segment Categories | `SegmentCategoriesPage.tsx` | ❌     | Needs audit                                   |
+| Segment List       | `SegmentListPage.tsx`       | ✅     | Completed 2025-01-XX - All strings translated |
+| Segment Types      | `SegmentTypesPage.tsx`      | ✅     | Uses TypeConfigurationPage (translated)       |
 
 ---
 
@@ -196,7 +196,7 @@ This document tracks the translation status of all pages in the CVM application.
 
 | Page                      | File                            | Status | Notes                                         |
 | ------------------------- | ------------------------------- | ------ | --------------------------------------------- |
-| Quick Lists               | `QuickListsPage.tsx`            | ❌     | Needs audit                                   |
+| Quick Lists               | `QuickListsPage.tsx`            | ✅     | Completed 2025-01-XX - All strings translated |
 | Quick List Details        | `QuickListDetailsPage.tsx`      | ❌     | Needs audit                                   |
 | Create Manual Broadcast   | `CreateManualBroadcastPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated |
 | Target Audience Step      | `TargetAudienceStep.tsx`        | ✅     | Completed 2025-01-XX - All strings translated |

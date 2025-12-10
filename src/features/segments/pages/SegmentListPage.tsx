@@ -14,6 +14,7 @@ import SegmentListModal, {
   SegmentListFormValues,
 } from "../components/SegmentListModal";
 import { MOCK_QUICKLISTS } from "../components/QuickListPickerModal";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface SegmentList {
   list_id: number;
@@ -32,6 +33,7 @@ interface SegmentList {
 }
 
 export default function SegmentListPage() {
+  const { t } = useLanguage();
   const [lists, setLists] = useState<SegmentList[]>([]);
   const [filteredLists, setFilteredLists] = useState<SegmentList[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,7 +133,7 @@ export default function SegmentListPage() {
 
     const newList: SegmentList = {
       list_id: Date.now(),
-      name: formData.list_label || `Uploaded List ${lists.length + 1}`,
+      name: formData.list_label || t.segmentList.createNewList,
       description: formData.list_description,
       subscriber_count: rowCount,
       created_on: new Date().toISOString(),
@@ -189,6 +191,19 @@ export default function SegmentListPage() {
     }
   };
 
+  const getListTypeLabel = (type: string) => {
+    switch (type) {
+      case "seed":
+        return t.segmentList.listTypeSeed;
+      case "and":
+        return t.segmentList.listTypeAnd;
+      case "standard":
+        return t.segmentList.listTypeStandard;
+      default:
+        return type;
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -203,10 +218,10 @@ export default function SegmentListPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Segment Lists
+            {t.segmentList.title}
           </h1>
           <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            Manage and organize your customer lists for segment building
+            {t.segmentList.description}
           </p>
         </div>
         <button
@@ -220,7 +235,7 @@ export default function SegmentListPage() {
           }}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Create New List
+          {t.segmentList.createNewList}
         </button>
       </div>
 
@@ -230,7 +245,7 @@ export default function SegmentListPage() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
             type="text"
-            placeholder="Search lists by name, description, or tags..."
+            placeholder={t.segmentList.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[${color.primary.accent}] focus:border-[${color.primary.accent}]`}
@@ -252,7 +267,7 @@ export default function SegmentListPage() {
                   }
                 : { padding: "0.5rem" }
             }
-            title="Grid View"
+            title={t.segmentList.gridView}
           >
             <Grid className="w-4 h-4" />
           </button>
@@ -271,7 +286,7 @@ export default function SegmentListPage() {
                   }
                 : { padding: "0.5rem" }
             }
-            title="List View"
+            title={t.segmentList.listView}
           >
             <ListIcon className="w-4 h-4" />
           </button>
@@ -283,21 +298,21 @@ export default function SegmentListPage() {
         <div className="text-center py-12">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-            No lists found
+            {t.segmentList.noListsFound}
           </h3>
           <p className={`text-sm ${tw.textSecondary} mb-4`}>
             {searchQuery
-              ? "No lists match your search criteria."
-              : "Get started by creating your first list."}
+              ? t.segmentList.noListsMatchSearch
+              : t.segmentList.getStartedCreateFirst}
           </p>
           {!searchQuery && (
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={openCreateModal}
               className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-colors`}
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Your First List
+              {t.segmentList.createYourFirstList}
             </button>
           )}
         </div>
@@ -312,7 +327,9 @@ export default function SegmentListPage() {
           {filteredLists.map((list) => (
             <div
               key={list.list_id}
-              className={`bg-white ${tw.rounded} p-6 hover:shadow-md transition-shadow ${
+              className={`bg-white ${
+                tw.rounded
+              } p-6 hover:shadow-md transition-shadow ${
                 viewMode === "list" ? "flex items-center justify-between" : ""
               }`}
             >
@@ -334,14 +351,14 @@ export default function SegmentListPage() {
                         list.list_type
                       )}`}
                     >
-                      {list.list_type}
+                      {getListTypeLabel(list.list_type)}
                     </span>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className={`text-sm ${tw.textSecondary}`}>
-                        Subscribers
+                        {t.segmentList.subscribers}
                       </span>
                       <span className={`font-semibold ${tw.textPrimary}`}>
                         {formatNumber(list.subscriber_count)}
@@ -350,7 +367,7 @@ export default function SegmentListPage() {
 
                     <div className="flex items-center justify-between">
                       <span className={`text-sm ${tw.textSecondary}`}>
-                        Created
+                        {t.segmentList.created}
                       </span>
                       <span className={`text-sm ${tw.textPrimary}`}>
                         {formatDate(list.created_on)}
@@ -407,7 +424,7 @@ export default function SegmentListPage() {
                           list.list_type
                         )}`}
                       >
-                        {list.list_type}
+                        {getListTypeLabel(list.list_type)}
                       </span>
                     </div>
                     <p
@@ -417,10 +434,16 @@ export default function SegmentListPage() {
                     </p>
                     <div className="flex items-center gap-4 text-sm">
                       <span className={`${tw.textSecondary}`}>
-                        {formatNumber(list.subscriber_count)} subscribers
+                        {t.segmentList.subscribersCount.replace(
+                          "{count}",
+                          formatNumber(list.subscriber_count)
+                        )}
                       </span>
                       <span className={`${tw.textSecondary}`}>
-                        Created {formatDate(list.created_on)}
+                        {t.segmentList.createdDate.replace(
+                          "{date}",
+                          formatDate(list.created_on)
+                        )}
                       </span>
                     </div>
                     {list.tags && list.tags.length > 0 && (
@@ -473,7 +496,11 @@ export default function SegmentListPage() {
         initialData={modalInitialData}
         onClose={closeModal}
         onSubmit={handleModalSubmit}
-        submitLabel={modalMode === "create" ? "Create List" : "Save Changes"}
+        submitLabel={
+          modalMode === "create"
+            ? t.segmentList.createList
+            : t.segmentList.saveChanges
+        }
       />
     </div>
   );

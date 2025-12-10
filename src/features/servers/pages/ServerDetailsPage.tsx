@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft,
   ShieldCheck,
   AlertTriangle,
   Activity,
@@ -19,10 +18,12 @@ import { serverService } from "../services/serverService";
 import { ServerType } from "../types/server";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
 const InfoRow = ({
   label,
@@ -365,7 +366,9 @@ export default function ServerDetailsPage() {
 
   if (errorMessage || !server) {
     return (
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center shadow-sm`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center shadow-sm`}
+      >
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
           <AlertTriangle size={20} />
         </div>
@@ -376,10 +379,14 @@ export default function ServerDetailsPage() {
           {errorMessage || "This server could not be found."}
         </p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigateBackOrFallback(navigate, "/dashboard/servers")}
           className={`mt-4 inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-black hover:bg-gray-50`}
         >
-          <ArrowLeft size={16} />
+          <BackButton
+            fallbackTo="/dashboard/servers"
+            iconSize="w-4 h-4"
+            className="p-0 text-black hover:text-black"
+          />
           Go back
         </button>
       </div>
@@ -389,13 +396,7 @@ export default function ServerDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 text-sm font-medium text-black hover:text-black"
-        >
-          <ArrowLeft size={16} />
-          Back to servers
-        </button>
+        <BackButton fallbackTo="/dashboard/servers" iconSize="w-4 h-4" />
         <div className="flex items-center gap-2">
           <button
             onClick={handleActivationToggle}
@@ -439,7 +440,9 @@ export default function ServerDetailsPage() {
               <span>More</span>
             </button>
             {showMoreMenu && (
-              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
+              <div
+                className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+              >
                 <button
                   onClick={() => {
                     handleHealthToggle();
@@ -533,7 +536,9 @@ export default function ServerDetailsPage() {
         </div>
       </div>
 
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
         <div className="flex flex-col gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
@@ -565,7 +570,9 @@ export default function ServerDetailsPage() {
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-3">
-          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
+          <div
+            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+          >
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Environment
             </p>
@@ -578,7 +585,9 @@ export default function ServerDetailsPage() {
               Region: {server.region || "—"}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
+          <div
+            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+          >
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Protocol
             </p>
@@ -589,7 +598,9 @@ export default function ServerDetailsPage() {
               TLS: {server.tls_enabled ? "Enabled" : "Disabled"}
             </p>
           </div>
-          <div className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}>
+          <div
+            className={`${tw.rounded} border border-gray-100 bg-gray-50/80 p-4`}
+          >
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Endpoint
             </p>
@@ -601,7 +612,9 @@ export default function ServerDetailsPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <section className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <section
+          className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity size={20} style={{ color: color.status.info }} />
             <h2 className="text-base font-semibold text-black">
@@ -635,7 +648,9 @@ export default function ServerDetailsPage() {
           </div>
         </section>
 
-        <section className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <section
+          className={`space-y-4 ${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             {server.health_check_enabled ? (
               <ShieldCheck size={20} style={{ color: color.status.success }} />
@@ -682,7 +697,9 @@ export default function ServerDetailsPage() {
       {/* Push Health Check Result Modal */}
       {showPushHealthModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className={`w-full max-w-md ${tw.rounded} bg-white p-6 shadow-xl`}>
+          <div
+            className={`w-full max-w-md ${tw.rounded} bg-white p-6 shadow-xl`}
+          >
             <h3 className="text-lg font-semibold text-black">
               Push Health Check Result
             </h3>
@@ -741,7 +758,9 @@ export default function ServerDetailsPage() {
       )}
 
       {server.metadata && Object.keys(server.metadata).length > 0 && (
-        <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <section
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="text-base font-semibold text-black">Metadata</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {Object.entries(server.metadata).map(([key, value]) => (

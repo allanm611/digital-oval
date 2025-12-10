@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   AlertCircle,
@@ -26,6 +25,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 
 const formatDateTime = (value?: string | null) => {
@@ -259,18 +259,11 @@ export default function JobWorkflowStepDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() =>
-              navigate(
-                `/dashboard/job-workflow-steps${
-                  jobIdParam ? `?job_id=${jobIdParam}` : ""
-                }`
-              )
-            }
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton
+            fallbackTo={`/dashboard/job-workflow-steps${
+              jobIdParam ? `?job_id=${jobIdParam}` : ""
+            }`}
+          />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {step.step_name}
@@ -329,7 +322,9 @@ export default function JobWorkflowStepDetailsPage() {
 
       {/* Status Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -345,7 +340,9 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -361,7 +358,9 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <GitBranch
               className="h-5 w-5"
@@ -377,7 +376,9 @@ export default function JobWorkflowStepDetailsPage() {
             )}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
             <p className="text-sm font-medium text-gray-600">Retries</p>
@@ -423,7 +424,9 @@ export default function JobWorkflowStepDetailsPage() {
         {/* Left Column */}
         <div className="space-y-6">
           {/* Basic Information */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Basic Information
             </h2>
@@ -485,7 +488,9 @@ export default function JobWorkflowStepDetailsPage() {
           </div>
 
           {/* Execution Configuration */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Execution Configuration
             </h2>
@@ -541,7 +546,9 @@ export default function JobWorkflowStepDetailsPage() {
           {/* Dependencies & Parallel Groups */}
           {step.depends_on_step_codes &&
             step.depends_on_step_codes.length > 0 && (
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
                   <Layers className="h-5 w-5" />
                   Dependencies
@@ -560,7 +567,9 @@ export default function JobWorkflowStepDetailsPage() {
             )}
 
           {step.is_parallel && step.parallel_group_id && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <GitBranch className="h-5 w-5" />
                 Parallel Group
@@ -599,7 +608,9 @@ export default function JobWorkflowStepDetailsPage() {
 
           {/* Next Step */}
           {nextStep && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 Next Step
               </h2>
@@ -618,7 +629,9 @@ export default function JobWorkflowStepDetailsPage() {
 
           {/* Validation Queries */}
           {(step.pre_validation_query || step.post_validation_query) && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h2 className="mb-4 text-lg font-semibold text-gray-900">
                 Validation Queries
               </h2>
@@ -646,7 +659,9 @@ export default function JobWorkflowStepDetailsPage() {
           )}
 
           {/* Metadata */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               Metadata
             </h2>
@@ -674,7 +689,9 @@ export default function JobWorkflowStepDetailsPage() {
 
       {/* Execution Order & Workflow Structure */}
       {executionOrder.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Workflow className="h-5 w-5" />
             Execution Order
@@ -683,7 +700,9 @@ export default function JobWorkflowStepDetailsPage() {
             {executionOrder.map((item, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between ${tw.rounded} p-3 ${
+                className={`flex items-center justify-between ${
+                  tw.rounded
+                } p-3 ${
                   item.step_id === step.id
                     ? "bg-blue-50 border-2 border-blue-300"
                     : "bg-gray-50 border border-gray-200"

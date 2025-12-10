@@ -14,9 +14,9 @@ import {
   MoreVertical,
   X,
   BarChart3,
-  ArrowLeft,
 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface UniversalControlGroup {
@@ -149,12 +149,7 @@ export default function ControlGroupsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate("/dashboard/configuration")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/configuration" />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
               Universal Control Groups
@@ -497,7 +492,9 @@ export default function ControlGroupsPage() {
       {showCreateModal &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className={`bg-white ${tw.rounded} shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden`}
+            >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
@@ -587,7 +584,9 @@ export default function ControlGroupsPage() {
                       Select the Customer Base for your Control Group
                     </label>
                     <div className="space-y-3">
-                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
+                      <label
+                        className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      >
                         <input
                           type="radio"
                           name="customerBase"
@@ -610,7 +609,9 @@ export default function ControlGroupsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
+                      <label
+                        className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      >
                         <input
                           type="radio"
                           name="customerBase"
@@ -632,7 +633,9 @@ export default function ControlGroupsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}>
+                      <label
+                        className={`flex items-start p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50`}
+                      >
                         <input
                           type="radio"
                           name="customerBase"

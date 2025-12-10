@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import BackButton from "../components/ui/BackButton";
 import {
-  ArrowLeft,
   Search,
   Check,
   CheckCircle2,
@@ -820,13 +820,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(-1)}
-            className={`p-2 ${tw.rounded} transition-colors`}
-            title="Go back"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          <BackButton fallbackTo="/dashboard" />
           <div>
             {/* <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}> */}
             <h1 className="text-2xl font-bold">
@@ -1000,7 +994,9 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       </div>
 
       {/* Table */}
-      <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}>
+      <div
+        className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}
+      >
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <LoadingSpinner />

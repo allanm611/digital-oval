@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Package } from "lucide-react";
+import { Package } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { Product, UpdateProductRequest, ProductUnit } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 
 export default function EditProductPage() {
@@ -254,7 +256,9 @@ export default function EditProductPage() {
             The product you're looking for doesn't exist.
           </p>
           <button
-            onClick={() => navigate("/dashboard/products")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/products")
+            }
             className={`bg-[#3b8169] hover:bg-[#2d5f4e] text-white px-4 py-2 ${tw.rounded} text-base font-semibold transition-all duration-200`}
           >
             Back to Products
@@ -269,13 +273,11 @@ export default function EditProductPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button
+          <BackButton
+            fallbackTo="/dashboard/products"
             onClick={navigateBack}
-            className={`p-2 ${tw.rounded} transition-colors`}
             style={{ color: color.text.secondary }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               Edit Product

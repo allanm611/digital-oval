@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Edit,
   Database,
   Server,
@@ -17,6 +16,8 @@ import {
   PowerOff,
   Play,
 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { connectionProfileService } from "../services/connectionProfileService";
 import { ConnectionProfileType } from "../types/connectionProfile";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -266,11 +267,17 @@ export default function ConnectionProfileDetailsPage() {
           The connection profile you're looking for doesn't exist.
         </p>
         <button
-          onClick={() => navigate("/dashboard/connection-profiles")}
+          onClick={() =>
+            navigateBackOrFallback(navigate, "/dashboard/connection-profiles")
+          }
           className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
           style={{ backgroundColor: color.primary.action }}
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
+          <BackButton
+            fallbackTo="/dashboard/connection-profiles"
+            iconSize="w-5 h-5"
+            className="mr-2 p-0 text-white hover:text-white"
+          />
           Back to Connection Profiles
         </button>
       </div>
@@ -284,12 +291,7 @@ export default function ConnectionProfileDetailsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
-            <button
-              onClick={() => navigate("/dashboard/connection-profiles")}
-              className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+            <BackButton fallbackTo="/dashboard/connection-profiles" />
             <div>
               <h1 className="text-xl font-semibold text-black">
                 {profile.profile_name}
@@ -340,7 +342,9 @@ export default function ConnectionProfileDetailsPage() {
                 <span>More</span>
               </button>
               {showMoreMenu && (
-                <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
+                <div
+                  className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+                >
                   <button
                     onClick={() => {
                       handleMarkUsed();

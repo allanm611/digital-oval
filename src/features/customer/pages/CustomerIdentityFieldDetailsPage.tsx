@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft,
   Database,
   FileText,
   Settings as SettingsIcon,
   ListChecks,
 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { tw, color } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { CustomerIdentityField } from "../types/customerIdentity";
 import { customerIdentityService } from "../services/customerIdentityService";
@@ -74,19 +75,16 @@ export default function CustomerIdentityFieldDetailsPage() {
   }, [initialField, loadField]);
 
   const handleBack = () => {
-    navigate("/dashboard/customer-identity");
+    navigateBackOrFallback(navigate, "/dashboard/customer-identity");
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button
-          type="button"
+        <BackButton
+          fallbackTo="/dashboard/customer-identity"
           onClick={handleBack}
-          className={`p-2 ${tw.rounded} transition-colors`}
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-700" />
-        </button>
+        />
         <div>
           <h1 className={`${tw.mainHeading} text-gray-900`}>
             {field ? field.field_name : t.customerIdentity.fieldDetails}

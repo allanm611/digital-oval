@@ -21,6 +21,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -265,12 +266,10 @@ export default function UserDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button
+          <BackButton
+            fallbackTo="/dashboard/user-management"
             onClick={navigateBack}
-            className={`p-2 text-gray-600 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          />
           <div>
             <h1
               className={`${tw.mainHeading} ${tw.textPrimary} md:text-lg text-base`}

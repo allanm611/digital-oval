@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Save, X, Plus } from "lucide-react";
+import { Save, X, Plus } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Listbox, Transition } from "@headlessui/react";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
@@ -328,25 +329,20 @@ export default function CreateJobWorkflowStepPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button
-          onClick={() =>
-            navigate(
-              `/dashboard/job-workflow-steps${
-                formData.job_id ? `?job_id=${formData.job_id}` : ""
-              }`
-            )
-          }
-          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <BackButton
+          fallbackTo={`/dashboard/job-workflow-steps${
+            formData.job_id ? `?job_id=${formData.job_id}` : ""
+          }`}
+        />
         <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
           {isEditMode ? "Edit Workflow Step" : "Create Workflow Step"}
         </h1>
       </div>
 
       {batchMode && batchSteps.length === 0 && (
-        <div className={`${tw.rounded} border border-blue-200 bg-blue-50 p-4 mb-6`}>
+        <div
+          className={`${tw.rounded} border border-blue-200 bg-blue-50 p-4 mb-6`}
+        >
           <div className="flex items-center justify-between">
             <p className="text-sm text-blue-800">
               Batch mode: Create multiple steps at once
@@ -365,7 +361,9 @@ export default function CreateJobWorkflowStepPage() {
       )}
 
       {batchMode && batchSteps.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}
+        >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Batch Steps ({batchSteps.length})
@@ -493,7 +491,9 @@ export default function CreateJobWorkflowStepPage() {
             {/* Left Column */}
             <div className="space-y-6">
               {/* Basic Information */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Basic Information
                 </h2>
@@ -614,7 +614,9 @@ export default function CreateJobWorkflowStepPage() {
                       }
                     >
                       <div className="relative">
-                        <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
+                        <Listbox.Button
+                          className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                        >
                           <span className="block truncate">
                             {STEP_TYPES.find(
                               (t) => t.value === formData.step_type
@@ -633,7 +635,9 @@ export default function CreateJobWorkflowStepPage() {
                           leaveFrom="opacity-100"
                           leaveTo="opacity-0"
                         >
-                          <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
+                          <Listbox.Options
+                            className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                          >
                             {STEP_TYPES.map((type) => (
                               <Listbox.Option
                                 key={type.value}
@@ -694,7 +698,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Execution Configuration */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Execution Configuration
                 </h2>
@@ -767,7 +773,9 @@ export default function CreateJobWorkflowStepPage() {
                         }
                       >
                         <div className="relative">
-                          <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
+                          <Listbox.Button
+                            className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                          >
                             <span className="block truncate">
                               {FAILURE_ACTIONS.find(
                                 (a) => a.value === formData.on_failure_action
@@ -786,7 +794,9 @@ export default function CreateJobWorkflowStepPage() {
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
+                            <Listbox.Options
+                              className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                            >
                               {FAILURE_ACTIONS.map((action) => (
                                 <Listbox.Option
                                   key={action.value}
@@ -883,7 +893,9 @@ export default function CreateJobWorkflowStepPage() {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Dependencies & Parallel Execution */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Dependencies & Parallel Execution
                 </h2>
@@ -990,7 +1002,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Validation */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Validation
                 </h2>
@@ -1076,7 +1090,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Status */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Status
                 </h2>
@@ -1121,7 +1137,9 @@ export default function CreateJobWorkflowStepPage() {
         ) : null}
 
         {batchMode ? (
-          <div className={`${tw.rounded} border border-amber-200 bg-amber-50 p-4`}>
+          <div
+            className={`${tw.rounded} border border-amber-200 bg-amber-50 p-4`}
+          >
             <p className="text-sm text-amber-800">
               <strong>Note:</strong> In batch mode, only the job selection and
               batch steps above will be used. Individual step configuration

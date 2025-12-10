@@ -25,6 +25,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { offerService } from "../../offers/services/offerService";
@@ -493,7 +494,7 @@ export default function CampaignDetailsPage() {
             The campaign you are looking for does not exist.
           </p>
           <button
-            onClick={() => navigate("/dashboard/campaigns")}
+            onClick={handleBack}
             className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-base text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -509,9 +510,7 @@ export default function CampaignDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button onClick={handleBack} className={`p-2 text-gray-600 ${tw.rounded}`}>
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {t.pages.campaignDetails}
@@ -659,7 +658,9 @@ export default function CampaignDetailsPage() {
             </button>
 
             {showMoreMenu && (
-              <div className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}>
+              <div
+                className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
+              >
                 {/* Reject - Only if pending and not already rejected */}
                 {campaign.approval_status === "pending" &&
                   campaign.status !== "rejected" && (
@@ -898,7 +899,9 @@ export default function CampaignDetailsPage() {
             </p>
             {/* Rejection Reason Display */}
             {campaign.status === "rejected" && campaign.rejection_reason && (
-              <div className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}>
+              <div
+                className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}
+              >
                 <div className="flex items-start gap-2">
                   <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -1408,7 +1411,9 @@ export default function CampaignDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setShowRejectModal(false)}
             />
-            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}>
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+            >
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                   <XCircle className="w-6 h-6 text-red-600" />

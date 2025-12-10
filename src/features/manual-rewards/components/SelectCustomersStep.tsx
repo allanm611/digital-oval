@@ -507,14 +507,14 @@ export default function SelectCustomersStep({
               {error}
             </p>
           </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Footer */}
-        <div
-          className="p-6 border-t flex items-center justify-end"
-          style={{ borderColor: color.border.default }}
-        >
+      {/* Footer */}
+      <div
+        className="p-6 border-t flex items-center justify-end"
+        style={{ borderColor: color.border.default }}
+      >
         <button
           onClick={handleNext}
           disabled={

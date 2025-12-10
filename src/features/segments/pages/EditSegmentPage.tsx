@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save, X, Plus, Activity } from "lucide-react";
+import { Save, X, Plus, Activity } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   Segment,
   UpdateSegmentRequest,
@@ -12,6 +13,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
 export default function EditSegmentPage() {
   const { id } = useParams<{ id: string }>();
@@ -135,7 +137,9 @@ export default function EditSegmentPage() {
           The segment you're trying to edit doesn't exist.
         </p>
         <button
-          onClick={() => navigate("/dashboard/segments")}
+          onClick={() =>
+            navigateBackOrFallback(navigate, "/dashboard/segments")
+          }
           className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded}`}
           style={{ backgroundColor: color.primary.action }}
         >
@@ -151,12 +155,11 @@ export default function EditSegmentPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
+          <BackButton
+            fallbackTo="/dashboard/segments"
             onClick={handleCancel}
-            className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+            className={`${tw.textMuted} hover:bg-gray-100`}
+          />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               Edit Segment
@@ -258,7 +261,9 @@ export default function EditSegmentPage() {
                 </label>
                 <div className="flex items-center space-x-2">
                   <span
-                    className={`inline-flex items-center px-3 py-2 ${tw.rounded} text-sm font-medium ${
+                    className={`inline-flex items-center px-3 py-2 ${
+                      tw.rounded
+                    } text-sm font-medium ${
                       type === "dynamic"
                         ? "bg-purple-100 text-purple-700"
                         : type === "static"
@@ -467,7 +472,9 @@ export default function EditSegmentPage() {
 
                 return (
                   <div key={index} className="relative">
-                    <div className={`flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-white ${tw.rounded} border border-gray-200`}>
+                    <div
+                      className={`flex items-start space-x-3 p-4 bg-gradient-to-r from-gray-50 to-white ${tw.rounded} border border-gray-200`}
+                    >
                       <div
                         className={`mt-1 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0`}
                         style={{ backgroundColor: `${color.primary.accent}20` }}

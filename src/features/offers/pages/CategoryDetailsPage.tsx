@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Trash2,
   Eye,
   Package,
@@ -12,6 +11,7 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
 import { offerCategoryService } from "../services/offerCategoryService";
@@ -255,7 +255,9 @@ export default function CategoryDetailsPage() {
           {error || "Category not found"}
         </h3>
         <button
-          onClick={() => navigate("/dashboard/offer-catalogs")}
+          onClick={() =>
+            navigateBackOrFallback(navigate, "/dashboard/offer-catalogs")
+          }
           className={`px-4 py-2 ${tw.rounded} font-medium transition-colors`}
           style={{
             backgroundColor: color.primary.action,
@@ -273,12 +275,7 @@ export default function CategoryDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-          <button
-            onClick={() => navigate("/dashboard/offer-catalogs")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors flex-shrink-0`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/offer-catalogs" />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
               {category.name}
@@ -303,7 +300,9 @@ export default function CategoryDetailsPage() {
           </button>
           <button
             onClick={handleToggleStatus}
-            className={`px-3 sm:px-4 py-2 ${tw.rounded} transition-colors font-medium text-sm sm:text-base whitespace-nowrap ${
+            className={`px-3 sm:px-4 py-2 ${
+              tw.rounded
+            } transition-colors font-medium text-sm sm:text-base whitespace-nowrap ${
               category.is_active
                 ? "text-white border"
                 : "text-green-700 bg-green-100 border border-green-300 hover:bg-green-200"
@@ -328,7 +327,9 @@ export default function CategoryDetailsPage() {
               <MoreVertical className="w-5 h-5" />
             </button>
             {showMoreMenu && (
-              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
+              <div
+                className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+              >
                 <button
                   onClick={() => {
                     handleViewOffers();
@@ -366,7 +367,9 @@ export default function CategoryDetailsPage() {
               <p className="text-sm font-medium text-gray-600">Total Offers</p>
               <p className="text-2xl font-bold text-gray-900">{offerCount}</p>
             </div>
-            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}
+            >
               <Package className="w-6 h-6 text-gray-900" />
             </div>
           </div>
@@ -383,7 +386,9 @@ export default function CategoryDetailsPage() {
                 {activeOfferCount}
               </p>
             </div>
-            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}
+            >
               <CheckCircle className="w-6 h-6 text-gray-900" />
             </div>
           </div>
@@ -402,7 +407,9 @@ export default function CategoryDetailsPage() {
                 {offerCount - activeOfferCount}
               </p>
             </div>
-            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}
+            >
               <XCircle className="w-6 h-6 text-gray-900" />
             </div>
           </div>
@@ -419,7 +426,9 @@ export default function CategoryDetailsPage() {
                 {category.is_active ? "Active" : "Inactive"}
               </p>
             </div>
-            <div className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
+            <div
+              className={`w-10 h-10 bg-gray-100 ${tw.rounded} flex items-center justify-center`}
+            >
               {category.is_active ? (
                 <CheckCircle className="w-6 h-6 text-green-600" />
               ) : (
@@ -622,7 +631,9 @@ export default function CategoryDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setIsEditModalOpen(false)}
             ></div>
-            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}>
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Edit Category
               </h3>
@@ -685,7 +696,9 @@ export default function CategoryDetailsPage() {
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setIsOffersModalOpen(false)}
             ></div>
-            <div className={`relative bg-white ${tw.rounded} shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden`}>
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden`}
+            >
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>

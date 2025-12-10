@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, CheckCircle, XCircle } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ChannelSelector from "../components/ChannelSelector";
@@ -139,7 +141,9 @@ export default function CreateCommunicationPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-3xl mx-auto">
-          <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}
+          >
             {/* Header */}
             <div
               className={`p-6 ${
@@ -241,7 +245,9 @@ export default function CreateCommunicationPage() {
             {/* Actions */}
             <div className="p-6 bg-gray-50 border-t flex items-center justify-between">
               <button
-                onClick={() => navigate("/dashboard/quicklists")}
+                onClick={() =>
+                  navigateBackOrFallback(navigate, "/dashboard/quicklists")
+                }
                 className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Back to QuickLists
@@ -267,7 +273,9 @@ export default function CreateCommunicationPage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate("/dashboard/quicklists")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/quicklists")
+            }
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -290,7 +298,9 @@ export default function CreateCommunicationPage() {
           {/* Left Column - Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Channel Selection */}
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+            >
               <ChannelSelector
                 selectedChannel={selectedChannel}
                 onChannelChange={setSelectedChannel}
@@ -298,7 +308,9 @@ export default function CreateCommunicationPage() {
             </div>
 
             {/* Message Editor */}
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+            >
               <MessageEditor
                 title={messageTitle}
                 body={messageBody}
@@ -314,7 +326,9 @@ export default function CreateCommunicationPage() {
             {/* Send Button */}
             <div className="flex items-center justify-end space-x-3">
               <button
-                onClick={() => navigate("/dashboard/quicklists")}
+                onClick={() =>
+                  navigateBackOrFallback(navigate, "/dashboard/quicklists")
+                }
                 className={`px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Cancel
@@ -344,7 +358,9 @@ export default function CreateCommunicationPage() {
 
           {/* Right Column - Preview */}
           <div className="lg:col-span-1">
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 sticky top-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6 sticky top-6`}
+            >
               <PreviewPanel
                 channel={selectedChannel}
                 title={messageTitle}

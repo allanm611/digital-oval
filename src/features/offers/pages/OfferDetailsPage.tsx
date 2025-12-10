@@ -30,6 +30,7 @@ import {
 } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -1316,7 +1317,9 @@ export default function OfferDetailsPage() {
             The offer you're looking for doesn't exist or has been deleted.
           </p>
           <button
-            onClick={() => navigate("/dashboard/offers")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/offers")
+            }
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -1348,12 +1351,11 @@ export default function OfferDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
+          <BackButton
+            fallbackTo="/dashboard/offers"
             onClick={handleBack}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+            className="text-gray-400 hover:text-gray-600"
+          />
           <div>
             <h1 className={tw.mainHeading}>{t.pages.offerDetails}</h1>
             <p className={`${tw.textSecondary} mt-1`}>
@@ -1497,7 +1499,9 @@ export default function OfferDetailsPage() {
               <MoreVertical className="w-5 h-5" />
             </button>
             {showMoreMenu && (
-              <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
+              <div
+                className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+              >
                 {/* Reject - Only for pending offers */}
                 {isPending && (
                   <button
@@ -2690,7 +2694,9 @@ export default function OfferDetailsPage() {
           )}
 
           {/* Products List */}
-          <div className={`max-h-96 overflow-y-auto border border-gray-200 ${tw.rounded}`}>
+          <div
+            className={`max-h-96 overflow-y-auto border border-gray-200 ${tw.rounded}`}
+          >
             {productsSearchLoading ? (
               <div className="flex justify-center items-center py-12">
                 <LoadingSpinner />
@@ -2730,7 +2736,9 @@ export default function OfferDetailsPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 flex-1">
                           <div
-                            className={`w-10 h-10 ${tw.rounded} flex items-center justify-center ${
+                            className={`w-10 h-10 ${
+                              tw.rounded
+                            } flex items-center justify-center ${
                               isAlreadyLinked ? "bg-gray-200" : "bg-gray-100"
                             }`}
                           >
@@ -2989,7 +2997,9 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Title
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <p className="text-gray-900">
                           {previewResult.rendered_title}
                         </p>
@@ -3002,7 +3012,9 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Text Body
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <p className="text-gray-900 whitespace-pre-wrap">
                           {previewResult.rendered_text_body}
                         </p>
@@ -3015,7 +3027,9 @@ export default function OfferDetailsPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered HTML Body
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <div
                           className="prose max-w-none"
                           dangerouslySetInnerHTML={{

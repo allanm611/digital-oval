@@ -25,6 +25,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -282,7 +283,7 @@ export default function SegmentDetailsPage() {
     );
     setShowExportModal(false);
     return;
-     
+
     setIsExporting(true);
     try {
       const blob = await segmentService.exportSegment(Number(id), {
@@ -403,7 +404,9 @@ export default function SegmentDetailsPage() {
           The segment you're looking for doesn't exist.
         </p>
         <button
-          onClick={() => navigate("/dashboard/segments")}
+          onClick={() =>
+            navigateBackOrFallback(navigate, "/dashboard/segments")
+          }
           className={`${tw.button} inline-flex items-center px-4 py-2`}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -418,12 +421,7 @@ export default function SegmentDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={handleBack}
-            className={`p-2 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          <BackButton fallbackTo="/dashboard/segments" onClick={handleBack} />
           <div>
             <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
               {segment.name}
@@ -472,7 +470,9 @@ export default function SegmentDetailsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -498,7 +498,9 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
 
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -519,7 +521,9 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
 
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
@@ -554,7 +558,9 @@ export default function SegmentDetailsPage() {
       {/* Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Information */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-6">
             <div
               className={`p-2 ${tw.rounded}`}
@@ -724,7 +730,9 @@ export default function SegmentDetailsPage() {
 
         {/* Query Information */}
         {segment.query || segment.count_query ? (
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+          <div
+            className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2 mb-6">
               <div
                 className={`p-2 ${tw.rounded}`}
@@ -747,7 +755,9 @@ export default function SegmentDetailsPage() {
                   >
                     Query
                   </label>
-                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}>
+                  <div
+                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}
+                  >
                     <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
                       {segment.query}
                     </code>
@@ -761,7 +771,9 @@ export default function SegmentDetailsPage() {
                   >
                     Count Query
                   </label>
-                  <div className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}>
+                  <div
+                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}
+                  >
                     <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
                       {segment.count_query}
                     </code>
@@ -771,7 +783,9 @@ export default function SegmentDetailsPage() {
             </div>
           </div>
         ) : (
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+          <div
+            className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2 mb-6">
               <div
                 className={`p-2 ${tw.rounded}`}
@@ -809,7 +823,9 @@ export default function SegmentDetailsPage() {
 
       {/* Criteria/Definition Section */}
       {(segment.criteria || segment.definition) && (
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-6">
             <div
               className={`p-2 ${tw.rounded}`}
@@ -858,7 +874,9 @@ export default function SegmentDetailsPage() {
 
                 return (
                   <div key={index} className="relative">
-                    <div className={`flex items-start space-x-3 p-4 bg-gray-50 ${tw.rounded} border border-gray-200`}>
+                    <div
+                      className={`flex items-start space-x-3 p-4 bg-gray-50 ${tw.rounded} border border-gray-200`}
+                    >
                       <div
                         className={`mt-1 w-6 h-6 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
                         style={{ backgroundColor: `${color.primary.accent}20` }}
@@ -921,7 +939,9 @@ export default function SegmentDetailsPage() {
       )}
 
       {/* Segment Members Section */}
-      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+      <div
+        className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+      >
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div
@@ -986,7 +1006,9 @@ export default function SegmentDetailsPage() {
       {showMembersModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
+            >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
@@ -1186,7 +1208,9 @@ export default function SegmentDetailsPage() {
       {showCustomerSelection &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
+            >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
@@ -1246,7 +1270,9 @@ export default function SegmentDetailsPage() {
                       return (
                         <div
                           key={`${customer.customerId}-${customer.subscriptionId}`}
-                          className={`p-4 border ${tw.rounded} cursor-pointer transition-colors ${
+                          className={`p-4 border ${
+                            tw.rounded
+                          } cursor-pointer transition-colors ${
                             isSelected
                               ? "border-blue-500 bg-blue-50"
                               : "border-gray-200 hover:border-gray-300"
@@ -1363,7 +1389,9 @@ export default function SegmentDetailsPage() {
       {showExportModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}
+            >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-xl font-bold text-gray-900">
                   Export Segment
@@ -1383,7 +1411,9 @@ export default function SegmentDetailsPage() {
                       Export Format
                     </label>
                     <div className="space-y-2">
-                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
+                      <label
+                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                      >
                         <input
                           type="radio"
                           value="csv"
@@ -1402,7 +1432,9 @@ export default function SegmentDetailsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
+                      <label
+                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                      >
                         <input
                           type="radio"
                           value="json"
@@ -1421,7 +1453,9 @@ export default function SegmentDetailsPage() {
                           </div>
                         </div>
                       </label>
-                      <label className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}>
+                      <label
+                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                      >
                         <input
                           type="radio"
                           value="xml"

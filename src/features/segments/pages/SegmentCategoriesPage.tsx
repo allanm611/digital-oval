@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   Plus,
   Search,
@@ -109,7 +110,9 @@ function CategoryModal({
   return isOpen
     ? createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+          >
             <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
                 {category
@@ -684,12 +687,7 @@ export default function SegmentCategoriesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
-          <button
-            onClick={() => navigate("/dashboard/segments")}
-            className={`p-2 ${tw.rounded} transition-colors flex-shrink-0`}
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          <BackButton fallbackTo="/dashboard/segments" />
           <div className="min-w-0 flex-1">
             <h1 className={`${tw.mainHeading} ${tw.textPrimary} truncate`}>
               Segment Catalogs
@@ -829,7 +827,9 @@ export default function SegmentCategoriesPage() {
           <p className={`${tw.textMuted} font-medium`}>Loading catalogs...</p>
         </div>
       ) : filteredCategories.length === 0 ? (
-        <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 text-center py-16 px-4`}>
+        <div
+          className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 text-center py-16 px-4`}
+        >
           <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>
             {searchTerm ? "No catalogs found" : "No catalogs yet"}

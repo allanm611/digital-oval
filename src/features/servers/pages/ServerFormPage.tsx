@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   CreateServerPayload,
   ServerEnvironment,
@@ -12,6 +13,7 @@ import { serverService } from "../services/serverService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
@@ -207,14 +209,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard/servers")}
-          className={`p-2 ${tw.rounded} text-gray-600`}
-          aria-label="Back to servers"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <BackButton fallbackTo="/dashboard/servers" />
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             {mode === "create" ? "Add Server" : "Edit Server"}
@@ -228,7 +223,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Basic Information
           </h2>
@@ -370,7 +367,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Connection Settings
           </h2>
@@ -403,7 +402,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
@@ -456,7 +457,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           )}
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
@@ -494,7 +497,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           )}
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">TLS</h2>
@@ -531,7 +536,9 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-4">
           <button
             type="button"
-            onClick={() => navigate("/dashboard/servers")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/servers")
+            }
             className={`${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50`}
             disabled={isSubmitting}
           >

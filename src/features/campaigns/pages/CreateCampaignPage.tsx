@@ -1276,16 +1276,19 @@ export default function CreateCampaignPage() {
 
           <div className="py-4">{renderStep()}</div>
 
-          {/* Sticky Bottom Navigation */}
-          <div className="sticky bottom-0 z-30 bg-white py-3 border-t border-gray-100">
+          {/* Bottom Navigation */}
+          <div className="mt-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button
-                onClick={handlePrev}
-                disabled={currentStep === 1}
-                className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
-              >
-                Previous
-              </button>
+              {currentStep > 1 ? (
+                <button
+                  onClick={handlePrev}
+                  className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 w-full sm:w-auto`}
+                >
+                  Previous
+                </button>
+              ) : (
+                <div></div>
+              )}
               <button
                 onClick={currentStep === 5 ? handleSubmit : handleNext}
                 disabled={isLoading || !validateCurrentStep().isValid}

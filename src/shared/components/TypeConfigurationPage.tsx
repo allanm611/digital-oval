@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Edit,
-  LucideIcon,
-  Plus,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Edit, LucideIcon, Plus, Search, Trash2, X } from "lucide-react";
 import { color, tw } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -18,6 +9,7 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import HeadlessSelect from "./ui/HeadlessSelect";
+import BackButton from "./ui/BackButton";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -671,7 +663,6 @@ interface TypeConfigurationPageProps {
 export default function TypeConfigurationPage({
   config,
 }: TypeConfigurationPageProps) {
-  const navigate = useNavigate();
   const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
@@ -792,13 +783,7 @@ export default function TypeConfigurationPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate(config.backPath)}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo={config.backPath} />
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}

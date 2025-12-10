@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Save } from "lucide-react";
+import { Save } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
   ConnectionProfileType,
@@ -194,12 +196,7 @@ export default function ConnectionProfileFormPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate("/dashboard/connection-profiles")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/connection-profiles" />
           <div className="ml-2 sm:ml-4">
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               {mode === "create"
@@ -216,7 +213,9 @@ export default function ConnectionProfileFormPage({
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Basic Information
           </h2>
@@ -336,7 +335,9 @@ export default function ConnectionProfileFormPage({
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Performance Settings
           </h2>
@@ -453,7 +454,9 @@ export default function ConnectionProfileFormPage({
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
             Data Governance
           </h2>
@@ -550,7 +553,9 @@ export default function ConnectionProfileFormPage({
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() => navigate("/dashboard/connection-profiles")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/connection-profiles")
+            }
             className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
           >
             Cancel

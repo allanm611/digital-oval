@@ -35,6 +35,7 @@ function JobTypeModal({
   onSubmit,
   initialData,
 }: JobTypeModalProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
@@ -234,7 +235,9 @@ function JobTypeModal({
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className={`mt-1 w-full ${tw.rounded} border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 ${
+                className={`mt-1 w-full ${
+                  tw.rounded
+                } border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 ${
                   codeValidationError
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -272,7 +275,9 @@ function JobTypeModal({
           </div>
 
           {error && (
-            <div className={`${tw.rounded} border border-red-200 bg-red-50 p-3 text-sm text-red-700`}>
+            <div
+              className={`${tw.rounded} border border-red-200 bg-red-50 p-3 text-sm text-red-700`}
+            >
               {error}
             </div>
           )}
@@ -678,7 +683,9 @@ export default function JobTypesPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -690,7 +697,9 @@ export default function JobTypesPage() {
             {isLoadingStats ? "..." : stats.totalJobTypes}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -704,7 +713,9 @@ export default function JobTypesPage() {
             {isLoadingStats ? "..." : stats.totalJobs}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"

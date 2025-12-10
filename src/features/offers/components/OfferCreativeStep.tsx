@@ -12,7 +12,7 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
@@ -909,7 +909,9 @@ export default function OfferCreativeStep({
       )}
 
       {creatives.length === 0 ? (
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}>
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-8 text-center`}
+        >
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageSquare className="w-8 h-8 text-gray-400" />
           </div>
@@ -934,7 +936,9 @@ export default function OfferCreativeStep({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Creative List */}
           <div className="lg:col-span-1">
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-4`}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900">Creatives</h3>
                 <button
@@ -958,7 +962,9 @@ export default function OfferCreativeStep({
                     <div
                       key={creative.id}
                       onClick={() => setSelectedCreative(creative.id)}
-                      className={`p-3 ${tw.rounded} border cursor-pointer transition-all ${
+                      className={`p-3 ${
+                        tw.rounded
+                      } border cursor-pointer transition-all ${
                         selectedCreative === creative.id
                           ? "border-gray-300 bg-gray-50"
                           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -966,7 +972,9 @@ export default function OfferCreativeStep({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}>
+                          <div
+                            className={`w-8 h-8 ${tw.rounded} flex items-center justify-center bg-gray-100`}
+                          >
                             <Icon className="w-4 h-4 text-gray-600" />
                           </div>
                           <div>
@@ -1004,7 +1012,9 @@ export default function OfferCreativeStep({
           {/* Creative Editor */}
           <div className="lg:col-span-2">
             {selectedCreativeData ? (
-              <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
+              <div
+                className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}
+              >
                 <div className="space-y-6">
                   {/* Channel and Locale */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1365,7 +1375,9 @@ export default function OfferCreativeStep({
                 </div>
               </div>
             ) : (
-              <div className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}>
+              <div
+                className={`bg-gray-50 ${tw.rounded} border border-gray-200 p-8 text-center`}
+              >
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="w-8 h-8 text-gray-400" />
                 </div>
@@ -1438,7 +1450,9 @@ export default function OfferCreativeStep({
 
           {/* Error Display */}
           {previewError && (
-            <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-4`}>
+            <div
+              className={`bg-red-50 border border-red-200 ${tw.rounded} p-4`}
+            >
               <p className="text-sm text-red-800">{previewError}</p>
             </div>
           )}
@@ -1485,7 +1499,9 @@ export default function OfferCreativeStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Title
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <p className="text-gray-900">
                           {previewResult.rendered_title}
                         </p>
@@ -1498,7 +1514,9 @@ export default function OfferCreativeStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered Text Body
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <p className="text-gray-900 whitespace-pre-wrap">
                           {previewResult.rendered_text_body}
                         </p>
@@ -1511,7 +1529,9 @@ export default function OfferCreativeStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rendered HTML Body
                       </label>
-                      <div className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}>
+                      <div
+                        className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
+                      >
                         <div
                           className="prose max-w-none"
                           dangerouslySetInnerHTML={{

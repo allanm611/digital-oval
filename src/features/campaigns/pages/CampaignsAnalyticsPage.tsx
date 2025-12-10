@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  Target,
-} from "lucide-react";
+import { TrendingUp, AlertTriangle, CheckCircle, Target } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
   Pie,
@@ -67,7 +62,9 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -468,13 +465,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-        <button
-          onClick={() => navigate("/dashboard/campaigns")}
-          className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors self-start`}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+        <BackButton fallbackTo="/dashboard/campaigns" className="self-start" />
         <div className="sm:ml-2">
           <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
             Campaign Analytics
@@ -494,7 +485,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {/* Summary Cards */}
           {stats && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Target
                     className="h-5 w-5"
@@ -508,7 +501,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                   {getTotalCampaigns(stats).toLocaleString()}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
@@ -522,7 +517,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                   {getActiveCampaigns(stats).toLocaleString()}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <TrendingUp
                     className="h-5 w-5"
@@ -542,7 +539,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                   />
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
@@ -568,13 +567,17 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {/* Additional Stats Row */}
           {stats && (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <p className="text-sm font-medium text-gray-600">In Draft</p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
                   {(stats.status_breakdown?.draft || 0).toLocaleString()}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <p className="text-sm font-medium text-gray-600">
                   Pending Approval
                 </p>
@@ -584,13 +587,17 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                   ).toLocaleString()}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <p className="text-sm font-medium text-gray-600">Completed</p>
                 <p className="mt-2 text-3xl font-bold text-gray-900">
                   {(stats.status_breakdown?.completed || 0).toLocaleString()}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <p className="text-sm font-medium text-gray-600">
                   Avg Campaign Budget
                 </p>
@@ -606,7 +613,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           {/* Charts Section */}
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
             {approvalStatusBreakdown.length > 0 && (
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Approval Status Distribution
                 </h3>
@@ -659,7 +668,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
             )}
 
             {controlGroupsBreakdown.length > 0 && (
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Control Groups Distribution
                 </h3>
@@ -714,7 +725,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {/* Bar Charts */}
           {targetsBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Targets Distribution
               </h3>
@@ -768,7 +781,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {statusBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Campaign Status Distribution
               </h3>
@@ -810,7 +825,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {activityStatusBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Activity Status Overview
               </h3>
@@ -852,7 +869,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {budgetDistributionBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Budget Distribution
               </h3>
@@ -894,7 +913,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {organizationBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Organization Overview
               </h3>
@@ -936,7 +957,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {participantMetrics.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Participant Metrics
               </h3>
@@ -978,7 +1001,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {recentActivityBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Recent Activity
               </h3>
@@ -1020,7 +1045,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           )}
 
           {timelineBreakdown.length > 0 && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Campaign Timeline
               </h3>
@@ -1066,7 +1093,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
               {topPerformersData.by_participants &&
                 topPerformersData.by_participants.length > 0 && (
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Top Campaigns by Participants
                     </h3>
@@ -1106,7 +1135,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               }
                               const data = props.payload[0].payload;
                               return (
-                                <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+                                <div
+                                  className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                                >
                                   <p className="mb-2 text-sm font-semibold text-gray-900">
                                     {data.fullName}
                                   </p>
@@ -1137,7 +1168,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
               {topPerformersData.by_spend &&
                 topPerformersData.by_spend.length > 0 && (
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Top Campaigns by Spend
                     </h3>
@@ -1177,7 +1210,9 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               }
                               const data = props.payload[0].payload;
                               return (
-                                <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+                                <div
+                                  className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                                >
                                   <p className="mb-2 text-sm font-semibold text-gray-900">
                                     {data.fullName}
                                   </p>

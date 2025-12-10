@@ -27,6 +27,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { offerCategoryService } from "../services/offerCategoryService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { offerService } from "../services/offerService";
 import { buildApiUrl, API_CONFIG } from "../../../shared/services/api";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -158,7 +159,9 @@ function CategoryModal({
   return isOpen
     ? createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-          <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+          >
             <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
                 {category ? "Edit Offer Catalog" : "Create New Offer Catalog"}
@@ -1004,12 +1007,7 @@ function OfferCategoriesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate("/dashboard/offers")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/offers" />
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               Offer Catalogs
@@ -1033,7 +1031,9 @@ function OfferCategoriesPage() {
       </div>
 
       {pageError && (
-        <div className={`${tw.rounded} border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700`}>
+        <div
+          className={`${tw.rounded} border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700`}
+        >
           {pageError}
         </div>
       )}

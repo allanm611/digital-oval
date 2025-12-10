@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Edit,
   Trash2,
   AlertCircle,
@@ -23,6 +22,8 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import BackButton from "../../../shared/components/ui/BackButton";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { color, tw } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 
@@ -496,7 +497,9 @@ export default function ScheduledJobDetailsPage() {
             deleted.
           </p>
           <button
-            onClick={() => navigate("/dashboard/scheduled-jobs")}
+            onClick={() =>
+              navigateBackOrFallback(navigate, "/dashboard/scheduled-jobs")
+            }
             className={`mt-4 px-4 py-2 ${tw.rounded} font-semibold text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
@@ -512,13 +515,7 @@ export default function ScheduledJobDetailsPage() {
       {/* Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          <BackButton fallbackTo="/dashboard/scheduled-jobs" />
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             {job.name || "Loading..."}
           </h1>
@@ -544,7 +541,9 @@ export default function ScheduledJobDetailsPage() {
               More
             </button>
             {showMoreMenu && (
-              <div className={`absolute right-0 mt-2 w-48 ${tw.rounded} bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10`}>
+              <div
+                className={`absolute right-0 mt-2 w-48 ${tw.rounded} bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-10`}
+              >
                 <div className="py-1">
                   {job?.status !== "active" && (
                     <button

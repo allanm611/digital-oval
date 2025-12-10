@@ -1,9 +1,10 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { OfferCreative } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
+import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -64,6 +65,17 @@ export default function OfferCreativeDetailsPage() {
   }, [id, showError]);
 
   const handleBack = () => {
+    if (returnTo?.pathname) {
+      navigate(returnTo.pathname, {
+        replace: true,
+        state: returnTo.state,
+      });
+      return;
+    }
+    navigateBackOrFallback(
+      navigate,
+      `/dashboard/offers/${creative?.offer_id || ""}`
+    );
     if (returnTo) {
       navigate(returnTo.pathname, {
         replace: true,
@@ -131,7 +143,6 @@ export default function OfferCreativeDetailsPage() {
           className="inline-flex items-center gap-2 text-sm font-medium"
           style={{ color: color.primary.accent }}
         >
-          <ArrowLeft className="h-4 w-4" />
           Back
         </button>
       </div>
@@ -150,7 +161,6 @@ export default function OfferCreativeDetailsPage() {
           className="inline-flex items-center gap-2 text-sm font-medium"
           style={{ color: color.primary.accent }}
         >
-          <ArrowLeft className="h-4 w-4" />
           Back
         </button>
       </div>
@@ -161,14 +171,12 @@ export default function OfferCreativeDetailsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="space-y-3">
-          <button
-            type="button"
+          <BackButton
+            fallbackTo={`/dashboard/offers/${creative?.offer_id || ""}`}
             onClick={handleBack}
             className="inline-flex items-center gap-2 text-sm font-semibold text-black"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
+            iconSize="h-4 w-4"
+          />
           <h1 className="text-2xl font-semibold text-gray-900">
             {creative.title || "Creative"}
           </h1>
@@ -359,7 +367,9 @@ export default function OfferCreativeDetailsPage() {
                 HTML Body
               </p>
               {creative.html_body ? (
-                <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}>
+                <pre
+                  className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}
+                >
                   {creative.html_body}
                 </pre>
               ) : (
@@ -379,7 +389,9 @@ export default function OfferCreativeDetailsPage() {
           </p>
           {creative.variables &&
           Object.keys(creative.variables || {}).length > 0 ? (
-            <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}>
+            <pre
+              className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto w-full`}
+            >
               {JSON.stringify(creative.variables, null, 2)}
             </pre>
           ) : (
@@ -397,7 +409,9 @@ export default function OfferCreativeDetailsPage() {
           </p>
           {creative.default_values &&
           Object.keys(creative.default_values || {}).length > 0 ? (
-            <pre className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto`}>
+            <pre
+              className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4 text-sm overflow-x-auto`}
+            >
               {JSON.stringify(creative.default_values, null, 2)}
             </pre>
           ) : (

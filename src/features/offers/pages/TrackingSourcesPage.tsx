@@ -1,7 +1,8 @@
 import GenericConfigurationPage from "../../../shared/components/GenericConfigurationPage";
-import { trackingSourcesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getTrackingSourcesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function TrackingSourcesPage() {
-  return <GenericConfigurationPage config={trackingSourcesConfig} />;
+  const { t } = useLanguage();
+  return <GenericConfigurationPage config={getTrackingSourcesConfig(t)} />;
 }
-

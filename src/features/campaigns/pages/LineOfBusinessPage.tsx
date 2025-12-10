@@ -1,7 +1,9 @@
-import React from 'react';
-import GenericConfigurationPage from '../../../shared/components/GenericConfigurationPage';
-import { lineOfBusinessConfig } from '../../../shared/configs/configurationPageConfigs';
+import React from "react";
+import GenericConfigurationPage from "../../../shared/components/GenericConfigurationPage";
+import { getLineOfBusinessConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function LineOfBusinessPage() {
-    return <GenericConfigurationPage config={lineOfBusinessConfig} />;
+  const { t } = useLanguage();
+  return <GenericConfigurationPage config={getLineOfBusinessConfig(t)} />;
 }

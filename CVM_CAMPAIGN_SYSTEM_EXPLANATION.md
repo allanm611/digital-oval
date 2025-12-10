@@ -7,16 +7,17 @@
 ## 📋 Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Campaign Creation Flow](#campaign-creation-flow)
-3. [How Segments Work](#how-segments-work)
-4. [How Offers Connect](#how-offers-connect)
-5. [How Creatives Work](#how-creatives-work)
-6. [Variable Replacement System](#variable-replacement-system)
-7. [Campaign Execution & Job Management](#campaign-execution--job-management)
-8. [Job Management Infrastructure](#job-management-infrastructure)
-9. [Complete Data Flow](#complete-data-flow)
-10. [Real-World Example](#real-world-example)
-11. [Manual Broadcasts](#manual-broadcasts)
+2. [Customer 360 Profile](#customer-360-profile)
+3. [Campaign Creation Flow](#campaign-creation-flow)
+4. [How Segments Work](#how-segments-work)
+5. [How Offers Connect](#how-offers-connect)
+6. [How Creatives Work](#how-creatives-work)
+7. [Variable Replacement System](#variable-replacement-system)
+8. [Campaign Execution & Job Management](#campaign-execution--job-management)
+9. [Job Management Infrastructure](#job-management-infrastructure)
+10. [Complete Data Flow](#complete-data-flow)
+11. [Real-World Example](#real-world-example)
+12. [Manual Broadcasts](#manual-broadcasts)
 
 ---
 
@@ -59,6 +60,651 @@
 │                                                           │
 └─────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Customer 360 Profile
+
+### What is Customer 360?
+
+**Customer 360** is a comprehensive, unified view of a customer that aggregates all available data about them from multiple sources into a single profile. In a CVM platform, it provides marketers with complete customer context to make informed decisions about campaigns, offers, and communications.
+
+The "360" refers to a complete, all-around view of the customer - like seeing them from every angle (360 degrees).
+
+### Why Customer 360 Matters in CVM:
+
+Customer 360 data is the foundation for:
+
+- **Personalization**: Tailor offers and messages to individual customer preferences
+- **Segmentation**: Create targeted customer groups based on shared characteristics
+- **Value Management**: Identify high-value customers and optimize their experience
+- **Churn Prevention**: Spot at-risk customers early and take action
+- **Cross-selling**: Recommend relevant products based on behavior and preferences
+- **Channel Optimization**: Use preferred communication channels and optimal timing
+
+### Core Components of Customer 360:
+
+#### 1. **Identity & Demographics**
+
+Basic customer information that identifies who they are:
+
+```javascript
+{
+  // Primary Identifiers
+  customer_id: 12345,
+  msisdn: "+254712345678",  // Phone number
+  email: "john.doe@example.com",
+  account_number: "ACC-12345",
+
+  // Personal Information
+  name: "John Doe",
+  first_name: "John",
+  last_name: "Doe",
+  age: 35,
+  gender: "Male",
+  date_of_birth: "1989-05-15",
+
+  // Location
+  country: "Kenya",
+  city: "Nairobi",
+  region: "Nairobi County",
+  postal_code: "00100",
+  timezone: "Africa/Nairobi",
+
+  // Account Details
+  account_status: "active",
+  registration_date: "2020-03-15",
+  customer_since: "2020-03-15",  // How long they've been a customer
+}
+```
+
+**Use Cases:**
+
+- Personalize messages: "Hi John, ..."
+- Location-based offers: "Special deals in Nairobi"
+- Age-appropriate content: Different offers for different age groups
+
+---
+
+#### 2. **Device & Technology**
+
+Information about the customer's devices and technology preferences:
+
+```javascript
+{
+  // Device Information
+  device_type: "mobile",  // mobile, tablet, desktop
+  device_category: "smartphone",  // smartphone, feature_phone
+  device_model: "iPhone 12",
+  operating_system: "iOS",
+  os_version: "15.4.1",
+  browser: "Safari",
+  browser_version: "15.4",
+
+  // Network Information
+  network_type: "4G",  // 2G, 3G, 4G, 5G, WiFi
+  carrier: "Equitel",
+  connection_quality: "high",
+
+  // App Information
+  app_version: "2.5.3",
+  app_installed: true,
+  last_app_activity: "2024-06-01T10:30:00Z",
+}
+```
+
+**Use Cases:**
+
+- Device-specific offers: "Get our iOS app exclusive deal"
+- Network-aware content: Optimize for 4G vs 3G users
+- App engagement: Target users who haven't opened the app recently
+
+---
+
+#### 3. **Revenue & Financial**
+
+Complete financial picture of the customer's value:
+
+```javascript
+{
+  // Revenue Metrics
+  lifetime_value: 50000.00,  // Total revenue from this customer
+  monthly_revenue: 5000.00,  // Average monthly revenue
+  total_spent: 45000.00,  // Total amount spent
+  average_transaction_value: 500.00,  // Average per transaction
+
+  // Transaction History
+  total_transactions: 90,
+  purchase_frequency: "high",  // high, medium, low
+  last_purchase_date: "2024-05-28",
+  last_purchase_amount: 750.00,
+  days_since_last_purchase: 4,
+
+  // Payment Information
+  payment_methods: ["mobile_money", "credit_card"],
+  preferred_payment_method: "mobile_money",
+  payment_success_rate: 0.98,  // 98% success rate
+
+  // Account Balance
+  current_balance: 1500.00,
+  credit_limit: 10000.00,
+  outstanding_debt: 0.00,
+
+  // Revenue Trends
+  revenue_trend: "increasing",  // increasing, stable, decreasing
+  monthly_revenue_change: 0.15,  // 15% increase from last month
+}
+```
+
+**Use Cases:**
+
+- High-value customer targeting: "VIP customers with LTV > $10,000"
+- Win-back campaigns: "Customers who haven't purchased in 30+ days"
+- Upselling: Target customers with high transaction values
+
+---
+
+#### 4. **Behavioral & Engagement**
+
+How the customer interacts with the brand:
+
+```javascript
+{
+  // Engagement Metrics
+  engagement_score: 85,  // 0-100, calculated score
+  engagement_level: "high",  // high, medium, low
+  last_activity_date: "2024-06-01",
+  days_since_last_activity: 0,
+
+  // Communication Preferences
+  preferred_channel: "SMS",  // SMS, Email, WhatsApp, Push, In-App
+  preferred_language: "en",  // en, fr, sw, es
+  preferred_communication_time: "morning",  // morning, afternoon, evening
+  opt_in_status: {
+    sms: true,
+    email: true,
+    whatsapp: false,
+    push: true,
+  },
+
+  // Response Rates
+  sms_response_rate: 0.75,  // 75% response rate
+  email_open_rate: 0.60,  // 60% open rate
+  email_click_rate: 0.25,  // 25% click rate
+  campaign_response_rate: 0.45,  // 45% overall response
+
+  // Interaction History
+  total_campaigns_received: 50,
+  total_campaigns_responded: 22,
+  last_campaign_response: "2024-05-20",
+
+  // Session Data
+  average_session_duration: 300,  // seconds
+  sessions_per_week: 5,
+  last_session_date: "2024-06-01",
+}
+```
+
+**Use Cases:**
+
+- Channel selection: Send SMS to customers who prefer SMS
+- Language personalization: Send Swahili messages to Swahili speakers
+- Engagement-based targeting: "High engagement customers" segment
+- Optimal timing: Send messages at preferred times
+
+---
+
+#### 5. **Subscription & Services**
+
+Active subscriptions and service usage:
+
+```javascript
+{
+  // Active Subscriptions
+  subscriptions: [
+    {
+      id: 101,
+      name: "Premium Data Plan",
+      status: "active",
+      start_date: "2024-01-01",
+      renewal_date: "2024-07-01",
+      monthly_cost: 2000.00,
+      plan_type: "premium",
+    },
+    {
+      id: 102,
+      name: "Voice Minutes Bundle",
+      status: "active",
+      start_date: "2024-03-15",
+      renewal_date: "2024-06-15",
+      monthly_cost: 500.00,
+      plan_type: "standard",
+    },
+  ],
+
+  // Service Status
+  total_active_services: 2,
+  service_status: "active",  // active, suspended, cancelled
+  account_tier: "premium",  // premium, standard, basic
+
+  // Usage Statistics
+  data_usage_gb: 8.5,
+  data_limit_gb: 10.0,
+  voice_minutes_used: 120,
+  voice_minutes_limit: 200,
+
+  // Product History
+  products_purchased: [
+    { product_id: 201, name: "10GB Data Bundle", purchase_date: "2024-05-15" },
+    { product_id: 202, name: "Voice Minutes", purchase_date: "2024-05-20" },
+  ],
+}
+```
+
+**Use Cases:**
+
+- Service-based targeting: "Premium plan customers"
+- Renewal campaigns: "Customers with subscriptions expiring soon"
+- Usage-based offers: "Customers using 80%+ of data limit"
+
+---
+
+#### 6. **Risk & Health Indicators**
+
+Customer health and risk assessment:
+
+```javascript
+{
+  // Churn Risk
+  churn_risk: "low",  // low, medium, high
+  churn_risk_score: 0.25,  // 0-1, probability of churning
+  churn_risk_factors: [
+    "declining_engagement",
+    "reduced_purchase_frequency"
+  ],
+
+  // Satisfaction
+  satisfaction_score: 85,  // 0-100
+  satisfaction_level: "high",  // high, medium, low
+  last_satisfaction_survey: "2024-05-01",
+
+  // Complaints & Support
+  total_complaints: 2,
+  complaints_last_30_days: 0,
+  support_tickets: 5,
+  support_tickets_last_30_days: 1,
+  average_resolution_time: 24,  // hours
+
+  // Payment Health
+  payment_delinquency: false,
+  late_payments: 0,
+  payment_delinquency_days: 0,
+  credit_score: 750,
+
+  // Account Health
+  account_health: "good",  // excellent, good, fair, poor
+  account_health_score: 0.85,  // 0-1
+  health_indicators: {
+    active_usage: true,
+    timely_payments: true,
+    no_complaints: true,
+  },
+}
+```
+
+**Use Cases:**
+
+- Churn prevention: "High churn risk customers" segment
+- Retention campaigns: Target at-risk customers with special offers
+- Support prioritization: Focus on customers with multiple complaints
+
+---
+
+#### 7. **Campaign & Marketing History**
+
+Customer's interaction with marketing campaigns:
+
+```javascript
+{
+  // Campaign Participation
+  campaigns_received: 50,
+  campaigns_responded: 22,
+  campaigns_redeemed: 15,
+  campaign_response_rate: 0.44,  // 44%
+
+  // Offer History
+  offers_received: 75,
+  offers_redeemed: 20,
+  offer_redemption_rate: 0.27,  // 27%
+  last_offer_redemption: "2024-05-25",
+
+  // Campaign Preferences
+  preferred_campaign_types: ["promotional", "discount"],
+  least_preferred_types: ["newsletter", "survey"],
+
+  // Redemption History
+  redemptions: [
+    {
+      offer_id: 456,
+      campaign_id: 789,
+      redeemed_at: "2024-05-25",
+      reward_value: 200.00,
+      status: "used",
+    },
+  ],
+
+  // Conversion Tracking
+  total_conversions: 15,
+  conversion_rate: 0.30,  // 30%
+  last_conversion_date: "2024-05-25",
+}
+```
+
+**Use Cases:**
+
+- Campaign effectiveness: See which campaigns this customer responds to
+- Offer optimization: Learn what types of offers work best
+- Frequency management: Avoid over-messaging customers
+
+---
+
+#### 8. **Temporal & Lifecycle Data**
+
+Customer journey and lifecycle stage:
+
+```javascript
+{
+  // Lifecycle Stage
+  lifecycle_stage: "active",  // new, active, at_risk, churned, win_back
+  customer_journey_stage: "loyalty",  // awareness, consideration, purchase, loyalty
+
+  // Temporal Metrics
+  customer_since: "2020-03-15",
+  days_as_customer: 1509,  // ~4 years
+  account_age_days: 1509,
+
+  // Recency
+  recency_score: 95,  // 0-100, how recent their activity
+  recency_category: "very_recent",  // very_recent, recent, moderate, old, very_old
+  last_interaction_date: "2024-06-01",
+  days_since_last_interaction: 0,
+
+  // Frequency
+  frequency_score: 80,  // 0-100, how often they interact
+  frequency_category: "high",  // high, medium, low
+  interactions_last_30_days: 12,
+
+  // Monetary
+  monetary_score: 90,  // 0-100, how much they spend
+  monetary_category: "high",  // high, medium, low
+
+  // RFM Analysis
+  rfm_segment: "champions",  // champions, loyal_customers, potential_loyalists, etc.
+  rfm_score: "555",  // Recency=5, Frequency=5, Monetary=5 (best)
+}
+```
+
+**Use Cases:**
+
+- Lifecycle-based campaigns: "New customers" vs "Loyal customers"
+- RFM segmentation: Target "champions" differently than "at risk"
+- Win-back campaigns: Target "churned" customers
+
+---
+
+### How Customer 360 Data is Used in CVM:
+
+#### 1. **Segmentation**
+
+Customer 360 data powers segment creation:
+
+```javascript
+// Example Segment: "High-Value At-Risk Customers"
+{
+  name: "High-Value At-Risk Customers",
+  conditions: [
+    {
+      field: "lifetime_value",
+      operator: "greater_than",
+      value: 10000
+    },
+    {
+      field: "churn_risk",
+      operator: "equals",
+      value: "high"
+    },
+    {
+      field: "days_since_last_purchase",
+      operator: "greater_than",
+      value: 30
+    }
+  ]
+}
+
+// This segment finds customers who:
+// - Have spent more than $10,000 (high value)
+// - Are at high risk of churning
+// - Haven't purchased in 30+ days
+```
+
+#### 2. **Personalization**
+
+Customer 360 enables message personalization:
+
+```javascript
+// Creative Template
+"Hi {{name}}! Your current balance is {{current_balance}}.
+Get {{amount}} OFF on {{product_name}}.
+Valid until {{expiry_date}}."
+
+// Customer 360 Data
+{
+  name: "John Doe",
+  current_balance: 1500.00,
+  preferred_language: "en",
+  preferred_channel: "SMS"
+}
+
+// Personalized Message
+"Hi John Doe! Your current balance is 1500.00.
+Get KES 500 OFF on 10GB Data Bundle.
+Valid until June 30, 2024."
+```
+
+#### 3. **Channel Selection**
+
+Customer 360 determines the best communication channel:
+
+```javascript
+// System logic
+if (customer.preferred_channel === "SMS" && customer.opt_in_status.sms) {
+  sendViaSMS();
+} else if (
+  customer.preferred_channel === "Email" &&
+  customer.opt_in_status.email
+) {
+  sendViaEmail();
+} else {
+  // Fallback to default channel
+  sendViaSMS();
+}
+```
+
+#### 4. **Offer Selection**
+
+Customer 360 helps determine which offers to send:
+
+```javascript
+// Campaign manager logic
+if (customer.lifetime_value > 50000 && customer.engagement_score > 80) {
+  // High-value, highly engaged customer
+  offer = "Premium VIP Offer";
+} else if (customer.churn_risk === "high") {
+  // At-risk customer
+  offer = "Retention Offer";
+} else if (customer.lifecycle_stage === "new") {
+  // New customer
+  offer = "Welcome Offer";
+}
+```
+
+#### 5. **Timing Optimization**
+
+Customer 360 determines when to send messages:
+
+```javascript
+// Optimal send time based on customer data
+if (customer.preferred_communication_time === "morning") {
+  sendTime = "08:00";
+} else if (customer.preferred_communication_time === "evening") {
+  sendTime = "18:00";
+} else {
+  // Default to business hours
+  sendTime = "10:00";
+}
+```
+
+---
+
+### Customer 360 Data Sources:
+
+Customer 360 data comes from multiple systems:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              CUSTOMER 360 DATA SOURCES                 │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  1. CUSTOMER DATABASE                                    │
+│     └─ Registration data, account info, demographics     │
+│                                                           │
+│  2. TRANSACTION SYSTEM                                   │
+│     └─ Purchase history, payment data, revenue           │
+│                                                           │
+│  3. SUBSCRIPTION SYSTEM                                  │
+│     └─ Active services, plan details, usage              │
+│                                                           │
+│  4. CAMPAIGN SYSTEM                                      │
+│     └─ Campaign participation, response rates           │
+│                                                           │
+│  5. ANALYTICS SYSTEM                                     │
+│     └─ Engagement scores, behavior patterns              │
+│                                                           │
+│  6. SUPPORT SYSTEM                                       │
+│     └─ Complaints, tickets, satisfaction scores          │
+│                                                           │
+│  7. DEVICE TRACKING                                      │
+│     └─ Device type, OS, app usage                        │
+│                                                           │
+│  8. COMMUNICATION SYSTEM                                 │
+│     └─ Channel preferences, opt-in status               │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Real-World Example: Using Customer 360
+
+**Scenario:** A customer named Jane Smith
+
+#### Customer 360 Profile:
+
+```javascript
+{
+  // Identity
+  name: "Jane Smith",
+  age: 28,
+  city: "Nairobi",
+  customer_since: "2021-06-15",
+
+  // Device
+  device_type: "iPhone 13",
+  os: "iOS 16",
+
+  // Revenue
+  lifetime_value: 35000.00,
+  monthly_revenue: 3000.00,
+  last_purchase_date: "2024-05-20",  // 12 days ago
+  days_since_last_purchase: 12,
+
+  // Engagement
+  engagement_score: 75,
+  preferred_channel: "SMS",
+  preferred_language: "en",
+  campaign_response_rate: 0.60,
+
+  // Risk
+  churn_risk: "medium",
+  churn_risk_score: 0.45,
+
+  // Lifecycle
+  lifecycle_stage: "active",
+  rfm_segment: "loyal_customers",
+}
+```
+
+#### How Campaign Manager Uses This:
+
+1. **Segmentation Decision:**
+
+   - Jane matches: "Active customers with medium churn risk"
+   - Segment: "At-Risk Loyal Customers"
+
+2. **Offer Selection:**
+
+   - High lifetime value ($35,000) → Premium offer
+   - Medium churn risk → Retention-focused offer
+   - Result: "Win-Back Premium Offer" with 20% discount
+
+3. **Channel Selection:**
+
+   - Preferred channel: SMS → Send via SMS
+   - Preferred language: English → Use English creative
+
+4. **Message Personalization:**
+
+   - Template: "Hi {{name}}, we miss you! Get {{amount}} OFF..."
+   - Personalized: "Hi Jane Smith, we miss you! Get 20% OFF..."
+
+5. **Timing:**
+   - Based on historical data: Jane responds best to morning messages
+   - Send at: 09:00 AM
+
+**Result:** Jane receives a personalized SMS at 9 AM with a premium retention offer, increasing the likelihood of re-engagement.
+
+---
+
+### Key Takeaways:
+
+1. **Customer 360 is Comprehensive**
+
+   - Aggregates data from multiple sources
+   - Provides complete customer context
+   - Enables informed decision-making
+
+2. **Data Powers Personalization**
+
+   - Every field can be used for personalization
+   - Variables in messages come from Customer 360
+   - Channel and timing based on preferences
+
+3. **Segmentation Relies on Customer 360**
+
+   - Segment conditions query Customer 360 fields
+   - Dynamic segments update as data changes
+   - Enables precise targeting
+
+4. **Value Management Uses Customer 360**
+
+   - Identify high-value customers
+   - Spot at-risk customers early
+   - Optimize customer experience
+
+5. **Continuous Updates**
+   - Customer 360 data updates in real-time
+   - Campaigns use current data at send time
+   - Ensures accuracy and relevance
 
 ---
 
