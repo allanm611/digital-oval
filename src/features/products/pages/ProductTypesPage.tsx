@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { productTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getProductTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function ProductTypesPage() {
-  return <TypeConfigurationPage config={productTypesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getProductTypesConfig(t)} />;
 }

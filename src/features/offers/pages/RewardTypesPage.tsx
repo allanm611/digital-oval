@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { rewardTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getRewardTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function RewardTypesPage() {
-  return <TypeConfigurationPage config={rewardTypesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getRewardTypesConfig(t)} />;
 }

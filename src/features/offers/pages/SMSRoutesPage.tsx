@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { smsRoutesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getSmsRoutesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function SMSRoutesPage() {
-  return <TypeConfigurationPage config={smsRoutesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getSmsRoutesConfig(t)} />;
 }

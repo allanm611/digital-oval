@@ -24,6 +24,7 @@ import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { offerCategoryService } from "../services/offerCategoryService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -111,6 +112,7 @@ function CategoryModal({
   category,
   onSave,
 }: CategoryModalProps) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -133,7 +135,7 @@ function CategoryModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setFormError("Catalog name is required");
+      setFormError(t.offerCatalogs.catalogNameRequired);
       return;
     }
 
@@ -150,7 +152,7 @@ function CategoryModal({
       onClose(); // Only close after save succeeds
     } catch (err) {
       console.error("Failed to save category:", err);
-      setFormError("Failed to save category. Please try again later.");
+      setFormError(t.offerCatalogs.saveFailed);
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +166,9 @@ function CategoryModal({
           >
             <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 flex-1 min-w-0">
-                {category ? "Edit Offer Catalog" : "Create New Offer Catalog"}
+                {category
+                  ? t.offerCatalogs.editModalTitle
+                  : t.offerCatalogs.createModalTitle}
               </h2>
               <button
                 onClick={onClose}
@@ -178,7 +182,7 @@ function CategoryModal({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Offer Catalog Name *
+                    {t.offerCatalogs.catalogNameLabel} *
                   </label>
                   <input
                     type="text"
@@ -187,14 +191,14 @@ function CategoryModal({
                       setFormData((prev) => ({ ...prev, name: e.target.value }))
                     }
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                    placeholder="Enter offer catalog name"
+                    placeholder={t.offerCatalogs.catalogNamePlaceholder}
                     required
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t.offerCatalogs.description}
                   </label>
                   <textarea
                     value={formData.description}
@@ -205,7 +209,7 @@ function CategoryModal({
                       }))
                     }
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                    placeholder="Enter offer catalog description"
+                    placeholder={t.offerCatalogs.descriptionPlaceholder}
                     rows={3}
                   />
                 </div>
@@ -221,7 +225,7 @@ function CategoryModal({
                   onClick={onClose}
                   className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
                 >
-                  Cancel
+                  {t.offerCatalogs.cancel}
                 </button>
                 <button
                   type="submit"
@@ -230,10 +234,10 @@ function CategoryModal({
                   style={{ backgroundColor: color.primary.action }}
                 >
                   {isLoading
-                    ? "Saving..."
+                    ? t.offerCatalogs.saving
                     : category
-                    ? "Update Category"
-                    : "Create Category"}
+                    ? t.offerCatalogs.update
+                    : t.offerCatalogs.create}
                 </button>
               </div>
             </form>
@@ -381,6 +385,7 @@ function OffersModal({
 }
 
 function OfferCategoriesPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { confirm, setConfirmLoading, closeConfirm } = useConfirm();
   const { success, error: showError } = useToast();
@@ -869,10 +874,12 @@ function OfferCategoriesPage() {
       }
       await Promise.all([loadCategories(true), loadStats()]);
       success(
-        newActiveStatus ? "Category Activated" : "Category Deactivated",
-        `"${category.name}" has been ${
-          newActiveStatus ? "activated" : "deactivated"
-        } successfully.`
+        newActiveStatus
+          ? t.offerCatalogs.activateSuccess
+          : t.offerCatalogs.deactivateSuccess,
+        newActiveStatus
+          ? t.offerCatalogs.activateSuccess
+          : t.offerCatalogs.deactivateSuccess
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
@@ -897,10 +904,7 @@ function OfferCategoriesPage() {
       await loadCategories(true); // skipCache = true
       await loadStats(); // Refresh stats too
 
-      success(
-        "Category Deleted",
-        `"${categoryToDelete.name}" has been deleted successfully.`
-      );
+      success(t.offerCatalogs.deleteSuccess, t.offerCatalogs.deleteSuccess);
       setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
@@ -935,13 +939,13 @@ function OfferCategoriesPage() {
           editingCategory.id,
           categoryData as UpdateOfferCategoryRequest
         );
-        success("Category updated successfully");
+        success(t.offerCatalogs.updateSuccess);
       } else {
         // Create new category
         await offerCategoryService.createCategory(
           categoryData as CreateOfferCategoryRequest
         );
-        success("Category created successfully");
+        success(t.offerCatalogs.createSuccess);
       }
 
       // Refresh both offers and categories to get updated counts
@@ -953,7 +957,7 @@ function OfferCategoriesPage() {
       setEditingCategory(undefined);
     } catch (err) {
       console.error("Failed to save category:", err);
-      showError("Failed to save category", "Please try again later.");
+      showError(t.offerCatalogs.saveFailed, t.offerCatalogs.saveFailed);
     }
   };
 
@@ -969,19 +973,19 @@ function OfferCategoriesPage() {
 
   const catalogStatsCards = [
     {
-      name: "Total Catalogs",
+      name: t.offerCatalogs.totalCatalogs,
       value: formatNumber(stats?.totalCategories),
       icon: FolderOpen,
       color: color.tertiary.tag1,
     },
     {
-      name: "Active Catalogs",
+      name: t.offerCatalogs.activeCatalogs,
       value: formatNumber(stats?.activeCategories),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Inactive Catalogs",
+      name: t.offerCatalogs.inactiveCatalogs,
       value: formatNumber(stats?.inactiveCategories),
       icon: XCircle,
       color: color.tertiary.tag3,
@@ -1010,10 +1014,10 @@ function OfferCategoriesPage() {
           <BackButton fallbackTo="/dashboard/offers" />
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              Offer Catalogs
+              {t.offerCatalogs.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Organize and manage your offer catalogs with ease
+              {t.offerCatalogs.subtitle}
             </p>
           </div>
         </div>
@@ -1024,8 +1028,12 @@ function OfferCategoriesPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Create Offer Catalog</span>
-            <span className="sm:hidden">Create Catalog</span>
+            <span className="hidden sm:inline">
+              {t.offerCatalogs.createCatalog}
+            </span>
+            <span className="sm:hidden">
+              {t.offerCatalogs.createCatalogShort}
+            </span>
           </button>
         </div>
       </div>
@@ -1085,7 +1093,7 @@ function OfferCategoriesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search catalogs..."
+            placeholder={t.offerCatalogs.searchPlaceholder}
             className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
           />
         </div>
@@ -1261,7 +1269,9 @@ function OfferCategoriesPage() {
             color="primary"
             className="mb-4"
           />
-          <p className={`${tw.textMuted} font-medium`}>Loading catalogs...</p>
+          <p className={`${tw.textMuted} font-medium`}>
+            {t.offerCatalogs.loadingCatalogs}
+          </p>
         </div>
       ) : filteredOfferCategories.length === 0 ? (
         <div
@@ -1270,12 +1280,14 @@ function OfferCategoriesPage() {
         >
           <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className={`${tw.cardHeading} text-gray-900 mb-1`}>
-            {searchTerm ? "No catalogs found" : "No catalogs yet"}
+            {searchTerm
+              ? t.offerCatalogs.noCatalogsFound
+              : t.offerCatalogs.noCatalogsYet}
           </h3>
           <p className="text-sm text-gray-500 mb-6">
             {searchTerm
-              ? "Try adjusting your search terms"
-              : "Create your first offer catalog to organize your offers"}
+              ? t.common.tryAdjustingSearch
+              : t.offerCatalogs.createFirstCatalog}
           </p>
           {!searchTerm && (
             <button
@@ -1284,7 +1296,7 @@ function OfferCategoriesPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Create Your First Catalog
+              {t.offerCatalogs.createFirstCatalog}
             </button>
           )}
         </div>
@@ -1314,7 +1326,11 @@ function OfferCategoriesPage() {
                     onClick={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={category.is_active ? "Deactivate" : "Activate"}
+                    title={
+                      category.is_active
+                        ? t.offerCatalogs.deactivate
+                        : t.offerCatalogs.activate
+                    }
                   >
                     {togglingCategoryId === category.id ? (
                       <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -1327,14 +1343,14 @@ function OfferCategoriesPage() {
                   <button
                     onClick={() => handleEditCategory(category)}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                    title="Edit"
+                    title={t.offerCatalogs.edit}
                   >
                     <Edit className="w-4 h-4 text-gray-600" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
                     className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                    title="Delete"
+                    title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </button>
@@ -1378,9 +1394,9 @@ function OfferCategoriesPage() {
                   <button
                     onClick={() => handleViewOffers(category)}
                     className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                    title="View & Assign Offers"
+                    title={t.offerCatalogs.viewOffers}
                   >
-                    View Offers
+                    {t.offerCatalogs.viewOffers}
                   </button>
                 </div>
                 {(() => {
@@ -1492,9 +1508,9 @@ function OfferCategoriesPage() {
                     <button
                       onClick={() => handleViewOffers(category)}
                       className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                      title="View & Assign Offers"
+                      title={t.offerCatalogs.viewOffers}
                     >
-                      View Offers
+                      {t.offerCatalogs.viewOffers}
                     </button>
                   </div>
                 </div>
@@ -1510,7 +1526,11 @@ function OfferCategoriesPage() {
                     onClick={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={category.is_active ? "Deactivate" : "Activate"}
+                    title={
+                      category.is_active
+                        ? t.offerCatalogs.deactivate
+                        : t.offerCatalogs.activate
+                    }
                   >
                     {togglingCategoryId === category.id ? (
                       <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -1523,14 +1543,14 @@ function OfferCategoriesPage() {
                   <button
                     onClick={() => handleEditCategory(category)}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                    title="Edit"
+                    title={t.offerCatalogs.edit}
                   >
                     <Edit className="w-4 h-4 text-gray-600" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category)}
                     className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                    title="Delete"
+                    title={t.offerCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </button>
@@ -1769,12 +1789,12 @@ function OfferCategoriesPage() {
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete Category"
-        description="Are you sure you want to delete this category? This action cannot be undone."
+        title={t.offerCatalogs.deleteConfirmTitle}
+        description={t.offerCatalogs.deleteConfirmMessage}
         itemName={categoryToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Category"
-        cancelText="Cancel"
+        confirmText={t.offerCatalogs.delete}
+        cancelText={t.offerCatalogs.cancel}
       />
     </div>
   );

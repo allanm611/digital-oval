@@ -1,7 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { languagesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getLanguagesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function LanguagesPage() {
-  return <TypeConfigurationPage config={languagesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getLanguagesConfig(t)} />;
 }
-

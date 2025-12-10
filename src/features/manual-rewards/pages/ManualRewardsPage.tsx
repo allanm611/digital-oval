@@ -43,7 +43,7 @@ const dummyManualRewards: ManualReward[] = [
     status: "applied",
     appliedCount: 123,
     failedCount: 2,
-    createdAt: "2024-12-01T10:30:00Z",
+    createdAt: "2025-12-01T10:30:00Z",
     createdBy: "Admin User",
   },
   {
@@ -56,7 +56,7 @@ const dummyManualRewards: ManualReward[] = [
     appliedCount: 0,
     failedCount: 0,
     scheduledAt: "2025-01-01T00:00:00Z",
-    createdAt: "2024-12-08T14:15:00Z",
+    createdAt: "2025-12-08T14:15:00Z",
     createdBy: "Marketing Team",
   },
   {
@@ -68,7 +68,7 @@ const dummyManualRewards: ManualReward[] = [
     status: "applied",
     appliedCount: 345,
     failedCount: 5,
-    createdAt: "2024-11-25T09:00:00Z",
+    createdAt: "2025-11-25T09:00:00Z",
     createdBy: "Sales Manager",
   },
   {
@@ -80,7 +80,7 @@ const dummyManualRewards: ManualReward[] = [
     status: "pending",
     appliedCount: 0,
     failedCount: 0,
-    createdAt: "2024-12-09T08:45:00Z",
+    createdAt: "2025-12-09T08:45:00Z",
     createdBy: "Admin User",
   },
   {
@@ -92,7 +92,7 @@ const dummyManualRewards: ManualReward[] = [
     status: "failed",
     appliedCount: 150,
     failedCount: 50,
-    createdAt: "2024-12-05T16:20:00Z",
+    createdAt: "2025-12-05T16:20:00Z",
     createdBy: "Support Team",
   },
 ];

@@ -20,6 +20,7 @@ import {
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { campaignService } from "../services/campaignService";
@@ -115,7 +116,9 @@ function CategoryModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}>
+      <div
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto`}
+      >
         <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 flex-1 min-w-0">
             {category ? "Edit Campaign Catalog" : "Create New Campaign Catalog"}
@@ -198,6 +201,7 @@ function CategoryModal({
 export default function CampaignCategoriesPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { removeFromCatalog, removingId } = useRemoveFromCatalog();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -774,10 +778,10 @@ export default function CampaignCategoriesPage() {
             <h1
               className={`font-['Satoshi_Variable',sans-serif] text-xl sm:text-2xl font-[800] leading-[110%] tracking-[-0.04em] ${tw.textPrimary}`}
             >
-              Campaign Catalogs
+              {t.campaignCatalogs.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Organize and manage your campaign catalogs with ease
+              {t.campaignCatalogs.subtitle}
             </p>
           </div>
         </div>
@@ -788,8 +792,12 @@ export default function CampaignCategoriesPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Create Campaign Catalog</span>
-            <span className="sm:hidden">Create Catalog</span>
+            <span className="hidden sm:inline">
+              {t.campaignCatalogs.createCatalog}
+            </span>
+            <span className="sm:hidden">
+              {t.campaignCatalogs.createCatalog}
+            </span>
           </button>
         </div>
       </div>
@@ -841,7 +849,7 @@ export default function CampaignCategoriesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search catalogs..."
+            placeholder={t.campaignCatalogs.searchPlaceholder}
             className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
           />
         </div>

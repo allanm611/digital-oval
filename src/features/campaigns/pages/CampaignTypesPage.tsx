@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { campaignTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getCampaignTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CampaignTypesPage() {
-  return <TypeConfigurationPage config={campaignTypesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getCampaignTypesConfig(t)} />;
 }

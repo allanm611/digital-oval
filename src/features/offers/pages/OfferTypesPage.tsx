@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { offerTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getOfferTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function OfferTypesPage() {
-  return <TypeConfigurationPage config={offerTypesConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getOfferTypesConfig(t)} />;
 }

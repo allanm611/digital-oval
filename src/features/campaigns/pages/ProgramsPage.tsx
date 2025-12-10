@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { programService } from "../services/programService";
 import { Program } from "../types/program";
@@ -26,6 +27,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 export default function ProgramsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -343,19 +345,19 @@ export default function ProgramsPage() {
 
   const programStatsCards = [
     {
-      name: "Total Programs",
+      name: t.programs.totalPrograms,
       value: statsLoading ? "..." : (stats?.total || 0).toLocaleString(),
       icon: Database,
       color: color.tertiary.tag1,
     },
     {
-      name: "Active Programs",
+      name: t.programs.activePrograms,
       value: statsLoading ? "..." : (stats?.active || 0).toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Total Budget",
+      name: t.programs.totalBudget,
       value: statsLoading ? (
         "..."
       ) : (
@@ -365,7 +367,7 @@ export default function ProgramsPage() {
       color: color.tertiary.tag2,
     },
     {
-      name: "Budget Spent",
+      name: t.programs.spentBudget,
       value: statsLoading ? (
         "..."
       ) : (
@@ -387,9 +389,11 @@ export default function ProgramsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>Programs</h1>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+              {t.programs.title}
+            </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Organize campaigns into programs
+              {t.programs.subtitle}
             </p>
           </div>
         </div>
@@ -400,7 +404,7 @@ export default function ProgramsPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            Create Program
+            {t.programs.createProgram}
           </button>
         </div>
       </div>
@@ -437,7 +441,7 @@ export default function ProgramsPage() {
             />
             <input
               type="text"
-              placeholder="Search programs by name or description..."
+              placeholder={t.programs.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
@@ -472,12 +476,12 @@ export default function ProgramsPage() {
               color="primary"
               className="mr-3"
             />
-            <span className={`${tw.textSecondary}`}>Loading programs...</span>
+            <span className={`${tw.textSecondary}`}>{t.programs.loading}</span>
           </div>
         ) : filteredPrograms.length === 0 ? (
           <div className="text-center py-12">
             <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>
-              {searchTerm ? "No programs found" : "No programs yet"}
+              {t.programs.noPrograms}
             </h3>
             <p className="text-sm text-gray-500 mb-6">
               {searchTerm

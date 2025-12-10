@@ -23,6 +23,7 @@ import {
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { segmentService } from "../services/segmentService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -353,6 +354,7 @@ function SegmentsModal({
 }
 
 export default function SegmentCategoriesPage() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -690,10 +692,10 @@ export default function SegmentCategoriesPage() {
           <BackButton fallbackTo="/dashboard/segments" />
           <div className="min-w-0 flex-1">
             <h1 className={`${tw.mainHeading} ${tw.textPrimary} truncate`}>
-              Segment Catalogs
+              {t.segmentCatalogs.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Organize your segments into catalogs
+              {t.segmentCatalogs.subtitle}
             </p>
           </div>
         </div>
@@ -715,8 +717,10 @@ export default function SegmentCategoriesPage() {
           }}
         >
           <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-          <span className="hidden sm:inline">Create Catalog</span>
-          <span className="sm:hidden">Create</span>
+          <span className="hidden sm:inline">
+            {t.segmentCatalogs.createCatalog}
+          </span>
+          <span className="sm:hidden">{t.segmentCatalogs.createCatalog}</span>
         </button>
       </div>
 
@@ -769,7 +773,7 @@ export default function SegmentCategoriesPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search catalogs..."
+            placeholder={t.segmentCatalogs.searchPlaceholder}
             className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
           />
         </div>

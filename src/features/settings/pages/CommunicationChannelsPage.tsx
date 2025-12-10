@@ -1,7 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { communicationChannelsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getCommunicationChannelsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CommunicationChannelsPage() {
-  return <TypeConfigurationPage config={communicationChannelsConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getCommunicationChannelsConfig(t)} />;
 }
-

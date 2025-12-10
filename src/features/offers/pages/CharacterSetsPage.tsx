@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { characterSetsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getCharacterSetsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CharacterSetsPage() {
-  return <TypeConfigurationPage config={characterSetsConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getCharacterSetsConfig(t)} />;
 }

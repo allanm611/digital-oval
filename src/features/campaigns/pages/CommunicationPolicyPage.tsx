@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Edit, Trash2, ArrowLeft } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw, components, helpers } from "../../../shared/utils/utils";
@@ -20,6 +21,7 @@ import { communicationPolicyService } from "../services/communicationPolicyServi
 export default function CommunicationPolicyPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [policyToDelete, setPolicyToDelete] =
     useState<CommunicationPolicyConfiguration | null>(null);
@@ -75,15 +77,15 @@ export default function CommunicationPolicyPage() {
         policyToDelete.id
       );
       if (success) {
-        showToast("Policy deleted successfully");
+        showToast(t.communicationPolicy.deleteSuccess);
         setShowDeleteModal(false);
         setPolicyToDelete(null);
       } else {
-        showError("Policy not found");
+        showError(t.communicationPolicy.policyNotFound);
       }
     } catch (err) {
       console.error("Failed to delete policy:", err);
-      showError("Failed to delete policy");
+      showError(t.communicationPolicy.deleteFailed);
     } finally {
       setIsDeleting(false);
     }
@@ -106,21 +108,24 @@ export default function CommunicationPolicyPage() {
           policyData
         );
         if (updatedPolicy) {
-          showToast("Policy updated successfully");
+          showToast(t.communicationPolicy.updateSuccess);
         } else {
-          showError("Policy not found");
+          showError(t.communicationPolicy.policyNotFound);
           return;
         }
       } else {
         // Create new policy
         communicationPolicyService.createPolicy(policyData);
-        showToast("Policy created successfully");
+        showToast(t.communicationPolicy.createSuccess);
       }
       setIsModalOpen(false);
       setEditingPolicy(undefined);
     } catch (err) {
       console.error("Failed to save policy:", err);
-      showError("Failed to save policy", "Please try again later.");
+      showError(
+        t.communicationPolicy.saveFailed,
+        t.communicationPolicy.saveFailed
+      );
     } finally {
       setIsSaving(false);
     }
@@ -207,10 +212,10 @@ export default function CommunicationPolicyPage() {
           </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              Communication Policies
+              {t.communicationPolicy.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage customer communication rules and preferences
+              {t.communicationPolicy.subtitle}
             </p>
           </div>
         </div>
@@ -221,7 +226,7 @@ export default function CommunicationPolicyPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            Create Policy
+            {t.communicationPolicy.createPolicy}
           </button>
         </div>
       </div>
@@ -233,7 +238,7 @@ export default function CommunicationPolicyPage() {
           />
           <input
             type="text"
-            placeholder="Search policies by name or description..."
+            placeholder={t.communicationPolicy.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`${components.input.default} w-full pl-10 pr-4 py-3 ${tw.caption}`}
@@ -253,15 +258,15 @@ export default function CommunicationPolicyPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading policies...
+              {t.communicationPolicy.loadingPolicies}
             </p>
           </div>
         ) : filteredPolicies.length === 0 ? (
           <div className="text-center py-12">
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? "No policies found matching your search."
-                : "Create your first communication policy to get started."}
+                ? t.communicationPolicy.noPoliciesFound
+                : t.communicationPolicy.createFirstPolicy}
             </p>
             {!searchTerm && (
               <button
@@ -269,7 +274,7 @@ export default function CommunicationPolicyPage() {
                 className={`${tw.button} flex items-center gap-2 mx-auto`}
               >
                 <Plus className="w-4 h-4" />
-                Create Policy
+                {t.communicationPolicy.createPolicy}
               </button>
             )}
           </div>
@@ -287,31 +292,31 @@ export default function CommunicationPolicyPage() {
                       className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Policy
+                      {t.communicationPolicy.policy}
                     </th>
                     <th
                       className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Channels
+                      {t.communicationPolicy.channels}
                     </th>
                     <th
                       className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Configuration Summary
+                      {t.communicationPolicy.type}
                     </th>
                     <th
                       className={`px-6 py-4 text-left text-xs font-medium uppercase tracking-wider`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Status
+                      {t.communicationPolicy.status}
                     </th>
                     <th
                       className={`px-6 py-4 text-right text-xs font-medium uppercase tracking-wider`}
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Actions
+                      {t.communicationPolicy.actions}
                     </th>
                   </tr>
                 </thead>
@@ -331,9 +336,13 @@ export default function CommunicationPolicyPage() {
                           </div>
                           <div
                             className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                            title={policy.description || "No description"}
+                            title={
+                              policy.description ||
+                              t.communicationPolicy.noDescription
+                            }
                           >
-                            {policy.description || "No description"}
+                            {policy.description ||
+                              t.communicationPolicy.noDescription}
                           </div>
                         </div>
                       </td>
@@ -365,7 +374,9 @@ export default function CommunicationPolicyPage() {
                               : helpers.badge("info")
                           }
                         >
-                          {policy.isActive ? "Active" : "Inactive"}
+                          {policy.isActive
+                            ? t.communicationPolicy.active
+                            : t.communicationPolicy.inactive}
                         </span>
                       </td>
                       <td
@@ -377,14 +388,14 @@ export default function CommunicationPolicyPage() {
                             onClick={() => handleEditPolicy(policy)}
                             className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                             style={{ color: color.primary.action }}
-                            title="Edit"
+                            title={t.communicationPolicy.edit}
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeletePolicy(policy)}
                             className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                            title="Delete"
+                            title={t.communicationPolicy.delete}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -468,12 +479,12 @@ export default function CommunicationPolicyPage() {
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete Policy"
-        description="Are you sure you want to delete this policy? This action cannot be undone."
+        title={t.communicationPolicy.deleteConfirmTitle}
+        description={t.communicationPolicy.deleteConfirmMessage}
         itemName={policyToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Policy"
-        cancelText="Cancel"
+        confirmText={t.communicationPolicy.deletePolicy}
+        cancelText={t.common.cancel}
       />
     </div>
   );

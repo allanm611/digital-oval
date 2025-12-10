@@ -35,6 +35,7 @@ import {
   parseCatalogTag,
 } from "../../../shared/utils/catalogTags";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
@@ -329,6 +330,7 @@ function ProductsModal({
 export default function ProductCatalogsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] =
     useState<ProductCategory | null>(null);
@@ -642,17 +644,14 @@ export default function ProductCatalogsPage() {
         description: editDescription.trim() || undefined,
       });
 
-      success(
-        "Catalog Updated",
-        `"${editName}" has been updated successfully.`
-      );
+      success(t.productCatalogs.updateSuccess, t.productCatalogs.updateSuccess);
       setEditingCatalog(null);
       setEditName("");
       setEditDescription("");
       await Promise.all([loadCategories(), loadStats(true)]);
     } catch (err) {
       console.error("Failed to update category:", err);
-      showError("Failed to update category", "Please try again later.");
+      showError(t.productCatalogs.saveFailed, t.productCatalogs.saveFailed);
     } finally {
       setIsUpdating(false);
     }
@@ -697,10 +696,12 @@ export default function ProductCatalogsPage() {
       }
       await Promise.all([loadCategories(true), loadStats(true)]);
       success(
-        newActiveStatus ? "Catalog Activated" : "Catalog Deactivated",
-        `"${category.name}" has been ${
-          newActiveStatus ? "activated" : "deactivated"
-        } successfully.`
+        newActiveStatus
+          ? t.productCatalogs.activateSuccess
+          : t.productCatalogs.deactivateSuccess,
+        newActiveStatus
+          ? t.productCatalogs.activateSuccess
+          : t.productCatalogs.deactivateSuccess
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
@@ -713,7 +714,7 @@ export default function ProductCatalogsPage() {
       ) {
         showError("Cannot Deactivate Category", errorMessage);
       } else {
-        showError("Failed to update category", "Please try again later.");
+        showError(t.productCatalogs.saveFailed, t.productCatalogs.saveFailed);
       }
     } finally {
       setTogglingCategoryId(null);
@@ -726,10 +727,7 @@ export default function ProductCatalogsPage() {
     setIsDeleting(true);
     try {
       await productCategoryService.deleteCategory(categoryToDelete.id);
-      success(
-        "Catalog Deleted",
-        `"${categoryToDelete.name}" has been deleted successfully.`
-      );
+      success(t.productCatalogs.deleteSuccess, t.productCatalogs.deleteSuccess);
       setShowDeleteModal(false);
       setCategoryToDelete(null);
       // Refresh categories and stats with cache skipped, and reload all products
@@ -868,25 +866,25 @@ export default function ProductCatalogsPage() {
 
   const catalogStatsCards = [
     {
-      name: "Total Catalogs",
+      name: t.productCatalogs.totalCatalogs,
       value: formatNumber(totalCatalogs),
       icon: FolderOpen,
       color: color.tertiary.tag1,
     },
     {
-      name: "Active Catalogs",
+      name: t.productCatalogs.activeCatalogs,
       value: formatNumber(activeCatalogs),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Inactive Catalogs",
+      name: t.productCatalogs.inactiveCatalogs,
       value: formatNumber(inactiveCatalogs),
       icon: XCircle,
       color: color.tertiary.tag3,
     },
     {
-      name: "Unused Catalogs",
+      name: t.productCatalogs.unusedCatalogs,
       value: formatNumber(unusedCatalogs),
       icon: Archive,
       color: color.tertiary.tag2,
@@ -923,10 +921,10 @@ export default function ProductCatalogsPage() {
           <BackButton fallbackTo="/dashboard/products" iconSize="w-4 h-4" />
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              Product Catalogs
+              {t.productCatalogs.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage product catalogs
+              {t.productCatalogs.subtitle}
             </p>
           </div>
         </div>
@@ -944,7 +942,7 @@ export default function ProductCatalogsPage() {
                 color.primary.action;
             }}
           >
-            Create Catalog
+            {t.productCatalogs.createCatalog}
           </button>
         </div>
       </div>
@@ -994,7 +992,7 @@ export default function ProductCatalogsPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search catalogs..."
+            placeholder={t.productCatalogs.searchPlaceholder}
             className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
           />
         </div>
@@ -1219,7 +1217,11 @@ export default function ProductCatalogsPage() {
                     onClick={() => handleToggleActive(category)}
                     disabled={togglingCategoryId === category.id}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={category.is_active ? "Deactivate" : "Activate"}
+                    title={
+                      category.is_active
+                        ? t.productCatalogs.deactivate
+                        : t.productCatalogs.activate
+                    }
                   >
                     {togglingCategoryId === category.id ? (
                       <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -1232,14 +1234,14 @@ export default function ProductCatalogsPage() {
                   <button
                     onClick={() => handleEditCatalog(category)}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                    title="Edit"
+                    title={t.productCatalogs.edit}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCatalog(category)}
                     className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                    title="Delete"
+                    title={t.productCatalogs.delete}
                   >
                     <Trash2 className="w-4 h-4 text-red-600" />
                   </button>
@@ -1265,7 +1267,7 @@ export default function ProductCatalogsPage() {
                   <button
                     onClick={() => handleViewProducts(category)}
                     className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                    title="View & Assign Products"
+                    title={t.productCatalogs.viewProducts}
                   >
                     View Products
                   </button>
@@ -1361,7 +1363,7 @@ export default function ProductCatalogsPage() {
                   <button
                     onClick={() => handleViewProducts(category)}
                     className={tw.borderedButton}
-                    title="View & Assign Products"
+                    title={t.productCatalogs.viewProducts}
                   >
                     View Products
                   </button>
@@ -1418,7 +1420,7 @@ export default function ProductCatalogsPage() {
             >
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Edit Catalog
+                  {t.productCatalogs.editModalTitle}
                 </h2>
                 <button
                   onClick={() => {
@@ -1428,35 +1430,35 @@ export default function ProductCatalogsPage() {
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  Close
+                  {t.common.close}
                 </button>
               </div>
 
               <div className="p-6">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Catalog Name *
+                    {t.productCatalogs.catalogNameLabel} *
                   </label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-                    placeholder="e.g., Data, Voice, SMS..."
+                    placeholder={t.productCatalogs.catalogNamePlaceholder}
                     required
                   />
                 </div>
 
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t.productCatalogs.description}
                   </label>
                   <textarea
                     value={editDescription}
                     onChange={(e) => setEditDescription(e.target.value)}
                     rows={3}
                     className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none`}
-                    placeholder="Catalog description..."
+                    placeholder={t.productCatalogs.descriptionPlaceholder}
                   />
                 </div>
 
@@ -1470,7 +1472,7 @@ export default function ProductCatalogsPage() {
                     }}
                     className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors text-sm`}
                   >
-                    Cancel
+                    {t.productCatalogs.cancel}
                   </button>
                   <button
                     onClick={handleUpdateCatalog}
@@ -1491,10 +1493,10 @@ export default function ProductCatalogsPage() {
                     {isUpdating ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Updating...
+                        {t.productCatalogs.saving}
                       </>
                     ) : (
-                      <>Update Catalog</>
+                      <>{t.productCatalogs.update}</>
                     )}
                   </button>
                 </div>
@@ -1777,12 +1779,12 @@ export default function ProductCatalogsPage() {
         isOpen={showDeleteModal}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete Catalog"
-        description="Are you sure you want to delete this catalog? This action cannot be undone."
+        title={t.productCatalogs.deleteConfirmTitle}
+        description={t.productCatalogs.deleteConfirmMessage}
         itemName={categoryToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Catalog"
-        cancelText="Cancel"
+        confirmText={t.productCatalogs.delete}
+        cancelText={t.productCatalogs.cancel}
       />
     </div>
   );

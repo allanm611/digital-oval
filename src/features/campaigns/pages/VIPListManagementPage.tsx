@@ -10,6 +10,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -132,6 +133,7 @@ const DUMMY_VIP_LISTS: VIPList[] = [
 export default function VIPListManagementPage() {
   const navigate = useNavigate();
   const { success: showToast } = useToast();
+  const { t } = useLanguage();
   const [vipCustomers] = useState<VIPCustomer[]>(DUMMY_VIP_CUSTOMERS);
   const [vipLists] = useState<VIPList[]>(DUMMY_VIP_LISTS);
   const [loading] = useState(false);
@@ -193,11 +195,10 @@ export default function VIPListManagementPage() {
           </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              VIP List Management
+              {t.vipListManagement.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage VIP customer lists - add, remove, and organize VIP
-              customers
+              {t.vipListManagement.subtitle}
             </p>
           </div>
         </div>
@@ -210,7 +211,7 @@ export default function VIPListManagementPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            Add VIP Customer
+            {t.vipListManagement.addCustomer}
           </button>
         </div>
       </div>

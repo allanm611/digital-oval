@@ -1,6 +1,8 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { senderIdsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getSenderIdsConfig } from "../../../shared/configs/configurationPageConfigs";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function SenderIdsPage() {
-  return <TypeConfigurationPage config={senderIdsConfig} />;
+  const { t } = useLanguage();
+  return <TypeConfigurationPage config={getSenderIdsConfig(t)} />;
 }

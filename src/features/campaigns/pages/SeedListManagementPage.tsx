@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Search, Trash2, Mail } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -122,6 +123,7 @@ const DUMMY_LINES_OF_BUSINESS: LineOfBusiness[] = [
 export default function SeedListManagementPage() {
   const navigate = useNavigate();
   const { success: showToast } = useToast();
+  const { t } = useLanguage();
   const [recipients] = useState<SeedListRecipient[]>(DUMMY_RECIPIENTS);
   const [departments] = useState<Department[]>(DUMMY_DEPARTMENTS);
   const [linesOfBusiness] = useState<LineOfBusiness[]>(DUMMY_LINES_OF_BUSINESS);
@@ -176,11 +178,10 @@ export default function SeedListManagementPage() {
           </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              Seed List Management
+              {t.seedListManagement.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage test recipients (staff) who receive campaign copies based
-              on department and line of business
+              {t.seedListManagement.subtitle}
             </p>
           </div>
         </div>
@@ -193,7 +194,7 @@ export default function SeedListManagementPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="w-4 h-4" />
-            Add Test Recipient
+            {t.seedListManagement.addRecipient}
           </button>
         </div>
       </div>
@@ -211,7 +212,7 @@ export default function SeedListManagementPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by name, email, or phone..."
+                placeholder={t.seedListManagement.searchPlaceholder}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#588157] text-sm`}
@@ -224,7 +225,7 @@ export default function SeedListManagementPage() {
                 value={filterDepartment}
                 onChange={(value) => setFilterDepartment(value.toString())}
                 options={[
-                  { value: "all", label: "All Departments" },
+                  { value: "all", label: t.seedListManagement.allDepartments },
                   ...departments.map((dept) => ({
                     value: dept.id.toString(),
                     label: dept.name,
@@ -240,7 +241,10 @@ export default function SeedListManagementPage() {
                 value={filterLoB}
                 onChange={(value) => setFilterLoB(value.toString())}
                 options={[
-                  { value: "all", label: "All Lines of Business" },
+                  {
+                    value: "all",
+                    label: t.seedListManagement.allLinesOfBusiness,
+                  },
                   ...linesOfBusiness.map((lob) => ({
                     value: lob.id.toString(),
                     label: lob.name,
@@ -273,7 +277,7 @@ export default function SeedListManagementPage() {
                 value={filterDepartment}
                 onChange={(value) => setFilterDepartment(value.toString())}
                 options={[
-                  { value: "all", label: "All Departments" },
+                  { value: "all", label: t.seedListManagement.allDepartments },
                   ...departments.map((dept) => ({
                     value: dept.id.toString(),
                     label: dept.name,
@@ -289,7 +293,10 @@ export default function SeedListManagementPage() {
                 value={filterLoB}
                 onChange={(value) => setFilterLoB(value.toString())}
                 options={[
-                  { value: "all", label: "All Lines of Business" },
+                  {
+                    value: "all",
+                    label: t.seedListManagement.allLinesOfBusiness,
+                  },
                   ...linesOfBusiness.map((lob) => ({
                     value: lob.id.toString(),
                     label: lob.name,

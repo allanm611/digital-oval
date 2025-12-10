@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { COMMUNICATION_CHANNELS } from "../types/communicationPolicyConfig";
 
 export default function DNDManagementPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleChannelClick = (channel: string) => {
     navigate(`/dashboard/dnd-management/${channel.toLowerCase()}`);
@@ -26,11 +28,10 @@ export default function DNDManagementPage() {
           </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              DND Management
+              {t.dndManagement.title}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Select a communication channel to manage Do Not Disturb
-              subscriptions
+              {t.dndManagement.subtitle}
             </p>
           </div>
         </div>

@@ -136,7 +136,7 @@ export default function NotificationDropdown({
   );
 
   const unreadCount = stats?.unread || 0;
-  const displayNotifications = filteredNotifications.slice(0, 10);
+  const displayNotifications = filteredNotifications.slice(0, 4);
 
   return (
     <div

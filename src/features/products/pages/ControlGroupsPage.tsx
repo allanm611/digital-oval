@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import BackButton from "../../../shared/components/ui/BackButton";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface UniversalControlGroup {
@@ -36,6 +37,7 @@ interface UniversalControlGroup {
 
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive" | "expired"
@@ -152,10 +154,10 @@ export default function ControlGroupsPage() {
           <BackButton fallbackTo="/dashboard/configuration" />
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-              Universal Control Groups
+              {t.controlGroups.title}
             </h1>
             <p className="text-gray-600 mt-1 text-sm">
-              Configure and manage universal control groups for campaigns
+              {t.controlGroups.subtitle}
             </p>
           </div>
         </div>
@@ -166,7 +168,7 @@ export default function ControlGroupsPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            <span>Create Control Group</span>
+            <span>{t.controlGroups.createControlGroup}</span>
           </button>
         </div>
       </div>
@@ -186,7 +188,7 @@ export default function ControlGroupsPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">
-                Total Control Groups
+                {t.controlGroups.totalGroups}
               </p>
               <p className="text-2xl font-bold text-gray-900">
                 {controlGroups.length}
@@ -246,7 +248,7 @@ export default function ControlGroupsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search control groups..."
+              placeholder={t.controlGroups.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
