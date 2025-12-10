@@ -1022,10 +1022,10 @@ export default function OfferCreativeStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Channel
                       </label>
-                      <HeadlessSelect
+                      <select
                         value={selectedCreativeData.channel}
-                        onChange={(value) => {
-                          const newChannel = value as CreativeChannel;
+                        onChange={(e) => {
+                          const newChannel = e.target.value as CreativeChannel;
                           updateCreative(selectedCreativeData.id, {
                             channel: newChannel,
                           });
@@ -1035,23 +1035,26 @@ export default function OfferCreativeStep({
                             [selectedCreativeData.id]: null,
                           }));
                         }}
-                        options={CHANNELS.map((channel) => ({
-                          value: channel.value,
-                          label: channel.label,
-                        }))}
-                        placeholder="Select channel"
-                      />
+                        className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-0 focus:border-gray-400 bg-white`}
+                      >
+                        <option value="">Select channel</option>
+                        {CHANNELS.map((channel) => (
+                          <option key={channel.value} value={channel.value}>
+                            {channel.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Locale / Language
                       </label>
-                      <HeadlessSelect
+                      <select
                         value={selectedCreativeData.locale}
-                        onChange={(value) => {
+                        onChange={(e) => {
                           updateCreative(selectedCreativeData.id, {
-                            locale: value as Locale,
+                            locale: e.target.value as Locale,
                           });
                           // Clear template selection when locale changes
                           // so user can select a template matching the new locale
@@ -1061,7 +1064,10 @@ export default function OfferCreativeStep({
                             return updated;
                           });
                         }}
-                        options={[
+                        className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-0 focus:border-gray-400 bg-white`}
+                      >
+                        <option value="">Select language</option>
+                        {[
                           ...((languages as TypeConfigurationItem[]) || [])
                             .filter((lang) => lang.isActive)
                             .map((lang) => ({
@@ -1076,9 +1082,12 @@ export default function OfferCreativeStep({
                                 value: locale,
                               }))
                             : []),
-                        ]}
-                        placeholder="Select language"
-                      />
+                        ].map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -1157,29 +1166,28 @@ export default function OfferCreativeStep({
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Sender ID
                       </label>
-                      <HeadlessSelect
+                      <select
                         value={selectedCreativeData.title || ""}
-                        onChange={(value) =>
+                        onChange={(e) =>
                           updateCreative(selectedCreativeData.id, {
-                            title: value || "",
+                            title: e.target.value || "",
                           })
                         }
-                        options={[
-                          { label: "Select Sender ID", value: "" },
-                          ...((senderIds as TypeConfigurationItem[]) || [])
-                            .filter(
-                              (senderId) =>
-                                senderId.isActive &&
-                                senderId.metadataValue === "active"
-                            )
-                            .map((senderId) => ({
-                              label: senderId.name,
-                              value: senderId.name,
-                            })),
-                        ]}
-                        placeholder="Select Sender ID..."
-                        className="w-full"
-                      />
+                        className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-0 focus:border-gray-400 bg-white`}
+                      >
+                        <option value="">Select Sender ID</option>
+                        {((senderIds as TypeConfigurationItem[]) || [])
+                          .filter(
+                            (senderId) =>
+                              senderId.isActive &&
+                              senderId.metadataValue === "active"
+                          )
+                          .map((senderId) => (
+                            <option key={senderId.name} value={senderId.name}>
+                              {senderId.name}
+                            </option>
+                          ))}
+                      </select>
                     </div>
                   ) : (
                     <div>
