@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -42,6 +42,7 @@ interface ProductFilters {
 
 export default function ProductsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -137,16 +138,16 @@ export default function ProductsPage() {
     [filters]
   );
 
-  // Load products and categories when filters change
+  // Load products and categories when filters change or when navigating back to this page
   useEffect(() => {
     loadProducts();
     loadCategories();
-  }, [loadProducts]);
+  }, [loadProducts, location.key]);
 
-  // Load stats only once on mount (stats don't change with filters)
+  // Load stats when navigating to this page
   useEffect(() => {
     loadStats();
-  }, []); // Empty dependency array - only run on mount
+  }, [location.key]);
 
   const loadStats = async () => {
     try {
@@ -294,7 +295,9 @@ export default function ProductsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {/* Total Products Card */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Package
               className="h-5 w-5"
@@ -312,7 +315,9 @@ export default function ProductsPage() {
         </div>
 
         {/* Active Products Card */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <TrendingUp
               className="h-5 w-5"
@@ -330,7 +335,9 @@ export default function ProductsPage() {
         </div>
 
         {/* Inactive Products Card */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -350,7 +357,9 @@ export default function ProductsPage() {
         </div>
 
         {/* Average Price Card */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <DollarSign
               className="h-5 w-5"
@@ -368,7 +377,9 @@ export default function ProductsPage() {
         </div>
 
         {/* Top Selling Products Card */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <BarChart3
               className="h-5 w-5"

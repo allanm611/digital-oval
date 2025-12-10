@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           {children}
         </main>
-        <div className="fixed bottom-0 left-0 md:left-32 xl:left-80 right-0">
+        <div className="fixed bottom-0 left-0 md:left-32 xl:left-80 right-0 z-[100]">
           <Footer />
         </div>
       </div>

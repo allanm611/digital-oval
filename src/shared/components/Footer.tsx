@@ -12,6 +12,8 @@ export default function Footer({ className = "" }: FooterProps) {
       className={`w-full py-6 ${className}`}
       style={{
         backgroundColor: color.gradients.sidebar.bottom,
+        zIndex: 100,
+        position: "relative",
       }}
     >
       <div className="px-5 lg:px-8">

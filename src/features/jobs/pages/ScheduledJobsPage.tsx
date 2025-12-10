@@ -19,7 +19,7 @@ import {
   Filter,
   BarChart3,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -72,6 +72,7 @@ const _getStatusColors = (status: string) => {
 
 export default function ScheduledJobsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -341,11 +342,11 @@ export default function ScheduledJobsPage() {
       fetchJobs();
     }, 300);
     return () => clearTimeout(timeout);
-  }, [fetchJobs]);
+  }, [fetchJobs, location.key]);
 
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+  }, [fetchStats, location.key]);
 
   useEffect(() => {
     const loadJobTypes = async () => {
@@ -524,7 +525,9 @@ export default function ScheduledJobsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -538,7 +541,9 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.totalJobs}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -550,7 +555,9 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.activeJobs}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Briefcase
               className="h-5 w-5"
@@ -562,7 +569,9 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.draftJobs}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -574,7 +583,9 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.slaBreached}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
@@ -586,7 +597,9 @@ export default function ScheduledJobsPage() {
             {isLoadingStats ? "..." : stats.staleJobs}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -642,7 +655,9 @@ export default function ScheduledJobsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedJobs.size > 0 && (
-        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedJobs.size} job(s) selected

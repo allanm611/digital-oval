@@ -32,7 +32,7 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
-  zIndex = 10,
+  zIndex = 1000,
 }: HeadlessSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -45,11 +45,15 @@ export default function HeadlessSelect({
     : options;
 
   return (
-    <div className={`relative ${className}`} style={{ zIndex }}>
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative w-full">
-          <Listbox.Button
-            className={`
+    <Listbox value={value} onChange={onChange} disabled={disabled}>
+      {({ open }) => (
+        <div
+          className={`relative ${className}`}
+          style={{ zIndex: open ? zIndex + 1000 : zIndex }}
+        >
+          <div className="relative w-full">
+            <Listbox.Button
+              className={`
             relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
             ${
@@ -59,94 +63,95 @@ export default function HeadlessSelect({
             }
             focus:outline-none focus:ring-0
           `}
-          >
-            {" "}
-            <span
-              className={`block text-sm ${
-                selectedOption ? "text-gray-900" : "text-gray-500"
-              }`}
             >
-              {selectedOption ? selectedOption.label : placeholder}
-            </span>
-            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400"
-                aria-hidden="true"
-              />
-            </span>
-          </Listbox.Button>
+              {" "}
+              <span
+                className={`block text-sm ${
+                  selectedOption ? "text-gray-900" : "text-gray-500"
+                }`}
+              >
+                {selectedOption ? selectedOption.label : placeholder}
+              </span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronUpDownIcon
+                  className="h-5 w-5 text-gray-400"
+                  aria-hidden="true"
+                />
+              </span>
+            </Listbox.Button>
 
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options
-              className={`absolute max-h-60 w-full overflow-auto ${
-                tw.rounded
-              } bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
-                openUpward ? "bottom-full mb-1" : "top-full mt-1"
-              }`}
-              style={{
-                minWidth: "100%",
-                maxWidth: "100%",
-                left: 0,
-                right: 0,
-                zIndex: zIndex + 1,
-              }}
+            <Transition
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
             >
-              {searchable && (
-                <div className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search options..."
-                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
+              <Listbox.Options
+                className={`absolute max-h-60 w-full overflow-auto ${
+                  tw.rounded
+                } bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
+                  openUpward ? "bottom-full mb-1" : "top-full mt-1"
+                }`}
+                style={{
+                  minWidth: "100%",
+                  maxWidth: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: open ? zIndex + 1000 : zIndex,
+                }}
+              >
+                {searchable && (
+                  <div className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200">
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search options..."
+                      className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
 
-              {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
-                  No options found.
-                </div>
-              ) : (
-                filteredOptions.map((option) => (
-                  <Listbox.Option
-                    key={option.value}
-                    value={option.value}
-                    disabled={option.disabled}
-                    className={({ active, disabled }) =>
-                      `relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
-                        active ? "bg-gray-100 text-gray-900" : "text-gray-900"
-                      } ${
-                        disabled
-                          ? "opacity-50 cursor-not-allowed"
-                          : "cursor-pointer"
-                      }`
-                    }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span
-                          className={`block ${
-                            selected ? "font-medium" : "font-normal"
-                          }`}
-                        >
-                          {option.label}
-                        </span>
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))
-              )}
-            </Listbox.Options>
-          </Transition>
+                {filteredOptions.length === 0 ? (
+                  <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
+                    No options found.
+                  </div>
+                ) : (
+                  filteredOptions.map((option) => (
+                    <Listbox.Option
+                      key={option.value}
+                      value={option.value}
+                      disabled={option.disabled}
+                      className={({ active, disabled }) =>
+                        `relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
+                          active ? "bg-gray-100 text-gray-900" : "text-gray-900"
+                        } ${
+                          disabled
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer"
+                        }`
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span
+                            className={`block ${
+                              selected ? "font-medium" : "font-normal"
+                            }`}
+                          >
+                            {option.label}
+                          </span>
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))
+                )}
+              </Listbox.Options>
+            </Transition>
+          </div>
         </div>
-      </Listbox>
-    </div>
+      )}
+    </Listbox>
   );
 }

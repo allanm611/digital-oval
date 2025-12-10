@@ -34,22 +34,43 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { path } = req.query;
+    const { path, ...queryParams } = req.query;
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
     // Use environment variable or default to localhost
     const API_BASE_URL = "http://cvm.groupngs.com:8080/api/database-service";
-    
+
+    // Build query string from remaining query parameters (excluding 'path')
+    const queryString = Object.entries(queryParams)
+      .map(([key, value]) => {
+        // Handle array values (e.g., multiple values for same key)
+        if (Array.isArray(value)) {
+          return value
+            .map(
+              (v) =>
+                `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`
+            )
+            .join("&");
+        }
+        return `${encodeURIComponent(key)}=${encodeURIComponent(
+          String(value)
+        )}`;
+      })
+      .join("&");
+
+    const targetUrl = `${API_BASE_URL}/${apiPath}${
+      queryString ? `?${queryString}` : ""
+    }`;
+
     // Log for debugging in production
     console.log("Proxy request:", {
       method: req.method,
       apiPath,
-      targetUrl: `${API_BASE_URL}/${apiPath}`,
+      queryParams,
+      targetUrl,
       hasApiBaseUrl: !!process.env.API_BASE_URL,
     });
-    
-    const targetUrl = `${API_BASE_URL}/${apiPath}`;
 
     // Prepare headers for the backend request
     const headers = {

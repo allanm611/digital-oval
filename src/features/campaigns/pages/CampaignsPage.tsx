@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
@@ -77,6 +77,7 @@ interface CampaignDisplay {
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const { t } = useLanguage();
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -628,26 +629,23 @@ export default function CampaignsPage() {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Fetch campaigns when filters change (deferred to ensure page renders immediately)
+  // Fetch campaigns when filters change or when navigating back to this page
   useEffect(() => {
-    // Defer to next event loop tick to ensure navigation and initial render complete first
-    const timer = setTimeout(() => {
-      fetchCampaigns();
-    }, 0);
-
-    return () => clearTimeout(timer);
+    fetchCampaigns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus, searchQuery, filters, currentPage, pageSize]);
+  }, [
+    selectedStatus,
+    searchQuery,
+    filters,
+    currentPage,
+    pageSize,
+    location.key,
+  ]);
 
-  // Fetch campaign stats (deferred to ensure page renders immediately)
+  // Fetch campaign stats when navigating to this page
   useEffect(() => {
-    // Defer to next event loop tick to ensure navigation and initial render complete first
-    const timer = setTimeout(() => {
-      fetchCampaignStats();
-    }, 0);
-
-    return () => clearTimeout(timer);
-  }, [fetchCampaignStats]);
+    fetchCampaignStats();
+  }, [fetchCampaignStats, location.key]);
 
   // Close action menus when clicking outside
   useEffect(() => {
@@ -1951,7 +1949,9 @@ export default function CampaignsPage() {
                             onClick={() =>
                               setFilters({ ...filters, sortDirection: "ASC" })
                             }
-                            className={`flex-1 px-4 py-2 ${tw.rounded} border transition-colors ${
+                            className={`flex-1 px-4 py-2 ${
+                              tw.rounded
+                            } border transition-colors ${
                               filters.sortDirection === "ASC"
                                 ? `${tw.button} border-transparent`
                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -1963,7 +1963,9 @@ export default function CampaignsPage() {
                             onClick={() =>
                               setFilters({ ...filters, sortDirection: "DESC" })
                             }
-                            className={`flex-1 px-4 py-2 ${tw.rounded} border transition-colors ${
+                            className={`flex-1 px-4 py-2 ${
+                              tw.rounded
+                            } border transition-colors ${
                               filters.sortDirection === "DESC"
                                 ? `${tw.button} border-transparent`
                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"

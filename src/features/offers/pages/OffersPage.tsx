@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -34,6 +34,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 
 export default function OffersPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -405,13 +406,19 @@ export default function OffersPage() {
 
   useEffect(() => {
     fetchOfferStats();
-  }, [fetchOfferStats]);
+  }, [fetchOfferStats, location.key]);
 
-  // Load offers on component mount and filter changes
+  // Load offers on component mount, filter changes, or when navigating back to this page
   useEffect(() => {
     loadOffers(true); // Always skip cache for fresh data
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, selectedStatus, selectedApproval, debouncedSearchTerm]);
+  }, [
+    filters,
+    selectedStatus,
+    selectedApproval,
+    debouncedSearchTerm,
+    location.key,
+  ]);
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
