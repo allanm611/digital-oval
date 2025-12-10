@@ -33,7 +33,7 @@ export default function TargetAudienceStep({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingUploadTypes, setLoadingUploadTypes] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function TargetAudienceStep({
 
   const loadUploadTypes = async () => {
     try {
-      setLoading(true);
+      setLoadingUploadTypes(true);
       const response = await quicklistService.getUploadTypes({
         activeOnly: true,
       });
@@ -58,7 +58,7 @@ export default function TargetAudienceStep({
       console.error("Failed to load upload types:", err);
       showError(t.manualBroadcast.errorLoadUploadTypes);
     } finally {
-      setLoading(false);
+      setLoadingUploadTypes(false);
     }
   };
 
@@ -327,19 +327,6 @@ export default function TargetAudienceStep({
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
-
-  if (loading) {
-    return (
-      <div
-        className={`bg-white ${tw.rounded} shadow-sm border p-8`}
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="text-center py-12">
-          <p className={tw.textMuted}>{t.manualBroadcast.loading}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
