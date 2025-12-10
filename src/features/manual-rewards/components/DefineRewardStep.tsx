@@ -140,11 +140,13 @@ export default function DefineRewardStep({
               const isSelected = rewardType === type.id;
               return (
                 <button
-                  key={type.id}
+                  key={`${type.id}-${isSelected}`}
                   type="button"
                   onClick={() => handleRewardTypeSelect(type.id)}
-                  className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} border-2 transition-all bg-white`}
+                  className={`flex flex-col items-center justify-center gap-1.5 p-2.5 ${tw.rounded} bg-white`}
                   style={{
+                    borderWidth: "2px",
+                    borderStyle: "solid",
                     borderColor: isSelected
                       ? color.primary.accent
                       : color.border.default,

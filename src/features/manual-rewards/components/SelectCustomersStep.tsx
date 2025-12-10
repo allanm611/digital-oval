@@ -277,19 +277,6 @@ export default function SelectCustomersStep({
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  if (loading) {
-    return (
-      <div
-        className={`bg-white ${tw.rounded} shadow-sm border p-8`}
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="text-center py-12">
-          <p className={tw.textMuted}>{t.manualRewards.loading}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className={`bg-white ${tw.rounded} shadow-sm border`}
@@ -520,14 +507,14 @@ export default function SelectCustomersStep({
               {error}
             </p>
           </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Footer */}
-      <div
-        className="p-6 border-t flex items-center justify-end"
-        style={{ borderColor: color.border.default }}
-      >
+        {/* Footer */}
+        <div
+          className="p-6 border-t flex items-center justify-end"
+          style={{ borderColor: color.border.default }}
+        >
         <button
           onClick={handleNext}
           disabled={
