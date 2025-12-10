@@ -529,13 +529,28 @@ export const zIndex = {
   base: 0,
 
   // Dropdowns and select menus (HeadlessUI, custom dropdowns)
-  dropdown: 1000,
+  // Closed: 50, Open: 1050
+  dropdown: 50,
+  dropdownOpen: 1050,
 
   // Sticky elements (headers, navigation bars)
-  sticky: 1100,
+  sticky: 100,
 
-  // Fixed elements (sidebars, fixed headers)
-  fixed: 1200,
+  // Fixed elements (sidebars, fixed headers, footers)
+  fixed: 200,
+
+  // Stepper components (progress steppers in multi-step forms)
+  stepper: 1100,
+
+  // Header (must be above stepper to allow search/notifications to appear above stepper)
+  header: 1200,
+
+  // Search bar dropdowns (should be above steppers, inside header)
+  // Must be high enough to appear above stepper (1100) even when inside header (1200)
+  searchDropdown: 1500,
+
+  // Notification dropdowns (should be above search and steppers, inside header)
+  notificationDropdown: 1600,
 
   // Overlay/backdrop (modal backgrounds, dimmers)
   overlay: 2000,

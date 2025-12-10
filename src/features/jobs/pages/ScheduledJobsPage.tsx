@@ -23,7 +23,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { scheduledJobService } from "../services/scheduledJobService";
@@ -977,7 +977,13 @@ export default function ScheduledJobsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndexTokens.overlay,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -986,7 +992,7 @@ export default function ScheduledJobsPage() {
             <div
               ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndexTokens.modal }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}

@@ -1,4 +1,5 @@
 import { Check, LucideIcon } from "lucide-react";
+import { zIndexTokens } from "../../utils/utils";
 
 export interface Step {
   id: number;
@@ -35,8 +36,8 @@ export default function ProgressStepper({
   return (
     <nav
       aria-label="Progress"
-      className="sticky top-16 z-[1100] bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0 shadow-sm"
-      style={{ backgroundColor: "white" }}
+      className="sticky top-16 bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0 shadow-sm"
+      style={{ backgroundColor: "white", zIndex: zIndexTokens.stepper }}
     >
       {/* Mobile - Simple dots */}
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">

@@ -31,7 +31,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
@@ -288,11 +288,15 @@ export default function JobWorkflowStepsPage() {
             params.on_failure_action = failureActionFilter;
             // Also use dedicated endpoint for better results
             try {
-              const failureActionResponse = await jobWorkflowStepService.getStepsByFailureAction(
-                failureActionFilter,
-                true
-              );
-              if (failureActionResponse.data && failureActionResponse.data.length > 0) {
+              const failureActionResponse =
+                await jobWorkflowStepService.getStepsByFailureAction(
+                  failureActionFilter,
+                  true
+                );
+              if (
+                failureActionResponse.data &&
+                failureActionResponse.data.length > 0
+              ) {
                 response = failureActionResponse;
               }
             } catch {
@@ -903,7 +907,9 @@ export default function JobWorkflowStepsPage() {
           <button
             onClick={() => {
               if (jobIdFilter) {
-                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`);
+                navigate(
+                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
+                );
               } else {
                 navigate("/dashboard/job-workflow-steps/create");
               }
@@ -918,7 +924,9 @@ export default function JobWorkflowStepsPage() {
             <button
               onClick={() => {
                 // Open batch create modal - for now navigate to create page
-                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`);
+                navigate(
+                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`
+                );
               }}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
@@ -936,7 +944,9 @@ export default function JobWorkflowStepsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Layers
               className="h-5 w-5"
@@ -948,7 +958,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.totalSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -960,7 +972,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.activeSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -972,7 +986,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.criticalSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
             <p className="text-sm font-medium text-gray-600">With Retry</p>
@@ -981,7 +997,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.stepsWithRetry}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -993,7 +1011,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.stepsWithValidation}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <GitBranch
               className="h-5 w-5"
@@ -1009,7 +1029,9 @@ export default function JobWorkflowStepsPage() {
 
       {/* Analytics Section */}
       {showAnalytics && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
               Analytics & Insights
@@ -1128,109 +1150,122 @@ export default function JobWorkflowStepsPage() {
 
               {/* Additional Analytics - Second Row */}
               <div className="grid gap-6 md:grid-cols-3 mt-6">
-              {/* Complex Workflows */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Workflow className="h-4 w-4 text-purple-500" />
-                  Complex Workflows
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.complexWorkflows && analyticsData.complexWorkflows.length > 0 ? (
-                    analyticsData.complexWorkflows.slice(0, 5).map((item) => (
-                      <div
-                        key={item.job_id}
-                        className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.job_name || `Job #${item.job_id}`}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Steps: {item.total_steps} | Parallel: {item.parallel_groups} | Dependencies: {item.dependencies}
-                        </div>
-                        <div className="mt-1 text-xs font-semibold text-purple-600">
-                          Complexity: {item.complexity_score.toFixed(1)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No complex workflows found</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Dependency Complexity */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-indigo-500" />
-                  Dependency Complexity
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.dependencyComplexity && analyticsData.dependencyComplexity.length > 0 ? (
-                    analyticsData.dependencyComplexity.slice(0, 5).map((item) => (
-                      <div
-                        key={item.job_id}
-                        className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.job_name || `Job #${item.job_id}`}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Max Depth: {item.max_depth} | Total: {item.total_dependencies}
-                        </div>
-                        {item.circular_dependencies && (
-                          <div className="mt-1 text-xs font-semibold text-red-600">
-                            ⚠️ Circular Dependencies
+                {/* Complex Workflows */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Workflow className="h-4 w-4 text-purple-500" />
+                    Complex Workflows
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.complexWorkflows &&
+                    analyticsData.complexWorkflows.length > 0 ? (
+                      analyticsData.complexWorkflows.slice(0, 5).map((item) => (
+                        <div
+                          key={item.job_id}
+                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.job_name || `Job #${item.job_id}`}
                           </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No data available</p>
-                  )}
+                          <div className="mt-1 text-xs text-gray-500">
+                            Steps: {item.total_steps} | Parallel:{" "}
+                            {item.parallel_groups} | Dependencies:{" "}
+                            {item.dependencies}
+                          </div>
+                          <div className="mt-1 text-xs font-semibold text-purple-600">
+                            Complexity: {item.complexity_score.toFixed(1)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">
+                        No complex workflows found
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Timeout Analysis */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  Timeout Analysis
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.timeoutAnalysis && analyticsData.timeoutAnalysis.length > 0 ? (
-                    analyticsData.timeoutAnalysis.slice(0, 5).map((item) => (
-                      <div
-                        key={item.step_id}
-                        className={`${tw.rounded} border p-3 ${
-                          item.risk_level === "high"
-                            ? "border-red-200 bg-red-50"
-                            : item.risk_level === "medium"
-                            ? "border-amber-200 bg-amber-50"
-                            : "border-gray-200 bg-gray-50"
-                        }`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.step_name}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Utilization: {item.timeout_utilization_percent.toFixed(1)}%
-                        </div>
-                        <div className={`mt-1 text-xs font-semibold ${
-                          item.risk_level === "high"
-                            ? "text-red-600"
-                            : item.risk_level === "medium"
-                            ? "text-amber-600"
-                            : "text-green-600"
-                        }`}>
-                          Risk: {item.risk_level.toUpperCase()}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No data available</p>
-                  )}
+                {/* Dependency Complexity */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <GitBranch className="h-4 w-4 text-indigo-500" />
+                    Dependency Complexity
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.dependencyComplexity &&
+                    analyticsData.dependencyComplexity.length > 0 ? (
+                      analyticsData.dependencyComplexity
+                        .slice(0, 5)
+                        .map((item) => (
+                          <div
+                            key={item.job_id}
+                            className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
+                          >
+                            <div className="text-sm font-medium text-gray-900">
+                              {item.job_name || `Job #${item.job_id}`}
+                            </div>
+                            <div className="mt-1 text-xs text-gray-500">
+                              Max Depth: {item.max_depth} | Total:{" "}
+                              {item.total_dependencies}
+                            </div>
+                            {item.circular_dependencies && (
+                              <div className="mt-1 text-xs font-semibold text-red-600">
+                                ⚠️ Circular Dependencies
+                              </div>
+                            )}
+                          </div>
+                        ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No data available</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* Timeout Analysis */}
+                <div>
+                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-orange-500" />
+                    Timeout Analysis
+                  </h3>
+                  <div className="space-y-2">
+                    {analyticsData.timeoutAnalysis &&
+                    analyticsData.timeoutAnalysis.length > 0 ? (
+                      analyticsData.timeoutAnalysis.slice(0, 5).map((item) => (
+                        <div
+                          key={item.step_id}
+                          className={`${tw.rounded} border p-3 ${
+                            item.risk_level === "high"
+                              ? "border-red-200 bg-red-50"
+                              : item.risk_level === "medium"
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-gray-200 bg-gray-50"
+                          }`}
+                        >
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.step_name}
+                          </div>
+                          <div className="mt-1 text-xs text-gray-500">
+                            Utilization:{" "}
+                            {item.timeout_utilization_percent.toFixed(1)}%
+                          </div>
+                          <div
+                            className={`mt-1 text-xs font-semibold ${
+                              item.risk_level === "high"
+                                ? "text-red-600"
+                                : item.risk_level === "medium"
+                                ? "text-amber-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            Risk: {item.risk_level.toUpperCase()}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No data available</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </Fragment>
           ) : (
@@ -1276,7 +1311,9 @@ export default function JobWorkflowStepsPage() {
               setShowRetrySteps(false);
               setShowOrphanedSteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showValidationSteps
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1291,7 +1328,9 @@ export default function JobWorkflowStepsPage() {
               setShowValidationSteps(false);
               setShowOrphanedSteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showRetrySteps
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1306,7 +1345,9 @@ export default function JobWorkflowStepsPage() {
               setShowValidationSteps(false);
               setShowRetrySteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showOrphanedSteps
                 ? "bg-amber-100 text-amber-700 border border-amber-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1337,7 +1378,9 @@ export default function JobWorkflowStepsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedSteps.size > 0 && (
-        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedSteps.size} step(s) selected
@@ -1727,7 +1770,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndexTokens.overlay,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -1736,7 +1785,7 @@ export default function JobWorkflowStepsPage() {
             <div
               ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndexTokens.modal }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
@@ -1920,7 +1969,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndexTokens.overlay,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -1928,7 +1983,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndexTokens.modal }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}
@@ -1960,7 +2015,9 @@ export default function JobWorkflowStepsPage() {
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, idx)}
                         onDragEnd={handleDragEnd}
-                        className={`flex items-center justify-between ${tw.rounded} border p-3 transition-all cursor-move ${
+                        className={`flex items-center justify-between ${
+                          tw.rounded
+                        } border p-3 transition-all cursor-move ${
                           draggedItem === idx
                             ? "opacity-50 border-blue-400 bg-blue-50"
                             : dragOverIndex === idx
@@ -2038,7 +2095,9 @@ export default function JobWorkflowStepsPage() {
                   {reorderData.some(
                     (item) => item.currentOrder !== item.newOrder
                   ) && (
-                    <div className={`mt-4 ${tw.rounded} bg-blue-50 border border-blue-200 p-3`}>
+                    <div
+                      className={`mt-4 ${tw.rounded} bg-blue-50 border border-blue-200 p-3`}
+                    >
                       <p className="text-sm text-blue-800">
                         <strong>Note:</strong> Step order will be updated when
                         you save. Make sure the order numbers are correct.
@@ -2096,7 +2155,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndexTokens.overlay,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -2104,7 +2169,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndexTokens.modal }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}
@@ -2135,9 +2200,7 @@ export default function JobWorkflowStepsPage() {
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
-                              is_active: e.target.checked
-                                ? true
-                                : undefined,
+                              is_active: e.target.checked ? true : undefined,
                             })
                           }
                           className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
@@ -2160,7 +2223,9 @@ export default function JobWorkflowStepsPage() {
                               }
                               className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                             />
-                            <span className="text-sm text-gray-600">Active</span>
+                            <span className="text-sm text-gray-600">
+                              Active
+                            </span>
                           </label>
                         </div>
                       )}
@@ -2209,11 +2274,15 @@ export default function JobWorkflowStepsPage() {
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={batchUpdateFields.timeout_seconds !== undefined}
+                          checked={
+                            batchUpdateFields.timeout_seconds !== undefined
+                          }
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
-                              timeout_seconds: e.target.checked ? 300 : undefined,
+                              timeout_seconds: e.target.checked
+                                ? 300
+                                : undefined,
                             })
                           }
                           className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
@@ -2281,7 +2350,9 @@ export default function JobWorkflowStepsPage() {
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={batchUpdateFields.on_failure_action !== undefined}
+                          checked={
+                            batchUpdateFields.on_failure_action !== undefined
+                          }
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,

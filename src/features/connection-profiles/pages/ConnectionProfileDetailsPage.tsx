@@ -657,7 +657,7 @@ export default function ConnectionProfileDetailsPage() {
             onChange={(value) =>
               setHealthStatus((value || "healthy") as "healthy" | "unhealthy")
             }
-            className="relative z-[100000]"
+            className="relative"
           />
           <div className="flex items-center justify-end gap-2">
             <button

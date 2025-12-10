@@ -453,9 +453,6 @@ function TypeConfigurationModal({
                           : field.options || []
                       }
                       placeholder={field.placeholder}
-                      zIndex={
-                        10020 + (config.customFields!.length - index) * 10
-                      }
                     />
                   ) : field.type === "number" ? (
                     <input

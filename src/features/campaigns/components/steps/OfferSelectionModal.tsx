@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { CampaignOffer } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { color , tw} from "../../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../../shared/utils/utils";
 import { offerService } from "../../../offers/services/offerService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
@@ -309,7 +309,7 @@ export default function OfferSelectionModal({
 
   return createPortal(
     <div
-      className="fixed bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+      className="fixed bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{
         top: 0,
         left: 0,
@@ -317,9 +317,13 @@ export default function OfferSelectionModal({
         bottom: 0,
         width: "100vw",
         height: "100vh",
+        zIndex: zIndexTokens.overlay,
       }}
     >
-      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}>
+      <div
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}
+        style={{ zIndex: zIndexTokens.modal }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>

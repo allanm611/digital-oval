@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
 import logo from "../../../assets/Effortel_logo.svg";
 import { User as UserType } from "../../../features/auth/types/auth";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
@@ -74,8 +74,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-[200] m-0 p-0 shadow-md"
+      className="sticky top-0 m-0 p-0 shadow-md"
       style={{
+        zIndex: zIndexTokens.header,
         backgroundColor: color.gradients.sidebar.top,
         opacity: 1,
       }}

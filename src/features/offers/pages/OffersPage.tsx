@@ -26,7 +26,7 @@ import { OfferCategoryType } from "../types/offerCategory";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -1381,7 +1381,7 @@ export default function OffersPage() {
                         }}
                         className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 pb-4 w-72`}
                         style={{
-                          zIndex: 99999,
+                          zIndex: zIndexTokens.popover,
                           top: `${dropdownPosition.top}px`,
                           left: `${dropdownPosition.left}px`,
                           maxHeight: `${dropdownPosition.maxHeight}px`,
@@ -1718,11 +1718,12 @@ export default function OffersPage() {
       {(showAdvancedFilters || isClosingModal) &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] overflow-hidden ${
+            className={`fixed inset-0 overflow-hidden ${
               isClosingModal
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
+            style={{ zIndex: zIndexTokens.overlay }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"

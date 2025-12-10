@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { tw } from "../../../shared/utils/utils";
+import { tw, zIndexTokens } from "../../../shared/utils/utils";
 
 interface PolicyNameModalProps {
   isOpen: boolean;
@@ -42,7 +42,10 @@ export default function PolicyNameModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ zIndex: zIndexTokens.overlay }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-60"
@@ -51,7 +54,8 @@ export default function PolicyNameModal({
 
       {/* Modal */}
       <div
-        className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md mx-4 z-10`}
+        className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md mx-4`}
+        style={{ zIndex: zIndexTokens.modal }}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}

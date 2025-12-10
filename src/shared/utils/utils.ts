@@ -1,5 +1,12 @@
 //converts the tokens into usable tailwind classes
-import { colors, fonts, spacing, borderRadius, buttons, zIndex } from "./tokens";
+import {
+  colors,
+  fonts,
+  spacing,
+  borderRadius,
+  buttons,
+  zIndex,
+} from "./tokens";
 
 // Standardized rounded corners - use this constant instead of hardcoded "rounded-md"
 export const ROUNDED = "rounded-md";
@@ -32,6 +39,7 @@ export const typography = {
 export const space = spacing;
 export const radius = borderRadius;
 export const button = buttons;
+export const zIndexTokens = zIndex;
 
 // Ready-to-use Tailwind CSS classes - copy and paste these directly into your className props
 export const tw = {
@@ -150,6 +158,7 @@ export default {
   space,
   radius,
   button,
+  zIndexTokens,
   tw,
   components,
   helpers,

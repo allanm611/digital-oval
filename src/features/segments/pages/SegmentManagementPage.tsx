@@ -32,7 +32,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import SegmentModal from "../components/SegmentModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndexTokens } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -563,7 +563,7 @@ export default function SegmentManagementPage() {
       "Cannot access this functionality right now."
     );
     return;
-     
+
     setShowActionMenu(null);
     const confirmed = await confirm({
       title: "Duplicate Segment",
@@ -792,7 +792,7 @@ export default function SegmentManagementPage() {
       "Cannot access this functionality right now."
     );
     return;
-     
+
     setShowActionMenu(null);
     try {
       const segmentId = segment.id;
@@ -1009,7 +1009,9 @@ export default function SegmentManagementPage() {
       {!isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Segments */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2">
               <Layers
                 className="h-5 w-5"
@@ -1035,7 +1037,9 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Active Segments */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2">
               <Activity
                 className="h-5 w-5"
@@ -1055,7 +1059,9 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Total Customers */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2">
               <Users
                 className="h-5 w-5"
@@ -1074,7 +1080,9 @@ export default function SegmentManagementPage() {
           </div>
 
           {/* Top Segment */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <div className="flex items-center gap-2">
               <TrendingUp
                 className="h-5 w-5"
@@ -1196,7 +1204,9 @@ export default function SegmentManagementPage() {
 
       {/* Bulk Actions Toolbar */}
       {isSelectionMode && selectedSegmentIds.size > 0 && (
-        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedSegmentIds.size} segment(s) selected
@@ -1544,7 +1554,7 @@ export default function SegmentManagementPage() {
                     }}
                     className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
                     style={{
-                      zIndex: 99999,
+                      zIndex: zIndexTokens.popover,
                       top: `${dropdownPosition.top}px`,
                       left: `${dropdownPosition.left}px`,
                       maxHeight: `${dropdownPosition.maxHeight}px`,
@@ -1821,11 +1831,12 @@ export default function SegmentManagementPage() {
       {(showAdvancedFilters || isClosingModal) &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] overflow-hidden ${
+            className={`fixed inset-0 overflow-hidden ${
               isClosingModal
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
+            style={{ zIndex: zIndexTokens.overlay }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"

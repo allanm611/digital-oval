@@ -388,7 +388,6 @@ export default function SettingsPage() {
                 onChange={(value) => handleLanguageChange(value as string)}
                 options={languageOptions}
                 placeholder="Select language"
-                zIndex={100000}
               />
             </div>
 
@@ -474,7 +473,6 @@ export default function SettingsPage() {
                 options={currencyOptions}
                 placeholder="Select currency"
                 searchable={true}
-                zIndex={100000}
               />
             </div>
 

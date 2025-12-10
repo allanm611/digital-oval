@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw, zIndexTokens } from "../../../shared/utils/utils";
 interface RegularModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,7 +39,7 @@ export default function RegularModal({
       <Dialog
         as="div"
         className="relative"
-        style={{ zIndex: 999999 }}
+        style={{ zIndex: zIndexTokens.overlay }}
         onClose={closeOnOverlayClick ? onClose : () => {}}
       >
         <Transition.Child
@@ -53,12 +53,12 @@ export default function RegularModal({
         >
           <div
             className="fixed inset-0 bg-black bg-opacity-50"
-            style={{ zIndex: 999999 }}
+            style={{ zIndex: zIndexTokens.overlay }}
             aria-hidden="true"
           />
         </Transition.Child>
 
-        <div className="fixed inset-0" style={{ zIndex: 999999 }}>
+        <div className="fixed inset-0" style={{ zIndex: zIndexTokens.overlay }}>
           <div className="flex min-h-full items-center justify-center p-4 overflow-y-auto">
             <Transition.Child
               as={Fragment}
@@ -71,7 +71,7 @@ export default function RegularModal({
             >
               <Dialog.Panel
                 className={`relative transform overflow-visible ${tw.rounded} bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
-                style={{ zIndex: 1000000 }}
+                style={{ zIndex: zIndexTokens.modal }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">

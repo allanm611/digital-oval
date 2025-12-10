@@ -11,7 +11,12 @@ import {
   BellOff,
   Star,
 } from "lucide-react";
-import { color, tw, components } from "../../../shared/utils/utils";
+import {
+  color,
+  tw,
+  components,
+  zIndexTokens,
+} from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   CommunicationPolicyConfiguration,
@@ -253,7 +258,7 @@ export default function CommunicationPolicyModal({
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="relative" style={{ zIndex: 99999 }}>
+          <div className="relative" style={{ zIndex: zIndexTokens.popover }}>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Period Type
             </label>
@@ -358,7 +363,7 @@ export default function CommunicationPolicyModal({
                 </div> */}
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndexTokens.popover - index }}
                 >
                   <label
                     className={`block text-sm font-medium text-gray-700 mb-2`}
@@ -388,7 +393,7 @@ export default function CommunicationPolicyModal({
                 </div>
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndexTokens.popover - index }}
                 >
                   <label
                     className={`block text-sm font-medium text-gray-700 mb-2`}
@@ -418,7 +423,7 @@ export default function CommunicationPolicyModal({
                 </div>
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndexTokens.popover - index }}
                 >
                   <label
                     className={`block text-sm font-medium text-gray-700 mb-2`}
@@ -538,7 +543,9 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border ${tw.rounded} overflow-visible transition-all duration-200 ${
+        className={`border ${
+          tw.rounded
+        } overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -599,10 +606,13 @@ export default function CommunicationPolicyModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ zIndex: zIndexTokens.overlay }}
+    >
       <div
         className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${tw.rounded}`}
-        style={{ zIndex: 10000, position: "relative" }}
+        style={{ zIndex: zIndexTokens.modal, position: "relative" }}
       >
         {/* Header */}
         <div style={{ backgroundColor: color.surface.background }}>
@@ -711,7 +721,10 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}>
+                    <div
+                      className={`absolute w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}
+                      style={{ zIndex: zIndexTokens.popover }}
+                    >
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}

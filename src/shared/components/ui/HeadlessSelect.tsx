@@ -32,7 +32,7 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
-  zIndex = 1000,
+  zIndex = 50,
 }: HeadlessSelectProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
