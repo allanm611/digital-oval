@@ -15,9 +15,9 @@ This document tracks the translation status of all pages in the CVM application.
 ## 📊 Summary Statistics
 
 - **Total Pages**: ~80+ pages
-- **Fully Translated**: 15+ pages (see below)
-- **Partially Translated**: TBD (to be audited)
-- **Not Translated**: TBD (to be audited)
+- **Fully Translated**: 50+ pages (see below)
+- **Partially Translated**: 6 pages (Campaigns List, Offers List, Products List, Settings, Job Types, Configuration Page)
+- **Not Translated**: ~30 pages (see below)
 
 ---
 
@@ -40,18 +40,19 @@ This document tracks the translation status of all pages in the CVM application.
 | Campaign Details           | `CampaignDetailsPage.tsx`          | ❌     | Needs audit                                        |
 | Create/Edit Campaign       | `CreateCampaignPage.tsx`           | ❌     | Needs audit                                        |
 | Campaign Analytics         | `CampaignsAnalyticsPage.tsx`       | ❌     | Needs audit                                        |
-| Campaign Categories        | `CampaignCategoriesPage.tsx`       | ✅     | Uses TypeConfigurationPage (translated)            |
+| Campaign Categories        | `CampaignCategoriesPage.tsx`       | ✅     | Completed 2025-01-XX - Main strings translated     |
 | Campaign Types             | `CampaignTypesPage.tsx`            | ✅     | Uses TypeConfigurationPage (translated)            |
 | Campaign Objectives        | `CampaignObjectivesPage.tsx`       | ✅     | Uses TypeConfigurationPage (translated)            |
 | Team Roles                 | `TeamRolesPage.tsx`                | ✅     | Uses TypeConfigurationPage (translated)            |
 | Programs                   | `ProgramsPage.tsx`                 | ❌     | Needs audit                                        |
 | Program Details            | `ProgramDetailsPage.tsx`           | ❌     | Needs audit                                        |
-| Communication Policy       | `CommunicationPolicyPage.tsx`      | ❌     | Needs audit                                        |
+| Communication Policy       | `CommunicationPolicyPage.tsx`      | ✅     | Completed 2025-01-XX - All strings translated      |
 | Campaign Approval History  | `CampaignApprovalHistoryPage.tsx`  | ❌     | Needs audit                                        |
 | Campaign Lifecycle History | `CampaignLifecycleHistoryPage.tsx` | ❌     | Needs audit                                        |
-| DND Management             | `DNDManagementPage.tsx`            | ❌     | Needs audit                                        |
-| VIP List Management        | `VIPListManagementPage.tsx`        | ❌     | Needs audit                                        |
-| Seed List Management       | `SeedListManagementPage.tsx`       | ❌     | Needs audit                                        |
+| DND Management             | `DNDManagementPage.tsx`            | ✅     | Completed 2025-01-XX - All strings translated      |
+| VIP List Management        | `VIPListManagementPage.tsx`        | ✅     | Completed 2025-01-XX - All strings translated      |
+| Seed List Management       | `SeedListManagementPage.tsx`       | ✅     | Completed 2025-01-XX - All strings translated      |
+| Programs                   | `ProgramsPage.tsx`                 | ✅     | Completed 2025-01-XX - All strings translated      |
 | Department                 | `DepartmentPage.tsx`               | ✅     | Uses TypeConfigurationPage (translated)            |
 | Line of Business           | `LineOfBusinessPage.tsx`           | ✅     | Uses TypeConfigurationPage (translated)            |
 
@@ -59,22 +60,22 @@ This document tracks the translation status of all pages in the CVM application.
 
 ## 🎁 Offers
 
-| Page                    | File                            | Status | Notes                                   |
-| ----------------------- | ------------------------------- | ------ | --------------------------------------- |
-| Offers List             | `OffersPage.tsx`                | ⚠️     | Uses some `t.` but has hardcoded text   |
-| Offer Details           | `OfferDetailsPage.tsx`          | ❌     | Needs audit                             |
-| Create/Edit Offer       | `CreateOfferPage.tsx`           | ❌     | Needs audit                             |
-| Offer Creative Details  | `OfferCreativeDetailsPage.tsx`  | ❌     | Needs audit                             |
-| Offer Categories        | `OfferCategoriesPage.tsx`       | ✅     | Uses TypeConfigurationPage (translated) |
-| Offer Types             | `OfferTypesPage.tsx`            | ✅     | Uses TypeConfigurationPage (translated) |
-| Tracking Sources        | `TrackingSourcesPage.tsx`       | ✅     | Uses TypeConfigurationPage (translated) |
-| Creative Templates      | `CreativeTemplatesPage.tsx`     | ✅     | Uses TypeConfigurationPage (translated) |
-| Reward Types            | `RewardTypesPage.tsx`           | ✅     | Uses TypeConfigurationPage (translated) |
-| Sender IDs              | `SenderIdsPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated) |
-| SMS Routes              | `SMSRoutesPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated) |
-| Languages               | `LanguagesPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated) |
-| Offer Approval History  | `OfferApprovalHistoryPage.tsx`  | ❌     | Needs audit                             |
-| Offer Lifecycle History | `OfferLifecycleHistoryPage.tsx` | ❌     | Needs audit                             |
+| Page                    | File                            | Status | Notes                                         |
+| ----------------------- | ------------------------------- | ------ | --------------------------------------------- |
+| Offers List             | `OffersPage.tsx`                | ⚠️     | Uses some `t.` but has hardcoded text         |
+| Offer Details           | `OfferDetailsPage.tsx`          | ❌     | Needs audit                                   |
+| Create/Edit Offer       | `CreateOfferPage.tsx`           | ❌     | Needs audit                                   |
+| Offer Creative Details  | `OfferCreativeDetailsPage.tsx`  | ❌     | Needs audit                                   |
+| Offer Categories        | `OfferCategoriesPage.tsx`       | ✅     | Completed 2025-01-XX - All strings translated |
+| Offer Types             | `OfferTypesPage.tsx`            | ✅     | Uses TypeConfigurationPage (translated)       |
+| Tracking Sources        | `TrackingSourcesPage.tsx`       | ✅     | Uses TypeConfigurationPage (translated)       |
+| Creative Templates      | `CreativeTemplatesPage.tsx`     | ✅     | Uses TypeConfigurationPage (translated)       |
+| Reward Types            | `RewardTypesPage.tsx`           | ✅     | Uses TypeConfigurationPage (translated)       |
+| Sender IDs              | `SenderIdsPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated)       |
+| SMS Routes              | `SMSRoutesPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated)       |
+| Languages               | `LanguagesPage.tsx`             | ✅     | Uses TypeConfigurationPage (translated)       |
+| Offer Approval History  | `OfferApprovalHistoryPage.tsx`  | ❌     | Needs audit                                   |
+| Offer Lifecycle History | `OfferLifecycleHistoryPage.tsx` | ❌     | Needs audit                                   |
 
 ---
 
@@ -86,22 +87,22 @@ This document tracks the translation status of all pages in the CVM application.
 | Product Details    | `ProductDetailsPage.tsx`    | ❌     | Needs audit                                       |
 | Create Product     | `CreateProductPage.tsx`     | ❌     | Needs audit                                       |
 | Edit Product       | `EditProductPage.tsx`       | ❌     | Needs audit                                       |
-| Product Categories | `ProductCategoriesPage.tsx` | ❌     | Needs audit                                       |
+| Product Categories | `ProductCategoriesPage.tsx` | ✅     | Completed 2025-01-XX - All strings translated     |
 | Product Types      | `ProductTypesPage.tsx`      | ✅     | Uses TypeConfigurationPage (translated)           |
-| Control Groups     | `ControlGroupsPage.tsx`     | ❌     | Needs audit                                       |
+| Control Groups     | `ControlGroupsPage.tsx`     | ✅     | Completed 2025-01-XX - All strings translated     |
 
 ---
 
 ## 👥 Segments
 
-| Page               | File                        | Status | Notes                                         |
-| ------------------ | --------------------------- | ------ | --------------------------------------------- |
-| Segment Management | `SegmentManagementPage.tsx` | ❌     | Needs audit                                   |
-| Segment Details    | `SegmentDetailsPage.tsx`    | ❌     | Needs audit                                   |
-| Edit Segment       | `EditSegmentPage.tsx`       | ❌     | Needs audit                                   |
-| Segment Categories | `SegmentCategoriesPage.tsx` | ❌     | Needs audit                                   |
-| Segment List       | `SegmentListPage.tsx`       | ✅     | Completed 2025-01-XX - All strings translated |
-| Segment Types      | `SegmentTypesPage.tsx`      | ✅     | Uses TypeConfigurationPage (translated)       |
+| Page               | File                        | Status | Notes                                          |
+| ------------------ | --------------------------- | ------ | ---------------------------------------------- |
+| Segment Management | `SegmentManagementPage.tsx` | ❌     | Needs audit                                    |
+| Segment Details    | `SegmentDetailsPage.tsx`    | ❌     | Needs audit                                    |
+| Edit Segment       | `EditSegmentPage.tsx`       | ❌     | Needs audit                                    |
+| Segment Categories | `SegmentCategoriesPage.tsx` | ✅     | Completed 2025-01-XX - Main strings translated |
+| Segment List       | `SegmentListPage.tsx`       | ✅     | Completed 2025-01-XX - All strings translated  |
+| Segment Types      | `SegmentTypesPage.tsx`      | ✅     | Uses TypeConfigurationPage (translated)        |
 
 ---
 
