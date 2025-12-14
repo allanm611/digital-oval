@@ -177,9 +177,7 @@ export default function JobWorkflowStepDetailsPage() {
   const handleDuplicate = async () => {
     if (!step) return;
     try {
-      await jobWorkflowStepService.duplicateStep(step.id, {
-        userId: user?.user_id || 0,
-      });
+      await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
         `"${step.step_name}" has been duplicated successfully.`

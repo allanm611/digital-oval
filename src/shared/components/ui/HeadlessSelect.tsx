@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { components, tw } from "../../utils/utils";
+import { components, tw, zIndex as zIndexTokens } from "../../utils/utils";
 
 interface SelectOption {
   value: string | number;
@@ -32,8 +32,9 @@ export default function HeadlessSelect({
   className = "",
   searchable = false,
   openUpward = false,
-  zIndex = 10,
+  zIndex,
 }: HeadlessSelectProps) {
+  const effectiveZIndex = zIndex ?? zIndexTokens.dropdown;
   const [searchTerm, setSearchTerm] = useState("");
 
   const selectedOption = options.find((option) => option.value === value);
@@ -45,7 +46,7 @@ export default function HeadlessSelect({
     : options;
 
   return (
-    <div className={`relative ${className}`} style={{ zIndex }}>
+    <div className={`relative ${className}`} style={{ zIndex: effectiveZIndex }}>
       <Listbox value={value} onChange={onChange} disabled={disabled}>
         <div className="relative w-full">
           <Listbox.Button
@@ -93,7 +94,7 @@ export default function HeadlessSelect({
                 maxWidth: "100%",
                 left: 0,
                 right: 0,
-                zIndex: zIndex + 1,
+                zIndex: effectiveZIndex + 1,
               }}
             >
               {searchable && (

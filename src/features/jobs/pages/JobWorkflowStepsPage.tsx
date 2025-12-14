@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
-  Briefcase,
   CheckCircle,
-  Clock,
   Eye,
   Edit,
   Plus,
@@ -22,18 +20,14 @@ import {
   Activity,
   Zap,
   Copy,
-  RefreshCw,
-  AlertCircle,
-  TrendingUp,
   Workflow,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
@@ -74,7 +68,6 @@ export default function JobWorkflowStepsPage() {
   const jobIdParam = searchParams.get("job_id");
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
 
   const [steps, setSteps] = useState<JobWorkflowStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +92,6 @@ export default function JobWorkflowStepsPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
   const [jobMap, setJobMap] = useState<Record<number, ScheduledJob>>({});
-  const [jobs, setJobs] = useState<ScheduledJob[]>([]);
   // Bulk selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
@@ -107,6 +99,7 @@ export default function JobWorkflowStepsPage() {
   // Advanced filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [stepCodeFilter, setStepCodeFilter] = useState<string>("");
+  const [stepOrderFilter, setStepOrderFilter] = useState<number | "">("");
   const [isCriticalFilter, setIsCriticalFilter] = useState<boolean | "">("");
   const [isParallelFilter, setIsParallelFilter] = useState<boolean | "">("");
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | "">("");
@@ -149,55 +142,6 @@ export default function JobWorkflowStepsPage() {
     on_failure_action?: FailureAction;
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
-  // Analytics data
-  const [analyticsData, setAnalyticsData] = useState<{
-    mostFailed: Array<{
-      step_id: number;
-      step_name: string;
-      step_code: string;
-      job_id: number;
-      failure_count: number;
-      last_failure_at: string | null;
-    }>;
-    longestRunning: Array<{
-      step_id: number;
-      step_name: string;
-      step_code: string;
-      job_id: number;
-      average_duration_seconds: number;
-      max_duration_seconds: number;
-    }>;
-    typeDistribution: Array<{
-      step_type: StepType;
-      count: number;
-      percentage: number;
-    }>;
-    complexWorkflows: Array<{
-      job_id: number;
-      job_name: string;
-      total_steps: number;
-      parallel_groups: number;
-      dependencies: number;
-      complexity_score: number;
-    }>;
-    dependencyComplexity: Array<{
-      job_id: number;
-      job_name: string;
-      max_depth: number;
-      total_dependencies: number;
-      circular_dependencies: boolean;
-    }>;
-    timeoutAnalysis: Array<{
-      step_id: number;
-      step_name: string;
-      configured_timeout: number;
-      average_execution_time: number;
-      timeout_utilization_percent: number;
-      risk_level: "low" | "medium" | "high";
-    }>;
-  } | null>(null);
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -215,7 +159,48 @@ export default function JobWorkflowStepsPage() {
       try {
         let response;
 
-        if (jobIdFilter) {
+        // Use specific lookup endpoints when we have both job_id and step_code or step_order
+        if (jobIdFilter && stepCodeFilter.trim()) {
+          // Use getStepByJobAndCode for precise lookup
+          try {
+            const step = await jobWorkflowStepService.getStepByJobAndCode(
+              Number(jobIdFilter),
+              stepCodeFilter.trim(),
+              true
+            );
+            response = { data: [step], count: 1 };
+          } catch (err) {
+            // If specific lookup fails, fall back to search
+            console.warn("getStepByJobAndCode failed, using search:", err);
+            response = await jobWorkflowStepService.searchJobWorkflowSteps({
+              job_id: Number(jobIdFilter),
+              step_code: stepCodeFilter.trim(),
+              limit: 50,
+              offset: 0,
+              skipCache: true,
+            });
+          }
+        } else if (jobIdFilter && stepOrderFilter !== "") {
+          // Use getStepByJobAndOrder for precise lookup
+          try {
+            const step = await jobWorkflowStepService.getStepByJobAndOrder(
+              Number(jobIdFilter),
+              Number(stepOrderFilter),
+              true
+            );
+            response = { data: [step], count: 1 };
+          } catch (err) {
+            // If specific lookup fails, fall back to search
+            console.warn("getStepByJobAndOrder failed, using search:", err);
+            response = await jobWorkflowStepService.searchJobWorkflowSteps({
+              job_id: Number(jobIdFilter),
+              step_order: Number(stepOrderFilter),
+              limit: 50,
+              offset: 0,
+              skipCache: true,
+            });
+          }
+        } else if (jobIdFilter) {
           // Get steps for specific job
           response = await jobWorkflowStepService.getStepsByJobId(
             Number(jobIdFilter),
@@ -250,6 +235,7 @@ export default function JobWorkflowStepsPage() {
         } else if (
           hasSearchTerm ||
           stepCodeFilter ||
+          stepOrderFilter !== "" ||
           isCriticalFilter !== "" ||
           isParallelFilter !== "" ||
           isActiveFilter !== "" ||
@@ -269,6 +255,9 @@ export default function JobWorkflowStepsPage() {
           if (stepCodeFilter) {
             params.step_code = stepCodeFilter;
           }
+          if (stepOrderFilter !== "") {
+            params.step_order = Number(stepOrderFilter);
+          }
           if (stepTypeFilter) {
             params.step_type = stepTypeFilter;
           }
@@ -276,23 +265,27 @@ export default function JobWorkflowStepsPage() {
             params.job_id = Number(jobIdFilter);
           }
           if (isCriticalFilter !== "") {
-            params.is_critical = isCriticalFilter === true;
+            params.is_critical = isCriticalFilter as boolean;
           }
           if (isParallelFilter !== "") {
-            params.is_parallel = isParallelFilter === true;
+            params.is_parallel = isParallelFilter as boolean;
           }
           if (isActiveFilter !== "") {
-            params.is_active = isActiveFilter === true;
+            params.is_active = isActiveFilter as boolean;
           }
           if (failureActionFilter) {
             params.on_failure_action = failureActionFilter;
             // Also use dedicated endpoint for better results
             try {
-              const failureActionResponse = await jobWorkflowStepService.getStepsByFailureAction(
-                failureActionFilter,
-                true
-              );
-              if (failureActionResponse.data && failureActionResponse.data.length > 0) {
+              const failureActionResponse =
+                await jobWorkflowStepService.getStepsByFailureAction(
+                  failureActionFilter,
+                  true
+                );
+              if (
+                failureActionResponse.data &&
+                failureActionResponse.data.length > 0
+              ) {
                 response = failureActionResponse;
               }
             } catch {
@@ -341,6 +334,7 @@ export default function JobWorkflowStepsPage() {
       stepTypeFilter,
       jobIdFilter,
       stepCodeFilter,
+      stepOrderFilter,
       isCriticalFilter,
       isParallelFilter,
       isActiveFilter,
@@ -450,63 +444,11 @@ export default function JobWorkflowStepsPage() {
     fetchStats();
   }, [fetchStats]);
 
-  const fetchAnalytics = useCallback(async () => {
-    if (!showAnalytics) return;
-    setIsLoadingAnalytics(true);
-    try {
-      const [
-        mostFailed,
-        longestRunning,
-        typeDistribution,
-        complexWorkflows,
-        dependencyComplexity,
-        timeoutAnalysis,
-      ] = await Promise.all([
-        jobWorkflowStepService
-          .getMostFailedSteps({ limit: 10, days_back: 30, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getLongestRunningSteps({ limit: 10, days_back: 30, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getTypeDistribution({ skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getComplexWorkflows({ limit: 10, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getDependencyComplexity({
-            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
-            limit: 10,
-            skipCache: true,
-          })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getTimeoutAnalysis({
-            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
-            skipCache: true,
-          })
-          .catch(() => ({ success: true, data: [] })),
-      ]);
-
-      setAnalyticsData({
-        mostFailed: mostFailed.data || [],
-        longestRunning: longestRunning.data || [],
-        typeDistribution: typeDistribution.data || [],
-        complexWorkflows: complexWorkflows.data || [],
-        dependencyComplexity: dependencyComplexity.data || [],
-        timeoutAnalysis: timeoutAnalysis.data || [],
-      });
-    } catch (err) {
-      console.error("Failed to load analytics:", err);
-    } finally {
-      setIsLoadingAnalytics(false);
-    }
-  }, [showAnalytics, jobIdFilter]);
-
+  // Reset selection mode when coming back from create/edit page or when job_id changes
   useEffect(() => {
-    fetchAnalytics();
-  }, [fetchAnalytics]);
+    setIsSelectionMode(false);
+    setSelectedSteps(new Set());
+  }, [jobIdParam]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -516,7 +458,6 @@ export default function JobWorkflowStepsPage() {
           skipCache: true,
         });
         const jobList = response.data || [];
-        setJobs(jobList);
         const map: Record<number, ScheduledJob> = {};
         jobList.forEach((job) => {
           map[job.id] = job;
@@ -592,14 +533,17 @@ export default function JobWorkflowStepsPage() {
         return;
       }
 
-      showToast(
-        `Batch ${action} completed`,
-        `${result.success} step(s) ${action}d successfully${
-          result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`
-      );
+      if (result) {
+        showToast(
+          `Batch ${action} completed`,
+          `${result.success} step(s) ${action}d successfully${
+            result.failed > 0 ? `, ${result.failed} failed` : ""
+          }`
+        );
+      }
 
       setSelectedSteps(new Set());
+      setIsSelectionMode(false);
       fetchSteps(); // Refresh the list
     } catch (err) {
       showError(
@@ -687,13 +631,27 @@ export default function JobWorkflowStepsPage() {
         newOrder: item.newOrder,
       }));
 
-      await jobWorkflowStepService.reorderSteps(Number(jobIdFilter), {
-        stepOrderMapping,
-        userId: user?.user_id || 0,
-      });
+      const result = await jobWorkflowStepService.reorderSteps(
+        Number(jobIdFilter),
+        {
+          stepOrderMapping,
+        }
+      );
 
-      showToast("Steps reordered", "Step order has been updated successfully.");
+      if (result.data?.updated && result.data.updated > 0) {
+        showToast(
+          "Steps reordered",
+          `${result.data.updated} step(s) reordered successfully.`
+        );
+      } else {
+        showToast(
+          "Steps reordered",
+          "Step order has been updated successfully."
+        );
+      }
+
       setShowReorderModal(false);
+      // Always refresh to show current state
       fetchSteps();
     } catch (err) {
       showError(
@@ -757,6 +715,7 @@ export default function JobWorkflowStepsPage() {
       setShowBatchUpdateModal(false);
       setBatchUpdateFields({});
       setSelectedSteps(new Set());
+      setIsSelectionMode(false);
       fetchSteps();
     } catch (err) {
       showError(
@@ -770,9 +729,7 @@ export default function JobWorkflowStepsPage() {
 
   const handleDuplicateStep = async (step: JobWorkflowStep) => {
     try {
-      await jobWorkflowStepService.duplicateStep(step.id, {
-        userId: user?.user_id || 0,
-      });
+      await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
         `"${step.step_name}" has been duplicated successfully.`
@@ -817,11 +774,6 @@ export default function JobWorkflowStepsPage() {
     return option?.label || type;
   };
 
-  const getFailureActionLabel = (action: FailureAction): string => {
-    const option = FAILURE_ACTION_OPTIONS.find((opt) => opt.value === action);
-    return option?.label || action;
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -861,18 +813,16 @@ export default function JobWorkflowStepsPage() {
             </>
           )}
           <button
-            onClick={() => setShowAnalytics(!showAnalytics)}
+            onClick={() => navigate("/dashboard/job-workflow-steps/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
-              backgroundColor: showAnalytics
-                ? color.primary.action
-                : "transparent",
-              color: showAnalytics ? "white" : color.primary.action,
+              backgroundColor: "transparent",
+              color: color.primary.action,
               border: `1px solid ${color.primary.action}`,
             }}
           >
             <BarChart3 className="h-4 w-4" />
-            {showAnalytics ? "Hide Analytics" : "Show Analytics"}
+            Analytics
           </button>
           <button
             onClick={() => {
@@ -903,7 +853,9 @@ export default function JobWorkflowStepsPage() {
           <button
             onClick={() => {
               if (jobIdFilter) {
-                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`);
+                navigate(
+                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
+                );
               } else {
                 navigate("/dashboard/job-workflow-steps/create");
               }
@@ -918,7 +870,9 @@ export default function JobWorkflowStepsPage() {
             <button
               onClick={() => {
                 // Open batch create modal - for now navigate to create page
-                navigate(`/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`);
+                navigate(
+                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`
+                );
               }}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
               style={{
@@ -936,7 +890,9 @@ export default function JobWorkflowStepsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Layers
               className="h-5 w-5"
@@ -948,7 +904,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.totalSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -960,7 +918,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.activeSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -972,7 +932,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.criticalSteps}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
             <p className="text-sm font-medium text-gray-600">With Retry</p>
@@ -981,7 +943,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.stepsWithRetry}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -993,7 +957,9 @@ export default function JobWorkflowStepsPage() {
             {isLoadingStats ? "..." : stats.stepsWithValidation}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <GitBranch
               className="h-5 w-5"
@@ -1006,238 +972,6 @@ export default function JobWorkflowStepsPage() {
           </p>
         </div>
       </div>
-
-      {/* Analytics Section */}
-      {showAnalytics && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Analytics & Insights
-            </h2>
-            <button
-              onClick={() => fetchAnalytics()}
-              disabled={isLoadingAnalytics}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50`}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${
-                  isLoadingAnalytics ? "animate-spin" : ""
-                }`}
-              />
-              Refresh
-            </button>
-          </div>
-
-          {isLoadingAnalytics ? (
-            <div className="flex justify-center py-8">
-              <LoadingSpinner />
-            </div>
-          ) : analyticsData ? (
-            <Fragment>
-              <div className="grid gap-6 md:grid-cols-3">
-                {/* Most Failed Steps */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                    Most Failed Steps
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.mostFailed.length > 0 ? (
-                      analyticsData.mostFailed.slice(0, 5).map((item) => (
-                        <div
-                          key={item.step_id}
-                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.step_name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Failures: {item.failure_count} | Job:{" "}
-                            {jobMap[item.job_id]?.name || `#${item.job_id}`}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No failed steps found
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Longest Running Steps */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    Longest Running Steps
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.longestRunning.length > 0 ? (
-                      analyticsData.longestRunning.slice(0, 5).map((item) => (
-                        <div
-                          key={item.step_id}
-                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.step_name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Avg: {Math.round(item.average_duration_seconds)}s |
-                            Max: {Math.round(item.max_duration_seconds)}s
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Type Distribution */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    Step Type Distribution
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.typeDistribution.length > 0 ? (
-                      analyticsData.typeDistribution.map((item) => (
-                        <div
-                          key={item.step_type}
-                          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {getStepTypeLabel(item.step_type)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {item.count} steps
-                            </div>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-700">
-                            {item.percentage.toFixed(1)}%
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Analytics - Second Row */}
-              <div className="grid gap-6 md:grid-cols-3 mt-6">
-              {/* Complex Workflows */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Workflow className="h-4 w-4 text-purple-500" />
-                  Complex Workflows
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.complexWorkflows && analyticsData.complexWorkflows.length > 0 ? (
-                    analyticsData.complexWorkflows.slice(0, 5).map((item) => (
-                      <div
-                        key={item.job_id}
-                        className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.job_name || `Job #${item.job_id}`}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Steps: {item.total_steps} | Parallel: {item.parallel_groups} | Dependencies: {item.dependencies}
-                        </div>
-                        <div className="mt-1 text-xs font-semibold text-purple-600">
-                          Complexity: {item.complexity_score.toFixed(1)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No complex workflows found</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Dependency Complexity */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <GitBranch className="h-4 w-4 text-indigo-500" />
-                  Dependency Complexity
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.dependencyComplexity && analyticsData.dependencyComplexity.length > 0 ? (
-                    analyticsData.dependencyComplexity.slice(0, 5).map((item) => (
-                      <div
-                        key={item.job_id}
-                        className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.job_name || `Job #${item.job_id}`}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Max Depth: {item.max_depth} | Total: {item.total_dependencies}
-                        </div>
-                        {item.circular_dependencies && (
-                          <div className="mt-1 text-xs font-semibold text-red-600">
-                            ⚠️ Circular Dependencies
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No data available</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Timeout Analysis */}
-              <div>
-                <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  Timeout Analysis
-                </h3>
-                <div className="space-y-2">
-                  {analyticsData.timeoutAnalysis && analyticsData.timeoutAnalysis.length > 0 ? (
-                    analyticsData.timeoutAnalysis.slice(0, 5).map((item) => (
-                      <div
-                        key={item.step_id}
-                        className={`${tw.rounded} border p-3 ${
-                          item.risk_level === "high"
-                            ? "border-red-200 bg-red-50"
-                            : item.risk_level === "medium"
-                            ? "border-amber-200 bg-amber-50"
-                            : "border-gray-200 bg-gray-50"
-                        }`}
-                      >
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.step_name}
-                        </div>
-                        <div className="mt-1 text-xs text-gray-500">
-                          Utilization: {item.timeout_utilization_percent.toFixed(1)}%
-                        </div>
-                        <div className={`mt-1 text-xs font-semibold ${
-                          item.risk_level === "high"
-                            ? "text-red-600"
-                            : item.risk_level === "medium"
-                            ? "text-amber-600"
-                            : "text-green-600"
-                        }`}>
-                          Risk: {item.risk_level.toUpperCase()}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500">No data available</p>
-                  )}
-                </div>
-              </div>
-              </div>
-            </Fragment>
-          ) : (
-            <p className="text-sm text-gray-500">No analytics data available</p>
-          )}
-        </div>
-      )}
 
       <div className="flex gap-4">
         <div className="relative flex-1">
@@ -1276,7 +1010,9 @@ export default function JobWorkflowStepsPage() {
               setShowRetrySteps(false);
               setShowOrphanedSteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showValidationSteps
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1291,7 +1027,9 @@ export default function JobWorkflowStepsPage() {
               setShowValidationSteps(false);
               setShowOrphanedSteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showRetrySteps
                 ? "bg-blue-100 text-blue-700 border border-blue-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1306,7 +1044,9 @@ export default function JobWorkflowStepsPage() {
               setShowValidationSteps(false);
               setShowRetrySteps(false);
             }}
-            className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
+            className={`inline-flex items-center justify-center gap-2 ${
+              tw.rounded
+            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
               showOrphanedSteps
                 ? "bg-amber-100 text-amber-700 border border-amber-300"
                 : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
@@ -1322,6 +1062,7 @@ export default function JobWorkflowStepsPage() {
             <Filter className="h-4 w-4" />
             <span>Filters</span>
             {(stepCodeFilter ||
+              stepOrderFilter !== "" ||
               isCriticalFilter !== "" ||
               isParallelFilter !== "" ||
               isActiveFilter !== "" ||
@@ -1337,13 +1078,18 @@ export default function JobWorkflowStepsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedSteps.size > 0 && (
-        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedSteps.size} step(s) selected
             </span>
             <button
-              onClick={() => setSelectedSteps(new Set())}
+              onClick={() => {
+                setSelectedSteps(new Set());
+                setIsSelectionMode(false);
+              }}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
               <X className="h-4 w-4" />
@@ -1619,7 +1365,9 @@ export default function JobWorkflowStepsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-workflow-steps/${step.id}?job_id=${step.job_id}`
+                              `/dashboard/job-workflow-steps/${step.id}${
+                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                              }`
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
@@ -1631,7 +1379,9 @@ export default function JobWorkflowStepsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-workflow-steps/${step.id}/edit?job_id=${step.job_id}`
+                              `/dashboard/job-workflow-steps/${step.id}/edit${
+                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                              }`
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
@@ -1727,7 +1477,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndex.modal,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -1736,7 +1492,7 @@ export default function JobWorkflowStepsPage() {
             <div
               ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
@@ -1767,6 +1523,28 @@ export default function JobWorkflowStepsPage() {
                         placeholder="Enter step code"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
+                    </div>
+
+                    {/* Step Order Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Step Order
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={stepOrderFilter || ""}
+                        onChange={(e) =>
+                          setStepOrderFilter(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Enter step order"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Use with Job ID for precise lookup
+                      </p>
                     </div>
 
                     {/* Critical Filter */}
@@ -1890,6 +1668,7 @@ export default function JobWorkflowStepsPage() {
                     <button
                       onClick={() => {
                         setStepCodeFilter("");
+                        setStepOrderFilter("");
                         setIsCriticalFilter("");
                         setIsParallelFilter("");
                         setIsActiveFilter("");
@@ -1920,7 +1699,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndex.modal,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -1928,7 +1713,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}
@@ -1960,7 +1745,9 @@ export default function JobWorkflowStepsPage() {
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, idx)}
                         onDragEnd={handleDragEnd}
-                        className={`flex items-center justify-between ${tw.rounded} border p-3 transition-all cursor-move ${
+                        className={`flex items-center justify-between ${
+                          tw.rounded
+                        } border p-3 transition-all cursor-move ${
                           draggedItem === idx
                             ? "opacity-50 border-blue-400 bg-blue-50"
                             : dragOverIndex === idx
@@ -2038,7 +1825,9 @@ export default function JobWorkflowStepsPage() {
                   {reorderData.some(
                     (item) => item.currentOrder !== item.newOrder
                   ) && (
-                    <div className={`mt-4 ${tw.rounded} bg-blue-50 border border-blue-200 p-3`}>
+                    <div
+                      className={`mt-4 ${tw.rounded} bg-blue-50 border border-blue-200 p-3`}
+                    >
                       <p className="text-sm text-blue-800">
                         <strong>Note:</strong> Step order will be updated when
                         you save. Make sure the order numbers are correct.
@@ -2096,7 +1885,13 @@ export default function JobWorkflowStepsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndex.modal,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
@@ -2104,7 +1899,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}
@@ -2135,9 +1930,7 @@ export default function JobWorkflowStepsPage() {
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
-                              is_active: e.target.checked
-                                ? true
-                                : undefined,
+                              is_active: e.target.checked ? true : undefined,
                             })
                           }
                           className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
@@ -2160,7 +1953,9 @@ export default function JobWorkflowStepsPage() {
                               }
                               className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                             />
-                            <span className="text-sm text-gray-600">Active</span>
+                            <span className="text-sm text-gray-600">
+                              Active
+                            </span>
                           </label>
                         </div>
                       )}
@@ -2209,11 +2004,15 @@ export default function JobWorkflowStepsPage() {
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={batchUpdateFields.timeout_seconds !== undefined}
+                          checked={
+                            batchUpdateFields.timeout_seconds !== undefined
+                          }
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,
-                              timeout_seconds: e.target.checked ? 300 : undefined,
+                              timeout_seconds: e.target.checked
+                                ? 300
+                                : undefined,
                             })
                           }
                           className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
@@ -2281,7 +2080,9 @@ export default function JobWorkflowStepsPage() {
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={batchUpdateFields.on_failure_action !== undefined}
+                          checked={
+                            batchUpdateFields.on_failure_action !== undefined
+                          }
                           onChange={(e) =>
                             setBatchUpdateFields({
                               ...batchUpdateFields,

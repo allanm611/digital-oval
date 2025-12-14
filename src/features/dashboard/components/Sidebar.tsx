@@ -36,6 +36,7 @@ import {
   Database,
   Link2,
   PlayCircle,
+  GitBranch,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw } from "../../../shared/utils/utils";
@@ -478,6 +479,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             name: "Job Workflow Steps",
             href: "/dashboard/job-workflow-steps",
             icon: Activity,
+            type: "single",
+            entity: "campaigns",
+          },
+          {
+            name: "Workflows",
+            href: "/dashboard/workflows",
+            icon: GitBranch,
             type: "single",
             entity: "campaigns",
           },

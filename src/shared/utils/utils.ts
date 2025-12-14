@@ -32,6 +32,7 @@ export const typography = {
 export const space = spacing;
 export const radius = borderRadius;
 export const button = buttons;
+export { zIndex };
 
 // Ready-to-use Tailwind CSS classes - copy and paste these directly into your className props
 export const tw = {
