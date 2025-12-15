@@ -95,7 +95,7 @@ export interface StatusCountsResponse {
 
 export interface WorkflowTypesResponse {
   success?: boolean;
-  data: string[];
+  data: string[] | { types: string[]; total: number };
   source?: string;
 }
 

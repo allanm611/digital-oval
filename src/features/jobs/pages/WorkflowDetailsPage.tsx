@@ -12,7 +12,7 @@ import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button } from "../../../shared/utils/utils";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -27,6 +27,7 @@ export default function WorkflowDetailsPage() {
   const [isActive, setIsActive] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCloning, setIsCloning] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
@@ -84,6 +85,7 @@ export default function WorkflowDetailsPage() {
   const handleClone = async () => {
     if (!workflow) return;
 
+    setIsCloning(true);
     try {
       await workflowService.cloneWorkflow(workflow.id, {
         newName: `${workflow.name} (Copy)`,
@@ -96,6 +98,8 @@ export default function WorkflowDetailsPage() {
         "Clone failed",
         err instanceof Error ? err.message : "Unknown error"
       );
+    } finally {
+      setIsCloning(false);
     }
   };
 
@@ -155,44 +159,98 @@ export default function WorkflowDetailsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleToggleActive}
-            disabled={isToggling}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium ${
-              isActive
-                ? "text-orange-700 bg-orange-50 border border-orange-300 hover:bg-orange-100"
-                : "text-green-700 bg-green-50 border border-green-300 hover:bg-green-100"
-            } disabled:opacity-50`}
-          >
-            {isActive ? (
-              <>
-                <Pause className="h-4 w-4" />
-                Deactivate
-              </>
-            ) : (
-              <>
+          {!isActive && (
+            <button
+              onClick={handleToggleActive}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
+              style={{
+                background: button.secondaryAction.background,
+                color: button.secondaryAction.color,
+                border: button.secondaryAction.border,
+                paddingTop: button.secondaryAction.paddingY,
+                paddingBottom: button.secondaryAction.paddingY,
+                paddingLeft: button.secondaryAction.paddingX,
+                paddingRight: button.secondaryAction.paddingX,
+                borderRadius: button.secondaryAction.borderRadius,
+                fontSize: button.secondaryAction.fontSize,
+              }}
+            >
+              {isToggling ? (
+                <LoadingSpinner />
+              ) : (
                 <Play className="h-4 w-4" />
-                Activate
-              </>
-            )}
-          </button>
+              )}
+              Activate
+            </button>
+          )}
+          {isActive && (
+            <button
+              onClick={handleToggleActive}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
+              style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
+            >
+              {isToggling ? (
+                <LoadingSpinner />
+              ) : (
+                <Pause className="h-4 w-4" />
+              )}
+              Deactivate
+            </button>
+          )}
           <button
             onClick={handleClone}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
-          >
-            <Copy className="h-4 w-4" />
-            Clone
+            disabled={isCloning}
+            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+            style={{
+              paddingTop: button.bordered.paddingY,
+              paddingBottom: button.bordered.paddingY,
+              paddingLeft: button.bordered.paddingX,
+              paddingRight: button.bordered.paddingX,
+              borderRadius: button.bordered.borderRadius,
+              fontSize: button.bordered.fontSize,
+            }}
+            >
+              {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
+              Clone
           </button>
           <button
             onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+            style={{
+              paddingTop: button.bordered.paddingY,
+              paddingBottom: button.bordered.paddingY,
+              paddingLeft: button.bordered.paddingX,
+              paddingRight: button.bordered.paddingX,
+              borderRadius: button.bordered.borderRadius,
+              fontSize: button.bordered.fontSize,
+            }}
           >
             <Edit className="h-4 w-4" />
             Edit
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+            style={{
+              paddingTop: button.bordered.paddingY,
+              paddingBottom: button.bordered.paddingY,
+              paddingLeft: button.bordered.paddingX,
+              paddingRight: button.bordered.paddingX,
+              borderRadius: button.bordered.borderRadius,
+              fontSize: button.bordered.fontSize,
+            }}
           >
             <Trash2 className="h-4 w-4" />
             Delete

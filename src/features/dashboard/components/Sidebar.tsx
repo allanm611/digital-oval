@@ -483,7 +483,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             entity: "campaigns",
           },
           {
-            name: "Workflows",
+            name: "Job Workflows",
             href: "/dashboard/workflows",
             icon: GitBranch,
             type: "single",

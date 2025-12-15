@@ -196,8 +196,9 @@ class WorkflowService {
     return this.normalizeListResponse(response);
   }
 
-  async getWorkflowTypes(): Promise<WorkflowTypesResponse> {
-    return this.request<WorkflowTypesResponse>("/types");
+  async getWorkflowTypes(skipCache = false): Promise<WorkflowTypesResponse> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<WorkflowTypesResponse>(`/types${query}`);
   }
 
   async searchWorkflows(
@@ -236,12 +237,14 @@ class WorkflowService {
       activeOnly?: boolean;
       limit?: number;
       offset?: number;
+      skipCache?: boolean;
     } = {}
   ): Promise<WorkflowListResponse> {
     const query = this.buildQueryString({
       activeOnly: params.activeOnly ?? true,
       limit: clampLimit(params.limit),
       offset: params.offset ?? 0,
+      skipCache: params.skipCache ?? false,
     });
     const response = await this.request<
       | WorkflowListResponse

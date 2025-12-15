@@ -5,8 +5,6 @@ import {
   Plus,
   Search,
   Trash2,
-  CheckSquare,
-  Square,
   Filter,
   BarChart3,
   Copy,
@@ -17,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
@@ -31,18 +29,21 @@ export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeOnlyFilter, setActiveOnlyFilter] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [workflowTypeFilter, setWorkflowTypeFilter] = useState<string>("");
   const [workflowTypes, setWorkflowTypes] = useState<string[]>([]);
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
+    pending_activation: 0,
+    deactivated: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [rowLoading, setRowLoading] = useState<{ id: number; action: "clone" | "delete" } | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<number>>(new Set());
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
@@ -55,18 +56,24 @@ export default function WorkflowsPage() {
 
       if (workflowTypeFilter) {
         response = await workflowService.getWorkflowsByType(workflowTypeFilter, {
-          activeOnly: activeOnlyFilter,
+          activeOnly: statusFilter === "active",
           limit: 50,
+          skipCache: true,
         });
       } else if (searchTerm.trim()) {
         response = await workflowService.searchWorkflows({
           q: searchTerm.trim(),
-          activeOnly: activeOnlyFilter,
+          activeOnly: statusFilter === "active",
           limit: 50,
           skipCache: true,
         });
-      } else if (activeOnlyFilter) {
+      } else if (statusFilter === "active") {
         response = await workflowService.getActiveWorkflows({
+          limit: 50,
+          skipCache: true,
+        });
+      } else if (statusFilter === "inactive") {
+        response = await workflowService.getInactiveWorkflows({
           limit: 50,
           skipCache: true,
         });
@@ -86,29 +93,49 @@ export default function WorkflowsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, activeOnlyFilter, workflowTypeFilter, showError]);
+  }, [searchTerm, statusFilter, workflowTypeFilter, showError]);
 
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
       const [statusCounts, typesResponse] = await Promise.all([
         workflowService.getStatusCounts(true),
-        workflowService.getWorkflowTypes(),
+        workflowService.getWorkflowTypes(true),
       ]);
 
+      // Handle different response structures
+      const counts = statusCounts?.data || statusCounts || {};
+      const totalCalculated =
+        (counts.pending_activation || 0) +
+        (counts.active || 0) +
+        (counts.suspended || 0) +
+        (counts.locked || 0) +
+        (counts.deactivated || 0) +
+        (counts.deleted || 0) +
+        (counts.inactive || 0);
       setStats({
-        total: statusCounts.data?.total || 0,
-        active: statusCounts.data?.active || 0,
-        inactive: statusCounts.data?.inactive || 0,
+        total: counts.total || totalCalculated || 0,
+        active: counts.active || 0,
+        inactive:
+          (counts.inactive || 0) +
+          (counts.deactivated || 0) +
+          (counts.suspended || 0) +
+          (counts.locked || 0),
+        pending_activation: counts.pending_activation || 0,
+        deactivated: counts.deactivated || 0,
       });
 
-      // Ensure workflowTypes is always an array
-      // Handle both cases: response might be array directly or wrapped in { data: string[] }
+      // Handle types response - backend returns {success: true, data: {types: [...], total: N}}
       let types: string[] = [];
       if (Array.isArray(typesResponse)) {
         types = typesResponse;
-      } else if (typesResponse?.data && Array.isArray(typesResponse.data)) {
-        types = typesResponse.data;
+      } else if (typesResponse?.data) {
+        // Check if data has types property (new format) or is array directly (old format)
+        if (typesResponse.data.types && Array.isArray(typesResponse.data.types)) {
+          types = typesResponse.data.types;
+        } else if (Array.isArray(typesResponse.data)) {
+          types = typesResponse.data;
+        }
       }
       setWorkflowTypes(types);
     } catch (err) {
@@ -134,6 +161,7 @@ export default function WorkflowsPage() {
       showToast("Workflow deleted", "Workflow has been deleted successfully.");
       setShowDeleteModal(false);
       setDeletingWorkflow(null);
+      setRowLoading(null);
       fetchWorkflows();
       fetchStats();
     } catch (err) {
@@ -217,6 +245,7 @@ export default function WorkflowsPage() {
   };
 
   const handleClone = async (workflow: Workflow) => {
+    setRowLoading({ id: workflow.id, action: "clone" });
     try {
       await workflowService.cloneWorkflow(workflow.id, {
         newName: `${workflow.name} (Copy)`,
@@ -230,6 +259,8 @@ export default function WorkflowsPage() {
         "Clone failed",
         err instanceof Error ? err.message : "Unknown error"
       );
+    } finally {
+      setRowLoading((prev) => (prev?.id === workflow.id ? null : prev));
     }
   };
 
@@ -259,6 +290,31 @@ export default function WorkflowsPage() {
             Analytics
           </button>
           <button
+            onClick={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+                setSelectedWorkflows(new Set(workflows.map((w) => w.id)));
+              } else {
+                setIsSelectionMode(false);
+                setSelectedWorkflows(new Set());
+              }
+            }}
+            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
+            style={{
+              background: button.bordered.background,
+              color: button.bordered.color,
+              border: button.bordered.border,
+              paddingTop: button.bordered.paddingY,
+              paddingBottom: button.bordered.paddingY,
+              paddingLeft: button.bordered.paddingX,
+              paddingRight: button.bordered.paddingX,
+              borderRadius: button.bordered.borderRadius,
+              fontSize: button.bordered.fontSize,
+            }}
+          >
+            {isSelectionMode ? "Cancel" : "Select"}
+          </button>
+          <button
             onClick={() => navigate("/dashboard/workflows/create")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
             style={{ backgroundColor: color.primary.action }}
@@ -269,9 +325,16 @@ export default function WorkflowsPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {!isLoadingStats && (
-        <div className="grid gap-4 md:grid-cols-3">
+      {/* Stats Cards (always visible; keep layout stable during search) */}
+      <div className="relative">
+        {isLoadingStats && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+            <LoadingSpinner />
+          </div>
+        )}
+        <div
+          className={`grid gap-4 md:grid-cols-4 ${isLoadingStats ? "opacity-50 pointer-events-none" : ""}`}
+        >
           <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" style={{ color: color.primary.accent }} />
@@ -293,8 +356,17 @@ export default function WorkflowsPage() {
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">{stats.inactive}</p>
           </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" style={{ color: color.primary.accent }} />
+              <p className="text-sm font-medium text-gray-600">Pending Activation</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {stats.pending_activation}
+            </p>
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Filters and Search */}
       <div className="flex flex-col sm:flex-row gap-4">
@@ -320,32 +392,28 @@ export default function WorkflowsPage() {
         />
         <HeadlessSelect
           options={[
-            { value: "true", label: "Active Only" },
-            { value: "false", label: "All" },
+            { value: "all", label: "All" },
+            { value: "active", label: "Active" },
+            { value: "inactive", label: "Inactive" },
           ]}
-          value={activeOnlyFilter ? "true" : "false"}
-          onChange={(value) => setActiveOnlyFilter(value === "true")}
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
           placeholder="Status"
           className="w-full sm:w-40"
         />
-        <button
-          onClick={() => setIsSelectionMode(!isSelectionMode)}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium border border-gray-300 bg-white hover:bg-gray-50`}
-        >
-          {isSelectionMode ? "Cancel" : "Select"}
-        </button>
       </div>
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedWorkflows.size > 0 && (
         <div className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-900">
               {selectedWorkflows.size} selected
             </span>
             <button
               onClick={handleSelectAll}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="text-sm hover:opacity-80"
+              style={{ color: color.primary.accent }}
             >
               {selectedWorkflows.size === workflows.length ? "Deselect All" : "Select All"}
             </button>
@@ -354,7 +422,18 @@ export default function WorkflowsPage() {
             <button
               onClick={handleBatchActivate}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-300 hover:bg-green-100 disabled:opacity-50`}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
+              style={{
+                background: button.secondaryAction.background,
+                color: button.secondaryAction.color,
+                border: button.secondaryAction.border,
+                paddingTop: button.secondaryAction.paddingY,
+                paddingBottom: button.secondaryAction.paddingY,
+                paddingLeft: button.secondaryAction.paddingX,
+                paddingRight: button.secondaryAction.paddingX,
+                borderRadius: button.secondaryAction.borderRadius,
+                fontSize: button.secondaryAction.fontSize,
+              }}
             >
               <Play className="h-4 w-4" />
               Activate
@@ -362,7 +441,18 @@ export default function WorkflowsPage() {
             <button
               onClick={handleBatchDeactivate}
               disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-orange-700 bg-orange-50 border border-orange-300 hover:bg-orange-100 disabled:opacity-50`}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium disabled:opacity-50`}
+              style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
             >
               <Pause className="h-4 w-4" />
               Deactivate
@@ -396,13 +486,12 @@ export default function WorkflowsPage() {
               <tr>
                 {isSelectionMode && (
                   <th className="px-6 py-3 text-left">
-                    <button onClick={handleSelectAll}>
-                      {selectedWorkflows.size === workflows.length ? (
-                        <CheckSquare className="h-5 w-5 text-gray-600" />
-                      ) : (
-                        <Square className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
+                    <input
+                      type="checkbox"
+                      checked={selectedWorkflows.size === workflows.length && workflows.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                    />
                   </th>
                 )}
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
@@ -427,13 +516,12 @@ export default function WorkflowsPage() {
                 <tr key={workflow.id} className="hover:bg-gray-50">
                   {isSelectionMode && (
                     <td className="px-6 py-4">
-                      <button onClick={() => handleToggleSelection(workflow.id)}>
-                        {selectedWorkflows.has(workflow.id) ? (
-                          <CheckSquare className="h-5 w-5 text-gray-600" />
-                        ) : (
-                          <Square className="h-5 w-5 text-gray-400" />
-                        )}
-                      </button>
+                      <input
+                        type="checkbox"
+                        checked={selectedWorkflows.has(workflow.id)}
+                        onChange={() => handleToggleSelection(workflow.id)}
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                      />
                     </td>
                   )}
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
@@ -442,16 +530,8 @@ export default function WorkflowsPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {workflow.workflow_type || "—"}
                   </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 ${tw.rounded} text-xs font-medium ${
-                        workflow.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {workflow.is_active ? "Active" : "Inactive"}
-                    </span>
+                  <td className="px-6 py-4 text-sm text-black">
+                    {workflow.is_active ? "Active" : "Inactive"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     {new Date(workflow.created_at).toLocaleDateString()}
@@ -473,21 +553,38 @@ export default function WorkflowsPage() {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleClone(workflow)}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        onClick={async () => {
+                          setRowLoading({ id: workflow.id, action: "clone" });
+                          await handleClone(workflow);
+                          setRowLoading((prev) =>
+                            prev?.id === workflow.id ? null : prev
+                          );
+                        }}
+                        disabled={rowLoading?.id === workflow.id && rowLoading?.action === "clone"}
+                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
                         title="Clone"
                       >
-                        <Copy className="w-4 h-4" />
+                        {rowLoading?.id === workflow.id && rowLoading?.action === "clone" ? (
+                          <LoadingSpinner />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
                       </button>
                       <button
                         onClick={() => {
+                          setRowLoading({ id: workflow.id, action: "delete" });
                           setDeletingWorkflow(workflow);
                           setShowDeleteModal(true);
                         }}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
+                        disabled={rowLoading?.id === workflow.id && rowLoading?.action === "delete"}
+                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
                         title="Delete"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {rowLoading?.id === workflow.id && rowLoading?.action === "delete" ? (
+                          <LoadingSpinner />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </td>
@@ -503,10 +600,11 @@ export default function WorkflowsPage() {
         onClose={() => {
           setShowDeleteModal(false);
           setDeletingWorkflow(null);
+          setRowLoading(null);
         }}
         onConfirm={handleDelete}
         title="Delete Workflow"
-        message={`Are you sure you want to delete "${deletingWorkflow?.name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${deletingWorkflow?.name || "this workflow"}"? This action cannot be undone.`}
         isDeleting={isDeleting}
       />
     </div>

@@ -178,25 +178,23 @@ export default function CreateWorkflowPage() {
               />
             </div>
 
-            {!isEditMode && (
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active ?? true}
-                  onChange={(e) =>
-                    setFormData({ ...formData, is_active: e.target.checked })
-                  }
-                  className="h-4 w-4 text-[#3b8169] focus:ring-[#3b8169] border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="is_active"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  Active
-                </label>
-              </div>
-            )}
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="is_active"
+                checked={formData.is_active ?? true}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
+                className="h-4 w-4 text-[#3b8169] focus:ring-[#3b8169] border-gray-300 rounded"
+              />
+              <label
+                htmlFor="is_active"
+                className="ml-2 block text-sm text-gray-700"
+              >
+                Active
+              </label>
+            </div>
           </div>
         </div>
 
