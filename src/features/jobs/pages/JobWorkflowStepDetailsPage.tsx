@@ -22,7 +22,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw, noteStyles } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -261,9 +261,35 @@ export default function JobWorkflowStepDetailsPage() {
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {step.step_name}
             </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Code: {step.step_code} | Order: {step.step_order}
-            </p>
+            {canExecute && (
+              <div className="flex items-center gap-2 mt-1">
+                {canExecute.can_execute ? (
+                  <CheckCircle
+                    className="h-4 w-4"
+                    style={{ color: color.status.info }}
+                  />
+                ) : (
+                  <AlertCircle
+                    className="h-4 w-4"
+                    style={{ color: color.status.danger }}
+                  />
+                )}
+                <p
+                  className="text-sm font-semibold"
+                  style={{
+                    color: canExecute.can_execute
+                      ? color.status.info
+                      : color.status.danger,
+                  }}
+                >
+                  {canExecute.can_execute
+                    ? "Step can execute"
+                    : `Step cannot execute: ${
+                        canExecute.reason || "Dependencies not satisfied"
+                      }`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -315,43 +341,6 @@ export default function JobWorkflowStepDetailsPage() {
           </button>
         </div>
       </div>
-
-      {/* Execution Status */}
-      {canExecute && (
-        <div
-          className={`${tw.rounded} border p-4`}
-          style={
-            canExecute.can_execute
-              ? undefined
-              : {
-                  backgroundColor: noteStyles.warning.backgroundColor,
-                  borderColor: noteStyles.warning.borderColor,
-                }
-          }
-        >
-          <div className="flex items-center gap-2">
-            {canExecute.can_execute ? (
-              <CheckCircle className="h-5 w-5 text-green-700" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-700" />
-            )}
-            <p
-              className="font-semibold"
-              style={
-                canExecute.can_execute
-                  ? { color: "#15803d" }
-                  : { color: noteStyles.warning.textColor }
-              }
-            >
-              {canExecute.can_execute
-                ? "Step can execute"
-                : `Step cannot execute: ${
-                    canExecute.reason || "Dependencies not satisfied"
-                  }`}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Main Content Grid */}
       <div className="space-y-6">

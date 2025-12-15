@@ -385,9 +385,17 @@ class JobWorkflowStepService {
     skipCache = false
   ): Promise<{ can_execute: boolean; reason?: string }> {
     const query = this.buildQueryString({ skipCache });
-    return this.request<{ can_execute: boolean; reason?: string }>(
-      `/job/${jobId}/can-execute/${stepOrder}${query}`
-    );
+    const response = await this.request<{
+      success: boolean;
+      data: { canExecute: boolean };
+      source?: string;
+    }>(`/job/${jobId}/can-execute/${stepOrder}${query}`);
+    
+    // Map backend response to expected format
+    return {
+      can_execute: response.data?.canExecute ?? false,
+      reason: response.data?.canExecute ? undefined : "Dependencies not satisfied",
+    };
   }
 
   async getParallelGroups(

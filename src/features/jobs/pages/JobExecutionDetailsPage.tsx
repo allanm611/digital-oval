@@ -13,6 +13,21 @@ import {
   Archive,
   RotateCcw,
 } from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
 import { useAuth } from "../../../contexts/AuthContext";
 import { jobExecutionService } from "../services/jobExecutionService";
 import { JobExecution } from "../types/jobExecution";
@@ -37,6 +52,55 @@ const formatDuration = (seconds: number | null) => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   return `${hours}h ${minutes}m`;
+};
+
+const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
+
+type ChartTooltipEntry = {
+  color?: string;
+  name?: string;
+  value?: number | string;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  label?: string;
+  payload?: ChartTooltipEntry[];
+};
+
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
+      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
+      {payload.map((entry, idx) => (
+        <div
+          key={idx}
+          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+        >
+          <span className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{
+                backgroundColor: entry.color || color.primary.accent,
+              }}
+            />
+            {entry.name || "Count"}
+          </span>
+          <span className="font-semibold text-gray-900">
+            {typeof entry.value === "number"
+              ? entry.value.toLocaleString()
+              : entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 const getStatusColor = (status: string) => {
@@ -74,6 +138,16 @@ export default function JobExecutionDetailsPage() {
   const [resourceUsage, setResourceUsage] = useState<any>(null);
   const [runningDuration, setRunningDuration] = useState<number | null>(null);
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
+
+  // Job Analytics state
+  const [executionDistribution, setExecutionDistribution] = useState<any[]>([]);
+  const [executionComparison, setExecutionComparison] = useState<any>(null);
+  const [completionForecast, setCompletionForecast] = useState<any[]>([]);
+  const [executionHeatmap, setExecutionHeatmap] = useState<any>(null);
+  const [slaPrediction, setSlaPrediction] = useState<any>(null);
+  const [executionTimeline, setExecutionTimeline] = useState<any[]>([]);
+  const [dailySummary, setDailySummary] = useState<any[]>([]);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -127,6 +201,67 @@ export default function JobExecutionDetailsPage() {
     }
   }, [id, execution?.execution_status, showError]);
 
+  // Fetch job analytics when execution is loaded
+  useEffect(() => {
+    if (!execution?.job_id) return;
+
+    const fetchJobAnalytics = async () => {
+      setIsLoadingAnalytics(true);
+      try {
+        const jobIdNum = Number(execution.job_id);
+        if (isNaN(jobIdNum)) {
+          console.error("Invalid job_id:", execution.job_id);
+          return;
+        }
+
+        // Calculate startDate (30 days ago)
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        const startDateStr = startDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+        const [
+          distributionData,
+          comparisonData,
+          forecastData,
+          heatmapData,
+          predictionData,
+          timelineData,
+          summaryData,
+        ] = await Promise.all([
+          jobExecutionService
+            .getExecutionDistribution({ startDate: startDateStr })
+            .catch(() => []),
+          jobExecutionService
+            .getExecutionComparison(jobIdNum, { currentPeriodDays: 7 })
+            .catch(() => null),
+          jobExecutionService.getCompletionForecast(jobIdNum).catch(() => []),
+          jobExecutionService.getExecutionHeatmap(jobIdNum).catch(() => null),
+          jobExecutionService.getSLAPrediction(jobIdNum).catch(() => null),
+          jobExecutionService
+            .getExecutionTimeline(jobIdNum, { limit: 20 })
+            .catch(() => []),
+          jobExecutionService
+            .getDailySummary(jobIdNum, { daysBack: 30 })
+            .catch(() => []),
+        ]);
+
+        setExecutionDistribution(distributionData || []);
+        setExecutionComparison(comparisonData);
+        setCompletionForecast(forecastData || []);
+        setExecutionHeatmap(heatmapData);
+        setSlaPrediction(predictionData);
+        setExecutionTimeline(timelineData || []);
+        setDailySummary(summaryData || []);
+      } catch (err) {
+        console.error("Failed to fetch job analytics:", err);
+      } finally {
+        setIsLoadingAnalytics(false);
+      }
+    };
+
+    fetchJobAnalytics();
+  }, [execution?.job_id]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
@@ -152,7 +287,7 @@ export default function JobExecutionDetailsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/dashboard/job-executions")}
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 transition-colors`}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -255,41 +390,6 @@ export default function JobExecutionDetailsPage() {
         </div>
       </div>
 
-      {/* Status Card */}
-      <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span
-              className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium ${getStatusColor(
-                execution.execution_status
-              )}`}
-            >
-              {execution.execution_status}
-            </span>
-            {execution.execution_status === "running" && (
-              <div className="flex items-center gap-2 text-blue-600">
-                <RefreshCw className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Running...</span>
-              </div>
-            )}
-          </div>
-          {execution.sla_breached && (
-            <div className="flex items-center gap-2 text-red-600">
-              <AlertCircle className="h-5 w-5" />
-              <span className="text-sm font-medium">SLA Breached</span>
-            </div>
-          )}
-          {isTimedOut && (
-            <div className="flex items-center gap-2 text-purple-600">
-              <Clock className="h-5 w-5" />
-              <span className="text-sm font-medium">Timed Out</span>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Main Info Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         <div
@@ -315,7 +415,7 @@ export default function JobExecutionDetailsPage() {
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500">Status</dt>
-              <dd className="mt-1">
+              <dd className="mt-1 flex items-center gap-3">
                 <span
                   className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
                     execution.execution_status
@@ -323,6 +423,24 @@ export default function JobExecutionDetailsPage() {
                 >
                   {execution.execution_status}
                 </span>
+                {execution.execution_status === "running" && (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    <span className="text-xs">Running...</span>
+                  </div>
+                )}
+                {execution.sla_breached && (
+                  <div className="flex items-center gap-1 text-red-600">
+                    <AlertCircle className="h-3 w-3" />
+                    <span className="text-xs font-medium">SLA Breached</span>
+                  </div>
+                )}
+                {isTimedOut && (
+                  <div className="flex items-center gap-1 text-purple-600">
+                    <Clock className="h-3 w-3" />
+                    <span className="text-xs font-medium">Timed Out</span>
+                  </div>
+                )}
               </dd>
             </div>
             <div>
@@ -598,6 +716,335 @@ export default function JobExecutionDetailsPage() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Job Analytics & Insights */}
+      {execution.job_id && (
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Job Analytics & Insights
+          </h3>
+
+          {isLoadingAnalytics ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* SLA Prediction */}
+              {slaPrediction && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                    SLA Prediction
+                  </h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <dt className="text-xs text-gray-500">
+                        Predicted Compliance Rate
+                      </dt>
+                      <dd className="text-lg font-semibold text-gray-900">
+                        {(slaPrediction.predicted_compliance_rate || 0).toFixed(
+                          1
+                        )}
+                        %
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-gray-500">Confidence</dt>
+                      <dd className="text-lg font-semibold text-gray-900">
+                        {(slaPrediction.confidence || 0).toFixed(1)}%
+                      </dd>
+                    </div>
+                  </div>
+                  {slaPrediction.factors &&
+                    slaPrediction.factors.length > 0 && (
+                      <div className="mt-3">
+                        <dt className="text-xs text-gray-500 mb-1">
+                          Key Factors
+                        </dt>
+                        <ul className="text-xs text-gray-600 space-y-1">
+                          {slaPrediction.factors
+                            .slice(0, 3)
+                            .map((factor: any, idx: number) => (
+                              <li key={idx}>
+                                • {factor.factor}: {factor.impact}% impact
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+                </div>
+              )}
+
+              {/* Execution Comparison */}
+              {executionComparison && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4">
+                    Period Comparison (Current vs Previous)
+                  </h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={[
+                        {
+                          period: "Current",
+                          total:
+                            executionComparison.current_period
+                              ?.total_executions || 0,
+                          successful:
+                            executionComparison.current_period
+                              ?.successful_executions || 0,
+                          failed:
+                            executionComparison.current_period
+                              ?.failed_executions || 0,
+                        },
+                        {
+                          period: "Previous",
+                          total:
+                            executionComparison.previous_period
+                              ?.total_executions || 0,
+                          successful:
+                            executionComparison.previous_period
+                              ?.successful_executions || 0,
+                          failed:
+                            executionComparison.previous_period
+                              ?.failed_executions || 0,
+                        },
+                      ]}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="period" />
+                      <YAxis />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "transparent" }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="successful"
+                        fill="#3b8169"
+                        name="Successful"
+                      />
+                      <Bar dataKey="failed" fill="#ef4444" name="Failed" />
+                      <Bar dataKey="total" fill="#3b82f6" name="Total" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Completion Forecast */}
+              {completionForecast && completionForecast.length > 0 && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                    Completion Forecast
+                  </h4>
+                  <div className="space-y-2">
+                    {completionForecast
+                      .slice(0, 3)
+                      .map((forecast: any, idx: number) => (
+                        <div key={idx} className="text-sm">
+                          <span className="font-medium text-gray-900">
+                            {forecast.execution_id?.substring(0, 8)}...
+                          </span>
+                          <span className="text-gray-600 ml-2">
+                            Est: {formatDateTime(forecast.estimated_completion)}
+                            ({forecast.confidence?.toFixed(0) || 0}% confidence)
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Execution Timeline */}
+              {executionTimeline && executionTimeline.length > 0 && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4">
+                    Recent Execution Timeline (Duration Trend)
+                  </h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart
+                      data={executionTimeline.slice(0, 10).map((item: any) => ({
+                        execution: item.execution_id?.substring(0, 8) || "N/A",
+                        duration: item.duration_seconds || 0,
+                        status: item.status,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="execution" />
+                      <YAxis />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "transparent" }}
+                      />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="duration"
+                        stroke="#3b82f6"
+                        name="Duration (seconds)"
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Daily Summary */}
+              {dailySummary && dailySummary.length > 0 && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4">
+                    Daily Summary (Last 30 Days)
+                  </h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart
+                      data={dailySummary.slice(0, 14).map((summary: any) => ({
+                        date: summary.date,
+                        successful: summary.successful_executions || 0,
+                        failed: summary.failed_executions || 0,
+                        total: summary.total_executions || 0,
+                      }))}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="date"
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis />
+                      <Tooltip
+                        content={<CustomTooltip />}
+                        cursor={{ fill: "transparent" }}
+                      />
+                      <Legend />
+                      <Bar
+                        dataKey="successful"
+                        fill="#3b8169"
+                        name="Successful"
+                      />
+                      <Bar dataKey="failed" fill="#ef4444" name="Failed" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Execution Distribution */}
+              {executionDistribution && executionDistribution.length > 0 && (
+                <div className="border-b border-gray-200 pb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-4">
+                    Execution Distribution
+                  </h4>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={[
+                            {
+                              name: "Successful",
+                              value: executionDistribution.reduce(
+                                (sum: number, d: any) =>
+                                  sum + (d.successful || 0),
+                                0
+                              ),
+                            },
+                            {
+                              name: "Failed",
+                              value: executionDistribution.reduce(
+                                (sum: number, d: any) => sum + (d.failed || 0),
+                                0
+                              ),
+                            },
+                          ]}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {[
+                            { name: "Successful", value: 0 },
+                            { name: "Failed", value: 0 },
+                          ].map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={index === 0 ? "#3b8169" : "#ef4444"}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        data={executionDistribution
+                          .slice(0, 10)
+                          .map((dist: any) => ({
+                            period: dist.period,
+                            successful: dist.successful || 0,
+                            failed: dist.failed || 0,
+                          }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="period" />
+                        <YAxis />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="successful"
+                          fill="#3b8169"
+                          name="Successful"
+                        />
+                        <Bar dataKey="failed" fill="#ef4444" name="Failed" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
+
+              {/* Execution Heatmap Info */}
+              {executionHeatmap &&
+                executionHeatmap.data &&
+                executionHeatmap.data.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                      Execution Heatmap
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {executionHeatmap.data.length} data points showing
+                      execution patterns by date and hour
+                    </p>
+                  </div>
+                )}
+
+              {/* No data message */}
+              {!slaPrediction &&
+                !executionComparison &&
+                completionForecast.length === 0 &&
+                executionTimeline.length === 0 &&
+                dailySummary.length === 0 &&
+                executionDistribution.length === 0 &&
+                (!executionHeatmap ||
+                  !executionHeatmap.data ||
+                  executionHeatmap.data.length === 0) && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No analytics data available for this job
+                  </p>
+                )}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -70,23 +70,6 @@ class JobExecutionService {
       options.method === "PUT" ||
       options.method === "PATCH";
 
-    if (isPostOrPut && options.body) {
-      console.log("🔵 JOB EXECUTION SERVICE - Request Details:");
-      console.log("Full URL:", fullUrl);
-      console.log("Method:", options.method);
-      console.log("Body (raw):", options.body);
-      try {
-        const parsedBody = JSON.parse(options.body as string);
-        console.log("Body (parsed):", JSON.stringify(parsedBody, null, 2));
-        console.log("Has userId:", "userId" in parsedBody);
-        console.log("userId value:", parsedBody.userId);
-        console.log("Has job_id:", "job_id" in parsedBody);
-        console.log("job_id value:", parsedBody.job_id);
-      } catch (e) {
-        console.log("Could not parse body:", e);
-      }
-    }
-
     const response = await fetch(fullUrl, {
       ...options,
       headers: {
@@ -101,16 +84,9 @@ class JobExecutionService {
       try {
         const parsed = JSON.parse(errorBody);
         errorMessage = parsed?.message || parsed?.error || errorMessage;
-        console.error("🔴 JOB EXECUTION SERVICE - Error Response:");
-        console.error("Status:", response.status);
-        console.error("Error body (parsed):", parsed);
-        console.error("Error message:", errorMessage);
       } catch {
         if (errorBody) {
           errorMessage = errorBody;
-          console.error("🔴 JOB EXECUTION SERVICE - Error Response:");
-          console.error("Status:", response.status);
-          console.error("Error body (raw):", errorBody);
         }
       }
       throw new Error(errorMessage);
@@ -344,14 +320,10 @@ class JobExecutionService {
   async getFailedExecutions(params?: {
     jobId?: number;
     daysBack?: number;
-    limit?: number;
-    offset?: number;
   }): Promise<JobExecutionListResponse> {
     const query = this.buildQueryString({
       jobId: params?.jobId,
       daysBack: params?.daysBack ?? 7,
-      limit: clampLimit(params?.limit),
-      offset: params?.offset ?? 0,
     });
     const response = await this.request<
       | JobExecutionListResponse
@@ -372,14 +344,10 @@ class JobExecutionService {
   async getSLABreachedExecutions(params?: {
     jobId?: number;
     daysBack?: number;
-    limit?: number;
-    offset?: number;
   }): Promise<JobExecutionListResponse> {
     const query = this.buildQueryString({
       jobId: params?.jobId,
       daysBack: params?.daysBack ?? 7,
-      limit: clampLimit(params?.limit),
-      offset: params?.offset ?? 0,
     });
     const response = await this.request<
       | JobExecutionListResponse
@@ -421,14 +389,8 @@ class JobExecutionService {
    * Get Queued Executions
    * GET /job-executions/queued
    */
-  async getQueuedExecutions(params?: {
-    limit?: number;
-    offset?: number;
-  }): Promise<JobExecutionListResponse> {
-    const query = this.buildQueryString({
-      limit: clampLimit(params?.limit),
-      offset: params?.offset ?? 0,
-    });
+  async getQueuedExecutions(): Promise<JobExecutionListResponse> {
+    const query = this.buildQueryString({});
     const response = await this.request<
       | JobExecutionListResponse
       | {
@@ -784,8 +746,15 @@ class JobExecutionService {
    * Get Execution Distribution
    * GET /job-executions/execution-distribution
    */
-  async getExecutionDistribution(): Promise<ExecutionDistribution[]> {
-    return this.request<ExecutionDistribution[]>(`/execution-distribution`);
+  async getExecutionDistribution(params?: {
+    startDate: string; // ISO format: YYYY-MM-DD
+  }): Promise<ExecutionDistribution[]> {
+    const query = this.buildQueryString({
+      startDate: params?.startDate,
+    });
+    return this.request<ExecutionDistribution[]>(
+      `/execution-distribution${query}`
+    );
   }
 
   /**
@@ -973,9 +942,13 @@ class JobExecutionService {
   /**
    * Get Completion Forecast
    * GET /job-executions/completion-forecast
+   * Note: Requires jobId parameter
    */
-  async getCompletionForecast(): Promise<CompletionForecast[]> {
-    return this.request<CompletionForecast[]>(`/completion-forecast`);
+  async getCompletionForecast(jobId: number): Promise<CompletionForecast[]> {
+    const query = this.buildQueryString({
+      jobId,
+    });
+    return this.request<CompletionForecast[]>(`/completion-forecast${query}`);
   }
 
   /**
@@ -989,9 +962,13 @@ class JobExecutionService {
   /**
    * Get SLA Prediction
    * GET /job-executions/sla-prediction
+   * Note: Requires jobId parameter
    */
-  async getSLAPrediction(): Promise<SLAPrediction> {
-    return this.request<SLAPrediction>(`/sla-prediction`);
+  async getSLAPrediction(jobId: number): Promise<SLAPrediction> {
+    const query = this.buildQueryString({
+      jobId,
+    });
+    return this.request<SLAPrediction>(`/sla-prediction${query}`);
   }
 
   /**
@@ -1011,75 +988,38 @@ class JobExecutionService {
   async createJobExecution(
     payload: CreateJobExecutionPayload
   ): Promise<JobExecution> {
-    console.log("🔵 CREATE JOB EXECUTION - Method Called!");
-    console.log("==========================================");
-    console.log("Payload received:", payload);
-    console.log("Payload type:", typeof payload);
-    console.log("Payload keys:", Object.keys(payload));
-    console.log("job_id:", payload.job_id, "Type:", typeof payload.job_id);
-    console.log("userId:", payload.userId, "Type:", typeof payload.userId);
-    console.log("userId is undefined?", payload.userId === undefined);
-    console.log("userId is null?", payload.userId === null);
-    console.log("Full payload JSON:", JSON.stringify(payload, null, 2));
-    console.log("==========================================");
-
     // Validate required fields before making the request
     if (!payload.job_id) {
-      console.error("❌ Validation Error: job_id is missing!");
       throw new Error("Job ID is required");
     }
     if (payload.userId === undefined || payload.userId === null) {
-      console.error("❌ Validation Error: userId is missing!");
-      console.error("userId value:", payload.userId);
       throw new Error("User ID is required");
     }
 
-    try {
-      const requestPayload = {
-        job_id: payload.job_id,
-        userId: payload.userId,
-        ...(payload.server_instance && {
-          server_instance: payload.server_instance,
-        }),
-        ...(payload.worker_node_id && {
-          worker_node_id: payload.worker_node_id,
-        }),
-        ...(payload.execution_context && {
-          execution_context: payload.execution_context,
-        }),
-        ...(payload.triggered_by && { triggered_by: payload.triggered_by }),
-      };
+    const requestPayload = {
+      job_id: payload.job_id,
+      userId: payload.userId,
+      ...(payload.server_instance && {
+        server_instance: payload.server_instance,
+      }),
+      ...(payload.worker_node_id && {
+        worker_node_id: payload.worker_node_id,
+      }),
+      ...(payload.execution_context && {
+        execution_context: payload.execution_context,
+      }),
+      ...(payload.triggered_by && { triggered_by: payload.triggered_by }),
+    };
 
-      console.log(
-        "📤 Sending request with payload:",
-        JSON.stringify(requestPayload, null, 2)
-      );
+    const response = await this.request<
+      JobExecution | { success?: boolean; data?: JobExecution }
+    >("/", {
+      method: "POST",
+      body: JSON.stringify(requestPayload),
+      headers: { "Content-Type": "application/json" },
+    });
 
-      const response = await this.request<
-        JobExecution | { success?: boolean; data?: JobExecution }
-      >("/", {
-        method: "POST",
-        body: JSON.stringify(requestPayload),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      console.log("🟢 CREATE JOB EXECUTION - Success Response:");
-      console.log("Response:", JSON.stringify(response, null, 2));
-
-      return this.normalizeExecutionResponse(response);
-    } catch (error) {
-      console.error("🔴 CREATE JOB EXECUTION - Error Caught:");
-      console.error(
-        "Error type:",
-        error instanceof Error ? error.constructor.name : typeof error
-      );
-      console.error(
-        "Error message:",
-        error instanceof Error ? error.message : String(error)
-      );
-      console.error("Full error:", error);
-      throw error;
-    }
+    return this.normalizeExecutionResponse(response);
   }
 
   /**
