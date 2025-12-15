@@ -290,9 +290,10 @@ const [newDependency, setNewDependency] = useState("");
     try {
       if (isEditMode && id) {
         // Backend does not allow changing job_id on update; omit it from payload
-        const { job_id, ...rest } = formData;
+        const { job_id, userId, ...rest } = formData;
         const updatePayload: UpdateJobWorkflowStepPayload = {
-          ...(rest as Omit<UpdateJobWorkflowStepPayload, "userId">),
+          ...rest,
+          depends_on_step_codes: formData.depends_on_step_codes || [],
           userId: user?.user_id || 0,
         };
         await jobWorkflowStepService.updateJobWorkflowStep(

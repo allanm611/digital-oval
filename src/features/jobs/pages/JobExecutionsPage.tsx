@@ -1173,6 +1173,20 @@ export default function JobExecutionsPage() {
                   className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
                   onClick={async () => {
                     if (!advancedInputs.jobId) return;
+                    const data =
+                      await jobExecutionService.getJobExecutionHistory(
+                        Number(advancedInputs.jobId),
+                        { limit: 50 }
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Execution History
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
                     const data = await jobExecutionService.getDailySummary(
                       Number(advancedInputs.jobId),
                       { daysBack: advancedInputs.daysBack || 30 }

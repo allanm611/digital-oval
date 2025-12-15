@@ -94,6 +94,8 @@ import JobExecutionsPage from "../../jobs/pages/JobExecutionsPage";
 import JobExecutionDetailsPage from "../../jobs/pages/JobExecutionDetailsPage";
 import JobExecutionsAnalyticsPage from "../../jobs/pages/JobExecutionsAnalyticsPage";
 import StepExecutionsPage from "../../jobs/pages/StepExecutionsPage";
+import StepExecutionDetailsPage from "../../jobs/pages/StepExecutionDetailsPage";
+import StepExecutionsAnalyticsPage from "../../jobs/pages/StepExecutionsAnalyticsPage";
 import NotificationsPage from "../../notifications/pages/NotificationsPage";
 import DNDManagementPage from "../../campaigns/pages/DNDManagementPage";
 import DNDChannelPage from "../../campaigns/pages/DNDChannelPage";
@@ -335,6 +337,14 @@ export default function Dashboard() {
           element={<JobExecutionsAnalyticsPage />}
         />
         <Route path="/step-executions" element={<StepExecutionsPage />} />
+        <Route
+          path="/step-executions/:id"
+          element={<StepExecutionDetailsPage />}
+        />
+        <Route
+          path="/step-executions/analytics"
+          element={<StepExecutionsAnalyticsPage />}
+        />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/dnd-management" element={<DNDManagementPage />} />
         <Route path="/dnd-management/:channel" element={<DNDChannelPage />} />

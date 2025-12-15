@@ -145,6 +145,10 @@ export default function JobWorkflowStepsPage() {
     on_failure_action?: FailureAction;
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
+  // Pagination
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -178,8 +182,8 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_code: stepCodeFilter.trim(),
-              limit: 50,
-              offset: 0,
+              limit: pageSize,
+              offset: page * pageSize,
               skipCache: true,
             });
           }
@@ -198,43 +202,86 @@ export default function JobWorkflowStepsPage() {
             response = await jobWorkflowStepService.searchJobWorkflowSteps({
               job_id: Number(jobIdFilter),
               step_order: Number(stepOrderFilter),
-              limit: 50,
-              offset: 0,
+              limit: pageSize,
+              offset: page * pageSize,
               skipCache: true,
             });
           }
         } else if (jobIdFilter) {
-          // Get steps for specific job
-          response = await jobWorkflowStepService.getStepsByJobId(
-            Number(jobIdFilter),
-            true
-          );
+          // Get steps for specific job - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            job_id: Number(jobIdFilter),
+            limit: pageSize,
+            offset: page * pageSize,
+            skipCache: true,
+          });
         } else if (stepTypeFilter) {
-          // Get steps by type
-          response = await jobWorkflowStepService.getStepsByType(
-            stepTypeFilter,
-            true
-          );
+          // Get steps by type - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            step_type: stepTypeFilter,
+            limit: pageSize,
+            offset: page * pageSize,
+            skipCache: true,
+          });
         } else if (isCriticalFilter === true) {
-          // Get critical steps
-          response = await jobWorkflowStepService.getCriticalSteps({
+          // Get critical steps - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            is_critical: true,
+            limit: pageSize,
+            offset: page * pageSize,
             skipCache: true,
           });
         } else if (showValidationSteps) {
-          // Get validation steps
-          response = await jobWorkflowStepService.getValidationSteps({
+          // Get validation steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getValidationSteps({
             job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
             skipCache: true,
           });
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (showRetrySteps) {
-          // Get retry steps
-          response = await jobWorkflowStepService.getRetrySteps({
+          // Get retry steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getRetrySteps({
             job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
             skipCache: true,
           });
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (showOrphanedSteps) {
-          // Get orphaned steps
-          response = await jobWorkflowStepService.getOrphanedSteps(true);
+          // Get orphaned steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getOrphanedSteps(true);
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (
           hasSearchTerm ||
           stepCodeFilter ||
@@ -247,8 +294,8 @@ export default function JobWorkflowStepsPage() {
         ) {
           // Use search endpoint with filters
           const params: JobWorkflowStepSearchParams = {
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset: page * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -304,8 +351,8 @@ export default function JobWorkflowStepsPage() {
         } else {
           // Use list endpoint
           const params = {
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset: page * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -321,6 +368,16 @@ export default function JobWorkflowStepsPage() {
           return a.step_order - b.step_order;
         });
         setSteps(sortedSteps);
+        
+        // Update total count from pagination response
+        if (response.pagination?.total !== undefined) {
+          setTotalCount(response.pagination.total);
+        } else if (response.count !== undefined) {
+          setTotalCount(response.count);
+        } else if (response.data) {
+          // If no pagination info, use the data length (for single-item responses)
+          setTotalCount(response.data.length);
+        }
       } catch (err) {
         const message =
           err instanceof Error
@@ -347,6 +404,8 @@ export default function JobWorkflowStepsPage() {
       showRetrySteps,
       showOrphanedSteps,
       showError,
+      page,
+      pageSize,
     ]
   );
 
@@ -1421,6 +1480,45 @@ export default function JobWorkflowStepsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && steps.length > 0 && (
+          <div
+            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
+          >
+            <p>
+              Showing {page * pageSize + 1}-
+              {Math.min((page + 1) * pageSize, totalCount)} of {totalCount}{" "}
+              steps
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+                disabled={page === 0}
+                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
+              >
+                Previous
+              </button>
+              <span className="text-gray-500">
+                Page {page + 1} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+              </span>
+              <button
+                onClick={() =>
+                  setPage((prev) =>
+                    Math.min(
+                      Math.ceil(totalCount / pageSize) - 1,
+                      prev + 1
+                    )
+                  )
+                }
+                disabled={page + 1 >= Math.ceil(totalCount / pageSize)}
+                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
