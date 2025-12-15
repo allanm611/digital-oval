@@ -26,7 +26,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, noteStyles } from "../../../shared/utils/utils";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -50,6 +50,8 @@ export default function JobWorkflowStepDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   // Related data
   const [executionOrder, setExecutionOrder] = useState<any[]>([]);
@@ -177,6 +179,7 @@ export default function JobWorkflowStepDetailsPage() {
   const handleDuplicate = async () => {
     if (!step) return;
     try {
+      setIsDuplicating(true);
       await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
@@ -191,12 +194,15 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to duplicate step";
       showError("Error", message);
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
   const handleActivate = async () => {
     if (!step) return;
     try {
+      setIsToggling(true);
       await jobWorkflowStepService.activateStep(step.id, user?.user_id || 0);
       showToast("Step activated", `"${step.step_name}" has been activated.`);
       // Reload step
@@ -209,12 +215,15 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to activate step";
       showError("Error", message);
+    } finally {
+      setIsToggling(false);
     }
   };
 
   const handleDeactivate = async () => {
     if (!step) return;
     try {
+      setIsToggling(true);
       await jobWorkflowStepService.deactivateStep(step.id, user?.user_id || 0);
       showToast(
         "Step deactivated",
@@ -230,6 +239,8 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to deactivate step";
       showError("Error", message);
+    } finally {
+      setIsToggling(false);
     }
   };
 
@@ -257,16 +268,10 @@ export default function JobWorkflowStepDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() =>
-              navigate(
-                `/dashboard/job-workflow-steps${
-                  jobIdParam ? `?job_id=${jobIdParam}` : ""
-                }`
-              )
-            }
-            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-          >
+        <button
+          onClick={() => navigate(-1)}
+          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
+        >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
@@ -282,18 +287,20 @@ export default function JobWorkflowStepDetailsPage() {
           {step.is_active ? (
             <button
               onClick={handleDeactivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
             >
-              <Pause className="h-4 w-4" />
+              {isToggling ? <LoadingSpinner /> : <Pause className="h-4 w-4" />}
               Deactivate
             </button>
           ) : (
             <button
               onClick={handleActivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
               style={{ backgroundColor: color.primary.action }}
             >
-              <Play className="h-4 w-4" />
+              {isToggling ? <LoadingSpinner /> : <Play className="h-4 w-4" />}
               Activate
             </button>
           )}
@@ -310,9 +317,10 @@ export default function JobWorkflowStepDetailsPage() {
           </button>
           <button
             onClick={handleDuplicate}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+            disabled={isDuplicating}
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
           >
-            <Copy className="h-4 w-4" />
+            {isDuplicating ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
             Duplicate
           </button>
           <button
@@ -325,75 +333,18 @@ export default function JobWorkflowStepDetailsPage() {
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
-          <div className="flex items-center gap-2">
-            <Activity
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Status</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_active ? (
-              <span className="text-green-700">Active</span>
-            ) : (
-              <span className="text-gray-500">Inactive</span>
-            )}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
-          <div className="flex items-center gap-2">
-            <AlertTriangle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Critical</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_critical ? (
-              <span className="text-red-700">Yes</span>
-            ) : (
-              <span className="text-gray-500">No</span>
-            )}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
-          <div className="flex items-center gap-2">
-            <GitBranch
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Parallel</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_parallel ? (
-              <span className="text-blue-700">Yes</span>
-            ) : (
-              <span className="text-gray-500">No</span>
-            )}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}>
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
-            <p className="text-sm font-medium text-gray-600">Retries</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.retry_count}
-          </p>
-        </div>
-      </div>
-
       {/* Execution Status */}
       {canExecute && (
         <div
-          className={`${tw.rounded} border p-4 ${
+          className={`${tw.rounded} border p-4`}
+          style={
             canExecute.can_execute
-              ? "border-green-200 bg-green-50"
-              : "border-amber-200 bg-amber-50"
-          }`}
+              ? undefined
+              : {
+                  backgroundColor: noteStyles.warning.backgroundColor,
+                  borderColor: noteStyles.warning.borderColor,
+                }
+          }
         >
           <div className="flex items-center gap-2">
             {canExecute.can_execute ? (
@@ -402,9 +353,12 @@ export default function JobWorkflowStepDetailsPage() {
               <AlertCircle className="h-5 w-5 text-amber-700" />
             )}
             <p
-              className={`font-semibold ${
-                canExecute.can_execute ? "text-green-700" : "text-amber-700"
-              }`}
+              className="font-semibold"
+              style={
+                canExecute.can_execute
+                  ? { color: "#15803d" }
+                  : { color: noteStyles.warning.textColor }
+              }
             >
               {canExecute.can_execute
                 ? "Step can execute"
@@ -460,7 +414,8 @@ export default function JobWorkflowStepDetailsPage() {
                       onClick={() =>
                         navigate(`/dashboard/scheduled-jobs/${job.id}`)
                       }
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="hover:underline"
+                      style={{ color: color.primary.accent }}
                     >
                       {job.name}
                     </button>

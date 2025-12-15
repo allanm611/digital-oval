@@ -70,6 +70,9 @@ export default function WorkflowsPage() {
     new Set()
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
 
   const fetchWorkflows = useCallback(async () => {
     setIsLoading(true);
@@ -81,7 +84,8 @@ export default function WorkflowsPage() {
           workflowTypeFilter,
           {
             activeOnly: statusFilter === "active",
-            limit: 50,
+            limit: pageSize,
+            offset: page * pageSize,
             skipCache: true,
           }
         );
@@ -89,27 +93,36 @@ export default function WorkflowsPage() {
         response = await workflowService.searchWorkflows({
           q: searchTerm.trim(),
           activeOnly: statusFilter === "active",
-          limit: 50,
+          limit: pageSize,
+          offset: page * pageSize,
           skipCache: true,
         });
       } else if (statusFilter === "active") {
         response = await workflowService.getActiveWorkflows({
-          limit: 50,
+          limit: pageSize,
+          offset: page * pageSize,
           skipCache: true,
         });
       } else if (statusFilter === "inactive") {
         response = await workflowService.getInactiveWorkflows({
-          limit: 50,
+          limit: pageSize,
+          offset: page * pageSize,
           skipCache: true,
         });
       } else {
         response = await workflowService.getAllWorkflows({
-          limit: 50,
+          limit: pageSize,
+          offset: page * pageSize,
           skipCache: true,
         });
       }
 
       setWorkflows(response.data || []);
+      const total =
+        response.pagination?.total ??
+        (response as any).count ??
+        (response.data ? response.data.length : 0);
+      setTotalCount(total);
     } catch (err) {
       showError(
         "Error",
@@ -118,7 +131,12 @@ export default function WorkflowsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, statusFilter, workflowTypeFilter, showError]);
+  }, [searchTerm, statusFilter, workflowTypeFilter, page, pageSize, showError]);
+
+  // Reset pagination when filters/search change
+  useEffect(() => {
+    setPage(0);
+  }, [searchTerm, statusFilter, workflowTypeFilter]);
 
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
@@ -690,6 +708,39 @@ export default function WorkflowsPage() {
               ))}
             </tbody>
           </table>
+          {/* Pagination */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+            <div className="text-sm text-gray-600">
+              Showing{" "}
+              <span className="font-medium">
+                {workflows.length === 0 ? 0 : page * pageSize + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min((page + 1) * pageSize, totalCount)}
+              </span>{" "}
+              of <span className="font-medium">{totalCount}</span> workflows
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                disabled={page === 0 || isLoading}
+                className={`inline-flex items-center gap-1 ${tw.rounded} px-3 py-1.5 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => {
+                  const nextOffset = (page + 1) * pageSize;
+                  if (nextOffset < totalCount) setPage((p) => p + 1);
+                }}
+                disabled={isLoading || (page + 1) * pageSize >= totalCount}
+                className={`inline-flex items-center gap-1 ${tw.rounded} px-3 py-1.5 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

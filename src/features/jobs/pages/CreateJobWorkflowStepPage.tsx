@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Save, X, Plus } from "lucide-react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
@@ -16,7 +16,7 @@ import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, noteStyles, zIndex } from "../../../shared/utils/utils";
 
 const STEP_TYPES: { value: StepType; label: string }[] = [
   { value: "sql", label: "SQL" },
@@ -37,9 +37,6 @@ const FAILURE_ACTIONS: { value: FailureAction; label: string }[] = [
   { value: "retry", label: "Retry" },
   { value: "skip_remaining", label: "Skip Remaining" },
 ];
-
-const classNames = (...classes: (string | false | null | undefined)[]) =>
-  classes.filter(Boolean).join(" ");
 
 export default function CreateJobWorkflowStepPage() {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +85,6 @@ export default function CreateJobWorkflowStepPage() {
   const [batchSteps, setBatchSteps] = useState<
     Array<Partial<CreateJobWorkflowStepPayload>>
   >([]);
-  const [isBatchCreating, setIsBatchCreating] = useState(false);
 
   // Load jobs and step codes
   useEffect(() => {
@@ -153,7 +149,7 @@ export default function CreateJobWorkflowStepPage() {
     };
 
     loadData();
-  }, [id, isEditMode, user?.user_id, showError]);
+  }, [id, isEditMode, user?.user_id, showError, formData.job_id]);
 
   // Reload step codes when job changes
   useEffect(() => {
@@ -186,20 +182,30 @@ export default function CreateJobWorkflowStepPage() {
         // Validate each batch step
         batchSteps.forEach((step, idx) => {
           if (!step.step_name?.trim()) {
-            newErrors[`batch_step_${idx}_name`] = `Step ${idx + 1}: Name is required`;
+            newErrors[`batch_step_${idx}_name`] = `Step ${
+              idx + 1
+            }: Name is required`;
           }
           if (!step.step_code?.trim()) {
-            newErrors[`batch_step_${idx}_code`] = `Step ${idx + 1}: Code is required`;
+            newErrors[`batch_step_${idx}_code`] = `Step ${
+              idx + 1
+            }: Code is required`;
           }
           if (!step.step_action?.trim()) {
-            newErrors[`batch_step_${idx}_action`] = `Step ${idx + 1}: Action is required`;
+            newErrors[`batch_step_${idx}_action`] = `Step ${
+              idx + 1
+            }: Action is required`;
           }
           if (step.step_order !== undefined && step.step_order < 1) {
-            newErrors[`batch_step_${idx}_order`] = `Step ${idx + 1}: Order must be at least 1`;
+            newErrors[`batch_step_${idx}_order`] = `Step ${
+              idx + 1
+            }: Order must be at least 1`;
           }
         });
       }
     } else {
+      const timeout = formData.timeout_seconds ?? 0;
+      const retries = formData.retry_count ?? 0;
       // Regular mode: validate individual form fields
       if (!formData.step_name?.trim()) {
         newErrors.step_name = "Step name is required";
@@ -213,10 +219,11 @@ export default function CreateJobWorkflowStepPage() {
       if (formData.step_order < 1) {
         newErrors.step_order = "Step order must be at least 1";
       }
-      if (formData.timeout_seconds < 1 || formData.timeout_seconds > 86400) {
-        newErrors.timeout_seconds = "Timeout must be between 1 and 86400 seconds";
+      if (timeout < 1 || timeout > 86400) {
+        newErrors.timeout_seconds =
+          "Timeout must be between 1 and 86400 seconds";
       }
-      if (formData.retry_count < 0 || formData.retry_count > 10) {
+      if (retries < 0 || retries > 10) {
         newErrors.retry_count = "Retry count must be between 0 and 10";
       }
     }
@@ -353,14 +360,8 @@ export default function CreateJobWorkflowStepPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <button
-          onClick={() =>
-            navigate(
-              `/dashboard/job-workflow-steps${
-                formData.job_id ? `?job_id=${formData.job_id}` : ""
-              }`
-            )
-          }
-          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+          onClick={() => navigate(-1)}
+          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -370,10 +371,21 @@ export default function CreateJobWorkflowStepPage() {
       </div>
 
       {batchMode && batchSteps.length === 0 && (
-        <div className={`${tw.rounded} border border-blue-200 bg-blue-50 p-4 mb-6`}>
+        <div
+          className={`${tw.rounded} border p-4 mb-6`}
+          style={{
+            backgroundColor: noteStyles.warning.backgroundColor,
+            borderColor: noteStyles.warning.borderColor,
+          }}
+        >
           <div className="flex items-center justify-between">
-            <p className="text-sm text-blue-800">
-              Batch mode: Create multiple steps at once
+            <p
+              className="text-sm font-medium"
+              style={{ color: noteStyles.warning.textColor }}
+            >
+              Batch mode: Create multiple steps at once. Only job selection and
+              the batch steps list are used; the individual step form is
+              ignored.
             </p>
             <button
               type="button"
@@ -389,7 +401,9 @@ export default function CreateJobWorkflowStepPage() {
       )}
 
       {batchMode && batchSteps.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}
+        >
           {errors.batchSteps && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
               <p className="text-sm text-red-600">{errors.batchSteps}</p>
@@ -458,11 +472,7 @@ export default function CreateJobWorkflowStepPage() {
                       type="text"
                       value={step.step_code || ""}
                       onChange={(e) =>
-                        updateBatchStep(
-                          idx,
-                          "step_code",
-                          e.target.value
-                        )
+                        updateBatchStep(idx, "step_code", e.target.value)
                       }
                       className={`w-full ${tw.rounded} border ${
                         errors[`batch_step_${idx}_code`]
@@ -548,7 +558,9 @@ export default function CreateJobWorkflowStepPage() {
             {/* Left Column */}
             <div className="space-y-6">
               {/* Basic Information */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Basic Information
                 </h2>
@@ -667,7 +679,9 @@ export default function CreateJobWorkflowStepPage() {
                       }
                     >
                       <div className="relative">
-                        <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
+                        <Listbox.Button
+                          className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                        >
                           <span className="block truncate">
                             {STEP_TYPES.find(
                               (t) => t.value === formData.step_type
@@ -686,7 +700,10 @@ export default function CreateJobWorkflowStepPage() {
                           leaveFrom="opacity-100"
                           leaveTo="opacity-0"
                         >
-                          <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
+                          <Listbox.Options
+                            className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                            style={{ zIndex: zIndex.dropdown }}
+                          >
                             {STEP_TYPES.map((type) => (
                               <Listbox.Option
                                 key={type.value}
@@ -747,7 +764,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Execution Configuration */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Execution Configuration
                 </h2>
@@ -820,7 +839,9 @@ export default function CreateJobWorkflowStepPage() {
                         }
                       >
                         <div className="relative">
-                          <Listbox.Button className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}>
+                          <Listbox.Button
+                            className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                          >
                             <span className="block truncate">
                               {FAILURE_ACTIONS.find(
                                 (a) => a.value === formData.on_failure_action
@@ -839,7 +860,10 @@ export default function CreateJobWorkflowStepPage() {
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <Listbox.Options className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}>
+                            <Listbox.Options
+                              className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                              style={{ zIndex: zIndex.dropdown }}
+                            >
                               {FAILURE_ACTIONS.map((action) => (
                                 <Listbox.Option
                                   key={action.value}
@@ -936,7 +960,9 @@ export default function CreateJobWorkflowStepPage() {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Dependencies & Parallel Execution */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Dependencies & Parallel Execution
                 </h2>
@@ -1043,7 +1069,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Validation */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Validation
                 </h2>
@@ -1129,7 +1157,9 @@ export default function CreateJobWorkflowStepPage() {
               </div>
 
               {/* Status */}
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
                   Status
                 </h2>
@@ -1170,16 +1200,6 @@ export default function CreateJobWorkflowStepPage() {
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
-
-        {batchMode ? (
-          <div className={`${tw.rounded} border border-amber-200 bg-amber-50 p-4`}>
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> In batch mode, only the job selection and
-              batch steps above will be used. Individual step configuration
-              fields are ignored.
-            </p>
           </div>
         ) : null}
 

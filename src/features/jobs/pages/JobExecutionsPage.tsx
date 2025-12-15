@@ -27,6 +27,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobExecutionService } from "../services/jobExecutionService";
+import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 import type {
   JobExecution,
   JobExecutionSearchParams,
@@ -91,6 +92,8 @@ export default function JobExecutionsPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const canWrite =
+    ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
 
   const [executions, setExecutions] = useState<JobExecution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -424,7 +427,9 @@ export default function JobExecutionsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <PlayCircle
               className="h-5 w-5"
@@ -438,7 +443,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.totalExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -450,7 +457,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.runningExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -462,7 +471,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.successfulExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -474,7 +485,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.failedExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
@@ -486,7 +499,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.queuedExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Pause
               className="h-5 w-5"
@@ -509,7 +524,9 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${
+            tw.rounded
+          } px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "sla-breached"
               ? "bg-red-100 text-red-700 border border-red-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -525,7 +542,9 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${
+            tw.rounded
+          } px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "long-running"
               ? "bg-orange-100 text-orange-700 border border-orange-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -541,7 +560,9 @@ export default function JobExecutionsPage() {
             );
             setStatusFilter("");
           }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 ${
+            tw.rounded
+          } px-3 py-1.5 text-sm font-medium transition-colors ${
             quickFilter === "currently-running"
               ? "bg-blue-100 text-blue-700 border border-blue-300"
               : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
@@ -917,25 +938,27 @@ export default function JobExecutionsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {execution.execution_status === "running" && (
-                          <button
-                            onClick={() => handleAction(execution, "abort")}
-                            className={`p-2 ${tw.rounded} text-red-600 hover:text-red-900 hover:bg-red-50 transition-colors`}
-                            aria-label="Abort execution"
-                          >
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        )}
-                        {execution.execution_status === "failure" && (
-                          <button
-                            onClick={() => handleAction(execution, "retry")}
-                            className={`p-2 ${tw.rounded} text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition-colors`}
-                            aria-label="Retry execution"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
-                        {!execution.archived && (
+                        {canWrite &&
+                          execution.execution_status === "running" && (
+                            <button
+                              onClick={() => handleAction(execution, "abort")}
+                              className={`p-2 ${tw.rounded} text-red-600 hover:text-red-900 hover:bg-red-50 transition-colors`}
+                              aria-label="Abort execution"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                          )}
+                        {canWrite &&
+                          execution.execution_status === "failure" && (
+                            <button
+                              onClick={() => handleAction(execution, "retry")}
+                              className={`p-2 ${tw.rounded} text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition-colors`}
+                              aria-label="Retry execution"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          )}
+                        {canWrite && !execution.archived && (
                           <button
                             onClick={() => handleAction(execution, "archive")}
                             className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}

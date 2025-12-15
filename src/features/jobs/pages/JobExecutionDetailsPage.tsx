@@ -19,6 +19,7 @@ import { JobExecution } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -65,6 +66,8 @@ export default function JobExecutionDetailsPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
+  const canWrite =
+    ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
   const [execution, setExecution] = useState<JobExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState<any>(null);
@@ -163,7 +166,7 @@ export default function JobExecutionDetailsPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {execution.execution_status === "running" && (
+          {canWrite && execution.execution_status === "running" && (
             <button
               onClick={async () => {
                 if (
@@ -195,35 +198,37 @@ export default function JobExecutionDetailsPage() {
               Abort
             </button>
           )}
-          {execution.execution_status === "failure" && user?.user_id && (
-            <button
-              onClick={async () => {
-                if (!window.confirm("Retry this failed execution?")) return;
-                try {
-                  await jobExecutionService.retryFailedJobExecutions({
-                    jobId: execution.job_id,
-                    daysBack: 7,
-                    userId: user.user_id,
-                  });
-                  showToast(
-                    "Retry Initiated",
-                    "Failed executions are being retried"
-                  );
-                } catch (err) {
-                  showError(
-                    "Retry Failed",
-                    err instanceof Error ? err.message : "Unknown error"
-                  );
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <RotateCcw className="h-4 w-4" />
-              Retry
-            </button>
-          )}
-          {!execution.archived && (
+          {canWrite &&
+            execution.execution_status === "failure" &&
+            user?.user_id && (
+              <button
+                onClick={async () => {
+                  if (!window.confirm("Retry this failed execution?")) return;
+                  try {
+                    await jobExecutionService.retryFailedJobExecutions({
+                      jobId: execution.job_id,
+                      daysBack: 7,
+                      userId: user.user_id,
+                    });
+                    showToast(
+                      "Retry Initiated",
+                      "Failed executions are being retried"
+                    );
+                  } catch (err) {
+                    showError(
+                      "Retry Failed",
+                      err instanceof Error ? err.message : "Unknown error"
+                    );
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <RotateCcw className="h-4 w-4" />
+                Retry
+              </button>
+            )}
+          {canWrite && !execution.archived && (
             <button
               onClick={async () => {
                 if (!id || !window.confirm("Archive this execution?")) return;
@@ -251,7 +256,9 @@ export default function JobExecutionDetailsPage() {
       </div>
 
       {/* Status Card */}
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span
@@ -285,7 +292,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Main Info Grid */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Information
           </h3>
@@ -349,7 +358,9 @@ export default function JobExecutionDetailsPage() {
           </dl>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             System Information
           </h3>
@@ -412,7 +423,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Progress (if running) */}
       {execution.execution_status === "running" && progress && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Progress
           </h3>
@@ -456,7 +469,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Resource Usage */}
       {resourceUsage && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Usage
           </h3>
@@ -485,7 +500,9 @@ export default function JobExecutionDetailsPage() {
 
       {/* Error Information */}
       {execution.error_message && (
-        <div className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-red-200 bg-red-50 p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-red-900 mb-4 flex items-center gap-2">
             <XCircle className="h-5 w-5" />
             Error Information
@@ -525,7 +542,9 @@ export default function JobExecutionDetailsPage() {
       {(execution.rows_processed !== null ||
         execution.rows_read !== null ||
         execution.steps_total !== null) && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Processing Metrics
           </h3>

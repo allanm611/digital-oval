@@ -522,6 +522,16 @@ export const cards = {
   },
 };
 
+// Reusable note/banner styling tokens to avoid hardcoded colors
+export const notes = {
+  warning: {
+    background: "#FFFBEB", // amber-50
+    border: "#FCD34D", // amber-300
+    text: "#92400E", // amber-700
+    textLight: "#B45309", // slightly lighter amber for softer text
+  },
+};
+
 // Z-Index system for consistent layering across the platform
 // Use these values instead of hardcoded z-index numbers
 export const zIndex = {
