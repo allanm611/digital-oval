@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, TrendingUp, BarChart3 } from "lucide-react";
+import { ArrowLeft, BarChart3 } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -41,7 +41,9 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -68,13 +70,21 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   );
 };
 
-const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899"];
+const COLORS = [
+  "#3b8169",
+  "#ef4444",
+  "#f59e0b",
+  "#3b82f6",
+  "#8b5cf6",
+  "#ec4899",
+];
 
 export default function WorkflowsAnalyticsPage() {
   const navigate = useNavigate();
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [totalWorkflows, setTotalWorkflows] = useState<number>(0);
   const [statusCounts, setStatusCounts] = useState<{
     pending_activation?: number;
     active?: number;
@@ -92,7 +102,7 @@ export default function WorkflowsAnalyticsPage() {
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [statusResponse, typeResponse] = await Promise.all([
+      const [statusResponse, typeResponse, totalResponse] = await Promise.all([
         workflowService.getStatusCounts(true).catch(() => ({
           success: true,
           data: { active: 0, inactive: 0, total: 0 },
@@ -101,10 +111,18 @@ export default function WorkflowsAnalyticsPage() {
           success: true,
           data: [],
         })),
+        workflowService
+          .getAllWorkflows({ limit: 50, offset: 0, skipCache: true })
+          .catch(() => ({ data: [], pagination: { total: 0 } })),
       ]);
 
       setStatusCounts(statusResponse.data || null);
       setCountByType(typeResponse.data || []);
+      const totalFromPagination = totalResponse?.pagination?.total ?? 0;
+      const totalFromCount = Array.isArray(totalResponse?.data)
+        ? totalResponse.data.length
+        : 0;
+      setTotalWorkflows(totalFromPagination || totalFromCount || 0);
     } catch (err) {
       showError(
         "Error",
@@ -130,7 +148,10 @@ export default function WorkflowsAnalyticsPage() {
   const statusChartData =
     statusCounts && Object.keys(statusCounts).length > 0
       ? [
-          { name: "Pending Activation", value: statusCounts.pending_activation || 0 },
+          {
+            name: "Pending Activation",
+            value: statusCounts.pending_activation || 0,
+          },
           { name: "Active", value: statusCounts.active || 0 },
           { name: "Suspended", value: statusCounts.suspended || 0 },
           { name: "Locked", value: statusCounts.locked || 0 },
@@ -167,55 +188,111 @@ export default function WorkflowsAnalyticsPage() {
 
       {/* Statistics Cards */}
       {statusCounts && (
-        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-          {[
-            { label: "Pending Activation", value: statusCounts.pending_activation || 0 },
-            { label: "Active", value: statusCounts.active || 0 },
-            { label: "Suspended", value: statusCounts.suspended || 0 },
-            { label: "Locked", value: statusCounts.locked || 0 },
-            { label: "Deactivated", value: statusCounts.deactivated || 0 },
-            { label: "Deleted", value: statusCounts.deleted || 0 },
-          ].map((card) => (
+        <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-4">
             <div
-              key={card.label}
               className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" style={{ color: color.primary.accent }} />
-                <p className="text-sm font-medium text-gray-600">{card.label}</p>
+                <BarChart3
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Total Workflows
+                </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {totalWorkflows}
+              </p>
             </div>
-          ))}
+            {[
+              {
+                label: "Pending Activation",
+                value: statusCounts.pending_activation || 0,
+              },
+              { label: "Active", value: statusCounts.active || 0 },
+              { label: "Suspended", value: statusCounts.suspended || 0 },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    {card.label}
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              { label: "Locked", value: statusCounts.locked || 0 },
+              { label: "Deactivated", value: statusCounts.deactivated || 0 },
+              { label: "Deleted", value: statusCounts.deleted || 0 },
+            ].map((card) => (
+              <div
+                key={card.label}
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    {card.label}
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Status Distribution */}
       {statusChartData.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Status Distribution
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={320}>
             <PieChart>
               <Pie
                 data={statusChartData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, value }) => `${name}: ${value}`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
               >
-                {statusChartData.map((entry, index) => (
+                {statusChartData.map((_entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />
                 ))}
               </Pie>
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -223,16 +300,21 @@ export default function WorkflowsAnalyticsPage() {
 
       {/* Count by Type */}
       {typeChartData.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Workflows by Type
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={360}>
             <BarChart data={typeChartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
               <YAxis />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
               <Legend />
               <Bar dataKey="value" fill="#3b8169" />
             </BarChart>
@@ -242,4 +324,3 @@ export default function WorkflowsAnalyticsPage() {
     </div>
   );
 }
-

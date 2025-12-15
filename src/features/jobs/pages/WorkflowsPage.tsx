@@ -5,7 +5,6 @@ import {
   Plus,
   Search,
   Trash2,
-  Filter,
   BarChart3,
   Copy,
   Play,
@@ -29,25 +28,48 @@ export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
   const [workflowTypeFilter, setWorkflowTypeFilter] = useState<string>("");
   const [workflowTypes, setWorkflowTypes] = useState<string[]>([]);
-  const [stats, setStats] = useState({
+  type Stats = {
+    total: number;
+    active: number;
+    inactive: number;
+    pending_activation?: number;
+    deactivated?: number;
+    suspended?: number;
+    locked?: number;
+    deleted?: number;
+  };
+
+  const [stats, setStats] = useState<Stats>({
     total: 0,
     active: 0,
     inactive: 0,
     pending_activation: 0,
     deactivated: 0,
+    suspended: 0,
+    locked: 0,
+    deleted: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(null);
+  const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(
+    null
+  );
+  const [deleteName, setDeleteName] = useState<string>("this workflow");
   const [isDeleting, setIsDeleting] = useState(false);
-  const [rowLoading, setRowLoading] = useState<{ id: number; action: "clone" | "delete" } | null>(null);
+  const [rowLoading, setRowLoading] = useState<{
+    id: number;
+    action: "clone" | "delete";
+  } | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedWorkflows, setSelectedWorkflows] = useState<Set<number>>(new Set());
+  const [selectedWorkflows, setSelectedWorkflows] = useState<Set<number>>(
+    new Set()
+  );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     setIsLoading(true);
@@ -55,11 +77,14 @@ export default function WorkflowsPage() {
       let response;
 
       if (workflowTypeFilter) {
-        response = await workflowService.getWorkflowsByType(workflowTypeFilter, {
-          activeOnly: statusFilter === "active",
-          limit: 50,
-          skipCache: true,
-        });
+        response = await workflowService.getWorkflowsByType(
+          workflowTypeFilter,
+          {
+            activeOnly: statusFilter === "active",
+            limit: 50,
+            skipCache: true,
+          }
+        );
       } else if (searchTerm.trim()) {
         response = await workflowService.searchWorkflows({
           q: searchTerm.trim(),
@@ -98,14 +123,20 @@ export default function WorkflowsPage() {
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const [statusCounts, typesResponse] = await Promise.all([
+      const [statusCounts, typesResponse, totalResponse] = await Promise.all([
         workflowService.getStatusCounts(true),
         workflowService.getWorkflowTypes(true),
+        workflowService
+          .getAllWorkflows({ limit: 50, offset: 0, skipCache: true })
+          .catch(() => ({ data: [], pagination: { total: 0 } })),
       ]);
 
       // Handle different response structures
-      const counts = statusCounts?.data || statusCounts || {};
-      const totalCalculated =
+      const counts: Partial<Stats> =
+        (statusCounts?.data as Partial<Stats>) ||
+        (statusCounts as Partial<Stats>) ||
+        {};
+      const totalCalculatedFromStatus =
         (counts.pending_activation || 0) +
         (counts.active || 0) +
         (counts.suspended || 0) +
@@ -113,8 +144,17 @@ export default function WorkflowsPage() {
         (counts.deactivated || 0) +
         (counts.deleted || 0) +
         (counts.inactive || 0);
+
+      const totalFromPagination = totalResponse?.pagination?.total ?? 0;
+      const totalFromCount = Array.isArray(totalResponse?.data)
+        ? totalResponse.data.length
+        : 0;
+
+      const totalFinal =
+        totalFromPagination || totalFromCount || totalCalculatedFromStatus || 0;
+
       setStats({
-        total: counts.total || totalCalculated || 0,
+        total: totalFinal,
         active: counts.active || 0,
         inactive:
           (counts.inactive || 0) +
@@ -123,19 +163,27 @@ export default function WorkflowsPage() {
           (counts.locked || 0),
         pending_activation: counts.pending_activation || 0,
         deactivated: counts.deactivated || 0,
+        suspended: counts.suspended || 0,
+        locked: counts.locked || 0,
+        deleted: counts.deleted || 0,
       });
 
       // Handle types response - backend returns {success: true, data: {types: [...], total: N}}
       let types: string[] = [];
       if (Array.isArray(typesResponse)) {
         types = typesResponse;
-      } else if (typesResponse?.data) {
-        // Check if data has types property (new format) or is array directly (old format)
-        if (typesResponse.data.types && Array.isArray(typesResponse.data.types)) {
-          types = typesResponse.data.types;
-        } else if (Array.isArray(typesResponse.data)) {
-          types = typesResponse.data;
-        }
+      } else if (
+        typesResponse?.data &&
+        typeof typesResponse.data === "object" &&
+        "types" in typesResponse.data &&
+        Array.isArray((typesResponse.data as { types?: unknown }).types)
+      ) {
+        types = (typesResponse.data as { types: string[] }).types;
+      } else if (
+        typesResponse?.data &&
+        Array.isArray(typesResponse.data as unknown[])
+      ) {
+        types = typesResponse.data as string[];
       }
       setWorkflowTypes(types);
     } catch (err) {
@@ -269,9 +317,7 @@ export default function WorkflowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Workflows
-          </h1>
+          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>Workflows</h1>
           <p className={`${tw.textSecondary} mt-1 text-sm`}>
             Manage and monitor workflows
           </p>
@@ -325,46 +371,62 @@ export default function WorkflowsPage() {
         </div>
       </div>
 
-      {/* Stats Cards (always visible; keep layout stable during search) */}
-      <div className="relative">
-        {isLoadingStats && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/60">
-            <LoadingSpinner />
-          </div>
-        )}
+      {/* Stats Cards (inline loader like scheduled jobs) */}
+      <div className="grid gap-4 md:grid-cols-4">
         <div
-          className={`grid gap-4 md:grid-cols-4 ${isLoadingStats ? "opacity-50 pointer-events-none" : ""}`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Total Workflows</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{stats.total}</p>
+          <div className="flex items-center gap-2">
+            <BarChart3
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Total Workflows</p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <div className="flex items-center gap-2">
-              <Play className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Active</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{stats.active}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.total}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Play className="h-5 w-5" style={{ color: color.primary.accent }} />
+            <p className="text-sm font-medium text-gray-600">Active</p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <div className="flex items-center gap-2">
-              <Pause className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Inactive</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{stats.inactive}</p>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.active}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Pause
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Inactive</p>
           </div>
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" style={{ color: color.primary.accent }} />
-              <p className="text-sm font-medium text-gray-600">Pending Activation</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {stats.pending_activation}
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.inactive}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <BarChart3
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Pending Activation
             </p>
           </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.pending_activation}
+          </p>
         </div>
       </div>
 
@@ -397,7 +459,9 @@ export default function WorkflowsPage() {
             { value: "inactive", label: "Inactive" },
           ]}
           value={statusFilter}
-          onChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
+          onChange={(value) =>
+            setStatusFilter(value as "all" | "active" | "inactive")
+          }
           placeholder="Status"
           className="w-full sm:w-40"
         />
@@ -405,7 +469,9 @@ export default function WorkflowsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedWorkflows.size > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-900">
               {selectedWorkflows.size} selected
@@ -415,7 +481,9 @@ export default function WorkflowsPage() {
               className="text-sm hover:opacity-80"
               style={{ color: color.primary.accent }}
             >
-              {selectedWorkflows.size === workflows.length ? "Deselect All" : "Select All"}
+              {selectedWorkflows.size === workflows.length
+                ? "Deselect All"
+                : "Select All"}
             </button>
           </div>
           <div className="flex items-center gap-2">
@@ -476,11 +544,15 @@ export default function WorkflowsPage() {
           <LoadingSpinner />
         </div>
       ) : workflows.length === 0 ? (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center`}
+        >
           <p className="text-gray-500">No workflows found</p>
         </div>
       ) : (
-        <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm overflow-hidden`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white shadow-sm overflow-hidden`}
+        >
           <table className="min-w-full divide-y divide-gray-200">
             <thead style={{ backgroundColor: color.surface.tableHeader }}>
               <tr>
@@ -488,30 +560,51 @@ export default function WorkflowsPage() {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedWorkflows.size === workflows.length && workflows.length > 0}
+                      checked={
+                        selectedWorkflows.size === workflows.length &&
+                        workflows.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                     />
                   </th>
                 )}
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
                   Created
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                <th
+                  className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider"
+                  style={{ color: color.surface.tableHeaderText }}
+                >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200" style={{ backgroundColor: color.surface.tablebodybg }}>
+            <tbody
+              className="divide-y divide-gray-200"
+              style={{ backgroundColor: color.surface.tablebodybg }}
+            >
               {workflows.map((workflow) => (
                 <tr key={workflow.id} className="hover:bg-gray-50">
                   {isSelectionMode && (
@@ -539,15 +632,19 @@ export default function WorkflowsPage() {
                   <td className="px-6 py-4 text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => navigate(`/dashboard/workflows/${workflow.id}`)}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        onClick={() =>
+                          navigate(`/dashboard/workflows/${workflow.id}`)
+                        }
+                        className="p-2 text-gray-600 rounded transition-colors"
                         title="View details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                        onClick={() =>
+                          navigate(`/dashboard/workflows/${workflow.id}/edit`)
+                        }
+                        className="p-2 text-gray-600 rounded transition-colors"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -560,11 +657,15 @@ export default function WorkflowsPage() {
                             prev?.id === workflow.id ? null : prev
                           );
                         }}
-                        disabled={rowLoading?.id === workflow.id && rowLoading?.action === "clone"}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                        disabled={
+                          rowLoading?.id === workflow.id &&
+                          rowLoading?.action === "clone"
+                        }
+                        className="p-2 text-gray-600 rounded transition-colors disabled:opacity-50"
                         title="Clone"
                       >
-                        {rowLoading?.id === workflow.id && rowLoading?.action === "clone" ? (
+                        {rowLoading?.id === workflow.id &&
+                        rowLoading?.action === "clone" ? (
                           <LoadingSpinner />
                         ) : (
                           <Copy className="w-4 h-4" />
@@ -572,19 +673,16 @@ export default function WorkflowsPage() {
                       </button>
                       <button
                         onClick={() => {
-                          setRowLoading({ id: workflow.id, action: "delete" });
                           setDeletingWorkflow(workflow);
+                          setDeleteName(
+                            workflow.name?.trim() || "this workflow"
+                          );
                           setShowDeleteModal(true);
                         }}
-                        disabled={rowLoading?.id === workflow.id && rowLoading?.action === "delete"}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                        className="p-2 text-red-600 rounded transition-colors"
                         title="Delete"
                       >
-                        {rowLoading?.id === workflow.id && rowLoading?.action === "delete" ? (
-                          <LoadingSpinner />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -601,13 +699,14 @@ export default function WorkflowsPage() {
           setShowDeleteModal(false);
           setDeletingWorkflow(null);
           setRowLoading(null);
+          setDeleteName("this workflow");
         }}
         onConfirm={handleDelete}
         title="Delete Workflow"
-        message={`Are you sure you want to delete "${deletingWorkflow?.name || "this workflow"}"? This action cannot be undone.`}
-        isDeleting={isDeleting}
+        description="This action cannot be undone."
+        itemName={deleteName}
+        isLoading={isDeleting}
       />
     </div>
   );
 }
-

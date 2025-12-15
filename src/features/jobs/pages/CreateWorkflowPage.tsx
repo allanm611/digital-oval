@@ -78,7 +78,13 @@ export default function CreateWorkflowPage() {
         await workflowService.updateWorkflow(Number(id), updatePayload);
         showToast("Workflow updated", "Workflow has been updated successfully.");
       } else {
-        await workflowService.createWorkflow(formData);
+        const createPayload: CreateWorkflowPayload = {
+          name: formData.name,
+          description: formData.description,
+          workflow_type: formData.workflow_type,
+          created_by: formData.created_by,
+        };
+        await workflowService.createWorkflow(createPayload);
         showToast("Workflow created", "Workflow has been created successfully.");
       }
       navigate("/dashboard/workflows");
@@ -176,24 +182,6 @@ export default function CreateWorkflowPage() {
                 className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                 placeholder="Enter workflow type (optional)"
               />
-            </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="is_active"
-                checked={formData.is_active ?? true}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_active: e.target.checked })
-                }
-                className="h-4 w-4 text-[#3b8169] focus:ring-[#3b8169] border-gray-300 rounded"
-              />
-              <label
-                htmlFor="is_active"
-                className="ml-2 block text-sm text-gray-700"
-              >
-                Active
-              </label>
             </div>
           </div>
         </div>
