@@ -34,6 +34,7 @@ export default function JobExecutionsAnalyticsPage() {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
+  const [jobIdForAnalytics, setJobIdForAnalytics] = useState<string>("");
   const [executionStats, setExecutionStats] = useState<any>(null);
   const [slaCompliance, setSlaCompliance] = useState<any>(null);
   const [successRate, setSuccessRate] = useState<any>(null);
@@ -58,9 +59,23 @@ export default function JobExecutionsAnalyticsPage() {
   const [healthScore, setHealthScore] = useState<any>(null);
   const [slowestExecutions, setSlowestExecutions] = useState<any[]>([]);
   const [resourceIssues, setResourceIssues] = useState<any[]>([]);
+  const [executionComparison, setExecutionComparison] = useState<any>(null);
+  const [completionForecast, setCompletionForecast] = useState<any[]>([]);
+  const [executionHeatmap, setExecutionHeatmap] = useState<any>(null);
+  const [slaPrediction, setSlaPrediction] = useState<any>(null);
+  const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
+  const [concurrentAnalysis, setConcurrentAnalysis] = useState<any>(null);
+  const [partitionInfo, setPartitionInfo] = useState<any[]>([]);
+  const [pendingCleanup, setPendingCleanup] = useState<any>(null);
+  const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<any[]>(
+    []
+  );
+  const [executionTimeline, setExecutionTimeline] = useState<any[]>([]);
+  const [dailySummaryJob, setDailySummaryJob] = useState<any[]>([]);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
+    const jobIdNum = jobIdForAnalytics ? Number(jobIdForAnalytics) : undefined;
     try {
       const [
         stats,
@@ -86,6 +101,17 @@ export default function JobExecutionsAnalyticsPage() {
         health,
         slowest,
         issues,
+        comparison,
+        forecast,
+        heatmap,
+        slaPred,
+        anomaly,
+        concurrent,
+        partitions,
+        pending,
+        triggerAlt,
+        timeline,
+        dailyForJob,
       ] = await Promise.all([
         jobExecutionService.getExecutionStatistics().catch(() => null),
         jobExecutionService.getSLACompliance().catch(() => null),
@@ -127,6 +153,35 @@ export default function JobExecutionsAnalyticsPage() {
         jobExecutionService
           .getExecutionsWithResourceIssues({ limit: 10 })
           .catch(() => []),
+        jobIdNum
+          ? jobExecutionService
+              .getExecutionComparison(jobIdNum, { currentPeriodDays: 7 })
+              .catch(() => null)
+          : Promise.resolve(null),
+        jobExecutionService.getCompletionForecast().catch(() => []),
+        jobIdNum
+          ? jobExecutionService.getExecutionHeatmap(jobIdNum).catch(() => null)
+          : Promise.resolve(null),
+        jobExecutionService.getSLAPrediction().catch(() => null),
+        jobExecutionService.getAnomalyDetection().catch(() => null),
+        jobExecutionService.getConcurrentExecutionAnalysis().catch(() => null),
+        jobExecutionService.getPartitionInformation().catch(() => []),
+        jobExecutionService
+          .getExecutionsPendingCleanup({ retentionDays: 365 })
+          .catch(() => null),
+        jobExecutionService
+          .getTriggerDistribution({ daysBack: 30 })
+          .catch(() => []),
+        jobIdNum
+          ? jobExecutionService
+              .getExecutionTimeline(jobIdNum, { limit: 20 })
+              .catch(() => [])
+          : Promise.resolve([]),
+        jobIdNum
+          ? jobExecutionService
+              .getDailySummary(jobIdNum, { daysBack: 30 })
+              .catch(() => [])
+          : Promise.resolve([]),
       ]);
 
       setExecutionStats(stats);
@@ -151,6 +206,17 @@ export default function JobExecutionsAnalyticsPage() {
       setHealthScore(health);
       setSlowestExecutions(slowest || []);
       setResourceIssues(issues || []);
+      setExecutionComparison(comparison);
+      setCompletionForecast(forecast || []);
+      setExecutionHeatmap(heatmap);
+      setSlaPrediction(slaPred);
+      setAnomalyDetection(anomaly);
+      setConcurrentAnalysis(concurrent);
+      setPartitionInfo(partitions || []);
+      setPendingCleanup(pending);
+      setTriggerDistributionAlt(triggerAlt || []);
+      setExecutionTimeline(timeline || []);
+      setDailySummaryJob(dailyForJob || []);
 
       // Build status distribution from stats
       if (stats) {
@@ -171,7 +237,7 @@ export default function JobExecutionsAnalyticsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [jobIdForAnalytics, showError]);
 
   useEffect(() => {
     loadAnalytics();
@@ -204,9 +270,29 @@ export default function JobExecutionsAnalyticsPage() {
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-700">Job ID (optional)</label>
+          <input
+            className={`${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+            placeholder="Job ID for job-scoped insights"
+            value={jobIdForAnalytics}
+            onChange={(e) => setJobIdForAnalytics(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={loadAnalytics}
+          className={`${tw.rounded} bg-white border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
+        >
+          Refresh Analytics
+        </button>
+      </div>
+
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-2">
             <BarChart3
               className="h-5 w-5"
@@ -220,7 +306,9 @@ export default function JobExecutionsAnalyticsPage() {
             {executionStats?.total_executions || 0}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle
               className="h-5 w-5"
@@ -234,7 +322,9 @@ export default function JobExecutionsAnalyticsPage() {
               : "—"}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp
               className="h-5 w-5"
@@ -248,7 +338,9 @@ export default function JobExecutionsAnalyticsPage() {
               : "—"}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2 mb-2">
             <AlertTriangle
               className="h-5 w-5"
@@ -267,7 +359,9 @@ export default function JobExecutionsAnalyticsPage() {
       {/* Charts Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Status Distribution */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Status Distribution
           </h3>
@@ -298,7 +392,9 @@ export default function JobExecutionsAnalyticsPage() {
         </div>
 
         {/* Trigger Distribution */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Trigger Distribution
           </h3>
@@ -316,7 +412,9 @@ export default function JobExecutionsAnalyticsPage() {
 
         {/* Trend Data */}
         {trendData.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Execution Trends (30 Days)
             </h3>
@@ -352,7 +450,9 @@ export default function JobExecutionsAnalyticsPage() {
 
         {/* Error Analysis */}
         {errorAnalysis.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Top Errors (30 Days)
             </h3>
@@ -376,7 +476,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* SLA Compliance Details */}
       {slaCompliance && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             SLA Compliance Details
           </h3>
@@ -419,7 +521,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Additional Analytics Sections */}
       {resourceUtilization && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Resource Utilization
           </h3>
@@ -461,7 +565,9 @@ export default function JobExecutionsAnalyticsPage() {
       )}
 
       {performanceSummary && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Performance Summary
           </h3>
@@ -509,7 +615,9 @@ export default function JobExecutionsAnalyticsPage() {
       )}
 
       {healthScore && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Execution Health Score
           </h3>
@@ -545,7 +653,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Executions by Hour */}
       {executionsByHour.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Executions by Hour
           </h3>
@@ -566,7 +676,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Worker Node Stats */}
       {workerNodeStats.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Worker Node Statistics
           </h3>
@@ -615,7 +727,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Step Failure Analysis */}
       {stepFailureAnalysis.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Step Failure Analysis
           </h3>
@@ -633,7 +747,9 @@ export default function JobExecutionsAnalyticsPage() {
 
       {/* Slowest Executions */}
       {slowestExecutions.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Slowest Executions
           </h3>
@@ -660,6 +776,137 @@ export default function JobExecutionsAnalyticsPage() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Additional Insights */}
+      {(executionComparison ||
+        completionForecast.length > 0 ||
+        executionHeatmap ||
+        slaPrediction ||
+        anomalyDetection ||
+        concurrentAnalysis ||
+        partitionInfo.length > 0 ||
+        pendingCleanup ||
+        triggerDistributionAlt.length > 0 ||
+        executionTimeline.length > 0 ||
+        dailySummaryJob.length > 0) && (
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Additional Insights
+          </h3>
+          {executionComparison && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Execution Comparison (job-scoped)
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(executionComparison, null, 2)}
+              </pre>
+            </div>
+          )}
+          {completionForecast.length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Completion Forecast
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(completionForecast, null, 2)}
+              </pre>
+            </div>
+          )}
+          {executionHeatmap && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Execution Heatmap (job-scoped)
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(executionHeatmap, null, 2)}
+              </pre>
+            </div>
+          )}
+          {slaPrediction && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                SLA Prediction
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(slaPrediction, null, 2)}
+              </pre>
+            </div>
+          )}
+          {anomalyDetection && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Anomaly Detection
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(anomalyDetection, null, 2)}
+              </pre>
+            </div>
+          )}
+          {concurrentAnalysis && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Concurrent Execution Analysis
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(concurrentAnalysis, null, 2)}
+              </pre>
+            </div>
+          )}
+          {triggerDistributionAlt.length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Trigger Distribution (alt)
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(triggerDistributionAlt.slice(0, 50), null, 2)}
+              </pre>
+            </div>
+          )}
+          {partitionInfo.length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Partition Information
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(partitionInfo.slice(0, 50), null, 2)}
+              </pre>
+            </div>
+          )}
+          {pendingCleanup && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Pending Cleanup
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(pendingCleanup, null, 2)}
+              </pre>
+            </div>
+          )}
+          {executionTimeline.length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Execution Timeline (job-scoped)
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(executionTimeline.slice(0, 50), null, 2)}
+              </pre>
+            </div>
+          )}
+          {dailySummaryJob.length > 0 && (
+            <div className="mb-1">
+              <h4 className="text-sm font-semibold text-gray-800">
+                Daily Summary (job-scoped)
+              </h4>
+              <pre className="mt-1 max-h-48 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+                {JSON.stringify(dailySummaryJob.slice(0, 50), null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>

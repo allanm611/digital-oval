@@ -1201,7 +1201,7 @@ export default function JobWorkflowStepsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Order
+                    Step Order
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"

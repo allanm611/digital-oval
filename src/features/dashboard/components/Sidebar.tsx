@@ -462,6 +462,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             entity: "campaigns",
           },
           {
+            name: "Step Executions",
+            href: "/dashboard/step-executions",
+            icon: List,
+            type: "single",
+            entity: "campaigns",
+          },
+          {
             name: "Job Types",
             href: "/dashboard/job-types",
             icon: Layers,

@@ -496,11 +496,11 @@ export default function ScheduledJobDetailsPage() {
             deleted.
           </p>
           <button
-            onClick={() => navigate("/dashboard/scheduled-jobs")}
+            onClick={() => navigate(-1)}
             className={`mt-4 px-4 py-2 ${tw.rounded} font-semibold text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
-            Back to Scheduled Jobs
+            Back
           </button>
         </div>
       </div>
@@ -513,8 +513,8 @@ export default function ScheduledJobDetailsPage() {
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
           <button
-            onClick={() => navigate("/dashboard/scheduled-jobs")}
-            className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
+            onClick={() => navigate(-1)}
+            className={`${tw.rounded} p-2 text-gray-600 transition-colors`}
             aria-label="Back"
           >
             <ArrowLeft className="h-5 w-5" />

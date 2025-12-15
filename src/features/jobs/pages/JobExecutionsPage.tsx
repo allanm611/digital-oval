@@ -125,6 +125,15 @@ export default function JobExecutionsPage() {
     "abort" | "archive" | "retry" | null
   >(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [advancedResult, setAdvancedResult] = useState<string>("");
+  const [advancedInputs, setAdvancedInputs] = useState({
+    executionId: "",
+    jobId: "",
+    daysBack: 7,
+    status: "running",
+    metricsJson: '{"rows_processed":1000}',
+    updateJson: '{"triggered_by":"manual"}',
+  });
 
   const fetchExecutions = useCallback(
     async (overrideParams?: Partial<JobExecutionSearchParams>) => {
@@ -1035,6 +1044,410 @@ export default function JobExecutionsPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Advanced Maintenance & Insights */}
+      {canWrite && (
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+            Advanced (Job Executions)
+          </h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Execution ID
+              </label>
+              <input
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.executionId}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    executionId: e.target.value,
+                  }))
+                }
+                placeholder="execution UUID"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Job ID
+              </label>
+              <input
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.jobId}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    jobId: e.target.value,
+                  }))
+                }
+                placeholder="numeric job id"
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Days Back
+              </label>
+              <input
+                type="number"
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.daysBack}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    daysBack: Number(e.target.value) || 0,
+                  }))
+                }
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Status (update)
+              </label>
+              <input
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.status}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    status: e.target.value,
+                  }))
+                }
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Metrics JSON
+              </label>
+              <textarea
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.metricsJson}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    metricsJson: e.target.value,
+                  }))
+                }
+                rows={2}
+              />
+              <label className="text-sm font-medium text-gray-700">
+                Update Payload JSON
+              </label>
+              <textarea
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                value={advancedInputs.updateJson}
+                onChange={(e) =>
+                  setAdvancedInputs((p) => ({
+                    ...p,
+                    updateJson: e.target.value,
+                  }))
+                }
+                rows={2}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
+                    const data =
+                      await jobExecutionService.getLatestExecutionForJob(
+                        Number(advancedInputs.jobId)
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Latest for Job
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
+                    const data = await jobExecutionService.getExecutionTimeline(
+                      Number(advancedInputs.jobId),
+                      { limit: 20 }
+                    );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Timeline
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
+                    const data = await jobExecutionService.getDailySummary(
+                      Number(advancedInputs.jobId),
+                      { daysBack: advancedInputs.daysBack || 30 }
+                    );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Daily Summary
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
+                    const data =
+                      await jobExecutionService.getExecutionComparison(
+                        Number(advancedInputs.jobId),
+                        { currentPeriodDays: advancedInputs.daysBack || 7 }
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Comparison
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getCompletionForecast();
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Completion Forecast
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId) return;
+                    const data = await jobExecutionService.getExecutionHeatmap(
+                      Number(advancedInputs.jobId)
+                    );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Heatmap
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data = await jobExecutionService.getSLAPrediction();
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  SLA Prediction
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getAnomalyDetection();
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Anomaly Detection
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getTriggerDistribution({
+                        daysBack: advancedInputs.daysBack || 7,
+                      });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Trigger Distribution
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getConcurrentExecutionAnalysis();
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Concurrent Analysis
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getPartitionInformation();
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Partitions
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-gray-100 hover:bg-gray-200`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.getExecutionsPendingCleanup({
+                        retentionDays: 365,
+                      });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Pending Cleanup
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.jobId || !user?.user_id) return;
+                    const data = await jobExecutionService.createJobExecution({
+                      job_id: Number(advancedInputs.jobId),
+                      userId: user.user_id,
+                      triggered_by: "manual",
+                    });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Create Execution
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const data =
+                      await jobExecutionService.updateJobExecutionStatus(
+                        advancedInputs.executionId,
+                        { execution_status: advancedInputs.status }
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Update Status
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const data =
+                      await jobExecutionService.markJobExecutionStarted(
+                        advancedInputs.executionId
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Mark Started
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const data =
+                      await jobExecutionService.markJobExecutionCompleted(
+                        advancedInputs.executionId,
+                        { execution_status: "success" }
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Mark Completed
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const data =
+                      await jobExecutionService.markJobExecutionFailed(
+                        advancedInputs.executionId,
+                        { error_message: "Manual fail" }
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Mark Failed
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const data =
+                      await jobExecutionService.markJobExecutionTimeout(
+                        advancedInputs.executionId
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Mark Timeout
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const payload = JSON.parse(
+                      advancedInputs.metricsJson || "{}"
+                    );
+                    const data =
+                      await jobExecutionService.recordJobExecutionMetrics(
+                        advancedInputs.executionId,
+                        payload
+                      );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Record Metrics
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId) return;
+                    const payload = JSON.parse(
+                      advancedInputs.updateJson || "{}"
+                    );
+                    const data = await jobExecutionService.updateJobExecution(
+                      advancedInputs.executionId,
+                      payload
+                    );
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Update Execution
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    if (!advancedInputs.executionId || !user?.user_id) return;
+                    const data =
+                      await jobExecutionService.bulkArchiveJobExecutions({
+                        executionIds: [advancedInputs.executionId],
+                        userId: user.user_id,
+                      });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Bulk Archive (single)
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.archiveOldJobExecutions({
+                        olderThanDays: advancedInputs.daysBack || 365,
+                        jobId: advancedInputs.jobId
+                          ? Number(advancedInputs.jobId)
+                          : undefined,
+                        userId: user?.user_id || 0,
+                      });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Archive Old
+                </button>
+                <button
+                  className={`px-3 py-2 text-sm ${tw.rounded} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                  onClick={async () => {
+                    const data =
+                      await jobExecutionService.cleanupArchivedJobExecutions({
+                        olderThanDays: advancedInputs.daysBack || 365,
+                      });
+                    setAdvancedResult(JSON.stringify(data, null, 2));
+                  }}
+                >
+                  Cleanup Archived
+                </button>
+              </div>
+            </div>
+          </div>
+          {advancedResult && (
+            <pre className="mt-3 max-h-64 overflow-auto rounded bg-gray-50 p-3 text-xs text-gray-800 border border-gray-200">
+              {advancedResult}
+            </pre>
+          )}
         </div>
       )}
     </div>

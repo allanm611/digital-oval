@@ -112,7 +112,11 @@ class JobWorkflowStepService {
         count: response.pagination?.total ?? response.data.length,
         success: response.success,
         pagination: response.pagination,
-        source: response.source,
+        source: response.source as
+          | "cache"
+          | "database"
+          | "database-forced"
+          | undefined,
       };
     }
     return response;
@@ -590,19 +594,63 @@ class JobWorkflowStepService {
   ): Promise<JobWorkflowStepListResponse> {
     const response = await this.request<
       | JobWorkflowStepListResponse
-      | { success: boolean; data: JobWorkflowStep[] }
+      | {
+          success: boolean;
+          data:
+            | JobWorkflowStep[]
+            | {
+                created?: number;
+                errors?: string[];
+              };
+          error?: string;
+        }
     >("/batch", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
     });
 
-    if (response && typeof response === "object" && "data" in response) {
-      return {
-        data: (response as { data: JobWorkflowStep[] }).data,
-        count: (response as { data: JobWorkflowStep[] }).data.length,
-        success: (response as { success: boolean }).success,
+    // Handle explicit failure
+    if (response && typeof response === "object" && "success" in response) {
+      const resp = response as {
+        success: boolean;
+        data:
+          | JobWorkflowStep[]
+          | {
+              created?: number;
+              errors?: string[];
+            };
+        error?: string;
       };
+
+      // If backend returned errors array, surface them as a single error string
+      const errors =
+        resp &&
+        resp.data &&
+        typeof resp.data === "object" &&
+        "errors" in resp.data
+          ? (resp.data as { errors?: string[] }).errors
+          : undefined;
+
+      if (errors && errors.length > 0) {
+        const messages = errors.join("\n");
+        throw new Error(messages);
+      }
+
+      if (resp.success === false) {
+        throw new Error(resp.error || "Batch create failed");
+      }
+    }
+
+    if (response && typeof response === "object" && "data" in response) {
+      // If data is an array of steps, normalize
+      if (Array.isArray((response as { data: unknown }).data)) {
+        return {
+          data: (response as { data: JobWorkflowStep[] }).data,
+          count: (response as { data: JobWorkflowStep[] }).data.length,
+          success: (response as { success: boolean }).success,
+        };
+      }
     }
 
     return response as JobWorkflowStepListResponse;
@@ -682,19 +730,20 @@ class JobWorkflowStepService {
   async reorderSteps(
     jobId: number,
     payload: ReorderStepsPayload
-  ): Promise<{ success: boolean; message?: string; data?: { updated: number; errors?: string[] } }> {
-    const response = await this.request<{ 
-      success: boolean; 
-      message?: string; 
-      data?: { updated: number; errors?: string[] } 
-    }>(
-      `/job/${jobId}/reorder`,
-      {
-        method: "PUT",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    data?: { updated: number; errors?: string[] };
+  }> {
+    const response = await this.request<{
+      success: boolean;
+      message?: string;
+      data?: { updated: number; errors?: string[] };
+    }>(`/job/${jobId}/reorder`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    });
 
     // Check if there are errors in the response data
     if (response.data?.errors && response.data.errors.length > 0) {
@@ -779,4 +828,3 @@ class JobWorkflowStepService {
 }
 
 export const jobWorkflowStepService = new JobWorkflowStepService();
-

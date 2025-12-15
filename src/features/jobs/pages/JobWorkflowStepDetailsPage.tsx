@@ -434,55 +434,16 @@ export default function JobWorkflowStepDetailsPage() {
                   </dd>
                 </div>
               )}
-            </dl>
-          </div>
-
-          {/* Execution Configuration */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Execution Configuration
-            </h2>
-            <dl className="space-y-3">
               <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Step Action
-                </dt>
-                <dd
-                  className={`mt-1 text-sm ${tw.textPrimary} font-mono bg-gray-50 p-2 rounded`}
-                >
-                  {step.step_action}
+                <dt className="text-sm font-medium text-gray-500">Created At</dt>
+                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                  {formatDateTime(step.created_at)}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Timeout (seconds)
-                </dt>
+                <dt className="text-sm font-medium text-gray-500">Updated At</dt>
                 <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {step.timeout_seconds}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Retry Count
-                </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {step.retry_count}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Retry Delay (seconds)
-                </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {step.retry_delay_seconds}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  On Failure Action
-                </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {step.on_failure_action}
+                  {formatDateTime(step.updated_at)}
                 </dd>
               </div>
             </dl>
@@ -569,99 +530,205 @@ export default function JobWorkflowStepDetailsPage() {
             </div>
           )}
 
-          {/* Validation Queries */}
-          {(step.pre_validation_query || step.post_validation_query) && (
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                Validation Queries
-              </h2>
-              {step.pre_validation_query && (
-                <div className="mb-4">
-                  <dt className="text-sm font-medium text-gray-500 mb-2">
-                    Pre-Validation
-                  </dt>
-                  <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
-                    {step.pre_validation_query}
-                  </dd>
-                </div>
-              )}
-              {step.post_validation_query && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 mb-2">
-                    Post-Validation
-                  </dt>
-                  <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
-                    {step.post_validation_query}
-                  </dd>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Metadata */}
+        {/* Validation Queries */}
+        {(step.pre_validation_query || step.post_validation_query) && (
           <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Metadata
+              Validation Queries
             </h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Created At
+            {step.pre_validation_query && (
+              <div className="mb-4">
+                <dt className="text-sm font-medium text-gray-500 mb-2">
+                  Pre-Validation
                 </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.created_at)}
+                <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
+                  {step.pre_validation_query}
                 </dd>
               </div>
+            )}
+            {step.post_validation_query && (
               <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Updated At
+                <dt className="text-sm font-medium text-gray-500 mb-2">
+                  Post-Validation
                 </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.updated_at)}
+                <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
+                  {step.post_validation_query}
                 </dd>
               </div>
-            </dl>
+            )}
           </div>
+        )}
+
+        {/* Execution Configuration (moved here) */}
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Execution Configuration
+          </h2>
+          <dl className="space-y-3">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Step Action</dt>
+              <dd
+                className={`mt-1 text-sm ${tw.textPrimary} font-mono bg-gray-50 p-2 rounded`}
+              >
+                {step.step_action}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Timeout (seconds)
+              </dt>
+              <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                {step.timeout_seconds}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Retry Count</dt>
+              <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                {step.retry_count}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                Retry Delay (seconds)
+              </dt>
+              <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                {step.retry_delay_seconds}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">
+                On Failure Action
+              </dt>
+              <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                {step.on_failure_action}
+              </dd>
+            </div>
+            {step.execution_condition && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Execution Condition
+                </dt>
+                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                  {step.execution_condition}
+                </dd>
+              </div>
+            )}
+            {step.skip_on_condition && (
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Skip On Condition
+                </dt>
+                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                  {step.skip_on_condition}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
         </div>
       </div>
 
-      {/* Execution Order & Workflow Structure */}
+      {/* Execution Order (table view) */}
       {executionOrder.length > 0 && (
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <div className="mt-2">
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-gray-900">
             <Workflow className="h-5 w-5" />
             Execution Order
           </h2>
-          <div className="space-y-2">
-            {executionOrder.map((item, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center justify-between ${tw.rounded} p-3 ${
-                  item.step_id === step.id
-                    ? "bg-blue-50 border-2 border-blue-300"
-                    : "bg-gray-50 border border-gray-200"
-                }`}
-              >
-                <div>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {item.step_name}
-                  </span>
-                  <span className="ml-2 text-xs text-gray-500">
-                    ({item.step_code})
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {item.can_execute ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span className="text-xs text-gray-500">
-                    Order: {item.step_order}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
+              <thead>
+                <tr>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopLeftRadius: "0.375rem",
+                    }}
+                  >
+                    Order
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Job ID
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Step Name
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopRightRadius: "0.375rem",
+                    }}
+                  >
+                    Step Code
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {executionOrder.map((item, idx) => (
+                  <tr key={item.id || item.step_id || idx}>
+                    <td
+                      className="px-4 py-3 text-sm font-semibold text-gray-900"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopLeftRadius: "0.375rem",
+                        borderBottomLeftRadius: "0.375rem",
+                      }}
+                    >
+                      {item.step_order}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <button
+                        onClick={() =>
+                          navigate(`/dashboard/scheduled-jobs/${item.job_id}`)
+                        }
+                        className="hover:underline"
+                        style={{ color: color.primary.accent }}
+                      >
+                        {item.job_id}
+                      </button>
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm text-gray-900"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {item.step_name}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm text-gray-700"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopRightRadius: "0.375rem",
+                        borderBottomRightRadius: "0.375rem",
+                      }}
+                    >
+                      {item.step_code}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
