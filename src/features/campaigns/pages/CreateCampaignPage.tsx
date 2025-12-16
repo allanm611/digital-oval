@@ -1276,8 +1276,8 @@ export default function CreateCampaignPage() {
 
           <div className="py-4">{renderStep()}</div>
 
-          {/* Sticky Bottom Navigation */}
-          <div className="sticky bottom-0 z-30 bg-white py-3 border-t border-gray-100">
+          {/* Bottom Navigation */}
+          <div className="bg-white py-3 border-t border-gray-100">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 onClick={handlePrev}

@@ -888,7 +888,7 @@ export const sw: Translations = {
     fieldValue: "Thamani ya Sehemu",
     fieldType: "Aina ya Sehemu",
     sourceTable: "Jedwali la Chanzo",
-    description: "Maelezo",
+    descriptionLabel: "Maelezo",
     actions: "Vitendo",
     viewDetails: "Angalia maelezo",
     fieldDetails: "Maelezo ya Sehemu",

@@ -2208,8 +2208,8 @@ export default function CreateOfferPage() {
             {currentStep === 6 && <ReviewStep {...stepProps} />}
           </div>
 
-          {/* Sticky Bottom Navigation */}
-          <div className="sticky bottom-0 z-40 bg-white py-4">
+          {/* Bottom Navigation */}
+          <div className="bg-white py-4">
             <div className="flex justify-between items-center">
               <button
                 onClick={handlePrev}
