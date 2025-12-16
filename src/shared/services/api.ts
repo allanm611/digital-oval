@@ -1,18 +1,34 @@
 // API Configuration
-// Base URL can be set via environment variable VITE_API_BASE_URL
-// Default: http://localhost:8080/api/database-service
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  `${window.location.protocol}//${window.location.host}/api/database-service`;
+// Detect environment
+const isLocalhost =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
 
-const isProduction =
-  window.location.hostname !== "localhost" &&
-  window.location.hostname !== "127.0.0.1";
+const isVercel =
+  window.location.hostname.includes("vercel.app") ||
+  window.location.hostname.includes(".vercel.app");
+
+// Determine API base URL based on environment:
+// - Vercel: use proxy (serverless function)
+// - Localhost: use .env value (http://cvm.groupngs.com:8080/api/database-service)
+// - UAT/Production: use dynamic URL (same host)
+const getApiBaseUrl = () => {
+  if (isVercel) {
+    return "/api/proxy";
+  }
+  if (isLocalhost) {
+    // Local development: use .env value
+    return (
+      import.meta.env.VITE_API_BASE_URL ||
+      "http://cvm.groupngs.com:8080/api/database-service"
+    );
+  }
+  // UAT/Production: use dynamic URL (server will proxy to backend)
+  return `${window.location.protocol}//${window.location.host}/api/database-service`;
+};
 
 export const API_CONFIG = {
-  // Use proxy in production, direct API in development
-  // BASE_URL is now configurable via VITE_API_BASE_URL environment variable
-  BASE_URL: isProduction ? "/api/proxy" : API_BASE_URL,
+  BASE_URL: getApiBaseUrl(),
   ENDPOINTS: {
     OFFERS: "/offers",
     PRODUCTS: "/products",

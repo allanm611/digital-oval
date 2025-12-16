@@ -103,18 +103,25 @@ export default function EditProductPage() {
         productData.unit ||
         "data_mb";
 
+      // Extract combo_data from metadata if it exists
+      const comboDataFromMetadata = productData.metadata?.combo_data as
+        | { resources: unknown[]; shared_validity?: boolean; shared_validity_hours?: number }
+        | undefined;
+
       setFormData({
         product_code: productData.product_code || "",
         name: productData.name || "",
         da_id: productData.da_id || "",
         description: productData.description || "",
         category_id: productData.category_id,
+        product_type_id: productData.product_type_id,
         price: productData.price || 0,
         currency: productData.currency || "KES",
         scope: productData.scope || "segment",
         unit: unitFromBackend as ProductUnit,
         unit_value: productData.unit_value ?? 0,
         validity_hours: productData.validity_hours,
+        combo_data: comboDataFromMetadata,
       });
 
       // Set selected category IDs for MultiCategorySelector
@@ -157,6 +164,7 @@ export default function EditProductPage() {
         unit,
         unit_value,
         validity_hours,
+        combo_data,
         ...updateData
       } = formData;
 
@@ -164,6 +172,7 @@ export default function EditProductPage() {
       const finalUpdateData: typeof updateData & {
         unit_of_measure?: string;
         validity_hours?: number;
+        combo_data?: typeof combo_data;
       } = {
         ...updateData,
       };
@@ -176,6 +185,11 @@ export default function EditProductPage() {
       // Include validity_hours if provided (backend doesn't accept unit_value)
       if (validity_hours && validity_hours > 0) {
         finalUpdateData.validity_hours = validity_hours;
+      }
+
+      // Include combo_data if provided (for combo products)
+      if (combo_data && combo_data.resources.length > 0) {
+        finalUpdateData.combo_data = combo_data;
       }
 
       // Update product data
@@ -214,9 +228,9 @@ export default function EditProductPage() {
 
   const handleInputChange = (
     field: keyof UpdateProductRequest,
-    value: string | number | boolean | undefined
+    value: string | number | boolean | undefined | UpdateProductRequest["combo_data"]
   ) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData({ ...formData, [field]: value as any });
   };
 
   const handleCategoryCreated = (categoryId: number) => {

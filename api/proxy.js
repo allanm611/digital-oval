@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     "http://localhost:5173",
     "https://sentra-wheat.vercel.app",
     "https://sentra-uat.vercel.app",
-    
+
     // Replace with your actual Vercel domain
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean);
@@ -41,12 +41,12 @@ export default async function handler(req, res) {
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
-    // Use environment variable or default to localhost
-    // const API_BASE_URL = "http://cvm.groupngs.com:8080/api/database-service";
+    // Use environment variable or default to the backend URL
     const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  `${window.location.protocol}//${window.location.host}/api/database-service`;
-    
+      process.env.VITE_API_BASE_URL ||
+      process.env.API_BASE_URL ||
+      "http://cvm.groupngs.com:8080/api/database-service";
+
     // Log for debugging in production
     console.log("Proxy request:", {
       method: req.method,
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       targetUrl: `${API_BASE_URL}/${apiPath}`,
       hasApiBaseUrl: !!process.env.API_BASE_URL,
     });
-    
+
     const targetUrl = `${API_BASE_URL}/${apiPath}`;
 
     // Prepare headers for the backend request

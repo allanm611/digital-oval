@@ -2480,22 +2480,20 @@ Satoshi
     @apply bg-primary-100 text-primary-900;
   }
 
-  /* Scrollbar styles */
+  /* Hide scrollbar completely while keeping scroll functionality */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    display: none;
+    width: 0;
+    height: 0;
   }
 
-  ::-webkit-scrollbar-track {
-    @apply bg-secondary-100;
+  /* Firefox - hide scrollbar */
+  * {
+    scrollbar-width: none;
   }
 
-  ::-webkit-scrollbar-thumb {
-    @apply bg-secondary-300 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-secondary-400;
+  html, body {
+    -ms-overflow-style: none; /* IE and Edge */
   }
 }
 

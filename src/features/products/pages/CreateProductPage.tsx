@@ -83,13 +83,14 @@ export default function CreateProductPage() {
       setIsLoading(true);
 
       // Map unit to unit_of_measure
-      const { scope, unit, unit_value, validity_hours, ...submitData } =
+      const { scope, unit, unit_value, validity_hours, combo_data, ...submitData } =
         formData;
 
       // Prepare submission data with unit_of_measure
       const finalSubmitData: typeof submitData & {
         unit_of_measure?: string;
         validity_hours?: number;
+        combo_data?: typeof combo_data;
       } = {
         ...submitData,
       };
@@ -102,6 +103,11 @@ export default function CreateProductPage() {
       // Include validity_hours if provided (backend doesn't accept unit_value)
       if (validity_hours && validity_hours > 0) {
         finalSubmitData.validity_hours = validity_hours;
+      }
+
+      // Include combo_data if provided (for combo products)
+      if (combo_data && combo_data.resources.length > 0) {
+        finalSubmitData.combo_data = combo_data;
       }
 
       await productService.createProduct(finalSubmitData);
@@ -139,9 +145,9 @@ export default function CreateProductPage() {
 
   const handleInputChange = (
     field: keyof CreateProductRequest,
-    value: string | number | boolean | undefined
+    value: string | number | boolean | undefined | CreateProductRequest["combo_data"]
   ) => {
-    setFormData({ ...formData, [field]: value });
+    setFormData({ ...formData, [field]: value as any });
   };
 
   const handleCategoryCreated = (categoryId: number) => {

@@ -1632,6 +1632,24 @@ const hardcodedProductTypes: TypeConfigurationItem[] = [
     isActive: false,
     metadataValue: 5,
   },
+  {
+    id: 6,
+    name: "Combo",
+    description: "Combined products with multiple resources (Data, Voice, SMS)",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 15,
+  },
+  {
+    id: 7,
+    name: "Utilities",
+    description: "Utility products and services",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 10,
+  },
 ];
 
 // Offer Types Configuration
