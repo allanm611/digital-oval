@@ -1,18 +1,19 @@
 // API Configuration
-// Base URL can be set via environment variable VITE_API_BASE_URL
-// Default: http://localhost:8080/api/database-service
+// Base URL is dynamically constructed based on the current host
+// Can be overridden via environment variable VITE_API_BASE_URL
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   `${window.location.protocol}//${window.location.host}/api/database-service`;
 
-const isProduction =
-  window.location.hostname !== "localhost" &&
-  window.location.hostname !== "127.0.0.1";
+// Detect if we're on Vercel (use proxy) or on other deployments (direct connection)
+const isVercel =
+  window.location.hostname.includes("vercel.app") ||
+  window.location.hostname.includes(".vercel.app");
 
 export const API_CONFIG = {
-  // Use proxy in production, direct API in development
-  // BASE_URL is now configurable via VITE_API_BASE_URL environment variable
-  BASE_URL: isProduction ? "/api/proxy" : API_BASE_URL,
+  // On Vercel: use proxy (serverless function)
+  // On other deployments (UAT, production): use direct connection to backend on same host
+  BASE_URL: isVercel ? "/api/proxy" : API_BASE_URL,
   ENDPOINTS: {
     OFFERS: "/offers",
     PRODUCTS: "/products",
