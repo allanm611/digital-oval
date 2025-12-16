@@ -42,6 +42,7 @@ export const space = spacing;
 export const radius = borderRadius;
 export const button = buttons;
 export { zIndex };
+export const zIndexTokens = zIndex;
 
 // Note/banner styles to avoid hardcoded colors
 export const noteStyles = {
