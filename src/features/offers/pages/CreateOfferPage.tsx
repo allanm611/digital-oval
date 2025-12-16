@@ -11,6 +11,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Target,
   DollarSign,
+  ArrowLeft,
   Gift,
   Palette,
   BarChart,
@@ -39,7 +40,6 @@ import OfferCreativeStep from "../components/OfferCreativeStep";
 import OfferTrackingStep from "../components/OfferTrackingStep";
 import OfferRewardStep from "../components/OfferRewardStep";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import BackButton from "../../../shared/components/ui/BackButton";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -301,9 +301,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., Summer Data Bundle"
-            className={`w-full px-3 py-1.5 border ${
-              tw.rounded
-            } focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.name ? "border-red-500" : "border-gray-300"
             }`}
             required
@@ -327,9 +325,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., SUMMER_DATA_2024"
-            className={`w-full px-3 py-1.5 border ${
-              tw.rounded
-            } focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.code ? "border-red-500" : "border-gray-300"
             }`}
             required
@@ -444,9 +440,7 @@ function BasicInfoStep({
               }
             }}
             placeholder="e.g., 1, 5, 10"
-            className={`w-full px-3 py-1.5 border ${
-              tw.rounded
-            } focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
+            className={`w-full px-3 py-1.5 border ${tw.rounded} focus:outline-none transition-all duration-200 text-sm placeholder:text-sm ${
               validationErrors?.max_usage_per_customer
                 ? "border-red-500"
                 : "border-gray-300"
@@ -1058,9 +1052,7 @@ function ReviewStep({
               Products
             </h3>
             {formData.primary_product_id ? (
-              <div
-                className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
-              >
+              <div className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}>
                 <div className="flex items-center gap-3">
                   <Package
                     className="w-5 h-5"
@@ -1169,9 +1161,7 @@ function ReviewStep({
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}
-          >
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Offer Settings
             </h3>
@@ -1201,9 +1191,7 @@ function ReviewStep({
             </div>
           </div>
 
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}
-          >
+          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}>
             <h3 className="text-sm font-semibold text-gray-900">
               Readiness Checklist
             </h3>
@@ -2169,10 +2157,12 @@ export default function CreateOfferPage() {
 
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <BackButton
-                fallbackTo="/dashboard/offers"
-                className="text-gray-400 hover:text-gray-600"
-              />
+              <button
+                onClick={() => navigate("/dashboard/offers")}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <div>
                 <h1 className={`text-xl font-semibold ${tw.textPrimary}`}>
                   {isEditMode ? "Edit Offer" : "Create Offer"}
@@ -2196,14 +2186,12 @@ export default function CreateOfferPage() {
           />
 
           {error && (
-            <div
-              className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}
-            >
+            <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}>
               <p className="text-red-700">{error}</p>
             </div>
           )}
 
-          <div className="py-4">
+          <div className="pb-10">
             {currentStep === 1 && <BasicInfoStep {...stepProps} />}
             {currentStep === 2 && (
               <ProductStepWrapper
@@ -2221,18 +2209,15 @@ export default function CreateOfferPage() {
           </div>
 
           {/* Bottom Navigation */}
-          <div className="mt-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              {currentStep > 1 ? (
-                <button
-                  onClick={handlePrev}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 w-full sm:w-auto`}
-                >
-                  Previous
-                </button>
-              ) : (
-                <div></div>
-              )}
+          <div className="bg-white py-4">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={handlePrev}
+                disabled={currentStep === 1}
+                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Previous
+              </button>
               <button
                 onClick={currentStep === 6 ? handleSubmit : handleNext}
                 disabled={
@@ -2240,7 +2225,7 @@ export default function CreateOfferPage() {
                     ? isLoading || !validateCurrentStep()
                     : !validateCurrentStep()
                 }
-                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
+                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
                 onMouseEnter={(e) => {
                   const btn = e.currentTarget;

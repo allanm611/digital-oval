@@ -5,7 +5,10 @@ export default async function handler(req, res) {
   const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5173",
-    "https://sentra-wheat.vercel.app", // Replace with your actual Vercel domain
+    "https://sentra-wheat.vercel.app",
+    "https://sentra-uat.vercel.app",
+    
+    // Replace with your actual Vercel domain
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean);
 
@@ -34,43 +37,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { path, ...queryParams } = req.query;
+    const { path } = req.query;
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
     // Use environment variable or default to localhost
-    const API_BASE_URL = "http://cvm.groupngs.com:8080/api/database-service";
-
-    // Build query string from remaining query parameters (excluding 'path')
-    const queryString = Object.entries(queryParams)
-      .map(([key, value]) => {
-        // Handle array values (e.g., multiple values for same key)
-        if (Array.isArray(value)) {
-          return value
-            .map(
-              (v) =>
-                `${encodeURIComponent(key)}=${encodeURIComponent(String(v))}`
-            )
-            .join("&");
-        }
-        return `${encodeURIComponent(key)}=${encodeURIComponent(
-          String(value)
-        )}`;
-      })
-      .join("&");
-
-    const targetUrl = `${API_BASE_URL}/${apiPath}${
-      queryString ? `?${queryString}` : ""
-    }`;
-
+    // const API_BASE_URL = "http://cvm.groupngs.com:8080/api/database-service";
+    const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  `${window.location.protocol}//${window.location.host}/api/database-service`;
+    
     // Log for debugging in production
     console.log("Proxy request:", {
       method: req.method,
       apiPath,
-      queryParams,
-      targetUrl,
+      targetUrl: `${API_BASE_URL}/${apiPath}`,
       hasApiBaseUrl: !!process.env.API_BASE_URL,
     });
+    
+    const targetUrl = `${API_BASE_URL}/${apiPath}`;
 
     // Prepare headers for the backend request
     const headers = {

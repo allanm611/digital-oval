@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
-  Briefcase,
   CheckCircle,
-  Clock,
   Eye,
   Edit,
   Plus,
@@ -22,18 +20,14 @@ import {
   Activity,
   Zap,
   Copy,
-  RefreshCw,
-  AlertCircle,
-  TrendingUp,
   Workflow,
 } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
@@ -70,19 +64,14 @@ const FAILURE_ACTION_OPTIONS: Array<{ label: string; value: FailureAction }> = [
 
 export default function JobWorkflowStepsPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const jobIdParam = searchParams.get("job_id");
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
 
   const [steps, setSteps] = useState<JobWorkflowStep[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stepTypeFilter, setStepTypeFilter] = useState<StepType | "">("");
-  const [jobIdFilter, setJobIdFilter] = useState<number | "">(
-    jobIdParam ? Number(jobIdParam) : ""
-  );
+  const [jobIdFilter, setJobIdFilter] = useState<number | "">("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalSteps: 0,
@@ -98,8 +87,14 @@ export default function JobWorkflowStepsPage() {
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
+  const [rowLoading, setRowLoading] = useState<{
+    id: number;
+    action: "clone";
+  } | null>(null);
+  const [validateLoadingId, setValidateLoadingId] = useState<number | null>(
+    null
+  );
   const [jobMap, setJobMap] = useState<Record<number, ScheduledJob>>({});
-  const [jobs, setJobs] = useState<ScheduledJob[]>([]);
   // Bulk selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedSteps, setSelectedSteps] = useState<Set<number>>(new Set());
@@ -107,6 +102,7 @@ export default function JobWorkflowStepsPage() {
   // Advanced filters
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [stepCodeFilter, setStepCodeFilter] = useState<string>("");
+  const [stepOrderFilter, setStepOrderFilter] = useState<number | "">("");
   const [isCriticalFilter, setIsCriticalFilter] = useState<boolean | "">("");
   const [isParallelFilter, setIsParallelFilter] = useState<boolean | "">("");
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | "">("");
@@ -149,55 +145,10 @@ export default function JobWorkflowStepsPage() {
     on_failure_action?: FailureAction;
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
-  // Analytics data
-  const [analyticsData, setAnalyticsData] = useState<{
-    mostFailed: Array<{
-      step_id: number;
-      step_name: string;
-      step_code: string;
-      job_id: number;
-      failure_count: number;
-      last_failure_at: string | null;
-    }>;
-    longestRunning: Array<{
-      step_id: number;
-      step_name: string;
-      step_code: string;
-      job_id: number;
-      average_duration_seconds: number;
-      max_duration_seconds: number;
-    }>;
-    typeDistribution: Array<{
-      step_type: StepType;
-      count: number;
-      percentage: number;
-    }>;
-    complexWorkflows: Array<{
-      job_id: number;
-      job_name: string;
-      total_steps: number;
-      parallel_groups: number;
-      dependencies: number;
-      complexity_score: number;
-    }>;
-    dependencyComplexity: Array<{
-      job_id: number;
-      job_name: string;
-      max_depth: number;
-      total_dependencies: number;
-      circular_dependencies: boolean;
-    }>;
-    timeoutAnalysis: Array<{
-      step_id: number;
-      step_name: string;
-      configured_timeout: number;
-      average_execution_time: number;
-      timeout_utilization_percent: number;
-      risk_level: "low" | "medium" | "high";
-    }>;
-  } | null>(null);
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
+  // Pagination
+  const [page, setPage] = useState(0);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -215,41 +166,126 @@ export default function JobWorkflowStepsPage() {
       try {
         let response;
 
-        if (jobIdFilter) {
-          // Get steps for specific job
-          response = await jobWorkflowStepService.getStepsByJobId(
-            Number(jobIdFilter),
-            true
-          );
+        // Use specific lookup endpoints when we have both job_id and step_code or step_order
+        if (jobIdFilter && stepCodeFilter.trim()) {
+          // Use getStepByJobAndCode for precise lookup
+          try {
+            const step = await jobWorkflowStepService.getStepByJobAndCode(
+              Number(jobIdFilter),
+              stepCodeFilter.trim(),
+              true
+            );
+            response = { data: [step], count: 1 };
+          } catch (err) {
+            // If specific lookup fails, fall back to search
+            console.warn("getStepByJobAndCode failed, using search:", err);
+            response = await jobWorkflowStepService.searchJobWorkflowSteps({
+              job_id: Number(jobIdFilter),
+              step_code: stepCodeFilter.trim(),
+              limit: pageSize,
+              offset: page * pageSize,
+              skipCache: true,
+            });
+          }
+        } else if (jobIdFilter && stepOrderFilter !== "") {
+          // Use getStepByJobAndOrder for precise lookup
+          try {
+            const step = await jobWorkflowStepService.getStepByJobAndOrder(
+              Number(jobIdFilter),
+              Number(stepOrderFilter),
+              true
+            );
+            response = { data: [step], count: 1 };
+          } catch (err) {
+            // If specific lookup fails, fall back to search
+            console.warn("getStepByJobAndOrder failed, using search:", err);
+            response = await jobWorkflowStepService.searchJobWorkflowSteps({
+              job_id: Number(jobIdFilter),
+              step_order: Number(stepOrderFilter),
+              limit: pageSize,
+              offset: page * pageSize,
+              skipCache: true,
+            });
+          }
+        } else if (jobIdFilter) {
+          // Get steps for specific job - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            job_id: Number(jobIdFilter),
+            limit: pageSize,
+            offset: page * pageSize,
+            skipCache: true,
+          });
         } else if (stepTypeFilter) {
-          // Get steps by type
-          response = await jobWorkflowStepService.getStepsByType(
-            stepTypeFilter,
-            true
-          );
+          // Get steps by type - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            step_type: stepTypeFilter,
+            limit: pageSize,
+            offset: page * pageSize,
+            skipCache: true,
+          });
         } else if (isCriticalFilter === true) {
-          // Get critical steps
-          response = await jobWorkflowStepService.getCriticalSteps({
+          // Get critical steps - use search with pagination
+          response = await jobWorkflowStepService.searchJobWorkflowSteps({
+            is_critical: true,
+            limit: pageSize,
+            offset: page * pageSize,
             skipCache: true,
           });
         } else if (showValidationSteps) {
-          // Get validation steps
-          response = await jobWorkflowStepService.getValidationSteps({
+          // Get validation steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getValidationSteps({
             job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
             skipCache: true,
           });
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (showRetrySteps) {
-          // Get retry steps
-          response = await jobWorkflowStepService.getRetrySteps({
+          // Get retry steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getRetrySteps({
             job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
             skipCache: true,
           });
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (showOrphanedSteps) {
-          // Get orphaned steps
-          response = await jobWorkflowStepService.getOrphanedSteps(true);
+          // Get orphaned steps - these endpoints don't support pagination, so we'll get all and paginate client-side
+          const allResponse = await jobWorkflowStepService.getOrphanedSteps(true);
+          const allSteps = allResponse.data || [];
+          const startIndex = page * pageSize;
+          const endIndex = startIndex + pageSize;
+          response = {
+            data: allSteps.slice(startIndex, endIndex),
+            pagination: {
+              total: allSteps.length,
+              limit: pageSize,
+              offset: startIndex,
+              hasMore: endIndex < allSteps.length,
+            },
+          };
         } else if (
           hasSearchTerm ||
           stepCodeFilter ||
+          stepOrderFilter !== "" ||
           isCriticalFilter !== "" ||
           isParallelFilter !== "" ||
           isActiveFilter !== "" ||
@@ -258,8 +294,8 @@ export default function JobWorkflowStepsPage() {
         ) {
           // Use search endpoint with filters
           const params: JobWorkflowStepSearchParams = {
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset: page * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -269,6 +305,9 @@ export default function JobWorkflowStepsPage() {
           if (stepCodeFilter) {
             params.step_code = stepCodeFilter;
           }
+          if (stepOrderFilter !== "") {
+            params.step_order = Number(stepOrderFilter);
+          }
           if (stepTypeFilter) {
             params.step_type = stepTypeFilter;
           }
@@ -276,13 +315,13 @@ export default function JobWorkflowStepsPage() {
             params.job_id = Number(jobIdFilter);
           }
           if (isCriticalFilter !== "") {
-            params.is_critical = isCriticalFilter === true;
+            params.is_critical = isCriticalFilter as boolean;
           }
           if (isParallelFilter !== "") {
-            params.is_parallel = isParallelFilter === true;
+            params.is_parallel = isParallelFilter as boolean;
           }
           if (isActiveFilter !== "") {
-            params.is_active = isActiveFilter === true;
+            params.is_active = isActiveFilter as boolean;
           }
           if (failureActionFilter) {
             params.on_failure_action = failureActionFilter;
@@ -312,8 +351,8 @@ export default function JobWorkflowStepsPage() {
         } else {
           // Use list endpoint
           const params = {
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset: page * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -329,6 +368,16 @@ export default function JobWorkflowStepsPage() {
           return a.step_order - b.step_order;
         });
         setSteps(sortedSteps);
+        
+        // Update total count from pagination response
+        if (response.pagination?.total !== undefined) {
+          setTotalCount(response.pagination.total);
+        } else if (response.count !== undefined) {
+          setTotalCount(response.count);
+        } else if (response.data) {
+          // If no pagination info, use the data length (for single-item responses)
+          setTotalCount(response.data.length);
+        }
       } catch (err) {
         const message =
           err instanceof Error
@@ -345,6 +394,7 @@ export default function JobWorkflowStepsPage() {
       stepTypeFilter,
       jobIdFilter,
       stepCodeFilter,
+      stepOrderFilter,
       isCriticalFilter,
       isParallelFilter,
       isActiveFilter,
@@ -354,6 +404,8 @@ export default function JobWorkflowStepsPage() {
       showRetrySteps,
       showOrphanedSteps,
       showError,
+      page,
+      pageSize,
     ]
   );
 
@@ -454,63 +506,11 @@ export default function JobWorkflowStepsPage() {
     fetchStats();
   }, [fetchStats]);
 
-  const fetchAnalytics = useCallback(async () => {
-    if (!showAnalytics) return;
-    setIsLoadingAnalytics(true);
-    try {
-      const [
-        mostFailed,
-        longestRunning,
-        typeDistribution,
-        complexWorkflows,
-        dependencyComplexity,
-        timeoutAnalysis,
-      ] = await Promise.all([
-        jobWorkflowStepService
-          .getMostFailedSteps({ limit: 10, days_back: 30, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getLongestRunningSteps({ limit: 10, days_back: 30, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getTypeDistribution({ skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getComplexWorkflows({ limit: 10, skipCache: true })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getDependencyComplexity({
-            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
-            limit: 10,
-            skipCache: true,
-          })
-          .catch(() => ({ success: true, data: [] })),
-        jobWorkflowStepService
-          .getTimeoutAnalysis({
-            job_id: jobIdFilter ? Number(jobIdFilter) : undefined,
-            skipCache: true,
-          })
-          .catch(() => ({ success: true, data: [] })),
-      ]);
-
-      setAnalyticsData({
-        mostFailed: mostFailed.data || [],
-        longestRunning: longestRunning.data || [],
-        typeDistribution: typeDistribution.data || [],
-        complexWorkflows: complexWorkflows.data || [],
-        dependencyComplexity: dependencyComplexity.data || [],
-        timeoutAnalysis: timeoutAnalysis.data || [],
-      });
-    } catch (err) {
-      console.error("Failed to load analytics:", err);
-    } finally {
-      setIsLoadingAnalytics(false);
-    }
-  }, [showAnalytics, jobIdFilter]);
-
+  // Reset selection mode when filters change
   useEffect(() => {
-    fetchAnalytics();
-  }, [fetchAnalytics]);
+    setIsSelectionMode(false);
+    setSelectedSteps(new Set());
+  }, [jobIdFilter]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -520,7 +520,6 @@ export default function JobWorkflowStepsPage() {
           skipCache: true,
         });
         const jobList = response.data || [];
-        setJobs(jobList);
         const map: Record<number, ScheduledJob> = {};
         jobList.forEach((job) => {
           map[job.id] = job;
@@ -596,14 +595,17 @@ export default function JobWorkflowStepsPage() {
         return;
       }
 
-      showToast(
-        `Batch ${action} completed`,
-        `${result.success} step(s) ${action}d successfully${
-          result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`
-      );
+      if (result) {
+        showToast(
+          `Batch ${action} completed`,
+          `${result.success} step(s) ${action}d successfully${
+            result.failed > 0 ? `, ${result.failed} failed` : ""
+          }`
+        );
+      }
 
       setSelectedSteps(new Set());
+      setIsSelectionMode(false);
       fetchSteps(); // Refresh the list
     } catch (err) {
       showError(
@@ -691,13 +693,27 @@ export default function JobWorkflowStepsPage() {
         newOrder: item.newOrder,
       }));
 
-      await jobWorkflowStepService.reorderSteps(Number(jobIdFilter), {
-        stepOrderMapping,
-        userId: user?.user_id || 0,
-      });
+      const result = await jobWorkflowStepService.reorderSteps(
+        Number(jobIdFilter),
+        {
+          stepOrderMapping,
+        }
+      );
 
-      showToast("Steps reordered", "Step order has been updated successfully.");
+      if (result.data?.updated && result.data.updated > 0) {
+        showToast(
+          "Steps reordered",
+          `${result.data.updated} step(s) reordered successfully.`
+        );
+      } else {
+        showToast(
+          "Steps reordered",
+          "Step order has been updated successfully."
+        );
+      }
+
       setShowReorderModal(false);
+      // Always refresh to show current state
       fetchSteps();
     } catch (err) {
       showError(
@@ -761,6 +777,7 @@ export default function JobWorkflowStepsPage() {
       setShowBatchUpdateModal(false);
       setBatchUpdateFields({});
       setSelectedSteps(new Set());
+      setIsSelectionMode(false);
       fetchSteps();
     } catch (err) {
       showError(
@@ -774,9 +791,7 @@ export default function JobWorkflowStepsPage() {
 
   const handleDuplicateStep = async (step: JobWorkflowStep) => {
     try {
-      await jobWorkflowStepService.duplicateStep(step.id, {
-        userId: user?.user_id || 0,
-      });
+      await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
         `"${step.step_name}" has been duplicated successfully.`
@@ -795,17 +810,34 @@ export default function JobWorkflowStepsPage() {
       const result = await jobWorkflowStepService.validateWorkflowIntegrity(
         jobId
       );
-      if (result.valid) {
+      type IntegrityResult = {
+        isValid?: boolean;
+        valid?: boolean;
+        errors?: string[];
+        warnings?: string[];
+      };
+      const res: IntegrityResult & { data?: IntegrityResult } =
+        result as IntegrityResult & {
+          data?: IntegrityResult;
+        };
+      const data = res.data ?? res;
+      const isValid = data.isValid ?? data.valid ?? false;
+      const errors = Array.isArray(data.errors) ? data.errors : [];
+      const warnings = Array.isArray(data.warnings) ? data.warnings : [];
+
+      if (isValid) {
         showToast(
           "Workflow Valid",
-          result.warnings.length > 0
-            ? `Workflow is valid. Warnings: ${result.warnings.join(", ")}`
+          warnings.length > 0
+            ? `Workflow is valid. Warnings: ${warnings.join(", ")}`
             : "Workflow is valid with no issues."
         );
       } else {
         showError(
           "Workflow Validation Failed",
-          `Errors: ${result.errors.join(", ")}`
+          errors.length > 0
+            ? `Errors: ${errors.join(", ")}`
+            : "Validation failed."
         );
       }
     } catch (err) {
@@ -819,11 +851,6 @@ export default function JobWorkflowStepsPage() {
   const getStepTypeLabel = (type: StepType): string => {
     const option = STEP_TYPE_OPTIONS.find((opt) => opt.value === type);
     return option?.label || type;
-  };
-
-  const getFailureActionLabel = (action: FailureAction): string => {
-    const option = FAILURE_ACTION_OPTIONS.find((opt) => opt.value === action);
-    return option?.label || action;
   };
 
   return (
@@ -865,18 +892,16 @@ export default function JobWorkflowStepsPage() {
             </>
           )}
           <button
-            onClick={() => setShowAnalytics(!showAnalytics)}
+            onClick={() => navigate("/dashboard/job-workflow-steps/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
             style={{
-              backgroundColor: showAnalytics
-                ? color.primary.action
-                : "transparent",
-              color: showAnalytics ? "white" : color.primary.action,
+              backgroundColor: "transparent",
+              color: color.primary.action,
               border: `1px solid ${color.primary.action}`,
             }}
           >
             <BarChart3 className="h-4 w-4" />
-            {showAnalytics ? "Hide Analytics" : "Show Analytics"}
+            Analytics
           </button>
           <button
             onClick={() => {
@@ -1027,253 +1052,6 @@ export default function JobWorkflowStepsPage() {
         </div>
       </div>
 
-      {/* Analytics Section */}
-      {showAnalytics && (
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Analytics & Insights
-            </h2>
-            <button
-              onClick={() => fetchAnalytics()}
-              disabled={isLoadingAnalytics}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50`}
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${
-                  isLoadingAnalytics ? "animate-spin" : ""
-                }`}
-              />
-              Refresh
-            </button>
-          </div>
-
-          {isLoadingAnalytics ? (
-            <div className="flex justify-center py-8">
-              <LoadingSpinner />
-            </div>
-          ) : analyticsData ? (
-            <Fragment>
-              <div className="grid gap-6 md:grid-cols-3">
-                {/* Most Failed Steps */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                    Most Failed Steps
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.mostFailed.length > 0 ? (
-                      analyticsData.mostFailed.slice(0, 5).map((item) => (
-                        <div
-                          key={item.step_id}
-                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.step_name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Failures: {item.failure_count} | Job:{" "}
-                            {jobMap[item.job_id]?.name || `#${item.job_id}`}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No failed steps found
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Longest Running Steps */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    Longest Running Steps
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.longestRunning.length > 0 ? (
-                      analyticsData.longestRunning.slice(0, 5).map((item) => (
-                        <div
-                          key={item.step_id}
-                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.step_name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Avg: {Math.round(item.average_duration_seconds)}s |
-                            Max: {Math.round(item.max_duration_seconds)}s
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Type Distribution */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    Step Type Distribution
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.typeDistribution.length > 0 ? (
-                      analyticsData.typeDistribution.map((item) => (
-                        <div
-                          key={item.step_type}
-                          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {getStepTypeLabel(item.step_type)}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {item.count} steps
-                            </div>
-                          </div>
-                          <div className="text-sm font-semibold text-gray-700">
-                            {item.percentage.toFixed(1)}%
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Analytics - Second Row */}
-              <div className="grid gap-6 md:grid-cols-3 mt-6">
-                {/* Complex Workflows */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Workflow className="h-4 w-4 text-purple-500" />
-                    Complex Workflows
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.complexWorkflows &&
-                    analyticsData.complexWorkflows.length > 0 ? (
-                      analyticsData.complexWorkflows.slice(0, 5).map((item) => (
-                        <div
-                          key={item.job_id}
-                          className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.job_name || `Job #${item.job_id}`}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Steps: {item.total_steps} | Parallel:{" "}
-                            {item.parallel_groups} | Dependencies:{" "}
-                            {item.dependencies}
-                          </div>
-                          <div className="mt-1 text-xs font-semibold text-purple-600">
-                            Complexity: {item.complexity_score.toFixed(1)}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No complex workflows found
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Dependency Complexity */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <GitBranch className="h-4 w-4 text-indigo-500" />
-                    Dependency Complexity
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.dependencyComplexity &&
-                    analyticsData.dependencyComplexity.length > 0 ? (
-                      analyticsData.dependencyComplexity
-                        .slice(0, 5)
-                        .map((item) => (
-                          <div
-                            key={item.job_id}
-                            className={`${tw.rounded} border border-gray-200 bg-gray-50 p-3`}
-                          >
-                            <div className="text-sm font-medium text-gray-900">
-                              {item.job_name || `Job #${item.job_id}`}
-                            </div>
-                            <div className="mt-1 text-xs text-gray-500">
-                              Max Depth: {item.max_depth} | Total:{" "}
-                              {item.total_dependencies}
-                            </div>
-                            {item.circular_dependencies && (
-                              <div className="mt-1 text-xs font-semibold text-red-600">
-                                ⚠️ Circular Dependencies
-                              </div>
-                            )}
-                          </div>
-                        ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Timeout Analysis */}
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-orange-500" />
-                    Timeout Analysis
-                  </h3>
-                  <div className="space-y-2">
-                    {analyticsData.timeoutAnalysis &&
-                    analyticsData.timeoutAnalysis.length > 0 ? (
-                      analyticsData.timeoutAnalysis.slice(0, 5).map((item) => (
-                        <div
-                          key={item.step_id}
-                          className={`${tw.rounded} border p-3 ${
-                            item.risk_level === "high"
-                              ? "border-red-200 bg-red-50"
-                              : item.risk_level === "medium"
-                              ? "border-amber-200 bg-amber-50"
-                              : "border-gray-200 bg-gray-50"
-                          }`}
-                        >
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.step_name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Utilization:{" "}
-                            {item.timeout_utilization_percent.toFixed(1)}%
-                          </div>
-                          <div
-                            className={`mt-1 text-xs font-semibold ${
-                              item.risk_level === "high"
-                                ? "text-red-600"
-                                : item.risk_level === "medium"
-                                ? "text-amber-600"
-                                : "text-green-600"
-                            }`}
-                          >
-                            Risk: {item.risk_level.toUpperCase()}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-500">No data available</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </Fragment>
-          ) : (
-            <p className="text-sm text-gray-500">No analytics data available</p>
-          )}
-        </div>
-      )}
-
       <div className="flex gap-4">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -1306,68 +1084,21 @@ export default function JobWorkflowStepsPage() {
         />
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              setShowValidationSteps(!showValidationSteps);
-              setShowRetrySteps(false);
-              setShowOrphanedSteps(false);
-            }}
-            className={`inline-flex items-center justify-center gap-2 ${
-              tw.rounded
-            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
-              showValidationSteps
-                ? "bg-blue-100 text-blue-700 border border-blue-300"
-                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Activity className="h-4 w-4" />
-            Validation Steps
-          </button>
-          <button
-            onClick={() => {
-              setShowRetrySteps(!showRetrySteps);
-              setShowValidationSteps(false);
-              setShowOrphanedSteps(false);
-            }}
-            className={`inline-flex items-center justify-center gap-2 ${
-              tw.rounded
-            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
-              showRetrySteps
-                ? "bg-blue-100 text-blue-700 border border-blue-300"
-                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <Zap className="h-4 w-4" />
-            Retry Steps
-          </button>
-          <button
-            onClick={() => {
-              setShowOrphanedSteps(!showOrphanedSteps);
-              setShowValidationSteps(false);
-              setShowRetrySteps(false);
-            }}
-            className={`inline-flex items-center justify-center gap-2 ${
-              tw.rounded
-            } px-4 py-2.5 text-sm font-medium shadow-sm transition-colors ${
-              showOrphanedSteps
-                ? "bg-amber-100 text-amber-700 border border-amber-300"
-                : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Orphaned Steps
-          </button>
-          <button
             onClick={() => setShowAdvancedFilters(true)}
             className={`inline-flex items-center justify-center gap-2 ${tw.rounded} bg-white border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50`}
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
             {(stepCodeFilter ||
+              stepOrderFilter !== "" ||
               isCriticalFilter !== "" ||
               isParallelFilter !== "" ||
               isActiveFilter !== "" ||
               failureActionFilter ||
-              parallelGroupIdFilter) && (
+              parallelGroupIdFilter ||
+              showValidationSteps ||
+              showRetrySteps ||
+              showOrphanedSteps) && (
               <span className="ml-1 inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium">
                 Active
               </span>
@@ -1386,7 +1117,10 @@ export default function JobWorkflowStepsPage() {
               {selectedSteps.size} step(s) selected
             </span>
             <button
-              onClick={() => setSelectedSteps(new Set())}
+              onClick={() => {
+                setSelectedSteps(new Set());
+                setIsSelectionMode(false);
+              }}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
               <X className="h-4 w-4" />
@@ -1526,7 +1260,7 @@ export default function JobWorkflowStepsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
-                    Order
+                    Step Order
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -1631,11 +1365,7 @@ export default function JobWorkflowStepsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center gap-2">
-                        <span
-                          className={`text-sm font-medium ${
-                            step.is_active ? "text-green-700" : "text-gray-500"
-                          }`}
-                        >
+                        <span className="text-sm font-medium text-black">
                           {step.is_active ? "Active" : "Inactive"}
                         </span>
                         {step.is_critical && (
@@ -1662,10 +1392,12 @@ export default function JobWorkflowStepsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-workflow-steps/${step.id}?job_id=${step.job_id}`
+                              `/dashboard/job-workflow-steps/${step.id}${
+                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                              }`
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
                           aria-label="View details"
                           title="View details"
                         >
@@ -1674,33 +1406,61 @@ export default function JobWorkflowStepsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-workflow-steps/${step.id}/edit?job_id=${step.job_id}`
+                              `/dashboard/job-workflow-steps/${step.id}/edit${
+                                jobIdFilter ? `?job_id=${jobIdFilter}` : ""
+                              }`
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
                           aria-label="Edit step"
                           title="Edit step"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDuplicateStep(step)}
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          onClick={async () => {
+                            setRowLoading({ id: step.id, action: "clone" });
+                            await handleDuplicateStep(step);
+                            setRowLoading((prev) =>
+                              prev?.id === step.id ? null : prev
+                            );
+                          }}
+                          disabled={
+                            rowLoading?.id === step.id &&
+                            rowLoading?.action === "clone"
+                          }
+                          className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50`}
                           aria-label="Duplicate step"
                           title="Duplicate step"
                         >
-                          <Copy className="w-4 h-4" />
+                          {rowLoading?.id === step.id &&
+                          rowLoading?.action === "clone" ? (
+                            <LoadingSpinner />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
                         </button>
                         {jobIdFilter && (
                           <button
-                            onClick={() =>
-                              handleValidateIntegrity(Number(jobIdFilter))
-                            }
-                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                            onClick={async () => {
+                              setValidateLoadingId(Number(jobIdFilter));
+                              await handleValidateIntegrity(
+                                Number(jobIdFilter)
+                              );
+                              setValidateLoadingId((prev) =>
+                                prev === Number(jobIdFilter) ? null : prev
+                              );
+                            }}
+                            disabled={validateLoadingId === Number(jobIdFilter)}
+                            className={`p-2 ${tw.rounded} text-gray-600 transition-colors disabled:opacity-50`}
                             aria-label="Validate workflow integrity"
                             title="Validate workflow integrity"
                           >
-                            <Workflow className="w-4 h-4" />
+                            {validateLoadingId === Number(jobIdFilter) ? (
+                              <LoadingSpinner />
+                            ) : (
+                              <Workflow className="w-4 h-4" />
+                            )}
                           </button>
                         )}
                         <button
@@ -1708,7 +1468,7 @@ export default function JobWorkflowStepsPage() {
                             setDeletingStep(step);
                             setShowDeleteModal(true);
                           }}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                          className={`p-2 text-red-600 ${tw.rounded} transition-colors`}
                           aria-label="Delete step"
                           title="Delete step"
                         >
@@ -1720,6 +1480,45 @@ export default function JobWorkflowStepsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && steps.length > 0 && (
+          <div
+            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
+          >
+            <p>
+              Showing {page * pageSize + 1}-
+              {Math.min((page + 1) * pageSize, totalCount)} of {totalCount}{" "}
+              steps
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
+                disabled={page === 0}
+                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
+              >
+                Previous
+              </button>
+              <span className="text-gray-500">
+                Page {page + 1} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+              </span>
+              <button
+                onClick={() =>
+                  setPage((prev) =>
+                    Math.min(
+                      Math.ceil(totalCount / pageSize) - 1,
+                      prev + 1
+                    )
+                  )
+                }
+                disabled={page + 1 >= Math.ceil(totalCount / pageSize)}
+                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1771,7 +1570,7 @@ export default function JobWorkflowStepsPage() {
           <div
             className="fixed inset-0 overflow-hidden"
             style={{
-              zIndex: zIndexTokens.overlay,
+              zIndex: zIndex.modal,
               top: 0,
               left: 0,
               right: 0,
@@ -1785,7 +1584,7 @@ export default function JobWorkflowStepsPage() {
             <div
               ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
-              style={{ zIndex: zIndexTokens.modal }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
@@ -1816,6 +1615,28 @@ export default function JobWorkflowStepsPage() {
                         placeholder="Enter step code"
                         className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
                       />
+                    </div>
+
+                    {/* Step Order Filter */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Step Order
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={stepOrderFilter || ""}
+                        onChange={(e) =>
+                          setStepOrderFilter(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                        placeholder="Enter step order"
+                        className={`w-full text-sm px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Use with Job ID for precise lookup
+                      </p>
                     </div>
 
                     {/* Critical Filter */}
@@ -1894,6 +1715,58 @@ export default function JobWorkflowStepsPage() {
                       />
                     </div>
 
+                    {/* Special Filters */}
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-700">
+                        Special Filters
+                      </p>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={showValidationSteps}
+                          onChange={(e) => {
+                            setShowValidationSteps(e.target.checked);
+                            if (e.target.checked) {
+                              setShowRetrySteps(false);
+                              setShowOrphanedSteps(false);
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        Validation Steps
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={showRetrySteps}
+                          onChange={(e) => {
+                            setShowRetrySteps(e.target.checked);
+                            if (e.target.checked) {
+                              setShowValidationSteps(false);
+                              setShowOrphanedSteps(false);
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        Retry Steps
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={showOrphanedSteps}
+                          onChange={(e) => {
+                            setShowOrphanedSteps(e.target.checked);
+                            if (e.target.checked) {
+                              setShowValidationSteps(false);
+                              setShowRetrySteps(false);
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                        Orphaned Steps
+                      </label>
+                    </div>
+
                     {/* Failure Action Filter */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1939,11 +1812,15 @@ export default function JobWorkflowStepsPage() {
                     <button
                       onClick={() => {
                         setStepCodeFilter("");
+                        setStepOrderFilter("");
                         setIsCriticalFilter("");
                         setIsParallelFilter("");
                         setIsActiveFilter("");
                         setFailureActionFilter("");
                         setParallelGroupIdFilter("");
+                        setShowValidationSteps(false);
+                        setShowRetrySteps(false);
+                        setShowOrphanedSteps(false);
                       }}
                       className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
                     >
@@ -1970,7 +1847,7 @@ export default function JobWorkflowStepsPage() {
           <div
             className="fixed inset-0 overflow-hidden"
             style={{
-              zIndex: zIndexTokens.overlay,
+              zIndex: zIndex.modal,
               top: 0,
               left: 0,
               right: 0,
@@ -1983,7 +1860,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: zIndexTokens.modal }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}
@@ -2019,9 +1896,9 @@ export default function JobWorkflowStepsPage() {
                           tw.rounded
                         } border p-3 transition-all cursor-move ${
                           draggedItem === idx
-                            ? "opacity-50 border-blue-400 bg-blue-50"
+                            ? "opacity-50 border border-gray-400 bg-gray-100"
                             : dragOverIndex === idx
-                            ? "border-blue-400 bg-blue-50 border-dashed"
+                            ? "border border-gray-400 bg-gray-100 border-dashed"
                             : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                         }`}
                       >
@@ -2096,9 +1973,16 @@ export default function JobWorkflowStepsPage() {
                     (item) => item.currentOrder !== item.newOrder
                   ) && (
                     <div
-                      className={`mt-4 ${tw.rounded} bg-blue-50 border border-blue-200 p-3`}
+                      className={`mt-4 ${tw.rounded} border p-3`}
+                      style={{
+                        backgroundColor: noteStyles.warning.backgroundColor,
+                        borderColor: noteStyles.warning.borderColor,
+                      }}
                     >
-                      <p className="text-sm text-blue-800">
+                      <p
+                        className="text-sm font-medium"
+                        style={{ color: noteStyles.warning.textColor }}
+                      >
                         <strong>Note:</strong> Step order will be updated when
                         you save. Make sure the order numbers are correct.
                       </p>
@@ -2156,7 +2040,7 @@ export default function JobWorkflowStepsPage() {
           <div
             className="fixed inset-0 overflow-hidden"
             style={{
-              zIndex: zIndexTokens.overlay,
+              zIndex: zIndex.modal,
               top: 0,
               left: 0,
               right: 0,
@@ -2169,7 +2053,7 @@ export default function JobWorkflowStepsPage() {
             ></div>
             <div
               className="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 transform bg-white shadow-xl"
-              style={{ zIndex: zIndexTokens.modal }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col max-h-[80vh]">
                 {/* Header */}

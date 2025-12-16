@@ -124,12 +124,10 @@ export interface BatchDeactivateStepsPayload {
 export interface DuplicateStepPayload {
   new_step_order?: number;
   new_step_code?: string;
-  userId: number;
 }
 
 export interface ReorderStepsPayload {
   stepOrderMapping: Array<{ stepId: number; newOrder: number }>;
-  userId: number;
 }
 
 export interface BatchUpdateStepsPayload {

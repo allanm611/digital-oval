@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ArrowLeft,
   TrendingUp,
   AlertTriangle,
   CheckCircle,
   BarChart3,
 } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
   Pie,
@@ -26,8 +26,60 @@ import { jobExecutionService } from "../services/jobExecutionService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { XCircle, Activity, Clock } from "lucide-react";
 
 const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
+
+type ChartTooltipEntry = {
+  color?: string;
+  name?: string;
+  value?: number | string;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  label?: string;
+  payload?: ChartTooltipEntry[];
+};
+
+const CustomTooltip: React.FC<ChartTooltipProps> = ({
+  active,
+  payload,
+  label,
+}) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
+      <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
+      {payload.map((entry, idx) => (
+        <div
+          key={idx}
+          className="flex items-center justify-between gap-4 text-sm text-gray-600"
+        >
+          <span className="flex items-center gap-2">
+            <span
+              className="h-3 w-3 rounded-full"
+              style={{
+                backgroundColor: entry.color || color.primary.accent,
+              }}
+            />
+            {entry.name || "Count"}
+          </span>
+          <span className="font-semibold text-gray-900">
+            {typeof entry.value === "number"
+              ? entry.value.toLocaleString()
+              : entry.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function JobExecutionsAnalyticsPage() {
   const navigate = useNavigate();
@@ -58,9 +110,23 @@ export default function JobExecutionsAnalyticsPage() {
   const [healthScore, setHealthScore] = useState<any>(null);
   const [slowestExecutions, setSlowestExecutions] = useState<any[]>([]);
   const [resourceIssues, setResourceIssues] = useState<any[]>([]);
+  const [executionComparison, setExecutionComparison] = useState<any>(null);
+  const [completionForecast, setCompletionForecast] = useState<any[]>([]);
+  const [executionHeatmap, setExecutionHeatmap] = useState<any>(null);
+  const [slaPrediction, setSlaPrediction] = useState<any>(null);
+  const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
+  const [concurrentAnalysis, setConcurrentAnalysis] = useState<any>(null);
+  const [partitionInfo, setPartitionInfo] = useState<any[]>([]);
+  const [pendingCleanup, setPendingCleanup] = useState<any>(null);
+  const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<any[]>(
+    []
+  );
+  const [executionTimeline, setExecutionTimeline] = useState<any[]>([]);
+  const [dailySummaryJob, setDailySummaryJob] = useState<any[]>([]);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
+    const jobIdNum = undefined; // No job-specific filtering for global analytics
     try {
       const [
         stats,
@@ -86,6 +152,17 @@ export default function JobExecutionsAnalyticsPage() {
         health,
         slowest,
         issues,
+        comparison,
+        forecast,
+        heatmap,
+        slaPred,
+        anomaly,
+        concurrent,
+        partitions,
+        pending,
+        triggerAlt,
+        timeline,
+        dailyForJob,
       ] = await Promise.all([
         jobExecutionService.getExecutionStatistics().catch(() => null),
         jobExecutionService.getSLACompliance().catch(() => null),
@@ -100,7 +177,8 @@ export default function JobExecutionsAnalyticsPage() {
         jobExecutionService
           .getPerformanceSummary({ daysBack: 30 })
           .catch(() => null),
-        jobExecutionService.getExecutionDistribution().catch(() => []),
+        // getExecutionDistribution requires startDate - skip for now
+        Promise.resolve([]),
         // Note: getDailySummary requires jobId, skipping for now
         Promise.resolve([]),
         jobExecutionService.getWorkerNodeStats().catch(() => []),
@@ -127,30 +205,91 @@ export default function JobExecutionsAnalyticsPage() {
         jobExecutionService
           .getExecutionsWithResourceIssues({ limit: 10 })
           .catch(() => []),
+        jobIdNum
+          ? jobExecutionService
+              .getExecutionComparison(jobIdNum, { currentPeriodDays: 7 })
+              .catch(() => null)
+          : Promise.resolve(null),
+        // getCompletionForecast requires jobId - only call if we have one
+        jobIdNum
+          ? jobExecutionService.getCompletionForecast(jobIdNum).catch(() => [])
+          : Promise.resolve([]),
+        jobIdNum
+          ? jobExecutionService.getExecutionHeatmap(jobIdNum).catch(() => null)
+          : Promise.resolve(null),
+        // getSLAPrediction requires jobId - only call if we have one
+        jobIdNum
+          ? jobExecutionService.getSLAPrediction(jobIdNum).catch(() => null)
+          : Promise.resolve(null),
+        jobExecutionService.getAnomalyDetection().catch(() => null),
+        jobExecutionService.getConcurrentExecutionAnalysis().catch(() => null),
+        jobExecutionService.getPartitionInformation().catch(() => []),
+        jobExecutionService
+          .getExecutionsPendingCleanup({ retentionDays: 365 })
+          .catch(() => null),
+        jobExecutionService
+          .getTriggerDistribution({ daysBack: 30 })
+          .catch(() => []),
+        jobIdNum
+          ? jobExecutionService
+              .getExecutionTimeline(jobIdNum, { limit: 20 })
+              .catch(() => [])
+          : Promise.resolve([]),
+        jobIdNum
+          ? jobExecutionService
+              .getDailySummary(jobIdNum, { daysBack: 30 })
+              .catch(() => [])
+          : Promise.resolve([]),
       ]);
 
       setExecutionStats(stats);
       setSlaCompliance(sla);
       setSuccessRate(success);
       setAverageDuration(duration);
-      setTrendData(trends || []);
-      setErrorAnalysis(errors || []);
+      // Ensure all chart data is arrays
+      const normalizeArray = (data: any): any[] => {
+        if (!data) return [];
+        if (Array.isArray(data)) return data;
+        if (
+          data &&
+          typeof data === "object" &&
+          "data" in data &&
+          Array.isArray(data.data)
+        ) {
+          return data.data;
+        }
+        return [];
+      };
+
+      setTrendData(normalizeArray(trends));
+      setErrorAnalysis(normalizeArray(errors));
       setResourceUtilization(resources);
       setDataQualityMetrics(dataQuality);
-      setFailurePatterns(failurePatternsData || []);
+      setFailurePatterns(normalizeArray(failurePatternsData));
       setPerformanceSummary(performance);
-      setExecutionDistribution(distribution || []);
-      setDailySummary(daily || []);
-      setWorkerNodeStats(workers || []);
-      setServerInstanceStats(servers || []);
-      setStepFailureAnalysis(steps || []);
-      setDurationOutliers(outliers || []);
+      setExecutionDistribution(normalizeArray(distribution));
+      setDailySummary(normalizeArray(daily));
+      setWorkerNodeStats(normalizeArray(workers));
+      setServerInstanceStats(normalizeArray(servers));
+      setStepFailureAnalysis(normalizeArray(steps));
+      setDurationOutliers(normalizeArray(outliers));
       setRetryAnalysis(retry);
-      setExecutionsByHour(byHour || []);
-      setPeakTimes(peaks || []);
+      setExecutionsByHour(normalizeArray(byHour));
+      setPeakTimes(normalizeArray(peaks));
       setHealthScore(health);
-      setSlowestExecutions(slowest || []);
-      setResourceIssues(issues || []);
+      setSlowestExecutions(normalizeArray(slowest));
+      setResourceIssues(normalizeArray(issues));
+      setExecutionComparison(comparison);
+      setCompletionForecast(normalizeArray(forecast));
+      setExecutionHeatmap(heatmap);
+      setSlaPrediction(slaPred);
+      setAnomalyDetection(anomaly);
+      setConcurrentAnalysis(concurrent);
+      setPartitionInfo(normalizeArray(partitions));
+      setPendingCleanup(pending);
+      setTriggerDistributionAlt(normalizeArray(triggerAlt));
+      setExecutionTimeline(normalizeArray(timeline));
+      setDailySummaryJob(normalizeArray(dailyForJob));
 
       // Build status distribution from stats
       if (stats) {
@@ -160,9 +299,11 @@ export default function JobExecutionsAnalyticsPage() {
           { name: "Running", value: stats.running_executions || 0 },
           { name: "Queued", value: stats.queued_executions || 0 },
         ]);
+      } else {
+        setStatusDistribution([]);
       }
 
-      setTriggerDistribution(triggers || []);
+      setTriggerDistribution(normalizeArray(triggers));
     } catch (err) {
       showError(
         "Analytics",
@@ -188,7 +329,12 @@ export default function JobExecutionsAnalyticsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <BackButton fallbackTo="/dashboard/job-executions" />
+        <button
+          onClick={() => navigate("/dashboard/job-executions")}
+          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
             Job Executions Analytics
@@ -199,12 +345,12 @@ export default function JobExecutionsAnalyticsPage() {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Key Metrics - All Statistics */}
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <BarChart3
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
@@ -213,56 +359,80 @@ export default function JobExecutionsAnalyticsPage() {
               Total Executions
             </p>
           </div>
-          <p className="text-3xl font-bold text-gray-900">
+          <p className="mt-2 text-3xl font-bold text-gray-900">
             {executionStats?.total_executions || 0}
           </p>
         </div>
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <CheckCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Successful</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionStats?.successful_executions || 0}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <XCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Failed</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionStats?.failed_executions || 0}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Activity
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Running</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionStats?.running_executions || 0}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Queued</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionStats?.queued_executions || 0}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <TrendingUp
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
             <p className="text-sm font-medium text-gray-600">Success Rate</p>
           </div>
-          <p className="text-3xl font-bold text-gray-900">
+          <p className="mt-2 text-3xl font-bold text-gray-900">
             {successRate?.success_rate
               ? `${successRate.success_rate.toFixed(1)}%`
-              : "—"}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Avg Duration</p>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {averageDuration?.average_duration_seconds
-              ? `${Math.round(averageDuration.average_duration_seconds / 60)}m`
-              : "—"}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">SLA Compliance</p>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {slaCompliance?.compliance_rate
-              ? `${slaCompliance.compliance_rate.toFixed(1)}%`
-              : "—"}
+              : "0%"}
           </p>
         </div>
       </div>
@@ -279,7 +449,9 @@ export default function JobExecutionsAnalyticsPage() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={statusDistribution}
+                data={
+                  Array.isArray(statusDistribution) ? statusDistribution : []
+                }
                 cx="50%"
                 cy="50%"
                 labelLine={false}
@@ -290,14 +462,20 @@ export default function JobExecutionsAnalyticsPage() {
                 fill="#8884d8"
                 dataKey="value"
               >
-                {statusDistribution.map((entry, index) => (
+                {(Array.isArray(statusDistribution)
+                  ? statusDistribution
+                  : []
+                ).map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -310,11 +488,18 @@ export default function JobExecutionsAnalyticsPage() {
             Trigger Distribution
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={triggerDistribution}>
+            <BarChart
+              data={
+                Array.isArray(triggerDistribution) ? triggerDistribution : []
+              }
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="trigger_type" />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
               <Legend />
               <Bar dataKey="count" fill="#3b8169" />
             </BarChart>
@@ -330,11 +515,14 @@ export default function JobExecutionsAnalyticsPage() {
               Execution Trends (30 Days)
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
+              <LineChart data={Array.isArray(trendData) ? trendData : []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
+                />
                 <Legend />
                 <Line
                   type="monotone"
@@ -368,7 +556,11 @@ export default function JobExecutionsAnalyticsPage() {
               Top Errors (30 Days)
             </h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={errorAnalysis.slice(0, 10)}>
+              <BarChart
+                data={
+                  Array.isArray(errorAnalysis) ? errorAnalysis.slice(0, 10) : []
+                }
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis
                   dataKey="error_code"
@@ -377,7 +569,10 @@ export default function JobExecutionsAnalyticsPage() {
                   height={100}
                 />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
+                />
                 <Bar dataKey="error_count" fill="#ef4444" />
               </BarChart>
             </ResponsiveContainer>
@@ -571,11 +766,16 @@ export default function JobExecutionsAnalyticsPage() {
             Executions by Hour
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={executionsByHour}>
+            <BarChart
+              data={Array.isArray(executionsByHour) ? executionsByHour : []}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="hour" />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
               <Legend />
               <Bar dataKey="count" fill="#3b8169" name="Total" />
               <Bar dataKey="successful" fill="#10b981" name="Successful" />
@@ -645,11 +845,20 @@ export default function JobExecutionsAnalyticsPage() {
             Step Failure Analysis
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stepFailureAnalysis.slice(0, 10)}>
+            <BarChart
+              data={
+                Array.isArray(stepFailureAnalysis)
+                  ? stepFailureAnalysis.slice(0, 10)
+                  : []
+              }
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="step_id" />
               <YAxis />
-              <Tooltip />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: "transparent" }}
+              />
               <Bar dataKey="failure_count" fill="#ef4444" />
             </BarChart>
           </ResponsiveContainer>
@@ -671,17 +880,25 @@ export default function JobExecutionsAnalyticsPage() {
                 className="flex items-center justify-between p-3 bg-gray-50 rounded"
               >
                 <div>
-                  <p className="text-sm font-medium">Job {exec.job_id}</p>
+                  <p className="text-sm font-medium">
+                    Job {exec.job_id || "—"}
+                  </p>
                   <p className="text-xs text-gray-500 font-mono">
-                    {exec.execution_id.substring(0, 8)}...
+                    {exec.execution_id
+                      ? `${exec.execution_id.substring(0, 8)}...`
+                      : "—"}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold">
-                    {Math.round(exec.duration_seconds / 60)}m
+                    {exec.duration_seconds
+                      ? `${Math.round(exec.duration_seconds / 60)}m`
+                      : "—"}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {new Date(exec.started_at).toLocaleDateString()}
+                    {exec.started_at
+                      ? new Date(exec.started_at).toLocaleDateString()
+                      : "—"}
                   </p>
                 </div>
               </div>

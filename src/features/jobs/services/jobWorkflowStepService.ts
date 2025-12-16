@@ -112,7 +112,11 @@ class JobWorkflowStepService {
         count: response.pagination?.total ?? response.data.length,
         success: response.success,
         pagination: response.pagination,
-        source: response.source,
+        source: response.source as
+          | "cache"
+          | "database"
+          | "database-forced"
+          | undefined,
       };
     }
     return response;
@@ -381,9 +385,17 @@ class JobWorkflowStepService {
     skipCache = false
   ): Promise<{ can_execute: boolean; reason?: string }> {
     const query = this.buildQueryString({ skipCache });
-    return this.request<{ can_execute: boolean; reason?: string }>(
-      `/job/${jobId}/can-execute/${stepOrder}${query}`
-    );
+    const response = await this.request<{
+      success: boolean;
+      data: { canExecute: boolean };
+      source?: string;
+    }>(`/job/${jobId}/can-execute/${stepOrder}${query}`);
+    
+    // Map backend response to expected format
+    return {
+      can_execute: response.data?.canExecute ?? false,
+      reason: response.data?.canExecute ? undefined : "Dependencies not satisfied",
+    };
   }
 
   async getParallelGroups(
@@ -432,13 +444,11 @@ class JobWorkflowStepService {
   async getMostFailedSteps(
     params: {
       limit?: number;
-      days_back?: number;
       skipCache?: boolean;
     } = {}
   ): Promise<MostFailedStepsResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params.limit),
-      days_back: params.days_back ?? 30,
       skipCache: params.skipCache ?? false,
     });
     return this.request<MostFailedStepsResponse>(
@@ -449,13 +459,11 @@ class JobWorkflowStepService {
   async getLongestRunningSteps(
     params: {
       limit?: number;
-      days_back?: number;
       skipCache?: boolean;
     } = {}
   ): Promise<LongestRunningStepsResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params.limit),
-      days_back: params.days_back ?? 30,
       skipCache: params.skipCache ?? false,
     });
     return this.request<LongestRunningStepsResponse>(
@@ -480,12 +488,10 @@ class JobWorkflowStepService {
 
   async getComplexWorkflows(
     params: {
-      limit?: number;
       skipCache?: boolean;
     } = {}
   ): Promise<ComplexWorkflowsResponse> {
     const query = this.buildQueryString({
-      limit: clampLimit(params.limit),
       skipCache: params.skipCache ?? false,
     });
     return this.request<ComplexWorkflowsResponse>(
@@ -529,13 +535,11 @@ class JobWorkflowStepService {
   async getDependencyComplexity(
     params: {
       job_id?: number;
-      limit?: number;
       skipCache?: boolean;
     } = {}
   ): Promise<DependencyComplexityResponse> {
     const query = this.buildQueryString({
       job_id: params.job_id,
-      limit: clampLimit(params.limit),
       skipCache: params.skipCache ?? false,
     });
     return this.request<DependencyComplexityResponse>(
@@ -598,19 +602,63 @@ class JobWorkflowStepService {
   ): Promise<JobWorkflowStepListResponse> {
     const response = await this.request<
       | JobWorkflowStepListResponse
-      | { success: boolean; data: JobWorkflowStep[] }
+      | {
+          success: boolean;
+          data:
+            | JobWorkflowStep[]
+            | {
+                created?: number;
+                errors?: string[];
+              };
+          error?: string;
+        }
     >("/batch", {
       method: "POST",
       body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
     });
 
-    if (response && typeof response === "object" && "data" in response) {
-      return {
-        data: (response as { data: JobWorkflowStep[] }).data,
-        count: (response as { data: JobWorkflowStep[] }).data.length,
-        success: (response as { success: boolean }).success,
+    // Handle explicit failure
+    if (response && typeof response === "object" && "success" in response) {
+      const resp = response as {
+        success: boolean;
+        data:
+          | JobWorkflowStep[]
+          | {
+              created?: number;
+              errors?: string[];
+            };
+        error?: string;
       };
+
+      // If backend returned errors array, surface them as a single error string
+      const errors =
+        resp &&
+        resp.data &&
+        typeof resp.data === "object" &&
+        "errors" in resp.data
+          ? (resp.data as { errors?: string[] }).errors
+          : undefined;
+
+      if (errors && errors.length > 0) {
+        const messages = errors.join("\n");
+        throw new Error(messages);
+      }
+
+      if (resp.success === false) {
+        throw new Error(resp.error || "Batch create failed");
+      }
+    }
+
+    if (response && typeof response === "object" && "data" in response) {
+      // If data is an array of steps, normalize
+      if (Array.isArray((response as { data: unknown }).data)) {
+        return {
+          data: (response as { data: JobWorkflowStep[] }).data,
+          count: (response as { data: JobWorkflowStep[] }).data.length,
+          success: (response as { success: boolean }).success,
+        };
+      }
     }
 
     return response as JobWorkflowStepListResponse;
@@ -690,15 +738,49 @@ class JobWorkflowStepService {
   async reorderSteps(
     jobId: number,
     payload: ReorderStepsPayload
-  ): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(
-      `/job/${jobId}/reorder`,
-      {
-        method: "PUT",
-        body: JSON.stringify(payload),
-        headers: { "Content-Type": "application/json" },
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    data?: { updated: number; errors?: string[] };
+  }> {
+    const response = await this.request<{
+      success: boolean;
+      message?: string;
+      data?: { updated: number; errors?: string[] };
+    }>(`/job/${jobId}/reorder`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Check if there are errors in the response data
+    if (response.data?.errors && response.data.errors.length > 0) {
+      // Check for specific error types and provide user-friendly messages
+      const errorMessages = response.data.errors;
+      if (errorMessages.some((err: string) => err.includes("duplicate key"))) {
+        throw new Error(
+          "Unable to reorder steps. Some steps have conflicting order numbers. Please try reordering again or refresh the page."
+        );
       }
-    );
+      if (errorMessages.some((err: string) => err.includes("transaction"))) {
+        throw new Error(
+          "Reorder operation failed due to a database conflict. Please try again."
+        );
+      }
+      // Generic error message
+      throw new Error(
+        "Unable to reorder steps. Please ensure all step orders are unique and try again."
+      );
+    }
+
+    // Check if no steps were updated
+    if (response.data?.updated === 0) {
+      throw new Error(
+        "No steps were reordered. Please check that the step orders are valid and try again."
+      );
+    }
+
+    return response;
   }
 
   // ==================== PATCH Endpoints ====================
@@ -754,4 +836,3 @@ class JobWorkflowStepService {
 }
 
 export const jobWorkflowStepService = new JobWorkflowStepService();
-

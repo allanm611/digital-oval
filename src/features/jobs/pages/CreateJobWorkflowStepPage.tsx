@@ -1,11 +1,11 @@
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Save, X, Plus } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
+import { ArrowLeft, Save, X, Plus } from "lucide-react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Listbox, Transition } from "@headlessui/react";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   CreateJobWorkflowStepPayload,
   UpdateJobWorkflowStepPayload,
@@ -16,7 +16,7 @@ import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, noteStyles, zIndex } from "../../../shared/utils/utils";
 
 const STEP_TYPES: { value: StepType; label: string }[] = [
   { value: "sql", label: "SQL" },
@@ -37,9 +37,6 @@ const FAILURE_ACTIONS: { value: FailureAction; label: string }[] = [
   { value: "retry", label: "Retry" },
   { value: "skip_remaining", label: "Skip Remaining" },
 ];
-
-const classNames = (...classes: (string | false | null | undefined)[]) =>
-  classes.filter(Boolean).join(" ");
 
 export default function CreateJobWorkflowStepPage() {
   const { id } = useParams<{ id: string }>();
@@ -82,80 +79,87 @@ export default function CreateJobWorkflowStepPage() {
     userId: user?.user_id || 0,
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [newDependency, setNewDependency] = useState("");
+const [errors, setErrors] = useState<Record<string, string>>({});
+const [existingStepOrders, setExistingStepOrders] = useState<number[]>([]);
+const [originalStepOrder, setOriginalStepOrder] = useState<number | null>(null);
+const [newDependency, setNewDependency] = useState("");
   // Batch create state
   const [batchSteps, setBatchSteps] = useState<
     Array<Partial<CreateJobWorkflowStepPayload>>
   >([]);
-  const [isBatchCreating, setIsBatchCreating] = useState(false);
 
-  // Load jobs and step codes
+  // Load jobs on mount
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
+    const loadJobs = async () => {
       try {
-        const [jobsResponse, stepsResponse] = await Promise.all([
-          scheduledJobService.listScheduledJobs({
-            limit: 1000,
-            skipCache: true,
-          }),
-          formData.job_id
-            ? jobWorkflowStepService.getStepsByJobId(formData.job_id, true)
-            : Promise.resolve({ data: [] }),
-        ]);
-
+        const jobsResponse = await scheduledJobService.listScheduledJobs({
+          limit: 1000,
+          skipCache: true,
+        });
         setJobs(jobsResponse.data || []);
-        const stepCodes = (stepsResponse.data || []).map((s) => s.step_code);
-        setAvailableStepCodes(stepCodes);
-
-        // If editing, load the step
-        if (isEditMode && id) {
-          const step = await jobWorkflowStepService.getJobWorkflowStepById(
-            Number(id),
-            true
-          );
-          setFormData({
-            job_id: step.job_id,
-            step_order: step.step_order,
-            step_name: step.step_name,
-            step_code: step.step_code,
-            step_description: step.step_description || "",
-            step_type: step.step_type,
-            step_action: step.step_action,
-            is_parallel: step.is_parallel,
-            parallel_group_id: step.parallel_group_id,
-            depends_on_step_codes: step.depends_on_step_codes || [],
-            execution_condition: step.execution_condition,
-            skip_on_condition: step.skip_on_condition,
-            retry_count: step.retry_count,
-            retry_delay_seconds: step.retry_delay_seconds,
-            timeout_seconds: step.timeout_seconds,
-            on_failure_action: step.on_failure_action,
-            pre_validation_query: step.pre_validation_query,
-            post_validation_query: step.post_validation_query,
-            expected_row_count_min: step.expected_row_count_min,
-            expected_row_count_max: step.expected_row_count_max,
-            parameters: step.parameters,
-            is_active: step.is_active,
-            is_critical: step.is_critical,
-            userId: user?.user_id || 0,
-          });
-        }
       } catch (err) {
         showError(
           "Error",
-          err instanceof Error ? err.message : "Failed to load data"
+          err instanceof Error ? err.message : "Failed to load jobs"
+        );
+      }
+    };
+
+    loadJobs();
+  }, [showError]);
+
+  // Load step data when editing
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    const loadStep = async () => {
+      setIsLoading(true);
+      try {
+        const step = await jobWorkflowStepService.getJobWorkflowStepById(
+          Number(id),
+          true
+        );
+        setOriginalStepOrder(step.step_order);
+        setFormData({
+          job_id: step.job_id,
+          step_order: step.step_order,
+          step_name: step.step_name,
+          step_code: step.step_code,
+          step_description: step.step_description ?? "",
+          step_type: step.step_type,
+          step_action: step.step_action,
+          is_parallel: step.is_parallel,
+          parallel_group_id: step.parallel_group_id,
+          depends_on_step_codes: step.depends_on_step_codes || [],
+          execution_condition: step.execution_condition,
+          skip_on_condition: step.skip_on_condition,
+          retry_count: step.retry_count,
+          retry_delay_seconds: step.retry_delay_seconds,
+          timeout_seconds: step.timeout_seconds,
+          on_failure_action: step.on_failure_action,
+          pre_validation_query: step.pre_validation_query,
+          post_validation_query: step.post_validation_query,
+          expected_row_count_min: step.expected_row_count_min,
+          expected_row_count_max: step.expected_row_count_max,
+          parameters: step.parameters,
+          is_active: step.is_active,
+          is_critical: step.is_critical,
+          userId: user?.user_id || 0,
+        });
+      } catch (err) {
+        showError(
+          "Error",
+          err instanceof Error ? err.message : "Failed to load step"
         );
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
+    loadStep();
   }, [id, isEditMode, user?.user_id, showError]);
 
-  // Reload step codes when job changes
+  // Reload step codes and existing orders when job changes
   useEffect(() => {
     if (formData.job_id) {
       jobWorkflowStepService
@@ -163,36 +167,115 @@ export default function CreateJobWorkflowStepPage() {
         .then((response) => {
           const stepCodes = (response.data || []).map((s) => s.step_code);
           setAvailableStepCodes(stepCodes);
+          const orders = (response.data || [])
+            .map((s) => s.step_order)
+            .filter((o) => typeof o === "number");
+          setExistingStepOrders(orders);
         })
         .catch(() => {
           setAvailableStepCodes([]);
+          setExistingStepOrders([]);
         });
+    } else {
+      setAvailableStepCodes([]);
+      setExistingStepOrders([]);
     }
   }, [formData.job_id]);
+
+  const getNextAvailableOrder = (usedOrders: Set<number>) => {
+    let candidate = 1;
+    while (usedOrders.has(candidate)) {
+      candidate += 1;
+    }
+    return candidate;
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    // Job ID is always required
     if (!formData.job_id) {
       newErrors.job_id = "Job ID is required";
     }
-    if (!formData.step_name?.trim()) {
-      newErrors.step_name = "Step name is required";
-    }
-    if (!formData.step_code?.trim()) {
-      newErrors.step_code = "Step code is required";
-    }
-    if (!formData.step_action?.trim()) {
-      newErrors.step_action = "Step action is required";
-    }
-    if (formData.step_order < 1) {
-      newErrors.step_order = "Step order must be at least 1";
-    }
-    if (formData.timeout_seconds < 1 || formData.timeout_seconds > 86400) {
-      newErrors.timeout_seconds = "Timeout must be between 1 and 86400 seconds";
-    }
-    if (formData.retry_count < 0 || formData.retry_count > 10) {
-      newErrors.retry_count = "Retry count must be between 0 and 10";
+
+    // In batch mode, validate batch steps instead of individual form fields
+    if (batchMode) {
+      if (batchSteps.length === 0) {
+        newErrors.batchSteps = "At least one batch step is required";
+      } else {
+        // Validate each batch step
+        const existingSet = new Set(existingStepOrders);
+        const seenOrders = new Set<number>();
+        batchSteps.forEach((step, idx) => {
+          if (!step.step_name?.trim()) {
+            newErrors[`batch_step_${idx}_name`] = `Step ${
+              idx + 1
+            }: Name is required`;
+          }
+          if (!step.step_code?.trim()) {
+            newErrors[`batch_step_${idx}_code`] = `Step ${
+              idx + 1
+            }: Code is required`;
+          }
+          if (!step.step_action?.trim()) {
+            newErrors[`batch_step_${idx}_action`] = `Step ${
+              idx + 1
+            }: Action is required`;
+          }
+          if (!step.step_description?.trim()) {
+            newErrors[`batch_step_${idx}_description`] = `Step ${
+              idx + 1
+            }: Description is required`;
+          }
+          if (step.step_order === undefined || step.step_order < 1) {
+            newErrors[`batch_step_${idx}_order`] = `Step ${
+              idx + 1
+            }: Order must be at least 1`;
+          } else if (existingSet.has(step.step_order)) {
+            newErrors[`batch_step_${idx}_order`] = `Step order ${step.step_order} is already used in this job`;
+          } else if (seenOrders.has(step.step_order)) {
+            newErrors[`batch_step_${idx}_order`] = `Step order ${step.step_order} is duplicated in this batch`;
+          } else {
+            seenOrders.add(step.step_order);
+          }
+        });
+      }
+    } else {
+      const timeout = formData.timeout_seconds ?? 0;
+      const retries = formData.retry_count ?? 0;
+      // Regular mode: validate individual form fields
+      if (!formData.step_name?.trim()) {
+        newErrors.step_name = "Step name is required";
+      }
+      if (!formData.step_code?.trim()) {
+        newErrors.step_code = "Step code is required";
+      }
+      if (!formData.step_description?.trim()) {
+        newErrors.step_description = "Step description is required";
+      }
+      if (!formData.step_action?.trim()) {
+        newErrors.step_action = "Step action is required";
+      }
+      if (formData.step_order < 1) {
+        newErrors.step_order = "Step order must be at least 1";
+      } else if (formData.job_id && existingStepOrders.length > 0) {
+        // Check if step order already exists for this job
+        // In edit mode, exclude the current step's original order
+        const ordersToCheck = isEditMode && originalStepOrder !== null
+          ? existingStepOrders.filter((order) => order !== originalStepOrder)
+          : existingStepOrders;
+        
+        if (ordersToCheck.includes(formData.step_order)) {
+          newErrors.step_order = `Step order ${formData.step_order} already exists for this job`;
+        }
+      }
+      if (timeout < 1 || timeout > 86400) {
+        newErrors.timeout_seconds =
+          "Timeout must be between 1 and 86400 seconds";
+      }
+      if (retries < 0 || retries > 10) {
+        newErrors.retry_count = "Retry count must be between 0 and 10";
+      }
     }
 
     setErrors(newErrors);
@@ -206,8 +289,11 @@ export default function CreateJobWorkflowStepPage() {
     setIsSaving(true);
     try {
       if (isEditMode && id) {
+        // Backend does not allow changing job_id on update; omit it from payload
+        const { job_id, userId, ...rest } = formData;
         const updatePayload: UpdateJobWorkflowStepPayload = {
-          ...formData,
+          ...rest,
+          depends_on_step_codes: formData.depends_on_step_codes || [],
           userId: user?.user_id || 0,
         };
         await jobWorkflowStepService.updateJobWorkflowStep(
@@ -254,11 +340,8 @@ export default function CreateJobWorkflowStepPage() {
           "Workflow step has been created successfully."
         );
       }
-      navigate(
-        `/dashboard/job-workflow-steps${
-          formData.job_id ? `?job_id=${formData.job_id}` : ""
-        }`
-      );
+      // Navigate back to list page without filtering - let user decide if they want to filter
+      navigate("/dashboard/job-workflow-steps");
     } catch (err) {
       showError(
         "Error",
@@ -270,10 +353,15 @@ export default function CreateJobWorkflowStepPage() {
   };
 
   const addBatchStep = () => {
+    const used = new Set<number>([
+      ...existingStepOrders,
+      ...batchSteps.map((s) => s.step_order).filter((n): n is number => !!n),
+    ]);
+    const nextOrder = getNextAvailableOrder(used);
     setBatchSteps([
       ...batchSteps,
       {
-        step_order: batchSteps.length + 1,
+        step_order: nextOrder,
         step_name: "",
         step_code: "",
         step_type: "sql",
@@ -329,11 +417,12 @@ export default function CreateJobWorkflowStepPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <BackButton
-          fallbackTo={`/dashboard/job-workflow-steps${
-            formData.job_id ? `?job_id=${formData.job_id}` : ""
-          }`}
-        />
+        <button
+          onClick={() => navigate(-1)}
+          className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
         <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
           {isEditMode ? "Edit Workflow Step" : "Create Workflow Step"}
         </h1>
@@ -341,11 +430,20 @@ export default function CreateJobWorkflowStepPage() {
 
       {batchMode && batchSteps.length === 0 && (
         <div
-          className={`${tw.rounded} border border-blue-200 bg-blue-50 p-4 mb-6`}
+          className={`${tw.rounded} border p-4 mb-6`}
+          style={{
+            backgroundColor: noteStyles.warning.backgroundColor,
+            borderColor: noteStyles.warning.borderColor,
+          }}
         >
           <div className="flex items-center justify-between">
-            <p className="text-sm text-blue-800">
-              Batch mode: Create multiple steps at once
+            <p
+              className="text-sm font-medium"
+              style={{ color: noteStyles.warning.textColor }}
+            >
+              Batch mode: Create multiple steps at once. Only job selection and
+              the batch steps list are used; the individual step form is
+              ignored.
             </p>
             <button
               type="button"
@@ -364,6 +462,11 @@ export default function CreateJobWorkflowStepPage() {
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}
         >
+          {errors.batchSteps && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
+              <p className="text-sm text-red-600">{errors.batchSteps}</p>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Batch Steps ({batchSteps.length})
@@ -406,9 +509,18 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(e) =>
                         updateBatchStep(idx, "step_name", e.target.value)
                       }
-                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
+                      className={`w-full ${tw.rounded} border ${
+                        errors[`batch_step_${idx}_name`]
+                          ? "border-red-300"
+                          : "border-gray-300"
+                      } px-2 py-1.5 text-sm`}
                       placeholder="Enter step name"
                     />
+                    {errors[`batch_step_${idx}_name`] && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors[`batch_step_${idx}_name`]}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -418,15 +530,43 @@ export default function CreateJobWorkflowStepPage() {
                       type="text"
                       value={step.step_code || ""}
                       onChange={(e) =>
-                        updateBatchStep(
-                          idx,
-                          "step_code",
-                          e.target.value.toUpperCase().replace(/\s/g, "_")
-                        )
+                        updateBatchStep(idx, "step_code", e.target.value)
                       }
-                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
-                      placeholder="STEP_CODE"
+                      className={`w-full ${tw.rounded} border ${
+                        errors[`batch_step_${idx}_code`]
+                          ? "border-red-300"
+                          : "border-gray-300"
+                      } px-2 py-1.5 text-sm`}
+                      placeholder="Enter step code"
                     />
+                    {errors[`batch_step_${idx}_code`] && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors[`batch_step_${idx}_code`]}
+                      </p>
+                    )}
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Step Description *
+                    </label>
+                    <textarea
+                      value={step.step_description || ""}
+                      onChange={(e) =>
+                        updateBatchStep(idx, "step_description", e.target.value)
+                      }
+                      className={`w-full ${tw.rounded} border ${
+                        errors[`batch_step_${idx}_description`]
+                          ? "border-red-300"
+                          : "border-gray-300"
+                      } px-2 py-1.5 text-sm`}
+                      rows={2}
+                      placeholder="Enter step description"
+                    />
+                    {errors[`batch_step_${idx}_description`] && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors[`batch_step_${idx}_description`]}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -450,19 +590,18 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       Step Type *
                     </label>
-                    <select
+                    <HeadlessSelect
+                      options={STEP_TYPES.map((type) => ({
+                        value: type.value,
+                        label: type.label,
+                      }))}
                       value={step.step_type || "sql"}
-                      onChange={(e) =>
-                        updateBatchStep(idx, "step_type", e.target.value)
+                      onChange={(value) =>
+                        updateBatchStep(idx, "step_type", value)
                       }
-                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm`}
-                    >
-                      {STEP_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select step type"
+                      className="w-full"
+                    />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -474,9 +613,18 @@ export default function CreateJobWorkflowStepPage() {
                         updateBatchStep(idx, "step_action", e.target.value)
                       }
                       rows={2}
-                      className={`w-full ${tw.rounded} border border-gray-300 px-2 py-1.5 text-sm font-mono`}
+                      className={`w-full ${tw.rounded} border ${
+                        errors[`batch_step_${idx}_action`]
+                          ? "border-red-300"
+                          : "border-gray-300"
+                      } px-2 py-1.5 text-sm font-mono`}
                       placeholder="Enter step action"
                     />
+                    {errors[`batch_step_${idx}_action`] && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {errors[`batch_step_${idx}_action`]}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -502,26 +650,26 @@ export default function CreateJobWorkflowStepPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Job <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a job" },
+                        ...jobs.map((job) => ({
+                          value: job.id,
+                          label: `${job.name} (${job.code})`,
+                        })),
+                      ]}
                       value={formData.job_id || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setFormData({
                           ...formData,
-                          job_id: Number(e.target.value),
+                          job_id: Number(value),
                         })
                       }
                       disabled={!!jobIdParam || isEditMode}
-                      className={`w-full ${tw.rounded} border ${
-                        errors.job_id ? "border-red-300" : "border-gray-300"
-                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169] disabled:bg-gray-100`}
-                    >
-                      <option value="">Select a job</option>
-                      {jobs.map((job) => (
-                        <option key={job.id} value={job.id}>
-                          {job.name} ({job.code})
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Select a job"
+                      error={!!errors.job_id}
+                      className="w-full"
+                    />
                     {errors.job_id && (
                       <p className="mt-1 text-sm text-red-600">
                         {errors.job_id}
@@ -561,15 +709,13 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          step_code: e.target.value
-                            .toUpperCase()
-                            .replace(/\s/g, "_"),
+                          step_code: e.target.value,
                         })
                       }
                       className={`w-full ${tw.rounded} border ${
                         errors.step_code ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="STEP_CODE"
+                      placeholder="Enter step code"
                     />
                     {errors.step_code && (
                       <p className="mt-1 text-sm text-red-600">
@@ -636,7 +782,8 @@ export default function CreateJobWorkflowStepPage() {
                           leaveTo="opacity-0"
                         >
                           <Listbox.Options
-                            className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                            className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                            style={{ zIndex: zIndex.dropdown }}
                           >
                             {STEP_TYPES.map((type) => (
                               <Listbox.Option
@@ -679,10 +826,10 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Description
+                      Step Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      value={formData.step_description || ""}
+                      value={formData.step_description ?? ""}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -690,9 +837,16 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       rows={3}
-                      className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                      className={`w-full ${tw.rounded} border ${
+                        errors.step_description ? "border-red-300" : "border-gray-300"
+                      } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="Enter step description"
                     />
+                    {errors.step_description && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.step_description}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -795,7 +949,8 @@ export default function CreateJobWorkflowStepPage() {
                             leaveTo="opacity-0"
                           >
                             <Listbox.Options
-                              className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                              className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
+                              style={{ zIndex: zIndex.dropdown }}
                             >
                               {FAILURE_ACTIONS.map((action) => (
                                 <Listbox.Option
@@ -1133,18 +1288,6 @@ export default function CreateJobWorkflowStepPage() {
                 </div>
               </div>
             </div>
-          </div>
-        ) : null}
-
-        {batchMode ? (
-          <div
-            className={`${tw.rounded} border border-amber-200 bg-amber-50 p-4`}
-          >
-            <p className="text-sm text-amber-800">
-              <strong>Note:</strong> In batch mode, only the job selection and
-              batch steps above will be used. Individual step configuration
-              fields are ignored.
-            </p>
           </div>
         ) : null}
 

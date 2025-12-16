@@ -6,6 +6,7 @@ import {
   borderRadius,
   buttons,
   zIndex,
+  notes,
 } from "./tokens";
 
 // Standardized rounded corners - use this constant instead of hardcoded "rounded-md"
@@ -24,6 +25,7 @@ export const color = {
   border: colors.border,
   gradients: colors.gradients,
   iconSizes: colors.iconSizes,
+  notes,
 };
 
 // Font system with Satoshi and sans-serif - includes weights, sizes, and pre-defined typography styles
@@ -39,7 +41,16 @@ export const typography = {
 export const space = spacing;
 export const radius = borderRadius;
 export const button = buttons;
-export const zIndexTokens = zIndex;
+export { zIndex };
+
+// Note/banner styles to avoid hardcoded colors
+export const noteStyles = {
+  warning: {
+    backgroundColor: color.notes.warning.background,
+    borderColor: color.notes.warning.border,
+    textColor: color.notes.warning.textLight,
+  },
+};
 
 // Ready-to-use Tailwind CSS classes - copy and paste these directly into your className props
 export const tw = {
@@ -158,7 +169,6 @@ export default {
   space,
   radius,
   button,
-  zIndexTokens,
   tw,
   components,
   helpers,

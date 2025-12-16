@@ -1,31 +1,27 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  ArrowLeft,
   Edit,
   Trash2,
   AlertCircle,
   CheckCircle,
-  Clock,
-  GitBranch,
   Layers,
-  Activity,
-  Zap,
-  RefreshCw,
   Copy,
-  Workflow,
   Play,
   Pause,
-  AlertTriangle,
 } from "lucide-react";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
-import { JobWorkflowStep } from "../types/jobWorkflowStep";
+import {
+  JobWorkflowStep,
+  ExecutionOrderResponse,
+} from "../types/jobWorkflowStep";
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 
 const formatDateTime = (value?: string | null) => {
@@ -50,19 +46,19 @@ export default function JobWorkflowStepDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   // Related data
-  const [executionOrder, setExecutionOrder] = useState<any[]>([]);
-  const [parallelGroups, setParallelGroups] = useState<any[]>([]);
-  const [dependencies, setDependencies] = useState<any[]>([]);
-  const [healthSummary, setHealthSummary] = useState<any>(null);
+  const [executionOrder, setExecutionOrder] = useState<
+    ExecutionOrderResponse["data"]
+  >([]);
   const [canExecute, setCanExecute] = useState<{
     can_execute: boolean;
     reason?: string;
   } | null>(null);
   const [nextStep, setNextStep] = useState<JobWorkflowStep | null>(null);
   const [parallelSteps, setParallelSteps] = useState<JobWorkflowStep[]>([]);
-  const [isLoadingRelated, setIsLoadingRelated] = useState(false);
 
   useEffect(() => {
     const loadStep = async () => {
@@ -88,39 +84,30 @@ export default function JobWorkflowStepDetailsPage() {
         }
 
         // Load related data
-        setIsLoadingRelated(true);
         try {
-          const [order, groups, deps, health, canExec, parallelSteps] =
-            await Promise.all([
-              jobWorkflowStepService
-                .getExecutionOrder(stepData.job_id, true)
-                .catch(() => ({ success: true, data: [] })),
-              jobWorkflowStepService
-                .getParallelGroups(stepData.job_id, true)
-                .catch(() => ({ success: true, data: [] })),
-              jobWorkflowStepService
-                .getDependencies(stepData.job_id, true)
-                .catch(() => ({ success: true, data: [] })),
-              jobWorkflowStepService
-                .getHealthSummary(stepData.job_id, true)
-                .catch(() => null),
-              jobWorkflowStepService
-                .canStepExecute(stepData.job_id, stepData.step_order, true)
-                .catch(() => null),
-              stepData.is_parallel && stepData.parallel_group_id
-                ? jobWorkflowStepService
-                    .getParallelSteps(stepData.job_id, true)
-                    .catch(() => ({ data: [] }))
-                : Promise.resolve({ data: [] }),
-            ]);
+          const [order, canExec, parallelSteps] = await Promise.all([
+            jobWorkflowStepService
+              .getExecutionOrder(stepData.job_id, true)
+              .catch(() => ({ success: true, data: [] })),
+            jobWorkflowStepService
+              .canStepExecute(stepData.job_id, stepData.step_order, true)
+              .catch(() => null),
+            stepData.is_parallel && stepData.parallel_group_id
+              ? jobWorkflowStepService
+                  .getParallelSteps(stepData.job_id, true)
+                  .catch(() => ({ data: [] }))
+              : Promise.resolve({ data: [] }),
+          ]);
 
           setExecutionOrder(order.data || []);
-          setParallelGroups(groups.data || []);
-          setDependencies(deps.data || []);
-          setHealthSummary(health?.data || null);
           setCanExecute(canExec);
-          const parallelStepsData = (parallelStepsResponse as any).data || [];
-          setParallelSteps(parallelStepsData as JobWorkflowStep[]);
+          const parallelStepsData =
+            parallelSteps &&
+            typeof parallelSteps === "object" &&
+            "data" in parallelSteps
+              ? (parallelSteps.data as JobWorkflowStep[])
+              : [];
+          setParallelSteps(parallelStepsData);
 
           // Try to get next step
           try {
@@ -135,8 +122,6 @@ export default function JobWorkflowStepDetailsPage() {
           }
         } catch (err) {
           console.error("Failed to load related data:", err);
-        } finally {
-          setIsLoadingRelated(false);
         }
       } catch (err) {
         const message =
@@ -177,9 +162,8 @@ export default function JobWorkflowStepDetailsPage() {
   const handleDuplicate = async () => {
     if (!step) return;
     try {
-      await jobWorkflowStepService.duplicateStep(step.id, {
-        userId: user?.user_id || 0,
-      });
+      setIsDuplicating(true);
+      await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
         `"${step.step_name}" has been duplicated successfully.`
@@ -193,12 +177,15 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to duplicate step";
       showError("Error", message);
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
   const handleActivate = async () => {
     if (!step) return;
     try {
+      setIsToggling(true);
       await jobWorkflowStepService.activateStep(step.id, user?.user_id || 0);
       showToast("Step activated", `"${step.step_name}" has been activated.`);
       // Reload step
@@ -211,12 +198,15 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to activate step";
       showError("Error", message);
+    } finally {
+      setIsToggling(false);
     }
   };
 
   const handleDeactivate = async () => {
     if (!step) return;
     try {
+      setIsToggling(true);
       await jobWorkflowStepService.deactivateStep(step.id, user?.user_id || 0);
       showToast(
         "Step deactivated",
@@ -232,6 +222,8 @@ export default function JobWorkflowStepDetailsPage() {
       const message =
         err instanceof Error ? err.message : "Failed to deactivate step";
       showError("Error", message);
+    } finally {
+      setIsToggling(false);
     }
   };
 
@@ -259,36 +251,65 @@ export default function JobWorkflowStepDetailsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <BackButton
-            fallbackTo={`/dashboard/job-workflow-steps${
-              jobIdParam ? `?job_id=${jobIdParam}` : ""
-            }`}
-          />
+          <button
+            onClick={() => navigate(-1)}
+            className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
               {step.step_name}
             </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Code: {step.step_code} | Order: {step.step_order}
-            </p>
+            {canExecute && (
+              <div className="flex items-center gap-2 mt-1">
+                {canExecute.can_execute ? (
+                  <CheckCircle
+                    className="h-4 w-4"
+                    style={{ color: color.status.info }}
+                  />
+                ) : (
+                  <AlertCircle
+                    className="h-4 w-4"
+                    style={{ color: color.status.danger }}
+                  />
+                )}
+                <p
+                  className="text-sm font-semibold"
+                  style={{
+                    color: canExecute.can_execute
+                      ? color.status.info
+                      : color.status.danger,
+                  }}
+                >
+                  {canExecute.can_execute
+                    ? "Step can execute"
+                    : `Step cannot execute: ${
+                        canExecute.reason || "Dependencies not satisfied"
+                      }`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
           {step.is_active ? (
             <button
               onClick={handleDeactivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
             >
-              <Pause className="h-4 w-4" />
+              {isToggling ? <LoadingSpinner /> : <Pause className="h-4 w-4" />}
               Deactivate
             </button>
           ) : (
             <button
               onClick={handleActivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
+              disabled={isToggling}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white disabled:opacity-50`}
               style={{ backgroundColor: color.primary.action }}
             >
-              <Play className="h-4 w-4" />
+              {isToggling ? <LoadingSpinner /> : <Play className="h-4 w-4" />}
               Activate
             </button>
           )}
@@ -305,9 +326,10 @@ export default function JobWorkflowStepDetailsPage() {
           </button>
           <button
             onClick={handleDuplicate}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+            disabled={isDuplicating}
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
           >
-            <Copy className="h-4 w-4" />
+            {isDuplicating ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
             Duplicate
           </button>
           <button
@@ -320,109 +342,10 @@ export default function JobWorkflowStepDetailsPage() {
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <Activity
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Status</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_active ? (
-              <span className="text-green-700">Active</span>
-            ) : (
-              <span className="text-gray-500">Inactive</span>
-            )}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <AlertTriangle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Critical</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_critical ? (
-              <span className="text-red-700">Yes</span>
-            ) : (
-              <span className="text-gray-500">No</span>
-            )}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <GitBranch
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
-            <p className="text-sm font-medium text-gray-600">Parallel</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.is_parallel ? (
-              <span className="text-blue-700">Yes</span>
-            ) : (
-              <span className="text-gray-500">No</span>
-            )}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-4 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <Zap className="h-5 w-5" style={{ color: color.primary.accent }} />
-            <p className="text-sm font-medium text-gray-600">Retries</p>
-          </div>
-          <p className="mt-2 text-xl font-bold text-gray-900">
-            {step.retry_count}
-          </p>
-        </div>
-      </div>
-
-      {/* Execution Status */}
-      {canExecute && (
-        <div
-          className={`${tw.rounded} border p-4 ${
-            canExecute.can_execute
-              ? "border-green-200 bg-green-50"
-              : "border-amber-200 bg-amber-50"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {canExecute.can_execute ? (
-              <CheckCircle className="h-5 w-5 text-green-700" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-amber-700" />
-            )}
-            <p
-              className={`font-semibold ${
-                canExecute.can_execute ? "text-green-700" : "text-amber-700"
-              }`}
-            >
-              {canExecute.can_execute
-                ? "Step can execute"
-                : `Step cannot execute: ${
-                    canExecute.reason || "Dependencies not satisfied"
-                  }`}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left Column */}
-        <div className="space-y-6">
+      <div className="space-y-6">
+        {/* Top Row: Basic Information and Execution Configuration side by side */}
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* Basic Information */}
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
@@ -465,7 +388,8 @@ export default function JobWorkflowStepDetailsPage() {
                       onClick={() =>
                         navigate(`/dashboard/scheduled-jobs/${job.id}`)
                       }
-                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      className="hover:underline"
+                      style={{ color: color.primary.accent }}
                     >
                       {job.name}
                     </button>
@@ -484,6 +408,22 @@ export default function JobWorkflowStepDetailsPage() {
                   </dd>
                 </div>
               )}
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Created At
+                </dt>
+                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                  {formatDateTime(step.created_at)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Updated At
+                </dt>
+                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                  {formatDateTime(step.updated_at)}
+                </dd>
+              </div>
             </dl>
           </div>
 
@@ -537,197 +477,267 @@ export default function JobWorkflowStepDetailsPage() {
                   {step.on_failure_action}
                 </dd>
               </div>
+              {step.execution_condition && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Execution Condition
+                  </dt>
+                  <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                    {step.execution_condition}
+                  </dd>
+                </div>
+              )}
+              {step.skip_on_condition && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">
+                    Skip On Condition
+                  </dt>
+                  <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
+                    {step.skip_on_condition}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Dependencies & Parallel Groups */}
-          {step.depends_on_step_codes &&
-            step.depends_on_step_codes.length > 0 && (
+        {/* Bottom Section: Two columns */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Parallel Group */}
+            {step.is_parallel && step.parallel_group_id && (
               <div
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
-                <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <Layers className="h-5 w-5" />
-                  Dependencies
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  Parallel Group
                 </h2>
-                <div className="space-y-2">
-                  {step.depends_on_step_codes.map((code, idx) => (
-                    <div
-                      key={idx}
-                      className={`${tw.rounded} bg-gray-50 p-3 text-sm font-medium text-gray-900`}
-                    >
-                      {code}
+                <p className="text-sm text-gray-700 mb-3">
+                  Group ID:{" "}
+                  <span className="font-semibold">
+                    {step.parallel_group_id}
+                  </span>
+                </p>
+                {parallelSteps.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-gray-500 mb-2">
+                      Parallel Steps in Group:
+                    </p>
+                    <div className="space-y-1">
+                      {parallelSteps
+                        .filter(
+                          (s) => s.parallel_group_id === step.parallel_group_id
+                        )
+                        .map((s) => (
+                          <div
+                            key={s.id}
+                            className={`${tw.rounded} p-2 text-sm ${
+                              s.id === step.id ? "font-semibold" : ""
+                            }`}
+                            style={
+                              s.id === step.id
+                                ? {
+                                    color: color.primary.accent,
+                                  }
+                                : undefined
+                            }
+                          >
+                            {s.step_name} (Order: {s.step_order})
+                          </div>
+                        ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             )}
 
-          {step.is_parallel && step.parallel_group_id && (
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <GitBranch className="h-5 w-5" />
-                Parallel Group
-              </h2>
-              <p className="text-sm text-gray-700 mb-3">
-                Group ID:{" "}
-                <span className="font-semibold">{step.parallel_group_id}</span>
-              </p>
-              {parallelSteps.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs font-medium text-gray-500 mb-2">
-                    Parallel Steps in Group:
-                  </p>
-                  <div className="space-y-1">
-                    {parallelSteps
-                      .filter(
-                        (s) => s.parallel_group_id === step.parallel_group_id
-                      )
-                      .map((s) => (
-                        <div
-                          key={s.id}
-                          className={`${tw.rounded} p-2 text-sm ${
-                            s.id === step.id
-                              ? "bg-blue-50 border border-blue-200"
-                              : "bg-gray-50"
-                          }`}
-                        >
-                          {s.step_name} (Order: {s.step_order})
-                        </div>
-                      ))}
+            {/* Validation Queries */}
+            {(step.pre_validation_query || step.post_validation_query) && (
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  Validation Queries
+                </h2>
+                {step.pre_validation_query && (
+                  <div className="mb-4">
+                    <dt className="text-sm font-medium text-gray-500 mb-2">
+                      Pre-Validation
+                    </dt>
+                    <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
+                      {step.pre_validation_query}
+                    </dd>
+                  </div>
+                )}
+                {step.post_validation_query && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500 mb-2">
+                      Post-Validation
+                    </dt>
+                    <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
+                      {step.post_validation_query}
+                    </dd>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Next Step */}
+            {nextStep && (
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  Next Step
+                </h2>
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/job-workflow-steps/${nextStep.id}?job_id=${nextStep.job_id}`
+                    )
+                  }
+                  className="hover:underline text-left w-full text-sm font-medium transition-colors"
+                  style={{ color: color.primary.accent }}
+                >
+                  {nextStep.step_name} (Order: {nextStep.step_order})
+                </button>
+              </div>
+            )}
+
+            {/* Dependencies */}
+            {step.depends_on_step_codes &&
+              step.depends_on_step_codes.length > 0 && (
+                <div
+                  className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                >
+                  <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Layers className="h-5 w-5" />
+                    Dependencies
+                  </h2>
+                  <div className="space-y-2">
+                    {step.depends_on_step_codes.map((code, idx) => (
+                      <div
+                        key={idx}
+                        className={`${tw.rounded} bg-gray-50 p-3 text-sm font-medium text-gray-900`}
+                      >
+                        {code}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Next Step */}
-          {nextStep && (
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                Next Step
-              </h2>
-              <button
-                onClick={() =>
-                  navigate(
-                    `/dashboard/job-workflow-steps/${nextStep.id}?job_id=${nextStep.job_id}`
-                  )
-                }
-                className={`text-left w-full ${tw.rounded} bg-gray-50 p-3 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors`}
-              >
-                {nextStep.step_name} (Order: {nextStep.step_order})
-              </button>
-            </div>
-          )}
-
-          {/* Validation Queries */}
-          {(step.pre_validation_query || step.post_validation_query) && (
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                Validation Queries
-              </h2>
-              {step.pre_validation_query && (
-                <div className="mb-4">
-                  <dt className="text-sm font-medium text-gray-500 mb-2">
-                    Pre-Validation
-                  </dt>
-                  <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
-                    {step.pre_validation_query}
-                  </dd>
-                </div>
-              )}
-              {step.post_validation_query && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500 mb-2">
-                    Post-Validation
-                  </dt>
-                  <dd className="text-sm font-mono bg-gray-50 p-2 rounded">
-                    {step.post_validation_query}
-                  </dd>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Metadata */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              Metadata
-            </h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Created At
-                </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.created_at)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">
-                  Updated At
-                </dt>
-                <dd className={`mt-1 text-sm ${tw.textPrimary}`}>
-                  {formatDateTime(step.updated_at)}
-                </dd>
-              </div>
-            </dl>
           </div>
         </div>
       </div>
 
-      {/* Execution Order & Workflow Structure */}
+      {/* Execution Order (table view) */}
       {executionOrder.length > 0 && (
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Workflow className="h-5 w-5" />
+        <div className="mt-2">
+          <h2 className="mb-3 text-lg font-semibold text-gray-900">
             Execution Order
           </h2>
-          <div className="space-y-2">
-            {executionOrder.map((item, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center justify-between ${
-                  tw.rounded
-                } p-3 ${
-                  item.step_id === step.id
-                    ? "bg-blue-50 border-2 border-blue-300"
-                    : "bg-gray-50 border border-gray-200"
-                }`}
-              >
-                <div>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {item.step_name}
-                  </span>
-                  <span className="ml-2 text-xs text-gray-500">
-                    ({item.step_code})
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {item.can_execute ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span className="text-xs text-gray-500">
-                    Order: {item.step_order}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
+              <thead>
+                <tr>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopLeftRadius: "0.375rem",
+                    }}
+                  >
+                    Order
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Job ID
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Step Name
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopRightRadius: "0.375rem",
+                    }}
+                  >
+                    Step Code
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {executionOrder.map((item, idx) => (
+                  <tr key={item.step_id || idx}>
+                    <td
+                      className="px-4 py-3 text-sm font-semibold text-gray-900"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopLeftRadius: "0.375rem",
+                        borderBottomLeftRadius: "0.375rem",
+                      }}
+                    >
+                      {item.step_order}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {step ? (
+                        <button
+                          onClick={() =>
+                            navigate(`/dashboard/scheduled-jobs/${step.job_id}`)
+                          }
+                          className="text-sm hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {step.job_id}
+                        </button>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm text-gray-900"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {item.step_name}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-sm text-gray-700"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopRightRadius: "0.375rem",
+                        borderBottomRightRadius: "0.375rem",
+                      }}
+                    >
+                      {item.step_code}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   AlertTriangle,
   PlayCircle,
@@ -19,6 +20,8 @@ import {
   Ban,
   Zap,
   TrendingUp,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -27,12 +30,14 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobExecutionService } from "../services/jobExecutionService";
+import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 import type {
   JobExecution,
   JobExecutionSearchParams,
   ExecutionStatus,
 } from "../types/jobExecution";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -91,6 +96,8 @@ export default function JobExecutionsPage() {
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
   const { t } = useLanguage();
+  const canWrite =
+    ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
 
   const [executions, setExecutions] = useState<JobExecution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,6 +129,19 @@ export default function JobExecutionsPage() {
     "abort" | "archive" | "retry" | null
   >(null);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  // Batch selection and batch operations
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedExecutions, setSelectedExecutions] = useState<Set<string>>(
+    new Set()
+  );
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const filtersModalRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(filtersModalRef, () => {
+    if (showAdvancedFilters) {
+      setShowAdvancedFilters(false);
+    }
+  });
 
   const fetchExecutions = useCallback(
     async (overrideParams?: Partial<JobExecutionSearchParams>) => {
@@ -136,8 +156,6 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getSLABreachedExecutions({
             jobId: jobIdFilter || undefined,
             daysBack: daysBackFilter,
-            limit: 50,
-            offset: 0,
           });
         } else if (quickFilter === "long-running") {
           response = await jobExecutionService.getLongRunningExecutions({
@@ -174,21 +192,13 @@ export default function JobExecutionsPage() {
             offset: 0,
           });
         } else if (statusFilter === "running") {
-          response = await jobExecutionService.getActiveExecutions({
-            limit: 50,
-            offset: 0,
-          });
+          response = await jobExecutionService.getActiveExecutions();
         } else if (statusFilter === "queued") {
-          response = await jobExecutionService.getQueuedExecutions({
-            limit: 50,
-            offset: 0,
-          });
+          response = await jobExecutionService.getQueuedExecutions();
         } else if (statusFilter === "failure") {
           response = await jobExecutionService.getFailedExecutions({
             jobId: jobIdFilter || undefined,
             daysBack: daysBackFilter,
-            limit: 50,
-            offset: 0,
           });
         } else if (statusFilter) {
           response = await jobExecutionService.getExecutionsByStatus(
@@ -229,7 +239,20 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.searchJobExecutions(params);
         }
 
-        const executionList = response.data || [];
+        // Ensure we always have an array
+        let executionList: JobExecution[] = [];
+        if (response && response.data) {
+          if (Array.isArray(response.data)) {
+            executionList = response.data;
+          } else if (
+            typeof response.data === "object" &&
+            "data" in response.data &&
+            Array.isArray(response.data.data)
+          ) {
+            executionList = response.data.data;
+          }
+        }
+
         const sortedExecutions = [...executionList].sort((a, b) => {
           const startedB = b.started_at ? new Date(b.started_at).getTime() : 0;
           const startedA = a.started_at ? new Date(a.started_at).getTime() : 0;
@@ -338,6 +361,97 @@ export default function JobExecutionsPage() {
     );
   }, [executions, searchTerm]);
 
+  // Batch selection handlers
+  const handleSelectExecution = (executionId: string) => {
+    setSelectedExecutions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(executionId)) {
+        newSet.delete(executionId);
+      } else {
+        newSet.add(executionId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedExecutions.size === filteredExecutions.length) {
+      setSelectedExecutions(new Set());
+    } else {
+      setSelectedExecutions(new Set(filteredExecutions.map((exec) => exec.id)));
+    }
+  };
+
+  const handleBatchAction = async (action: "abort" | "archive" | "retry") => {
+    if (selectedExecutions.size === 0) return;
+
+    const executionIds = Array.from(selectedExecutions);
+    setIsBatchProcessing(true);
+
+    try {
+      switch (action) {
+        case "abort":
+          await Promise.all(
+            executionIds.map((id) =>
+              jobExecutionService.markJobExecutionAborted(id, {
+                reason: "Batch abort",
+              })
+            )
+          );
+          showToast(
+            "Executions Aborted",
+            `${executionIds.length} execution(s) aborted successfully`
+          );
+          break;
+        case "archive":
+          if (!user?.user_id) return;
+          await jobExecutionService.bulkArchiveJobExecutions({
+            executionIds,
+            userId: user.user_id,
+          });
+          showToast(
+            "Executions Archived",
+            `${executionIds.length} execution(s) archived successfully`
+          );
+          break;
+        case "retry":
+          if (!user?.user_id) return;
+          // Get unique job IDs from selected executions
+          const jobIds = Array.from(
+            new Set(
+              filteredExecutions
+                .filter((exec) => selectedExecutions.has(exec.id))
+                .map((exec) => exec.job_id)
+            )
+          );
+          await Promise.all(
+            jobIds.map((jobId) =>
+              jobExecutionService.retryFailedJobExecutions({
+                jobId,
+                daysBack: 7,
+                userId: user.user_id,
+              })
+            )
+          );
+          showToast(
+            "Retry Initiated",
+            `Retrying failed executions for ${jobIds.length} job(s)`
+          );
+          break;
+      }
+      setSelectedExecutions(new Set());
+      setIsSelectionMode(false);
+      fetchExecutions();
+    } catch (err) {
+      showError(
+        `Batch ${action} failed`,
+        err instanceof Error ? err.message : "Unknown error"
+      );
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
   const handleAction = async (
     execution: JobExecution,
     action: "abort" | "archive" | "retry"
@@ -419,12 +533,42 @@ export default function JobExecutionsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
+          <button
+            onClick={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+                setSelectedExecutions(
+                  new Set(filteredExecutions.map((exec) => exec.id))
+                );
+              } else {
+                setIsSelectionMode(false);
+                setSelectedExecutions(new Set());
+              }
+            }}
+            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+            style={{
+              backgroundColor: isSelectionMode
+                ? color.primary.action
+                : "transparent",
+              color: isSelectionMode ? "white" : color.primary.action,
+              border: `1px solid ${color.primary.action}`,
+            }}
+          >
+            {isSelectionMode ? (
+              <CheckSquare className="h-4 w-4" />
+            ) : (
+              <Square className="h-4 w-4" />
+            )}
+            {isSelectionMode ? "Exit Selection" : "Select Executions"}
+          </button>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <PlayCircle
               className="h-5 w-5"
@@ -438,7 +582,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.totalExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Activity
               className="h-5 w-5"
@@ -450,7 +596,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.runningExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -462,7 +610,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.successfulExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -474,7 +624,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.failedExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
@@ -486,7 +638,9 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.queuedExecutions}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Pause
               className="h-5 w-5"
@@ -498,58 +652,6 @@ export default function JobExecutionsPage() {
             {isLoadingStats ? "..." : stats.activeExecutions}
           </p>
         </div>
-      </div>
-
-      {/* Quick Filter Buttons */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => {
-            setQuickFilter(
-              quickFilter === "sla-breached" ? "" : "sla-breached"
-            );
-            setStatusFilter("");
-          }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-            quickFilter === "sla-breached"
-              ? "bg-red-100 text-red-700 border border-red-300"
-              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-          }`}
-        >
-          <AlertTriangle className="h-4 w-4" />
-          SLA Breached
-        </button>
-        <button
-          onClick={() => {
-            setQuickFilter(
-              quickFilter === "long-running" ? "" : "long-running"
-            );
-            setStatusFilter("");
-          }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-            quickFilter === "long-running"
-              ? "bg-orange-100 text-orange-700 border border-orange-300"
-              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-          }`}
-        >
-          <Clock className="h-4 w-4" />
-          Long Running
-        </button>
-        <button
-          onClick={() => {
-            setQuickFilter(
-              quickFilter === "currently-running" ? "" : "currently-running"
-            );
-            setStatusFilter("");
-          }}
-          className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium transition-colors ${
-            quickFilter === "currently-running"
-              ? "bg-blue-100 text-blue-700 border border-blue-300"
-              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-          }`}
-        >
-          <Activity className="h-4 w-4" />
-          Currently Running
-        </button>
       </div>
 
       <div className="flex gap-4">
@@ -592,140 +694,283 @@ export default function JobExecutionsPage() {
         </button>
       </div>
 
-      {/* Advanced Filters Modal */}
-      {showAdvancedFilters && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div
-            className={`bg-white ${tw.rounded} shadow-xl p-6 w-full max-w-md`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-              <button
-                onClick={() => setShowAdvancedFilters(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Job ID
-                </label>
-                <input
-                  type="number"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  placeholder="Filter by job ID"
-                  value={jobIdFilter}
-                  onChange={(e) =>
-                    setJobIdFilter(e.target.value ? Number(e.target.value) : "")
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Days Back
-                </label>
-                <input
-                  type="number"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  placeholder="7"
-                  value={daysBackFilter}
-                  onChange={(e) =>
-                    setDaysBackFilter(Number(e.target.value) || 7)
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  value={startDateFilter}
-                  onChange={(e) => setStartDateFilter(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  value={endDateFilter}
-                  onChange={(e) => setEndDateFilter(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Correlation ID
-                </label>
-                <input
-                  type="text"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  placeholder="Filter by correlation ID"
-                  value={correlationIdFilter}
-                  onChange={(e) => setCorrelationIdFilter(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Trace ID
-                </label>
-                <input
-                  type="text"
-                  className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                  placeholder="Filter by trace ID"
-                  value={traceIdFilter}
-                  onChange={(e) => setTraceIdFilter(e.target.value)}
-                />
-              </div>
-              {quickFilter === "long-running" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Threshold (minutes)
-                  </label>
-                  <input
-                    type="number"
-                    className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
-                    placeholder="60"
-                    value={longRunningThreshold}
-                    onChange={(e) =>
-                      setLongRunningThreshold(Number(e.target.value) || 60)
-                    }
-                  />
-                </div>
-              )}
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setJobIdFilter("");
-                  setDaysBackFilter(7);
-                  setStartDateFilter("");
-                  setEndDateFilter("");
-                  setCorrelationIdFilter("");
-                  setTraceIdFilter("");
-                  setLongRunningThreshold(60);
-                }}
-                className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setShowAdvancedFilters(false)}
-                className={`flex-1 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                Apply
-              </button>
-            </div>
+      {/* Batch Actions Toolbar */}
+      {isSelectionMode && selectedExecutions.size > 0 && (
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">
+              {selectedExecutions.size} execution(s) selected
+            </span>
+            <button
+              onClick={() => setSelectedExecutions(new Set())}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBatchAction("abort")}
+              disabled={isBatchProcessing}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-red-700 border border-red-200 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Ban className="h-4 w-4" />
+              Abort Running
+            </button>
+            <button
+              onClick={() => handleBatchAction("archive")}
+              disabled={isBatchProcessing}
+              className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Archive className="h-4 w-4" />
+              Archive
+            </button>
+            <button
+              onClick={() => handleBatchAction("retry")}
+              disabled={isBatchProcessing}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <RotateCcw className="h-4 w-4" />
+              Retry Failed
+            </button>
           </div>
         </div>
       )}
+
+      {/* Advanced Filters Modal */}
+      {showAdvancedFilters &&
+        createPortal(
+          <div
+            className="fixed inset-0 overflow-hidden"
+            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-in-out"
+              onClick={() => setShowAdvancedFilters(false)}
+            ></div>
+            <div
+              ref={filtersModalRef}
+              className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
+              style={{ zIndex: 1000000 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Filter Executions
+                  </h2>
+                  <button
+                    onClick={() => setShowAdvancedFilters(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-4">
+                    {/* Quick Filters */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Quick Filters
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => {
+                            setQuickFilter(
+                              quickFilter === "sla-breached"
+                                ? ""
+                                : "sla-breached"
+                            );
+                            setStatusFilter("");
+                          }}
+                          className={`inline-flex items-center gap-2 ${
+                            tw.rounded
+                          } px-3 py-1.5 text-sm font-medium transition-colors ${
+                            quickFilter === "sla-breached"
+                              ? "bg-red-100 text-red-700 border border-red-300"
+                              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          SLA Breached
+                        </button>
+                        <button
+                          onClick={() => {
+                            setQuickFilter(
+                              quickFilter === "long-running"
+                                ? ""
+                                : "long-running"
+                            );
+                            setStatusFilter("");
+                          }}
+                          className={`inline-flex items-center gap-2 ${
+                            tw.rounded
+                          } px-3 py-1.5 text-sm font-medium transition-colors ${
+                            quickFilter === "long-running"
+                              ? "bg-orange-100 text-orange-700 border border-orange-300"
+                              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Clock className="h-4 w-4" />
+                          Long Running
+                        </button>
+                        <button
+                          onClick={() => {
+                            setQuickFilter(
+                              quickFilter === "currently-running"
+                                ? ""
+                                : "currently-running"
+                            );
+                            setStatusFilter("");
+                          }}
+                          className={`inline-flex items-center gap-2 ${
+                            tw.rounded
+                          } px-3 py-1.5 text-sm font-medium transition-colors ${
+                            quickFilter === "currently-running"
+                              ? "bg-blue-100 text-blue-700 border border-blue-300"
+                              : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Activity className="h-4 w-4" />
+                          Currently Running
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Job ID
+                      </label>
+                      <input
+                        type="number"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        placeholder="Filter by job ID"
+                        value={jobIdFilter}
+                        onChange={(e) =>
+                          setJobIdFilter(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Days Back
+                      </label>
+                      <input
+                        type="number"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        placeholder="7"
+                        value={daysBackFilter}
+                        onChange={(e) =>
+                          setDaysBackFilter(Number(e.target.value) || 7)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date
+                      </label>
+                      <input
+                        type="date"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        value={startDateFilter}
+                        onChange={(e) => setStartDateFilter(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        End Date
+                      </label>
+                      <input
+                        type="date"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        value={endDateFilter}
+                        onChange={(e) => setEndDateFilter(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Correlation ID
+                      </label>
+                      <input
+                        type="text"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        placeholder="Filter by correlation ID"
+                        value={correlationIdFilter}
+                        onChange={(e) => setCorrelationIdFilter(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Trace ID
+                      </label>
+                      <input
+                        type="text"
+                        className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                        placeholder="Filter by trace ID"
+                        value={traceIdFilter}
+                        onChange={(e) => setTraceIdFilter(e.target.value)}
+                      />
+                    </div>
+                    {quickFilter === "long-running" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Threshold (minutes)
+                        </label>
+                        <input
+                          type="number"
+                          className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm`}
+                          placeholder="60"
+                          value={longRunningThreshold}
+                          onChange={(e) =>
+                            setLongRunningThreshold(
+                              Number(e.target.value) || 60
+                            )
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-gray-200 p-4">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setJobIdFilter("");
+                        setDaysBackFilter(7);
+                        setStartDateFilter("");
+                        setEndDateFilter("");
+                        setCorrelationIdFilter("");
+                        setTraceIdFilter("");
+                        setLongRunningThreshold(60);
+                        setQuickFilter("");
+                      }}
+                      className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => setShowAdvancedFilters(false)}
+                      className={`flex-1 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
+                      style={{ backgroundColor: color.primary.action }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       <div>
         {errorMessage && (
@@ -757,12 +1002,34 @@ export default function JobExecutionsPage() {
             >
               <thead>
                 <tr>
+                  {isSelectionMode && (
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                        borderTopLeftRadius: "0.375rem",
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          filteredExecutions.length > 0 &&
+                          selectedExecutions.size === filteredExecutions.length
+                        }
+                        onChange={handleSelectAll}
+                        className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                      />
+                    </th>
+                  )}
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{
                       color: color.surface.tableHeaderText,
                       backgroundColor: color.surface.tableHeader,
-                      borderTopLeftRadius: "0.375rem",
+                      ...(!isSelectionMode && {
+                        borderTopLeftRadius: "0.375rem",
+                      }),
                     }}
                   >
                     Execution ID
@@ -828,12 +1095,31 @@ export default function JobExecutionsPage() {
               <tbody>
                 {filteredExecutions.map((execution) => (
                   <tr key={execution.id} className="transition-colors">
+                    {isSelectionMode && (
+                      <td
+                        className="px-6 py-4"
+                        style={{
+                          backgroundColor: color.surface.tablebodybg,
+                          borderTopLeftRadius: "0.375rem",
+                          borderBottomLeftRadius: "0.375rem",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedExecutions.has(execution.id)}
+                          onChange={() => handleSelectExecution(execution.id)}
+                          className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                        />
+                      </td>
+                    )}
                     <td
                       className="px-6 py-4"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
-                        borderTopLeftRadius: "0.375rem",
-                        borderBottomLeftRadius: "0.375rem",
+                        ...(!isSelectionMode && {
+                          borderTopLeftRadius: "0.375rem",
+                          borderBottomLeftRadius: "0.375rem",
+                        }),
                       }}
                     >
                       <div className="flex items-center">
@@ -865,11 +1151,7 @@ export default function JobExecutionsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                          execution.execution_status
-                        )}`}
-                      >
+                      <span className="text-sm text-black font-medium">
                         {execution.execution_status}
                       </span>
                     </td>
@@ -912,34 +1194,40 @@ export default function JobExecutionsPage() {
                               `/dashboard/job-executions/${execution.id}`
                             )
                           }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                          className={`p-2 ${tw.rounded} text-gray-600`}
                           aria-label="View details"
+                          title="View details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {execution.execution_status === "running" && (
-                          <button
-                            onClick={() => handleAction(execution, "abort")}
-                            className={`p-2 ${tw.rounded} text-red-600 hover:text-red-900 hover:bg-red-50 transition-colors`}
-                            aria-label="Abort execution"
-                          >
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        )}
-                        {execution.execution_status === "failure" && (
-                          <button
-                            onClick={() => handleAction(execution, "retry")}
-                            className={`p-2 ${tw.rounded} text-blue-600 hover:text-blue-900 hover:bg-blue-50 transition-colors`}
-                            aria-label="Retry execution"
-                          >
-                            <RotateCcw className="w-4 h-4" />
-                          </button>
-                        )}
-                        {!execution.archived && (
+                        {canWrite &&
+                          execution.execution_status === "running" && (
+                            <button
+                              onClick={() => handleAction(execution, "abort")}
+                              className={`p-2 ${tw.rounded} text-red-600`}
+                              aria-label="Abort execution"
+                              title="Abort execution"
+                            >
+                              <Ban className="w-4 h-4" />
+                            </button>
+                          )}
+                        {canWrite &&
+                          execution.execution_status === "failure" && (
+                            <button
+                              onClick={() => handleAction(execution, "retry")}
+                              className={`p-2 ${tw.rounded} text-blue-600`}
+                              aria-label="Retry execution"
+                              title="Retry execution"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          )}
+                        {canWrite && !execution.archived && (
                           <button
                             onClick={() => handleAction(execution, "archive")}
-                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                            className={`p-2 ${tw.rounded} text-gray-600`}
                             aria-label="Archive execution"
+                            title="Archive execution"
                           >
                             <Archive className="w-4 h-4" />
                           </button>
