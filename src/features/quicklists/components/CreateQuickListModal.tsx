@@ -129,7 +129,7 @@ export default function CreateQuickListModal({
           style={{ pointerEvents: "auto" }}
         >
       <div
-        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto`}
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
