@@ -56,9 +56,9 @@ export default function CreateCommunicationModal({
       setIsRichText(false);
       setShowTemplates(true);
     }
-  }, [isOpen]);
+  }, [isOpen, loadSampleData]);
 
-  const loadSampleData = async () => {
+  const loadSampleData = useCallback(async () => {
     try {
       setLoading(true);
       // Load sample data (first row) for preview
@@ -81,7 +81,7 @@ export default function CreateCommunicationModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [quicklist.id]);
 
   const handleSelectTemplate = (template: MessageTemplate) => {
     setMessageTitle(template.subject || "");

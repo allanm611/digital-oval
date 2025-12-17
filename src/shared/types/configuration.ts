@@ -124,10 +124,29 @@ export interface CreativeTemplate extends BaseConfigurationItem {
 export type ProductType = ConfigurationItemWithMetadata;
 
 /**
- * Combo Type
- * Types of combo products (e.g., "Data + Voice", "Data + SMS")
+ * Combo Resource
+ * Individual resource within a combo (Data, Voice, or SMS)
  */
-export type ComboType = ConfigurationItemWithMetadata;
+export interface ComboResource {
+  type: "data" | "voice" | "sms";
+  value: number;
+  unit: string; // e.g., "data_mb", "onnet_minutes", "sms_count"
+  sharedValidity: boolean; // Whether this resource uses shared validity hours
+  sharedValidityHours: number; // Individual validity hours (if not using shared)
+}
+
+/**
+ * Combo Type
+ * Definition of combo products (e.g., "Data + Voice", "Data + SMS")
+ * Includes resources, pricing, and validity configuration
+ */
+export interface ComboType extends ConfigurationItemWithMetadata {
+  // Combo-specific fields
+  comboResources?: ComboResource[]; // Array of resources in the combo
+  sharedValidity?: boolean; // Whether all resources share the same validity hours
+  validityHours?: number; // Shared validity hours for all resources (if sharedValidity is true)
+  price?: number; // Price of the combo bundle
+}
 
 /**
  * Product Category

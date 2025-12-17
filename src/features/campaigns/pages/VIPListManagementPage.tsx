@@ -173,8 +173,7 @@ export default function VIPListManagementPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleRemoveCustomer = (customer: VIPCustomer) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRemoveCustomer = () => {
     // TODO: Implement remove functionality
     showToast("Remove customer functionality will be implemented");
   };

@@ -53,9 +53,9 @@ export default function ExecuteCampaignModal({
     if (isOpen) {
       loadSegments();
     }
-  }, [isOpen, campaignId]);
+  }, [isOpen, campaignId, loadSegments]);
 
-  const loadSegments = async () => {
+  const loadSegments = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await campaignSegmentOfferService.getMappingsByCampaign(
@@ -83,7 +83,7 @@ export default function ExecuteCampaignModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [campaignId, showToast]);
 
   const toggleSegment = (segmentId: string) => {
     setSegments((prev) =>

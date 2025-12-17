@@ -93,6 +93,7 @@ export interface CreateProductRequest {
   effective_to?: string;
   da_id?: string;
   metadata?: Record<string, unknown>;
+  tags?: string[]; // Array of tags for the product
   combo_data?: ComboProductData; // For combo products
   created_by?: number;
 }
@@ -119,6 +120,7 @@ export interface UpdateProductRequest {
   da_id?: string;
   is_active?: boolean;
   metadata?: Record<string, unknown>;
+  tags?: string[]; // Array of tags for the product
   combo_data?: ComboProductData; // For combo products
   updated_by?: number;
 }

@@ -58,7 +58,7 @@ export default function ConnectionProfileFormPage({
     if (mode === "edit" && id) {
       loadProfile();
     }
-  }, [mode, id]);
+  }, [mode, id, loadProfile]);
 
   const ensureUniqueIdentifiers = async () => {
     // Note: Backend doesn't have /name/{name} or /code/{code} endpoints
@@ -66,7 +66,7 @@ export default function ConnectionProfileFormPage({
     // This function is kept for potential future use but doesn't make API calls
   };
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -112,7 +112,7 @@ export default function ConnectionProfileFormPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

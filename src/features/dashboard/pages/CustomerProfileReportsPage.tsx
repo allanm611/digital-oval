@@ -474,15 +474,6 @@ const mapDaysToRange = (days: number | null): RangeOption => {
   return "90d";
 };
 
-const getRangeLabel = (option: RangeOption): string => {
-  const labels: Record<RangeOption, string> = {
-    "7d": "Daily",
-    "30d": "Weekly",
-    "90d": "Monthly",
-  };
-  return labels[option];
-};
-
 // Calculate scale factor based on actual custom days vs base range
 const getCustomScaleFactor = (
   customDays: number | null,

@@ -611,6 +611,8 @@ export default function CampaignReportsPage() {
     customDays,
     selectedRange,
     useDummyData,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
   ]);
 
   const segmentOptions = [

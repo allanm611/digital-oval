@@ -464,6 +464,8 @@ export default function DeliverySMSReportsPage() {
     customDays,
     deliveryRange,
     useDummyData,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
   ]);
 
   const handleDownloadCsv = () => {

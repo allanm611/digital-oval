@@ -82,15 +82,23 @@ export default function CreateProductPage() {
     try {
       setIsLoading(true);
 
-      // Map unit to unit_of_measure
-      const { scope, unit, unit_value, validity_hours, combo_data, ...submitData } =
-        formData;
+      // Map unit to unit_of_measure and exclude frontend-only fields
+      // Backend doesn't accept: scope, unit, unit_value, validity_hours, combo_data, product_type_id
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const {
+        scope,
+        unit,
+        unit_value,
+        validity_hours,
+        combo_data,
+        product_type_id,
+        ...submitData
+      } = formData;
 
       // Prepare submission data with unit_of_measure
       const finalSubmitData: typeof submitData & {
         unit_of_measure?: string;
         validity_hours?: number;
-        combo_data?: typeof combo_data;
       } = {
         ...submitData,
       };
@@ -105,10 +113,8 @@ export default function CreateProductPage() {
         finalSubmitData.validity_hours = validity_hours;
       }
 
-      // Include combo_data if provided (for combo products)
-      if (combo_data && combo_data.resources.length > 0) {
-        finalSubmitData.combo_data = combo_data;
-      }
+      // Note: combo_data is kept for frontend only, not sent to backend yet
+      // Backend support will be added later
 
       await productService.createProduct(finalSubmitData);
       success(
@@ -145,7 +151,12 @@ export default function CreateProductPage() {
 
   const handleInputChange = (
     field: keyof CreateProductRequest,
-    value: string | number | boolean | undefined | CreateProductRequest["combo_data"]
+    value:
+      | string
+      | number
+      | boolean
+      | undefined
+      | CreateProductRequest["combo_data"]
   ) => {
     setFormData({ ...formData, [field]: value as any });
   };

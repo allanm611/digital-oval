@@ -64,7 +64,7 @@ export default function SchedulingStep({
       };
       setFormData({ ...formData, scheduling: defaultScheduling });
     }
-  }, []);
+  }, [formData, setFormData]);
 
   const updateScheduling = (updates: Partial<CampaignScheduling>) => {
     const newScheduling = { ...scheduling, ...updates };

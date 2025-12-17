@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, HelpCircle, Plus, Trash2 } from "lucide-react";
+import { Save, HelpCircle, Plus, Trash2, X } from "lucide-react";
 import {
   CreateProductRequest,
   UpdateProductRequest,
@@ -12,6 +12,7 @@ import {
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { tw, color, zIndex } from "../../../shared/utils/utils";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 
@@ -68,6 +69,29 @@ export default function ProductForm({
   // Track if user is in custom combo creation mode
   const [isCustomComboMode, setIsCustomComboMode] = useState(false);
 
+  // Tags input state
+  const [tagInput, setTagInput] = useState("");
+
+  // Handle adding a tag
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      const newTag = tagInput.trim().toLowerCase();
+      const currentTags = formData.tags || [];
+      if (!currentTags.includes(newTag)) {
+        onInputChange("tags", [...currentTags, newTag]);
+      }
+      setTagInput("");
+    }
+  };
+
+  // Handle removing a tag
+  const handleRemoveTag = (tagToRemove: string) => {
+    const currentTags = formData.tags || [];
+    const updatedTags = currentTags.filter((tag) => tag !== tagToRemove);
+    onInputChange("tags", updatedTags.length > 0 ? updatedTags : undefined);
+  };
+
   // Check if selected product type is Combo
   const selectedProductType = productTypes.find(
     (pt) => String(pt.id) === String(formData.product_type_id)
@@ -89,7 +113,9 @@ export default function ProductForm({
 
   // Get selected combo type details (move before useEffect that uses it)
   const selectedComboType = comboData.combo_type_id
-    ? comboTypes.find((ct) => ct.id === comboData.combo_type_id)
+    ? (comboTypes.find((ct) => ct.id === comboData.combo_type_id) as
+        | TypeConfigurationItem
+        | undefined)
     : null;
 
   // Initialize combo data from formData when product type changes to Combo
@@ -139,17 +165,14 @@ export default function ProductForm({
         });
       }
 
-      // Prefill with default shared validity
+      // Prefill with default shared validity and price from template
       if (resources.length > 0) {
-        const comboTypeWithPrice = selectedComboType as unknown as {
-          price?: number;
-        };
         setComboData({
           combo_type_id: comboData.combo_type_id,
           resources,
           shared_validity: true,
           shared_validity_hours: 720, // 30 days default
-          price: comboTypeWithPrice.price, // Load price from combo type
+          price: selectedComboType.price, // Prefill price from template
         });
       }
     }
@@ -253,34 +276,66 @@ export default function ProductForm({
           }}
         >
           <div className="space-y-5">
-            {/* Product Code */}
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Product Code{" "}
-                <span style={{ color: color.status.danger }}>*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.product_code || ""}
-                onChange={(e) => onInputChange("product_code", e.target.value)}
-                className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                style={{
-                  borderColor: color.border.default,
-                  outline: "none",
-                }}
-                placeholder="e.g., VOICE_BUNDLE_001"
-                onFocus={(e) => {
-                  e.target.style.borderColor = color.primary.accent;
-                  e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = color.border.default;
-                  e.target.style.boxShadow = "none";
-                }}
-              />
+            {/* Product Code & DA ID */}
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label
+                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                >
+                  Product Code{" "}
+                  <span style={{ color: color.status.danger }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.product_code || ""}
+                  onChange={(e) =>
+                    onInputChange("product_code", e.target.value)
+                  }
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                  style={{
+                    borderColor: color.border.default,
+                    outline: "none",
+                  }}
+                  placeholder="e.g., VOICE_BUNDLE_001"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = color.border.default;
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
+
+              <div>
+                <label
+                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                >
+                  DA ID <span style={{ color: color.status.danger }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.da_id || ""}
+                  onChange={(e) => onInputChange("da_id", e.target.value)}
+                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                  style={{
+                    borderColor: color.border.default,
+                    outline: "none",
+                  }}
+                  placeholder="Enter DA ID"
+                  onFocus={(e) => {
+                    e.target.style.borderColor = color.primary.accent;
+                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = color.border.default;
+                    e.target.style.boxShadow = "none";
+                  }}
+                />
+              </div>
             </div>
 
             {/* Product Name */}
@@ -341,7 +396,7 @@ export default function ProductForm({
               />
             </div>
 
-            {/* Price & DA ID */}
+            {/* Price & Tags */}
             <div className="grid gap-5 md:grid-cols-2">
               <div>
                 <label
@@ -377,28 +432,97 @@ export default function ProductForm({
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
-                  DA ID <span style={{ color: color.status.danger }}>*</span>
+                  Tags
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.da_id || ""}
-                  onChange={(e) => onInputChange("da_id", e.target.value)}
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{
-                    borderColor: color.border.default,
-                    outline: "none",
-                  }}
-                  placeholder="Enter DA ID"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setTagInput(value);
+
+                        // Auto-add tag when comma is typed
+                        if (value.includes(",")) {
+                          const tag = value.replace(",", "").trim();
+                          const currentTags = formData.tags || [];
+                          if (tag && !currentTags.includes(tag.toLowerCase())) {
+                            const updatedTags = [
+                              ...currentTags,
+                              tag.toLowerCase(),
+                            ];
+                            onInputChange("tags", updatedTags);
+                            setTagInput("");
+                          }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        handleAddTag(e);
+                      }}
+                      placeholder="Type tags separated by commas"
+                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                      style={{
+                        borderColor: color.border.default,
+                        outline: "none",
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = color.primary.accent;
+                        e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = color.border.default;
+                        e.target.style.boxShadow = "none";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (tagInput.trim()) {
+                          const newTag = tagInput.trim().toLowerCase();
+                          const currentTags = formData.tags || [];
+                          if (!currentTags.includes(newTag)) {
+                            const updatedTags = [...currentTags, newTag];
+                            onInputChange("tags", updatedTags);
+                            setTagInput("");
+                          }
+                        }
+                      }}
+                      className={`inline-flex items-center px-4 py-2.5 text-sm text-white ${tw.rounded} transition-colors`}
+                      style={{
+                        backgroundColor: color.primary.action,
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.tags && formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
+                          style={{
+                            backgroundColor: color.primary.accent,
+                            borderColor: color.primary.accent,
+                            color: "#FFFFFF",
+                          }}
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="ml-2 hover:opacity-80"
+                            style={{ color: "#FFFFFF" }}
+                            aria-label={`Remove tag ${tag}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -550,12 +674,13 @@ export default function ProductForm({
                   </p>
                 </div>
 
-                {/* Validity Options */}
+                {/* Combo Price and Validity - Same Line */}
                 <div
-                  className="mb-6 pb-6 border-b"
                   style={{ borderColor: color.border.default }}
+                  className="mb-6 pb-6 border-b"
                 >
-                  <div className="flex items-center gap-3 mb-4">
+                  {/* Shared Validity Checkbox */}
+                  <div className="mb-4">
                     <label className="flex items-center gap-2">
                       <input
                         type="checkbox"
@@ -574,65 +699,92 @@ export default function ProductForm({
                     </label>
                   </div>
 
+                  {/* Validity Hours and Combo Price - Same Line */}
                   {comboData.shared_validity && (
-                    <div className="ml-6">
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Validity Hours{" "}
-                        <span style={{ color: color.status.danger }}>*</span>
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={comboData.shared_validity_hours ?? ""}
-                        onChange={(e) =>
-                          setComboData({
-                            ...comboData,
-                            shared_validity_hours: e.target.value
-                              ? parseInt(e.target.value, 10)
-                              : undefined,
-                          })
-                        }
-                        className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                        style={{ borderColor: color.border.default }}
-                        placeholder="e.g., 720 (30 days)"
-                      />
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                        >
+                          Validity Hours{" "}
+                          <span style={{ color: color.status.danger }}>*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={comboData.shared_validity_hours ?? ""}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              shared_validity_hours: e.target.value
+                                ? parseInt(e.target.value, 10)
+                                : undefined,
+                            })
+                          }
+                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                          style={{ borderColor: color.border.default }}
+                          placeholder="e.g., 720 (30 days)"
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                        >
+                          Combo Price{" "}
+                          <span style={{ color: color.status.danger }}>*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={comboData.price ?? ""}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              price: e.target.value
+                                ? parseFloat(e.target.value)
+                                : undefined,
+                            })
+                          }
+                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                          style={{ borderColor: color.border.default }}
+                          placeholder="Enter combo price"
+                        />
+                      </div>
                     </div>
                   )}
-                </div>
 
-                {/* Combo Price */}
-                <div
-                  className="mb-6 pb-6 border-b"
-                  style={{ borderColor: color.border.default }}
-                >
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Combo Price{" "}
-                    <span style={{ color: color.status.danger }}>*</span>
-                  </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={comboData.price ?? ""}
-                      onChange={(e) =>
-                        setComboData({
-                          ...comboData,
-                          price: e.target.value
-                            ? parseFloat(e.target.value)
-                            : undefined,
-                        })
-                      }
-                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                      style={{ borderColor: color.border.default }}
-                      placeholder="Enter combo price"
-                    />
-                  </div>
+                  {!comboData.shared_validity && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label
+                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                        >
+                          Combo Price{" "}
+                          <span style={{ color: color.status.danger }}>*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={comboData.price ?? ""}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              price: e.target.value
+                                ? parseFloat(e.target.value)
+                                : undefined,
+                            })
+                          }
+                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                          style={{ borderColor: color.border.default }}
+                          placeholder="Enter combo price"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Show Add Resource Buttons only for custom combos */}
@@ -741,10 +893,10 @@ export default function ProductForm({
                           )}
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-2">
+                        <div className="grid gap-3 md:grid-cols-2 mb-3">
                           <div>
                             <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-1`}
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
                               Unit
                             </label>
@@ -771,7 +923,7 @@ export default function ProductForm({
 
                           <div>
                             <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-1`}
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
                               Value
                             </label>
@@ -787,7 +939,7 @@ export default function ProductForm({
                                   parseFloat(e.target.value) || 0
                                 )
                               }
-                              className={`w-full px-3 py-2 border ${tw.rounded} text-sm transition-all`}
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
                               style={{ borderColor: color.border.default }}
                               placeholder="Enter value"
                             />
@@ -795,9 +947,9 @@ export default function ProductForm({
                         </div>
 
                         {!comboData.shared_validity && (
-                          <div className="mt-3">
+                          <div>
                             <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-1`}
+                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
                               Validity (Hours)
                             </label>
@@ -815,7 +967,7 @@ export default function ProductForm({
                                     : (0 as number)
                                 )
                               }
-                              className={`w-full px-3 py-2 border ${tw.rounded} text-sm transition-all`}
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
                               style={{ borderColor: color.border.default }}
                               placeholder="e.g., 72"
                             />
@@ -842,13 +994,9 @@ export default function ProductForm({
             <div className="grid gap-5 md:grid-cols-2">
               <div>
                 <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
+                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
                   Scope
-                  <HelpCircle
-                    className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Scope determines product availability: Segmented = available only to specific customer segments, Open Market = available to all customers"
-                  />
                 </label>
                 <HeadlessSelect
                   options={scopeOptions.map((opt) => ({

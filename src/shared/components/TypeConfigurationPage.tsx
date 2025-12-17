@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { color, tw } from "../utils/utils";
+import { color, tw, button } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -269,6 +269,7 @@ function TypeConfigurationModal({
     isCreativeTemplate,
     isLanguage,
     isCharacterSet,
+    isComboType,
     config.customFields,
   ]);
 
@@ -406,6 +407,8 @@ function TypeConfigurationModal({
             ? "max-w-4xl max-h-[90vh] flex flex-col"
             : isLanguage
             ? "max-w-lg"
+            : isComboType
+            ? "max-w-2xl"
             : "max-w-md"
         }`}
       >
@@ -468,7 +471,8 @@ function TypeConfigurationModal({
             />
           </div>
 
-          {config.metadataField && (
+          {/* Hide metadata field for combo types (Active Combos is just tracking) */}
+          {config.metadataField && !isComboType && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {config.metadataField.label}
@@ -701,56 +705,41 @@ function TypeConfigurationModal({
           {/* Combo Type Fields */}
           {isComboType && (
             <>
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">
-                  Combo Resources
-                </h3>
-              </div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                Resources
+              </h3>
 
-              {/* Combo Resources List */}
-              <div className="space-y-3">
+              {/* Combo Resources List - Compact Grid */}
+              <div className="grid gap-2 ">
                 {comboResources.map((resource, idx) => (
                   <div
                     key={idx}
-                    className="border border-gray-200 rounded p-3 bg-gray-50"
+                    className={`grid gap-2 items-center bg-gray-50 p-3 rounded border border-gray-200 ${
+                      comboSharedValidity ? "grid-cols-3" : "grid-cols-4"
+                    }`}
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {resource.type === "data"
-                            ? "Data"
-                            : resource.type === "voice"
-                              ? "Voice"
-                              : "SMS"}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {resource.value} {resource.unit}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setComboResources(
-                            comboResources.filter((_, i) => i !== idx)
-                          );
-                        }}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
+                    <div className="col-span-1">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {resource.type === "data"
+                          ? "Data"
+                          : resource.type === "voice"
+                          ? "Voice"
+                          : "SMS"}
+                      </p>
+                      <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <input
-                        type="number"
-                        value={resource.value}
-                        onChange={(e) => {
-                          const updated = [...comboResources];
-                          updated[idx].value = parseInt(e.target.value) || 0;
-                          setComboResources(updated);
-                        }}
-                        className="px-2 py-1 border border-gray-300 rounded"
-                        placeholder="Value"
-                      />
+                    <input
+                      type="number"
+                      value={resource.value}
+                      onChange={(e) => {
+                        const updated = [...comboResources];
+                        updated[idx].value = parseInt(e.target.value) || 0;
+                        setComboResources(updated);
+                      }}
+                      className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                      placeholder="Value"
+                    />
+                    {!comboSharedValidity && (
                       <input
                         type="number"
                         value={resource.sharedValidityHours}
@@ -760,16 +749,28 @@ function TypeConfigurationModal({
                             parseInt(e.target.value) || 0;
                           setComboResources(updated);
                         }}
-                        className="px-2 py-1 border border-gray-300 rounded"
+                        className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
                         placeholder="Hours"
                       />
-                    </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setComboResources(
+                          comboResources.filter((_, i) => i !== idx)
+                        );
+                      }}
+                      className="col-span-1 flex justify-center items-center text-red-600 hover:text-red-700"
+                      aria-label="Delete resource"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 ))}
               </div>
 
-              {/* Add Resource Buttons */}
-              <div className="flex gap-2 flex-wrap">
+              {/* Add Resource Buttons - Inline */}
+              <div className="flex justify-between gap-3 mb-4 w-full">
                 {!comboResources.some((r) => r.type === "data") && (
                   <button
                     type="button"
@@ -785,7 +786,29 @@ function TypeConfigurationModal({
                         },
                       ]);
                     }}
-                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
                   >
                     + Data
                   </button>
@@ -805,7 +828,29 @@ function TypeConfigurationModal({
                         },
                       ]);
                     }}
-                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
                   >
                     + Voice
                   </button>
@@ -825,22 +870,43 @@ function TypeConfigurationModal({
                         },
                       ]);
                     }}
-                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
                   >
                     + SMS
                   </button>
                 )}
               </div>
 
-              {/* Shared Validity Toggle */}
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <label className="flex items-center gap-2">
+              {/* Validity & Price - 2 Column Layout */}
+              <div className="pt-3 mt-3">
+                <label className="flex items-center gap-2 mb-3">
                   <input
                     type="checkbox"
                     checked={comboSharedValidity}
                     onChange={(e) => {
                       setComboSharedValidity(e.target.checked);
-                      // Update all resources with new shared validity setting
                       setComboResources(
                         comboResources.map((r) => ({
                           ...r,
@@ -851,41 +917,39 @@ function TypeConfigurationModal({
                     className="rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">
-                    Shared Validity (same hours for all resources)
+                    Shared Validity
                   </span>
                 </label>
 
-                {comboSharedValidity && (
-                  <div className="mt-3">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Validity Hours
-                    </label>
-                    <input
-                      type="number"
-                      value={comboValidityHours}
-                      onChange={(e) => {
-                        const newHours = parseInt(e.target.value) || 0;
-                        setComboValidityHours(newHours);
-                        // Update all resources
-                        setComboResources(
-                          comboResources.map((r) => ({
-                            ...r,
-                            sharedValidityHours: newHours,
-                          }))
-                        );
-                      }}
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                      placeholder="e.g., 720 (30 days)"
-                    />
-                  </div>
-                )}
+                <div className="grid grid-cols-2 gap-3">
+                  {comboSharedValidity && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Validity Hours
+                      </label>
+                      <input
+                        type="number"
+                        value={comboValidityHours}
+                        onChange={(e) => {
+                          const newHours = parseInt(e.target.value) || 0;
+                          setComboValidityHours(newHours);
+                          setComboResources(
+                            comboResources.map((r) => ({
+                              ...r,
+                              sharedValidityHours: newHours,
+                            }))
+                          );
+                        }}
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                        placeholder="e.g., 720"
+                      />
+                    </div>
+                  )}
 
-                {/* Combo Price */}
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Combo Price <span className="text-red-600">*</span>
-                  </label>
-                  <div className="flex gap-3">
+                  <div className={comboSharedValidity ? "" : "col-span-2"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Combo Price <span className="text-red-600">*</span>
+                    </label>
                     <input
                       type="number"
                       min="0"
@@ -893,11 +957,13 @@ function TypeConfigurationModal({
                       value={comboPrice ?? ""}
                       onChange={(e) =>
                         setComboPrice(
-                          e.target.value ? parseFloat(e.target.value) : undefined
+                          e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined
                         )
                       }
-                      className={`flex-1 px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                      placeholder="Enter combo price"
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      placeholder="Enter price"
                     />
                   </div>
                 </div>
@@ -1211,17 +1277,19 @@ export default function TypeConfigurationPage({
                       >
                         {config.statusLabel || "Status"}
                       </th>
-                      {config.metadataField && (
-                        <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{
-                            color: color.surface.tableHeaderText,
-                            backgroundColor: color.surface.tableHeader,
-                          }}
-                        >
-                          {config.metadataField.label}
-                        </th>
-                      )}
+                      {/* Hide metadata header for combo types */}
+                      {config.metadataField &&
+                        !config.configType?.includes("comboTypes") && (
+                          <th
+                            className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                            style={{
+                              color: color.surface.tableHeaderText,
+                              backgroundColor: color.surface.tableHeader,
+                            }}
+                          >
+                            {config.metadataField.label}
+                          </th>
+                        )}
                     </>
                   )}
                   <th
@@ -1328,18 +1396,20 @@ export default function TypeConfigurationPage({
                               : t.genericConfig.inactive}
                           </span>
                         </td>
-                        {config.metadataField && (
-                          <td
-                            className="px-6 py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div className={`text-sm ${tw.textPrimary}`}>
-                              {item.metadataValue ?? "—"}
-                            </div>
-                          </td>
-                        )}
+                        {/* Hide metadata column for combo types */}
+                        {config.metadataField &&
+                          !config.configType?.includes("comboTypes") && (
+                            <td
+                              className="px-6 py-4"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              <div className={`text-sm ${tw.textPrimary}`}>
+                                {item.metadataValue ?? "—"}
+                              </div>
+                            </td>
+                          )}
                       </>
                     )}
                     <td

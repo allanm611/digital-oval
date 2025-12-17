@@ -292,7 +292,7 @@ export default function OfferMappingStep({
     };
 
     checkOfferStatuses();
-  }, [selectedOffers, clearValidationErrors]);
+  }, [selectedOffers, clearValidationErrors, setValidationErrors]);
 
   // Transform offerMappings for specialized components (extract offerIds only)
   const simplifiedOfferMappings: { [segmentId: string]: string[] } = {};

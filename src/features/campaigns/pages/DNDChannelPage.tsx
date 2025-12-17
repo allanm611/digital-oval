@@ -145,8 +145,7 @@ export default function DNDChannelPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleRemoveCustomer = (subscription: DNDSubscription) => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleRemoveCustomer = () => {
     // TODO: Implement remove functionality
     showToast("Remove customer functionality will be implemented");
   };

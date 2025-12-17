@@ -26,12 +26,12 @@ export default function TemplateSelector({
 
   useEffect(() => {
     loadTemplates();
-  }, [channel]);
+  }, [channel, loadTemplates]);
 
-  const loadTemplates = () => {
+  const loadTemplates = useCallback(() => {
     const allTemplates = templateService.getTemplatesByChannel(channel);
     setTemplates(allTemplates);
-  };
+  }, [channel]);
 
   const handleSelect = (template: MessageTemplate) => {
     setSelectedId(template.id);

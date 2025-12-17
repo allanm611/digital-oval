@@ -65,7 +65,7 @@ export default function CustomerIdentityFieldDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [fieldId]);
+  }, [fieldId, t.customerIdentity.fieldNotFound, t.customerIdentity.invalidFieldIdentifier, t.customerIdentity.unableToLoadFieldDetails]);
 
   useEffect(() => {
     if (!initialField) {
