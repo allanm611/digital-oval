@@ -53,6 +53,8 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   sharedValidity?: boolean;
   validityHours?: number;
   price?: number; // Price for combo type
+  // Routes fields
+  communication_channel_id?: number;
 }
 
 interface MetadataFieldConfig {
@@ -96,6 +98,7 @@ export interface TypeConfigurationPageConfig {
   statusLabel?: string;
   metadataField?: MetadataFieldConfig;
   customFields?: CustomFieldConfig[];
+  hideFields?: string[];
   deleteConfirmTitle: string;
   deleteConfirmMessage: (name: string) => string;
   deleteSuccessMessage: (name: string) => string;
@@ -159,6 +162,8 @@ function TypeConfigurationModal({
   const isLanguage = config.configType === "languages";
   const isCharacterSet = config.configType === "characterSets";
   const isComboType = config.configType === "comboTypes";
+  const isSmsRoutes = config.configType === "smsRoutes";
+  const isRoutes = config.configType === "routes";
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
@@ -218,7 +223,10 @@ function TypeConfigurationModal({
         );
         setLocale(item.locale || "");
       }
-      if ((isLanguage || isCharacterSet) && config.customFields) {
+      if (
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        config.customFields
+      ) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] =
@@ -248,7 +256,10 @@ function TypeConfigurationModal({
         setVariablesText("");
         setLocale("");
       }
-      if ((isLanguage || isCharacterSet) && config.customFields) {
+      if (
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        config.customFields
+      ) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] = "";
@@ -270,6 +281,8 @@ function TypeConfigurationModal({
     isLanguage,
     isCharacterSet,
     isComboType,
+    isSmsRoutes,
+    isRoutes,
     config.customFields,
   ]);
 
@@ -362,8 +375,11 @@ function TypeConfigurationModal({
       payload.locale = locale.trim() || undefined;
     }
 
-    // Add custom fields for languages and character sets
-    if ((isLanguage || isCharacterSet) && config.customFields) {
+    // Add custom fields for languages, character sets, SMS routes, and routes
+    if (
+      (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+      config.customFields
+    ) {
       for (const field of config.customFields) {
         const value = customFields[field.fieldKey]?.trim() || "";
         if (field.required && !value) {
@@ -409,6 +425,8 @@ function TypeConfigurationModal({
             ? "max-w-lg"
             : isComboType
             ? "max-w-2xl"
+            : isSmsRoutes
+            ? "max-w-md"
             : "max-w-md"
         }`}
       >
@@ -506,86 +524,91 @@ function TypeConfigurationModal({
             </div>
           )}
 
-          {/* Custom Fields (for Languages and Character Sets) */}
-          {(isLanguage || isCharacterSet) && config.customFields && (
-            <>
-              {config.customFields.map((field, index) => (
-                <div
-                  key={field.fieldKey}
-                  style={{
-                    position: "relative",
-                    zIndex: config.customFields!.length - index,
-                  }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {field.label} {field.required && "*"}
-                  </label>
-                  {field.type === "select" ? (
-                    <HeadlessSelect
-                      value={String(customFields[field.fieldKey] || "")}
-                      onChange={(value) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: String(value || ""),
-                        }))
-                      }
-                      options={
-                        field.dynamicOptions === "characterSets"
-                          ? getCharacterSetsOptions()
-                          : field.options || []
-                      }
-                      placeholder={field.placeholder}
-                      zIndex={
-                        10020 + (config.customFields!.length - index) * 10
-                      }
-                    />
-                  ) : field.type === "number" ? (
-                    <input
-                      type="number"
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  ) : field.type === "textarea" ? (
-                    <textarea
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      rows={3}
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+          {/* Custom Fields (for Languages, Character Sets, SMS Routes, and Routes) */}
+          {(isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+            config.customFields && (
+              <>
+                {config.customFields
+                  .filter(
+                    (field) => !config.hideFields?.includes(field.fieldKey)
+                  )
+                  .map((field, index) => (
+                    <div
+                      key={field.fieldKey}
+                      style={{
+                        position: "relative",
+                        zIndex: config.customFields!.length - index,
+                      }}
+                    >
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} {field.required && "*"}
+                      </label>
+                      {field.type === "select" ? (
+                        <HeadlessSelect
+                          value={String(customFields[field.fieldKey] || "")}
+                          onChange={(value) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: String(value || ""),
+                            }))
+                          }
+                          options={
+                            field.dynamicOptions === "characterSets"
+                              ? getCharacterSetsOptions()
+                              : field.options || []
+                          }
+                          placeholder={field.placeholder}
+                          zIndex={
+                            10020 + (config.customFields!.length - index) * 10
+                          }
+                        />
+                      ) : field.type === "number" ? (
+                        <input
+                          type="number"
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      ) : field.type === "textarea" ? (
+                        <textarea
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </>
+            )}
 
           {/* Template Content Fields (for Creative Templates only) */}
           {isCreativeTemplate && (
@@ -1009,10 +1032,12 @@ function TypeConfigurationModal({
 
 interface TypeConfigurationPageProps {
   config: TypeConfigurationPageConfig;
+  onRowClick?: (itemName: string, item: TypeConfigurationItem) => void;
 }
 
 export default function TypeConfigurationPage({
   config,
+  onRowClick,
 }: TypeConfigurationPageProps) {
   const navigate = useNavigate();
   const { confirm } = useConfirm();
@@ -1034,6 +1059,9 @@ export default function TypeConfigurationPage({
     TypeConfigurationItem | undefined
   >();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Config type checks for conditional rendering
+  const isRoutes = config.configType === "routes";
 
   useEffect(() => {
     if (config.configType) {
@@ -1290,6 +1318,18 @@ export default function TypeConfigurationPage({
                             {config.metadataField.label}
                           </th>
                         )}
+                      {/* Communication Channel header for routes */}
+                      {isRoutes && (
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{
+                            color: color.surface.tableHeaderText,
+                            backgroundColor: color.surface.tableHeader,
+                          }}
+                        >
+                          Channel
+                        </th>
+                      )}
                     </>
                   )}
                   <th
@@ -1307,7 +1347,12 @@ export default function TypeConfigurationPage({
 
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className="transition-colors">
+                  <tr
+                    key={item.id}
+                    className="transition-colors"
+                    onClick={() => onRowClick?.(item.name, item)}
+                    style={onRowClick ? { cursor: "pointer" } : undefined}
+                  >
                     <td
                       className="px-6 py-4"
                       style={{
@@ -1410,6 +1455,34 @@ export default function TypeConfigurationPage({
                               </div>
                             </td>
                           )}
+                        {/* Communication Channel column for routes */}
+                        {isRoutes && (
+                          <td
+                            className="px-6 py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <div className={`text-sm ${tw.textPrimary}`}>
+                              {(() => {
+                                const channelId = (
+                                  item as unknown as Record<string, unknown>
+                                ).communication_channel_id;
+                                if (!channelId) return "—";
+                                // Find channel name from hardcoded data
+                                const hardcodedChannels = (config
+                                  .customFields?.[0]?.options || []) as Array<{
+                                  value: string;
+                                  label: string;
+                                }>;
+                                const channel = hardcodedChannels.find(
+                                  (ch) => ch.value === String(channelId)
+                                );
+                                return channel?.label || "—";
+                              })()}
+                            </div>
+                          </td>
+                        )}
                       </>
                     )}
                     <td

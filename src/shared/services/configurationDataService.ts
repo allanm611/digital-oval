@@ -35,6 +35,7 @@ export type ConfigurationType =
   | "communicationChannels"
   | "senderIds"
   | "smsRoutes"
+  | "routes"
   | "languages"
   | "characterSets";
 
@@ -62,6 +63,7 @@ class ConfigurationDataService {
     this.listeners.set("communicationChannels", new Set());
     this.listeners.set("senderIds", new Set());
     this.listeners.set("smsRoutes", new Set());
+    this.listeners.set("routes", new Set());
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
 

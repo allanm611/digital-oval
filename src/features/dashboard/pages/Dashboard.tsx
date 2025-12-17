@@ -69,6 +69,8 @@ import DeliveryEmailReportsPage from "./DeliveryEmailReportsPage";
 import OfferReportsPage from "./OfferReportsPage";
 import SettingsPage from "../../settings/pages/SettingsPage";
 import CommunicationChannelsPage from "../../settings/pages/CommunicationChannelsPage";
+import SettingsSMSRoutesPage from "../../settings/pages/SMSRoutesPage";
+import RoutesPage from "../../settings/pages/RoutesPage";
 import ServersPage from "../../servers/pages/ServersPage";
 import ServerDetailsPage from "../../servers/pages/ServerDetailsPage";
 import ServerFormPage from "../../servers/pages/ServerFormPage";
@@ -220,12 +222,19 @@ export default function Dashboard() {
         <Route path="/creative-templates" element={<CreativeTemplatesPage />} />
         <Route path="/reward-types" element={<RewardTypesPage />} />
         <Route path="/sender-ids" element={<SenderIdsPage />} />
-        <Route path="/sms-routes" element={<SMSRoutesPage />} />
         <Route path="/languages" element={<LanguagesPage />} />
         <Route path="/character-sets" element={<CharacterSetsPage />} />
         <Route
           path="/communication-channels"
           element={<CommunicationChannelsPage />}
+        />
+        <Route
+          path="/sms-routes"
+          element={<SettingsSMSRoutesPage />}
+        />
+        <Route
+          path="/routes"
+          element={<RoutesPage />}
         />
         <Route path="/customer-identity" element={<CustomerIdentityPage />} />
         <Route

@@ -55,13 +55,13 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/communication-channels",
       },
       {
-        id: "sms-email-routes",
-        name: "SMS/Email Routes",
-        description: "Configure SMS and Email routing for campaign delivery",
+        id: "routes",
+        name: "Routes",
+        description: "Manage routes across all communication channels",
         type: "campaign",
         category: "Campaign Configuration",
         status: "active",
-        navigationPath: "", // Placeholder - doesn't navigate anywhere
+        navigationPath: "/dashboard/routes",
       },
       {
         id: "campaign-objectives",
