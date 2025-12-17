@@ -44,6 +44,19 @@ interface AllPolicyConfigs {
   vipList: VIPListConfig;
 }
 
+// Period item for maximum communication (with id for list management)
+interface MaxCommPeriod {
+  id: string;
+  type: "daily" | "weekly" | "monthly";
+  maxCount: number;
+}
+
+const PERIOD_OPTIONS = [
+  { label: "Daily", value: "daily" as const },
+  { label: "Weekly", value: "weekly" as const },
+  { label: "Monthly", value: "monthly" as const },
+];
+
 export default function CommunicationPolicyModal({
   isOpen,
   onClose,
@@ -84,6 +97,9 @@ export default function CommunicationPolicyModal({
   // Track channel dropdown state
   const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState(false);
 
+  // Maximum communication periods (multiple)
+  const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
+
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -120,6 +136,7 @@ export default function CommunicationPolicyModal({
     }
     setError("");
     setIsChannelDropdownOpen(false); // Reset dropdown state when modal opens/closes
+    setMaxCommPeriods([]); // Reset periods when modal opens/closes
   }, [policy, isOpen]);
 
   const toggleSection = (type: CommunicationPolicyType) => {
@@ -249,49 +266,125 @@ export default function CommunicationPolicyModal({
   };
 
   const renderMaxCommunicationConfig = () => {
-    const maxConfig = configs.maximumCommunication;
+    // Get already selected period types to disable them in other rows
+    const selectedPeriodTypes = maxCommPeriods.map((p) => p.type);
+    
+    // Find first available period type for new periods
+    const getFirstAvailablePeriodType = () => {
+      const availableType = PERIOD_OPTIONS.find(
+        (opt) => !selectedPeriodTypes.includes(opt.value)
+      );
+      return availableType?.value || "daily";
+    };
+    
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative" style={{ zIndex: 99999 }}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Period Type
+      <div className="space-y-4 overflow-visible">
+        <div className="flex items-center justify-between">
+          <p className={`${tw.caption} ${tw.textSecondary}`}>
+            Set maximum communications per period
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const newPeriod: MaxCommPeriod = {
+                id: Date.now().toString(),
+                type: getFirstAvailablePeriodType(),
+                maxCount: 3,
+              };
+              setMaxCommPeriods((prev) => [...prev, newPeriod]);
+            }}
+            className={`${tw.button} flex items-center gap-2 text-xs px-3 py-1.5`}
+            disabled={selectedPeriodTypes.length >= PERIOD_OPTIONS.length}
+          >
+            <Plus className="w-3 h-3" />
+            Add Period
+          </button>
+        </div>
+        
+        {/* Column Headers - only show when there are periods */}
+        {maxCommPeriods.length > 0 && (
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Period
             </label>
-            <HeadlessSelect
-              value={maxConfig.type}
-              onChange={(value) =>
-                updateConfig("maximumCommunication", (prev) => ({
-                  ...prev,
-                  type: value as "daily" | "weekly" | "monthly",
-                }))
-              }
-              options={[
-                { label: "Daily Maximum", value: "daily" },
-                { label: "Weekly Maximum", value: "weekly" },
-                { label: "Monthly Maximum", value: "monthly" },
-              ]}
-              placeholder="Select period type"
-              className="w-full"
-              zIndex={zIndex.popover}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
               Maximum Count
             </label>
-            <input
-              type="number"
-              min="1"
-              value={maxConfig.maxCount}
-              onChange={(e) =>
-                updateConfig("maximumCommunication", (prev) => ({
-                  ...prev,
-                  maxCount: parseInt(e.target.value) || 1,
-                }))
-              }
-              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
-            />
+            <div className="w-8" /> {/* Spacer for delete button */}
           </div>
+        )}
+        
+        <div className="space-y-2">
+          {maxCommPeriods.map((period, index) => (
+            <div
+              key={period.id}
+              className={`px-4 py-3 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
+            >
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <HeadlessSelect
+                    value={period.type}
+                    onChange={(value) => {
+                      setMaxCommPeriods((prev) =>
+                        prev.map((p) =>
+                          p.id === period.id
+                            ? { ...p, type: value as "daily" | "weekly" | "monthly" }
+                            : p
+                        )
+                      );
+                    }}
+                    options={PERIOD_OPTIONS.map((opt) => ({
+                      label: opt.label,
+                      value: opt.value,
+                      // Disable if already selected in another row (but not current row)
+                      disabled: selectedPeriodTypes.includes(opt.value) && period.type !== opt.value,
+                    }))}
+                    placeholder="Select period"
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    min="1"
+                    value={period.maxCount}
+                    onChange={(e) => {
+                      setMaxCommPeriods((prev) =>
+                        prev.map((p) =>
+                          p.id === period.id
+                            ? { ...p, maxCount: parseInt(e.target.value) || 1 }
+                            : p
+                        )
+                      );
+                    }}
+                    className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMaxCommPeriods((prev) =>
+                      prev.filter((p) => p.id !== period.id)
+                    );
+                  }}
+                  className="p-2 rounded transition-colors"
+                  style={{ color: "#dc2626" }}
+                  title="Delete period"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {maxCommPeriods.length === 0 && (
+            <p className={`${tw.caption} ${tw.textMuted} text-center py-6`}>
+              No periods added yet. Click "Add Period" to get started.
+            </p>
+          )}
         </div>
       </div>
     );
