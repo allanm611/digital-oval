@@ -786,7 +786,9 @@ export default function ServersPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedServerIds.size > 0 && (
-        <div className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedServerIds.size} server(s) selected
@@ -1056,7 +1058,9 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleHealthToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${
+                              tw.rounded
+                            } p-2 transition-colors ${
                               server.health_check_enabled
                                 ? "text-green-600 hover:bg-green-50"
                                 : "text-black hover:bg-gray-100"
@@ -1082,7 +1086,9 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleActivationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${
+                              tw.rounded
+                            } p-2 transition-colors ${
                               server.is_active
                                 ? "text-red-600 hover:bg-red-50"
                                 : "text-green-600 hover:bg-green-50"
@@ -1106,7 +1112,9 @@ export default function ServersPage() {
                           <button
                             type="button"
                             onClick={(e) => handleDeprecationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
+                            className={`relative inline-flex items-center justify-center ${
+                              tw.rounded
+                            } p-2 transition-colors ${
                               server.is_deprecated
                                 ? "text-purple-600 hover:bg-purple-50"
                                 : "text-purple-600 hover:bg-purple-50"
@@ -1141,7 +1149,9 @@ export default function ServersPage() {
       </div>
 
       {!isLoadingServers && filteredServers.length > 0 && (
-        <div className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}>
+        <div
+          className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
+        >
           <p>
             Showing {(page - 1) * PAGE_SIZE + 1}-
             {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} servers

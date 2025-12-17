@@ -130,8 +130,13 @@ export default function QuickListDetailsModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
-      <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex-1">
