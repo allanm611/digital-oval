@@ -53,9 +53,9 @@ export default function ExecuteCampaignModal({
     if (isOpen) {
       loadSegments();
     }
-  }, [isOpen, campaignId]);
+  }, [isOpen, campaignId, loadSegments]);
 
-  const loadSegments = async () => {
+  const loadSegments = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await campaignSegmentOfferService.getMappingsByCampaign(
@@ -83,7 +83,7 @@ export default function ExecuteCampaignModal({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [campaignId, showToast]);
 
   const toggleSegment = (segmentId: string) => {
     setSegments((prev) =>
@@ -280,7 +280,9 @@ export default function ExecuteCampaignModal({
               <div className="flex gap-3">
                 <button
                   onClick={() => setExecutionMode("immediate")}
-                  className={`flex-1 p-3 ${tw.rounded} border-2 transition-all ${
+                  className={`flex-1 p-3 ${
+                    tw.rounded
+                  } border-2 transition-all ${
                     executionMode === "immediate"
                       ? "border-current"
                       : "border-gray-200 hover:border-gray-300"
@@ -296,7 +298,9 @@ export default function ExecuteCampaignModal({
                 </button>
                 <button
                   onClick={() => setExecutionMode("scheduled")}
-                  className={`flex-1 p-3 ${tw.rounded} border-2 transition-all ${
+                  className={`flex-1 p-3 ${
+                    tw.rounded
+                  } border-2 transition-all ${
                     executionMode === "scheduled"
                       ? "border-current"
                       : "border-gray-200 hover:border-gray-300"
@@ -399,7 +403,9 @@ export default function ExecuteCampaignModal({
                                       channel.code
                                     )
                                   }
-                                  className={`flex items-center gap-2 px-3 py-1.5 ${tw.rounded} text-sm transition-all border-2 ${
+                                  className={`flex items-center gap-2 px-3 py-1.5 ${
+                                    tw.rounded
+                                  } text-sm transition-all border-2 ${
                                     isSelected ? "" : "hover:bg-gray-100"
                                   }`}
                                   style={

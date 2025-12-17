@@ -1,14 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  User,
-  Save,
-  Mail,
-  Phone,
-  Clock,
-  Shield,
-  X,
-  CheckCircle,
-} from "lucide-react";
+import { User, Save, X } from "lucide-react";
 import { userService } from "../services/userService";
 import { UserType, UpdateUserRequest } from "../types/user";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -199,17 +190,15 @@ export default function UserProfilePage() {
     );
   }
 
-  const statusValue =
-    (user.account_status || user.status || "unknown")?.toLowerCase() ??
-    "unknown";
+  const statusValue = (user.status || "unknown")?.toLowerCase() ?? "unknown";
   const statusLabel =
     statusValue === "unknown"
       ? t.profile.statusUnknown
       : statusValue
           .split("_")
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+          .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
           .join(" ");
-  const lastLoginValue = user.last_login_at || user.last_login || null;
+  const lastLoginValue = user.last_login || null;
 
   return (
     <div className="space-y-6">
@@ -411,9 +400,8 @@ export default function UserProfilePage() {
 
             <div>
               <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                <Phone className="w-4 h-4" />
                 {t.profile.phoneNumber}
               </label>
               {isEditing ? (
@@ -433,9 +421,8 @@ export default function UserProfilePage() {
 
             <div>
               <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                <Mail className="w-4 h-4" />
                 {t.profile.emailAddress}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
@@ -563,9 +550,8 @@ export default function UserProfilePage() {
             </div>
             <div>
               <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                <Shield className="w-4 h-4" />
                 {t.profile.dataAccessLevel}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
@@ -574,9 +560,8 @@ export default function UserProfilePage() {
             </div>
             <div>
               <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                <CheckCircle className="w-4 h-4" />
                 {t.profile.piiAccess}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>
@@ -585,9 +570,8 @@ export default function UserProfilePage() {
             </div>
             <div>
               <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1 flex items-center gap-2`}
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
-                <Clock className="w-4 h-4" />
                 {t.profile.lastLogin}
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>

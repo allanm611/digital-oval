@@ -3,6 +3,29 @@ import type {
   StepExecution,
   StepExecutionListResponse,
 } from "../types/stepExecution";
+import type {
+  ExecutionStatistics,
+  SuccessRateResponse,
+  AverageDurationResponse,
+  ErrorAnalysisItem,
+  TrendDataPoint,
+  ExecutionsByHour,
+  PeakTimes,
+  FailurePattern,
+  PerformanceSummary,
+  ExecutionDistribution,
+  StepFailureAnalysis,
+  DurationOutlier,
+  RetryAnalysis,
+  ExecutionTimelineItem,
+  SlowestExecution,
+  ResourceIssue,
+  ExecutionHeatmap,
+  AnomalyDetection,
+  ConcurrentExecutionAnalysis,
+  HealthScoreResponse,
+  ExecutionComparison,
+} from "../types/jobExecution";
 
 const BASE_URL = buildApiUrl("/step-executions");
 
@@ -633,7 +656,7 @@ class StepExecutionService {
     startDate?: string;
     endDate?: string;
     skipCache?: boolean;
-  }): Promise<any> {
+  }): Promise<ExecutionStatistics> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       jobExecutionId: params?.jobExecutionId,
@@ -641,7 +664,7 @@ class StepExecutionService {
       endDate: params?.endDate,
       skipCache: params?.skipCache ?? false,
     });
-    return this.request<any>(`/stats${query}`);
+    return this.request<ExecutionStatistics>(`/stats${query}`);
   }
 
   /**
@@ -652,13 +675,13 @@ class StepExecutionService {
     stepId?: number;
     skipCache?: boolean;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any> {
+  }): Promise<SuccessRateResponse> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       skipCache: params?.skipCache ?? true,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any>(`/success-rate${query}`);
+    return this.request<SuccessRateResponse>(`/success-rate${query}`);
   }
 
   /**
@@ -669,13 +692,13 @@ class StepExecutionService {
     stepId?: number;
     skipCache?: boolean;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any> {
+  }): Promise<AverageDurationResponse> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       skipCache: params?.skipCache ?? true,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any>(`/average-duration${query}`);
+    return this.request<AverageDurationResponse>(`/average-duration${query}`);
   }
 
   /**
@@ -685,12 +708,12 @@ class StepExecutionService {
   async getErrorAnalysis(params?: {
     // daysBack?: number; // Not supported by backend
     stepId?: number;
-  }): Promise<any[]> {
+  }): Promise<ErrorAnalysisItem[]> {
     const query = this.buildQueryString({
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
       stepId: params?.stepId,
     });
-    return this.request<any[]>(`/error-analysis${query}`);
+    return this.request<ErrorAnalysisItem[]>(`/error-analysis${query}`);
   }
 
   /**
@@ -700,12 +723,12 @@ class StepExecutionService {
   async getTrendData(params?: {
     stepId?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any[]> {
+  }): Promise<TrendDataPoint[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any[]>(`/trend-data${query}`);
+    return this.request<TrendDataPoint[]>(`/trend-data${query}`);
   }
 
   /**
@@ -715,31 +738,33 @@ class StepExecutionService {
   async getStepExecutionsByHour(params?: {
     stepId?: number;
     date?: string;
-  }): Promise<any[]> {
+  }): Promise<ExecutionsByHour[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       date: params?.date,
     });
-    return this.request<any[]>(`/by-hour${query}`);
+    return this.request<ExecutionsByHour[]>(`/by-hour${query}`);
   }
 
   /**
    * Get Peak Execution Times
    * GET /step-executions/peak-times
    */
-  async getPeakExecutionTimes(params?: { stepId?: number }): Promise<any[]> {
+  async getPeakExecutionTimes(params?: {
+    stepId?: number;
+  }): Promise<PeakTimes[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
     });
-    return this.request<any[]>(`/peak-times${query}`);
+    return this.request<PeakTimes[]>(`/peak-times${query}`);
   }
 
   /**
    * Get Failure Patterns
    * GET /step-executions/failure-patterns
    */
-  async getFailurePatterns(): Promise<any[]> {
-    return this.request<any[]>(`/failure-patterns`);
+  async getFailurePatterns(): Promise<FailurePattern[]> {
+    return this.request<FailurePattern[]>(`/failure-patterns`);
   }
 
   /**
@@ -749,20 +774,20 @@ class StepExecutionService {
   async getPerformanceSummary(params?: {
     stepId?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any> {
+  }): Promise<PerformanceSummary> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any>(`/performance-summary${query}`);
+    return this.request<PerformanceSummary>(`/performance-summary${query}`);
   }
 
   /**
    * Get Execution Distribution
    * GET /step-executions/execution-distribution
    */
-  async getExecutionDistribution(): Promise<any[]> {
-    return this.request<any[]>(`/execution-distribution`);
+  async getExecutionDistribution(): Promise<ExecutionDistribution[]> {
+    return this.request<ExecutionDistribution[]>(`/execution-distribution`);
   }
 
   /**
@@ -772,12 +797,14 @@ class StepExecutionService {
   async getStepFailureAnalysis(params?: {
     stepId?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any[]> {
+  }): Promise<StepFailureAnalysis[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any[]>(`/step-failure-analysis${query}`);
+    return this.request<StepFailureAnalysis[]>(
+      `/step-failure-analysis${query}`
+    );
   }
 
   /**
@@ -787,12 +814,12 @@ class StepExecutionService {
   async getDurationOutliers(params?: {
     stepId?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any[]> {
+  }): Promise<DurationOutlier[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any[]>(`/duration-outliers${query}`);
+    return this.request<DurationOutlier[]>(`/duration-outliers${query}`);
   }
 
   /**
@@ -802,12 +829,12 @@ class StepExecutionService {
   async getRetryAnalysis(params?: {
     stepId?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any> {
+  }): Promise<RetryAnalysis> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 14, // Commented out - not allowed by backend
     });
-    return this.request<any>(`/retry-analysis${query}`);
+    return this.request<RetryAnalysis>(`/retry-analysis${query}`);
   }
 
   /**
@@ -819,11 +846,13 @@ class StepExecutionService {
     params?: {
       limit?: number;
     }
-  ): Promise<any[]> {
+  ): Promise<ExecutionTimelineItem[]> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
     });
-    return this.request<any[]>(`/steps/${stepId}/timeline${query}`);
+    return this.request<ExecutionTimelineItem[]>(
+      `/steps/${stepId}/timeline${query}`
+    );
   }
 
   /**
@@ -833,12 +862,12 @@ class StepExecutionService {
   async getSlowestStepExecutions(params?: {
     limit?: number;
     // daysBack?: number; // Not supported by backend
-  }): Promise<any[]> {
+  }): Promise<SlowestExecution[]> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit, 100),
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<any[]>(`/slowest${query}`);
+    return this.request<SlowestExecution[]>(`/slowest${query}`);
   }
 
   /**
@@ -847,11 +876,11 @@ class StepExecutionService {
    */
   async getStepExecutionsWithResourceIssues(params?: {
     limit?: number;
-  }): Promise<any[]> {
+  }): Promise<ResourceIssue[]> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit, 100),
     });
-    return this.request<any[]>(`/resource-issues${query}`);
+    return this.request<ResourceIssue[]>(`/resource-issues${query}`);
   }
 
   /**
@@ -863,46 +892,50 @@ class StepExecutionService {
     params?: {
       currentPeriodDays?: number;
     }
-  ): Promise<any> {
+  ): Promise<ExecutionComparison> {
     const query = this.buildQueryString({
       currentPeriodDays: params?.currentPeriodDays ?? 7,
     });
-    return this.request<any>(`/steps/${stepId}/comparison${query}`);
+    return this.request<ExecutionComparison>(
+      `/steps/${stepId}/comparison${query}`
+    );
   }
 
   /**
    * Get Execution Heatmap
    * GET /step-executions/steps/:stepId/heatmap
    */
-  async getExecutionHeatmap(stepId: number): Promise<any> {
-    return this.request<any>(`/steps/${stepId}/heatmap`);
+  async getExecutionHeatmap(stepId: number): Promise<ExecutionHeatmap> {
+    return this.request<ExecutionHeatmap>(`/steps/${stepId}/heatmap`);
   }
 
   /**
    * Get Anomaly Detection
    * GET /step-executions/anomaly-detection
    */
-  async getAnomalyDetection(): Promise<any> {
-    return this.request<any>(`/anomaly-detection`);
+  async getAnomalyDetection(): Promise<AnomalyDetection> {
+    return this.request<AnomalyDetection>(`/anomaly-detection`);
   }
 
   /**
    * Get Concurrent Execution Analysis
    * GET /step-executions/concurrent-analysis
    */
-  async getConcurrentExecutionAnalysis(): Promise<any> {
-    return this.request<any>(`/concurrent-analysis`);
+  async getConcurrentExecutionAnalysis(): Promise<ConcurrentExecutionAnalysis> {
+    return this.request<ConcurrentExecutionAnalysis>(`/concurrent-analysis`);
   }
 
   /**
    * Get Execution Health Score
    * GET /step-executions/health-score
    */
-  async getExecutionHealthScore(params?: { stepId?: number }): Promise<any> {
+  async getExecutionHealthScore(params?: {
+    stepId?: number;
+  }): Promise<HealthScoreResponse> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
     });
-    return this.request<any>(`/health-score${query}`);
+    return this.request<HealthScoreResponse>(`/health-score${query}`);
   }
 
   // ==================== DELETE Endpoints ====================

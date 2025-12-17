@@ -1,7 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit, LucideIcon, Plus, Search, Trash2, X } from "lucide-react";
-import { color, tw } from "../utils/utils";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Edit,
+  LucideIcon,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
+import { color, tw, button, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -9,7 +18,6 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import HeadlessSelect from "./ui/HeadlessSelect";
-import BackButton from "./ui/BackButton";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -26,6 +34,27 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   country?: string;
   characterSet?: string;
   whatsappLanguageCode?: string;
+  // Character Set fields
+  messageType?: string;
+  characterSetType?: string;
+  characterSetSize?: number;
+  standardChars?: string;
+  doubleChars?: string;
+  tripleChars?: string;
+  quadChars?: string;
+  // Combo Type fields
+  comboResources?: Array<{
+    type: "data" | "voice" | "sms";
+    value: number;
+    unit: string;
+    sharedValidity: boolean;
+    sharedValidityHours: number;
+  }>;
+  sharedValidity?: boolean;
+  validityHours?: number;
+  price?: number; // Price for combo type
+  // Routes fields
+  communication_channel_id?: number;
 }
 
 interface MetadataFieldConfig {
@@ -69,6 +98,7 @@ export interface TypeConfigurationPageConfig {
   statusLabel?: string;
   metadataField?: MetadataFieldConfig;
   customFields?: CustomFieldConfig[];
+  hideFields?: string[];
   deleteConfirmTitle: string;
   deleteConfirmMessage: (name: string) => string;
   deleteSuccessMessage: (name: string) => string;
@@ -76,6 +106,8 @@ export interface TypeConfigurationPageConfig {
   updateSuccessMessage: string;
   deleteErrorMessage: string;
   saveErrorMessage: string;
+  disableCreate?: boolean;
+  disableDelete?: boolean;
 }
 
 interface TypeConfigurationModalProps {
@@ -116,7 +148,7 @@ function TypeConfigurationModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [metadataValue, setMetadataValue] = useState<string>("");
+  const [metadataValue, setMetadataValue] = useState<string | number>("");
   // Template content fields (for Creative Templates)
   const [title, setTitle] = useState("");
   const [textBody, setTextBody] = useState("");
@@ -129,9 +161,26 @@ function TypeConfigurationModal({
   const isCreativeTemplate = config.configType === "creativeTemplates";
   const isLanguage = config.configType === "languages";
   const isCharacterSet = config.configType === "characterSets";
+  const isComboType = config.configType === "comboTypes";
+  const isSmsRoutes = config.configType === "smsRoutes";
+  const isRoutes = config.configType === "routes";
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
+
+  // Combo types fields
+  const [comboResources, setComboResources] = useState<
+    Array<{
+      type: "data" | "voice" | "sms";
+      value: number;
+      unit: string;
+      sharedValidity: boolean;
+      sharedValidityHours: number;
+    }>
+  >([]);
+  const [comboSharedValidity, setComboSharedValidity] = useState(true);
+  const [comboValidityHours, setComboValidityHours] = useState<number>(720);
+  const [comboPrice, setComboPrice] = useState<number | undefined>(undefined);
 
   // Load languages for template locale selection
   const languages = isCreativeTemplate
@@ -174,13 +223,26 @@ function TypeConfigurationModal({
         );
         setLocale(item.locale || "");
       }
-      if ((isLanguage || isCharacterSet) && config.customFields) {
+      if (
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        config.customFields
+      ) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] =
-            ((item as Record<string, unknown>)[field.fieldKey] as string) || "";
+            String(
+              (item as TypeConfigurationItem)[
+                field.fieldKey as keyof TypeConfigurationItem
+              ]
+            ) || "";
         });
         setCustomFields(fields);
+      }
+      if (isComboType) {
+        setComboResources(item.comboResources || []);
+        setComboSharedValidity(item.sharedValidity ?? true);
+        setComboValidityHours(item.validityHours ?? 720);
+        setComboPrice(item.price);
       }
     } else {
       setName("");
@@ -194,12 +256,21 @@ function TypeConfigurationModal({
         setVariablesText("");
         setLocale("");
       }
-      if ((isLanguage || isCharacterSet) && config.customFields) {
+      if (
+        (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+        config.customFields
+      ) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] = "";
         });
         setCustomFields(fields);
+      }
+      if (isComboType) {
+        setComboResources([]);
+        setComboSharedValidity(true);
+        setComboValidityHours(720);
+        setComboPrice(undefined);
       }
     }
     setError("");
@@ -209,6 +280,9 @@ function TypeConfigurationModal({
     isCreativeTemplate,
     isLanguage,
     isCharacterSet,
+    isComboType,
+    isSmsRoutes,
+    isRoutes,
     config.customFields,
   ]);
 
@@ -301,8 +375,11 @@ function TypeConfigurationModal({
       payload.locale = locale.trim() || undefined;
     }
 
-    // Add custom fields for languages and character sets
-    if ((isLanguage || isCharacterSet) && config.customFields) {
+    // Add custom fields for languages, character sets, SMS routes, and routes
+    if (
+      (isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+      config.customFields
+    ) {
       for (const field of config.customFields) {
         const value = customFields[field.fieldKey]?.trim() || "";
         if (field.required && !value) {
@@ -311,6 +388,14 @@ function TypeConfigurationModal({
         }
         payload[field.fieldKey] = value || undefined;
       }
+    }
+
+    // Add combo type fields
+    if (isComboType) {
+      payload.comboResources = comboResources;
+      payload.sharedValidity = comboSharedValidity;
+      payload.validityHours = comboValidityHours;
+      payload.price = comboPrice;
     }
 
     if (
@@ -331,13 +416,17 @@ function TypeConfigurationModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
       <div
         className={`${tw.rounded} shadow-2xl w-full bg-white ${
           isCreativeTemplate
             ? "max-w-4xl max-h-[90vh] flex flex-col"
             : isLanguage
             ? "max-w-lg"
+            : isComboType
+            ? "max-w-2xl"
+            : isSmsRoutes
+            ? "max-w-md"
             : "max-w-md"
         }`}
       >
@@ -400,23 +489,34 @@ function TypeConfigurationModal({
             />
           </div>
 
-          {config.metadataField && (
+          {/* Hide metadata field for combo types (Active Combos is just tracking) */}
+          {config.metadataField && !isComboType && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {config.metadataField.label}
               </label>
               {config.metadataField.type === "select" ? (
                 <HeadlessSelect
-                  value={metadataValue}
-                  onChange={(value) => setMetadataValue(value || "")}
+                  value={String(metadataValue || "")}
+                  onChange={(value: string | number) =>
+                    setMetadataValue(value || "")
+                  }
                   options={config.metadataField.options || []}
                   placeholder={config.metadataField.placeholder}
                 />
               ) : (
                 <input
                   type={config.metadataField.type}
-                  value={metadataValue}
-                  onChange={(e) => setMetadataValue(e.target.value)}
+                  value={String(metadataValue || "")}
+                  onChange={(e) =>
+                    setMetadataValue(
+                      config.metadataField?.type === "number"
+                        ? e.target.value
+                          ? parseFloat(e.target.value)
+                          : ""
+                        : e.target.value
+                    )
+                  }
                   className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                   placeholder={config.metadataField.placeholder}
                 />
@@ -424,83 +524,91 @@ function TypeConfigurationModal({
             </div>
           )}
 
-          {/* Custom Fields (for Languages and Character Sets) */}
-          {(isLanguage || isCharacterSet) && config.customFields && (
-            <>
-              {config.customFields.map((field, index) => (
-                <div
-                  key={field.fieldKey}
-                  style={{
-                    position: "relative",
-                    zIndex: config.customFields!.length - index,
-                  }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {field.label} {field.required && "*"}
-                  </label>
-                  {field.type === "select" ? (
-                    <HeadlessSelect
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(value) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: value || "",
-                        }))
-                      }
-                      options={
-                        field.dynamicOptions === "characterSets"
-                          ? getCharacterSetsOptions()
-                          : field.options || []
-                      }
-                      placeholder={field.placeholder}
-                    />
-                  ) : field.type === "number" ? (
-                    <input
-                      type="number"
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  ) : field.type === "textarea" ? (
-                    <textarea
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      rows={3}
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={customFields[field.fieldKey] || ""}
-                      onChange={(e) =>
-                        setCustomFields((prev) => ({
-                          ...prev,
-                          [field.fieldKey]: e.target.value,
-                        }))
-                      }
-                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
-                      placeholder={field.placeholder}
-                      required={field.required}
-                    />
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+          {/* Custom Fields (for Languages, Character Sets, SMS Routes, and Routes) */}
+          {(isLanguage || isCharacterSet || isSmsRoutes || isRoutes) &&
+            config.customFields && (
+              <>
+                {config.customFields
+                  .filter(
+                    (field) => !config.hideFields?.includes(field.fieldKey)
+                  )
+                  .map((field, index) => (
+                    <div
+                      key={field.fieldKey}
+                      style={{
+                        position: "relative",
+                        zIndex: config.customFields!.length - index,
+                      }}
+                    >
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} {field.required && "*"}
+                      </label>
+                      {field.type === "select" ? (
+                        <HeadlessSelect
+                          value={String(customFields[field.fieldKey] || "")}
+                          onChange={(value) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: String(value || ""),
+                            }))
+                          }
+                          options={
+                            field.dynamicOptions === "characterSets"
+                              ? getCharacterSetsOptions()
+                              : field.options || []
+                          }
+                          placeholder={field.placeholder}
+                          zIndex={
+                            10020 + (config.customFields!.length - index) * 10
+                          }
+                        />
+                      ) : field.type === "number" ? (
+                        <input
+                          type="number"
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      ) : field.type === "textarea" ? (
+                        <textarea
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          rows={3}
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={customFields[field.fieldKey] || ""}
+                          onChange={(e) =>
+                            setCustomFields((prev) => ({
+                              ...prev,
+                              [field.fieldKey]: e.target.value,
+                            }))
+                          }
+                          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                          placeholder={field.placeholder}
+                          required={field.required}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </>
+            )}
 
           {/* Template Content Fields (for Creative Templates only) */}
           {isCreativeTemplate && (
@@ -516,8 +624,8 @@ function TypeConfigurationModal({
                   {t.genericConfig.languageOptional}
                 </label>
                 <HeadlessSelect
-                  value={locale}
-                  onChange={(value) => setLocale(value || "")}
+                  value={String(locale || "")}
+                  onChange={(value) => setLocale(String(value || ""))}
                   options={[
                     {
                       value: "",
@@ -526,7 +634,7 @@ function TypeConfigurationModal({
                     ...(languages as TypeConfigurationItem[])
                       .filter((lang) => lang.isActive)
                       .map((lang) => ({
-                        value: lang.metadataValue as string,
+                        value: String(lang.metadataValue || ""),
                         label: lang.name,
                       })),
                   ]}
@@ -617,6 +725,275 @@ function TypeConfigurationModal({
             </>
           )}
 
+          {/* Combo Type Fields */}
+          {isComboType && (
+            <>
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                Resources
+              </h3>
+
+              {/* Combo Resources List - Compact Grid */}
+              <div className="grid gap-2 ">
+                {comboResources.map((resource, idx) => (
+                  <div
+                    key={idx}
+                    className={`grid gap-2 items-center bg-gray-50 p-3 rounded border border-gray-200 ${
+                      comboSharedValidity ? "grid-cols-3" : "grid-cols-4"
+                    }`}
+                  >
+                    <div className="col-span-1">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {resource.type === "data"
+                          ? "Data"
+                          : resource.type === "voice"
+                          ? "Voice"
+                          : "SMS"}
+                      </p>
+                      <p className="text-sm text-gray-500">{resource.unit}</p>
+                    </div>
+                    <input
+                      type="number"
+                      value={resource.value}
+                      onChange={(e) => {
+                        const updated = [...comboResources];
+                        updated[idx].value = parseInt(e.target.value) || 0;
+                        setComboResources(updated);
+                      }}
+                      className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                      placeholder="Value"
+                    />
+                    {!comboSharedValidity && (
+                      <input
+                        type="number"
+                        value={resource.sharedValidityHours}
+                        onChange={(e) => {
+                          const updated = [...comboResources];
+                          updated[idx].sharedValidityHours =
+                            parseInt(e.target.value) || 0;
+                          setComboResources(updated);
+                        }}
+                        className="col-span-1 px-3 py-2 border border-gray-300 rounded text-sm"
+                        placeholder="Hours"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setComboResources(
+                          comboResources.filter((_, i) => i !== idx)
+                        );
+                      }}
+                      className="col-span-1 flex justify-center items-center text-red-600 hover:text-red-700"
+                      aria-label="Delete resource"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Resource Buttons - Inline */}
+              <div className="flex justify-between gap-3 mb-4 w-full">
+                {!comboResources.some((r) => r.type === "data") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "data",
+                          value: 5,
+                          unit: "data_mb",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
+                  >
+                    + Data
+                  </button>
+                )}
+                {!comboResources.some((r) => r.type === "voice") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "voice",
+                          value: 500,
+                          unit: "onnet_minutes",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
+                  >
+                    + Voice
+                  </button>
+                )}
+                {!comboResources.some((r) => r.type === "sms") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "sms",
+                          value: 100,
+                          unit: "sms_count",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    style={{
+                      background: button.bordered.background,
+                      color: button.bordered.color,
+                      border: button.bordered.border,
+                      paddingTop: button.bordered.paddingY,
+                      paddingBottom: button.bordered.paddingY,
+                      paddingLeft: button.bordered.paddingX,
+                      paddingRight: button.bordered.paddingX,
+                      borderRadius: button.bordered.borderRadius,
+                      fontSize: button.bordered.fontSize,
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                      flex: 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(37, 40, 41, 0.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        button.bordered.background;
+                    }}
+                  >
+                    + SMS
+                  </button>
+                )}
+              </div>
+
+              {/* Validity & Price - 2 Column Layout */}
+              <div className="pt-3 mt-3">
+                <label className="flex items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={comboSharedValidity}
+                    onChange={(e) => {
+                      setComboSharedValidity(e.target.checked);
+                      setComboResources(
+                        comboResources.map((r) => ({
+                          ...r,
+                          sharedValidity: e.target.checked,
+                        }))
+                      );
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Shared Validity
+                  </span>
+                </label>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {comboSharedValidity && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Validity Hours
+                      </label>
+                      <input
+                        type="number"
+                        value={comboValidityHours}
+                        onChange={(e) => {
+                          const newHours = parseInt(e.target.value) || 0;
+                          setComboValidityHours(newHours);
+                          setComboResources(
+                            comboResources.map((r) => ({
+                              ...r,
+                              sharedValidityHours: newHours,
+                            }))
+                          );
+                        }}
+                        className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                        placeholder="e.g., 720"
+                      />
+                    </div>
+                  )}
+
+                  <div className={comboSharedValidity ? "" : "col-span-2"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Combo Price <span className="text-red-600">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={comboPrice ?? ""}
+                      onChange={(e) =>
+                        setComboPrice(
+                          e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined
+                        )
+                      }
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      placeholder="Enter price"
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {error && (
             <div
               className={`mt-2 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
@@ -655,11 +1032,14 @@ function TypeConfigurationModal({
 
 interface TypeConfigurationPageProps {
   config: TypeConfigurationPageConfig;
+  onRowClick?: (itemName: string, item: TypeConfigurationItem) => void;
 }
 
 export default function TypeConfigurationPage({
   config,
+  onRowClick,
 }: TypeConfigurationPageProps) {
+  const navigate = useNavigate();
   const { confirm } = useConfirm();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
@@ -679,6 +1059,9 @@ export default function TypeConfigurationPage({
     TypeConfigurationItem | undefined
   >();
   const [isSaving, setIsSaving] = useState(false);
+
+  // Config type checks for conditional rendering
+  const isRoutes = config.configType === "routes";
 
   useEffect(() => {
     if (config.configType) {
@@ -780,7 +1163,13 @@ export default function TypeConfigurationPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo={config.backPath} />
+          <button
+            onClick={() => navigate(config.backPath)}
+            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
@@ -791,14 +1180,16 @@ export default function TypeConfigurationPage({
           </div>
         </div>
         <div className="flex items-center gap-3 w-auto">
-          <button
-            onClick={handleCreateItem}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {config.createButtonText}
-          </button>
+          {!config.disableCreate && (
+            <button
+              onClick={handleCreateItem}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              {config.createButtonText}
+            </button>
+          )}
         </div>
       </div>
 
@@ -833,7 +1224,7 @@ export default function TypeConfigurationPage({
                 ? "Try adjusting your search terms."
                 : `Create your first ${config.entityName} to get started.`}
             </p>
-            {!searchTerm && (
+            {!searchTerm && !config.disableCreate && (
               <button
                 onClick={handleCreateItem}
                 className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
@@ -884,6 +1275,15 @@ export default function TypeConfigurationPage({
                       >
                         Character Set Type
                       </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.statusLabel || "Status"}
+                      </th>
                     </>
                   ) : (
                     <>
@@ -896,7 +1296,30 @@ export default function TypeConfigurationPage({
                       >
                         Description
                       </th>
-                      {config.metadataField && (
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.statusLabel || "Status"}
+                      </th>
+                      {/* Hide metadata header for combo types */}
+                      {config.metadataField &&
+                        !config.configType?.includes("comboTypes") && (
+                          <th
+                            className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                            style={{
+                              color: color.surface.tableHeaderText,
+                              backgroundColor: color.surface.tableHeader,
+                            }}
+                          >
+                            {config.metadataField.label}
+                          </th>
+                        )}
+                      {/* Communication Channel header for routes */}
+                      {isRoutes && (
                         <th
                           className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                           style={{
@@ -904,7 +1327,7 @@ export default function TypeConfigurationPage({
                             backgroundColor: color.surface.tableHeader,
                           }}
                         >
-                          {config.metadataField.label}
+                          Channel
                         </th>
                       )}
                     </>
@@ -924,7 +1347,12 @@ export default function TypeConfigurationPage({
 
               <tbody>
                 {filteredItems.map((item) => (
-                  <tr key={item.id} className="transition-colors">
+                  <tr
+                    key={item.id}
+                    className="transition-colors"
+                    onClick={() => onRowClick?.(item.name, item)}
+                    style={onRowClick ? { cursor: "pointer" } : undefined}
+                  >
                     <td
                       className="px-6 py-4"
                       style={{
@@ -955,8 +1383,10 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <div className={`text-sm ${tw.textPrimary}`}>
-                            {(item as unknown as Record<string, unknown>)
-                              .messageType || "—"}
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .messageType || "—"
+                            )}
                           </div>
                         </td>
                         <td
@@ -966,9 +1396,23 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <div className={`text-sm ${tw.textPrimary}`}>
-                            {(item as unknown as Record<string, unknown>)
-                              .characterSetType || "—"}
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .characterSetType || "—"
+                            )}
                           </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {item.isActive ?? true
+                              ? t.genericConfig.active
+                              : t.genericConfig.inactive}
+                          </span>
                         </td>
                       </>
                     ) : (
@@ -985,7 +1429,34 @@ export default function TypeConfigurationPage({
                             {item.description || t.genericConfig.noDescription}
                           </div>
                         </td>
-                        {config.metadataField && (
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {item.isActive ?? true
+                              ? t.genericConfig.active
+                              : t.genericConfig.inactive}
+                          </span>
+                        </td>
+                        {/* Hide metadata column for combo types */}
+                        {config.metadataField &&
+                          !config.configType?.includes("comboTypes") && (
+                            <td
+                              className="px-6 py-4"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              <div className={`text-sm ${tw.textPrimary}`}>
+                                {item.metadataValue ?? "—"}
+                              </div>
+                            </td>
+                          )}
+                        {/* Communication Channel column for routes */}
+                        {isRoutes && (
                           <td
                             className="px-6 py-4"
                             style={{
@@ -993,26 +1464,27 @@ export default function TypeConfigurationPage({
                             }}
                           >
                             <div className={`text-sm ${tw.textPrimary}`}>
-                              {item.metadataValue ?? "—"}
+                              {(() => {
+                                const channelId = (
+                                  item as unknown as Record<string, unknown>
+                                ).communication_channel_id;
+                                if (!channelId) return "—";
+                                // Find channel name from hardcoded data
+                                const hardcodedChannels = (config
+                                  .customFields?.[0]?.options || []) as Array<{
+                                  value: string;
+                                  label: string;
+                                }>;
+                                const channel = hardcodedChannels.find(
+                                  (ch) => ch.value === String(channelId)
+                                );
+                                return channel?.label || "—";
+                              })()}
                             </div>
                           </td>
                         )}
                       </>
                     )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {item.isActive ?? true
-                          ? t.genericConfig.active
-                          : t.genericConfig.inactive}
-                      </span>
-                    </td>
                     <td
                       className="px-6 py-4 text-right"
                       style={{
@@ -1040,13 +1512,15 @@ export default function TypeConfigurationPage({
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteItem(item)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title="Delete template"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {!config.disableDelete && (
+                          <button
+                            onClick={() => handleDeleteItem(item)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            title="Delete template"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

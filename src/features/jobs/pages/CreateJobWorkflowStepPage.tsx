@@ -79,10 +79,12 @@ export default function CreateJobWorkflowStepPage() {
     userId: user?.user_id || 0,
   });
 
-const [errors, setErrors] = useState<Record<string, string>>({});
-const [existingStepOrders, setExistingStepOrders] = useState<number[]>([]);
-const [originalStepOrder, setOriginalStepOrder] = useState<number | null>(null);
-const [newDependency, setNewDependency] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [existingStepOrders, setExistingStepOrders] = useState<number[]>([]);
+  const [originalStepOrder, setOriginalStepOrder] = useState<number | null>(
+    null
+  );
+  const [newDependency, setNewDependency] = useState("");
   // Batch create state
   const [batchSteps, setBatchSteps] = useState<
     Array<Partial<CreateJobWorkflowStepPayload>>
@@ -232,9 +234,13 @@ const [newDependency, setNewDependency] = useState("");
               idx + 1
             }: Order must be at least 1`;
           } else if (existingSet.has(step.step_order)) {
-            newErrors[`batch_step_${idx}_order`] = `Step order ${step.step_order} is already used in this job`;
+            newErrors[
+              `batch_step_${idx}_order`
+            ] = `Step order ${step.step_order} is already used in this job`;
           } else if (seenOrders.has(step.step_order)) {
-            newErrors[`batch_step_${idx}_order`] = `Step order ${step.step_order} is duplicated in this batch`;
+            newErrors[
+              `batch_step_${idx}_order`
+            ] = `Step order ${step.step_order} is duplicated in this batch`;
           } else {
             seenOrders.add(step.step_order);
           }
@@ -261,10 +267,11 @@ const [newDependency, setNewDependency] = useState("");
       } else if (formData.job_id && existingStepOrders.length > 0) {
         // Check if step order already exists for this job
         // In edit mode, exclude the current step's original order
-        const ordersToCheck = isEditMode && originalStepOrder !== null
-          ? existingStepOrders.filter((order) => order !== originalStepOrder)
-          : existingStepOrders;
-        
+        const ordersToCheck =
+          isEditMode && originalStepOrder !== null
+            ? existingStepOrders.filter((order) => order !== originalStepOrder)
+            : existingStepOrders;
+
         if (ordersToCheck.includes(formData.step_order)) {
           newErrors.step_order = `Step order ${formData.step_order} already exists for this job`;
         }
@@ -290,7 +297,7 @@ const [newDependency, setNewDependency] = useState("");
     try {
       if (isEditMode && id) {
         // Backend does not allow changing job_id on update; omit it from payload
-        const { job_id, userId, ...rest } = formData;
+        const { ...rest } = formData;
         const updatePayload: UpdateJobWorkflowStepPayload = {
           ...rest,
           depends_on_step_codes: formData.depends_on_step_codes || [],
@@ -838,7 +845,9 @@ const [newDependency, setNewDependency] = useState("");
                       }
                       rows={3}
                       className={`w-full ${tw.rounded} border ${
-                        errors.step_description ? "border-red-300" : "border-gray-300"
+                        errors.step_description
+                          ? "border-red-300"
+                          : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                       placeholder="Enter step description"
                     />

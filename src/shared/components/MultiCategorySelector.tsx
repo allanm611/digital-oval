@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Search, Plus, X, Check } from "lucide-react";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color , tw} from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 
 interface MultiCategorySelectorProps {
   value?: number[]; // Array of selected category IDs
@@ -34,15 +35,20 @@ export default function MultiCategorySelector({
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside both the button AND the portal dropdown
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(event.target as Node) &&
+        portalRef.current &&
+        !portalRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setSearchTerm("");
@@ -52,6 +58,32 @@ export default function MultiCategorySelector({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Update dropdown position on scroll/resize
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isOpen && dropdownRef.current) {
+        const rect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
+        if (rect) {
+          setDropdownPosition({
+            top: rect.bottom + 4,
+            left: rect.left,
+            width: rect.width,
+          });
+        }
+      }
+    };
+
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener("scroll", updatePosition);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -272,8 +304,18 @@ export default function MultiCategorySelector({
         )}
       </div>
 
-      {isOpen && (
-        <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
+      {isOpen && createPortal(
+        <div
+          ref={portalRef}
+          style={{
+            position: "fixed",
+            top: `${dropdownRef.current?.getBoundingClientRect().bottom || 0}px`,
+            left: `${dropdownRef.current?.getBoundingClientRect().left || 0}px`,
+            width: `${dropdownRef.current?.getBoundingClientRect().width || 0}px`,
+            zIndex: zIndex.dropdown,
+          }}
+          className={`bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+        >
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -359,7 +401,8 @@ export default function MultiCategorySelector({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

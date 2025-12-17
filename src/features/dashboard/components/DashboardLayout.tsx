@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "../../../shared/components/Footer";
-import { tw } from "../../../shared/utils/utils";
+import { tw, zIndex } from "../../../shared/utils/utils";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,7 +22,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           {children}
         </main>
-        <div className="fixed bottom-0 left-0 md:left-32 xl:left-80 right-0 z-[100]">
+        <div
+          className="fixed bottom-0 left-0 md:left-32 xl:left-80 right-0"
+          style={{ zIndex: zIndex.base }}
+        >
           <Footer />
         </div>
       </div>

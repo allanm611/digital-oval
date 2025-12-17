@@ -6,7 +6,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Activity,
   RefreshCw,
   Ban,
   RotateCcw,
@@ -16,6 +15,7 @@ import {
 import { useAuth } from "../../../contexts/AuthContext";
 import { stepExecutionService } from "../services/stepExecutionService";
 import { StepExecution } from "../types/stepExecution";
+import { ExecutionProgress, ResourceUsage } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -69,8 +69,10 @@ export default function StepExecutionDetailsPage() {
     ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
   const [execution, setExecution] = useState<StepExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState<any>(null);
-  const [resourceUsage, setResourceUsage] = useState<any>(null);
+  const [progress, setProgress] = useState<ExecutionProgress | null>(null);
+  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(
+    null
+  );
   const [runningDuration, setRunningDuration] = useState<number | null>(null);
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
 

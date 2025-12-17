@@ -18,6 +18,7 @@ import {
   CampaignOffer,
   ControlGroup,
   CampaignScheduling,
+  BackendCampaignType,
 } from "../types/campaign";
 import { CreateCampaignRequest } from "../types/createCampaign";
 
@@ -218,8 +219,9 @@ export default function CreateCampaignPage() {
       }
       try {
         const response = await campaignService.getCampaignById(campaignId);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const campaign = (response as { data?: any } | any).data || response;
+        const campaign =
+          (response as { data?: BackendCampaignType } | BackendCampaignType)
+            .data || response;
 
         // Only set form data if not already populated from state
         if (!skipFormData) {
@@ -485,8 +487,9 @@ export default function CreateCampaignPage() {
       setIsDuplicateMode(false);
 
       // Check if campaign data is passed via location.state (from details page)
-      const campaignFromState = (location.state as { campaign?: any })
-        ?.campaign;
+      const campaignFromState = (
+        location.state as { campaign?: BackendCampaignType }
+      )?.campaign;
       if (campaignFromState) {
         // Use passed data to populate form immediately
         hasRestoredDataRef.current = true;

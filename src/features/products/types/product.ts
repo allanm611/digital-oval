@@ -21,6 +21,26 @@ export type ProductOfferCategory =
   | "loyalty"
   | "other";
 
+// Combo resource types
+export type ComboResourceType = "data" | "voice" | "sms";
+
+// Combo resource structure
+export interface ComboResource {
+  resource_type: ComboResourceType;
+  unit: ProductUnit;
+  unit_value: number;
+  validity_hours?: number; // Individual validity (if not using shared)
+}
+
+// Combo product structure
+export interface ComboProductData {
+  combo_type_id?: number; // Reference to the selected combo type
+  resources: ComboResource[];
+  shared_validity?: boolean; // true = all resources share same validity, false = individual validity
+  shared_validity_hours?: number; // Validity when shared_validity is true
+  price?: number; // Price for the entire combo
+}
+
 export interface Product {
   id: number;
   product_uuid: string;
@@ -29,6 +49,7 @@ export interface Product {
   name: string;
   description?: string;
   category_id?: number;
+  product_type_id?: number; // Reference to product type
   price: number;
   currency: string;
   scope?: ProductScope;
@@ -56,6 +77,7 @@ export interface CreateProductRequest {
   name: string;
   description?: string;
   category_id?: number;
+  product_type_id?: number;
   price: number;
   currency?: string;
   scope?: ProductScope;
@@ -71,6 +93,8 @@ export interface CreateProductRequest {
   effective_to?: string;
   da_id?: string;
   metadata?: Record<string, unknown>;
+  tags?: string[]; // Array of tags for the product
+  combo_data?: ComboProductData; // For combo products
   created_by?: number;
 }
 
@@ -79,6 +103,7 @@ export interface UpdateProductRequest {
   name?: string;
   description?: string;
   category_id?: number;
+  product_type_id?: number;
   price?: number;
   currency?: string;
   scope?: ProductScope;
@@ -95,6 +120,8 @@ export interface UpdateProductRequest {
   da_id?: string;
   is_active?: boolean;
   metadata?: Record<string, unknown>;
+  tags?: string[]; // Array of tags for the product
+  combo_data?: ComboProductData; // For combo products
   updated_by?: number;
 }
 

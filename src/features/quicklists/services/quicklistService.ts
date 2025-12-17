@@ -37,7 +37,7 @@ class QuickListService {
     let data;
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch (_) {
       // If response is not JSON, treat as error
       console.error("API Error Response (non-JSON):", {
         status: response.status,
@@ -159,7 +159,7 @@ class QuickListService {
     let data;
     try {
       data = JSON.parse(text);
-    } catch (e) {
+    } catch (_) {
       // If response is not JSON, treat as error
       console.error("API Error Response (non-JSON):", {
         status: response.status,
@@ -247,7 +247,7 @@ class QuickListService {
         if (errorJson.error) {
           errorMessage = errorJson.error;
         }
-      } catch (e) {
+      } catch (_) {
         // If error is not JSON, use the text as-is
         if (errorText) {
           errorMessage = errorText;

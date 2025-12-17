@@ -44,7 +44,7 @@ class ServerService {
     let parsed: unknown;
     try {
       parsed = JSON.parse(responseText);
-    } catch (error) {
+    } catch (_) {
       throw new Error(
         `Invalid JSON response from servers API. First 200 chars: ${responseText.substring(
           0,

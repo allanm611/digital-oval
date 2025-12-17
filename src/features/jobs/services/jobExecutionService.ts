@@ -65,10 +65,6 @@ class JobExecutionService {
     options: RequestInit = {}
   ): Promise<T> {
     const fullUrl = `${BASE_URL}${endpoint}`;
-    const isPostOrPut =
-      options.method === "POST" ||
-      options.method === "PUT" ||
-      options.method === "PATCH";
 
     const response = await fetch(fullUrl, {
       ...options,

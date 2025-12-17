@@ -1,13 +1,20 @@
 import offerService from "../../offers/services/offerService";
 import { segmentService } from "../../segments/services/segmentService";
 import campaignService from "../../campaigns/services/campaignService";
-import { Campaign } from "../../campaigns/types/campaign";
 
 export interface DashboardStats {
   totalOffers: number;
   totalSegments: number;
   activeCampaigns: number;
   conversionRate: number;
+}
+
+interface CampaignStatsData {
+  overview?: Record<string, unknown>;
+  activity_status?: Record<string, unknown>;
+  status_breakdown?: Record<string, unknown>;
+  active_campaigns?: number;
+  currently_active?: number;
 }
 
 class DashboardService {
@@ -47,7 +54,7 @@ class DashboardService {
         );
 
         if (campaignStatsResponse.success && campaignStatsResponse.data) {
-          const stats = campaignStatsResponse.data as any;
+          const stats = campaignStatsResponse.data as CampaignStatsData;
           const overview = stats.overview ?? {};
           const activityStatus = stats.activity_status ?? {};
           const statusBreakdown = stats.status_breakdown ?? {};

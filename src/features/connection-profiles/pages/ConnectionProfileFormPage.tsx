@@ -8,6 +8,10 @@ import {
   ConnectionProfileType,
   CreateConnectionProfilePayload,
   UpdateConnectionProfilePayload,
+  ConnectionTypeEnum,
+  LoadStrategyEnum,
+  EnvironmentEnum,
+  DataClassificationEnum,
 } from "../types/connectionProfile";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -56,12 +60,7 @@ export default function ConnectionProfileFormPage({
     if (mode === "edit" && id) {
       loadProfile();
     }
-  }, [mode, id]);
-
-  const isLookupNotFoundError = (error: unknown) => {
-    const message = error instanceof Error ? error.message.toLowerCase() : "";
-    return message.includes("not found") || message.includes("404");
-  };
+  }, [mode, id, loadProfile]);
 
   const ensureUniqueIdentifiers = async () => {
     // Note: Backend doesn't have /name/{name} or /code/{code} endpoints
@@ -69,7 +68,7 @@ export default function ConnectionProfileFormPage({
     // This function is kept for potential future use but doesn't make API calls
   };
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -115,7 +114,7 @@ export default function ConnectionProfileFormPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showError]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,7 +266,8 @@ export default function ConnectionProfileFormPage({
                 onChange={(value) =>
                   setFormData({
                     ...formData,
-                    connection_type: (value || "database") as any,
+                    connection_type: (value ||
+                      "database") as ConnectionTypeEnum,
                   })
                 }
               />
@@ -286,7 +286,7 @@ export default function ConnectionProfileFormPage({
                 onChange={(value) =>
                   setFormData({
                     ...formData,
-                    environment: (value || "development") as any,
+                    environment: (value || "development") as EnvironmentEnum,
                   })
                 }
               />
@@ -309,7 +309,7 @@ export default function ConnectionProfileFormPage({
                 onChange={(value) =>
                   setFormData({
                     ...formData,
-                    load_strategy: (value || "full") as any,
+                    load_strategy: (value || "full") as LoadStrategyEnum,
                   })
                 }
               />
@@ -476,7 +476,8 @@ export default function ConnectionProfileFormPage({
                 onChange={(value) =>
                   setFormData({
                     ...formData,
-                    data_classification: (value || "internal") as any,
+                    data_classification: (value ||
+                      "internal") as DataClassificationEnum,
                   })
                 }
               />

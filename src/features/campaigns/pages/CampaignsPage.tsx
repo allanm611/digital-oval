@@ -21,8 +21,6 @@ import {
   Target,
   Clock,
   AlertCircle,
-  History,
-  Copy,
   BarChart3,
 } from "lucide-react";
 import { color, tw, button, zIndexTokens } from "../../../shared/utils/utils";
@@ -578,7 +576,6 @@ export default function CampaignsPage() {
         const data = response.data as CampaignStatsSummary;
         const overview = data.overview ?? {};
         const statusBreakdown = data.status_breakdown ?? {};
-        const approvalBreakdown = data.approval_status_breakdown ?? {};
         const activityStatus = data.activity_status ?? {};
 
         const total =

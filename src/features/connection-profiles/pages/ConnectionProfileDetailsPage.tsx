@@ -2,9 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Edit,
-  Database,
-  Server,
-  Activity,
   Shield,
   CheckCircle,
   XCircle,
@@ -49,7 +46,6 @@ export default function ConnectionProfileDetailsPage() {
     valid_to: "",
   });
   const [validitySaving, setValiditySaving] = useState(false);
-  const [validityStatus, setValidityStatus] = useState<boolean | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -69,7 +65,7 @@ export default function ConnectionProfileDetailsPage() {
     if (id) {
       loadProfile();
     }
-  }, [id]);
+  }, [id, loadProfile]);
 
   // Close more menu when clicking outside
   useEffect(() => {
@@ -91,7 +87,7 @@ export default function ConnectionProfileDetailsPage() {
     };
   }, [showMoreMenu]);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!id) return;
 
     try {
@@ -115,22 +111,11 @@ export default function ConnectionProfileDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, showError]);
 
   const handleEdit = () => {
     if (id) {
       navigate(`/dashboard/connection-profiles/${id}/edit`);
-    }
-  };
-
-  const getConnectionTypeIcon = (type: string) => {
-    switch (type) {
-      case "database":
-        return Database;
-      case "api":
-        return Activity;
-      default:
-        return Server;
     }
   };
 
@@ -283,8 +268,6 @@ export default function ConnectionProfileDetailsPage() {
       </div>
     );
   }
-
-  const Icon = getConnectionTypeIcon(profile.connection_type);
 
   return (
     <div className="space-y-6">

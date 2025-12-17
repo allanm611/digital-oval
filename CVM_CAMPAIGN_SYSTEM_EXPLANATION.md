@@ -3251,4 +3251,877 @@ broadcast_recipients
 
 ---
 
+## Infrastructure in the CVM System
+
+### What is Infrastructure?
+
+**Infrastructure** in the CVM system refers to the backend servers and database connections that power the entire platform. It's the foundation that enables all CVM operations - from storing customer data to executing campaigns and sending messages.
+
+### Infrastructure Components:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│              INFRASTRUCTURE COMPONENTS                   │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  1. SERVERS                                              │
+│     └─ Backend servers that the CVM system connects to  │
+│        (API servers, database servers, message gateways) │
+│                                                           │
+│  2. CONNECTION PROFILES                                  │
+│     └─ Database connection configurations                │
+│        (How to connect to customer data sources)        │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 1. Servers
+
+**Servers** are the backend infrastructure endpoints that the CVM platform uses to:
+- Store and retrieve customer data
+- Execute campaign jobs
+- Send messages (SMS, Email, Push)
+- Process analytics and tracking
+
+#### Server Structure:
+
+```javascript
+// Example: Production Database Server
+{
+  id: 1,
+  name: "Production Customer Database",
+  code: "PROD-DB-01",
+  server_type: "database",
+  environment: "prod",
+  region: "Africa/Nairobi",
+  protocol: "https",
+  host: "db.production.example.com",
+  port: 5432,
+  base_path: "/api/v1",
+  timeout_seconds: 30,
+  max_retries: 3,
+  
+  // Circuit Breaker (prevents cascading failures)
+  circuit_breaker_enabled: true,
+  circuit_breaker_threshold: 5, // Fail after 5 consecutive errors
+  
+  // Health Monitoring
+  health_check_enabled: true,
+  health_check_url: "/health",
+  health_check_interval_seconds: 60,
+  last_health_check_at: "2024-06-01T08:00:00Z",
+  last_health_check_status: "healthy",
+  consecutive_health_failures: 0,
+  
+  // Security
+  tls_enabled: true,
+  authentication_type: "bearer_token",
+  
+  // Status
+  is_active: true,
+  is_deprecated: false,
+  
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-06-01T08:00:00Z"
+}
+```
+
+#### Server Types in CVM:
+
+```javascript
+// 1. DATABASE SERVER
+// Stores customer data, campaigns, segments, offers
+{
+  name: "Customer Database Server",
+  server_type: "database",
+  protocol: "https",
+  host: "db.cvm.example.com",
+  port: 5432
+}
+
+// 2. API SERVER
+// Handles API requests from the frontend
+{
+  name: "CVM API Server",
+  server_type: "api",
+  protocol: "https",
+  host: "api.cvm.example.com",
+  port: 443,
+  base_path: "/api/v1"
+}
+
+// 3. MESSAGE GATEWAY SERVER
+// Sends SMS, Email, Push notifications
+{
+  name: "SMS Gateway Server",
+  server_type: "message_gateway",
+  protocol: "https",
+  host: "sms-gateway.example.com",
+  port: 443
+}
+
+// 4. ANALYTICS SERVER
+// Processes campaign analytics and metrics
+{
+  name: "Analytics Processing Server",
+  server_type: "analytics",
+  protocol: "https",
+  host: "analytics.example.com",
+  port: 443
+}
+```
+
+#### How Servers Connect to Campaigns:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ CAMPAIGN EXECUTION FLOW WITH SERVERS                    │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  1. Campaign Activated                                   │
+│     ↓                                                     │
+│  2. Job System connects to Database Server              │
+│     - Fetches segment definitions                        │
+│     - Queries customer data                              │
+│     ↓                                                     │
+│  3. Segment Evaluation Job                              │
+│     - Uses Database Server to run SQL queries           │
+│     - Returns customer IDs                              │
+│     ↓                                                     │
+│  4. Message Delivery Job                                │
+│     - Uses Message Gateway Server                       │
+│     - Sends SMS/Email/Push                              │
+│     ↓                                                     │
+│  5. Analytics Job                                        │
+│     - Uses Analytics Server                             │
+│     - Tracks opens, clicks, conversions                 │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Example: Campaign Using Multiple Servers
+
+```javascript
+// Scenario: "Summer Sale Campaign" execution
+
+// STEP 1: Segment Evaluation
+// Uses: Database Server (PROD-DB-01)
+const segmentQuery = `
+  SELECT customer_id 
+  FROM customers 
+  WHERE tier = 'VIP' AND city = 'Nairobi'
+`;
+// Executed on: db.production.example.com:5432
+// Result: [123, 456, 789, ...]
+
+// STEP 2: Customer Profile Fetch
+// Uses: Database Server (PROD-DB-01)
+const customerProfiles = await db.query(
+  `SELECT * FROM customers WHERE customer_id IN (?)`,
+  [customerIds]
+);
+// Executed on: db.production.example.com:5432
+
+// STEP 3: Message Delivery
+// Uses: SMS Gateway Server (SMS-GW-01)
+await smsGateway.send({
+  server: "sms-gateway.example.com",
+  to: customer.phone,
+  message: renderedMessage
+});
+// Executed on: sms-gateway.example.com:443
+
+// STEP 4: Analytics Tracking
+// Uses: Analytics Server (ANALYTICS-01)
+await analytics.track({
+  server: "analytics.example.com",
+  event: "message_sent",
+  campaign_id: 789,
+  customer_id: 123
+});
+// Executed on: analytics.example.com:443
+```
+
+---
+
+### 2. Connection Profiles
+
+**Connection Profiles** define how the CVM system connects to data sources (databases, APIs, file systems) to retrieve customer data. They provide a secure, reusable way to configure database connections.
+
+#### Connection Profile Structure:
+
+```javascript
+// Example: Customer Database Connection Profile
+{
+  id: 101,
+  profile_name: "Production Customer DB",
+  profile_code: "PROD-CUSTOMER-DB",
+  connection_type: "database",
+  
+  // Server Reference
+  server_id: 1, // Links to Server (PROD-DB-01)
+  
+  // Database Configuration
+  database_name: "customer_database",
+  database_type: "postgresql",
+  
+  // Data Loading Strategy
+  load_strategy: "incremental", // Options: full, incremental, delta, cdc, merge, append, upsert
+  sync_column_name: "updated_at", // Column to track changes
+  sync_column_type: "timestamp",
+  
+  // Performance Settings
+  batch_size: 1000, // Process 1000 records at a time
+  parallel_threads: 4, // Use 4 parallel connections
+  
+  // Connection Pooling
+  min_pool_size: 5, // Minimum connections in pool
+  max_pool_size: 20, // Maximum connections in pool
+  connection_timeout_seconds: 30,
+  idle_timeout_seconds: 300,
+  
+  // Retry Logic
+  max_retries: 3,
+  retry_backoff_multiplier: 2, // Exponential backoff: 2s, 4s, 8s
+  
+  // Circuit Breaker
+  circuit_breaker_threshold: 5, // Fail after 5 consecutive errors
+  
+  // Health Monitoring
+  health_check_enabled: true,
+  health_check_query: "SELECT 1", // Simple query to test connection
+  last_health_check_at: "2024-06-01T08:00:00Z",
+  last_health_check_status: "healthy",
+  
+  // Data Governance
+  data_classification: "confidential", // public, internal, confidential, restricted
+  contains_pii: true, // Contains Personally Identifiable Information
+  gdpr_applicable: true, // Subject to GDPR regulations
+  
+  // Environment
+  environment: "production", // development, staging, production, uat
+  
+  // Validity Period
+  valid_from: "2024-01-01T00:00:00Z",
+  valid_to: null, // null = no expiration
+  
+  // Security
+  encryption_key_version: 2, // Encryption key version for credentials
+  
+  // Status
+  is_active: true,
+  
+  // Usage Tracking
+  last_used_at: "2024-06-01T08:15:30Z",
+  
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-06-01T08:00:00Z"
+}
+```
+
+#### Connection Types:
+
+```javascript
+// 1. DATABASE CONNECTION
+// Connects to SQL databases (PostgreSQL, MySQL, SQL Server, etc.)
+{
+  connection_type: "database",
+  database_name: "customer_database",
+  database_type: "postgresql",
+  load_strategy: "incremental"
+}
+
+// 2. API CONNECTION
+// Connects to REST APIs for customer data
+{
+  connection_type: "api",
+  server_id: 5, // API Server
+  load_strategy: "full"
+}
+
+// 3. FILE SYSTEM CONNECTION
+// Connects to SFTP/FTP servers for file-based data
+{
+  connection_type: "sftp",
+  server_id: 6, // SFTP Server
+  load_strategy: "delta"
+}
+
+// 4. CLOUD STORAGE CONNECTION
+// Connects to S3, Azure Blob Storage
+{
+  connection_type: "s3",
+  load_strategy: "append"
+}
+
+// 5. STREAMING CONNECTION
+// Connects to Kafka for real-time data
+{
+  connection_type: "kafka",
+  load_strategy: "cdc" // Change Data Capture
+}
+```
+
+#### Load Strategies:
+
+```javascript
+// FULL LOAD
+// Loads all data every time (use for small datasets)
+{
+  load_strategy: "full"
+}
+// Example: Load all 10,000 customers every day
+
+// INCREMENTAL LOAD
+// Only loads new/updated records since last sync
+{
+  load_strategy: "incremental",
+  sync_column_name: "updated_at",
+  sync_column_type: "timestamp"
+}
+// Example: Load only customers updated in last 24 hours
+
+// DELTA LOAD
+// Loads only changed records (inserts, updates, deletes)
+{
+  load_strategy: "delta",
+  sync_column_name: "change_timestamp"
+}
+// Example: Load only customers that changed
+
+// CDC (CHANGE DATA CAPTURE)
+// Real-time streaming of changes
+{
+  load_strategy: "cdc"
+}
+// Example: Stream customer changes as they happen
+
+// MERGE LOAD
+// Merges new data with existing data
+{
+  load_strategy: "merge"
+}
+// Example: Merge updated customer profiles
+
+// APPEND LOAD
+// Adds new records without updating existing ones
+{
+  load_strategy: "append"
+}
+// Example: Add new customers without modifying existing ones
+
+// UPSERT LOAD
+// Updates existing records or inserts new ones
+{
+  load_strategy: "upsert"
+}
+// Example: Update customer if exists, insert if new
+```
+
+#### How Connection Profiles Work in Campaigns:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ CAMPAIGN SEGMENT EVALUATION WITH CONNECTION PROFILE    │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  1. Campaign activates                                   │
+│     ↓                                                     │
+│  2. Segment Evaluation Job starts                        │
+│     ↓                                                     │
+│  3. System selects Connection Profile                   │
+│     - Profile: "Production Customer DB"                │
+│     - Connection Type: database                         │
+│     - Server: PROD-DB-01                                │
+│     ↓                                                     │
+│  4. Connection Pool established                          │
+│     - min_pool_size: 5 connections                      │
+│     - max_pool_size: 20 connections                     │
+│     ↓                                                     │
+│  5. Segment query executed                               │
+│     - Uses connection from pool                         │
+│     - Query: SELECT customer_id FROM customers...      │
+│     - Batch size: 1000 records                          │
+│     ↓                                                     │
+│  6. Results returned                                     │
+│     - Customer IDs: [123, 456, 789, ...]               │
+│     ↓                                                     │
+│  7. Connection returned to pool                        │
+│     - Available for next query                          │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Example: Segment Evaluation Using Connection Profile
+
+```javascript
+// STEP 1: Get Connection Profile
+const connectionProfile = await getConnectionProfile("PROD-CUSTOMER-DB");
+// Result: {
+//   id: 101,
+//   server_id: 1,
+//   database_name: "customer_database",
+//   batch_size: 1000,
+//   parallel_threads: 4
+// }
+
+// STEP 2: Get Server Details
+const server = await getServer(connectionProfile.server_id);
+// Result: {
+//   host: "db.production.example.com",
+//   port: 5432,
+//   protocol: "https"
+// }
+
+// STEP 3: Establish Connection Pool
+const connectionPool = await createConnectionPool({
+  host: server.host,
+  port: server.port,
+  database: connectionProfile.database_name,
+  minPoolSize: connectionProfile.min_pool_size, // 5
+  maxPoolSize: connectionProfile.max_pool_size, // 20
+  connectionTimeout: connectionProfile.connection_timeout_seconds * 1000
+});
+
+// STEP 4: Execute Segment Query (with batching)
+const segment = {
+  criteria: {
+    conditions: [
+      { field: "tier", operator: "equals", value: "VIP" },
+      { field: "city", operator: "equals", value: "Nairobi" }
+    ]
+  }
+};
+
+// Convert segment criteria to SQL
+const sqlQuery = `
+  SELECT customer_id, name, email, phone
+  FROM customers
+  WHERE tier = 'VIP' AND city = 'Nairobi'
+  AND is_active = true
+  AND opted_out = false
+`;
+
+// Execute query in batches
+const customerIds = [];
+let offset = 0;
+const batchSize = connectionProfile.batch_size; // 1000
+
+while (true) {
+  const batch = await connectionPool.query(
+    `${sqlQuery} LIMIT ${batchSize} OFFSET ${offset}`
+  );
+  
+  if (batch.length === 0) break;
+  
+  customerIds.push(...batch.map(row => row.customer_id));
+  offset += batchSize;
+  
+  // Use parallel threads for faster processing
+  if (customerIds.length % (batchSize * connectionProfile.parallel_threads) === 0) {
+    await Promise.all(
+      Array(connectionProfile.parallel_threads).fill(null).map(() =>
+        processBatch(customerIds.slice(-batchSize))
+      )
+    );
+  }
+}
+
+// Result: [123, 456, 789, 1011, ...] - All VIP customers in Nairobi
+```
+
+---
+
+### How Infrastructure Connects to the CVM System
+
+#### Complete Flow: Campaign Execution with Infrastructure
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. CAMPAIGN CREATED                                      │
+│    - User creates campaign in UI                         │
+│    - Campaign stored in database                         │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 2. CAMPAIGN ACTIVATED                                    │
+│    - Campaign status = "active"                          │
+│    - Job system triggered                                │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 3. JOB SYSTEM CONNECTS TO INFRASTRUCTURE                 │
+│    - Gets Connection Profile: "Production Customer DB" │
+│    - Gets Server: PROD-DB-01                            │
+│    - Establishes connection pool                         │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 4. SEGMENT EVALUATION JOB                                │
+│    - Uses Connection Profile to query database          │
+│    - Executes SQL: SELECT customer_id FROM customers...│
+│    - Returns: [123, 456, 789, ...]                      │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 5. CUSTOMER PROFILE FETCH                                │
+│    - Uses same Connection Profile                       │
+│    - Fetches full customer data                         │
+│    - Returns: { customer_id: 123, name: "John", ... } │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 6. MESSAGE DELIVERY                                      │
+│    - Uses Message Gateway Server                        │
+│    - Server: SMS-GW-01                                  │
+│    - Sends SMS via gateway                              │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ 7. ANALYTICS TRACKING                                    │
+│    - Uses Analytics Server                              │
+│    - Server: ANALYTICS-01                               │
+│    - Tracks delivery, opens, clicks                    │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Key Benefits of Infrastructure Management:
+
+1. **Centralized Configuration**
+   - All server and connection settings in one place
+   - Easy to update without changing code
+   - Consistent configuration across environments
+
+2. **Health Monitoring**
+   - Automatic health checks
+   - Circuit breakers prevent cascading failures
+   - Real-time status visibility
+
+3. **Performance Optimization**
+   - Connection pooling reduces overhead
+   - Batch processing improves efficiency
+   - Parallel threads speed up data loading
+
+4. **Security & Compliance**
+   - Encrypted connections (TLS)
+   - Data classification tracking
+   - GDPR compliance features
+   - Audit trails for data access
+
+5. **Reliability**
+   - Retry logic with exponential backoff
+   - Circuit breakers prevent system overload
+   - Automatic failover capabilities
+
+---
+
+## Segment Lists
+
+### What are Segment Lists?
+
+**Segment Lists** are pre-uploaded lists of customers that can be used as building blocks for creating segments. Instead of defining segment conditions (like "tier = VIP"), you can upload a CSV file with specific customer IDs and use that list directly in your segments.
+
+### Key Characteristics:
+
+- ✅ **Pre-uploaded customer data** - CSV, TSV, TXT, or XLSX files
+- ✅ **Reusable** - Use the same list in multiple segments/campaigns
+- ✅ **Flexible** - Can be combined with segment conditions
+- ✅ **Quick setup** - No need to write complex SQL queries
+- ✅ **Static or dynamic** - Lists can be updated over time
+
+### Segment List Structure:
+
+```javascript
+// Example: High Value Customers List
+{
+  list_id: 501,
+  name: "High Value Customers Q4 2024",
+  description: "Top 1000 customers by revenue in Q4 2024",
+  subscriber_count: 1000,
+  created_on: "2024-12-01",
+  list_type: "standard", // Options: "seed", "and", "standard"
+  
+  // File Configuration
+  subscriber_id_col_name: "customer_id", // Column containing customer IDs
+  file_delimiter: ",", // CSV delimiter
+  list_headers: "customer_id,name,email,phone,revenue", // CSV headers
+  file_text: "customer_id,name,email,phone,revenue\n123,John Doe,john@example.com,+254712345678,50000\n456,Jane Smith,jane@example.com,+254723456789,45000\n...", // File content
+  file_name: "high_value_customers_q4.csv",
+  file_size: 125000, // bytes
+  
+  // Metadata
+  tags: ["high-value", "q4-2024", "revenue"]
+}
+```
+
+### List Types:
+
+```javascript
+// 1. STANDARD LIST
+// General purpose list for most campaigns
+{
+  list_type: "standard",
+  description: "Use for regular campaign targeting"
+}
+// Example: "VIP Customers List", "New Customers List"
+
+// 2. SEED LIST
+// Internal QA or preview audiences (testing)
+{
+  list_type: "seed",
+  description: "Use for testing campaigns before full launch"
+}
+// Example: "QA Test List", "Preview Audience"
+
+// 3. AND LIST
+// Intersect with existing segment logic
+{
+  list_type: "and",
+  description: "Combine with segment conditions using AND logic"
+}
+// Example: Use list AND segment conditions together
+```
+
+### How Segment Lists Work:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ STEP 1: UPLOAD LIST                                     │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  User uploads CSV file:                                 │
+│  customer_id,name,email,phone                          │
+│  123,John Doe,john@example.com,+254712345678           │
+│  456,Jane Smith,jane@example.com,+254723456789         │
+│  789,Bob Johnson,bob@example.com,+254734567890         │
+│  ...                                                     │
+│                                                           │
+│  System stores:                                          │
+│  - File content in database                             │
+│  - List metadata (name, description, type)             │
+│  - Subscriber count: 1,000                              │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ STEP 2: USE LIST IN SEGMENT                             │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  User creates segment:                                   │
+│  - Name: "High Value Customers Campaign"                │
+│  - Type: "List-based"                                   │
+│  - List: "High Value Customers Q4 2024" (list_id: 501) │
+│                                                           │
+│  System creates segment:                                 │
+│  {                                                       │
+│    segment_id: 201,                                      │
+│    name: "High Value Customers Campaign",               │
+│    type: "static",                                      │
+│    list_id: 501,                                        │
+│    members: [123, 456, 789, ...] // From list          │
+│  }                                                       │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│ STEP 3: USE SEGMENT IN CAMPAIGN                         │
+├─────────────────────────────────────────────────────────┤
+│                                                           │
+│  User creates campaign:                                  │
+│  - Campaign: "Q4 Revenue Campaign"                     │
+│  - Segment: "High Value Customers Campaign" (201)       │
+│  - Offer: "Premium Data Bundle Offer"                  │
+│                                                           │
+│  When campaign runs:                                     │
+│  1. System loads list (list_id: 501)                    │
+│  2. Gets customer IDs: [123, 456, 789, ...]            │
+│  3. Fetches customer profiles                           │
+│  4. Sends offers to all customers in list               │
+│                                                           │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Segment List File Format:
+
+```csv
+# Example CSV File: high_value_customers.csv
+customer_id,name,email,phone,revenue,tier
+123,John Doe,john@example.com,+254712345678,50000,VIP
+456,Jane Smith,jane@example.com,+254723456789,45000,Premium
+789,Bob Johnson,bob@example.com,+254734567890,40000,Standard
+1011,Alice Brown,alice@example.com,+254745678901,55000,VIP
+```
+
+#### File Configuration:
+
+```javascript
+// When uploading, user specifies:
+{
+  subscriber_id_col_name: "customer_id", // Which column has customer IDs
+  file_delimiter: ",", // Comma, semicolon, tab, or pipe
+  list_headers: "customer_id,name,email,phone,revenue,tier" // First row
+}
+
+// System parses file:
+// - Extracts customer IDs from "customer_id" column
+// - Counts total rows (excluding header)
+// - Stores file content for later use
+```
+
+### Using Segment Lists in Segments:
+
+#### Option 1: List-Only Segment
+
+```javascript
+// Segment that uses ONLY the list (no additional conditions)
+{
+  segment_id: 201,
+  name: "High Value Customers",
+  type: "static",
+  list_id: 501, // "High Value Customers Q4 2024"
+  criteria: null, // No additional conditions
+  
+  // Members: All customers from list
+  members: [123, 456, 789, 1011, ...] // From list file
+}
+```
+
+#### Option 2: List + Conditions (AND List)
+
+```javascript
+// Segment that uses list AND additional conditions
+{
+  segment_id: 202,
+  name: "High Value Customers in Nairobi",
+  type: "dynamic",
+  list_id: 501, // "High Value Customers Q4 2024"
+  criteria: {
+    conditions: [
+      { field: "city", operator: "equals", value: "Nairobi" }
+    ],
+    logic: "AND"
+  },
+  
+  // Members: Customers from list WHO ALSO live in Nairobi
+  // Process:
+  // 1. Get customers from list: [123, 456, 789, ...]
+  // 2. Filter by city = "Nairobi"
+  // 3. Result: [123, 789, ...] (only those in Nairobi)
+  members: [123, 789, ...] // Intersection of list and conditions
+}
+```
+
+### Real-World Example: Using Segment Lists
+
+#### Scenario: Black Friday Campaign with Pre-Selected Customers
+
+```javascript
+// STEP 1: Upload Customer List
+const segmentList = {
+  list_id: 501,
+  name: "Black Friday VIP Customers",
+  description: "Top 500 customers selected for exclusive Black Friday offer",
+  subscriber_count: 500,
+  list_type: "standard",
+  file_text: `customer_id,name,email,phone
+123,John Doe,john@example.com,+254712345678
+456,Jane Smith,jane@example.com,+254723456789
+789,Bob Johnson,bob@example.com,+254734567890
+...` // 500 rows total
+};
+
+// STEP 2: Create Segment Using List
+const segment = {
+  segment_id: 201,
+  name: "Black Friday VIP Segment",
+  type: "static",
+  list_id: 501, // Uses the uploaded list
+  members: [123, 456, 789, ...] // 500 customer IDs from list
+};
+
+// STEP 3: Create Campaign
+const campaign = {
+  campaign_id: 789,
+  name: "Black Friday Exclusive Sale",
+  segments: [201], // Uses segment with list
+  offers: [456] // "Black Friday Data Bundle Offer"
+};
+
+// STEP 4: Campaign Execution
+// When campaign runs:
+// 1. System loads list (list_id: 501)
+// 2. Gets customer IDs: [123, 456, 789, ...]
+// 3. Fetches customer profiles for all 500 customers
+// 4. Sends Black Friday offer to all customers in list
+```
+
+### Segment Lists vs Dynamic Segments:
+
+| Feature | Segment Lists | Dynamic Segments |
+|---------|---------------|------------------|
+| **Definition** | Pre-uploaded customer list | Conditions-based query |
+| **Data Source** | CSV/Excel file | Database query |
+| **Updates** | Manual re-upload | Automatic (runs query each time) |
+| **Use Case** | Specific customer selection | Rule-based targeting |
+| **Example** | "Top 100 customers" | "VIP customers in Nairobi" |
+| **Flexibility** | Fixed list | Dynamic (changes as data changes) |
+
+### Combining Lists with Segment Conditions:
+
+```javascript
+// Example: Use list AND apply additional filters
+
+// List: "High Value Customers" (1,000 customers)
+const list = {
+  list_id: 501,
+  subscriber_count: 1000
+};
+
+// Segment: "High Value Customers in Nairobi" (uses list + condition)
+const segment = {
+  segment_id: 201,
+  list_id: 501, // Start with list
+  criteria: {
+    conditions: [
+      { field: "city", operator: "equals", value: "Nairobi" }
+    ]
+  }
+};
+
+// Execution:
+// 1. Load list: Get 1,000 customer IDs
+// 2. Apply condition: Filter by city = "Nairobi"
+// 3. Result: ~200 customers (only those in Nairobi from the list)
+```
+
+### Key Takeaways:
+
+1. **Segment Lists are Pre-Uploaded Customer Lists**
+   - Upload CSV/Excel files with customer data
+   - Reuse lists across multiple segments/campaigns
+   - Quick way to target specific customers
+
+2. **Three List Types**
+   - **Standard**: General purpose lists
+   - **Seed**: Testing/preview audiences
+   - **AND**: Combine with segment conditions
+
+3. **Can Combine with Segment Conditions**
+   - Use list as starting point
+   - Apply additional filters (city, tier, etc.)
+   - Result: Intersection of list and conditions
+
+4. **Infrastructure Powers Everything**
+   - Servers provide backend connectivity
+   - Connection Profiles define data access
+   - Both work together to execute campaigns
+
+5. **Lists vs Dynamic Segments**
+   - Lists: Fixed, pre-selected customers
+   - Dynamic: Rule-based, automatically updates
+
+---
+
 ## Summary

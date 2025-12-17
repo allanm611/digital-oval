@@ -40,7 +40,7 @@ export default function CustomerIdentityPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t.customerIdentity.unableToLoadFields]);
 
   useEffect(() => {
     loadFields();

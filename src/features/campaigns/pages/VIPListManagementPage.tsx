@@ -175,7 +175,7 @@ export default function VIPListManagementPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleRemoveCustomer = (customer: VIPCustomer) => {
+  const handleRemoveCustomer = () => {
     // TODO: Implement remove functionality
     showToast("Remove customer functionality will be implemented");
   };

@@ -11,12 +11,7 @@ import {
   BellOff,
   Star,
 } from "lucide-react";
-import {
-  color,
-  tw,
-  components,
-  zIndexTokens,
-} from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   CommunicationPolicyConfiguration,
@@ -48,6 +43,19 @@ interface AllPolicyConfigs {
   dnd: DNDConfig;
   vipList: VIPListConfig;
 }
+
+// Period item for maximum communication (with id for list management)
+interface MaxCommPeriod {
+  id: string;
+  type: "daily" | "weekly" | "monthly";
+  maxCount: number;
+}
+
+const PERIOD_OPTIONS = [
+  { label: "Daily", value: "daily" as const },
+  { label: "Weekly", value: "weekly" as const },
+  { label: "Monthly", value: "monthly" as const },
+];
 
 export default function CommunicationPolicyModal({
   isOpen,
@@ -89,6 +97,9 @@ export default function CommunicationPolicyModal({
   // Track channel dropdown state
   const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState(false);
 
+  // Maximum communication periods (multiple)
+  const [maxCommPeriods, setMaxCommPeriods] = useState<MaxCommPeriod[]>([]);
+
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -125,6 +136,7 @@ export default function CommunicationPolicyModal({
     }
     setError("");
     setIsChannelDropdownOpen(false); // Reset dropdown state when modal opens/closes
+    setMaxCommPeriods([]); // Reset periods when modal opens/closes
   }, [policy, isOpen]);
 
   const toggleSection = (type: CommunicationPolicyType) => {
@@ -196,7 +208,7 @@ export default function CommunicationPolicyModal({
                   startTime: e.target.value,
                 }))
               }
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
+              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
           <div>
@@ -212,7 +224,7 @@ export default function CommunicationPolicyModal({
                   endTime: e.target.value,
                 }))
               }
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
+              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -254,48 +266,125 @@ export default function CommunicationPolicyModal({
   };
 
   const renderMaxCommunicationConfig = () => {
-    const maxConfig = configs.maximumCommunication;
+    // Get already selected period types to disable them in other rows
+    const selectedPeriodTypes = maxCommPeriods.map((p) => p.type);
+    
+    // Find first available period type for new periods
+    const getFirstAvailablePeriodType = () => {
+      const availableType = PERIOD_OPTIONS.find(
+        (opt) => !selectedPeriodTypes.includes(opt.value)
+      );
+      return availableType?.value || "daily";
+    };
+    
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative" style={{ zIndex: zIndexTokens.popover }}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Period Type
+      <div className="space-y-4 overflow-visible">
+        <div className="flex items-center justify-between">
+          <p className={`${tw.caption} ${tw.textSecondary}`}>
+            Set maximum communications per period
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const newPeriod: MaxCommPeriod = {
+                id: Date.now().toString(),
+                type: getFirstAvailablePeriodType(),
+                maxCount: 3,
+              };
+              setMaxCommPeriods((prev) => [...prev, newPeriod]);
+            }}
+            className={`${tw.button} flex items-center gap-2 text-xs px-3 py-1.5`}
+            disabled={selectedPeriodTypes.length >= PERIOD_OPTIONS.length}
+          >
+            <Plus className="w-3 h-3" />
+            Add Period
+          </button>
+        </div>
+        
+        {/* Column Headers - only show when there are periods */}
+        {maxCommPeriods.length > 0 && (
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Period
             </label>
-            <HeadlessSelect
-              value={maxConfig.type}
-              onChange={(value) =>
-                updateConfig("maximumCommunication", (prev) => ({
-                  ...prev,
-                  type: value as "daily" | "weekly" | "monthly",
-                }))
-              }
-              options={[
-                { label: "Daily Maximum", value: "daily" },
-                { label: "Weekly Maximum", value: "weekly" },
-                { label: "Monthly Maximum", value: "monthly" },
-              ]}
-              placeholder="Select period type"
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700">
               Maximum Count
             </label>
-            <input
-              type="number"
-              min="1"
-              value={maxConfig.maxCount}
-              onChange={(e) =>
-                updateConfig("maximumCommunication", (prev) => ({
-                  ...prev,
-                  maxCount: parseInt(e.target.value) || 1,
-                }))
-              }
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
-            />
+            <div className="w-8" /> {/* Spacer for delete button */}
           </div>
+        )}
+        
+        <div className="space-y-2">
+          {maxCommPeriods.map((period, index) => (
+            <div
+              key={period.id}
+              className={`px-4 py-3 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
+            >
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
+                <div
+                  className="relative overflow-visible"
+                  style={{ zIndex: 99999 - index }}
+                >
+                  <HeadlessSelect
+                    value={period.type}
+                    onChange={(value) => {
+                      setMaxCommPeriods((prev) =>
+                        prev.map((p) =>
+                          p.id === period.id
+                            ? { ...p, type: value as "daily" | "weekly" | "monthly" }
+                            : p
+                        )
+                      );
+                    }}
+                    options={PERIOD_OPTIONS.map((opt) => ({
+                      label: opt.label,
+                      value: opt.value,
+                      // Disable if already selected in another row (but not current row)
+                      disabled: selectedPeriodTypes.includes(opt.value) && period.type !== opt.value,
+                    }))}
+                    placeholder="Select period"
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    min="1"
+                    value={period.maxCount}
+                    onChange={(e) => {
+                      setMaxCommPeriods((prev) =>
+                        prev.map((p) =>
+                          p.id === period.id
+                            ? { ...p, maxCount: parseInt(e.target.value) || 1 }
+                            : p
+                        )
+                      );
+                    }}
+                    className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMaxCommPeriods((prev) =>
+                      prev.filter((p) => p.id !== period.id)
+                    );
+                  }}
+                  className="p-2 rounded transition-colors"
+                  style={{ color: "#dc2626" }}
+                  title="Delete period"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {maxCommPeriods.length === 0 && (
+            <p className={`${tw.caption} ${tw.textMuted} text-center py-6`}>
+              No periods added yet. Click "Add Period" to get started.
+            </p>
+          )}
         </div>
       </div>
     );
@@ -303,6 +392,18 @@ export default function CommunicationPolicyModal({
 
   const renderDNDConfig = () => {
     const dndConfig = configs.dnd;
+    
+    // Get already selected types to disable them in other rows
+    const selectedTypes = dndConfig.categories.map((cat) => cat.type);
+    
+    // Find first available type for new categories
+    const getFirstAvailableType = () => {
+      const availableType = DND_CATEGORIES.find(
+        (cat) => !selectedTypes.includes(cat.type)
+      );
+      return availableType?.type || "marketing";
+    };
+    
     return (
       <div className="space-y-4 overflow-visible">
         <div className="flex items-center justify-between">
@@ -315,7 +416,7 @@ export default function CommunicationPolicyModal({
               const newCategory: DNDCategory = {
                 id: Date.now().toString(),
                 name: "",
-                type: "marketing",
+                type: getFirstAvailableType(),
                 status: "stop",
                 value: "allowed",
               };
@@ -325,51 +426,37 @@ export default function CommunicationPolicyModal({
               }));
             }}
             className={`${tw.button} flex items-center gap-2 text-xs px-3 py-1.5`}
+            disabled={selectedTypes.length >= DND_CATEGORIES.length}
           >
             <Plus className="w-3 h-3" />
             Add Category
           </button>
         </div>
-        <div className="space-y-4">
+        
+        {/* Column Headers - only show when there are categories */}
+        {dndConfig.categories.length > 0 && (
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Type
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              Value
+            </label>
+            <div className="w-8" /> {/* Spacer for delete button */}
+          </div>
+        )}
+        
+        <div className="space-y-2">
           {dndConfig.categories.map((category, index) => (
             <div
               key={category.id}
-              className={`p-4 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
+              className={`px-4 py-3 ${tw.rounded} bg-white transition-colors hover:bg-gray-50`}
             >
-              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-end">
-                {/* <div>
-                  <label
-                    className={`block ${tw.label} ${tw.textSecondary} mb-1`}
-                  >
-                    Category Name
-                  </label>
-                  <input
-                    type="text"
-                    value={category.name}
-                    onChange={(e) => {
-                      const newCategories = [...dndConfig.categories];
-                      newCategories[index] = {
-                        ...category,
-                        name: e.target.value,
-                      };
-                      updateConfig("dnd", (prev) => ({
-                        ...prev,
-                        categories: newCategories,
-                      }));
-                    }}
-                    className={`${components.input.default} w-full px-3 py-2 text-sm border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
-                    placeholder="Enter name"
-                  />
-                </div> */}
+              <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: zIndexTokens.popover - index }}
+                  style={{ zIndex: 99999 - index }}
                 >
-                  <label
-                    className={`block text-sm font-medium text-gray-700 mb-2`}
-                  >
-                    Type
-                  </label>
                   <HeadlessSelect
                     value={category.type}
                     onChange={(value) => {
@@ -386,20 +473,18 @@ export default function CommunicationPolicyModal({
                     options={DND_CATEGORIES.map((cat) => ({
                       label: cat.label,
                       value: cat.type,
+                      // Disable if already selected in another row (but not current row)
+                      disabled: selectedTypes.includes(cat.type) && category.type !== cat.type,
                     }))}
                     placeholder="Select type"
                     className="w-full"
+                    zIndex={zIndex.popover}
                   />
                 </div>
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: zIndexTokens.popover - index }}
+                  style={{ zIndex: 99999 - index }}
                 >
-                  <label
-                    className={`block text-sm font-medium text-gray-700 mb-2`}
-                  >
-                    Value
-                  </label>
                   <HeadlessSelect
                     value={category.value || "allowed"}
                     onChange={(value) => {
@@ -419,36 +504,7 @@ export default function CommunicationPolicyModal({
                     ]}
                     placeholder="Select value"
                     className="w-full"
-                  />
-                </div>
-                <div
-                  className="relative overflow-visible"
-                  style={{ zIndex: zIndexTokens.popover - index }}
-                >
-                  <label
-                    className={`block text-sm font-medium text-gray-700 mb-2`}
-                  >
-                    Status
-                  </label>
-                  <HeadlessSelect
-                    value={category.status}
-                    onChange={(value) => {
-                      const newCategories = [...dndConfig.categories];
-                      newCategories[index] = {
-                        ...category,
-                        status: value as "start" | "stop",
-                      };
-                      updateConfig("dnd", (prev) => ({
-                        ...prev,
-                        categories: newCategories,
-                      }));
-                    }}
-                    options={[
-                      { label: "Start", value: "start" },
-                      { label: "Stop", value: "stop" },
-                    ]}
-                    placeholder="Select status"
-                    className="w-full"
+                    zIndex={zIndex.popover}
                   />
                 </div>
                 <button
@@ -462,7 +518,7 @@ export default function CommunicationPolicyModal({
                       categories: newCategories,
                     }));
                   }}
-                  className="p-2 rounded transition-colors mb-0.5"
+                  className="p-2 rounded transition-colors"
                   style={{ color: "#dc2626" }}
                   title="Delete category"
                 >
@@ -504,6 +560,7 @@ export default function CommunicationPolicyModal({
               ]}
               placeholder="Select action"
               className="w-full"
+              zIndex={zIndex.popover}
             />
           </div>
           <div>
@@ -520,7 +577,7 @@ export default function CommunicationPolicyModal({
                   priority: parseInt(e.target.value) || 1,
                 }))
               }
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
+              className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all bg-white`}
             />
           </div>
         </div>
@@ -543,9 +600,7 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border ${
-          tw.rounded
-        } overflow-visible transition-all duration-200 ${
+        className={`border ${tw.rounded} overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -606,13 +661,13 @@ export default function CommunicationPolicyModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div
+    <div 
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ zIndex: zIndexTokens.overlay }}
+      style={{ zIndex: zIndex.overlay }}
     >
       <div
         className={`${components.card.surface} w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col ${tw.rounded}`}
-        style={{ zIndex: zIndexTokens.modal, position: "relative" }}
+        style={{ zIndex: zIndex.modal, position: "relative" }}
       >
         {/* Header */}
         <div style={{ backgroundColor: color.surface.background }}>
@@ -721,10 +776,7 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div
-                      className={`absolute w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}
-                      style={{ zIndex: zIndexTokens.popover }}
-                    >
+                    <div className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}>
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}

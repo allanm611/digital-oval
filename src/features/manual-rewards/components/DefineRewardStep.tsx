@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  Gift,
-  AlertCircle,
-  Package,
-  Coins,
-  Percent,
-  DollarSign,
-} from "lucide-react";
+import { AlertCircle, Package, Coins, Percent, DollarSign } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";

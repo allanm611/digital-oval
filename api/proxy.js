@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
-    // Use environment variable or default to localhost
+    // Use environment variable or default to the backend URL
     const API_BASE_URL =
       process.env.VITE_API_BASE_URL ||
       process.env.API_BASE_URL ||

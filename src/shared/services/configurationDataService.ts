@@ -8,6 +8,7 @@ import {
   campaignTypesConfig,
   segmentTypesConfig,
   productTypesConfig,
+  comboTypesConfig,
   trackingSourcesConfig,
   creativeTemplatesConfig,
   rewardTypesConfig,
@@ -27,12 +28,14 @@ export type ConfigurationType =
   | "campaignTypes"
   | "segmentTypes"
   | "productTypes"
+  | "comboTypes"
   | "trackingSources"
   | "creativeTemplates"
   | "rewardTypes"
   | "communicationChannels"
   | "senderIds"
   | "smsRoutes"
+  | "routes"
   | "languages"
   | "characterSets";
 
@@ -53,12 +56,14 @@ class ConfigurationDataService {
     this.listeners.set("campaignTypes", new Set());
     this.listeners.set("segmentTypes", new Set());
     this.listeners.set("productTypes", new Set());
+    this.listeners.set("comboTypes", new Set());
     this.listeners.set("trackingSources", new Set());
     this.listeners.set("creativeTemplates", new Set());
     this.listeners.set("rewardTypes", new Set());
     this.listeners.set("communicationChannels", new Set());
     this.listeners.set("senderIds", new Set());
     this.listeners.set("smsRoutes", new Set());
+    this.listeners.set("routes", new Set());
     this.listeners.set("languages", new Set());
     this.listeners.set("characterSets", new Set());
 
@@ -99,6 +104,10 @@ class ConfigurationDataService {
         this.data.set(
           "productTypes",
           parsed.productTypes || [...productTypesConfig.initialData]
+        );
+        this.data.set(
+          "comboTypes",
+          parsed.comboTypes || [...comboTypesConfig.initialData]
         );
         this.data.set(
           "trackingSources",
@@ -145,6 +154,7 @@ class ConfigurationDataService {
         this.data.set("campaignTypes", [...campaignTypesConfig.initialData]);
         this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
         this.data.set("productTypes", [...productTypesConfig.initialData]);
+        this.data.set("comboTypes", [...comboTypesConfig.initialData]);
         this.data.set("trackingSources", [
           ...trackingSourcesConfig.initialData,
         ]);
@@ -173,6 +183,7 @@ class ConfigurationDataService {
       this.data.set("campaignTypes", [...campaignTypesConfig.initialData]);
       this.data.set("segmentTypes", [...segmentTypesConfig.initialData]);
       this.data.set("productTypes", [...productTypesConfig.initialData]);
+      this.data.set("comboTypes", [...comboTypesConfig.initialData]);
       this.data.set("trackingSources", [...trackingSourcesConfig.initialData]);
       this.data.set("creativeTemplates", [
         ...creativeTemplatesConfig.initialData,
@@ -199,6 +210,7 @@ class ConfigurationDataService {
         campaignTypes: this.data.get("campaignTypes") || [],
         segmentTypes: this.data.get("segmentTypes") || [],
         productTypes: this.data.get("productTypes") || [],
+        comboTypes: this.data.get("comboTypes") || [],
         trackingSources: this.data.get("trackingSources") || [],
         creativeTemplates: this.data.get("creativeTemplates") || [],
         rewardTypes: this.data.get("rewardTypes") || [],
@@ -331,6 +343,9 @@ class ConfigurationDataService {
         break;
       case "productTypes":
         this.setData(type, [...productTypesConfig.initialData]);
+        break;
+      case "comboTypes":
+        this.setData(type, [...comboTypesConfig.initialData]);
         break;
       case "trackingSources":
         this.setData(type, [...trackingSourcesConfig.initialData]);

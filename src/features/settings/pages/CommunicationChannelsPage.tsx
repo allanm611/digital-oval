@@ -1,8 +1,22 @@
+import { useNavigate } from "react-router-dom";
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getCommunicationChannelsConfig } from "../../../shared/configs/configurationPageConfigs";
-import { useLanguage } from "../../../contexts/LanguageContext";
+import { communicationChannelsConfig } from "../../../shared/configs/configurationPageConfigs";
 
 export default function CommunicationChannelsPage() {
-  const { t } = useLanguage();
-  return <TypeConfigurationPage config={getCommunicationChannelsConfig(t)} />;
+  const navigate = useNavigate();
+
+  // Handle row click - navigate to SMS routes if SMS channel is clicked
+  const handleChannelRowClick = (channelName: string) => {
+    if (channelName.toLowerCase().includes("sms")) {
+      navigate("/dashboard/sms-routes");
+    }
+    // For other channels in the future, add more conditions
+  };
+
+  return (
+    <TypeConfigurationPage
+      config={communicationChannelsConfig}
+      onRowClick={handleChannelRowClick}
+    />
+  );
 }
