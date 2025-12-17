@@ -63,17 +63,27 @@ export default function StepExecutionsAnalyticsPage() {
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
   const [statusDistribution, setStatusDistribution] = useState<ExecutionByTrigger[]>([]);
   const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
   const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
   const [executionsByHour, setExecutionsByHour] = useState<ExecutionsByHour[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [peakTimes, setPeakTimes] = useState<PeakTimes[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [anomalyDetection, setAnomalyDetection] = useState<AnomalyDetection | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [concurrentAnalysis, setConcurrentAnalysis] = useState<ConcurrentExecutionAnalysis | null>(null);
 
   const loadAnalytics = useCallback(async () => {

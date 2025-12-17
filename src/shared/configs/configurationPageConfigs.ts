@@ -1668,6 +1668,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 15.99,
   },
   {
     id: 2,
@@ -1683,6 +1684,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 18.99,
   },
   {
     id: 3,
@@ -1698,6 +1700,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 4,
@@ -1713,6 +1716,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 5,
@@ -1728,6 +1732,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 6,
@@ -1744,6 +1749,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 7,
@@ -1760,6 +1766,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 8,
@@ -1776,6 +1783,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 9,
@@ -1792,6 +1800,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 10,
@@ -1807,6 +1816,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 11,
@@ -1822,6 +1832,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
   {
     id: 12,
@@ -1836,6 +1847,7 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     ],
     sharedValidity: true,
     validityHours: 720,
+    price: 25,
   },
 ];
 

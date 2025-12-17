@@ -70,7 +70,7 @@ export default function ProductForm({
 
   // Check if selected product type is Combo
   const selectedProductType = productTypes.find(
-    (pt) => pt.id === formData.product_type_id
+    (pt) => String(pt.id) === String(formData.product_type_id)
   );
   const isComboType = selectedProductType?.name === "Combo";
 
@@ -141,11 +141,15 @@ export default function ProductForm({
 
       // Prefill with default shared validity
       if (resources.length > 0) {
+        const comboTypeWithPrice = selectedComboType as unknown as {
+          price?: number;
+        };
         setComboData({
           combo_type_id: comboData.combo_type_id,
           resources,
           shared_validity: true,
           shared_validity_hours: 720, // 30 days default
+          price: comboTypeWithPrice.price, // Load price from combo type
         });
       }
     }
@@ -481,12 +485,6 @@ export default function ProductForm({
                       color: "#FFFFFF",
                       backgroundColor: color.primary.action,
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = "0.9";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                    }}
                   >
                     <Plus className="w-4 h-4" />
                     Create Custom Combo
@@ -497,7 +495,7 @@ export default function ProductForm({
                 <div>
                   <HeadlessSelect
                     options={[
-                      { value: "", label: "Select an option" },
+                      { value: "", label: "Select a combo type" },
                       ...comboTypes
                         .filter((ct) => ct.isActive !== false)
                         .map((ct) => ({
@@ -605,6 +603,38 @@ export default function ProductForm({
                   )}
                 </div>
 
+                {/* Combo Price */}
+                <div
+                  className="mb-6 pb-6 border-b"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Combo Price{" "}
+                    <span style={{ color: color.status.danger }}>*</span>
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={comboData.price ?? ""}
+                      onChange={(e) =>
+                        setComboData({
+                          ...comboData,
+                          price: e.target.value
+                            ? parseFloat(e.target.value)
+                            : undefined,
+                        })
+                      }
+                      className={`flex-1 px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                      style={{ borderColor: color.border.default }}
+                      placeholder="Enter combo price"
+                    />
+                  </div>
+                </div>
+
                 {/* Show Add Resource Buttons only for custom combos */}
                 {isCustomComboMode && !comboData.combo_type_id && (
                   <div className="flex gap-2 mb-4 flex-wrap">
@@ -700,13 +730,15 @@ export default function ProductForm({
                               {resource.resource_type}
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeComboResource(index)}
-                            className="text-red-500 hover:text-red-700 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {!comboData.combo_type_id && (
+                            <button
+                              type="button"
+                              onClick={() => removeComboResource(index)}
+                              className="text-red-500 hover:text-red-700 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
 
                         <div className="grid gap-3 md:grid-cols-2">
@@ -789,6 +821,16 @@ export default function ProductForm({
                             />
                           </div>
                         )}
+
+                        <div className="mt-4 flex justify-end">
+                          <button
+                            type="button"
+                            className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
+                            style={{ backgroundColor: color.primary.action }}
+                          >
+                            Save
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

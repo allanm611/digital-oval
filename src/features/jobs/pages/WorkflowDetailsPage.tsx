@@ -12,7 +12,7 @@ import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { tw, button } from "../../../shared/utils/utils";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
 

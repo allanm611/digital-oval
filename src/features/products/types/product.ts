@@ -38,6 +38,7 @@ export interface ComboProductData {
   resources: ComboResource[];
   shared_validity?: boolean; // true = all resources share same validity, false = individual validity
   shared_validity_hours?: number; // Validity when shared_validity is true
+  price?: number; // Price for the entire combo
 }
 
 export interface Product {

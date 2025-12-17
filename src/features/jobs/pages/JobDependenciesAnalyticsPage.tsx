@@ -17,15 +17,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { jobDependencyService } from "../services/jobDependencyService";
 import {
   DependencyStatistics,
-  DependencyStatisticsResponse,
-  MostDependedResponse,
-  OrphanedJobsResponse,
 } from "../types/jobDependency";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";

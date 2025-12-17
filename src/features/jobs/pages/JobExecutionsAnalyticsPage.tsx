@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   TrendingUp,
-  AlertTriangle,
   CheckCircle,
   BarChart3,
 } from "lucide-react";
@@ -24,9 +23,6 @@ import {
 } from "recharts";
 import { jobExecutionService } from "../services/jobExecutionService";
 import { 
-  ExecutionStatistics,
-  SLAComplianceResponse,
-  SuccessRateResponse,
   AverageDurationResponse,
   TrendDataPoint,
   ErrorAnalysisItem,
@@ -118,40 +114,58 @@ export default function JobExecutionsAnalyticsPage() {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [executionStats, setExecutionStats] = useState<ExecutionStatistics | null>(null);
-  const [slaCompliance, setSlaCompliance] = useState<SLAComplianceResponse | null>(null);
-  const [successRate, setSuccessRate] = useState<SuccessRateResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [averageDuration, setAverageDuration] = useState<AverageDurationResponse | null>(null);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
   const [statusDistribution, setStatusDistribution] = useState<ExecutionByTrigger[]>([]);
   const [triggerDistribution, setTriggerDistribution] = useState<ExecutionByTrigger[]>([]);
   const [resourceUtilization, setResourceUtilization] = useState<ResourceUtilizationStats | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dataQualityMetrics, setDataQualityMetrics] = useState<DataQualityMetrics | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
   const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
   const [workerNodeStats, setWorkerNodeStats] = useState<WorkerNodeStats[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [serverInstanceStats, setServerInstanceStats] = useState<ServerInstanceStats[]>([]);
   const [stepFailureAnalysis, setStepFailureAnalysis] = useState<StepFailureAnalysis[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(null);
   const [executionsByHour, setExecutionsByHour] = useState<ExecutionByHour[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [peakTimes, setPeakTimes] = useState<ExecutionByHour[]>([]);
   const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
   const [slowestExecutions, setSlowestExecutions] = useState<SlowestExecution[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [resourceIssues, setResourceIssues] = useState<ResourceIssue[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [completionForecast, setCompletionForecast] = useState<CompletionForecast[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [anomalyDetection, setAnomalyDetection] = useState<AnomalyDetection | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [concurrentAnalysis, setConcurrentAnalysis] = useState<ConcurrentExecutionAnalysis | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [partitionInfo, setPartitionInfo] = useState<PartitionInfo[]>([]);
-  const [pendingCleanup, setPendingCleanup] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [pendingCleanup, setPendingCleanup] = useState<JobExecutionListResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<ExecutionByTrigger[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dailySummaryJob, setDailySummaryJob] = useState<DailySummary[]>([]);
 
   const loadAnalytics = useCallback(async () => {
@@ -277,7 +291,7 @@ export default function JobExecutionsAnalyticsPage() {
       setSuccessRate(success);
       setAverageDuration(duration);
       // Ensure all chart data is arrays
-      const normalizeArray = (data: any): any[] => {
+      const normalizeArray = (data: unknown): unknown[] => {
         if (!data) return [];
         if (Array.isArray(data)) return data;
         if (

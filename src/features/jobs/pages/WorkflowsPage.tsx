@@ -120,7 +120,7 @@ export default function WorkflowsPage() {
       setWorkflows(response.data || []);
       const total =
         response.pagination?.total ??
-        (response as any).count ??
+        (response as { count?: number }).count ??
         (response.data ? response.data.length : 0);
       setTotalCount(total);
     } catch (err) {

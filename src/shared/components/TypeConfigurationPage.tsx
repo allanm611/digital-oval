@@ -52,6 +52,7 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   }>;
   sharedValidity?: boolean;
   validityHours?: number;
+  price?: number; // Price for combo type
 }
 
 interface MetadataFieldConfig {
@@ -157,9 +158,24 @@ function TypeConfigurationModal({
   const isCreativeTemplate = config.configType === "creativeTemplates";
   const isLanguage = config.configType === "languages";
   const isCharacterSet = config.configType === "characterSets";
+  const isComboType = config.configType === "comboTypes";
 
   // Custom fields state for languages and character sets
   const [customFields, setCustomFields] = useState<Record<string, string>>({});
+
+  // Combo types fields
+  const [comboResources, setComboResources] = useState<
+    Array<{
+      type: "data" | "voice" | "sms";
+      value: number;
+      unit: string;
+      sharedValidity: boolean;
+      sharedValidityHours: number;
+    }>
+  >([]);
+  const [comboSharedValidity, setComboSharedValidity] = useState(true);
+  const [comboValidityHours, setComboValidityHours] = useState<number>(720);
+  const [comboPrice, setComboPrice] = useState<number | undefined>(undefined);
 
   // Load languages for template locale selection
   const languages = isCreativeTemplate
@@ -214,6 +230,12 @@ function TypeConfigurationModal({
         });
         setCustomFields(fields);
       }
+      if (isComboType) {
+        setComboResources(item.comboResources || []);
+        setComboSharedValidity(item.sharedValidity ?? true);
+        setComboValidityHours(item.validityHours ?? 720);
+        setComboPrice(item.price);
+      }
     } else {
       setName("");
       setDescription("");
@@ -232,6 +254,12 @@ function TypeConfigurationModal({
           fields[field.fieldKey] = "";
         });
         setCustomFields(fields);
+      }
+      if (isComboType) {
+        setComboResources([]);
+        setComboSharedValidity(true);
+        setComboValidityHours(720);
+        setComboPrice(undefined);
       }
     }
     setError("");
@@ -343,6 +371,14 @@ function TypeConfigurationModal({
         }
         payload[field.fieldKey] = value || undefined;
       }
+    }
+
+    // Add combo type fields
+    if (isComboType) {
+      payload.comboResources = comboResources;
+      payload.sharedValidity = comboSharedValidity;
+      payload.validityHours = comboValidityHours;
+      payload.price = comboPrice;
     }
 
     if (
@@ -658,6 +694,213 @@ function TypeConfigurationModal({
                       );
                     }
                   })()}
+              </div>
+            </>
+          )}
+
+          {/* Combo Type Fields */}
+          {isComboType && (
+            <>
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                  Combo Resources
+                </h3>
+              </div>
+
+              {/* Combo Resources List */}
+              <div className="space-y-3">
+                {comboResources.map((resource, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-gray-200 rounded p-3 bg-gray-50"
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {resource.type === "data"
+                            ? "Data"
+                            : resource.type === "voice"
+                              ? "Voice"
+                              : "SMS"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {resource.value} {resource.unit}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setComboResources(
+                            comboResources.filter((_, i) => i !== idx)
+                          );
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <input
+                        type="number"
+                        value={resource.value}
+                        onChange={(e) => {
+                          const updated = [...comboResources];
+                          updated[idx].value = parseInt(e.target.value) || 0;
+                          setComboResources(updated);
+                        }}
+                        className="px-2 py-1 border border-gray-300 rounded"
+                        placeholder="Value"
+                      />
+                      <input
+                        type="number"
+                        value={resource.sharedValidityHours}
+                        onChange={(e) => {
+                          const updated = [...comboResources];
+                          updated[idx].sharedValidityHours =
+                            parseInt(e.target.value) || 0;
+                          setComboResources(updated);
+                        }}
+                        className="px-2 py-1 border border-gray-300 rounded"
+                        placeholder="Hours"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Resource Buttons */}
+              <div className="flex gap-2 flex-wrap">
+                {!comboResources.some((r) => r.type === "data") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "data",
+                          value: 5,
+                          unit: "data_mb",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                  >
+                    + Data
+                  </button>
+                )}
+                {!comboResources.some((r) => r.type === "voice") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "voice",
+                          value: 500,
+                          unit: "onnet_minutes",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                  >
+                    + Voice
+                  </button>
+                )}
+                {!comboResources.some((r) => r.type === "sms") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboResources([
+                        ...comboResources,
+                        {
+                          type: "sms",
+                          value: 100,
+                          unit: "sms_count",
+                          sharedValidity: comboSharedValidity,
+                          sharedValidityHours: comboValidityHours,
+                        },
+                      ]);
+                    }}
+                    className="px-3 py-1 text-xs font-medium border border-purple-600 text-purple-600 rounded hover:bg-purple-50"
+                  >
+                    + SMS
+                  </button>
+                )}
+              </div>
+
+              {/* Shared Validity Toggle */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={comboSharedValidity}
+                    onChange={(e) => {
+                      setComboSharedValidity(e.target.checked);
+                      // Update all resources with new shared validity setting
+                      setComboResources(
+                        comboResources.map((r) => ({
+                          ...r,
+                          sharedValidity: e.target.checked,
+                        }))
+                      );
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Shared Validity (same hours for all resources)
+                  </span>
+                </label>
+
+                {comboSharedValidity && (
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Validity Hours
+                    </label>
+                    <input
+                      type="number"
+                      value={comboValidityHours}
+                      onChange={(e) => {
+                        const newHours = parseInt(e.target.value) || 0;
+                        setComboValidityHours(newHours);
+                        // Update all resources
+                        setComboResources(
+                          comboResources.map((r) => ({
+                            ...r,
+                            sharedValidityHours: newHours,
+                          }))
+                        );
+                      }}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      placeholder="e.g., 720 (30 days)"
+                    />
+                  </div>
+                )}
+
+                {/* Combo Price */}
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Combo Price <span className="text-red-600">*</span>
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={comboPrice ?? ""}
+                      onChange={(e) =>
+                        setComboPrice(
+                          e.target.value ? parseFloat(e.target.value) : undefined
+                        )
+                      }
+                      className={`flex-1 px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                      placeholder="Enter combo price"
+                    />
+                  </div>
+                </div>
               </div>
             </>
           )}
