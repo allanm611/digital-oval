@@ -1652,6 +1652,127 @@ const hardcodedProductTypes: TypeConfigurationItem[] = [
   },
 ];
 
+// Hardcoded combo types data
+const hardcodedComboTypes: TypeConfigurationItem[] = [
+  {
+    id: 1,
+    name: "Data + On-net Voice",
+    description: "Data bundle combined with on-network voice calls",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 12,
+  },
+  {
+    id: 2,
+    name: "Data + Off-net Voice",
+    description: "Data bundle combined with off-network voice calls",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 10,
+  },
+  {
+    id: 3,
+    name: "Data + International Calls",
+    description: "Data bundle combined with international roaming calls",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 8,
+  },
+  {
+    id: 4,
+    name: "Data + Voice (All-net)",
+    description: "Data bundle combined with all types of voice calls",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 15,
+  },
+  {
+    id: 5,
+    name: "Data + SMS",
+    description: "Data bundle combined with SMS credits",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 14,
+  },
+  {
+    id: 6,
+    name: "Data + On-net Voice + SMS",
+    description: "Data bundle with on-network calls and SMS credits",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 11,
+  },
+  {
+    id: 7,
+    name: "Data + Off-net Voice + SMS",
+    description: "Data bundle with off-network calls and SMS credits",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 9,
+  },
+  {
+    id: 8,
+    name: "Data + Voice (All-net) + SMS",
+    description: "Complete bundle with data, all types of calls, and SMS",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 18,
+  },
+  {
+    id: 9,
+    name: "On-net + Off-net + International",
+    description: "Voice triple combo combining all call types",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 7,
+  },
+  {
+    id: 10,
+    name: "Voice (All-net) + SMS",
+    description: "All types of voice calls combined with SMS credits",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 6,
+  },
+  {
+    id: 11,
+    name: "International Calls + SMS",
+    description: "International roaming calls combined with SMS credits",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 5,
+  },
+  {
+    id: 12,
+    name: "Airtime + Data",
+    description: "Airtime recharge combined with data bundle",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 13,
+  },
+  {
+    id: 13,
+    name: "Custom Combo",
+    description: "User-defined combination of services",
+    created_at: "2025-01-20T10:00:00Z",
+    updated_at: "2025-01-20T10:00:00Z",
+    isActive: true,
+    metadataValue: 3,
+  },
+];
+
 // Offer Types Configuration
 export const offerTypesConfig: TypeConfigurationPageConfig = {
   // Page configuration
@@ -1829,6 +1950,45 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   createSuccessMessage: "Product type created successfully",
   updateSuccessMessage: "Product type updated successfully",
   deleteErrorMessage: "Failed to delete product type",
+  saveErrorMessage: "Please try again later.",
+};
+
+// Combo Types Configuration
+export const comboTypesConfig: TypeConfigurationPageConfig = {
+  title: "Combo Types",
+  subtitle: "Define and manage different types of product combinations",
+  entityName: "combo type",
+  entityNamePlural: "combo types",
+  configType: "comboTypes",
+  backPath: "/dashboard/configuration",
+  icon: Briefcase,
+  searchPlaceholder: "Search combo types by name or description...",
+  initialData: hardcodedComboTypes,
+  createButtonText: "Create Combo Type",
+  modalTitle: {
+    create: "Create New Combo Type",
+    edit: "Edit Combo Type",
+  },
+  nameLabel: "Combo Type Name",
+  nameRequired: true,
+  descriptionLabel: "Description",
+  descriptionRequired: false,
+  nameMaxLength: 150,
+  descriptionMaxLength: 600,
+  statusLabel: "Status",
+  metadataField: {
+    label: "Active Combos",
+    type: "number",
+    placeholder: "Enter number of active combos",
+  },
+  deleteConfirmTitle: "Delete Combo Type",
+  deleteConfirmMessage: (name: string) =>
+    `Are you sure you want to delete "${name}"? This action cannot be undone.`,
+  deleteSuccessMessage: (name: string) =>
+    `"${name}" has been deleted successfully.`,
+  createSuccessMessage: "Combo type created successfully",
+  updateSuccessMessage: "Combo type updated successfully",
+  deleteErrorMessage: "Failed to delete combo type",
   saveErrorMessage: "Please try again later.",
 };
 

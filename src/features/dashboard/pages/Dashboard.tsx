@@ -29,6 +29,7 @@ import EditProductPage from "../../products/pages/EditProductPage";
 import ProductDetailsPage from "../../products/pages/ProductDetailsPage";
 import ProductCategoriesPage from "../../products/pages/ProductCategoriesPage";
 import ProductTypesPage from "../../products/pages/ProductTypesPage";
+import ComboTypesPage from "../../products/pages/ComboTypesPage";
 import OfferTypesPage from "../../offers/pages/OfferTypesPage";
 import OfferCategoriesPage from "../../offers/pages/OfferCategoriesPage";
 import TrackingSourcesPage from "../../offers/pages/TrackingSourcesPage";
@@ -171,6 +172,7 @@ export default function Dashboard() {
           element={<AssignItemsPage itemType="products" />}
         /> */}
         <Route path="/product-types" element={<ProductTypesPage />} />
+        <Route path="/combo-types" element={<ComboTypesPage />} />
         <Route path="/offer-types" element={<OfferTypesPage />} />
         <Route path="/offer-catalogs" element={<OfferCategoriesPage />} />
         {/* Commented out - now using modal instead of page */}

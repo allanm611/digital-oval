@@ -215,6 +215,15 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/product-types",
       },
       {
+        id: "combo-types",
+        name: "Combo Types",
+        description: "Manage combo types and combinations",
+        type: "product",
+        category: "Product Configuration",
+        status: "active",
+        navigationPath: "/dashboard/combo-types",
+      },
+      {
         id: "product-catalogs",
         name: "Product Categories",
         description: "Manage product categories and catalogs",
