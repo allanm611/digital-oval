@@ -176,6 +176,18 @@ export default function TestBroadcastStep({
     onNext();
   };
 
+  const getChannelLabel = () => {
+    switch (data.channel) {
+      case "EMAIL":
+        return t.manualBroadcast.testInputLabelEmail.toLowerCase();
+      case "SMS":
+      case "WHATSAPP":
+        return t.manualBroadcast.testInputLabelPhone.toLowerCase();
+      default:
+        return t.manualBroadcast.testInputLabelGeneric.toLowerCase();
+    }
+  };
+
   return (
     <div
       className={`bg-white ${tw.rounded} shadow-sm border`}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
+import { Users, MessageSquare, Send, Calendar } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -161,12 +162,10 @@ export default function CreateManualBroadcastPage() {
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => navigate("/dashboard/quicklists")}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+              <BackButton
+                fallbackTo="/dashboard/quicklists"
+                className="text-gray-400 hover:text-gray-600"
+              />
               <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
                 {t.manualBroadcast.title}
               </h1>
