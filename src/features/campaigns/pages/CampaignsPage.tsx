@@ -21,8 +21,6 @@ import {
   Target,
   Clock,
   AlertCircle,
-  History,
-  Copy,
   BarChart3,
 } from "lucide-react";
 import { color, tw, button } from "../../../shared/utils/utils";
@@ -577,7 +575,6 @@ export default function CampaignsPage() {
         const data = response.data as CampaignStatsSummary;
         const overview = data.overview ?? {};
         const statusBreakdown = data.status_breakdown ?? {};
-        const approvalBreakdown = data.approval_status_breakdown ?? {};
         const activityStatus = data.activity_status ?? {};
 
         const total =
@@ -1951,7 +1948,9 @@ export default function CampaignsPage() {
                             onClick={() =>
                               setFilters({ ...filters, sortDirection: "ASC" })
                             }
-                            className={`flex-1 px-4 py-2 ${tw.rounded} border transition-colors ${
+                            className={`flex-1 px-4 py-2 ${
+                              tw.rounded
+                            } border transition-colors ${
                               filters.sortDirection === "ASC"
                                 ? `${tw.button} border-transparent`
                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
@@ -1963,7 +1962,9 @@ export default function CampaignsPage() {
                             onClick={() =>
                               setFilters({ ...filters, sortDirection: "DESC" })
                             }
-                            className={`flex-1 px-4 py-2 ${tw.rounded} border transition-colors ${
+                            className={`flex-1 px-4 py-2 ${
+                              tw.rounded
+                            } border transition-colors ${
                               filters.sortDirection === "DESC"
                                 ? `${tw.button} border-transparent`
                                 : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"

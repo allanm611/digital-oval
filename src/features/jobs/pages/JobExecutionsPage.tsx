@@ -13,13 +13,9 @@ import {
   Pause,
   Activity,
   X,
-  Calendar,
-  Link2,
   Archive,
   RotateCcw,
   Ban,
-  Zap,
-  TrendingUp,
   CheckSquare,
   Square,
 } from "lucide-react";
@@ -51,28 +47,6 @@ const STATUS_OPTIONS = [
   { label: "Cancelled", value: "cancelled" },
 ];
 
-const getStatusColor = (status: ExecutionStatus) => {
-  switch (status.toLowerCase()) {
-    case "success":
-      return "text-green-600 bg-green-50";
-    case "failure":
-      return "text-red-600 bg-red-50";
-    case "running":
-      return "text-blue-600 bg-blue-50";
-    case "queued":
-      return "text-yellow-600 bg-yellow-50";
-    case "pending":
-      return "text-gray-600 bg-gray-50";
-    case "aborted":
-    case "cancelled":
-      return "text-orange-600 bg-orange-50";
-    case "timeout":
-      return "text-purple-600 bg-purple-50";
-    default:
-      return "text-gray-600 bg-gray-50";
-  }
-};
-
 const formatDuration = (seconds: number | null) => {
   if (!seconds) return "—";
   if (seconds < 60) return `${seconds}s`;
@@ -95,7 +69,6 @@ export default function JobExecutionsPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
   const canWrite =
     ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
 
@@ -414,7 +387,7 @@ export default function JobExecutionsPage() {
             `${executionIds.length} execution(s) archived successfully`
           );
           break;
-        case "retry":
+        case "retry": {
           if (!user?.user_id) return;
           // Get unique job IDs from selected executions
           const jobIds = Array.from(
@@ -438,6 +411,7 @@ export default function JobExecutionsPage() {
             `Retrying failed executions for ${jobIds.length} job(s)`
           );
           break;
+        }
       }
       setSelectedExecutions(new Set());
       setIsSelectionMode(false);

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, Trash2, Filter, X, ExternalLink, Search } from "lucide-react";
+import { Bell, Trash2, X, ExternalLink, Search } from "lucide-react";
 import { useNotifications } from "../../../contexts/NotificationContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { notificationService } from "../services/notificationService";
@@ -23,10 +23,8 @@ export default function NotificationsPage() {
     error,
     refreshNotifications,
     markAsRead,
-    markAllAsRead,
     deleteNotification,
     deleteNotifications,
-    deleteAllRead,
   } = useNotifications();
 
   const [selectedNotifications, setSelectedNotifications] = useState<

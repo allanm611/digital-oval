@@ -3,11 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   AlertCircle,
-  CheckCircle,
   XCircle,
   Clock,
-  Activity,
-  PlayCircle,
   RefreshCw,
   Ban,
   Archive,
@@ -53,8 +50,6 @@ const formatDuration = (seconds: number | null) => {
   const minutes = Math.floor((seconds % 3600) / 60);
   return `${hours}h ${minutes}m`;
 };
-
-const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
 
 type ChartTooltipEntry = {
   color?: string;

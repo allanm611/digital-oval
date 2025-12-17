@@ -82,7 +82,11 @@ export default function CommunicationPolicyModal({
   }, [policy, isOpen]);
 
   const handleTypeChange = (newType: CommunicationPolicyType) => {
-    let defaultConfig: any;
+    let defaultConfig:
+      | TimeWindowConfig
+      | MaximumCommunicationConfig
+      | DNDConfig
+      | VIPListConfig;
 
     switch (newType) {
       case "timeWindow":
@@ -147,7 +151,7 @@ export default function CommunicationPolicyModal({
 
   const renderConfigurationFields = () => {
     switch (formData.type) {
-      case "timeWindow":
+      case "timeWindow": {
         const timeConfig = formData.config as TimeWindowConfig;
         return (
           <div className="space-y-4">
@@ -226,8 +230,9 @@ export default function CommunicationPolicyModal({
             </div>
           </div>
         );
+      }
 
-      case "maximumCommunication":
+      case "maximumCommunication": {
         const maxConfig = formData.config as MaximumCommunicationConfig;
         return (
           <div className="space-y-4">
@@ -280,8 +285,9 @@ export default function CommunicationPolicyModal({
             </div>
           </div>
         );
+      }
 
-      case "dnd":
+      case "dnd": {
         const dndConfig = formData.config as DNDConfig;
         return (
           <div className="space-y-4">
@@ -355,7 +361,7 @@ export default function CommunicationPolicyModal({
                           const newCategories = [...dndConfig.categories];
                           newCategories[index] = {
                             ...category,
-                            type: e.target.value as any,
+                            type: e.target.value as DNDCategory["type"],
                           };
                           setFormData((prev) => ({
                             ...prev,
@@ -428,8 +434,9 @@ export default function CommunicationPolicyModal({
             </div>
           </div>
         );
+      }
 
-      case "vipList":
+      case "vipList": {
         const vipConfig = formData.config as VIPListConfig;
         return (
           <div className="space-y-4">
@@ -487,6 +494,7 @@ export default function CommunicationPolicyModal({
             </div>
           </div>
         );
+      }
 
       default:
         return null;
@@ -581,7 +589,9 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isTypeDropdownOpen && (
-                    <div className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}>
+                    <div
+                      className={`absolute z-10 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-auto`}
+                    >
                       {COMMUNICATION_POLICY_TYPES.map((type) => (
                         <button
                           key={type.value}
@@ -638,7 +648,9 @@ export default function CommunicationPolicyModal({
           </div>
 
           {error && (
-            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
+            <div
+              className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+            >
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}

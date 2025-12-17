@@ -1,5 +1,4 @@
 import {
-  API_CONFIG,
   buildApiUrl,
   getAuthHeaders,
 } from "../../../shared/services/api";

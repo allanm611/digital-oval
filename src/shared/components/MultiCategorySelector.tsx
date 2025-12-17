@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, Search, Plus, X, Check } from "lucide-react";
 import { ProductCategory } from "../../features/products/types/productCategory";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color , tw} from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 
 interface MultiCategorySelectorProps {
   value?: number[]; // Array of selected category IDs
@@ -272,8 +273,17 @@ export default function MultiCategorySelector({
         )}
       </div>
 
-      {isOpen && (
-        <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
+      {isOpen && createPortal(
+        <div
+          style={{
+            position: "fixed",
+            top: `${dropdownRef.current?.getBoundingClientRect().bottom || 0}px`,
+            left: `${dropdownRef.current?.getBoundingClientRect().left || 0}px`,
+            width: `${dropdownRef.current?.getBoundingClientRect().width || 0}px`,
+            zIndex: zIndex.dropdown,
+          }}
+          className={`bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+        >
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -359,7 +369,8 @@ export default function MultiCategorySelector({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

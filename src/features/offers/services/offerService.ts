@@ -62,7 +62,7 @@ class OfferService {
         const text = await response.text();
         responseData = text ? JSON.parse(text) : {};
       }
-    } catch (parseError) {
+    } catch (_) {
       // If parsing fails, handle based on response status
       if (!response.ok) {
         throw new Error(
@@ -404,7 +404,7 @@ class OfferService {
 
   async approveOffer(
     id: number,
-    request: ApproveOfferRequest = {}
+    _request: ApproveOfferRequest = {}
   ): Promise<OfferResponse> {
     // Use updateOfferStatus - backend sets approval_status, approved_by, approved_at automatically
     const statusRequest: UpdateStatusRequest = {
@@ -502,7 +502,7 @@ class OfferService {
 
   async rejectOffer(
     id: number,
-    request?: { rejected_by?: number }
+    _request?: { rejected_by?: number }
   ): Promise<OfferResponse> {
     // Use updateOfferStatus - backend sets approval_status, approved_by, approved_at automatically
     const statusRequest: UpdateStatusRequest = {
@@ -548,7 +548,7 @@ class OfferService {
     const requestWithDefaults: BatchOfferProductLinkRequest = {
       links: request.links.map((link) => {
         // Remove created_by from link if it exists (shouldn't be there)
-        const { created_by: _, ...linkWithoutCreatedBy } = link;
+        const { created_by, ...linkWithoutCreatedBy } = link;
         return {
           ...linkWithoutCreatedBy,
           quantity: link.quantity ?? 1,

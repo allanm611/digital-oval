@@ -48,7 +48,6 @@ export default function ConnectionProfileDetailsPage() {
     valid_to: "",
   });
   const [validitySaving, setValiditySaving] = useState(false);
-  const [validityStatus, setValidityStatus] = useState<boolean | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
@@ -277,8 +276,6 @@ export default function ConnectionProfileDetailsPage() {
     );
   }
 
-  const Icon = getConnectionTypeIcon(profile.connection_type);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
@@ -340,7 +337,9 @@ export default function ConnectionProfileDetailsPage() {
                 <span>More</span>
               </button>
               {showMoreMenu && (
-                <div className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}>
+                <div
+                  className={`absolute right-0 top-full mt-1 w-56 bg-white ${tw.rounded} shadow-lg border border-gray-200 py-1 z-10`}
+                >
                   <button
                     onClick={() => {
                       handleMarkUsed();

@@ -118,7 +118,7 @@ const DUMMY_DND_SUBSCRIPTIONS: DNDSubscription[] = [
 export default function DNDChannelPage() {
   const navigate = useNavigate();
   const { channel } = useParams<{ channel: string }>();
-  const { success: showToast, error: showError } = useToast();
+  const { success: showToast } = useToast();
   const [dndSubscriptions] = useState<DNDSubscription[]>(
     DUMMY_DND_SUBSCRIPTIONS
   );
@@ -146,6 +146,7 @@ export default function DNDChannelPage() {
   });
 
   const handleRemoveCustomer = (subscription: DNDSubscription) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     // TODO: Implement remove functionality
     showToast("Remove customer functionality will be implemented");
   };

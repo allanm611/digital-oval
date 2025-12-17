@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Search, Plus, Users } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { color , tw} from "../../../../shared/utils/utils";
+import { color, tw } from "../../../../shared/utils/utils";
 import { segmentService } from "../../../segments/services/segmentService";
 import { Segment } from "../../../segments/types/segment";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -20,9 +20,8 @@ interface SegmentSelectionModalProps {
 
 // Helper function to convert Segment to CampaignSegment
 const convertToCampaignSegment = (segment: Segment): CampaignSegment => {
-  // Use actual customer count from segment data (size_estimate or customer_count)
-  const customerCount =
-    (segment as any).customer_count ?? segment.size_estimate ?? 0;
+  // Use actual customer count from segment data (size_estimate)
+  const customerCount = segment.size_estimate ?? 0;
 
   return {
     id: String(segment.segment_id || segment.id || ""),
@@ -137,7 +136,9 @@ export default function SegmentSelectionModal({
         height: "100vh",
       }}
     >
-      <div className={`bg-white ${tw.rounded}  w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+      <div
+        className={`bg-white ${tw.rounded}  w-full max-w-4xl max-h-[90vh] flex flex-col`}
+      >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -154,7 +155,9 @@ export default function SegmentSelectionModal({
             <X className="w-5 h-5" />
           </button>
           {tempSelectedSegments.length > 0 && (
-            <div className={`${tw.rounded} p-4 border border-gray-200 bg-gray-50 text-sm text-gray-700`}>
+            <div
+              className={`${tw.rounded} p-4 border border-gray-200 bg-gray-50 text-sm text-gray-700`}
+            >
               <div className="flex items-center justify-between">
                 <span>
                   {tempSelectedSegments.length} segment

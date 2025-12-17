@@ -28,7 +28,6 @@ export default function SelectCustomersStep({
   const [file, setFile] = useState<File | null>(data.audienceFile || null);
   const [uploadType, setUploadType] = useState<string>(data.uploadType || "");
   const [name, setName] = useState(data.audienceName || "");
-  const [listType, setListType] = useState("Standard");
   const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

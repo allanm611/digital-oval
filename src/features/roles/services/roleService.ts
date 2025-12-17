@@ -35,7 +35,7 @@ class RoleService {
     let parsed: unknown;
     try {
       parsed = JSON.parse(responseText);
-    } catch (error) {
+    } catch (_) {
       throw new Error(
         `Invalid JSON response from roles API. First 200 chars: ${responseText.substring(
           0,

@@ -103,7 +103,7 @@ class SegmentService {
         const text = await response.text();
         responseData = text ? JSON.parse(text) : {};
       }
-    } catch (parseError) {
+    } catch (_) {
       // If parsing fails, handle based on response status
       if (!response.ok) {
         throw new Error(
@@ -1084,7 +1084,7 @@ class SegmentService {
    * NOTE: This endpoint doesn't exist in the backend - disabled
    */
   async getSegmentRules(
-    segmentId: number
+    _segmentId: number
   ): Promise<ApiSuccessResponse<SegmentRuleType[]>> {
     // Endpoint doesn't exist - return empty array
     console.warn("getSegmentRules endpoint doesn't exist in backend");
@@ -1394,7 +1394,7 @@ class SegmentService {
     let filteredMembers = allMembers;
     if (request.query) {
       const searchTerm = request.query.toLowerCase();
-      filteredMembers = allMembers.filter((member: any) => {
+      filteredMembers = allMembers.filter((member: { name?: string; email?: string; customer_id?: string | number }) => {
         const name = String(member.name || "").toLowerCase();
         const email = String(member.email || "").toLowerCase();
         const customerId = String(member.customer_id || "").toLowerCase();

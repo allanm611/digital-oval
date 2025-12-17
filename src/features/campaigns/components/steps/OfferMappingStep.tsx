@@ -61,8 +61,6 @@ export default function OfferMappingStep({
     SequentialOfferMapping[]
   >([]);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
-  const [invalidOffers, setInvalidOffers] = useState<string[]>([]);
-  const [isValidatingOffers, setIsValidatingOffers] = useState(false);
 
   const isRoundRobinOrMultiLevel =
     formData.campaign_type === "round_robin" ||
@@ -232,8 +230,6 @@ export default function OfferMappingStep({
       return { isValid: true, invalidOffers: [] };
     }
 
-    const invalidOffersList: string[] = [];
-
     try {
       // Fetch status for each offer
       const statusPromises = offers.map(async (offer) => {
@@ -274,14 +270,10 @@ export default function OfferMappingStep({
   useEffect(() => {
     const checkOfferStatuses = async () => {
       if (selectedOffers.length === 0) {
-        setInvalidOffers([]);
         return;
       }
 
-      setIsValidatingOffers(true);
       const validation = await validateOfferStatuses(selectedOffers);
-      setInvalidOffers(validation.invalidOffers);
-      setIsValidatingOffers(false);
 
       // Set validation error if there are invalid offers
       if (!validation.isValid && validation.invalidOffers.length > 0) {

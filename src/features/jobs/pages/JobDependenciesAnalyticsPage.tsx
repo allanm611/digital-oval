@@ -21,6 +21,12 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { jobDependencyService } from "../services/jobDependencyService";
+import {
+  DependencyStatistics,
+  DependencyStatisticsResponse,
+  MostDependedResponse,
+  OrphanedJobsResponse,
+} from "../types/jobDependency";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -98,7 +104,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [statistics, setStatistics] = useState<any>(null);
+  const [statistics, setStatistics] = useState<DependencyStatistics | null>(null);
   const [dependencyTypeDistribution, setDependencyTypeDistribution] = useState<
     Array<{ name: string; value: number }>
   >([]);

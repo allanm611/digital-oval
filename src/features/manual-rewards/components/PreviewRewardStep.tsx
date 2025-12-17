@@ -6,14 +6,12 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface PreviewRewardStepProps {
   data: ManualRewardData;
-  onUpdate: (data: Partial<ManualRewardData>) => void;
   onNext: () => void;
   onPrevious: () => void;
 }
 
 export default function PreviewRewardStep({
   data,
-  onUpdate,
   onNext,
   onPrevious,
 }: PreviewRewardStepProps) {

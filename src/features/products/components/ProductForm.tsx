@@ -12,7 +12,7 @@ import {
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { tw, color } from "../../../shared/utils/utils";
+import { tw, color, zIndex } from "../../../shared/utils/utils";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 
 interface ProductFormProps {
@@ -51,7 +51,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   // Get product types from configuration
   const { data: productTypes } = useConfigurationData("productTypes");
-  
+
   // Combo data state
   const [comboData, setComboData] = useState<ComboProductData>(() => {
     if (formData.combo_data) {
@@ -111,7 +111,9 @@ export default function ProductForm({
   ];
 
   // Unit options for combo resources
-  const getComboUnitOptions = (resourceType: ComboResourceType): { label: string; value: ProductUnit }[] => {
+  const getComboUnitOptions = (
+    resourceType: ComboResourceType
+  ): { label: string; value: ProductUnit }[] => {
     switch (resourceType) {
       case "data":
         return [{ label: "Data (MB)", value: "data_mb" }];
@@ -134,7 +136,8 @@ export default function ProductForm({
 
   // Combo resource handlers
   const addComboResource = (resourceType: ComboResourceType) => {
-    const defaultUnit = getComboUnitOptions(resourceType)[0]?.value || "data_mb";
+    const defaultUnit =
+      getComboUnitOptions(resourceType)[0]?.value || "data_mb";
     const newResource: ComboResource = {
       resource_type: resourceType,
       unit: defaultUnit,
@@ -366,12 +369,20 @@ export default function ProductForm({
                     value: String(pt.id),
                     label: pt.name,
                   }))}
-                value={formData.product_type_id ? String(formData.product_type_id) : ""}
+                value={
+                  formData.product_type_id
+                    ? String(formData.product_type_id)
+                    : ""
+                }
                 onChange={(value) =>
-                  onInputChange("product_type_id", value ? parseInt(value, 10) : undefined)
+                  onInputChange(
+                    "product_type_id",
+                    value ? parseInt(value, 10) : undefined
+                  )
                 }
                 placeholder="Select product type"
                 className="w-full"
+                zIndex={zIndex.dropdown}
               />
             </div>
 
@@ -385,10 +396,15 @@ export default function ProductForm({
                 }}
               >
                 <div className="mb-4">
-                  <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-1`}>
+                  <h3
+                    className={`text-sm font-semibold ${tw.textPrimary} mb-1`}
+                  >
                     Combo Resources
                   </h3>
-                  <p className="text-xs" style={{ color: color.text.secondary }}>
+                  <p
+                    className="text-xs"
+                    style={{ color: color.text.secondary }}
+                  >
                     Add resources (Data, Voice, SMS) to this combo product
                   </p>
                 </div>
@@ -452,7 +468,8 @@ export default function ProductForm({
                       backgroundColor: "transparent",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = color.surface.background;
+                      e.currentTarget.style.backgroundColor =
+                        color.surface.background;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "transparent";
@@ -472,7 +489,8 @@ export default function ProductForm({
                       backgroundColor: "transparent",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = color.surface.background;
+                      e.currentTarget.style.backgroundColor =
+                        color.surface.background;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "transparent";
@@ -492,7 +510,8 @@ export default function ProductForm({
                       backgroundColor: "transparent",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = color.surface.background;
+                      e.currentTarget.style.backgroundColor =
+                        color.surface.background;
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = "transparent";
@@ -556,6 +575,7 @@ export default function ProductForm({
                               }
                               placeholder="Select unit"
                               className="w-full"
+                              zIndex={zIndex.dropdown}
                             />
                           </div>
 
@@ -641,6 +661,7 @@ export default function ProductForm({
                   }
                   placeholder="Select scope"
                   className="w-full"
+                  zIndex={zIndex.dropdown}
                 />
               </div>
 
@@ -665,6 +686,7 @@ export default function ProductForm({
                   }
                   placeholder="Select unit"
                   className="w-full"
+                  zIndex={zIndex.dropdown}
                 />
               </div>
             </div>

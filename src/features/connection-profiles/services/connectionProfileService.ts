@@ -42,7 +42,7 @@ class ConnectionProfileService {
     if (hasBody) {
       try {
         parsed = JSON.parse(responseText);
-      } catch (error) {
+      } catch {
         throw new Error(`Invalid JSON response from connection profiles API`);
       }
     }

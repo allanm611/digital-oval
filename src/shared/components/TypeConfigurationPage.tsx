@@ -34,6 +34,14 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   country?: string;
   characterSet?: string;
   whatsappLanguageCode?: string;
+  // Character Set fields
+  messageType?: string;
+  characterSetType?: string;
+  characterSetSize?: number;
+  standardChars?: string;
+  doubleChars?: string;
+  tripleChars?: string;
+  quadChars?: string;
 }
 
 interface MetadataFieldConfig {
@@ -124,7 +132,7 @@ function TypeConfigurationModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
-  const [metadataValue, setMetadataValue] = useState<string>("");
+  const [metadataValue, setMetadataValue] = useState<string | number>("");
   // Template content fields (for Creative Templates)
   const [title, setTitle] = useState("");
   const [textBody, setTextBody] = useState("");
@@ -186,7 +194,11 @@ function TypeConfigurationModal({
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
           fields[field.fieldKey] =
-            ((item as Record<string, unknown>)[field.fieldKey] as string) || "";
+            String(
+              (item as TypeConfigurationItem)[
+                field.fieldKey as keyof TypeConfigurationItem
+              ]
+            ) || "";
         });
         setCustomFields(fields);
       }
@@ -415,16 +427,26 @@ function TypeConfigurationModal({
               </label>
               {config.metadataField.type === "select" ? (
                 <HeadlessSelect
-                  value={metadataValue}
-                  onChange={(value) => setMetadataValue(value || "")}
+                  value={String(metadataValue || "")}
+                  onChange={(value: string | number) =>
+                    setMetadataValue(value || "")
+                  }
                   options={config.metadataField.options || []}
                   placeholder={config.metadataField.placeholder}
                 />
               ) : (
                 <input
                   type={config.metadataField.type}
-                  value={metadataValue}
-                  onChange={(e) => setMetadataValue(e.target.value)}
+                  value={String(metadataValue || "")}
+                  onChange={(e) =>
+                    setMetadataValue(
+                      config.metadataField?.type === "number"
+                        ? e.target.value
+                          ? parseFloat(e.target.value)
+                          : ""
+                        : e.target.value
+                    )
+                  }
                   className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                   placeholder={config.metadataField.placeholder}
                 />
@@ -448,11 +470,11 @@ function TypeConfigurationModal({
                   </label>
                   {field.type === "select" ? (
                     <HeadlessSelect
-                      value={customFields[field.fieldKey] || ""}
+                      value={String(customFields[field.fieldKey] || "")}
                       onChange={(value) =>
                         setCustomFields((prev) => ({
                           ...prev,
-                          [field.fieldKey]: value || "",
+                          [field.fieldKey]: String(value || ""),
                         }))
                       }
                       options={
@@ -527,8 +549,8 @@ function TypeConfigurationModal({
                   {t.genericConfig.languageOptional}
                 </label>
                 <HeadlessSelect
-                  value={locale}
-                  onChange={(value) => setLocale(value || "")}
+                  value={String(locale || "")}
+                  onChange={(value) => setLocale(String(value || ""))}
                   options={[
                     {
                       value: "",
@@ -537,7 +559,7 @@ function TypeConfigurationModal({
                     ...(languages as TypeConfigurationItem[])
                       .filter((lang) => lang.isActive)
                       .map((lang) => ({
-                        value: lang.metadataValue as string,
+                        value: String(lang.metadataValue || ""),
                         label: lang.name,
                       })),
                   ]}
@@ -902,6 +924,15 @@ export default function TypeConfigurationPage({
                       >
                         Character Set Type
                       </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.statusLabel || "Status"}
+                      </th>
                     </>
                   ) : (
                     <>
@@ -913,6 +944,15 @@ export default function TypeConfigurationPage({
                         }}
                       >
                         Description
+                      </th>
+                      <th
+                        className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                        style={{
+                          color: color.surface.tableHeaderText,
+                          backgroundColor: color.surface.tableHeader,
+                        }}
+                      >
+                        {config.statusLabel || "Status"}
                       </th>
                       {config.metadataField && (
                         <th
@@ -973,8 +1013,10 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <div className={`text-sm ${tw.textPrimary}`}>
-                            {(item as unknown as Record<string, unknown>)
-                              .messageType || "—"}
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .messageType || "—"
+                            )}
                           </div>
                         </td>
                         <td
@@ -984,9 +1026,23 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <div className={`text-sm ${tw.textPrimary}`}>
-                            {(item as unknown as Record<string, unknown>)
-                              .characterSetType || "—"}
+                            {String(
+                              (item as unknown as Record<string, unknown>)
+                                .characterSetType || "—"
+                            )}
                           </div>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {item.isActive ?? true
+                              ? t.genericConfig.active
+                              : t.genericConfig.inactive}
+                          </span>
                         </td>
                       </>
                     ) : (
@@ -1003,6 +1059,18 @@ export default function TypeConfigurationPage({
                             {item.description || t.genericConfig.noDescription}
                           </div>
                         </td>
+                        <td
+                          className="px-6 py-4"
+                          style={{
+                            backgroundColor: color.surface.tablebodybg,
+                          }}
+                        >
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {item.isActive ?? true
+                              ? t.genericConfig.active
+                              : t.genericConfig.inactive}
+                          </span>
+                        </td>
                         {config.metadataField && (
                           <td
                             className="px-6 py-4"
@@ -1017,20 +1085,6 @@ export default function TypeConfigurationPage({
                         )}
                       </>
                     )}
-                    <td
-                      className="px-6 py-4"
-                      style={{
-                        backgroundColor: color.surface.tablebodybg,
-                        borderTopRightRadius: "0.375rem",
-                        borderBottomRightRadius: "0.375rem",
-                      }}
-                    >
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {item.isActive ?? true
-                          ? t.genericConfig.active
-                          : t.genericConfig.inactive}
-                      </span>
-                    </td>
                     <td
                       className="px-6 py-4 text-right"
                       style={{
