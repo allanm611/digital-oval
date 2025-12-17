@@ -8,7 +8,7 @@ import {
 } from "../types/segment";
 import SegmentConditionsBuilder from "./SegmentConditionsBuilder";
 import { segmentService } from "../services/segmentService";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import MultiCategorySelector from "../../../shared/components/MultiCategorySelector";
 
 interface SegmentModalProps {
@@ -512,13 +512,13 @@ export default function SegmentModal({
 
   return isOpen
     ? createPortal(
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div
-              className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-              onClick={onClose}
-            />
-
+        <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: zIndex.modal }}>
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={onClose}
+            style={{ zIndex: zIndex.overlay }}
+          />
+          <div className="flex min-h-full items-center justify-center p-4 relative" style={{ zIndex: zIndex.modal }}>
             <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}>
               {/* Header */}
               <div

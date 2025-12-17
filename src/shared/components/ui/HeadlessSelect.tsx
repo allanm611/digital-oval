@@ -121,7 +121,7 @@ export default function HeadlessSelect({
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
-              zIndex: effectiveZIndex + 1,
+              zIndex: zIndexTokens.popover,
             }}
             onClick={() => setIsOpen(false)}
           >
@@ -182,7 +182,7 @@ export default function HeadlessSelect({
         <div
           className="fixed inset-0"
           onClick={() => setIsOpen(false)}
-          style={{ zIndex: effectiveZIndex }}
+          style={{ zIndex: zIndexTokens.popover - 1 }}
         />
       )}
     </div>

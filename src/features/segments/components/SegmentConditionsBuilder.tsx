@@ -6,7 +6,7 @@ import {
   SEGMENT_FIELDS,
   OPERATOR_LABELS,
 } from "../types/segment";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
 import SegmentPickerModal from "./SegmentPickerModal";
@@ -778,6 +778,7 @@ export default function SegmentConditionsBuilder({
                         }}
                         placeholder="Select type"
                         className="text-sm"
+                        zIndex={zIndex.dropdown}
                       />
                     </div>
                   </div>

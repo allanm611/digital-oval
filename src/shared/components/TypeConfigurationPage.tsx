@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { color, tw, button } from "../utils/utils";
+import { color, tw, button, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -416,7 +416,7 @@ function TypeConfigurationModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
       <div
         className={`${tw.rounded} shadow-2xl w-full bg-white ${
           isCreativeTemplate
