@@ -70,7 +70,9 @@ export default function StepExecutionDetailsPage() {
   const [execution, setExecution] = useState<StepExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState<ExecutionProgress | null>(null);
-  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(null);
+  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(
+    null
+  );
   const [runningDuration, setRunningDuration] = useState<number | null>(null);
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
 

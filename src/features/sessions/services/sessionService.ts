@@ -1,7 +1,4 @@
-import {
-  buildApiUrl,
-  getAuthHeaders,
-} from "../../../shared/services/api";
+import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 import {
   SessionType,
   CreateSessionRequest,

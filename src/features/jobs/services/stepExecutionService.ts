@@ -3,7 +3,29 @@ import type {
   StepExecution,
   StepExecutionListResponse,
 } from "../types/stepExecution";
-import type { ExecutionStatistics, SuccessRateResponse, AverageDurationResponse, ErrorAnalysisItem, TrendDataPoint, ExecutionsByHour, PeakTimes, FailurePattern, PerformanceSummary, ExecutionDistribution, StepFailureAnalysis, DurationOutlier, RetryAnalysis, ExecutionTimelineItem, SlowestExecution, ResourceIssue, ExecutionHeatmap, AnomalyDetection, ConcurrentExecutionAnalysis, HealthScoreResponse, ExecutionComparison } from "../types/jobExecution";
+import type {
+  ExecutionStatistics,
+  SuccessRateResponse,
+  AverageDurationResponse,
+  ErrorAnalysisItem,
+  TrendDataPoint,
+  ExecutionsByHour,
+  PeakTimes,
+  FailurePattern,
+  PerformanceSummary,
+  ExecutionDistribution,
+  StepFailureAnalysis,
+  DurationOutlier,
+  RetryAnalysis,
+  ExecutionTimelineItem,
+  SlowestExecution,
+  ResourceIssue,
+  ExecutionHeatmap,
+  AnomalyDetection,
+  ConcurrentExecutionAnalysis,
+  HealthScoreResponse,
+  ExecutionComparison,
+} from "../types/jobExecution";
 
 const BASE_URL = buildApiUrl("/step-executions");
 
@@ -728,7 +750,9 @@ class StepExecutionService {
    * Get Peak Execution Times
    * GET /step-executions/peak-times
    */
-  async getPeakExecutionTimes(params?: { stepId?: number }): Promise<PeakTimes[]> {
+  async getPeakExecutionTimes(params?: {
+    stepId?: number;
+  }): Promise<PeakTimes[]> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
     });
@@ -778,7 +802,9 @@ class StepExecutionService {
       stepId: params?.stepId,
       // daysBack: params?.daysBack ?? 30, // Commented out - not allowed by backend
     });
-    return this.request<StepFailureAnalysis[]>(`/step-failure-analysis${query}`);
+    return this.request<StepFailureAnalysis[]>(
+      `/step-failure-analysis${query}`
+    );
   }
 
   /**
@@ -824,7 +850,9 @@ class StepExecutionService {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
     });
-    return this.request<ExecutionTimelineItem[]>(`/steps/${stepId}/timeline${query}`);
+    return this.request<ExecutionTimelineItem[]>(
+      `/steps/${stepId}/timeline${query}`
+    );
   }
 
   /**
@@ -868,7 +896,9 @@ class StepExecutionService {
     const query = this.buildQueryString({
       currentPeriodDays: params?.currentPeriodDays ?? 7,
     });
-    return this.request<ExecutionComparison>(`/steps/${stepId}/comparison${query}`);
+    return this.request<ExecutionComparison>(
+      `/steps/${stepId}/comparison${query}`
+    );
   }
 
   /**
@@ -899,7 +929,9 @@ class StepExecutionService {
    * Get Execution Health Score
    * GET /step-executions/health-score
    */
-  async getExecutionHealthScore(params?: { stepId?: number }): Promise<HealthScoreResponse> {
+  async getExecutionHealthScore(params?: {
+    stepId?: number;
+  }): Promise<HealthScoreResponse> {
     const query = this.buildQueryString({
       stepId: params?.stepId,
     });

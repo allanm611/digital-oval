@@ -1394,16 +1394,22 @@ class SegmentService {
     let filteredMembers = allMembers;
     if (request.query) {
       const searchTerm = request.query.toLowerCase();
-      filteredMembers = allMembers.filter((member: { name?: string; email?: string; customer_id?: string | number }) => {
-        const name = String(member.name || "").toLowerCase();
-        const email = String(member.email || "").toLowerCase();
-        const customerId = String(member.customer_id || "").toLowerCase();
-        return (
-          name.includes(searchTerm) ||
-          email.includes(searchTerm) ||
-          customerId.includes(searchTerm)
-        );
-      });
+      filteredMembers = allMembers.filter(
+        (member: {
+          name?: string;
+          email?: string;
+          customer_id?: string | number;
+        }) => {
+          const name = String(member.name || "").toLowerCase();
+          const email = String(member.email || "").toLowerCase();
+          const customerId = String(member.customer_id || "").toLowerCase();
+          return (
+            name.includes(searchTerm) ||
+            email.includes(searchTerm) ||
+            customerId.includes(searchTerm)
+          );
+        }
+      );
     }
 
     // Handle pagination client-side

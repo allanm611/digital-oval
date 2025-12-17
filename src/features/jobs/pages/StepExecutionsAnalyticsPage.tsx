@@ -24,7 +24,7 @@ import {
   Line,
 } from "recharts";
 import { stepExecutionService } from "../services/stepExecutionService";
-import { 
+import {
   ExecutionStatistics,
   SuccessRateResponse,
   AverageDurationResponse,
@@ -43,7 +43,7 @@ import {
   ExecutionComparison,
   ExecutionHeatmap,
   AnomalyDetection,
-  ConcurrentExecutionAnalysis
+  ConcurrentExecutionAnalysis,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -56,35 +56,59 @@ export default function StepExecutionsAnalyticsPage() {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [statistics, setStatistics] = useState<ExecutionStatistics | null>(null);
-  const [successRate, setSuccessRate] = useState<SuccessRateResponse | null>(null);
-  const [averageDuration, setAverageDuration] = useState<AverageDurationResponse | null>(null);
+  const [statistics, setStatistics] = useState<ExecutionStatistics | null>(
+    null
+  );
+  const [successRate, setSuccessRate] = useState<SuccessRateResponse | null>(
+    null
+  );
+  const [averageDuration, setAverageDuration] =
+    useState<AverageDurationResponse | null>(null);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<ExecutionByTrigger[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState<
+    ExecutionByTrigger[]
+  >([]);
   const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
-  const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
-  const [executionsByHour, setExecutionsByHour] = useState<ExecutionsByHour[]>([]);
+  const [performanceSummary, setPerformanceSummary] =
+    useState<PerformanceSummary | null>(null);
+  const [executionDistribution, setExecutionDistribution] = useState<
+    ExecutionDistribution[]
+  >([]);
+  const [executionsByHour, setExecutionsByHour] = useState<ExecutionsByHour[]>(
+    []
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [peakTimes, setPeakTimes] = useState<PeakTimes[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
+  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(
+    null
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(null);
+  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(
+    null
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>([]);
+  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>(
+    []
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  const [executionTimeline, setExecutionTimeline] = useState<
+    ExecutionTimelineItem[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  const [executionComparison, setExecutionComparison] =
+    useState<ExecutionComparison | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  const [executionHeatmap, setExecutionHeatmap] =
+    useState<ExecutionHeatmap | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [anomalyDetection, setAnomalyDetection] = useState<AnomalyDetection | null>(null);
+  const [anomalyDetection, setAnomalyDetection] =
+    useState<AnomalyDetection | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [concurrentAnalysis, setConcurrentAnalysis] = useState<ConcurrentExecutionAnalysis | null>(null);
+  const [concurrentAnalysis, setConcurrentAnalysis] =
+    useState<ConcurrentExecutionAnalysis | null>(null);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);

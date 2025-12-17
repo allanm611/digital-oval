@@ -27,7 +27,7 @@ import {
 } from "recharts";
 import { useAuth } from "../../../contexts/AuthContext";
 import { jobExecutionService } from "../services/jobExecutionService";
-import { 
+import {
   JobExecution,
   ExecutionProgress,
   ResourceUsage,
@@ -37,7 +37,7 @@ import {
   ExecutionHeatmap,
   SLAPrediction,
   ExecutionTimelineItem,
-  DailySummary
+  DailySummary,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -141,17 +141,29 @@ export default function JobExecutionDetailsPage() {
   const [execution, setExecution] = useState<JobExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [progress, setProgress] = useState<ExecutionProgress | null>(null);
-  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(null);
+  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(
+    null
+  );
   const [runningDuration, setRunningDuration] = useState<number | null>(null);
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
 
   // Job Analytics state
-  const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
-  const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
-  const [completionForecast, setCompletionForecast] = useState<CompletionForecast[]>([]);
-  const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
-  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(null);
-  const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  const [executionDistribution, setExecutionDistribution] = useState<
+    ExecutionDistribution[]
+  >([]);
+  const [executionComparison, setExecutionComparison] =
+    useState<ExecutionComparison | null>(null);
+  const [completionForecast, setCompletionForecast] = useState<
+    CompletionForecast[]
+  >([]);
+  const [executionHeatmap, setExecutionHeatmap] =
+    useState<ExecutionHeatmap | null>(null);
+  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(
+    null
+  );
+  const [executionTimeline, setExecutionTimeline] = useState<
+    ExecutionTimelineItem[]
+  >([]);
   const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
 
@@ -774,11 +786,16 @@ export default function JobExecutionDetailsPage() {
                         <ul className="text-xs text-gray-600 space-y-1">
                           {slaPrediction.factors
                             .slice(0, 3)
-                            .map((factor: { factor: string; impact: number }, idx: number) => (
-                              <li key={idx}>
-                                • {factor.factor}: {factor.impact}% impact
-                              </li>
-                            ))}
+                            .map(
+                              (
+                                factor: { factor: string; impact: number },
+                                idx: number
+                              ) => (
+                                <li key={idx}>
+                                  • {factor.factor}: {factor.impact}% impact
+                                </li>
+                              )
+                            )}
                         </ul>
                       </div>
                     )}
@@ -872,11 +889,14 @@ export default function JobExecutionDetailsPage() {
                   </h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart
-                      data={executionTimeline.slice(0, 10).map((item: ExecutionTimelineItem) => ({
-                        execution: item.execution_id?.substring(0, 8) || "N/A",
-                        duration: item.duration_seconds || 0,
-                        status: item.status,
-                      }))}
+                      data={executionTimeline
+                        .slice(0, 10)
+                        .map((item: ExecutionTimelineItem) => ({
+                          execution:
+                            item.execution_id?.substring(0, 8) || "N/A",
+                          duration: item.duration_seconds || 0,
+                          status: item.status,
+                        }))}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="execution" />
@@ -906,12 +926,14 @@ export default function JobExecutionDetailsPage() {
                   </h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
-                      data={dailySummary.slice(0, 14).map((summary: DailySummary) => ({
-                        date: summary.date,
-                        successful: summary.successful_executions || 0,
-                        failed: summary.failed_executions || 0,
-                        total: summary.total_executions || 0,
-                      }))}
+                      data={dailySummary
+                        .slice(0, 14)
+                        .map((summary: DailySummary) => ({
+                          date: summary.date,
+                          successful: summary.successful_executions || 0,
+                          failed: summary.failed_executions || 0,
+                          total: summary.total_executions || 0,
+                        }))}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -959,7 +981,8 @@ export default function JobExecutionDetailsPage() {
                             {
                               name: "Failed",
                               value: executionDistribution.reduce(
-                                (sum: number, d: ExecutionDistribution) => sum + (d.failed || 0),
+                                (sum: number, d: ExecutionDistribution) =>
+                                  sum + (d.failed || 0),
                                 0
                               ),
                             },

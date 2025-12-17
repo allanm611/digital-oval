@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  TrendingUp,
-  CheckCircle,
-  BarChart3,
-} from "lucide-react";
+import { ArrowLeft, TrendingUp, CheckCircle, BarChart3 } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -22,7 +17,7 @@ import {
   Line,
 } from "recharts";
 import { jobExecutionService } from "../services/jobExecutionService";
-import { 
+import {
   AverageDurationResponse,
   TrendDataPoint,
   ErrorAnalysisItem,
@@ -49,7 +44,7 @@ import {
   AnomalyDetection,
   ConcurrentExecutionAnalysis,
   PartitionInfo,
-  ExecutionTimelineItem
+  ExecutionTimelineItem,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -115,56 +110,93 @@ export default function JobExecutionsAnalyticsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [averageDuration, setAverageDuration] = useState<AverageDurationResponse | null>(null);
+  const [averageDuration, setAverageDuration] =
+    useState<AverageDurationResponse | null>(null);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<ExecutionByTrigger[]>([]);
-  const [triggerDistribution, setTriggerDistribution] = useState<ExecutionByTrigger[]>([]);
-  const [resourceUtilization, setResourceUtilization] = useState<ResourceUtilizationStats | null>(null);
+  const [statusDistribution, setStatusDistribution] = useState<
+    ExecutionByTrigger[]
+  >([]);
+  const [triggerDistribution, setTriggerDistribution] = useState<
+    ExecutionByTrigger[]
+  >([]);
+  const [resourceUtilization, setResourceUtilization] =
+    useState<ResourceUtilizationStats | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dataQualityMetrics, setDataQualityMetrics] = useState<DataQualityMetrics | null>(null);
+  const [dataQualityMetrics, setDataQualityMetrics] =
+    useState<DataQualityMetrics | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
-  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  const [performanceSummary, setPerformanceSummary] =
+    useState<PerformanceSummary | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
+  const [executionDistribution, setExecutionDistribution] = useState<
+    ExecutionDistribution[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
   const [workerNodeStats, setWorkerNodeStats] = useState<WorkerNodeStats[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [serverInstanceStats, setServerInstanceStats] = useState<ServerInstanceStats[]>([]);
-  const [stepFailureAnalysis, setStepFailureAnalysis] = useState<StepFailureAnalysis[]>([]);
+  const [serverInstanceStats, setServerInstanceStats] = useState<
+    ServerInstanceStats[]
+  >([]);
+  const [stepFailureAnalysis, setStepFailureAnalysis] = useState<
+    StepFailureAnalysis[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>([]);
+  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>(
+    []
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(null);
-  const [executionsByHour, setExecutionsByHour] = useState<ExecutionByHour[]>([]);
+  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(
+    null
+  );
+  const [executionsByHour, setExecutionsByHour] = useState<ExecutionByHour[]>(
+    []
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [peakTimes, setPeakTimes] = useState<ExecutionByHour[]>([]);
-  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
-  const [slowestExecutions, setSlowestExecutions] = useState<SlowestExecution[]>([]);
+  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(
+    null
+  );
+  const [slowestExecutions, setSlowestExecutions] = useState<
+    SlowestExecution[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [resourceIssues, setResourceIssues] = useState<ResourceIssue[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  const [executionComparison, setExecutionComparison] =
+    useState<ExecutionComparison | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [completionForecast, setCompletionForecast] = useState<CompletionForecast[]>([]);
+  const [completionForecast, setCompletionForecast] = useState<
+    CompletionForecast[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  const [executionHeatmap, setExecutionHeatmap] =
+    useState<ExecutionHeatmap | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(null);
+  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(
+    null
+  );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [anomalyDetection, setAnomalyDetection] = useState<AnomalyDetection | null>(null);
+  const [anomalyDetection, setAnomalyDetection] =
+    useState<AnomalyDetection | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [concurrentAnalysis, setConcurrentAnalysis] = useState<ConcurrentExecutionAnalysis | null>(null);
+  const [concurrentAnalysis, setConcurrentAnalysis] =
+    useState<ConcurrentExecutionAnalysis | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [partitionInfo, setPartitionInfo] = useState<PartitionInfo[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pendingCleanup, setPendingCleanup] = useState<JobExecutionListResponse | null>(null);
+  const [pendingCleanup, setPendingCleanup] =
+    useState<JobExecutionListResponse | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<ExecutionByTrigger[]>([]);
+  const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<
+    ExecutionByTrigger[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  const [executionTimeline, setExecutionTimeline] = useState<
+    ExecutionTimelineItem[]
+  >([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dailySummaryJob, setDailySummaryJob] = useState<DailySummary[]>([]);
 
@@ -779,22 +811,27 @@ export default function JobExecutionsAnalyticsPage() {
             </div>
             {healthScore.factors && healthScore.factors.length > 0 && (
               <div className="flex-1">
-                {healthScore.factors.map((factor: { factor: string; score: number; weight: number }, idx: number) => (
-                  <div key={idx} className="mb-2">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">{factor.factor}</span>
-                      <span className="font-medium">
-                        {factor.score.toFixed(0)}
-                      </span>
+                {healthScore.factors.map(
+                  (
+                    factor: { factor: string; score: number; weight: number },
+                    idx: number
+                  ) => (
+                    <div key={idx} className="mb-2">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600">{factor.factor}</span>
+                        <span className="font-medium">
+                          {factor.score.toFixed(0)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${factor.score}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${factor.score}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
           </div>
@@ -918,35 +955,37 @@ export default function JobExecutionsAnalyticsPage() {
             Slowest Executions
           </h3>
           <div className="space-y-2">
-            {slowestExecutions.slice(0, 10).map((exec: SlowestExecution, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded"
-              >
-                <div>
-                  <p className="text-sm font-medium">
-                    Job {exec.job_id || "—"}
-                  </p>
-                  <p className="text-xs text-gray-500 font-mono">
-                    {exec.execution_id
-                      ? `${exec.execution_id.substring(0, 8)}...`
-                      : "—"}
-                  </p>
+            {slowestExecutions
+              .slice(0, 10)
+              .map((exec: SlowestExecution, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                >
+                  <div>
+                    <p className="text-sm font-medium">
+                      Job {exec.job_id || "—"}
+                    </p>
+                    <p className="text-xs text-gray-500 font-mono">
+                      {exec.execution_id
+                        ? `${exec.execution_id.substring(0, 8)}...`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold">
+                      {exec.duration_seconds
+                        ? `${Math.round(exec.duration_seconds / 60)}m`
+                        : "—"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {exec.started_at
+                        ? new Date(exec.started_at).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold">
-                    {exec.duration_seconds
-                      ? `${Math.round(exec.duration_seconds / 60)}m`
-                      : "—"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {exec.started_at
-                      ? new Date(exec.started_at).toLocaleDateString()
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}

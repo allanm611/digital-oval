@@ -27,7 +27,7 @@ import type {
   CampaignRow,
 } from "../types/ReportsAPI";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 // Extract types from API response type
 type CampaignSummary = CampaignReportsResponse["summary"];
 type ChannelReachPoint = CampaignReportsResponse["channelReach"][number];
@@ -372,7 +372,9 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -755,7 +757,9 @@ export default function CampaignReportsPage() {
                   setCustomRange({ start: "", end: "" });
                   setAppliedCustomRange({ start: "", end: "" });
                 }}
-                className={`${tw.rounded} border px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`${
+                  tw.rounded
+                } border px-3 py-1.5 text-sm font-medium transition-colors ${
                   !(appliedCustomRange.start && appliedCustomRange.end) &&
                   selectedRange === option
                     ? "border-[#252829] bg-[#252829] text-white"
@@ -767,7 +771,9 @@ export default function CampaignReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
+            <div
+              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
+            >
               <label
                 htmlFor="campaign-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -906,7 +912,9 @@ export default function CampaignReportsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -947,7 +955,9 @@ export default function CampaignReportsPage() {
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -987,7 +997,9 @@ export default function CampaignReportsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1039,7 +1051,9 @@ export default function CampaignReportsPage() {
           </div>
         </div>
 
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">

@@ -20,9 +20,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { jobDependencyService } from "../services/jobDependencyService";
-import {
-  DependencyStatistics,
-} from "../types/jobDependency";
+import { DependencyStatistics } from "../types/jobDependency";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -49,7 +47,9 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -100,7 +100,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [statistics, setStatistics] = useState<DependencyStatistics | null>(null);
+  const [statistics, setStatistics] = useState<DependencyStatistics | null>(
+    null
+  );
   const [dependencyTypeDistribution, setDependencyTypeDistribution] = useState<
     Array<{ name: string; value: number }>
   >([]);
@@ -125,7 +127,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
       is_active: boolean;
     }>
   >([]);
-  const [dependencyGraph, setDependencyGraph] = useState<DependencyGraphNode[]>([]);
+  const [dependencyGraph, setDependencyGraph] = useState<DependencyGraphNode[]>(
+    []
+  );
   const [activeInactiveDistribution, setActiveInactiveDistribution] = useState<
     Array<{ name: string; value: number }>
   >([]);
@@ -263,7 +267,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           {/* Statistics Summary */}
           {statistics && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -277,7 +283,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.total_dependencies || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className="h-5 w-5"
@@ -291,7 +299,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.active_dependencies || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -305,7 +315,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.jobs_with_dependencies || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <XCircle
                     className="h-5 w-5"
@@ -319,7 +331,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.inactive_dependencies || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -333,7 +347,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.jobs_depended_on || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <AlertTriangle
                     className="h-5 w-5"
@@ -347,7 +363,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.blocking_count || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -361,7 +379,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.optional_count || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -375,7 +395,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.conditional_count || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -389,7 +411,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   {statistics.cross_day_count || 0}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
                 <div className="flex items-center gap-2">
                   <Link2
                     className="h-5 w-5"
@@ -408,7 +432,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
               {/* Dependency Graph Summary Stat Cards */}
               {dependencyGraph.length > 0 && (
                 <>
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
@@ -422,7 +448,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       {dependencyGraph.length}
                     </p>
                   </div>
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
@@ -440,7 +468,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       }
                     </p>
                   </div>
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
@@ -458,7 +488,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       }
                     </p>
                   </div>
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                  >
                     <div className="flex items-center gap-2">
                       <Link2
                         className="h-5 w-5"
@@ -488,7 +520,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           {/* Pie Charts - Three on same line */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Dependency Type Distribution */}
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Dependency Type Distribution
               </h3>
@@ -528,7 +562,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
             </div>
 
             {/* Wait For Status Distribution */}
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Wait For Status Distribution
               </h3>
@@ -568,7 +604,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
             </div>
 
             {/* Active/Inactive Distribution */}
-            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Active vs Inactive Dependencies
               </h3>
@@ -612,7 +650,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
           </div>
 
           {/* Most Depended On Jobs - Own Row */}
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Most Depended-On Jobs (Top 10)
             </h3>
@@ -627,7 +667,9 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                       if (!active || !payload?.length) return null;
                       const data = payload[0].payload as MostDependedJob;
                       return (
-                        <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+                        <div
+                          className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+                        >
                           <p className="mb-2 text-sm font-semibold text-gray-900">
                             {data.name}
                           </p>

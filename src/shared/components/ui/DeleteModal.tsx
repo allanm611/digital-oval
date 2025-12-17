@@ -6,7 +6,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw, zIndex } from '../../../shared/utils/utils';
 interface DeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,7 +34,7 @@ export default function DeleteModal({
 
   return createPortal(
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[9999]" onClose={onClose}>
+      <Dialog as="div" className="relative" onClose={onClose} style={{ zIndex: zIndex.modal }}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FileText, Plus, Eye, Trash2 } from "lucide-react";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import { MessageTemplate } from "../types/template";
 import { CommunicationChannel } from "../types/communication";
 import { templateService } from "../services/templateService";

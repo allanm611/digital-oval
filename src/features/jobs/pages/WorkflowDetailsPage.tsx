@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Edit,
-  Trash2,
-  Copy,
-  Play,
-  Pause,
-} from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Copy, Play, Pause } from "lucide-react";
 import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -41,7 +34,9 @@ export default function WorkflowDetailsPage() {
         setIsActive(data.is_active);
 
         // Also check active status
-        const activeCheck = await workflowService.checkWorkflowActive(Number(id));
+        const activeCheck = await workflowService.checkWorkflowActive(
+          Number(id)
+        );
         setIsActive(activeCheck.is_active);
       } catch (err) {
         showError(
@@ -131,7 +126,9 @@ export default function WorkflowDetailsPage() {
 
   if (!workflow) {
     return (
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-8 text-center`}
+      >
         <p className="text-gray-500">Workflow not found</p>
       </div>
     );
@@ -176,11 +173,7 @@ export default function WorkflowDetailsPage() {
                 fontSize: button.secondaryAction.fontSize,
               }}
             >
-              {isToggling ? (
-                <LoadingSpinner />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
+              {isToggling ? <LoadingSpinner /> : <Play className="h-4 w-4" />}
               Activate
             </button>
           )}
@@ -201,11 +194,7 @@ export default function WorkflowDetailsPage() {
                 fontSize: button.bordered.fontSize,
               }}
             >
-              {isToggling ? (
-                <LoadingSpinner />
-              ) : (
-                <Pause className="h-4 w-4" />
-              )}
+              {isToggling ? <LoadingSpinner /> : <Pause className="h-4 w-4" />}
               Deactivate
             </button>
           )}
@@ -221,9 +210,9 @@ export default function WorkflowDetailsPage() {
               borderRadius: button.bordered.borderRadius,
               fontSize: button.bordered.fontSize,
             }}
-            >
-              {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
-              Clone
+          >
+            {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
+            Clone
           </button>
           <button
             onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
@@ -259,7 +248,9 @@ export default function WorkflowDetailsPage() {
       </div>
 
       {/* Details */}
-      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+      <div
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Workflow Information
         </h2>
@@ -291,7 +282,9 @@ export default function WorkflowDetailsPage() {
               Status
             </label>
             <span
-              className={`inline-flex items-center px-2.5 py-0.5 ${tw.rounded} text-xs font-medium ${
+              className={`inline-flex items-center px-2.5 py-0.5 ${
+                tw.rounded
+              } text-xs font-medium ${
                 workflow.is_active
                   ? "bg-green-100 text-green-800"
                   : "bg-gray-100 text-gray-800"
@@ -330,4 +323,3 @@ export default function WorkflowDetailsPage() {
     </div>
   );
 }
-

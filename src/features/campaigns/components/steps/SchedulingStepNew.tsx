@@ -524,7 +524,9 @@ export default function SchedulingStep({
 
       {/* Validation Warning */}
       {(!scheduling.start_date || scheduling.start_date === "") && (
-        <div className={`bg-amber-50 border border-amber-200 ${tw.rounded} p-4`}>
+        <div
+          className={`bg-amber-50 border border-amber-200 ${tw.rounded} p-4`}
+        >
           <div className="flex items-start space-x-2">
             <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
             <div>

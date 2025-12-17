@@ -320,7 +320,9 @@ export default function NotificationsPage() {
 
       {/* Bulk Actions */}
       {bulkMode && (
-        <div className={`${tw.rounded} px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}>
+        <div
+          className={`${tw.rounded} px-4 py-3 mb-4 bg-gray-50 border border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}
+        >
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <button
               onClick={handleSelectAll}
@@ -380,7 +382,9 @@ export default function NotificationsPage() {
       )}
 
       {/* Notifications List */}
-      <div className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}>
+      <div
+        className={`bg-white ${tw.rounded} border border-gray-200 overflow-hidden`}
+      >
         {error && (
           <div className="p-4 bg-red-50 border-b border-red-200">
             <p className="text-sm text-red-800">{error}</p>
