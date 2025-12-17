@@ -1,4 +1,5 @@
 import { Check, LucideIcon } from "lucide-react";
+import { zIndex } from "../../../shared/utils/utils";
 
 export interface Step {
   id: number;
@@ -65,7 +66,7 @@ export default function ProgressStepper({
         {/* Background line - full width */}
         <div
           className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200"
-          style={{ zIndex: 0 }}
+          style={{ zIndex: zIndex.base }}
         />
 
         {/* Progress line for completed steps */}
@@ -83,7 +84,7 @@ export default function ProgressStepper({
                   ? "100%"
                   : `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
               backgroundColor: primaryColor,
-              zIndex: 1,
+              zIndex: zIndex.base + 1,
             }}
           />
         )}
@@ -112,7 +113,11 @@ export default function ProgressStepper({
           const isLast = stepIdx === steps.length - 1;
 
           return (
-            <div key={step.id} className="relative" style={{ zIndex: 30 }}>
+            <div
+              key={step.id}
+              className="relative"
+              style={{ zIndex: zIndex.base + 5 }}
+            >
               <button
                 onClick={() => onStepClick(step.id)}
                 className="relative flex flex-col items-center group"
@@ -122,7 +127,7 @@ export default function ProgressStepper({
                 <div
                   className="absolute top-4 left-1/2 w-10 h-10 rounded-full -translate-x-1/2 -translate-y-1/2"
                   style={{
-                    zIndex: 25,
+                    zIndex: zIndex.base + 4,
                     backgroundColor:
                       status === "completed" ? primaryColor : "white",
                   }}
@@ -145,7 +150,7 @@ export default function ProgressStepper({
                         : "cursor-not-allowed"
                     }
                   `}
-                  style={{ zIndex: 30 }}
+                  style={{ zIndex: zIndex.base + 5 }}
                 >
                   {status === "completed" ? (
                     <Check className="w-4 h-4" />

@@ -32,7 +32,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -1171,11 +1171,12 @@ export default function ServersPage() {
       {(showFilters || isClosingFilters) &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] ${
+            className={`fixed inset-0 ${
               isClosingFilters
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
+            style={{ zIndex: zIndex.modal }}
           >
             <div
               className="absolute inset-0 bg-black/50"

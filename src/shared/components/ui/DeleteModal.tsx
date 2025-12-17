@@ -6,7 +6,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-import { tw, zIndex } from '../../../shared/utils/utils';
+import { tw, zIndex } from "../../../shared/utils/utils";
 interface DeleteModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,7 +34,12 @@ export default function DeleteModal({
 
   return createPortal(
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative" onClose={onClose} style={{ zIndex: zIndex.modal }}>
+      <Dialog
+        as="div"
+        className="relative"
+        onClose={onClose}
+        style={{ zIndex: zIndex.modal }}
+      >
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -47,7 +52,10 @@ export default function DeleteModal({
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
         </Transition.Child>
 
-        <div className="fixed inset-0 z-[9999] overflow-y-auto">
+        <div
+          className="fixed inset-0 overflow-y-auto"
+          style={{ zIndex: zIndex.modal }}
+        >
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <Transition.Child
               as={Fragment}
@@ -58,7 +66,9 @@ export default function DeleteModal({
               leaveFrom="opacity-100 translate-y-0 sm:scale-100"
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <Dialog.Panel className={`relative transform overflow-hidden ${tw.rounded} bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg`}>
+              <Dialog.Panel
+                className={`relative transform overflow-hidden ${tw.rounded} bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg`}
+              >
                 <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Search, Plus, Users } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../../shared/utils/utils";
 import { segmentService } from "../../../segments/services/segmentService";
 import { Segment } from "../../../segments/types/segment";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -126,7 +126,7 @@ export default function SegmentSelectionModal({
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{
-        zIndex: 9999,
+        zIndex: zIndex.modal,
         position: "fixed",
         top: 0,
         left: 0,

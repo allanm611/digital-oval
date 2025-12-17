@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, Users } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
 import { SegmentType } from "../types/segment";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -80,7 +80,7 @@ export default function SegmentPickerModal({
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{
-        zIndex: 9999,
+        zIndex: zIndex.modal,
         position: "fixed",
         top: 0,
         left: 0,
@@ -90,7 +90,9 @@ export default function SegmentPickerModal({
         height: "100vh",
       }}
     >
-      <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+      <div
+        className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
@@ -185,9 +187,7 @@ export default function SegmentPickerModal({
                       <tr
                         key={segment.id}
                         onClick={() => handleSegmentSelect(segment)}
-                        onMouseEnter={() =>
-                          setHoveredSegmentId(segment.id)
-                        }
+                        onMouseEnter={() => setHoveredSegmentId(segment.id)}
                         onMouseLeave={() => setHoveredSegmentId(null)}
                         className="cursor-pointer transition-colors"
                         style={{
@@ -245,7 +245,9 @@ export default function SegmentPickerModal({
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className="text-sm text-gray-600">
                             {segment.created_at
-                              ? new Date(segment.created_at).toLocaleDateString()
+                              ? new Date(
+                                  segment.created_at
+                                ).toLocaleDateString()
                               : "-"}
                           </span>
                         </td>

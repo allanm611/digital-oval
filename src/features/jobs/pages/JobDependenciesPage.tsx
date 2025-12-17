@@ -22,7 +22,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -196,7 +196,9 @@ function JobDependencyModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+      <div
+        className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -345,7 +347,9 @@ function JobDependencyModal({
           </div>
 
           {error && (
-            <div className={`${tw.rounded} border border-red-200 bg-red-50 p-4 text-sm text-red-700`}>
+            <div
+              className={`${tw.rounded} border border-red-200 bg-red-50 p-4 text-sm text-red-700`}
+            >
               <div className="font-semibold mb-2">Error</div>
               <div className="whitespace-pre-line">{error}</div>
             </div>
@@ -395,7 +399,9 @@ function JobDependencyViewModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-      <div className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl`}>
+      <div
+        className={`w-full max-w-lg ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -1777,7 +1783,9 @@ export default function JobDependenciesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1791,7 +1799,9 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.totalDependencies}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <CheckCircle
               className="h-5 w-5"
@@ -1805,7 +1815,9 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.activeDependencies}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <XCircle
               className="h-5 w-5"
@@ -1819,7 +1831,9 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.inactiveDependencies}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1833,7 +1847,9 @@ export default function JobDependenciesPage() {
             {isLoadingStats ? "..." : stats.blockingDependencies}
           </p>
         </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex items-center gap-2">
             <Link2
               className="h-5 w-5"
@@ -1917,7 +1933,9 @@ export default function JobDependenciesPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedDependencyIds.size > 0 && (
-        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}>
+        <div
+          className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+        >
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">
               {selectedDependencyIds.size} dependency(ies) selected
@@ -2270,7 +2288,7 @@ export default function JobDependenciesPage() {
                         }}
                         className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
                         style={{
-                          zIndex: 99999,
+                          zIndex: zIndex.popover,
                           top: `${dropdownPosition.top}px`,
                           left: `${dropdownPosition.left}px`,
                           width: `${dropdownPosition.width || 256}px`,
@@ -2499,7 +2517,9 @@ export default function JobDependenciesPage() {
       {/* Chain/Path Modal */}
       {showChainModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -2710,7 +2730,9 @@ export default function JobDependenciesPage() {
       {/* Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -2736,7 +2758,9 @@ export default function JobDependenciesPage() {
                 {statusData ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <div
+                        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                      >
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Total Dependencies
                         </div>
@@ -2744,7 +2768,9 @@ export default function JobDependenciesPage() {
                           {statusData.total_dependencies || "0"}
                         </div>
                       </div>
-                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <div
+                        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                      >
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Blocking Dependencies
                         </div>
@@ -2752,7 +2778,9 @@ export default function JobDependenciesPage() {
                           {statusData.blocking_dependencies || "0"}
                         </div>
                       </div>
-                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <div
+                        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                      >
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Optional Dependencies
                         </div>
@@ -2760,7 +2788,9 @@ export default function JobDependenciesPage() {
                           {statusData.optional_dependencies || "0"}
                         </div>
                       </div>
-                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <div
+                        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                      >
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Satisfied Dependencies
                         </div>
@@ -2768,7 +2798,9 @@ export default function JobDependenciesPage() {
                           {statusData.satisfied_dependencies || "0"}
                         </div>
                       </div>
-                      <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <div
+                        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                      >
                         <div className="text-sm font-medium text-gray-600 mb-1">
                           Unsatisfied Blocking
                         </div>
@@ -2799,7 +2831,9 @@ export default function JobDependenciesPage() {
       {/* Dependencies For Job Modal */}
       {showDependenciesForJobModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3048,7 +3082,9 @@ export default function JobDependenciesPage() {
       {/* Jobs Depending On Modal */}
       {showJobsDependingOnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3295,7 +3331,9 @@ export default function JobDependenciesPage() {
       {/* Blocking Dependencies Modal */}
       {showBlockingDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3526,7 +3564,9 @@ export default function JobDependenciesPage() {
       {/* Immediate Dependencies Modal */}
       {showImmediateDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3632,7 +3672,9 @@ export default function JobDependenciesPage() {
       {/* All Dependents Modal */}
       {showAllDependentsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-4xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3739,7 +3781,9 @@ export default function JobDependenciesPage() {
       {/* Unsatisfied Dependencies Modal */}
       {showUnsatisfiedDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
@@ -3906,7 +3950,9 @@ export default function JobDependenciesPage() {
       {/* Complex Dependencies Modal */}
       {showComplexDependenciesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-2 sm:p-4">
-          <div className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`w-full max-w-6xl ${tw.rounded} bg-white p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto`}
+          >
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">

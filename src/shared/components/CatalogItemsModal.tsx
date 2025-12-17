@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import { X, Search, Plus } from "lucide-react";
-import { color , tw} from "../utils/utils";
+import { color , tw, zIndex} from "../utils/utils";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import AssignItemsModal from "./AssignItemsModal";
 import HeadlessSelect from "./ui/HeadlessSelect";
@@ -160,7 +160,7 @@ export default function CatalogItemsModal<T extends CatalogItem>({
   const displayCount = displayItems.length;
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] overflow-y-auto">
+    <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: zIndex.modal }}>
       <div
         className="fixed inset-0 bg-black bg-opacity-50"
         onClick={onClose}

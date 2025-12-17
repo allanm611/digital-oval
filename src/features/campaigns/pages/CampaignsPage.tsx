@@ -23,7 +23,7 @@ import {
   AlertCircle,
   BarChart3,
 } from "lucide-react";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
@@ -1430,7 +1430,7 @@ export default function CampaignsPage() {
                         }}
                         className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
                         style={{
-                          zIndex: 99999,
+                          zIndex: zIndex.popover,
                           top: `${dropdownPosition.top}px`,
                           left: `${dropdownPosition.left}px`,
                           width: `${dropdownPosition.width || 256}px`,
@@ -1812,7 +1812,13 @@ export default function CampaignsPage() {
         createPortal(
           <div
             className="fixed inset-0 overflow-hidden"
-            style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}
+            style={{
+              zIndex: zIndex.modal,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50"
@@ -1820,7 +1826,7 @@ export default function CampaignsPage() {
             ></div>
             <div
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl"
-              style={{ zIndex: 1000000 }}
+              style={{ zIndex: zIndex.modal + 1 }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}

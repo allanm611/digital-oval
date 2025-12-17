@@ -27,7 +27,7 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import { Role } from "../../features/roles/types/role";
-import { color, tw } from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 
 interface SearchSuggestion {
   id: string | number;
@@ -726,7 +726,8 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 max-w-xs sm:max-w-md z-[9999]"
+      className="relative flex-1 max-w-xs sm:max-w-md"
+      style={{ zIndex: zIndex.popover }}
     >
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
@@ -759,7 +760,8 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className={`absolute top-full left-0 right-0 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto z-[9999] w-full max-w-[calc(100vw-2rem)] sm:max-w-[500px] mx-auto sm:mx-0`}
+          className={`absolute top-full left-0 right-0 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto w-full max-w-[calc(100vw-2rem)] sm:max-w-[500px] mx-auto sm:mx-0`}
+          style={{ zIndex: zIndex.popover }}
         >
           {isLoading ? (
             <div className="p-12 text-center">

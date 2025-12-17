@@ -9,7 +9,7 @@ import {
 } from "../types/server";
 import { serverService } from "../services/serverService";
 import { useToast } from "../../../contexts/ToastContext";
-import { tw } from "../../../shared/utils/utils";
+import { tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface CreateServerModalProps {
@@ -114,7 +114,7 @@ export default function CreateServerModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/40 px-4" style={{ zIndex: zIndex.modal }}>
       <div className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl`}>
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
