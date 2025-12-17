@@ -1662,6 +1662,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 12,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 500, unit: "onnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 2,
@@ -1671,6 +1677,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 10,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 300, unit: "offnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 3,
@@ -1680,6 +1692,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 8,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 100, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 4,
@@ -1689,6 +1707,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 15,
+    comboResources: [
+      { type: "data", value: 10, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 1000, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 5,
@@ -1698,6 +1722,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 14,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 100, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 6,
@@ -1707,6 +1737,13 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 11,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 500, unit: "onnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 50, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 7,
@@ -1716,6 +1753,13 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 9,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 300, unit: "offnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 50, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 8,
@@ -1725,6 +1769,13 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 18,
+    comboResources: [
+      { type: "data", value: 10, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 1000, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 100, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 9,
@@ -1734,6 +1785,13 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 7,
+    comboResources: [
+      { type: "voice", value: 500, unit: "onnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 300, unit: "offnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "voice", value: 100, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 10,
@@ -1743,6 +1801,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 6,
+    comboResources: [
+      { type: "voice", value: 1000, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 100, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 11,
@@ -1752,6 +1816,12 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 5,
+    comboResources: [
+      { type: "voice", value: 200, unit: "allnet_minutes", sharedValidity: true, sharedValidityHours: 720 },
+      { type: "sms", value: 50, unit: "sms_count", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
   {
     id: 12,
@@ -1761,15 +1831,11 @@ const hardcodedComboTypes: TypeConfigurationItem[] = [
     updated_at: "2025-01-20T10:00:00Z",
     isActive: true,
     metadataValue: 13,
-  },
-  {
-    id: 13,
-    name: "Custom Combo",
-    description: "User-defined combination of services",
-    created_at: "2025-01-20T10:00:00Z",
-    updated_at: "2025-01-20T10:00:00Z",
-    isActive: true,
-    metadataValue: 3,
+    comboResources: [
+      { type: "data", value: 5, unit: "data_mb", sharedValidity: true, sharedValidityHours: 720 },
+    ],
+    sharedValidity: true,
+    validityHours: 720,
   },
 ];
 

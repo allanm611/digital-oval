@@ -34,6 +34,7 @@ export interface ComboResource {
 
 // Combo product structure
 export interface ComboProductData {
+  combo_type_id?: number; // Reference to the selected combo type
   resources: ComboResource[];
   shared_validity?: boolean; // true = all resources share same validity, false = individual validity
   shared_validity_hours?: number; // Validity when shared_validity is true

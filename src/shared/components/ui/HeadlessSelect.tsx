@@ -53,15 +53,27 @@ export default function HeadlessSelect({
       )
     : options;
 
-  // Update position when dropdown opens
+  // Update position when dropdown opens or window scrolls
   useEffect(() => {
-    if (isOpen && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: openUpward ? rect.top - 300 : rect.bottom + 4,
-        left: rect.left,
-        width: rect.width,
-      });
+    const updatePosition = () => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: openUpward ? rect.top - 300 : rect.bottom + 4,
+          left: rect.left,
+          width: rect.width,
+        });
+      }
+    };
+
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener("scroll", updatePosition);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition);
+        window.removeEventListener("resize", updatePosition);
+      };
     }
   }, [isOpen, openUpward]);
 

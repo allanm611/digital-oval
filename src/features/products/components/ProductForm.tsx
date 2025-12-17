@@ -51,6 +51,7 @@ export default function ProductForm({
 }: ProductFormProps) {
   // Get product types from configuration
   const { data: productTypes } = useConfigurationData("productTypes");
+  const { data: comboTypes } = useConfigurationData("comboTypes");
 
   // Combo data state
   const [comboData, setComboData] = useState<ComboProductData>(() => {
@@ -64,6 +65,9 @@ export default function ProductForm({
     };
   });
 
+  // Track if user is in custom combo creation mode
+  const [isCustomComboMode, setIsCustomComboMode] = useState(false);
+
   // Check if selected product type is Combo
   const selectedProductType = productTypes.find(
     (pt) => pt.id === formData.product_type_id
@@ -74,11 +78,19 @@ export default function ProductForm({
   useEffect(() => {
     if (isComboType) {
       // Update formData with combo_data using type assertion
-      (onInputChange as any)("combo_data", comboData);
+      onInputChange(
+        "combo_data",
+        comboData as unknown as string | number | boolean | undefined
+      );
     } else {
-      (onInputChange as any)("combo_data", undefined);
+      onInputChange("combo_data", undefined);
     }
-  }, [comboData, isComboType, onInputChange]);
+  }, [comboData, isComboType]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get selected combo type details (move before useEffect that uses it)
+  const selectedComboType = comboData.combo_type_id
+    ? comboTypes.find((ct) => ct.id === comboData.combo_type_id)
+    : null;
 
   // Initialize combo data from formData when product type changes to Combo
   useEffect(() => {
@@ -93,10 +105,56 @@ export default function ProductForm({
     }
   }, [formData.product_type_id, isComboType]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const scopeOptions: { label: string; value: ProductScope }[] = [
-    { label: "Segmented", value: "segment" },
-    { label: "Open Market", value: "open_market" },
-  ];
+  // Prefill combo data when a template combo type is selected
+  useEffect(() => {
+    if (
+      comboData.combo_type_id &&
+      comboData.combo_type_id !== 0 &&
+      selectedComboType
+    ) {
+      // For now, prefill based on combo type name
+      // This will be replaced with actual template data from backend
+      const resources: ComboResource[] = [];
+
+      // Parse resources from combo type name and add default values
+      if (selectedComboType.name.toLowerCase().includes("data")) {
+        resources.push({
+          resource_type: "data",
+          unit: "data_mb",
+          unit_value: 5,
+        });
+      }
+      if (selectedComboType.name.toLowerCase().includes("voice")) {
+        resources.push({
+          resource_type: "voice",
+          unit: "onnet_minutes",
+          unit_value: 500,
+        });
+      }
+      if (selectedComboType.name.toLowerCase().includes("sms")) {
+        resources.push({
+          resource_type: "sms",
+          unit: "sms_count",
+          unit_value: 100,
+        });
+      }
+
+      // Prefill with default shared validity
+      if (resources.length > 0) {
+        setComboData({
+          combo_type_id: comboData.combo_type_id,
+          resources,
+          shared_validity: true,
+          shared_validity_hours: 720, // 30 days default
+        });
+      }
+    }
+  }, [comboData.combo_type_id, selectedComboType]);
+
+  // Track which resources are already in the combo
+  const existingResourceTypes = comboData.resources.map((r) => r.resource_type);
+
+  // Users can add all 3 resource types (Data, Voice, SMS), but only once each
 
   const unitOptions: { label: string; value: ProductUnit }[] = [
     { label: "Data (MB)", value: "data_mb" },
@@ -134,6 +192,11 @@ export default function ProductForm({
     unitOptions.find((option) => option.value === formData.unit)?.label ||
     "Value";
 
+  const scopeOptions: { label: string; value: ProductScope }[] = [
+    { label: "Segmented", value: "segment" },
+    { label: "Open Market", value: "open_market" },
+  ];
+
   // Combo resource handlers
   const addComboResource = (resourceType: ComboResourceType) => {
     const defaultUnit =
@@ -160,7 +223,7 @@ export default function ProductForm({
   const updateComboResource = (
     index: number,
     field: keyof ComboResource,
-    value: any
+    value: string | number | boolean
   ) => {
     const updatedResources = [...comboData.resources];
     updatedResources[index] = {
@@ -376,8 +439,11 @@ export default function ProductForm({
                 }
                 onChange={(value) =>
                   onInputChange(
-                    "product_type_id",
-                    value ? parseInt(value, 10) : undefined
+                    "product_type_id" as keyof (
+                      | CreateProductRequest
+                      | UpdateProductRequest
+                    ),
+                    value as string
                   )
                 }
                 placeholder="Select product type"
@@ -386,8 +452,85 @@ export default function ProductForm({
               />
             </div>
 
-            {/* Combo Resources Section - Only show when Combo is selected */}
+            {/* Combo Type Selector - Only show when Combo is selected */}
             {isComboType && (
+              <>
+                {/* Select Pre-configured and Create Custom Combo on same line */}
+                <div className="flex items-center gap-3 mb-4">
+                  <label
+                    className={`text-sm font-medium ${tw.textPrimary} whitespace-nowrap`}
+                  >
+                    Select Pre-configured:
+                  </label>
+                  <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                    OR
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setComboData({
+                        combo_type_id: undefined,
+                        resources: [],
+                        shared_validity: true,
+                        shared_validity_hours: undefined,
+                      });
+                      setIsCustomComboMode(true);
+                    }}
+                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap`}
+                    style={{
+                      color: "#FFFFFF",
+                      backgroundColor: color.primary.action,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = "0.9";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Custom Combo
+                  </button>
+                </div>
+
+                {/* Combo Type Selector */}
+                <div>
+                  <HeadlessSelect
+                    options={[
+                      { value: "", label: "Select an option" },
+                      ...comboTypes
+                        .filter((ct) => ct.isActive !== false)
+                        .map((ct) => ({
+                          value: String(ct.id),
+                          label: ct.name,
+                        })),
+                    ]}
+                    value={
+                      comboData.combo_type_id
+                        ? String(comboData.combo_type_id)
+                        : ""
+                    }
+                    onChange={(value) => {
+                      setComboData({
+                        ...comboData,
+                        combo_type_id: value
+                          ? parseInt(value as string, 10)
+                          : undefined,
+                        resources: [], // Reset resources when combo type changes
+                      });
+                      // Exit custom combo mode when selecting/deselecting
+                      setIsCustomComboMode(false);
+                    }}
+                    placeholder="Select a combo type"
+                    className="w-full"
+                    zIndex={zIndex.dropdown}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Combo Resources Section - Only show when a combo type is selected or in custom combo mode */}
+            {isComboType && (comboData.combo_type_id || isCustomComboMode) && (
               <div
                 className={`${tw.rounded} border p-5`}
                 style={{
@@ -410,29 +553,36 @@ export default function ProductForm({
                 </div>
 
                 {/* Validity Options */}
-                <div className="mb-4">
-                  <label className="flex items-center gap-2 mb-2">
-                    <input
-                      type="checkbox"
-                      checked={comboData.shared_validity ?? true}
-                      onChange={(e) =>
-                        setComboData({
-                          ...comboData,
-                          shared_validity: e.target.checked,
-                        })
-                      }
-                      className="w-4 h-4"
-                    />
-                    <span className={`text-sm ${tw.textPrimary}`}>
-                      Use shared validity for all resources
-                    </span>
-                  </label>
+                <div
+                  className="mb-6 pb-6 border-b"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={comboData.shared_validity ?? true}
+                        onChange={(e) =>
+                          setComboData({
+                            ...comboData,
+                            shared_validity: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 cursor-pointer"
+                      />
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                        Shared Validity
+                      </span>
+                    </label>
+                  </div>
+
                   {comboData.shared_validity && (
-                    <div className="mt-2">
+                    <div className="ml-6">
                       <label
                         className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                       >
-                        Shared Validity (Hours)
+                        Validity Hours{" "}
+                        <span style={{ color: color.status.danger }}>*</span>
                       </label>
                       <input
                         type="number"
@@ -449,78 +599,86 @@ export default function ProductForm({
                         }
                         className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                         style={{ borderColor: color.border.default }}
-                        placeholder="e.g., 72"
+                        placeholder="e.g., 720 (30 days)"
                       />
                     </div>
                   )}
                 </div>
 
-                {/* Add Resource Buttons */}
-                <div className="flex gap-2 mb-4 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => addComboResource("data")}
-                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
-                    style={{
-                      borderWidth: "1px",
-                      borderColor: color.border.default,
-                      color: color.text.secondary,
-                      backgroundColor: "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        color.surface.background;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Data
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addComboResource("voice")}
-                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
-                    style={{
-                      borderWidth: "1px",
-                      borderColor: color.border.default,
-                      color: color.text.secondary,
-                      backgroundColor: "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        color.surface.background;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Voice
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addComboResource("sms")}
-                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
-                    style={{
-                      borderWidth: "1px",
-                      borderColor: color.border.default,
-                      color: color.text.secondary,
-                      backgroundColor: "transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        color.surface.background;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add SMS
-                  </button>
-                </div>
+                {/* Show Add Resource Buttons only for custom combos */}
+                {isCustomComboMode && !comboData.combo_type_id && (
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => addComboResource("data")}
+                      disabled={existingResourceTypes.includes("data")}
+                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
+                      style={{
+                        borderWidth: "1px",
+                        borderColor: color.primary.action,
+                        color: existingResourceTypes.includes("data")
+                          ? color.text.secondary
+                          : color.primary.action,
+                        backgroundColor: "transparent",
+                        opacity: existingResourceTypes.includes("data")
+                          ? 0.5
+                          : 1,
+                        cursor: existingResourceTypes.includes("data")
+                          ? "not-allowed"
+                          : "pointer",
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Data
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addComboResource("voice")}
+                      disabled={existingResourceTypes.includes("voice")}
+                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
+                      style={{
+                        borderWidth: "1px",
+                        borderColor: color.primary.action,
+                        color: existingResourceTypes.includes("voice")
+                          ? color.text.secondary
+                          : color.primary.action,
+                        backgroundColor: "transparent",
+                        opacity: existingResourceTypes.includes("voice")
+                          ? 0.5
+                          : 1,
+                        cursor: existingResourceTypes.includes("voice")
+                          ? "not-allowed"
+                          : "pointer",
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Voice
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addComboResource("sms")}
+                      disabled={existingResourceTypes.includes("sms")}
+                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
+                      style={{
+                        borderWidth: "1px",
+                        borderColor: color.primary.action,
+                        color: existingResourceTypes.includes("sms")
+                          ? color.text.secondary
+                          : color.primary.action,
+                        backgroundColor: "transparent",
+                        opacity: existingResourceTypes.includes("sms")
+                          ? 0.5
+                          : 1,
+                        cursor: existingResourceTypes.includes("sms")
+                          ? "not-allowed"
+                          : "pointer",
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add SMS
+                    </button>
+                  </div>
+                )}
 
                 {/* Resources List */}
                 {comboData.resources.length > 0 && (
@@ -622,7 +780,7 @@ export default function ProductForm({
                                   "validity_hours",
                                   e.target.value
                                     ? parseInt(e.target.value, 10)
-                                    : undefined
+                                    : (0 as number)
                                 )
                               }
                               className={`w-full px-3 py-2 border ${tw.rounded} text-sm transition-all`}
@@ -647,7 +805,7 @@ export default function ProductForm({
                   Scope
                   <HelpCircle
                     className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Scope determines product availability: Segmented = available only to specific customer segments, Open Market = available to all customers"
+                    aria-label="Scope determines product availability: Segmented = available only to specific customer segments, Open Market = available to all customers"
                   />
                 </label>
                 <HeadlessSelect
@@ -672,7 +830,7 @@ export default function ProductForm({
                   Unit
                   <HelpCircle
                     className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Unit defines the measurement type for this product (e.g., Data in MB, SMS count, Airtime, Minutes, etc.)"
+                    aria-label="Unit defines the measurement type for this product (e.g., Data in MB, SMS count, Airtime, Minutes, etc.)"
                   />
                 </label>
                 <HeadlessSelect
@@ -720,7 +878,7 @@ export default function ProductForm({
                   Validity (Hours)
                   <HelpCircle
                     className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
+                    aria-label="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
                   />
                 </label>
                 <input

@@ -42,6 +42,16 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   doubleChars?: string;
   tripleChars?: string;
   quadChars?: string;
+  // Combo Type fields
+  comboResources?: Array<{
+    type: "data" | "voice" | "sms";
+    value: number;
+    unit: string;
+    sharedValidity: boolean;
+    sharedValidityHours: number;
+  }>;
+  sharedValidity?: boolean;
+  validityHours?: number;
 }
 
 interface MetadataFieldConfig {
@@ -92,6 +102,8 @@ export interface TypeConfigurationPageConfig {
   updateSuccessMessage: string;
   deleteErrorMessage: string;
   saveErrorMessage: string;
+  disableCreate?: boolean;
+  disableDelete?: boolean;
 }
 
 interface TypeConfigurationModalProps {
@@ -831,14 +843,16 @@ export default function TypeConfigurationPage({
           </div>
         </div>
         <div className="flex items-center gap-3 w-auto">
-          <button
-            onClick={handleCreateItem}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {config.createButtonText}
-          </button>
+          {!config.disableCreate && (
+            <button
+              onClick={handleCreateItem}
+              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Plus className="w-4 h-4" />
+              {config.createButtonText}
+            </button>
+          )}
         </div>
       </div>
 
@@ -873,7 +887,7 @@ export default function TypeConfigurationPage({
                 ? "Try adjusting your search terms."
                 : `Create your first ${config.entityName} to get started.`}
             </p>
-            {!searchTerm && (
+            {!searchTerm && !config.disableCreate && (
               <button
                 onClick={handleCreateItem}
                 className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
@@ -1112,13 +1126,15 @@ export default function TypeConfigurationPage({
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteItem(item)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          title="Delete template"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {!config.disableDelete && (
+                          <button
+                            onClick={() => handleDeleteItem(item)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            title="Delete template"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

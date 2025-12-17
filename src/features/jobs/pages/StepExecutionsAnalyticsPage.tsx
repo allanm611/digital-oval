@@ -24,6 +24,27 @@ import {
   Line,
 } from "recharts";
 import { stepExecutionService } from "../services/stepExecutionService";
+import { 
+  ExecutionStatistics,
+  SuccessRateResponse,
+  AverageDurationResponse,
+  TrendDataPoint,
+  ErrorAnalysisItem,
+  ExecutionByTrigger,
+  FailurePattern,
+  PerformanceSummary,
+  ExecutionDistribution,
+  ExecutionsByHour,
+  PeakTimes,
+  HealthScoreResponse,
+  RetryAnalysis,
+  DurationOutlier,
+  ExecutionTimelineItem,
+  ExecutionComparison,
+  ExecutionHeatmap,
+  AnomalyDetection,
+  ConcurrentExecutionAnalysis
+} from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -35,25 +56,25 @@ export default function StepExecutionsAnalyticsPage() {
   const { error: showError } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [statistics, setStatistics] = useState<any>(null);
-  const [successRate, setSuccessRate] = useState<any>(null);
-  const [averageDuration, setAverageDuration] = useState<any>(null);
-  const [trendData, setTrendData] = useState<any[]>([]);
-  const [errorAnalysis, setErrorAnalysis] = useState<any[]>([]);
-  const [statusDistribution, setStatusDistribution] = useState<any[]>([]);
-  const [failurePatterns, setFailurePatterns] = useState<any[]>([]);
-  const [performanceSummary, setPerformanceSummary] = useState<any>(null);
-  const [executionDistribution, setExecutionDistribution] = useState<any[]>([]);
-  const [executionsByHour, setExecutionsByHour] = useState<any[]>([]);
-  const [peakTimes, setPeakTimes] = useState<any[]>([]);
-  const [healthScore, setHealthScore] = useState<any>(null);
-  const [retryAnalysis, setRetryAnalysis] = useState<any>(null);
-  const [durationOutliers, setDurationOutliers] = useState<any[]>([]);
-  const [executionTimeline, setExecutionTimeline] = useState<any[]>([]);
-  const [executionComparison, setExecutionComparison] = useState<any>(null);
-  const [executionHeatmap, setExecutionHeatmap] = useState<any>(null);
-  const [anomalyDetection, setAnomalyDetection] = useState<any>(null);
-  const [concurrentAnalysis, setConcurrentAnalysis] = useState<any>(null);
+  const [statistics, setStatistics] = useState<ExecutionStatistics | null>(null);
+  const [successRate, setSuccessRate] = useState<SuccessRateResponse | null>(null);
+  const [averageDuration, setAverageDuration] = useState<AverageDurationResponse | null>(null);
+  const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
+  const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
+  const [statusDistribution, setStatusDistribution] = useState<ExecutionByTrigger[]>([]);
+  const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
+  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
+  const [executionsByHour, setExecutionsByHour] = useState<ExecutionsByHour[]>([]);
+  const [peakTimes, setPeakTimes] = useState<PeakTimes[]>([]);
+  const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(null);
+  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(null);
+  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>([]);
+  const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  const [anomalyDetection, setAnomalyDetection] = useState<AnomalyDetection | null>(null);
+  const [concurrentAnalysis, setConcurrentAnalysis] = useState<ConcurrentExecutionAnalysis | null>(null);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);

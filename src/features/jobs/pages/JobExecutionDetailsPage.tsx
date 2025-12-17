@@ -27,7 +27,18 @@ import {
 } from "recharts";
 import { useAuth } from "../../../contexts/AuthContext";
 import { jobExecutionService } from "../services/jobExecutionService";
-import { JobExecution } from "../types/jobExecution";
+import { 
+  JobExecution,
+  ExecutionProgress,
+  ResourceUsage,
+  ExecutionDistribution,
+  ExecutionComparison,
+  CompletionForecast,
+  ExecutionHeatmap,
+  SLAPrediction,
+  ExecutionTimelineItem,
+  DailySummary
+} from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -129,19 +140,19 @@ export default function JobExecutionDetailsPage() {
     ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
   const [execution, setExecution] = useState<JobExecution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [progress, setProgress] = useState<any>(null);
-  const [resourceUsage, setResourceUsage] = useState<any>(null);
+  const [progress, setProgress] = useState<ExecutionProgress | null>(null);
+  const [resourceUsage, setResourceUsage] = useState<ResourceUsage | null>(null);
   const [runningDuration, setRunningDuration] = useState<number | null>(null);
   const [isTimedOut, setIsTimedOut] = useState<boolean>(false);
 
   // Job Analytics state
-  const [executionDistribution, setExecutionDistribution] = useState<any[]>([]);
-  const [executionComparison, setExecutionComparison] = useState<any>(null);
-  const [completionForecast, setCompletionForecast] = useState<any[]>([]);
-  const [executionHeatmap, setExecutionHeatmap] = useState<any>(null);
-  const [slaPrediction, setSlaPrediction] = useState<any>(null);
-  const [executionTimeline, setExecutionTimeline] = useState<any[]>([]);
-  const [dailySummary, setDailySummary] = useState<any[]>([]);
+  const [executionDistribution, setExecutionDistribution] = useState<ExecutionDistribution[]>([]);
+  const [executionComparison, setExecutionComparison] = useState<ExecutionComparison | null>(null);
+  const [completionForecast, setCompletionForecast] = useState<CompletionForecast[]>([]);
+  const [executionHeatmap, setExecutionHeatmap] = useState<ExecutionHeatmap | null>(null);
+  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(null);
+  const [executionTimeline, setExecutionTimeline] = useState<ExecutionTimelineItem[]>([]);
+  const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
 
   useEffect(() => {
@@ -763,7 +774,7 @@ export default function JobExecutionDetailsPage() {
                         <ul className="text-xs text-gray-600 space-y-1">
                           {slaPrediction.factors
                             .slice(0, 3)
-                            .map((factor: any, idx: number) => (
+                            .map((factor: { factor: string; impact: number }, idx: number) => (
                               <li key={idx}>
                                 • {factor.factor}: {factor.impact}% impact
                               </li>
@@ -838,7 +849,7 @@ export default function JobExecutionDetailsPage() {
                   <div className="space-y-2">
                     {completionForecast
                       .slice(0, 3)
-                      .map((forecast: any, idx: number) => (
+                      .map((forecast: CompletionForecast, idx: number) => (
                         <div key={idx} className="text-sm">
                           <span className="font-medium text-gray-900">
                             {forecast.execution_id?.substring(0, 8)}...
@@ -861,7 +872,7 @@ export default function JobExecutionDetailsPage() {
                   </h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart
-                      data={executionTimeline.slice(0, 10).map((item: any) => ({
+                      data={executionTimeline.slice(0, 10).map((item: ExecutionTimelineItem) => ({
                         execution: item.execution_id?.substring(0, 8) || "N/A",
                         duration: item.duration_seconds || 0,
                         status: item.status,
@@ -895,7 +906,7 @@ export default function JobExecutionDetailsPage() {
                   </h4>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
-                      data={dailySummary.slice(0, 14).map((summary: any) => ({
+                      data={dailySummary.slice(0, 14).map((summary: DailySummary) => ({
                         date: summary.date,
                         successful: summary.successful_executions || 0,
                         failed: summary.failed_executions || 0,
@@ -940,7 +951,7 @@ export default function JobExecutionDetailsPage() {
                             {
                               name: "Successful",
                               value: executionDistribution.reduce(
-                                (sum: number, d: any) =>
+                                (sum: number, d: ExecutionDistribution) =>
                                   sum + (d.successful || 0),
                                 0
                               ),
@@ -948,7 +959,7 @@ export default function JobExecutionDetailsPage() {
                             {
                               name: "Failed",
                               value: executionDistribution.reduce(
-                                (sum: number, d: any) => sum + (d.failed || 0),
+                                (sum: number, d: ExecutionDistribution) => sum + (d.failed || 0),
                                 0
                               ),
                             },
@@ -983,7 +994,7 @@ export default function JobExecutionDetailsPage() {
                       <BarChart
                         data={executionDistribution
                           .slice(0, 10)
-                          .map((dist: any) => ({
+                          .map((dist: ExecutionDistribution) => ({
                             period: dist.period,
                             successful: dist.successful || 0,
                             failed: dist.failed || 0,

@@ -129,7 +129,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
       is_active: boolean;
     }>
   >([]);
-  const [dependencyGraph, setDependencyGraph] = useState<any[]>([]);
+  const [dependencyGraph, setDependencyGraph] = useState<DependencyGraphNode[]>([]);
   const [activeInactiveDistribution, setActiveInactiveDistribution] = useState<
     Array<{ name: string; value: number }>
   >([]);
@@ -172,7 +172,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
       const statusCounts: Record<string, number> = {};
       const activeInactiveCounts = { Active: 0, Inactive: 0 };
 
-      allDeps.forEach((dep: any) => {
+      allDeps.forEach((dep: JobDependency) => {
         // Count by dependency type
         const type = dep.dependency_type || "unknown";
         typeCounts[type] = (typeCounts[type] || 0) + 1;
@@ -629,7 +629,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
-                      const data = payload[0].payload as any;
+                      const data = payload[0].payload as MostDependedJob;
                       return (
                         <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
                           <p className="mb-2 text-sm font-semibold text-gray-900">

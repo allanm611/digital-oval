@@ -470,8 +470,8 @@ class JobDependencyService {
     // Add these aliases to the outgoing body to increase compatibility.
     const body = {
       ...payload,
-      created_by: (payload as any).userId ?? (payload as any).user_id ?? null,
-      user_id: (payload as any).userId ?? (payload as any).user_id ?? null,
+      created_by: payload.userId ?? null,
+      user_id: payload.userId ?? null,
     };
 
     return this.request<JobDependency>("", {
@@ -517,8 +517,8 @@ class JobDependencyService {
     // different field names still receives the user information.
     const body = {
       ...payload,
-      updated_by: (payload as any).userId ?? (payload as any).user_id ?? null,
-      user_id: (payload as any).userId ?? (payload as any).user_id ?? null,
+      updated_by: payload.userId ?? null,
+      user_id: payload.userId ?? null,
     };
 
     return this.request<JobDependency>(`/${id}`, {

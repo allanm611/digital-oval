@@ -35,6 +35,7 @@ export default function MultiCategorySelector({
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
@@ -57,6 +58,32 @@ export default function MultiCategorySelector({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Update dropdown position on scroll/resize
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isOpen && dropdownRef.current) {
+        const rect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
+        if (rect) {
+          setDropdownPosition({
+            top: rect.bottom + 4,
+            left: rect.left,
+            width: rect.width,
+          });
+        }
+      }
+    };
+
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener("scroll", updatePosition);
+      window.addEventListener("resize", updatePosition);
+      return () => {
+        window.removeEventListener("scroll", updatePosition);
+        window.removeEventListener("resize", updatePosition);
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
