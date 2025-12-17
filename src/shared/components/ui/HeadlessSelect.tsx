@@ -1,6 +1,7 @@
-import { Fragment, useState } from "react";
-import { Listbox, Transition } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { Listbox } from "@headlessui/react";
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { components, tw, zIndex as zIndexTokens } from "../../utils/utils";
 
 interface SelectOption {
@@ -36,6 +37,13 @@ export default function HeadlessSelect({
 }: HeadlessSelectProps) {
   const effectiveZIndex = zIndex ?? zIndexTokens.dropdown;
   const [searchTerm, setSearchTerm] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+  const buttonRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -45,11 +53,24 @@ export default function HeadlessSelect({
       )
     : options;
 
+  // Update position when dropdown opens
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: openUpward ? rect.top - 300 : rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [isOpen, openUpward]);
+
   return (
-    <div className={`relative ${className}`} style={{ zIndex: effectiveZIndex }}>
+    <div className={`relative ${className}`}>
       <Listbox value={value} onChange={onChange} disabled={disabled}>
-        <div className="relative w-full">
+        <div className="relative w-full" ref={buttonRef}>
           <Listbox.Button
+            onClick={() => setIsOpen(!isOpen)}
             className={`
             relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
@@ -76,78 +97,82 @@ export default function HeadlessSelect({
               />
             </span>
           </Listbox.Button>
-
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options
-              className={`absolute max-h-60 w-full overflow-auto ${
-                tw.rounded
-              } bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm ${
-                openUpward ? "bottom-full mb-1" : "top-full mt-1"
-              }`}
-              style={{
-                minWidth: "100%",
-                maxWidth: "100%",
-                left: 0,
-                right: 0,
-                zIndex: effectiveZIndex + 1,
-              }}
-            >
-              {searchable && (
-                <div className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200">
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search options..."
-                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              )}
-
-              {filteredOptions.length === 0 ? (
-                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
-                  No options found.
-                </div>
-              ) : (
-                filteredOptions.map((option) => (
-                  <Listbox.Option
-                    key={option.value}
-                    value={option.value}
-                    disabled={option.disabled}
-                    className={({ active, disabled }) =>
-                      `relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
-                        active ? "bg-gray-100 text-gray-900" : "text-gray-900"
-                      } ${
-                        disabled
-                          ? "opacity-50 cursor-not-allowed"
-                          : "cursor-pointer"
-                      }`
-                    }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span
-                          className={`block ${
-                            selected ? "font-medium" : "font-normal"
-                          }`}
-                        >
-                          {option.label}
-                        </span>
-                      </>
-                    )}
-                  </Listbox.Option>
-                ))
-              )}
-            </Listbox.Options>
-          </Transition>
         </div>
       </Listbox>
+
+      {isOpen &&
+        createPortal(
+          <div
+            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-60 overflow-auto`}
+            style={{
+              position: "fixed",
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              zIndex: effectiveZIndex + 1,
+            }}
+            onClick={() => setIsOpen(false)}
+          >
+            {searchable && (
+              <div
+                className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search options..."
+                  className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            )}
+
+            {filteredOptions.length === 0 ? (
+              <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
+                No options found.
+              </div>
+            ) : (
+              filteredOptions.map((option) => (
+                <div
+                  key={option.value}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
+                    value === option.value
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-900 hover:bg-gray-50"
+                  } ${
+                    option.disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }`}
+                >
+                  <span
+                    className={`block ${
+                      value === option.value ? "font-medium" : "font-normal"
+                    }`}
+                  >
+                    {option.label}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>,
+          document.body
+        )}
+
+      {isOpen && (
+        <div
+          className="fixed inset-0"
+          onClick={() => setIsOpen(false)}
+          style={{ zIndex: effectiveZIndex }}
+        />
+      )}
     </div>
   );
 }

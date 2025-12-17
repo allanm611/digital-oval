@@ -37,13 +37,17 @@ export default function MultiCategorySelector({
   const [error, setError] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const portalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside both the button AND the portal dropdown
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(event.target as Node) &&
+        portalRef.current &&
+        !portalRef.current.contains(event.target as Node)
       ) {
         setIsOpen(false);
         setSearchTerm("");
@@ -275,6 +279,7 @@ export default function MultiCategorySelector({
 
       {isOpen && createPortal(
         <div
+          ref={portalRef}
           style={{
             position: "fixed",
             top: `${dropdownRef.current?.getBoundingClientRect().bottom || 0}px`,
