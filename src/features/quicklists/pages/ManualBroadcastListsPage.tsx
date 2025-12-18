@@ -56,7 +56,11 @@ export default function ManualBroadcastListsPage() {
   }, []);
 
   useEffect(() => {
-    loadQuickLists(1);
+    const debounceTimer = setTimeout(() => {
+      loadQuickLists(1);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(debounceTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, selectedUploadType]);
 
@@ -119,9 +123,10 @@ export default function ManualBroadcastListsPage() {
       setLoading(true);
 
       let response;
-      if (searchTerm) {
+      const trimmedSearch = searchTerm.trim();
+      if (trimmedSearch) {
         response = await quicklistService.searchQuickLists({
-          q: searchTerm,
+          q: trimmedSearch,
           upload_type: selectedUploadType || undefined,
           limit: pagination.limit,
           offset: (page - 1) * pagination.limit,
@@ -145,11 +150,14 @@ export default function ManualBroadcastListsPage() {
           }));
         }
       } else {
-        showError("Failed to load QuickLists");
+        showError("Failed to load broadcast lists", response.error || "Please try again");
       }
     } catch (err) {
       console.error("Failed to load quicklists:", err);
-      showError("Failed to load QuickLists");
+      // Only show error if not already showing one (prevent duplicate toasts)
+      if (!loading) {
+        showError("Failed to load broadcast lists", "Please check your connection and try again");
+      }
     } finally {
       setLoading(false);
     }
@@ -363,7 +371,7 @@ export default function ManualBroadcastListsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>Manual Broadcast Lists</h1>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>Manual Broadcasts</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Manage recipient lists created for manual broadcasts
           </p>

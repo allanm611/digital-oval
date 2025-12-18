@@ -22,6 +22,119 @@ Step 4 (Schedule) → Ready to send
 
 ---
 
+## 📋 QUICKLISTS: UNDERSTANDING THE RECIPIENT MANAGEMENT SYSTEM
+
+### What are QuickLists?
+QuickLists are temporary data containers that store recipient information for Manual Broadcast communications. They serve as the bridge between audience creation and message delivery.
+
+### How QuickLists Work with Manual Broadcasts
+
+#### 1. **Audience Creation → QuickList Storage**
+```
+Manual Broadcast Step 1 (Target Audience)
+        ↓
+File Upload or Manual Entry
+        ↓
+Data Validation & Processing
+        ↓
+QuickList Created (POST /quicklists)
+        ↓
+Returns QuickList ID
+```
+
+#### 2. **QuickList Structure & Data Types**
+QuickLists support different upload types based on data categories:
+
+**Customer Subscription Data (`customer_subscription`)**:
+- Purpose: Target customers by subscription status
+- Required Columns: `msisdn` (phone), `subscription_id`
+- Example Data:
+  ```csv
+  msisdn,subscription_id,status
+  +254700000001,12345,active
+  +254700000002,12346,inactive
+  ```
+
+**Customer Data (`customer_data`)**:
+- Purpose: Target customers by personal information
+- Required Columns: `msisdn`, `first_name`, `last_name`
+- Example Data:
+  ```csv
+  msisdn,first_name,last_name,email,age
+  +254700000001,John,Doe,john@example.com,25
+  +254700000002,Jane,Smith,jane@example.com,30
+  ```
+
+#### 3. **Template Variables Integration**
+QuickLists automatically generate template variables from column headers:
+
+**Example QuickList with Customer Data:**
+```
+Columns: msisdn, first_name, last_name, email, age
+Variables Available: {{msisdn}}, {{first_name}}, {{last_name}}, {{email}}, {{age}}
+```
+
+**Message Template Example:**
+```
+"Hi {{first_name}} {{last_name}}, your phone {{msisdn}} is registered for our service. Your age group is {{age}}."
+```
+
+**Rendered Message:**
+```
+"Hi John Doe, your phone +254700000001 is registered for our service. Your age group is 25."
+```
+
+#### 4. **QuickList Lifecycle in Manual Broadcasts**
+
+**Phase 1: Creation (Step 1)**
+- User uploads file or enters data manually
+- System validates data format and required columns
+- QuickList created via API: `POST /quicklists`
+- Response returns `quicklist_id`
+
+**Phase 2: Message Composition (Step 2)**
+- System fetches available variables: `GET /communications/template-variables/{quicklist_id}`
+- User composes message using template variables
+- Variables are validated against QuickList columns
+
+**Phase 3: Communication Send (Step 4)**
+- System sends communication: `POST /communications/send`
+- Payload includes:
+  ```json
+  {
+    "source_type": "quicklist",
+    "source_id": quicklist_id,
+    "channels": ["SMS", "EMAIL"],
+    "message_template": {
+      "subject": "Welcome {{first_name}}",
+      "body": "Hi {{first_name}}, welcome to our service!"
+    }
+  }
+  ```
+
+#### 5. **QuickList Management Operations**
+- **View Data**: `GET /quicklists/{id}/data` - Paginated recipient list
+- **View Logs**: `GET /quicklists/{id}/logs` - Upload processing logs
+- **Delete**: `DELETE /quicklists/{id}` - Remove QuickList and data
+- **Export**: `GET /quicklists/{id}/export` - Download as CSV
+
+#### 6. **Current Status: Part of Manual Broadcasts**
+QuickLists are currently integrated as part of the Manual Broadcast workflow:
+- Not accessible as standalone feature (sidebar commented out)
+- Created automatically during Manual Broadcast Step 1
+- Used immediately for communication sending
+- Can be made independent by uncommenting sidebar navigation
+
+#### 7. **Future Independent QuickList Feature**
+When QuickLists become standalone:
+- Dedicated page: `/dashboard/quicklists`
+- CRUD operations for data management
+- Reusable across multiple campaigns
+- Advanced filtering and segmentation
+- Data import/export capabilities
+
+---
+
 ## ✅ FULLY CONNECTED & WORKING
 
 ### 1. POST /communications/send

@@ -750,7 +750,7 @@ export default function Dashboard() {
             path="/manual-broadcasts"
             element={<OtherPages.ManualBroadcastListsPage />}
           />
-          <Route path="/quicklists" element={<OtherPages.QuickListsPage />} />
+          {/* <Route path="/quicklists" element={<OtherPages.QuickListsPage />} /> */}
           <Route
             path="/communications/analytics"
             element={<OtherPages.CommunicationAnalyticsPage />}
@@ -767,10 +767,10 @@ export default function Dashboard() {
             path="/manual-rewards/create"
             element={<OtherPages.CreateManualRewardPage />}
           />
-          <Route
+          {/* <Route
             path="/quicklists/:id"
             element={<OtherPages.QuickListDetailsPage />}
-          />
+          /> */}
           <Route
             path="/manual-broadcast/:id"
             element={<OtherPages.QuickListDetailsPage />}

@@ -70,7 +70,7 @@ export default function EditQuickListModal({
       <div className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Edit Quick List</h2>
+          <h2 className="text-lg font-medium text-gray-900">Edit Manual broadcast </h2>
           <button
             onClick={onClose}
             className={`p-1 text-gray-400 hover:text-gray-600 ${tw.rounded} transition-colors`}

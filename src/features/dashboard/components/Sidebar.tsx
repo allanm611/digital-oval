@@ -505,13 +505,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         type: "single",
         entity: "segments",
       },
-      {
-        name: "QuickLists",
-        href: "/dashboard/quicklists",
-        icon: Database,
-        type: "single",
-        entity: "segments",
-      },
+      // {
+      //   name: "QuickLists",
+      //   href: "/dashboard/quicklists",
+      //   icon: Database,
+      //   type: "single",
+      //   entity: "segments",
+      // },
       {
         name: "Manual Rewards",
         href: "/dashboard/manual-rewards",
