@@ -396,6 +396,7 @@ export default function CreateQuickListModal({
                 onChange={(value) => setUploadType(value as string)}
                 placeholder="Select upload type"
                 disabled={isSubmitting}
+                zIndex={zIndex.popover}
               />
               {uploadType &&
                 (() => {

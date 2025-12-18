@@ -42,7 +42,10 @@ export default function PolicyNameModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: zIndex.modal }}>
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ zIndex: zIndex.modal }}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-60"

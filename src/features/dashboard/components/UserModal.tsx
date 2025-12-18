@@ -11,7 +11,7 @@ import {
 } from "../../users/types/user";
 import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
 
@@ -284,7 +284,9 @@ export default function UserModal({
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
           style={{ top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          <div className={`bg-white ${tw.rounded} shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}
+          >
             {/* Header */}
             <div
               className={`flex items-center justify-between p-6 border-b ${tw.borderDefault}`}
@@ -366,7 +368,9 @@ export default function UserModal({
                     disabled={!!user}
                     className={`block w-full pl-10 pr-3 py-3 border ${
                       tw.borderDefault
-                    } ${tw.rounded} focus:outline-none transition-all duration-200 text-sm ${
+                    } ${
+                      tw.rounded
+                    } focus:outline-none transition-all duration-200 text-sm ${
                       user ? "bg-gray-100 cursor-not-allowed opacity-75" : ""
                     }`}
                     placeholder="email@example.com"
@@ -455,6 +459,7 @@ export default function UserModal({
                     disabled={isLoadingRoles || roleOptions.length === 0}
                     searchable
                     className="w-full"
+                    zIndex={zIndex.popover}
                   />
                   {rolesError && (
                     <p className="mt-2 text-xs text-red-600">{rolesError}</p>

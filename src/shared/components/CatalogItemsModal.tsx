@@ -213,6 +213,7 @@ export default function CatalogItemsModal<T extends CatalogItem>({
                   value={statusFilter}
                   onChange={(value) => setStatusFilter(value || "")}
                   placeholder="All Statuses"
+                  zIndex={zIndex.popover}
                 />
               </div>
             </div>

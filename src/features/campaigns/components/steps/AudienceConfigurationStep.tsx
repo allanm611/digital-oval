@@ -378,7 +378,10 @@ export default function AudienceConfigurationStep({
           </button>
 
           {isCampaignTypeDropdownOpen && (
-            <div className={`absolute w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`} style={{ zIndex: zIndex.dropdown }}>
+            <div
+              className={`absolute w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
+              style={{ zIndex: zIndex.dropdown }}
+            >
               {campaignTypeOptions.map((option) => {
                 const IconComponent = option.icon;
                 return (
@@ -570,7 +573,9 @@ export default function AudienceConfigurationStep({
               }`}
             >
               <div className="flex items-center justify-center gap-3">
-                <div className={`w-8 h-8 bg-gray-100 ${tw.rounded} flex items-center justify-center`}>
+                <div
+                  className={`w-8 h-8 bg-gray-100 ${tw.rounded} flex items-center justify-center`}
+                >
                   <Users className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="text-center">
@@ -587,14 +592,18 @@ export default function AudienceConfigurationStep({
 
         {/* Validation Error Message */}
         {validationErrors.segments && (
-          <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
+          <div
+            className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+          >
             <p className="text-sm text-red-600">{validationErrors.segments}</p>
           </div>
         )}
 
         {formData.campaign_type === "multiple_target_group" &&
           selectedSegments.length > 0 && (
-            <div className={`border border-gray-200 ${tw.rounded} overflow-hidden`}>
+            <div
+              className={`border border-gray-200 ${tw.rounded} overflow-hidden`}
+            >
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -855,7 +864,9 @@ function ControlGroupConfigModal({
         zIndex: zIndex.modal,
       }}
     >
-      <div className={`bg-white ${tw.rounded} max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}>
+      <div
+        className={`bg-white ${tw.rounded} max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}
+      >
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-900">
             Configure Control Group
@@ -1172,7 +1183,9 @@ function ControlGroupConfigModal({
                 Select Universal Control Group
               </h4>
 
-              <div className={`border border-gray-300 ${tw.rounded} p-4 space-y-3`}>
+              <div
+                className={`border border-gray-300 ${tw.rounded} p-4 space-y-3`}
+              >
                 <input
                   type="text"
                   placeholder="Search universal control groups..."

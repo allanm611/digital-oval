@@ -1063,6 +1063,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Statuses"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                   <HeadlessSelect
                     options={[
@@ -1081,6 +1082,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Types"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                 </>
               )}
@@ -1103,6 +1105,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Types"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                   <HeadlessSelect
                     options={[
@@ -1126,6 +1129,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Statuses"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                 </>
               )}
@@ -1152,6 +1156,7 @@ function AssignItemsModal({
                   }
                   placeholder="All Statuses"
                   className="w-full sm:w-48"
+                  zIndex={zIndex.popover}
                 />
               )}
 

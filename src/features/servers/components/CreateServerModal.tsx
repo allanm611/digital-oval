@@ -189,6 +189,7 @@ export default function CreateServerModal({
                 )}
                 placeholder="Select protocol"
                 className="mt-1 w-full"
+                zIndex={zIndex.popover}
               />
             </div>
 
@@ -227,6 +228,7 @@ export default function CreateServerModal({
                 ]}
                 placeholder="Select environment"
                 className="mt-1 w-full"
+                zIndex={zIndex.popover}
               />
             </div>
 

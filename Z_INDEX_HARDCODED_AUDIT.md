@@ -25,21 +25,27 @@ This document tracks the completion of the comprehensive z-index migration acros
 All hardcoded z-index values have been successfully replaced with standardized tokens from `src/shared/utils/tokens.ts`. The following mapping was used:
 
 ### Modal Components (zIndex.modal = 3000)
+
 - All modal overlays and dialogs now use `zIndex.modal`
 
-### Dropdown/Popover Components (zIndex.popover = 4000)  
+### Dropdown/Popover Components (zIndex.popover = 4000)
+
 - All dropdown menus and tooltips now use `zIndex.popover`
 
 ### Base Layer Components (zIndex.base = 0)
+
 - Progress indicators and base elements use `zIndex.base` with calculated offsets
 
 ### Dropdown Components (zIndex.dropdown = 1000)
+
 - Form select dropdowns use `zIndex.dropdown`
 
 ### Converted Tailwind Arbitrary Classes
+
 All `z-[number]` classes were converted to inline styles with appropriate tokens:
+
 - `z-[9999]` → `style={{ zIndex: zIndex.modal }}`
-- `z-[10000]` → `style={{ zIndex: zIndex.modal }}`  
+- `z-[10000]` → `style={{ zIndex: zIndex.modal }}`
 - `z-[10050]` → `style={{ zIndex: zIndex.modal }}`
 - `z-[100]` → `style={{ zIndex: zIndex.dropdown }}`
 

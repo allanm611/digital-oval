@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { color , tw, zIndex} from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { Program } from "../types/program";
 
 interface ProgramModalProps {
@@ -99,7 +99,10 @@ export default function ProgramModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
+    >
       <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -223,7 +226,9 @@ export default function ProgramModal({
           </div>
 
           {error && (
-            <div className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}>
+            <div
+              className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
+            >
               <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
