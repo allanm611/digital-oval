@@ -500,6 +500,12 @@ const AnalyticsPages = {
 
 // Other Pages - All routes preloaded for instant access
 const OtherPages = {
+  ManualBroadcastListsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../quicklists/pages/ManualBroadcastListsPage"
+      )
+  ),
   QuickListsPage: lazy(
     () =>
       import(
@@ -740,13 +746,17 @@ export default function Dashboard() {
             path="/control-groups"
             element={<ProductPages.ControlGroupsPage />}
           />
+          <Route
+            path="/manual-broadcasts"
+            element={<OtherPages.ManualBroadcastListsPage />}
+          />
           <Route path="/quicklists" element={<OtherPages.QuickListsPage />} />
           <Route
             path="/communications/analytics"
             element={<OtherPages.CommunicationAnalyticsPage />}
           />
           <Route
-            path="/quicklists/create"
+            path="/manual-broadcasts/create"
             element={<OtherPages.CreateManualBroadcastPage />}
           />
           <Route

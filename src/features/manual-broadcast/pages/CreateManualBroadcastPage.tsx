@@ -12,6 +12,7 @@ import DefineCommunicationStep from "../components/DefineCommunicationStep";
 import TestBroadcastStep from "../components/TestBroadcastStep";
 import ScheduleStep from "../components/ScheduleStep";
 import { communicationService } from "../../communications/services/communicationService";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 
 export interface ManualBroadcastData {
@@ -23,8 +24,8 @@ export interface ManualBroadcastData {
   quicklistId?: number;
   rowCount?: number;
   // New fields for enhanced audience selection
-  subscriptionIdColumn?: string;   // Selected column containing Subscription IDs
-  fileColumns?: string[];          // Columns extracted from uploaded file
+  subscriptionIdColumn?: string; // Selected column containing Subscription IDs
+  fileColumns?: string[]; // Columns extracted from uploaded file
   inputMethod?: AudienceInputMethod; // "file" or "manual" input method
 
   // Step 2: Communication
@@ -33,7 +34,7 @@ export interface ManualBroadcastData {
   messageBody?: string;
   isRichText?: boolean;
   // New field for template variables
-  selectedVariables?: TemplateVariable[];  // Variables used in the message
+  selectedVariables?: TemplateVariable[]; // Variables used in the message
 
   // Step 3: Test
   testContacts?: string[];
@@ -108,10 +109,27 @@ export default function CreateManualBroadcastPage() {
 
   const handleSubmit = async () => {
     try {
-      // Send the communication
+      // First create the QuickList from the stored audience data
+      const quicklistResponse = await quicklistService.createQuickList({
+        file: broadcastData.audienceFile!,
+        upload_type: broadcastData.uploadType!,
+        name: broadcastData.audienceName!,
+        description: null,
+        created_by: null,
+      });
+
+      if (!quicklistResponse.success) {
+        throw new Error(
+          "error" in quicklistResponse
+            ? quicklistResponse.error
+            : "Failed to create audience QuickList"
+        );
+      }
+
+      // Now send the communication using the newly created QuickList
       const response = await communicationService.sendCommunication({
         source_type: "quicklist",
-        source_id: broadcastData.quicklistId!,
+        source_id: quicklistResponse.data.quicklist_id,
         channels: broadcastData.channel ? [broadcastData.channel] : [],
         message_template: {
           ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
@@ -130,7 +148,7 @@ export default function CreateManualBroadcastPage() {
 
       if (response.success) {
         showToast(t.manualBroadcast.createdSuccess);
-        navigate("/dashboard/quicklists");
+        navigate("/dashboard/manual-broadcasts");
       } else {
         throw new Error("Communication sending failed");
       }
@@ -193,7 +211,7 @@ export default function CreateManualBroadcastPage() {
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => navigate("/dashboard/quicklists")}
+                onClick={() => navigate("/dashboard/manual-broadcasts")}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />

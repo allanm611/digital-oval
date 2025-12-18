@@ -344,7 +344,7 @@ export default function QuickListsPage() {
 
   const quicklistStatsCards = [
     {
-      name: "Total Manual Broadcasts",
+      name: "Total QuickLists",
       value: statsLoading
         ? "..."
         : (stats?.overall.total_quicklists || 0).toLocaleString(),
@@ -384,27 +384,18 @@ export default function QuickListsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Manual Broadcast
-          </h1>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>QuickLists</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Upload and manage customer data lists for quick communication
+            Manage standalone QuickLists for data storage and reuse
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/dashboard/communications/analytics")}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Database className="w-4 h-4" />
-            Analytics
-          </button>
-          <button
-            onClick={() => navigate("/dashboard/quicklists/create")}
+            onClick={() => setIsCreateModalOpen(true)}
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
-            Create Manual Broadcast
+            Create QuickList
           </button>
         </div>
       </div>
@@ -441,7 +432,7 @@ export default function QuickListsPage() {
           />
           <input
             type="text"
-            placeholder="Search manual broadcasts by name..."
+            placeholder="Search QuickLists by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
@@ -478,7 +469,7 @@ export default function QuickListsPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading manual broadcasts...
+              Loading QuickLists...
             </p>
           </div>
         ) : quicklists.length === 0 ? (
@@ -486,8 +477,8 @@ export default function QuickListsPage() {
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? "No manual broadcasts match your search."
-                : "No manual broadcasts yet. Upload your first list to get started."}
+                ? "No QuickLists match your search."
+                : "No QuickLists yet. Create your first QuickList to get started."}
             </p>
             {!searchTerm && (
               <button
@@ -496,7 +487,7 @@ export default function QuickListsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Upload className="w-4 h-4" />
-                Create Manual Broadcast
+                Create QuickList
               </button>
             )}
           </div>
@@ -509,25 +500,25 @@ export default function QuickListsPage() {
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Name
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Upload Type
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Rows
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Status
@@ -577,7 +568,7 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
-                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-700`}
+                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700`}
                       >
                         {quicklist.upload_type}
                       </span>
@@ -595,7 +586,7 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
-                        className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white"
+                        className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm text-white"
                         style={{ backgroundColor: color.primary.accent }}
                       >
                         {quicklist.processing_status
@@ -685,7 +676,7 @@ export default function QuickListsPage() {
               )}{" "}
               to{" "}
               {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-              of {pagination.total.toLocaleString()} quicklists
+              of {pagination.total.toLocaleString()} QuickLists
             </div>
             <div className="flex items-center justify-center space-x-2">
               <button

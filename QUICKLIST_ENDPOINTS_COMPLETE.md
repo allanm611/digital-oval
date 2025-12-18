@@ -52,25 +52,25 @@
 
 ## 🔌 Connection Status
 
-### Connected & Used (8/14)
+### Connected & Used (11/14)
 
-- `getAllQuickLists` - ✅ Used in QuickListsPage
-- `getQuickListById` - ✅ Used in QuickListsPage & QuickListDetailsModal
+- `getAllQuickLists` - ✅ Used in both QuickLists pages
+- `getQuickListById` - ✅ Used in both QuickLists pages & QuickListDetailsModal
 - `getQuickListData` - ✅ Used in QuickListDetailsModal
-- `createQuickList` - ✅ Used in QuickListsPage
-- `deleteQuickList` - ✅ Used in QuickListsPage
-- `searchQuickLists` - ✅ Used in QuickListsPage
-- `exportQuickList` - ✅ Used in QuickListsPage
-- `getUploadTypes` - ✅ Used in QuickListsPage
+- `createQuickList` - ✅ Used in both QuickLists pages
+- `deleteQuickList` - ✅ Used in both QuickLists pages
+- `searchQuickLists` - ✅ Used in both QuickLists pages
+- `exportQuickList` - ✅ Used in both QuickLists pages
+- `getUploadTypes` - ✅ Used in both QuickLists pages
+- `getStats` - ✅ Used in both QuickLists pages (stats cards)
+- `updateQuickList` - ✅ Used in both QuickLists pages (edit modal)
+- `getImportLogs` - ✅ Used in QuickListDetailsModal
 
-### Not Yet Connected (6/14)
+### Not Yet Connected (3/14)
 
-- `getImportLogs` - ⏳ Available but not used
-- `updateQuickList` - ⏳ Available but not used
-- `getStats` - ⏳ Available but not used
-- `getUploadTypeSchema` - ⏳ Available but not used (NEW)
-- `getTableMappings` - ⏳ Available but not used (NEW)
-- `getTableMappingByUploadType` - ⏳ Available but not used (NEW)
+- `getUploadTypeSchema` - ⏳ Available but not used
+- `getTableMappings` - ⏳ Available but not used
+- `getTableMappingByUploadType` - ⏳ Available but not used
 
 ---
 

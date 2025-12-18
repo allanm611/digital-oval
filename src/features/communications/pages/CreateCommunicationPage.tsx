@@ -139,7 +139,9 @@ export default function CreateCommunicationPage() {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-3xl mx-auto">
-          <div className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}>
+          <div
+            className={`bg-white ${tw.rounded} shadow-sm border border-gray-200 overflow-hidden`}
+          >
             {/* Header */}
             <div
               className={`p-6 ${
@@ -241,10 +243,10 @@ export default function CreateCommunicationPage() {
             {/* Actions */}
             <div className="p-6 bg-gray-50 border-t flex items-center justify-between">
               <button
-                onClick={() => navigate("/dashboard/quicklists")}
+                onClick={() => navigate("/dashboard/manual-broadcasts")}
                 className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
-                Back to QuickLists
+                Back to Manual Broadcasts
               </button>
               <button
                 onClick={() => setResult(null)}
@@ -290,7 +292,9 @@ export default function CreateCommunicationPage() {
           {/* Left Column - Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Channel Selection */}
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+            >
               <ChannelSelector
                 selectedChannel={selectedChannel}
                 onChannelChange={setSelectedChannel}
@@ -298,7 +302,9 @@ export default function CreateCommunicationPage() {
             </div>
 
             {/* Message Editor */}
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+            >
               <MessageEditor
                 title={messageTitle}
                 body={messageBody}
@@ -314,7 +320,7 @@ export default function CreateCommunicationPage() {
             {/* Send Button */}
             <div className="flex items-center justify-end space-x-3">
               <button
-                onClick={() => navigate("/dashboard/quicklists")}
+                onClick={() => navigate("/dashboard/manual-broadcasts")}
                 className={`px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Cancel
@@ -344,7 +350,9 @@ export default function CreateCommunicationPage() {
 
           {/* Right Column - Preview */}
           <div className="lg:col-span-1">
-            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 sticky top-6`}>
+            <div
+              className={`bg-white ${tw.rounded} border border-gray-200 p-6 sticky top-6`}
+            >
               <PreviewPanel
                 channel={selectedChannel}
                 title={messageTitle}

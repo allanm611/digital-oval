@@ -200,35 +200,22 @@ export default function TargetAudienceStep({
       setIsSubmitting(true);
       setError("");
 
-      // Create file from manual input if in manual mode
+      // Create file from manual input if in manual mode (don't create QuickList yet)
       const fileToUpload =
         audienceData.inputMethod === "manual"
           ? createFileFromManualInput()
           : audienceData.file!;
 
-      // Upload quicklist
-      const response = await quicklistService.createQuickList({
-        file: fileToUpload,
-        upload_type: audienceData.uploadType || "",
-        name: audienceData.name || "",
-        description: null,
-        created_by: null,
-      });
-
-      if (!response.success) {
-        throw new Error(
-          "error" in response ? response.error : "Failed to create audience"
-        );
-      }
-
-      // Update broadcast data
+      // Update broadcast data with audience info (QuickList will be created at submission)
       onUpdate({
         audienceFile: fileToUpload,
         audienceName: audienceData.name || "",
         audienceDescription: undefined,
         uploadType: audienceData.uploadType || (uploadTypes.length > 0 ? uploadTypes[0].upload_type : ""),
-        quicklistId: response.data.quicklist_id,
-        rowCount: response.data.rows_imported,
+        // quicklistId will be set when broadcast is actually sent
+        rowCount: audienceData.inputMethod === "manual"
+          ? (audienceData.manualInput?.split('\n').filter(line => line.trim()).length || 0)
+          : 0, // Will be updated when QuickList is created
         subscriptionIdColumn:
           audienceData.inputMethod === "file"
             ? audienceData.subscriptionIdColumn || undefined

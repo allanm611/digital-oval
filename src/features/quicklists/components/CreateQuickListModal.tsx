@@ -99,10 +99,10 @@ export default function CreateQuickListModal({
         >
           <div>
             <h2 className={`text-lg font-medium ${tw.textPrimary}`}>
-              Upload QuickList
+              Create Broadcast List
             </h2>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Upload an Excel file to create a new customer list
+              Upload an Excel file to create a new broadcast recipient list
             </p>
           </div>
           <button
@@ -193,7 +193,7 @@ export default function CreateQuickListModal({
                   isSubmitting || !isFormValid ? "not-allowed" : "pointer",
               }}
             >
-              {isSubmitting ? "Creating..." : "Upload QuickList"}
+              {isSubmitting ? "Creating..." : "Create Broadcast List"}
             </button>
           </div>
         </form>

@@ -500,8 +500,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       },
       {
         name: "Manual Broadcast",
-        href: "/dashboard/quicklists",
+        href: "/dashboard/manual-broadcasts",
         icon: Upload,
+        type: "single",
+        entity: "segments",
+      },
+      {
+        name: "QuickLists",
+        href: "/dashboard/quicklists",
+        icon: Database,
         type: "single",
         entity: "segments",
       },
