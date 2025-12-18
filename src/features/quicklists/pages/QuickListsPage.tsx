@@ -7,7 +7,6 @@ import {
   Download,
   Trash2,
   Eye,
-  Send,
   Plus,
   Database,
   CheckCircle,
@@ -22,7 +21,6 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../services/quicklistService";
 import { QuickList, UploadType, QuickListStats } from "../types/quicklist";
 import CreateQuickListModal from "../components/CreateQuickListModal";
-import CreateCommunicationModal from "../../communications/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
 export default function QuickListsPage() {
@@ -49,9 +47,6 @@ export default function QuickListsPage() {
   });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
-  const [communicateQuickList, setCommunicateQuickList] =
-    useState<QuickList | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const isInitialMount = useRef(true);
@@ -300,10 +295,6 @@ export default function QuickListsPage() {
     }
   };
 
-  const handleCommunicate = (quicklist: QuickList) => {
-    setCommunicateQuickList(quicklist);
-    setIsCommunicateModalOpen(true);
-  };
 
   const handleEdit = (quicklist: QuickList) => {
     setEditQuickList(quicklist);
@@ -616,13 +607,6 @@ export default function QuickListsPage() {
                     >
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          onClick={() => handleCommunicate(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title="Send Communication"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                        <button
                           onClick={() => handleEdit(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                           title="Edit"
@@ -719,23 +703,6 @@ export default function QuickListsPage() {
         uploadTypes={uploadTypes}
       />
 
-      {communicateQuickList && (
-        <CreateCommunicationModal
-          isOpen={isCommunicateModalOpen}
-          onClose={() => {
-            setIsCommunicateModalOpen(false);
-            setCommunicateQuickList(null);
-          }}
-          quicklist={communicateQuickList}
-          onSuccess={(result) => {
-            showToast(
-              `Communication sent successfully! ${result.total_messages_sent} messages sent.`
-            );
-            setIsCommunicateModalOpen(false);
-            setCommunicateQuickList(null);
-          }}
-        />
-      )}
 
       {/* Edit Modal */}
       {isEditModalOpen && editQuickList && (

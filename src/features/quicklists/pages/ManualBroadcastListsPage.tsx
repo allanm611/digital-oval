@@ -6,7 +6,6 @@ import {
   Download,
   Trash2,
   Eye,
-  // Send,
   Plus,
   Database,
   CheckCircle,
@@ -19,7 +18,7 @@ import { quicklistService } from "../services/quicklistService";
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import ConfirmModal from "../../../shared/components/ui/ConfirmModal";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -228,7 +227,7 @@ export default function ManualBroadcastListsPage() {
   };
 
   const handleViewDetails = (quicklist: QuickList) => {
-    navigate(`/dashboard/quicklists/${quicklist.id}`);
+    navigate(`/dashboard/manual-broadcast/${quicklist.id}`);
   };
 
   const handleDelete = (quicklist: QuickList) => {
@@ -246,7 +245,7 @@ export default function ManualBroadcastListsPage() {
       );
 
       if (response.success) {
-        showToast(`QuickList "${quicklistToDelete.name}" deleted successfully!`);
+        showToast(`Broadcast list "${quicklistToDelete.name}" deleted successfully!`);
         setShowDeleteModal(false);
         setQuicklistToDelete(null);
         await loadQuickLists();
@@ -282,6 +281,7 @@ export default function ManualBroadcastListsPage() {
       showError("Failed to export QuickList");
     }
   };
+
 
   const handleEdit = (quicklist: QuickList) => {
     setEditQuickList(quicklist);
@@ -369,6 +369,13 @@ export default function ManualBroadcastListsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/dashboard/communications/analytics")}
+            className={`${tw.button} flex items-center gap-2`}
+          >
+            <Database className="w-4 h-4" />
+            Analytics
+          </button>
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className={`${tw.button} flex items-center gap-2`}
@@ -599,7 +606,7 @@ export default function ManualBroadcastListsPage() {
                           </button>
                           <button
                             onClick={() => handleDelete(quicklist)}
-                            className={`p-1 ${tw.rounded} text-red-400 hover:text-red-600 transition-colors`}
+                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors`}
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -687,17 +694,18 @@ export default function ManualBroadcastListsPage() {
         />
       )}
 
-      <ConfirmModal
+      <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
           setQuicklistToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete QuickList"
-        description="Are you sure you want to delete this QuickList? This action cannot be undone."
+        title="Delete Broadcast List"
+        description="Are you sure you want to delete this broadcast list? This action cannot be undone."
+        itemName={quicklistToDelete?.name || ""}
         isLoading={isDeleting}
-        confirmText="Delete QuickList"
+        confirmText="Delete Broadcast List"
         cancelText="Cancel"
       />
     </div>

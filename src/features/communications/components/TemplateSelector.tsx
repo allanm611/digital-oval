@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FileText, Plus, Eye, Trash2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { MessageTemplate } from "../types/template";
@@ -24,14 +24,14 @@ export default function TemplateSelector({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTemplates();
-  }, [channel, loadTemplates]);
-
   const loadTemplates = useCallback(() => {
     const allTemplates = templateService.getTemplatesByChannel(channel);
     setTemplates(allTemplates);
   }, [channel]);
+
+  useEffect(() => {
+    loadTemplates();
+  }, [channel, loadTemplates]);
 
   const handleSelect = (template: MessageTemplate) => {
     setSelectedId(template.id);

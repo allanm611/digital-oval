@@ -771,6 +771,10 @@ export default function Dashboard() {
             path="/quicklists/:id"
             element={<OtherPages.QuickListDetailsPage />}
           />
+          <Route
+            path="/manual-broadcast/:id"
+            element={<OtherPages.QuickListDetailsPage />}
+          />
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
           <Route
             path="/configuration"

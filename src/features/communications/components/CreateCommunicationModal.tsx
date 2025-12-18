@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, CheckCircle, XCircle } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -55,7 +55,7 @@ export default function CreateCommunicationModal({
       setIsRichText(false);
       setShowTemplates(true);
     }
-  }, [isOpen, loadSampleData]);
+  }, [isOpen]);
 
   const loadSampleData = useCallback(async () => {
     try {
