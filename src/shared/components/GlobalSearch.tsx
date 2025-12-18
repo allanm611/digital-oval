@@ -9,10 +9,12 @@ import {
   Package,
   Users,
   FolderKanban,
+  ArrowRight,
+  Sparkles,
+  UserCheck,
+  Settings,
   FolderTree,
   List,
-  Settings,
-  UserCheck,
 } from "lucide-react";
 import { campaignService } from "../../features/campaigns/services/campaignService";
 import { offerService } from "../../features/offers/services/offerService";
@@ -25,7 +27,7 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import { Role } from "../../features/roles/types/role";
-import { tw, zIndex } from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 
 interface SearchSuggestion {
   id: string | number;
@@ -85,6 +87,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -436,6 +439,11 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((user) => {
             const roleId = user.role_id || user.primary_role_id;
+            const role = roleId ? roleLookup[roleId] : null;
+            const roleName =
+              role?.name ||
+              user.role_name ||
+              (roleId ? `Role ${roleId}` : "No Role");
 
             allSuggestions.push({
               id: user.id,
@@ -619,18 +627,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
     }
   }, []);
 
-  // Calculate dropdown position
-  const updateDropdownPosition = useCallback(() => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      // setDropdownPosition({
-      //   top: rect.bottom + 8, // 8px for mt-2, using viewport coordinates for fixed positioning
-      //   left: rect.left,
-      //   width: rect.width,
-      // });
-    }
-  }, []);
-
   // Debounce search
   useEffect(() => {
     if (debounceTimerRef.current) {
@@ -652,24 +648,8 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
     };
   }, [searchTerm, fetchSuggestions]);
 
-  // Update dropdown position when shown or window resizes
-  useEffect(() => {
-    if (showSuggestions) {
-      updateDropdownPosition();
-      const handleResize = () => updateDropdownPosition();
-      const handleScroll = () => updateDropdownPosition();
-      window.addEventListener("resize", handleResize);
-      window.addEventListener("scroll", handleScroll, true);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        window.removeEventListener("scroll", handleScroll, true);
-      };
-    }
-  }, [showSuggestions, updateDropdownPosition]);
-
   // Handle input focus
   const handleFocus = () => {
-    updateDropdownPosition();
     setShowSuggestions(true);
   };
 
@@ -706,6 +686,14 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       // Always go to search results page when Enter is pressed
       // Users can click on suggestions if they want to navigate directly
       handleSearch();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
       onClose?.();
@@ -780,106 +768,120 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
               <p className="mt-3 text-sm text-gray-600">Searching...</p>
             </div>
-          ) : showQuickSearches ? (
-            <>
-              {/* Quick Access */}
-              <div className="py-2">
-                <div className="px-4 py-2">
-                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Quick Access
-                  </h3>
-                </div>
-                <div>
-                  {QUICK_SEARCHES.map((quickSearch) => {
-                    const Icon = quickSearch.icon;
-                    return (
-                      <button
-                        key={quickSearch.label}
-                        onClick={() => {
-                          navigate(quickSearch.url);
-                          setShowSuggestions(false);
-                          onClose?.();
-                        }}
-                        className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                      >
-                        <Icon className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                        <span className="font-medium text-gray-900 text-sm">
-                          {quickSearch.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Recent Searches */}
-                {recentSearches.length > 0 && (
-                  <div className="border-t border-gray-200 mt-2">
-                    <div className="px-4 py-2 mt-2">
-                      <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Recent Searches
-                      </h3>
-                    </div>
-                    <div>
-                      {recentSearches.map((search, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            setSearchTerm(search);
-                            handleSearch(search);
-                          }}
-                          className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors flex items-center gap-3"
-                        >
-                          <Clock className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                          <span className="text-gray-900 text-sm">
-                            {search}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
           ) : hasSearchResults ? (
             <>
               {/* Search Results */}
               <div className="py-2">
                 <div className="px-4 py-2">
                   <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    Search Results
+                    Results
                   </h3>
                 </div>
                 <div>
-                  {suggestions.slice(0, 5).map((suggestion) => (
+                  {suggestions.map((suggestion, index) => {
+                    const typeInfo = getTypeInfo(suggestion.type);
+                    const Icon = typeInfo.icon;
+                    return (
+                      <button
+                        key={`${suggestion.type}-${suggestion.id}`}
+                        onClick={() => {
+                          navigate(suggestion.url);
+                          setShowSuggestions(false);
+                          onClose?.();
+                        }}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                          selectedIndex === index ? "bg-gray-50" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Icon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">
+                              {suggestion.name}
+                            </p>
+                            {suggestion.description && (
+                              <p className="text-xs text-gray-500 truncate mt-0.5">
+                                {suggestion.description}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500 flex-shrink-0">
+                            {typeInfo.label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* View All Results */}
+              <div className="border-t border-gray-200 p-2">
+                <button
+                  onClick={() => handleSearch()}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-50 rounded transition-colors"
+                >
+                  View all results for "{searchTerm}"
+                </button>
+              </div>
+            </>
+          ) : showQuickSearches ? (
+            <div className="py-4">
+              {/* Quick Searches Section */}
+              <div className="px-4 py-2">
+                <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  Quick Access
+                </h3>
+              </div>
+              <div>
+                {QUICK_SEARCHES.map((quickSearch) => {
+                  const Icon = quickSearch.icon;
+                  return (
                     <button
-                      key={suggestion.id}
+                      key={quickSearch.label}
                       onClick={() => {
-                        navigate(suggestion.url);
+                        navigate(quickSearch.url);
                         setShowSuggestions(false);
                         onClose?.();
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors"
+                      className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors flex items-center gap-3"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-medium text-gray-600">
-                            {getTypeInfo(suggestion.type).label[0]}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
-                            {suggestion.name}
-                          </div>
-                          <div className="text-xs text-gray-600 truncate">
-                            {suggestion.description || suggestion.type}
-                          </div>
-                        </div>
-                      </div>
+                      <Icon className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                      <span className="font-medium text-gray-900 text-sm">
+                        {quickSearch.label}
+                      </span>
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            </>
+
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="border-t border-gray-200 mt-2">
+                  <div className="px-4 py-2 mt-2">
+                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                      Recent Searches
+                    </h3>
+                  </div>
+                  <div>
+                    {recentSearches.map((search, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setSearchTerm(search);
+                          handleSearch(search);
+                        }}
+                        className="w-full text-left px-4 py-4 hover:bg-gray-50 transition-colors flex items-center gap-3"
+                      >
+                        <Clock className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                        <span className="text-gray-900 text-sm">{search}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           ) : (
             <div className="p-12 text-center">
               <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
