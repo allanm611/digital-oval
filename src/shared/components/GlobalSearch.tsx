@@ -28,7 +28,7 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import { Role } from "../../features/roles/types/role";
-import { color, tw, zIndexTokens } from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 
 interface SearchSuggestion {
   id: string | number;
@@ -758,7 +758,11 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   const showQuickSearches = !searchTerm.trim() || searchTerm.trim().length < 2;
 
   return (
-    <div ref={containerRef} className="relative flex-1 max-w-xs sm:max-w-md">
+    <div
+      ref={containerRef}
+      className="relative flex-1 max-w-xs sm:max-w-md"
+      style={{ zIndex: zIndex.popover }}
+    >
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
         <input
@@ -786,85 +790,22 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         )}
       </div>
 
-      {/* Suggestions Dropdown - Portaled outside header */}
-      {showSuggestions &&
-        createPortal(
-          <div
-            ref={suggestionsRef}
-            className={`fixed bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto max-w-[calc(100vw-2rem)] sm:max-w-[500px]`}
-            style={{
-              zIndex: zIndexTokens.searchDropdown,
-              top: `${dropdownPosition.top}px`,
-              left: `${dropdownPosition.left}px`,
-              width: `${dropdownPosition.width}px`,
-            }}
-          >
-            {isLoading ? (
-              <div className="p-12 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
-                <p className="mt-3 text-sm text-gray-600">Searching...</p>
-              </div>
-            ) : hasSearchResults ? (
-              <>
-                {/* Search Results */}
-                <div className="py-2">
-                  <div className="px-4 py-2">
-                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Results
-                    </h3>
-                  </div>
-                  <div>
-                    {suggestions.map((suggestion, index) => {
-                      const typeInfo = getTypeInfo(suggestion.type);
-                      const Icon = typeInfo.icon;
-                      return (
-                        <button
-                          key={`${suggestion.type}-${suggestion.id}`}
-                          onClick={() => {
-                            navigate(suggestion.url);
-                            setShowSuggestions(false);
-                            onClose?.();
-                          }}
-                          onMouseEnter={() => setSelectedIndex(index)}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
-                            selectedIndex === index ? "bg-gray-50" : ""
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 text-sm truncate">
-                                {suggestion.name}
-                              </p>
-                              {suggestion.description && (
-                                <p className="text-xs text-gray-500 truncate mt-0.5">
-                                  {suggestion.description}
-                                </p>
-                              )}
-                            </div>
-                            <span className="text-xs text-gray-500 flex-shrink-0">
-                              {typeInfo.label}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* View All Results */}
-                <div className="border-t border-gray-200 p-2">
-                  <button
-                    onClick={() => handleSearch()}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-900 hover:bg-gray-50 rounded transition-colors"
-                  >
-                    View all results for "{searchTerm}"
-                  </button>
-                </div>
-              </>
-            ) : showQuickSearches ? (
-              <div className="py-4">
-                {/* Quick Searches Section */}
+      {/* Suggestions Dropdown */}
+      {showSuggestions && (
+        <div
+          ref={suggestionsRef}
+          className={`absolute top-full left-0 right-0 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto w-full max-w-[calc(100vw-2rem)] sm:max-w-[500px] mx-auto sm:mx-0`}
+          style={{ zIndex: zIndex.popover }}
+        >
+          {isLoading ? (
+            <div className="p-12 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
+              <p className="mt-3 text-sm text-gray-600">Searching...</p>
+            </div>
+          ) : hasSearchResults ? (
+            <>
+              {/* Search Results */}
+              <div className="py-2">
                 <div className="px-4 py-2">
                   <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                     Quick Access

@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-import { tw, zIndexTokens } from "../../../shared/utils/utils";
+import { tw, zIndex } from "../../../shared/utils/utils";
 interface SideModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -40,7 +40,7 @@ export default function SideModal({
       <Dialog
         as="div"
         className="relative"
-        style={{ zIndex: zIndexTokens.overlay }}
+        style={{ zIndex: zIndex.modal }}
         onClose={onClose}
       >
         <Transition.Child

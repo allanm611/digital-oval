@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, CheckCircle, XCircle, Info, X } from "lucide-react";
-import { color , tw} from "../../utils/utils";
+import { color, tw, zIndex } from "../../utils/utils";
 
 export type ConfirmType = "danger" | "warning" | "success" | "info";
 
@@ -98,7 +98,10 @@ export default function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] overflow-y-auto">
+    <div
+      className="fixed inset-0 overflow-y-auto"
+      style={{ zIndex: zIndex.modal }}
+    >
       {/* Backdrop */}
       <div
         className={`fixed inset-0 bg-black transition-opacity duration-300 ${
@@ -110,7 +113,9 @@ export default function ConfirmModal({
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative w-full max-w-md transform overflow-hidden ${tw.rounded} bg-white shadow-2xl transition-all duration-300 ${
+          className={`relative w-full max-w-md transform overflow-hidden ${
+            tw.rounded
+          } bg-white shadow-2xl transition-all duration-300 ${
             isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0"
           }`}
         >
@@ -165,7 +170,9 @@ export default function ConfirmModal({
             <button
               onClick={handleConfirm}
               disabled={isLoading}
-              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-4 py-2 text-sm font-medium text-white ${
+                tw.rounded
+              } focus:outline-none focus:ring-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 config.confirmButtonColor || ""
               }`}
               style={

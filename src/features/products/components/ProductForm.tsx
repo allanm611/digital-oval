@@ -893,7 +893,13 @@ export default function ProductForm({
                           )}
                         </div>
 
-                        <div className="grid gap-3 md:grid-cols-2 mb-3">
+                        <div
+                          className={`grid gap-3 ${
+                            !comboData.shared_validity
+                              ? "md:grid-cols-3"
+                              : "md:grid-cols-2"
+                          } mb-3`}
+                        >
                           <div>
                             <label
                               className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
@@ -944,35 +950,35 @@ export default function ProductForm({
                               placeholder="Enter value"
                             />
                           </div>
-                        </div>
 
-                        {!comboData.shared_validity && (
-                          <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
-                              Validity (Hours)
-                            </label>
-                            <input
-                              type="number"
-                              min="1"
-                              step="1"
-                              value={resource.validity_hours ?? ""}
-                              onChange={(e) =>
-                                updateComboResource(
-                                  index,
-                                  "validity_hours",
-                                  e.target.value
-                                    ? parseInt(e.target.value, 10)
-                                    : (0 as number)
-                                )
-                              }
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                              style={{ borderColor: color.border.default }}
-                              placeholder="e.g., 72"
-                            />
-                          </div>
-                        )}
+                          {!comboData.shared_validity && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Validity (Hours)
+                              </label>
+                              <input
+                                type="number"
+                                min="1"
+                                step="1"
+                                value={resource.validity_hours ?? ""}
+                                onChange={(e) =>
+                                  updateComboResource(
+                                    index,
+                                    "validity_hours",
+                                    e.target.value
+                                      ? parseInt(e.target.value, 10)
+                                      : (0 as number)
+                                  )
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="e.g., 72"
+                              />
+                            </div>
+                          )}
+                        </div>
 
                         <div className="mt-4 flex justify-end">
                           <button

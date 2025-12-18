@@ -121,6 +121,28 @@ export const colors = {
         "#8b5cf6", // Purple
       ],
     },
+    communications: {
+      // Primary colors for communications analytics charts
+      primary: "#3B82F6", // Blue for main bars and primary elements
+      secondary: "#10B981", // Green for secondary bars
+      accent: "#8B5CF6", // Purple for accent elements
+      success: "#059669", // Dark green for success metrics
+      error: "#DC2626", // Red for error/failure metrics
+      warning: "#D97706", // Orange for warning states
+      // Pie chart colors for channel distribution
+      pieColors: [
+        "#3B82F6", // Blue (primary)
+        "#10B981", // Green (success)
+        "#F59E0B", // Yellow (warning)
+        "#8B5CF6", // Purple (accent)
+        "#DC2626", // Red (error)
+        "#06B6D4", // Cyan (secondary)
+        "#84CC16", // Lime (additional)
+      ],
+      // Area chart gradient colors
+      sentGradient: ["#3B82F6", "#1E40AF"], // Blue gradient for sent messages
+      failedGradient: ["#DC2626", "#B91C1C"], // Red gradient for failed messages
+    },
   },
 
   // Standardized report chart colors - 4 color palette for all report graphs

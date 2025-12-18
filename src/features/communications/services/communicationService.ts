@@ -2,6 +2,14 @@ import { API_CONFIG, getAuthHeaders } from '../../../shared/services/api';
 import {
   SendCommunicationRequest,
   SendCommunicationResponse,
+  CommunicationExecution,
+  CommunicationStats,
+  CommunicationLog,
+  GetExecutionsRequest,
+  GetLogsRequest,
+  CommunicationExecutionsResponse,
+  CommunicationStatsResponse,
+  CommunicationLogsResponse,
 } from '../types/communication';
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/communications`;
@@ -46,6 +54,61 @@ class CommunicationService {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  }
+
+  /**
+   * Get communication statistics
+   */
+  async getStats(): Promise<CommunicationStatsResponse> {
+    return this.request<CommunicationStatsResponse>('/stats');
+  }
+
+  /**
+   * Get communication executions
+   */
+  async getExecutions(
+    params?: GetExecutionsRequest
+  ): Promise<CommunicationExecutionsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
+    if (params?.channel) queryParams.append('channel', params.channel);
+    if (params?.source_type) queryParams.append('source_type', params.source_type);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/executions${queryString ? `?${queryString}` : ''}`;
+
+    return this.request<CommunicationExecutionsResponse>(endpoint);
+  }
+
+  /**
+   * Get detailed execution information
+   */
+  async getExecutionById(executionId: string): Promise<{ success: boolean; data: CommunicationExecution }> {
+    return this.request<{ success: boolean; data: CommunicationExecution }>(`/executions/${executionId}`);
+  }
+
+  /**
+   * Get communication logs
+   */
+  async getLogs(
+    params?: GetLogsRequest
+  ): Promise<CommunicationLogsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+    if (params?.execution_id) queryParams.append('execution_id', params.execution_id);
+    if (params?.channel) queryParams.append('channel', params.channel);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/logs${queryString ? `?${queryString}` : ''}`;
+
+    return this.request<CommunicationLogsResponse>(endpoint);
   }
 }
 

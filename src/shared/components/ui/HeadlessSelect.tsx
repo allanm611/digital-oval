@@ -121,7 +121,7 @@ export default function HeadlessSelect({
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
-              zIndex: zIndexTokens.popover,
+              zIndex: effectiveZIndex,
             }}
             onClick={() => setIsOpen(false)}
           >

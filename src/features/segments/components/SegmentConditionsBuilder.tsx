@@ -280,6 +280,7 @@ export default function SegmentConditionsBuilder({
             }}
             placeholder="Select category"
             className="text-sm"
+            zIndex={zIndex.popover}
           />
         </div>
 
@@ -336,6 +337,7 @@ export default function SegmentConditionsBuilder({
             }}
             placeholder="Select field"
             className="text-sm"
+            zIndex={zIndex.popover}
           />
         </div>
 
@@ -384,6 +386,7 @@ export default function SegmentConditionsBuilder({
             }}
             placeholder="Select operator"
             className="text-sm"
+            zIndex={zIndex.popover}
           />
         </div>
 
@@ -404,6 +407,7 @@ export default function SegmentConditionsBuilder({
               }}
               placeholder="Select value"
               className="text-sm"
+              zIndex={zIndex.popover}
             />
           </div>
         ) : (
@@ -481,6 +485,7 @@ export default function SegmentConditionsBuilder({
             }}
             placeholder="Select operator"
             className="text-sm"
+            zIndex={zIndex.popover}
           />
         </div>
       </>
@@ -548,6 +553,7 @@ export default function SegmentConditionsBuilder({
             }}
             placeholder="Select operator"
             className="text-sm"
+            zIndex={zIndex.popover}
           />
         </div>
       </>
@@ -623,6 +629,7 @@ export default function SegmentConditionsBuilder({
                       }
                       placeholder="AND"
                       className="text-sm"
+                      zIndex={zIndex.popover}
                     />
                   </div>
                   <div className="h-6 w-px bg-gray-300 mx-1" />
@@ -648,6 +655,7 @@ export default function SegmentConditionsBuilder({
                     }
                     placeholder="AND"
                     className="text-sm"
+                    zIndex={zIndex.popover}
                   />
                 </div>
               </div>
@@ -778,7 +786,7 @@ export default function SegmentConditionsBuilder({
                         }}
                         placeholder="Select type"
                         className="text-sm"
-                        zIndex={zIndex.dropdown}
+                        zIndex={zIndex.popover}
                       />
                     </div>
                   </div>

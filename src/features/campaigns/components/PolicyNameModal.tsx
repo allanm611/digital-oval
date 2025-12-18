@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { tw, zIndexTokens } from "../../../shared/utils/utils";
+import { tw, zIndex } from "../../../shared/utils/utils";
 
 interface PolicyNameModalProps {
   isOpen: boolean;
@@ -44,7 +44,7 @@ export default function PolicyNameModal({
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ zIndex: zIndexTokens.overlay }}
+      style={{ zIndex: zIndex.modal }}
     >
       {/* Backdrop */}
       <div

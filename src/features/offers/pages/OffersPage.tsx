@@ -26,7 +26,7 @@ import { OfferCategoryType } from "../types/offerCategory";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { color, tw, button, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -1381,7 +1381,7 @@ export default function OffersPage() {
                         }}
                         className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 pb-4 w-72`}
                         style={{
-                          zIndex: zIndexTokens.popover,
+                          zIndex: zIndex.popover,
                           top: `${dropdownPosition.top}px`,
                           left: `${dropdownPosition.left}px`,
                           maxHeight: `${dropdownPosition.maxHeight}px`,

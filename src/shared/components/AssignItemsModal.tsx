@@ -9,7 +9,7 @@ import {
   Package,
   Users,
 } from "lucide-react";
-import { color, tw } from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import LoadingSpinner from "./ui/LoadingSpinner";
@@ -993,13 +993,18 @@ function AssignItemsModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[10000] overflow-y-auto">
+    <div
+      className="fixed inset-0 overflow-y-auto"
+      style={{ zIndex: zIndex.modal }}
+    >
       <div
         className="fixed inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       ></div>
       <div className="relative min-h-screen flex items-center justify-center p-4">
-        <div className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}>
+        <div
+          className={`relative bg-white ${tw.rounded} shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col`}
+        >
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
             <div className="flex-1 min-w-0">
@@ -1058,6 +1063,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Statuses"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                   <HeadlessSelect
                     options={[
@@ -1076,6 +1082,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Types"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                 </>
               )}
@@ -1098,6 +1105,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Types"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                   <HeadlessSelect
                     options={[
@@ -1121,6 +1129,7 @@ function AssignItemsModal({
                     }
                     placeholder="All Statuses"
                     className="w-full sm:w-48"
+                    zIndex={zIndex.popover}
                   />
                 </>
               )}
@@ -1147,6 +1156,7 @@ function AssignItemsModal({
                   }
                   placeholder="All Statuses"
                   className="w-full sm:w-48"
+                  zIndex={zIndex.popover}
                 />
               )}
 

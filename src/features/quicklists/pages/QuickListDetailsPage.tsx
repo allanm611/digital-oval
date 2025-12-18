@@ -339,7 +339,11 @@ export default function QuickListDetailsPage() {
       return;
     }
 
-    navigateBackOrFallback(navigate, "/dashboard/quicklists");
+    // Navigate back based on current route context
+    const currentPath = location.pathname;
+    const isManualBroadcast = currentPath.includes('/manual-broadcast/');
+    const fallbackPath = isManualBroadcast ? "/dashboard/manual-broadcasts" : "/dashboard/quicklists";
+    navigateBackOrFallback(navigate, fallbackPath);
   };
 
   const formatFileSize = (bytes: number): string => {

@@ -32,7 +32,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import SegmentModal from "../components/SegmentModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw, button, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -1554,7 +1554,7 @@ export default function SegmentManagementPage() {
                     }}
                     className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3 w-64`}
                     style={{
-                      zIndex: zIndexTokens.popover,
+                      zIndex: zIndex.popover,
                       top: `${dropdownPosition.top}px`,
                       left: `${dropdownPosition.left}px`,
                       maxHeight: `${dropdownPosition.maxHeight}px`,

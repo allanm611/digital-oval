@@ -22,7 +22,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -2288,7 +2288,7 @@ export default function JobDependenciesPage() {
                         }}
                         className={`fixed bg-white border border-gray-200 ${tw.rounded} shadow-xl py-3`}
                         style={{
-                          zIndex: zIndexTokens.popover,
+                          zIndex: zIndex.popover,
                           top: `${dropdownPosition.top}px`,
                           left: `${dropdownPosition.left}px`,
                           width: `${dropdownPosition.width || 256}px`,

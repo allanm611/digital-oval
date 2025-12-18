@@ -12,7 +12,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-import { tw, zIndexTokens } from "../../../../shared/utils/utils";
+import { tw, zIndex } from "../../../../shared/utils/utils";
 interface UniversalControlGroup {
   id: string;
   name: string;
@@ -104,7 +104,7 @@ export default function UniversalControlGroupModal({
         bottom: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: zIndexTokens.overlay,
+        zIndex: zIndex.modal,
       }}
     >
       <div

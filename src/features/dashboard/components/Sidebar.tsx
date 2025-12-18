@@ -39,7 +39,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
-import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { roleService } from "../../roles/services/roleService";
 import { userService } from "../../users/services/userService";
@@ -500,11 +500,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       },
       {
         name: "Manual Broadcast",
-        href: "/dashboard/quicklists",
+        href: "/dashboard/manual-broadcasts",
         icon: Upload,
         type: "single",
         entity: "segments",
       },
+      // {
+      //   name: "QuickLists",
+      //   href: "/dashboard/quicklists",
+      //   icon: Database,
+      //   type: "single",
+      //   entity: "segments",
+      // },
       {
         name: "Manual Rewards",
         href: "/dashboard/manual-rewards",
@@ -1004,7 +1011,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         style={{
                           top: "50%",
                           transform: "translateY(-50%)",
-                          zIndex: zIndexTokens.popover,
+                          zIndex: zIndex.popover,
                         }}
                       >
                         {item.name}
@@ -1066,7 +1073,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     style={{
                                       top: "50%",
                                       transform: "translateY(-50%)",
-                                      zIndex: zIndexTokens.popover,
+                                      zIndex: zIndex.popover,
                                     }}
                                   >
                                     {child.name}
@@ -1110,7 +1117,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                               style={{
                                                 top: "50%",
                                                 transform: "translateY(-50%)",
-                                                zIndex: zIndexTokens.popover,
+                                                zIndex: zIndex.popover,
                                               }}
                                             >
                                               {grandchild.name}
@@ -1156,7 +1163,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                   style={{
                                     top: "50%",
                                     transform: "translateY(-50%)",
-                                    zIndex: 99999,
+                                    zIndex: zIndex.popover,
                                   }}
                                 >
                                   {child.name}
@@ -1204,7 +1211,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",
-                        zIndex: 99999,
+                        zIndex: zIndex.popover,
                       }}
                     >
                       {item.name}

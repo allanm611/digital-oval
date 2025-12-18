@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { productCategoryService } from "../../features/products/services/productCategoryService";
-import { color , tw} from "../utils/utils";
+import { color, tw, zIndex } from "../utils/utils";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -85,8 +85,13 @@ export default function CreateCategoryModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-[9999] backdrop-blur-sm">
-      <div className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100 max-h-[90vh] overflow-y-auto`}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center backdrop-blur-sm"
+      style={{ zIndex: zIndex.modal }}
+    >
+      <div
+        className={`bg-white ${tw.rounded} shadow-xl w-full max-w-md mx-4 border border-gray-100 max-h-[90vh] overflow-y-auto`}
+      >
         <div className="flex items-start sm:items-center justify-between gap-4 p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex-1 min-w-0">
             New Catalog

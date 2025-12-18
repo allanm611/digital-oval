@@ -7,7 +7,6 @@ import {
   Download,
   Trash2,
   Eye,
-  Send,
   Plus,
   Database,
   CheckCircle,
@@ -23,7 +22,6 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../services/quicklistService";
 import { QuickList, UploadType, QuickListStats } from "../types/quicklist";
 import CreateQuickListModal from "../components/CreateQuickListModal";
-import CreateCommunicationModal from "../../communications/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
 export default function QuickListsPage() {
@@ -51,9 +49,6 @@ export default function QuickListsPage() {
   });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
-  const [communicateQuickList, setCommunicateQuickList] =
-    useState<QuickList | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const isInitialMount = useRef(true);
@@ -61,6 +56,7 @@ export default function QuickListsPage() {
   useEffect(() => {
     loadInitialData();
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -310,10 +306,6 @@ export default function QuickListsPage() {
     }
   };
 
-  const handleCommunicate = (quicklist: QuickList) => {
-    setCommunicateQuickList(quicklist);
-    setIsCommunicateModalOpen(true);
-  };
 
   const handleEdit = (quicklist: QuickList) => {
     setEditQuickList(quicklist);
@@ -354,7 +346,7 @@ export default function QuickListsPage() {
 
   const quicklistStatsCards = [
     {
-      name: t.quickList.totalManualBroadcasts,
+      name: "Total QuickLists",
       value: statsLoading
         ? "..."
         : (stats?.overall.total_quicklists || 0).toLocaleString(),
@@ -394,20 +386,18 @@ export default function QuickListsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {t.quickList.title}
-          </h1>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>QuickLists</h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            {t.quickList.description}
+            Manage standalone QuickLists for data storage and reuse
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/dashboard/quicklists/create")}
+            onClick={() => setIsCreateModalOpen(true)}
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
-            {t.quickList.createManualBroadcast}
+            Create QuickList
           </button>
         </div>
       </div>
@@ -444,7 +434,7 @@ export default function QuickListsPage() {
           />
           <input
             type="text"
-            placeholder={t.quickList.searchPlaceholder}
+            placeholder="Search QuickLists by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
@@ -481,7 +471,7 @@ export default function QuickListsPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              {t.quickList.loadingManualBroadcasts}
+              Loading QuickLists...
             </p>
           </div>
         ) : quicklists.length === 0 ? (
@@ -489,8 +479,8 @@ export default function QuickListsPage() {
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? t.quickList.noManualBroadcastsMatch
-                : t.quickList.noManualBroadcastsYet}
+                ? "No QuickLists match your search."
+                : "No QuickLists yet. Create your first QuickList to get started."}
             </p>
             {!searchTerm && (
               <button
@@ -499,7 +489,7 @@ export default function QuickListsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Upload className="w-4 h-4" />
-                {t.quickList.createManualBroadcast}
+                Create QuickList
               </button>
             )}
           </div>
@@ -512,25 +502,25 @@ export default function QuickListsPage() {
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     {t.quickList.name}
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     {t.quickList.uploadType}
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     {t.quickList.rows}
                   </th>
                   <th
-                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     {t.quickList.status}
@@ -580,7 +570,7 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
-                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-700`}
+                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700`}
                       >
                         {quicklist.upload_type}
                       </span>
@@ -598,7 +588,7 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
-                        className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium text-white"
+                        className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm text-white"
                         style={{ backgroundColor: color.primary.accent }}
                       >
                         {quicklist.processing_status
@@ -627,13 +617,6 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleCommunicate(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                          title={t.quickList.sendCommunication}
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => handleEdit(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
@@ -688,7 +671,7 @@ export default function QuickListsPage() {
               )}{" "}
               to{" "}
               {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-              of {pagination.total.toLocaleString()} quicklists
+              of {pagination.total.toLocaleString()} QuickLists
             </div>
             <div className="flex items-center justify-center space-x-2">
               <button
@@ -731,23 +714,6 @@ export default function QuickListsPage() {
         uploadTypes={uploadTypes}
       />
 
-      {communicateQuickList && (
-        <CreateCommunicationModal
-          isOpen={isCommunicateModalOpen}
-          onClose={() => {
-            setIsCommunicateModalOpen(false);
-            setCommunicateQuickList(null);
-          }}
-          quicklist={communicateQuickList}
-          onSuccess={(result) => {
-            showToast(
-              `Communication sent successfully! ${result.total_messages_sent} messages sent.`
-            );
-            setIsCommunicateModalOpen(false);
-            setCommunicateQuickList(null);
-          }}
-        />
-      )}
 
       {/* Edit Modal */}
       {isEditModalOpen && editQuickList && (

@@ -245,12 +245,10 @@ export default function CreateCommunicationPage() {
             {/* Actions */}
             <div className="p-6 bg-gray-50 border-t flex items-center justify-between">
               <button
-                onClick={() =>
-                  navigateBackOrFallback(navigate, "/dashboard/quicklists")
-                }
+                onClick={() => navigate("/dashboard/manual-broadcasts")}
                 className={`px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
-                Back to QuickLists
+                Back to Manual Broadcasts
               </button>
               <button
                 onClick={() => setResult(null)}
@@ -326,9 +324,7 @@ export default function CreateCommunicationPage() {
             {/* Send Button */}
             <div className="flex items-center justify-end space-x-3">
               <button
-                onClick={() =>
-                  navigateBackOrFallback(navigate, "/dashboard/quicklists")
-                }
+                onClick={() => navigate("/dashboard/manual-broadcasts")}
                 className={`px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 ${tw.rounded} hover:bg-gray-50 transition-colors`}
               >
                 Cancel

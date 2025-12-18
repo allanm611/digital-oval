@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, List, Check } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 
 // Type pour les QuickLists (simplifié pour la sélection)
 interface QuickListItem {
@@ -137,7 +137,7 @@ export default function QuickListPickerModal({
       <div
         className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
         style={{
-          zIndex: 9999,
+          zIndex: zIndex.modal,
           position: "fixed",
           top: 0,
           left: 0,

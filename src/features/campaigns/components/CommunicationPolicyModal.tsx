@@ -268,7 +268,7 @@ export default function CommunicationPolicyModal({
   const renderMaxCommunicationConfig = () => {
     // Get already selected period types to disable them in other rows
     const selectedPeriodTypes = maxCommPeriods.map((p) => p.type);
-    
+
     // Find first available period type for new periods
     const getFirstAvailablePeriodType = () => {
       const availableType = PERIOD_OPTIONS.find(
@@ -276,7 +276,7 @@ export default function CommunicationPolicyModal({
       );
       return availableType?.value || "daily";
     };
-    
+
     return (
       <div className="space-y-4 overflow-visible">
         <div className="flex items-center justify-between">
@@ -300,7 +300,7 @@ export default function CommunicationPolicyModal({
             Add Period
           </button>
         </div>
-        
+
         {/* Column Headers - only show when there are periods */}
         {maxCommPeriods.length > 0 && (
           <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
@@ -313,7 +313,7 @@ export default function CommunicationPolicyModal({
             <div className="w-8" /> {/* Spacer for delete button */}
           </div>
         )}
-        
+
         <div className="space-y-2">
           {maxCommPeriods.map((period, index) => (
             <div
@@ -323,7 +323,7 @@ export default function CommunicationPolicyModal({
               <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
                     value={period.type}
@@ -331,7 +331,10 @@ export default function CommunicationPolicyModal({
                       setMaxCommPeriods((prev) =>
                         prev.map((p) =>
                           p.id === period.id
-                            ? { ...p, type: value as "daily" | "weekly" | "monthly" }
+                            ? {
+                                ...p,
+                                type: value as "daily" | "weekly" | "monthly",
+                              }
                             : p
                         )
                       );
@@ -340,7 +343,9 @@ export default function CommunicationPolicyModal({
                       label: opt.label,
                       value: opt.value,
                       // Disable if already selected in another row (but not current row)
-                      disabled: selectedPeriodTypes.includes(opt.value) && period.type !== opt.value,
+                      disabled:
+                        selectedPeriodTypes.includes(opt.value) &&
+                        period.type !== opt.value,
                     }))}
                     placeholder="Select period"
                     className="w-full"
@@ -392,10 +397,10 @@ export default function CommunicationPolicyModal({
 
   const renderDNDConfig = () => {
     const dndConfig = configs.dnd;
-    
+
     // Get already selected types to disable them in other rows
     const selectedTypes = dndConfig.categories.map((cat) => cat.type);
-    
+
     // Find first available type for new categories
     const getFirstAvailableType = () => {
       const availableType = DND_CATEGORIES.find(
@@ -403,7 +408,7 @@ export default function CommunicationPolicyModal({
       );
       return availableType?.type || "marketing";
     };
-    
+
     return (
       <div className="space-y-4 overflow-visible">
         <div className="flex items-center justify-between">
@@ -432,7 +437,7 @@ export default function CommunicationPolicyModal({
             Add Category
           </button>
         </div>
-        
+
         {/* Column Headers - only show when there are categories */}
         {dndConfig.categories.length > 0 && (
           <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-4">
@@ -445,7 +450,7 @@ export default function CommunicationPolicyModal({
             <div className="w-8" /> {/* Spacer for delete button */}
           </div>
         )}
-        
+
         <div className="space-y-2">
           {dndConfig.categories.map((category, index) => (
             <div
@@ -455,7 +460,7 @@ export default function CommunicationPolicyModal({
               <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
                     value={category.type}
@@ -474,7 +479,9 @@ export default function CommunicationPolicyModal({
                       label: cat.label,
                       value: cat.type,
                       // Disable if already selected in another row (but not current row)
-                      disabled: selectedTypes.includes(cat.type) && category.type !== cat.type,
+                      disabled:
+                        selectedTypes.includes(cat.type) &&
+                        category.type !== cat.type,
                     }))}
                     placeholder="Select type"
                     className="w-full"
@@ -483,7 +490,7 @@ export default function CommunicationPolicyModal({
                 </div>
                 <div
                   className="relative overflow-visible"
-                  style={{ zIndex: 99999 - index }}
+                  style={{ zIndex: zIndex.popover - index }}
                 >
                   <HeadlessSelect
                     value={category.value || "allowed"}
@@ -600,7 +607,9 @@ export default function CommunicationPolicyModal({
     return (
       <div
         key={type}
-        className={`border ${tw.rounded} overflow-visible transition-all duration-200 ${
+        className={`border ${
+          tw.rounded
+        } overflow-visible transition-all duration-200 ${
           isExpanded ? "border-2" : tw.borderDefault
         }`}
         style={{
@@ -661,7 +670,7 @@ export default function CommunicationPolicyModal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 backdrop-blur-sm"
       style={{ zIndex: zIndex.overlay }}
     >
@@ -776,7 +785,9 @@ export default function CommunicationPolicyModal({
                   </button>
 
                   {isChannelDropdownOpen && (
-                    <div className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}>
+                    <div
+                      className={`absolute z-[10000] w-full mt-1 bg-white border border-gray-200 ${tw.rounded} max-h-64 overflow-y-auto`}
+                    >
                       {COMMUNICATION_CHANNELS.map((ch) => (
                         <label
                           key={ch.value}

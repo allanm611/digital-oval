@@ -3251,6 +3251,287 @@ broadcast_recipients
 
 ---
 
+## QuickLists: Recipient Management for Manual Broadcasts
+
+### What are QuickLists?
+
+**QuickLists** are the recipient management system specifically designed for **Manual Broadcasts**. They serve as temporary data containers that store customer contact information and enable personalized messaging through template variables.
+
+### Key Characteristics:
+
+- ✅ **Recipient Storage** - Holds customer contact data (phone, email, names)
+- ✅ **Template Variables** - Auto-generates variables from data columns
+- ✅ **Manual Broadcast Only** - Currently integrated as part of Manual Broadcast workflow
+- ✅ **Temporary Nature** - Created per broadcast, not persistent long-term
+- ✅ **Multiple Data Types** - Supports different customer data formats
+- ❌ **Not Standalone** - Currently not accessible as independent feature
+- ❌ **No Segmentation** - No advanced filtering or rule-based selection
+
+### How QuickLists Work with Manual Broadcasts
+
+#### 1. **Audience Creation → QuickList Storage**
+
+```
+Manual Broadcast Step 1 (Target Audience)
+        ↓
+File Upload or Manual Entry
+        ↓
+Data Validation & Processing
+        ↓
+QuickList Created (API: POST /quicklists)
+        ↓
+Returns QuickList ID for Broadcast
+```
+
+#### 2. **QuickList Data Types & Structure**
+
+QuickLists support different upload types based on the type of customer data:
+
+**Customer Subscription Data (`customer_subscription`)**:
+
+- **Purpose**: Target customers by their subscription status and details
+- **Required Columns**: `msisdn` (phone number), `subscription_id`
+- **Optional Columns**: `status`, `plan_name`, `activation_date`
+- **Example CSV:**
+  ```csv
+  msisdn,subscription_id,status,plan_name
+  +254700000001,12345,active,Premium Plan
+  +254700000002,12346,inactive,Basic Plan
+  +254700000003,12347,suspended,Family Plan
+  ```
+
+**Customer Data (`customer_data`)**:
+
+- **Purpose**: Target customers using personal information and demographics
+- **Required Columns**: `msisdn`, `first_name`, `last_name`
+- **Optional Columns**: `email`, `age`, `gender`, `city`, `registration_date`
+- **Example CSV:**
+  ```csv
+  msisdn,first_name,last_name,email,age,city
+  +254700000001,John,Doe,john.doe@email.com,25,Nairobi
+  +254700000002,Jane,Smith,jane.smith@email.com,32,Mombasa
+  +254700000003,Mike,Johnson,mike.j@email.com,45,Kisumu
+  ```
+
+#### 3. **Template Variables System**
+
+QuickLists automatically convert column headers into template variables:
+
+**Example QuickList with Customer Data:**
+
+```
+File: vip_customers.csv
+Columns: msisdn, first_name, last_name, email, age, city
+Available Variables: {{msisdn}}, {{first_name}}, {{last_name}}, {{email}}, {{age}}, {{city}}
+```
+
+**Variable Usage in Messages:**
+
+**SMS Message Template:**
+
+```
+Hi {{first_name}} {{last_name}}, your account ending in {{msisdn}} has been upgraded! Enjoy {{city}}'s best service.
+```
+
+**Rendered SMS for John Doe:**
+
+```
+Hi John Doe, your account ending in +254700000001 has been upgraded! Enjoy Nairobi's best service.
+```
+
+**Email Subject Template:**
+
+```
+Welcome to our service, {{first_name}}!
+```
+
+**Rendered Subject:**
+
+```
+Welcome to our service, John!
+```
+
+#### 4. **Complete QuickList Lifecycle**
+
+**Phase 1: Creation (Manual Broadcast Step 1)**
+
+- User selects "File Upload" or "Manual Entry"
+- System validates file format and required columns
+- QuickList created via API: `POST /quicklists`
+- Response includes `quicklist_id` for the broadcast
+
+**Phase 2: Variable Discovery (Manual Broadcast Step 2)**
+
+- System fetches available variables: `GET /communications/template-variables/{quicklist_id}`
+- User sees available variables: `{{first_name}}`, `{{email}}`, `{{city}}`, etc.
+- Variables used in message composition and validation
+
+**Phase 3: Communication Execution (Manual Broadcast Step 4)**
+
+- Broadcast sent using QuickList as recipient source
+- API Payload structure:
+  ```json
+  {
+    "source_type": "quicklist",
+    "source_id": 123,
+    "channels": ["SMS", "EMAIL"],
+    "message_template": {
+      "subject": "Special Offer for {{first_name}}",
+      "body": "Dear {{first_name}}, we have a special offer just for you in {{city}}!"
+    },
+    "schedule_type": "now"
+  }
+  ```
+
+#### 5. **QuickList Management Operations**
+
+- **View Recipients**: `GET /quicklists/{id}/data` - Paginated list of all recipients
+- **Import Logs**: `GET /quicklists/{id}/logs` - Track upload success/failures
+- **Export Data**: `GET /quicklists/{id}/export` - Download recipients as CSV
+- **Delete List**: `DELETE /quicklists/{id}` - Remove QuickList and all data
+
+#### 6. **Data Validation & Error Handling**
+
+**File Upload Validation:**
+
+- ✅ Correct file format (CSV, Excel)
+- ✅ Required columns present
+- ✅ Data type validation (phone numbers, emails)
+- ✅ Duplicate detection
+- ❌ Shows validation errors with specific row/column details
+
+**Manual Entry Validation:**
+
+- ✅ Phone/email format validation
+- ✅ Duplicate contact detection
+- ✅ Maximum recipient limits
+- ❌ Real-time validation feedback
+
+#### 7. **Current Integration Status**
+
+**As Part of Manual Broadcasts:**
+
+- Created automatically during Manual Broadcast Step 1
+- Variables available immediately in Step 2
+- Used directly for sending in Step 4
+- Not accessible outside Manual Broadcast workflow
+
+**Future Independent Feature:**
+
+- Standalone QuickLists page: `/dashboard/quicklists`
+- CRUD operations for data management
+- Reusable across multiple broadcasts
+- Advanced filtering and search capabilities
+- Data import/export workflows
+
+#### 8. **Real-World Example: Customer Reactivation Campaign**
+
+**Scenario:** Send reactivation SMS to inactive customers with personalized city mentions.
+
+**Step 1: Create QuickList**
+
+- **File**: `inactive_customers_dec2024.csv`
+- **Upload Type**: `customer_subscription`
+- **Data**:
+  ```csv
+  msisdn,first_name,last_name,city,status
+  +254700000001,John,Doe,Nairobi,inactive
+  +254700000002,Jane,Smith,Mombasa,inactive
+  +254700000003,Mike,Johnson,Kisumu,inactive
+  ```
+
+**Step 2: Compose Message**
+
+- **Channel**: SMS
+- **Message**:
+  ```
+  Hi {{first_name}}, we miss you in {{city}}! Your {{msisdn}} account is inactive.
+  Reactivate now and get 20% off your next bill. Reply YES to continue.
+  ```
+
+**Step 3: Test Broadcast**
+
+- **Test to**: Admin phone (+254712345678)
+- **Rendered Test**:
+  ```
+  Hi John, we miss you in Nairobi! Your +254700000001 account is inactive.
+  Reactivate now and get 20% off your next bill. Reply YES to continue.
+  ```
+
+**Step 4: Send Broadcast**
+
+- **QuickList ID**: 456
+- **Recipients**: 2,500 inactive customers
+- **Schedule**: Send immediately
+- **API Call**: `POST /communications/send` with `source_type: "quicklist"`
+
+### QuickLists vs Other CVM Components
+
+| Feature          | QuickLists                  | Segment Lists           | Dynamic Segments              |
+| ---------------- | --------------------------- | ----------------------- | ----------------------------- |
+| **Purpose**      | Manual Broadcast recipients | Campaign audience lists | Rule-based customer selection |
+| **Data Source**  | Uploaded CSV/Manual         | Pre-defined lists       | Database queries              |
+| **Persistence**  | Temporary (per broadcast)   | Permanent storage       | Dynamic evaluation            |
+| **Variables**    | ✅ Auto-generated           | ❌ No variables         | ✅ Database variables         |
+| **Segmentation** | ❌ No filtering             | ✅ List-based           | ✅ Complex rules              |
+| **Use Case**     | Direct messaging            | Pre-selected audiences  | Targeted campaigns            |
+| **Management**   | Basic CRUD                  | Advanced management     | Rule configuration            |
+
+### Technical Implementation
+
+**Database Schema:**
+
+```
+quicklists
+  ├─ id (Primary Key)
+  ├─ name (List name)
+  ├─ upload_type ('customer_subscription', 'customer_data')
+  ├─ rows_imported (Total recipients)
+  ├─ created_at, updated_at
+  ├─ file_path (Stored file location)
+  └─ status ('processing', 'completed', 'failed')
+
+quicklist_data
+  ├─ quicklist_id (Foreign Key)
+  ├─ row_number (Sequential)
+  ├─ column_name (Field name)
+  ├─ column_value (Field data)
+  └─ created_at
+```
+
+**API Endpoints:**
+
+- `POST /quicklists` - Create new QuickList
+- `GET /quicklists/{id}` - Get QuickList details
+- `GET /quicklists/{id}/data` - Get recipient data (paginated)
+- `GET /quicklists/{id}/logs` - Get import logs
+- `GET /quicklists/{id}/export` - Export as CSV
+- `DELETE /quicklists/{id}` - Delete QuickList
+
+**Integration Points:**
+
+- Manual Broadcast Step 1: Creates QuickList
+- Manual Broadcast Step 2: Fetches variables from QuickList
+- Communication Service: Uses QuickList as `source_type`
+
+### Key Takeaways
+
+1. **QuickLists = Recipient Management** - They're containers for customer contact data specifically for Manual Broadcasts
+
+2. **Template Variables are Automatic** - Column headers become `{{variable}}` placeholders for personalization
+
+3. **Currently Manual Broadcast Only** - QuickLists are created and used within the Manual Broadcast workflow
+
+4. **Data Types Matter** - Different upload types (`customer_subscription`, `customer_data`) require different columns
+
+5. **Temporary by Design** - QuickLists are meant for one-time broadcasts, not long-term customer management
+
+6. **Validation is Critical** - Phone numbers, emails, and required columns must be validated before creation
+
+7. **Future Flexibility** - Can become standalone feature by uncommenting sidebar navigation and routes
+
+---
+
 ## Infrastructure in the CVM System
 
 ### What is Infrastructure?
@@ -3280,6 +3561,7 @@ broadcast_recipients
 ### 1. Servers
 
 **Servers** are the backend infrastructure endpoints that the CVM platform uses to:
+
 - Store and retrieve customer data
 - Execute campaign jobs
 - Send messages (SMS, Email, Push)
@@ -3302,11 +3584,11 @@ broadcast_recipients
   base_path: "/api/v1",
   timeout_seconds: 30,
   max_retries: 3,
-  
+
   // Circuit Breaker (prevents cascading failures)
   circuit_breaker_enabled: true,
   circuit_breaker_threshold: 5, // Fail after 5 consecutive errors
-  
+
   // Health Monitoring
   health_check_enabled: true,
   health_check_url: "/health",
@@ -3314,15 +3596,15 @@ broadcast_recipients
   last_health_check_at: "2024-06-01T08:00:00Z",
   last_health_check_status: "healthy",
   consecutive_health_failures: 0,
-  
+
   // Security
   tls_enabled: true,
   authentication_type: "bearer_token",
-  
+
   // Status
   is_active: true,
   is_deprecated: false,
-  
+
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-06-01T08:00:00Z"
 }
@@ -3429,7 +3711,7 @@ const customerProfiles = await db.query(
 await smsGateway.send({
   server: "sms-gateway.example.com",
   to: customer.phone,
-  message: renderedMessage
+  message: renderedMessage,
 });
 // Executed on: sms-gateway.example.com:443
 
@@ -3439,7 +3721,7 @@ await analytics.track({
   server: "analytics.example.com",
   event: "message_sent",
   campaign_id: 789,
-  customer_id: 123
+  customer_id: 123,
 });
 // Executed on: analytics.example.com:443
 ```
@@ -3459,63 +3741,63 @@ await analytics.track({
   profile_name: "Production Customer DB",
   profile_code: "PROD-CUSTOMER-DB",
   connection_type: "database",
-  
+
   // Server Reference
   server_id: 1, // Links to Server (PROD-DB-01)
-  
+
   // Database Configuration
   database_name: "customer_database",
   database_type: "postgresql",
-  
+
   // Data Loading Strategy
   load_strategy: "incremental", // Options: full, incremental, delta, cdc, merge, append, upsert
   sync_column_name: "updated_at", // Column to track changes
   sync_column_type: "timestamp",
-  
+
   // Performance Settings
   batch_size: 1000, // Process 1000 records at a time
   parallel_threads: 4, // Use 4 parallel connections
-  
+
   // Connection Pooling
   min_pool_size: 5, // Minimum connections in pool
   max_pool_size: 20, // Maximum connections in pool
   connection_timeout_seconds: 30,
   idle_timeout_seconds: 300,
-  
+
   // Retry Logic
   max_retries: 3,
   retry_backoff_multiplier: 2, // Exponential backoff: 2s, 4s, 8s
-  
+
   // Circuit Breaker
   circuit_breaker_threshold: 5, // Fail after 5 consecutive errors
-  
+
   // Health Monitoring
   health_check_enabled: true,
   health_check_query: "SELECT 1", // Simple query to test connection
   last_health_check_at: "2024-06-01T08:00:00Z",
   last_health_check_status: "healthy",
-  
+
   // Data Governance
   data_classification: "confidential", // public, internal, confidential, restricted
   contains_pii: true, // Contains Personally Identifiable Information
   gdpr_applicable: true, // Subject to GDPR regulations
-  
+
   // Environment
   environment: "production", // development, staging, production, uat
-  
+
   // Validity Period
   valid_from: "2024-01-01T00:00:00Z",
   valid_to: null, // null = no expiration
-  
+
   // Security
   encryption_key_version: 2, // Encryption key version for credentials
-  
+
   // Status
   is_active: true,
-  
+
   // Usage Tracking
   last_used_at: "2024-06-01T08:15:30Z",
-  
+
   created_at: "2024-01-01T00:00:00Z",
   updated_at: "2024-06-01T08:00:00Z"
 }
@@ -3682,7 +3964,7 @@ const connectionPool = await createConnectionPool({
   database: connectionProfile.database_name,
   minPoolSize: connectionProfile.min_pool_size, // 5
   maxPoolSize: connectionProfile.max_pool_size, // 20
-  connectionTimeout: connectionProfile.connection_timeout_seconds * 1000
+  connectionTimeout: connectionProfile.connection_timeout_seconds * 1000,
 });
 
 // STEP 4: Execute Segment Query (with batching)
@@ -3690,9 +3972,9 @@ const segment = {
   criteria: {
     conditions: [
       { field: "tier", operator: "equals", value: "VIP" },
-      { field: "city", operator: "equals", value: "Nairobi" }
-    ]
-  }
+      { field: "city", operator: "equals", value: "Nairobi" },
+    ],
+  },
 };
 
 // Convert segment criteria to SQL
@@ -3713,18 +3995,21 @@ while (true) {
   const batch = await connectionPool.query(
     `${sqlQuery} LIMIT ${batchSize} OFFSET ${offset}`
   );
-  
+
   if (batch.length === 0) break;
-  
-  customerIds.push(...batch.map(row => row.customer_id));
+
+  customerIds.push(...batch.map((row) => row.customer_id));
   offset += batchSize;
-  
+
   // Use parallel threads for faster processing
-  if (customerIds.length % (batchSize * connectionProfile.parallel_threads) === 0) {
+  if (
+    customerIds.length % (batchSize * connectionProfile.parallel_threads) ===
+    0
+  ) {
     await Promise.all(
-      Array(connectionProfile.parallel_threads).fill(null).map(() =>
-        processBatch(customerIds.slice(-batchSize))
-      )
+      Array(connectionProfile.parallel_threads)
+        .fill(null)
+        .map(() => processBatch(customerIds.slice(-batchSize)))
     );
   }
 }
@@ -3790,21 +4075,25 @@ while (true) {
 #### Key Benefits of Infrastructure Management:
 
 1. **Centralized Configuration**
+
    - All server and connection settings in one place
    - Easy to update without changing code
    - Consistent configuration across environments
 
 2. **Health Monitoring**
+
    - Automatic health checks
    - Circuit breakers prevent cascading failures
    - Real-time status visibility
 
 3. **Performance Optimization**
+
    - Connection pooling reduces overhead
    - Batch processing improves efficiency
    - Parallel threads speed up data loading
 
 4. **Security & Compliance**
+
    - Encrypted connections (TLS)
    - Data classification tracking
    - GDPR compliance features
@@ -3842,7 +4131,7 @@ while (true) {
   subscriber_count: 1000,
   created_on: "2024-12-01",
   list_type: "standard", // Options: "seed", "and", "standard"
-  
+
   // File Configuration
   subscriber_id_col_name: "customer_id", // Column containing customer IDs
   file_delimiter: ",", // CSV delimiter
@@ -3850,7 +4139,7 @@ while (true) {
   file_text: "customer_id,name,email,phone,revenue\n123,John Doe,john@example.com,+254712345678,50000\n456,Jane Smith,jane@example.com,+254723456789,45000\n...", // File content
   file_name: "high_value_customers_q4.csv",
   file_size: 125000, // bytes
-  
+
   // Metadata
   tags: ["high-value", "q4-2024", "revenue"]
 }
@@ -3982,7 +4271,7 @@ customer_id,name,email,phone,revenue,tier
   type: "static",
   list_id: 501, // "High Value Customers Q4 2024"
   criteria: null, // No additional conditions
-  
+
   // Members: All customers from list
   members: [123, 456, 789, 1011, ...] // From list file
 }
@@ -4003,7 +4292,7 @@ customer_id,name,email,phone,revenue,tier
     ],
     logic: "AND"
   },
-  
+
   // Members: Customers from list WHO ALSO live in Nairobi
   // Process:
   // 1. Get customers from list: [123, 456, 789, ...]
@@ -4059,14 +4348,14 @@ const campaign = {
 
 ### Segment Lists vs Dynamic Segments:
 
-| Feature | Segment Lists | Dynamic Segments |
-|---------|---------------|------------------|
-| **Definition** | Pre-uploaded customer list | Conditions-based query |
-| **Data Source** | CSV/Excel file | Database query |
-| **Updates** | Manual re-upload | Automatic (runs query each time) |
-| **Use Case** | Specific customer selection | Rule-based targeting |
-| **Example** | "Top 100 customers" | "VIP customers in Nairobi" |
-| **Flexibility** | Fixed list | Dynamic (changes as data changes) |
+| Feature         | Segment Lists               | Dynamic Segments                  |
+| --------------- | --------------------------- | --------------------------------- |
+| **Definition**  | Pre-uploaded customer list  | Conditions-based query            |
+| **Data Source** | CSV/Excel file              | Database query                    |
+| **Updates**     | Manual re-upload            | Automatic (runs query each time)  |
+| **Use Case**    | Specific customer selection | Rule-based targeting              |
+| **Example**     | "Top 100 customers"         | "VIP customers in Nairobi"        |
+| **Flexibility** | Fixed list                  | Dynamic (changes as data changes) |
 
 ### Combining Lists with Segment Conditions:
 
@@ -4076,7 +4365,7 @@ const campaign = {
 // List: "High Value Customers" (1,000 customers)
 const list = {
   list_id: 501,
-  subscriber_count: 1000
+  subscriber_count: 1000,
 };
 
 // Segment: "High Value Customers in Nairobi" (uses list + condition)
@@ -4084,10 +4373,8 @@ const segment = {
   segment_id: 201,
   list_id: 501, // Start with list
   criteria: {
-    conditions: [
-      { field: "city", operator: "equals", value: "Nairobi" }
-    ]
-  }
+    conditions: [{ field: "city", operator: "equals", value: "Nairobi" }],
+  },
 };
 
 // Execution:
@@ -4099,21 +4386,25 @@ const segment = {
 ### Key Takeaways:
 
 1. **Segment Lists are Pre-Uploaded Customer Lists**
+
    - Upload CSV/Excel files with customer data
    - Reuse lists across multiple segments/campaigns
    - Quick way to target specific customers
 
 2. **Three List Types**
+
    - **Standard**: General purpose lists
    - **Seed**: Testing/preview audiences
    - **AND**: Combine with segment conditions
 
 3. **Can Combine with Segment Conditions**
+
    - Use list as starting point
    - Apply additional filters (city, tier, etc.)
    - Result: Intersection of list and conditions
 
 4. **Infrastructure Powers Everything**
+
    - Servers provide backend connectivity
    - Connection Profiles define data access
    - Both work together to execute campaigns

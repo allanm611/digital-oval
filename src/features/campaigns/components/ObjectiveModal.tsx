@@ -20,7 +20,7 @@ import {
   Save,
   AlertCircle,
 } from "lucide-react";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import TagInput from "../../../shared/components/ui/TagInput";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -344,7 +344,9 @@ export default function ObjectiveModal({
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${
+                  className={`w-full px-4 py-3 border ${
+                    tw.rounded
+                  } focus:outline-none focus:ring-2 focus:ring-[${
                     color.primary.action
                   }] focus:border-transparent ${
                     errors.name ? "border-red-500" : "border-gray-300"
@@ -388,7 +390,9 @@ export default function ObjectiveModal({
                         key={option.value}
                         type="button"
                         onClick={() => handleInputChange("icon", option.value)}
-                        className={`p-3 ${tw.rounded} border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
+                        className={`p-3 ${
+                          tw.rounded
+                        } border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
                           formData.icon === option.value
                             ? `border-[${color.primary.action}] bg-[${color.primary.action}]20`
                             : "border-gray-200 hover:border-gray-300"
@@ -419,6 +423,7 @@ export default function ObjectiveModal({
                   value={formData.status}
                   onChange={(value) => handleInputChange("status", value)}
                   placeholder="Select status..."
+                  zIndex={zIndex.popover}
                 />
               </div>
 
