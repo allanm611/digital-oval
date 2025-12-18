@@ -757,7 +757,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
     searchTerm.trim().length >= 2 && suggestions.length > 0;
   const showQuickSearches = !searchTerm.trim() || searchTerm.trim().length < 2;
 
-  return (
+  return createPortal(
     <div
       ref={containerRef}
       className="relative flex-1 max-w-xs sm:max-w-md"
@@ -861,26 +861,27 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="p-12 text-center">
-                <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-sm font-medium text-gray-900 mb-1">
-                  No results found
-                </p>
-                <p className="text-xs text-gray-600 mb-4">
-                  Try adjusting your search terms
-                </p>
-                <button
-                  onClick={() => handleSearch()}
-                  className="text-sm text-gray-900 hover:text-gray-700 transition-colors"
-                >
-                  View all results
-                </button>
-              </div>
-            )}
-          </div>,
-          document.body
-        )}
-    </div>
+            </>
+          ) : (
+            <div className="p-12 text-center">
+              <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-gray-900 mb-1">
+                No results found
+              </p>
+              <p className="text-xs text-gray-600 mb-4">
+                Try adjusting your search terms
+              </p>
+              <button
+                onClick={() => handleSearch()}
+                className="text-sm text-gray-900 hover:text-gray-700 transition-colors"
+              >
+                View all results
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>,
+    document.body
   );
 }
