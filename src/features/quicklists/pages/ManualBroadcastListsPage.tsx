@@ -47,7 +47,6 @@ export default function ManualBroadcastListsPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-
   const loadInitialData = useCallback(async () => {
     try {
       setStatsLoading(true);
@@ -126,13 +125,19 @@ export default function ManualBroadcastListsPage() {
           }));
         }
       } else {
-        showError("Failed to load broadcast lists", response.error || "Please try again");
+        showError(
+          "Failed to load broadcast lists",
+          response.error || "Please try again"
+        );
       }
     } catch (err) {
       console.error("Failed to load quicklists:", err);
       // Only show error if not already showing one (prevent duplicate toasts)
       if (!loading) {
-        showError("Failed to load broadcast lists", "Please check your connection and try again");
+        showError(
+          "Failed to load broadcast lists",
+          "Please check your connection and try again"
+        );
       }
     } finally {
       setLoading(false);
@@ -153,7 +158,6 @@ export default function ManualBroadcastListsPage() {
     }
   };
 
-
   const handleViewDetails = (quicklist: QuickList) => {
     navigate(`/dashboard/manual-broadcast/${quicklist.id}`);
   };
@@ -173,7 +177,9 @@ export default function ManualBroadcastListsPage() {
       );
 
       if (response.success) {
-        showToast(`Broadcast list "${quicklistToDelete.name}" deleted successfully!`);
+        showToast(
+          `Broadcast list "${quicklistToDelete.name}" deleted successfully!`
+        );
         setShowDeleteModal(false);
         setQuicklistToDelete(null);
         await loadQuickLists();
@@ -191,10 +197,7 @@ export default function ManualBroadcastListsPage() {
 
   const handleExport = async (quicklist: QuickList, format: "csv" | "json") => {
     try {
-      const blob = await quicklistService.exportQuickList(
-        quicklist.id,
-        format
-      );
+      const blob = await quicklistService.exportQuickList(quicklist.id, format);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -209,7 +212,6 @@ export default function ManualBroadcastListsPage() {
       showError("Failed to export QuickList");
     }
   };
-
 
   const handleEdit = (quicklist: QuickList) => {
     setEditQuickList(quicklist);
@@ -291,7 +293,9 @@ export default function ManualBroadcastListsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>Manual Broadcasts</h1>
+          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+            Manual Broadcasts
+          </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Manage recipient lists created for manual broadcasts
           </p>
@@ -494,9 +498,7 @@ export default function ManualBroadcastListsPage() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className="inline-flex px-2 py-1 text-sm text-black"
-                        >
+                        <span className="inline-flex px-2 py-1 text-sm text-black">
                           {quicklist.processing_status}
                         </span>
                       </td>
@@ -544,8 +546,8 @@ export default function ManualBroadcastListsPage() {
                     </tr>
                   ))}
                 </tbody>
-          </table>
-        </div>
+              </table>
+            </div>
 
             {/* Pagination */}
             {quicklists.length > 0 && totalPages > 1 && (

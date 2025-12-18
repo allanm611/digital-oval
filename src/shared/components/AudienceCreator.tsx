@@ -409,30 +409,6 @@ export default function AudienceCreator({
           disabled={disabled}
           zIndex={zIndex.popover}
         />
-        {mode === "quicklist" &&
-          uploadType &&
-          (() => {
-            const selectedType = uploadTypes.find(
-              (t) => t.upload_type === uploadType
-            );
-            const expectedColumns = selectedType?.expected_columns;
-            const columnsDisplay = Array.isArray(expectedColumns)
-              ? expectedColumns.join(", ")
-              : typeof expectedColumns === "object" && expectedColumns !== null
-              ? Object.keys(expectedColumns).join(", ")
-              : "N/A";
-
-            return (
-              <div
-                className={`mt-2 p-3 rounded-md`}
-                style={{ backgroundColor: `${color.primary.accent}10` }}
-              >
-                <p className="text-xs" style={{ color: color.primary.accent }}>
-                  <strong>Expected columns:</strong> {columnsDisplay}
-                </p>
-              </div>
-            );
-          })()}
       </div>
 
       {/* Description - Only for QuickLists */}
