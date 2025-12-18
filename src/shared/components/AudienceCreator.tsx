@@ -4,7 +4,6 @@ import {
   FileText,
   // AlertCircle,
   // Download,
-  Edit3,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../utils/utils";
@@ -60,7 +59,6 @@ export default function AudienceCreator({
   const [subscriptionIdColumn, setSubscriptionIdColumn] = useState<
     string | null
   >(data.subscriptionIdColumn || null);
-  const [isParsingFile, setIsParsingFile] = useState(false);
   const [filePreview, setFilePreview] = useState<{
     headers: string[];
     rows: string[][];
@@ -91,7 +89,12 @@ export default function AudienceCreator({
     onUpdate({
       inputMethod: inputMode,
       file: file || undefined,
-      uploadType: mode === "quicklist" ? uploadType : "",
+      uploadType:
+        mode === "quicklist"
+          ? uploadType
+          : uploadTypes.length > 0
+          ? uploadTypes[0].upload_type
+          : "",
       listType: mode === "broadcast" ? listType : undefined,
       name,
       description,
@@ -242,7 +245,6 @@ export default function AudienceCreator({
 
       // Parse file columns and generate preview
       try {
-        setIsParsingFile(true);
         const columns = await parseFileColumns(selectedFile);
         setFileColumns(columns);
 
@@ -262,8 +264,6 @@ export default function AudienceCreator({
         setFileError(
           "Failed to read file. Please ensure the file is a valid Excel document."
         );
-      } finally {
-        setIsParsingFile(false);
       }
     }
   };
@@ -310,48 +310,6 @@ export default function AudienceCreator({
       reader.onerror = reject;
       reader.readAsArrayBuffer(file);
     });
-  };
-
-  const downloadTemplate = () => {
-    let selectedType: UploadType | undefined;
-
-    if (mode === "quicklist") {
-      if (!uploadType) return;
-      selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
-    } else {
-      // For broadcast mode, use the first available upload type
-      selectedType = uploadTypes.length > 0 ? uploadTypes[0] : undefined;
-    }
-
-    if (!selectedType) return;
-
-    const expectedColumns = selectedType.expected_columns;
-    const headers = Array.isArray(expectedColumns)
-      ? expectedColumns
-      : typeof expectedColumns === "object" && expectedColumns !== null
-      ? Object.keys(expectedColumns)
-      : ["email", "phone"];
-
-    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${uploadType}_template.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const getTypeOptions = () => {

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
+import * as XLSX from "xlsx";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { quicklistService } from "../../quicklists/services/quicklistService";
@@ -103,11 +104,15 @@ export default function TargetAudienceStep({
   }, [audienceData.manualInput]);
 
   const createFileFromManualInput = (): File => {
-    const selectedType = uploadTypes.find(
-      (t) => t.upload_type === audienceData.uploadType
-    );
+    // For broadcast mode, use any available upload type since listType is just categorization
+    const selectedType = audienceData.uploadType
+      ? uploadTypes.find((t) => t.upload_type === audienceData.uploadType)
+      : uploadTypes.length > 0
+      ? uploadTypes[0]
+      : null;
+
     if (!selectedType) {
-      throw new Error("Upload type not selected");
+      throw new Error("No upload types available");
     }
 
     let columns: string[] = [];
@@ -221,7 +226,7 @@ export default function TargetAudienceStep({
         audienceFile: fileToUpload,
         audienceName: audienceData.name || "",
         audienceDescription: undefined,
-        uploadType: audienceData.uploadType || "",
+        uploadType: audienceData.uploadType || (uploadTypes.length > 0 ? uploadTypes[0].upload_type : ""),
         quicklistId: response.data.quicklist_id,
         rowCount: response.data.rows_imported,
         subscriptionIdColumn:
@@ -370,7 +375,7 @@ export default function TargetAudienceStep({
             type="button"
             onClick={handleNext}
             disabled={isSubmitting || !isFormValid}
-            className="px-4 py-2 rounded-md transition-colors text-sm font-medium text-white"
+            className="px-4 py-2 rounded-md transition-colors text-sm font-medium text-white flex items-center justify-center"
             style={{
               backgroundColor:
                 isSubmitting || !isFormValid

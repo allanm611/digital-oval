@@ -119,6 +119,7 @@ export default function CreateManualBroadcastPage() {
             : {}),
           body: broadcastData.messageBody || "",
         },
+        upload_type: broadcastData.uploadType,
         filters: {
           column_conditions: [],
           limit: 1000,

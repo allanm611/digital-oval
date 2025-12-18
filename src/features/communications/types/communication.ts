@@ -24,6 +24,7 @@ export interface SendCommunicationRequest {
   filters?: CommunicationFilters;
   batch_size?: number;
   created_by?: number;
+  upload_type?: string;
 }
 
 export interface ChannelSummary {
