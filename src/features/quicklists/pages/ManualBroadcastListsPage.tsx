@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -15,7 +15,6 @@ import {
 import { color, tw, components } from "../../../shared/utils/utils";
 import { QuickList, UploadType, QuickListStats } from "../types/quicklist";
 import { quicklistService } from "../services/quicklistService";
-import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -40,7 +39,6 @@ export default function ManualBroadcastListsPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUploadType, setSelectedUploadType] = useState<string>("");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -49,34 +47,8 @@ export default function ManualBroadcastListsPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const isInitialMount = useRef(true);
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      loadQuickLists(1);
-    }, 300); // 300ms debounce
-
-    return () => clearTimeout(debounceTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedUploadType]);
-
-  useEffect(() => {
-    // Load quicklists when page changes (skip initial mount)
-    if (!isInitialMount.current && pagination.page > 0) {
-      loadQuickLists(pagination.page);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page]);
-
-  useEffect(() => {
-    isInitialMount.current = false;
-  }, []);
-
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       setStatsLoading(true);
 
@@ -116,7 +88,11 @@ export default function ManualBroadcastListsPage() {
       setLoading(false);
       setStatsLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const loadQuickLists = async (page: number = pagination.page) => {
     try {
@@ -177,62 +153,6 @@ export default function ManualBroadcastListsPage() {
     }
   };
 
-  const handleCreateQuickList = async (request: {
-    file: File;
-    upload_type: string;
-    name: string;
-    description?: string | null;
-    created_by?: string | null;
-  }) => {
-    try {
-      const response = await quicklistService.createQuickList(request);
-
-      if (!response.success) {
-        throw new Error(
-          "error" in response ? response.error : "Failed to create QuickList"
-        );
-      }
-
-      // Check for validation errors even if upload was successful
-      if (response.data.has_errors || response.data.rows_failed > 0) {
-        const errorCount =
-          response.data.errors?.length || response.data.rows_failed;
-        const errorDetails =
-          response.data.errors?.length > 0
-            ? `\n\nFirst few errors:\n${response.data.errors
-                .slice(0, 3)
-                .map((e: any) => `- Row ${e.row_number}: ${e.error}`)
-                .join("\n")}`
-            : "";
-        showToast(
-          `QuickList created but ${errorCount} row(s) failed validation. ${
-            errorDetails ? `\n\nFirst few errors:\n${errorDetails}` : ""
-          }`
-        );
-      } else {
-        showToast("QuickList created successfully!");
-      }
-
-      // Reload stats and quicklists
-      await loadStats();
-      // Reload the quicklists list to show the new one
-      // Small delay to allow backend to process the file
-      setTimeout(async () => {
-        await loadQuickLists(pagination.page);
-      }, 1500);
-    } catch (err) {
-      console.error("Failed to create QuickList:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create QuickList";
-      // Filter out HTTP errors
-      const userMessage =
-        errorMessage.includes("HTTP error") || errorMessage.includes("status:")
-          ? "Failed to create QuickList"
-          : errorMessage;
-      showError("Failed to create QuickList", userMessage);
-      throw err; // Re-throw so the modal can handle it
-    }
-  };
 
   const handleViewDetails = (quicklist: QuickList) => {
     navigate(`/dashboard/manual-broadcast/${quicklist.id}`);
@@ -277,11 +197,11 @@ export default function ManualBroadcastListsPage() {
       );
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      link.href = url;
-      link.download = `${quicklist.name}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      a.href = url;
+      a.download = `${quicklist.name}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       showToast(`QuickList exported as ${format.toUpperCase()}`);
     } catch (err) {
@@ -385,7 +305,7 @@ export default function ManualBroadcastListsPage() {
             Analytics
           </button>
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => navigate("/dashboard/manual-broadcasts/create")}
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
@@ -476,7 +396,7 @@ export default function ManualBroadcastListsPage() {
             </p>
             {!searchTerm && (
               <button
-                onClick={() => setIsCreateModalOpen(true)}
+                onClick={() => navigate("/dashboard/manual-broadcasts/create")}
                 className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
@@ -682,12 +602,6 @@ export default function ManualBroadcastListsPage() {
       </div>
 
       {/* Modals */}
-      <CreateQuickListModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateQuickList}
-        uploadTypes={uploadTypes}
-      />
 
       {editQuickList && (
         <EditQuickListModal

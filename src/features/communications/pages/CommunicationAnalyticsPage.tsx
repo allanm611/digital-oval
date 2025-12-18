@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Activity, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -300,7 +300,7 @@ export default function CommunicationAnalyticsPage() {
                     <thead>
                       <tr>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -310,7 +310,7 @@ export default function CommunicationAnalyticsPage() {
                           Execution ID
                         </th>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -319,7 +319,7 @@ export default function CommunicationAnalyticsPage() {
                           Source
                         </th>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -328,7 +328,7 @@ export default function CommunicationAnalyticsPage() {
                           Status
                         </th>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -365,14 +365,18 @@ export default function CommunicationAnalyticsPage() {
                                 </td>
                                 <td className="px-6 py-4 text-sm">
                                   <span
-                                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                      execution.status === "completed" ||
-                                      !execution.status
-                                        ? "bg-green-100 text-green-800"
-                                        : execution.status === "failed"
-                                        ? "bg-red-100 text-red-800"
-                                        : "bg-yellow-100 text-yellow-800"
-                                    }`}
+                                    className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
+                                    style={{
+                                      backgroundColor:
+                                        execution.status === "completed" ||
+                                        !execution.status
+                                          ? color.primary.accent
+                                          : execution.status === "failed"
+                                          ? color.status.danger
+                                          : execution.status === "completed_with_errors"
+                                          ? color.status.warning
+                                          : color.primary.accent,
+                                    }}
                                   >
                                     {execution.status || "completed"}
                                   </span>
@@ -461,8 +465,7 @@ export default function CommunicationAnalyticsPage() {
             {/* Communication Logs Table */}
             {logs && logs.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Communication Logs
                 </h3>
                 <div className="overflow-x-auto">
@@ -476,7 +479,7 @@ export default function CommunicationAnalyticsPage() {
                     <thead>
                       <tr>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -486,7 +489,7 @@ export default function CommunicationAnalyticsPage() {
                           Execution ID
                         </th>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -495,7 +498,7 @@ export default function CommunicationAnalyticsPage() {
                           Channel
                         </th>
                         <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                           style={{
                             color: color.surface.tableHeaderText,
                             backgroundColor: color.surface.tableHeader,
@@ -529,13 +532,15 @@ export default function CommunicationAnalyticsPage() {
                               </td>
                               <td className="px-6 py-4 text-sm">
                                 <span
-                                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                    log.status === "sent"
-                                      ? "bg-green-100 text-green-800"
-                                      : log.status === "failed"
-                                      ? "bg-red-100 text-red-800"
-                                      : "bg-yellow-100 text-yellow-800"
-                                  }`}
+                                  className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
+                                  style={{
+                                    backgroundColor:
+                                      log.status === "sent"
+                                        ? color.primary.accent
+                                        : log.status === "failed"
+                                        ? color.status.danger
+                                        : color.primary.accent,
+                                  }}
                                 >
                                   {log.status}
                                 </span>
