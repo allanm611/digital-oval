@@ -85,7 +85,7 @@ export default function ScheduleStep({
 
   return (
     <div
-      className={`bg-white ${tw.rounded} shadow-sm border`}
+      className="bg-white rounded-md shadow-sm border"
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -112,7 +112,7 @@ export default function ScheduleStep({
               type="button"
               onClick={() => setScheduleType("now")}
               disabled={isSubmitting}
-              className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 ${tw.rounded} border-2 transition-all text-left`}
+              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left"
               style={{
                 borderColor:
                   scheduleType === "now"
@@ -168,7 +168,7 @@ export default function ScheduleStep({
               type="button"
               onClick={() => setScheduleType("later")}
               disabled={isSubmitting}
-              className={`flex items-start gap-3 sm:gap-4 p-3 sm:p-4 ${tw.rounded} border-2 transition-all text-left`}
+              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left"
               style={{
                 borderColor:
                   scheduleType === "later"
@@ -240,7 +240,7 @@ export default function ScheduleStep({
                   value={scheduleDate}
                   onChange={(e) => setScheduleDate(e.target.value)}
                   min={getMinDate()}
-                  className={`w-full pl-10 pr-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
+                  className="w-full pl-10 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
                   style={{
                     borderColor: color.border.default,
                     color: color.text.primary,
@@ -266,7 +266,7 @@ export default function ScheduleStep({
                   value={scheduleTime}
                   onChange={(e) => setScheduleTime(e.target.value)}
                   min={scheduleDate === getMinDate() ? getMinTime() : ""}
-                  className={`w-full pl-10 pr-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
+                  className="w-full pl-10 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
                   style={{
                     borderColor: color.border.default,
                     color: color.text.primary,
@@ -280,7 +280,7 @@ export default function ScheduleStep({
 
         {/* Summary */}
         <div
-          className={`p-3 sm:p-4 ${tw.rounded}`}
+          className="p-3 sm:p-4 rounded-md"
           style={{ backgroundColor: `${color.primary.accent}10` }}
         >
           <h3
@@ -337,7 +337,7 @@ export default function ScheduleStep({
         {/* Error Message */}
         {error && (
           <div
-            className={`p-3 ${tw.rounded} flex items-start space-x-2`}
+            className="p-3 rounded-md flex items-start space-x-2"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -355,7 +355,7 @@ export default function ScheduleStep({
 
         {/* Warning Message */}
         <div
-          className={`p-3 ${tw.rounded} flex items-start space-x-2`}
+          className="p-3 rounded-md flex items-start space-x-2"
           style={{
             backgroundColor: `${color.status.warning}10`,
             border: `1px solid ${color.status.warning}30`,
@@ -389,7 +389,7 @@ export default function ScheduleStep({
         <button
           onClick={onPrevious}
           disabled={isSubmitting}
-          className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap`}
+          className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
           style={{
             backgroundColor: color.surface.cards,
             border: `1px solid ${color.border.default}`,
@@ -404,7 +404,7 @@ export default function ScheduleStep({
             isSubmitting ||
             (scheduleType === "later" && (!scheduleDate || !scheduleTime))
           }
-          className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+          className="w-full sm:w-auto px-6 sm:px-8 py-2.5 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           style={{ backgroundColor: color.primary.action }}
         >
           {isSubmitting ? (

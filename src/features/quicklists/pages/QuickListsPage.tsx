@@ -59,6 +59,7 @@ export default function QuickListsPage() {
   useEffect(() => {
     loadInitialData();
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -391,6 +392,13 @@ export default function QuickListsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/dashboard/communications/analytics")}
+            className={`${tw.button} flex items-center gap-2`}
+          >
+            <Database className="w-4 h-4" />
+            Analytics
+          </button>
           <button
             onClick={() => navigate("/dashboard/quicklists/create")}
             className={`${tw.button} flex items-center gap-2`}

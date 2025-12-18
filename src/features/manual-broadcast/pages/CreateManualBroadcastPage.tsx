@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, MessageSquare, Send, Calendar } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
+import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -12,6 +11,8 @@ import TargetAudienceStep from "../components/TargetAudienceStep";
 import DefineCommunicationStep from "../components/DefineCommunicationStep";
 import TestBroadcastStep from "../components/TestBroadcastStep";
 import ScheduleStep from "../components/ScheduleStep";
+import { communicationService } from "../../communications/services/communicationService";
+import type { TemplateVariable, AudienceInputMethod } from "../types";
 
 export interface ManualBroadcastData {
   // Step 1: Audience
@@ -21,12 +22,18 @@ export interface ManualBroadcastData {
   uploadType?: string;
   quicklistId?: number;
   rowCount?: number;
+  // New fields for enhanced audience selection
+  subscriptionIdColumn?: string;   // Selected column containing Subscription IDs
+  fileColumns?: string[];          // Columns extracted from uploaded file
+  inputMethod?: AudienceInputMethod; // "file" or "manual" input method
 
   // Step 2: Communication
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
   messageTitle?: string;
   messageBody?: string;
   isRichText?: boolean;
+  // New field for template variables
+  selectedVariables?: TemplateVariable[];  // Variables used in the message
 
   // Step 3: Test
   testContacts?: string[];
@@ -101,9 +108,31 @@ export default function CreateManualBroadcastPage() {
 
   const handleSubmit = async () => {
     try {
-      // TODO: Save manual broadcast to database
-      showToast(t.manualBroadcast.createdSuccess);
-      navigate("/dashboard/quicklists");
+      // Send the communication
+      const response = await communicationService.sendCommunication({
+        source_type: "quicklist",
+        source_id: broadcastData.quicklistId!,
+        channels: broadcastData.channel ? [broadcastData.channel] : [],
+        message_template: {
+          ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
+            ? { title: broadcastData.messageTitle }
+            : {}),
+          body: broadcastData.messageBody || "",
+        },
+        filters: {
+          column_conditions: [],
+          limit: 1000,
+        },
+        batch_size: 500,
+        created_by: 1, // TODO: Get from auth context
+      });
+
+      if (response.success) {
+        showToast(t.manualBroadcast.createdSuccess);
+        navigate("/dashboard/quicklists");
+      } else {
+        throw new Error("Communication sending failed");
+      }
     } catch (err) {
       console.error("Failed to create manual broadcast:", err);
       showError(t.manualBroadcast.createFailed);
@@ -155,17 +184,19 @@ export default function CreateManualBroadcastPage() {
   return (
     <div className="min-h-screen">
       <div
-        className={`bg-white ${tw.rounded} border p-4`}
+        className="bg-white rounded-md border p-4"
         style={{ borderColor: color.border.default }}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center space-x-3">
-              <BackButton
-                fallbackTo="/dashboard/quicklists"
-                className="text-gray-400 hover:text-gray-600"
-              />
+              <button
+                onClick={() => navigate("/dashboard/quicklists")}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
               <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
                 {t.manualBroadcast.title}
               </h1>

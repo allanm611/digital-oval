@@ -48,3 +48,83 @@ export interface SendCommunicationResponse {
   success: boolean;
   data: CommunicationResult;
 }
+
+// Analytics and monitoring types
+export interface CommunicationStats {
+  total_executions: number;
+  total_messages_sent: number;
+  total_messages_failed: number;
+  success_rate: number;
+  executions_today: number;
+  messages_today: number;
+}
+
+export interface CommunicationExecution {
+  id: number;
+  execution_id: string;
+  source_type: string;
+  source_id: number;
+  created_at?: string;
+  updated_at?: string;
+  status?: string;
+  // Add other fields that might be in the response
+  [key: string]: any;
+}
+
+export interface CommunicationLog {
+  id: string;
+  execution_id: string;
+  channel: string;
+  status?: string;
+  recipient?: string;
+  sent_at?: string;
+  error_message?: string;
+  // Add other fields that might be in the response
+  [key: string]: any;
+}
+
+// Request types for analytics
+export interface GetExecutionsRequest {
+  limit?: number;
+  offset?: number;
+  start_date?: string;
+  end_date?: string;
+  channel?: CommunicationChannel;
+  source_type?: string;
+}
+
+export interface GetLogsRequest {
+  limit?: number;
+  offset?: number;
+  execution_id?: string;
+  channel?: CommunicationChannel;
+  status?: "sent" | "failed" | "pending";
+  start_date?: string;
+  end_date?: string;
+}
+
+// Response types
+export interface CommunicationExecutionsResponse {
+  success: boolean;
+  data: CommunicationExecution[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export interface CommunicationStatsResponse {
+  success: boolean;
+  data: CommunicationStats;
+}
+
+export interface CommunicationLogsResponse {
+  success: boolean;
+  data: CommunicationLog[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}

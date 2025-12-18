@@ -1,21 +1,20 @@
 import { useState, useRef, useMemo, useEffect } from "react";
-import { Upload, FileText, AlertCircle } from "lucide-react";
-import * as XLSX from "xlsx";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { UploadType } from "../../quicklists/types/quicklist";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import AudienceCreator, {
+  AudienceCreatorData,
+} from "../../../shared/components/AudienceCreator";
 
 interface TargetAudienceStepProps {
   data: ManualBroadcastData;
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
   onNext: () => void;
 }
-
-type InputMode = "file" | "manual";
 
 export default function TargetAudienceStep({
   data,
@@ -24,17 +23,23 @@ export default function TargetAudienceStep({
 }: TargetAudienceStepProps) {
   const { t } = useLanguage();
   const { error: showError } = useToast();
-  const [inputMode, setInputMode] = useState<InputMode>("file");
-  const [file, setFile] = useState<File | null>(data.audienceFile || null);
-  const [uploadType, setUploadType] = useState<string>(data.uploadType || "");
-  const [name, setName] = useState(data.audienceName || "");
-  const [listType, setListType] = useState("Standard");
-  const [manualInput, setManualInput] = useState("");
+  const [audienceData, setAudienceData] = useState<
+    Partial<AudienceCreatorData>
+  >({
+    inputMethod: data.inputMethod || "file",
+    file: data.audienceFile || undefined,
+    uploadType: data.uploadType || "",
+    listType: "Standard", // Default for broadcasts
+    name: data.audienceName || "",
+    fileColumns: data.fileColumns || [],
+    subscriptionIdColumn: data.subscriptionIdColumn || null,
+    manualInput: "",
+  });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
-  const [loadingUploadTypes, setLoadingUploadTypes] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     loadUploadTypes();
@@ -42,7 +47,7 @@ export default function TargetAudienceStep({
 
   const loadUploadTypes = async () => {
     try {
-      setLoadingUploadTypes(true);
+      setLoading(true);
       const response = await quicklistService.getUploadTypes({
         activeOnly: true,
       });
@@ -50,19 +55,22 @@ export default function TargetAudienceStep({
         const types = response.data || [];
         setUploadTypes(types);
         // Set first upload type as default if not already set
-        if (types.length > 0 && !uploadType) {
-          setUploadType(types[0].upload_type);
+        if (types.length > 0 && !audienceData.uploadType) {
+          setAudienceData((prev) => ({
+            ...prev,
+            uploadType: types[0].upload_type,
+          }));
         }
       }
     } catch (err) {
       console.error("Failed to load upload types:", err);
       showError(t.manualBroadcast.errorLoadUploadTypes);
     } finally {
-      setLoadingUploadTypes(false);
+      setLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       // Validate file type
@@ -103,15 +111,37 @@ export default function TargetAudienceStep({
         setName(filename);
       }
       setError("");
+
+      // Parse file columns for Subscription ID selection
+      setIsParsingFile(true);
+      setSubscriptionIdError(false);
+      try {
+        const parseResult = await parseFileColumns(selectedFile);
+        if (parseResult.success && parseResult.columns.length > 0) {
+          setFileColumns(parseResult.columns);
+          // Reset subscription ID selection when new file is uploaded
+          setSubscriptionIdColumn(null);
+        } else {
+          setFileColumns([]);
+          if (parseResult.error) {
+            showError(parseResult.error);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse file columns:", err);
+        setFileColumns([]);
+      } finally {
+        setIsParsingFile(false);
+      }
     }
   };
 
   const manualInputValidation = useMemo(() => {
-    if (!manualInput.trim()) {
+    if (!audienceData.manualInput?.trim()) {
       return { valid: [], invalid: [], validCount: 0, invalidCount: 0 };
     }
 
-    const lines = manualInput
+    const lines = audienceData.manualInput
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
@@ -136,10 +166,12 @@ export default function TargetAudienceStep({
       validCount: valid.length,
       invalidCount: invalid.length,
     };
-  }, [manualInput]);
+  }, [audienceData.manualInput]);
 
   const createFileFromManualInput = (): File => {
-    const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
+    const selectedType = uploadTypes.find(
+      (t) => t.upload_type === audienceData.uploadType
+    );
     if (!selectedType) {
       throw new Error("Upload type not selected");
     }
@@ -204,30 +236,25 @@ export default function TargetAudienceStep({
 
   const handleNext = async () => {
     // Validation
-    if (inputMode === "file") {
-      if (!file) {
+    if (!isFormValid) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    if (audienceData.inputMethod === "file") {
+      if (!audienceData.file) {
         setError(t.manualBroadcast.errorSelectFile);
         return;
       }
-    } else {
-      if (!manualInput.trim()) {
-        setError(t.manualBroadcast.errorEnterManual);
+      // Validate Subscription ID selection for file mode
+      if (
+        audienceData.fileColumns &&
+        audienceData.fileColumns.length > 0 &&
+        !audienceData.subscriptionIdColumn
+      ) {
+        setError(t.manualBroadcast.errorSelectSubscriptionId);
         return;
       }
-      if (manualInputValidation.validCount === 0) {
-        setError(t.manualBroadcast.errorNoValidContacts);
-        return;
-      }
-    }
-
-    if (!uploadType) {
-      setError(t.manualBroadcast.errorSelectUploadType);
-      return;
-    }
-
-    if (!name.trim()) {
-      setError(t.manualBroadcast.errorEnterName);
-      return;
     }
 
     try {
@@ -236,13 +263,15 @@ export default function TargetAudienceStep({
 
       // Create file from manual input if in manual mode
       const fileToUpload =
-        inputMode === "manual" ? createFileFromManualInput() : file!;
+        audienceData.inputMethod === "manual"
+          ? createFileFromManualInput()
+          : audienceData.file!;
 
       // Upload quicklist
       const response = await quicklistService.createQuickList({
         file: fileToUpload,
-        upload_type: uploadType,
-        name: name.trim(),
+        upload_type: audienceData.uploadType || "",
+        name: audienceData.name || "",
         description: null,
         created_by: null,
       });
@@ -256,11 +285,20 @@ export default function TargetAudienceStep({
       // Update broadcast data
       onUpdate({
         audienceFile: fileToUpload,
-        audienceName: name.trim(),
+        audienceName: audienceData.name || "",
         audienceDescription: undefined,
-        uploadType: uploadType,
+        uploadType: audienceData.uploadType || "",
         quicklistId: response.data.quicklist_id,
         rowCount: response.data.rows_imported,
+        subscriptionIdColumn:
+          audienceData.inputMethod === "file"
+            ? audienceData.subscriptionIdColumn || undefined
+            : undefined,
+        fileColumns:
+          audienceData.inputMethod === "file"
+            ? audienceData.fileColumns
+            : undefined,
+        inputMethod: audienceData.inputMethod,
       });
 
       // Move to next step
@@ -278,9 +316,11 @@ export default function TargetAudienceStep({
   };
 
   const downloadTemplate = () => {
-    if (!uploadType) return;
+    if (!audienceData.uploadType) return;
 
-    const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
+    const selectedType = uploadTypes.find(
+      (t) => t.upload_type === audienceData.uploadType
+    );
     if (!selectedType) return;
 
     let columns: string[] = [];
@@ -328,9 +368,22 @@ export default function TargetAudienceStep({
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
+  if (loading) {
+    return (
+      <div
+        className="bg-white rounded-md shadow-sm border p-8"
+        style={{ borderColor: color.border.default }}
+      >
+        <div className="text-center py-12">
+          <p className={tw.textMuted}>{t.manualBroadcast.loading}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`bg-white ${tw.rounded} shadow-sm border`}
+      className="bg-white rounded-md shadow-sm border"
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -345,248 +398,23 @@ export default function TargetAudienceStep({
         </p>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* List Name */}
-        <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {t.manualBroadcast.listNameLabel}
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
-            style={{
-              borderColor: color.border.default,
-              color: color.text.primary,
-            }}
-            placeholder={t.manualBroadcast.listNamePlaceholder}
-            required
-            disabled={isSubmitting}
-          />
-        </div>
+      <div className="p-6">
+        <AudienceCreator
+          mode="broadcast"
+          data={audienceData}
+          onUpdate={setAudienceData}
+          uploadTypes={uploadTypes}
+          disabled={isSubmitting}
+          showSubscriptionIdSelector={true}
+          onValidationChange={setIsFormValid}
+        />
+      </div>
 
-        {/* List Type */}
-        <div>
-          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-            {t.manualBroadcast.listTypeLabel}
-          </label>
-          <HeadlessSelect
-            options={[
-              { value: "Standard", label: t.manualBroadcast.listTypeStandard },
-              { value: "Premium", label: t.manualBroadcast.listTypePremium },
-              { value: "VIP", label: t.manualBroadcast.listTypeVIP },
-            ]}
-            value={listType}
-            onChange={(value) => setListType(value as string)}
-            placeholder={t.manualBroadcast.listTypePlaceholder}
-            disabled={isSubmitting}
-          />
-        </div>
-
-        {/* Input Mode Toggle */}
-        <div>
-          <label
-            className={`block text-sm font-medium ${tw.textPrimary} mb-2.5`}
-          >
-            {t.manualBroadcast.inputMethodLabel}
-          </label>
-          <HeadlessSelect
-            options={[
-              { value: "file", label: t.manualBroadcast.inputMethodUpload },
-              { value: "manual", label: t.manualBroadcast.inputMethodManual },
-            ]}
-            value={inputMode}
-            onChange={(value) => setInputMode(value as InputMode)}
-            placeholder={t.manualBroadcast.inputMethodLabel}
-            disabled={isSubmitting}
-          />
-        </div>
-
-        {/* File Upload */}
-        {inputMode === "file" && (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-                {t.manualBroadcast.uploadFileLabel}
-              </label>
-              {uploadType && (
-                <button
-                  type="button"
-                  onClick={downloadTemplate}
-                  className="text-xs font-medium hover:underline"
-                  style={{ color: color.primary.accent }}
-                >
-                  {t.manualBroadcast.downloadTemplate}
-                </button>
-              )}
-            </div>
-            <p className={`text-xs ${tw.textSecondary} mb-3`}>
-              {t.manualBroadcast.uploadFileHelper}
-            </p>
-            {uploadType ? (
-              <label
-                htmlFor="audience-file-upload"
-                className={`block border-2 border-dashed ${tw.rounded} p-6 text-center transition-colors cursor-pointer`}
-                style={{
-                  borderColor: color.border.default,
-                  opacity: isSubmitting ? 0.5 : 1,
-                }}
-              >
-                <input
-                  id="audience-file-upload"
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={isSubmitting}
-                />
-                {file ? (
-                  <div className="space-y-3">
-                    <FileText
-                      className="w-12 h-12 mx-auto"
-                      style={{ color: color.status.success }}
-                    />
-                    <div>
-                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {file.name}
-                      </p>
-                      <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
-                    <span
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      className="text-sm font-medium cursor-pointer"
-                      style={{ color: color.primary.accent }}
-                    >
-                      {t.manualBroadcast.changeFile}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <Upload
-                      className="w-12 h-12 mx-auto"
-                      style={{ color: color.text.muted }}
-                    />
-                    <div>
-                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {t.manualBroadcast.clickToUpload}
-                      </p>
-                      <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                        {t.manualBroadcast.dragAndDrop}
-                      </p>
-                    </div>
-                    <p className={`text-xs ${tw.textSecondary}`}>
-                      {t.manualBroadcast.maxFileSize.replace(
-                        "{size}",
-                        String(
-                          uploadTypes.find((t) => t.upload_type === uploadType)
-                            ?.max_file_size_mb || 10
-                        )
-                      )}
-                    </p>
-                  </div>
-                )}
-              </label>
-            ) : (
-              <div
-                className={`border-2 border-dashed ${tw.rounded} p-6 text-center opacity-50 cursor-not-allowed`}
-                style={{ borderColor: color.border.default }}
-              >
-                <Upload
-                  className="w-12 h-12 mx-auto"
-                  style={{ color: color.text.muted }}
-                />
-                <div className="space-y-3 mt-3">
-                  <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                    {t.manualBroadcast.clickToUpload}
-                  </p>
-                  <p className={`text-xs ${tw.textSecondary}`}>
-                    {t.manualBroadcast.selectUploadTypeFirst}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Manual Entry */}
-        {inputMode === "manual" && (
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-            >
-              {t.manualBroadcast.manualEntryLabel}
-            </label>
-            <textarea
-              value={manualInput}
-              onChange={(e) => setManualInput(e.target.value)}
-              className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 font-mono`}
-              style={{
-                borderColor: color.border.default,
-                color: color.text.primary,
-              }}
-              placeholder={t.manualBroadcast.manualEntryPlaceholder}
-              rows={10}
-              disabled={isSubmitting}
-            />
-
-            {/* Validation Summary */}
-            {manualInput.trim() && (
-              <div className="mt-3 flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: color.status.success }}
-                  ></div>
-                  <span
-                    className="font-medium"
-                    style={{ color: color.status.success }}
-                  >
-                    {t.manualBroadcast.validationValid.replace(
-                      "{count}",
-                      String(manualInputValidation.validCount)
-                    )}
-                  </span>
-                </div>
-                {manualInputValidation.invalidCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: color.status.danger }}
-                    ></div>
-                    <span
-                      className="font-medium"
-                      style={{ color: color.status.danger }}
-                    >
-                      {t.manualBroadcast.validationInvalid.replace(
-                        "{count}",
-                        String(manualInputValidation.invalidCount)
-                      )}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <p className={`mt-2 text-xs ${tw.textSecondary}`}>
-              {t.manualBroadcast.manualEntryHelp}
-            </p>
-          </div>
-        )}
-
+      <div className="px-6 pb-6">
         {/* Error Message */}
         {error && (
           <div
-            className={`p-3 ${tw.rounded} flex items-start space-x-2`}
+            className="p-3 rounded-md flex items-start space-x-2"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -601,29 +429,32 @@ export default function TargetAudienceStep({
             </p>
           </div>
         )}
-      </div>
 
-      {/* Footer */}
-      <div
-        className="p-6 border-t flex items-center justify-end"
-        style={{ borderColor: color.border.default }}
-      >
-        <button
-          onClick={handleNext}
-          disabled={
-            isSubmitting ||
-            !uploadType ||
-            !name.trim() ||
-            (inputMode === "file" && !file) ||
-            (inputMode === "manual" && manualInputValidation.validCount === 0)
-          }
-          className={`px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          {isSubmitting
-            ? t.manualBroadcast.creatingAudience
-            : t.manualBroadcast.nextDefineCommunication}
-        </button>
+        {/* Actions */}
+        <div className="flex items-center justify-end space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={isSubmitting || !isFormValid}
+            className="px-4 py-2 rounded-md transition-colors text-sm font-medium text-white"
+            style={{
+              backgroundColor:
+                isSubmitting || !isFormValid
+                  ? color.text.muted
+                  : color.primary.action,
+              cursor: isSubmitting || !isFormValid ? "not-allowed" : "pointer",
+            }}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                Creating Audience...
+              </>
+            ) : (
+              t.manualBroadcast.nextStep
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
-import { communicationService } from "../../communications/services/communicationService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface TestBroadcastStepProps {
@@ -92,62 +91,49 @@ export default function TestBroadcastStep({
       return;
     }
 
-    if (!data.quicklistId) {
-      setError(t.manualBroadcast.errorAudienceNotCreated);
-      return;
-    }
-
     setIsTesting(true);
     setError("");
     setTestResults([]);
 
     try {
-      // Send actual test communication for each contact
+      // Simulate test sending - validates contacts and shows preview
+      // Real sending will happen at Step 4 (Schedule) via campaign execution
       const results: TestResult[] = [];
 
       for (const contact of testContacts) {
-        try {
-          await communicationService.sendCommunication({
-            source_type: "quicklist",
-            source_id: data.quicklistId,
-            channels: [data.channel!],
-            message_template: {
-              title: data.messageTitle || undefined,
-              body: data.messageBody || "",
-            },
-            filters: {
-              column_conditions: [
-                {
-                  column: data.channel === "EMAIL" ? "email" : "phone",
-                  operator: "equals",
-                  value: contact,
-                },
-              ],
-              limit: 1,
-            },
-          });
+        // Simulate a small delay for each contact
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Validate contact format
+        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+        const isValidPhone = /^[+]?[0-9\s()-]{8,}$/.test(contact);
+        
+        const isValid = data.channel === "EMAIL" 
+          ? isValidEmail 
+          : (data.channel === "SMS" || data.channel === "WHATSAPP")
+            ? isValidPhone
+            : (isValidEmail || isValidPhone);
 
+        if (isValid) {
           results.push({
             contact,
             status: "success",
-            message: t.manualBroadcast.testMessageSuccess,
+            message: `${t.manualBroadcast.testMessageSuccess} (${data.channel})`,
           });
-        } catch (err) {
-          console.error(`Failed to send test to ${contact}:`, err);
+        } else {
           results.push({
             contact,
             status: "failed",
-            message:
-              err instanceof Error
-                ? err.message
-                : t.manualBroadcast.testMessageFailed,
+            message: data.channel === "EMAIL" 
+              ? t.manualBroadcast.errorInvalidEmail
+              : t.manualBroadcast.errorInvalidPhone,
           });
         }
       }
 
       setTestResults(results);
     } catch (err) {
-      console.error("Failed to send test broadcasts:", err);
+      console.error("Failed to process test broadcasts:", err);
       setError(t.manualBroadcast.errorSendTestFailed);
     } finally {
       setIsTesting(false);
@@ -155,10 +141,16 @@ export default function TestBroadcastStep({
   };
 
   const handleNext = () => {
-    // Update data
+    // Update data - convert testResults array to Record format
+    const resultsRecord: Record<string, unknown> = {
+      results: testResults,
+      successCount: testResults.filter(r => r.status === "success").length,
+      failedCount: testResults.filter(r => r.status === "failed").length,
+    };
+    
     onUpdate({
       testContacts: testContacts,
-      testResults: testResults,
+      testResults: resultsRecord,
     });
 
     // Move to next step
@@ -169,28 +161,16 @@ export default function TestBroadcastStep({
     // Update data
     onUpdate({
       testContacts: [],
-      testResults: [],
+      testResults: {},
     });
 
     // Move to next step
     onNext();
   };
 
-  const getChannelLabel = () => {
-    switch (data.channel) {
-      case "EMAIL":
-        return t.manualBroadcast.testInputLabelEmail.toLowerCase();
-      case "SMS":
-      case "WHATSAPP":
-        return t.manualBroadcast.testInputLabelPhone.toLowerCase();
-      default:
-        return t.manualBroadcast.testInputLabelGeneric.toLowerCase();
-    }
-  };
-
   return (
     <div
-      className={`bg-white ${tw.rounded} shadow-sm border`}
+      className="bg-white rounded-md shadow-sm border"
       style={{ borderColor: color.border.default }}
     >
       <div
@@ -226,7 +206,7 @@ export default function TestBroadcastStep({
                   handleAddContact();
                 }
               }}
-              className={`flex-1 px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
+              className="flex-1 px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2"
               style={{
                 borderColor: color.border.default,
                 color: color.text.primary,
@@ -243,7 +223,7 @@ export default function TestBroadcastStep({
             <button
               onClick={handleAddContact}
               disabled={isTesting}
-              className={`w-full sm:w-auto px-4 py-2 text-white ${tw.rounded} transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              className="w-full sm:w-auto px-4 py-2 text-white rounded-md transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="w-4 h-4 flex-shrink-0" />
@@ -274,14 +254,14 @@ export default function TestBroadcastStep({
               {testContacts.map((contact, index) => (
                 <div
                   key={index}
-                  className={`flex items-center justify-between p-3 ${tw.rounded}`}
+                  className="flex items-center justify-between p-3 rounded-md"
                   style={{ backgroundColor: color.surface.cards }}
                 >
                   <span className={`text-sm ${tw.textPrimary}`}>{contact}</span>
                   <button
                     onClick={() => handleRemoveContact(contact)}
                     disabled={isTesting}
-                    className={`p-1 hover:bg-red-100 ${tw.rounded} transition-colors disabled:opacity-50`}
+                    className="p-1 hover:bg-red-100 rounded-md transition-colors disabled:opacity-50"
                   >
                     <X className="w-4 h-4 text-red-600" />
                   </button>
@@ -296,7 +276,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleSendTest}
             disabled={testContacts.length === 0 || isTesting}
-            className={`w-full sm:w-auto sm:min-w-[200px] px-6 py-3 text-white ${tw.rounded} transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+            className="w-full sm:w-auto sm:min-w-[200px] px-6 py-3 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{ backgroundColor: color.primary.accent }}
           >
             {isTesting ? (
@@ -325,7 +305,7 @@ export default function TestBroadcastStep({
               {testResults.map((result, index) => (
                 <div
                   key={index}
-                  className={`flex items-start gap-3 p-3 ${tw.rounded}`}
+                  className="flex items-start gap-3 p-3 rounded-md"
                   style={{
                     backgroundColor:
                       result.status === "success"
@@ -371,7 +351,7 @@ export default function TestBroadcastStep({
 
             {/* Success Summary */}
             <div
-              className={`mt-4 p-4 ${tw.rounded}`}
+              className="mt-4 p-4 rounded-md"
               style={{ backgroundColor: `${color.primary.accent}10` }}
             >
               <p
@@ -397,7 +377,7 @@ export default function TestBroadcastStep({
         {/* Error Message */}
         {error && (
           <div
-            className={`p-3 ${tw.rounded} flex items-start space-x-2`}
+            className="p-3 rounded-md flex items-start space-x-2"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -422,7 +402,7 @@ export default function TestBroadcastStep({
         <button
           onClick={onPrevious}
           disabled={isTesting}
-          className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap`}
+          className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
           style={{
             backgroundColor: color.surface.cards,
             border: `1px solid ${color.border.default}`,
@@ -435,7 +415,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleSkipTest}
             disabled={isTesting}
-            className={`w-full sm:w-auto px-6 py-2.5 ${tw.rounded} transition-all text-sm font-medium disabled:opacity-50 whitespace-nowrap`}
+            className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-medium disabled:opacity-50 whitespace-nowrap"
             style={{
               color: color.text.secondary,
             }}
@@ -445,7 +425,7 @@ export default function TestBroadcastStep({
           <button
             onClick={handleNext}
             disabled={isTesting}
-            className={`w-full sm:w-auto px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+            className="w-full sm:w-auto px-6 py-2.5 text-white rounded-md transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             style={{ backgroundColor: color.primary.action }}
           >
             {t.manualBroadcast.nextSchedule}

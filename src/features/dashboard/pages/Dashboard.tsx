@@ -518,6 +518,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../manual-broadcast/pages/CreateManualBroadcastPage"
       )
   ),
+  CommunicationAnalyticsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../communications/pages/CommunicationAnalyticsPage"
+      )
+  ),
   CreateManualRewardPage: lazy(
     () =>
       import(
@@ -735,6 +741,10 @@ export default function Dashboard() {
             element={<ProductPages.ControlGroupsPage />}
           />
           <Route path="/quicklists" element={<OtherPages.QuickListsPage />} />
+          <Route
+            path="/communications/analytics"
+            element={<OtherPages.CommunicationAnalyticsPage />}
+          />
           <Route
             path="/quicklists/create"
             element={<OtherPages.CreateManualBroadcastPage />}
