@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -67,72 +67,6 @@ export default function TargetAudienceStep({
       showError(t.manualBroadcast.errorLoadUploadTypes);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      // Validate file type
-      const validTypes = [
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-excel",
-      ];
-      if (!validTypes.includes(selectedFile.type)) {
-        setError(t.manualBroadcast.errorSelectFile);
-        setFile(null);
-        return;
-      }
-
-      // Validate file size
-      const selectedUploadType = uploadTypes.find(
-        (t) => t.upload_type === uploadType
-      );
-      if (!selectedUploadType) {
-        setError(t.manualBroadcast.selectUploadTypeFirst);
-        setFile(null);
-        return;
-      }
-
-      const maxSizeMB = selectedUploadType.max_file_size_mb || 10;
-      const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
-      if (selectedFile.size > maxSizeBytes) {
-        setError(
-          t.manualBroadcast.maxFileSize.replace("{size}", String(maxSizeMB))
-        );
-        setFile(null);
-        return;
-      }
-
-      setFile(selectedFile);
-      if (!name) {
-        const filename = selectedFile.name.replace(/\.[^/.]+$/, "");
-        setName(filename);
-      }
-      setError("");
-
-      // Parse file columns for Subscription ID selection
-      setIsParsingFile(true);
-      setSubscriptionIdError(false);
-      try {
-        const parseResult = await parseFileColumns(selectedFile);
-        if (parseResult.success && parseResult.columns.length > 0) {
-          setFileColumns(parseResult.columns);
-          // Reset subscription ID selection when new file is uploaded
-          setSubscriptionIdColumn(null);
-        } else {
-          setFileColumns([]);
-          if (parseResult.error) {
-            showError(parseResult.error);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to parse file columns:", err);
-        setFileColumns([]);
-      } finally {
-        setIsParsingFile(false);
-      }
     }
   };
 
@@ -451,7 +385,7 @@ export default function TargetAudienceStep({
                 Creating Audience...
               </>
             ) : (
-              t.manualBroadcast.nextStep
+              "Next: Define Communication"
             )}
           </button>
         </div>

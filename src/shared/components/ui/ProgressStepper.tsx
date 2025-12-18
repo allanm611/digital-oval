@@ -36,7 +36,8 @@ export default function ProgressStepper({
   return (
     <nav
       aria-label="Progress"
-      className="sticky top-16 z-40 bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0"
+      className="sticky top-16 bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0"
+      style={{ zIndex: zIndex.base + 100 }}
     >
       {/* Mobile - Simple dots */}
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
@@ -66,7 +67,7 @@ export default function ProgressStepper({
         {/* Background line - full width */}
         <div
           className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200"
-          style={{ zIndex: zIndex.base }}
+          style={{ zIndex: zIndex.base + 1 }}
         />
 
         {/* Progress line for completed steps */}
@@ -84,7 +85,7 @@ export default function ProgressStepper({
                   ? "100%"
                   : `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
               backgroundColor: primaryColor,
-              zIndex: zIndex.base + 1,
+              zIndex: zIndex.base + 2,
             }}
           />
         )}
@@ -92,16 +93,18 @@ export default function ProgressStepper({
         {/* Cover divs to hide line at edges */}
         {/* Hide right cover when on last step to allow line to reach the circle */}
         <div
-          className="absolute top-4 left-0 h-0.5 bg-white z-20"
+          className="absolute top-4 left-0 h-0.5 bg-white"
           style={{
             width: "5rem",
+            zIndex: zIndex.base + 20,
           }}
         />
         {currentStep < steps.length && (
           <div
-            className="absolute top-4 right-0 h-0.5 bg-white z-20"
+            className="absolute top-4 right-0 h-0.5 bg-white"
             style={{
               width: "5rem",
+              zIndex: zIndex.base + 20,
             }}
           />
         )}
@@ -116,7 +119,7 @@ export default function ProgressStepper({
             <div
               key={step.id}
               className="relative"
-              style={{ zIndex: zIndex.base + 5 }}
+                  style={{ zIndex: zIndex.base + 10 }}
             >
               <button
                 onClick={() => onStepClick(step.id)}
@@ -127,7 +130,7 @@ export default function ProgressStepper({
                 <div
                   className="absolute top-4 left-1/2 w-10 h-10 rounded-full -translate-x-1/2 -translate-y-1/2"
                   style={{
-                    zIndex: zIndex.base + 4,
+                    zIndex: zIndex.base + 5,
                     backgroundColor:
                       status === "completed" ? primaryColor : "white",
                   }}
@@ -150,7 +153,7 @@ export default function ProgressStepper({
                         : "cursor-not-allowed"
                     }
                   `}
-                  style={{ zIndex: zIndex.base + 5 }}
+                  style={{ zIndex: zIndex.base + 10 }}
                 >
                   {status === "completed" ? (
                     <Check className="w-4 h-4" />
@@ -159,7 +162,7 @@ export default function ProgressStepper({
                   )}
                 </div>
 
-                <div className="mt-2 text-center">
+                <div className="mt-2 text-center" style={{ zIndex: zIndex.base + 15 }}>
                   <div
                     className={`text-sm font-medium ${
                       status === "current"
@@ -174,6 +177,7 @@ export default function ProgressStepper({
                   {step.description && (
                     <div
                       className={`text-xs mt-1 hidden lg:block ${textMuted}`}
+                      style={{ zIndex: zIndex.base + 15 }}
                     >
                       {step.description}
                     </div>

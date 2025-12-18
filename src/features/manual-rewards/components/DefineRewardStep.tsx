@@ -245,6 +245,7 @@ export default function DefineRewardStep({
               value={bundleTrack}
               onChange={(value) => setBundleTrack(value as string)}
               placeholder={t.manualRewards.bundleTrackPlaceholder}
+              zIndex={zIndex.popover}
             />
             <p className={`mt-1 text-xs ${tw.textSecondary}`}>
               {t.manualRewards.bundleTrackHelper}

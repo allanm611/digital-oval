@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { Upload, FileText, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../../quicklists/services/quicklistService";
@@ -343,6 +343,7 @@ export default function SelectCustomersStep({
             onChange={(value) => setInputMode(value as InputMode)}
             placeholder={t.manualRewards.inputMethodLabel}
             disabled={isSubmitting}
+            zIndex={zIndex.popover}
           />
         </div>
 
