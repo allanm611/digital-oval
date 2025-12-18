@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -10,12 +9,10 @@ import {
   Package,
   Users,
   FolderKanban,
-  ArrowRight,
-  Sparkles,
-  UserCheck,
-  Settings,
   FolderTree,
   List,
+  Settings,
+  UserCheck,
 } from "lucide-react";
 import { campaignService } from "../../features/campaigns/services/campaignService";
 import { offerService } from "../../features/offers/services/offerService";
@@ -28,7 +25,7 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import { Role } from "../../features/roles/types/role";
-import { color, tw, zIndex } from "../utils/utils";
+import { tw, zIndex } from "../utils/utils";
 
 interface SearchSuggestion {
   id: string | number;
@@ -88,12 +85,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [dropdownPosition, setDropdownPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-  });
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -445,11 +436,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((user) => {
             const roleId = user.role_id || user.primary_role_id;
-            const role = roleId ? roleLookup[roleId] : null;
-            const roleName =
-              role?.name ||
-              user.role_name ||
-              (roleId ? `Role ${roleId}` : "No Role");
 
             allSuggestions.push({
               id: user.id,
@@ -637,11 +623,11 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   const updateDropdownPosition = useCallback(() => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      setDropdownPosition({
-        top: rect.bottom + 8, // 8px for mt-2, using viewport coordinates for fixed positioning
-        left: rect.left,
-        width: rect.width,
-      });
+      // setDropdownPosition({
+      //   top: rect.bottom + 8, // 8px for mt-2, using viewport coordinates for fixed positioning
+      //   left: rect.left,
+      //   width: rect.width,
+      // });
     }
   }, []);
 
@@ -720,14 +706,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       // Always go to search results page when Enter is pressed
       // Users can click on suggestions if they want to navigate directly
       handleSearch();
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setSelectedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === "Escape") {
       setShowSuggestions(false);
       onClose?.();
@@ -757,7 +735,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
     searchTerm.trim().length >= 2 && suggestions.length > 0;
   const showQuickSearches = !searchTerm.trim() || searchTerm.trim().length < 2;
 
-  return createPortal(
+  return (
     <div
       ref={containerRef}
       className="relative flex-1 max-w-xs sm:max-w-md"
@@ -802,9 +780,9 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400 mx-auto"></div>
               <p className="mt-3 text-sm text-gray-600">Searching...</p>
             </div>
-          ) : hasSearchResults ? (
+          ) : showQuickSearches ? (
             <>
-              {/* Search Results */}
+              {/* Quick Access */}
               <div className="py-2">
                 <div className="px-4 py-2">
                   <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -862,6 +840,46 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
                 )}
               </div>
             </>
+          ) : hasSearchResults ? (
+            <>
+              {/* Search Results */}
+              <div className="py-2">
+                <div className="px-4 py-2">
+                  <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    Search Results
+                  </h3>
+                </div>
+                <div>
+                  {suggestions.slice(0, 5).map((suggestion) => (
+                    <button
+                      key={suggestion.id}
+                      onClick={() => {
+                        navigate(suggestion.url);
+                        setShowSuggestions(false);
+                        onClose?.();
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-medium text-gray-600">
+                            {getTypeInfo(suggestion.type).label[0]}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {suggestion.name}
+                          </div>
+                          <div className="text-xs text-gray-600 truncate">
+                            {suggestion.description || suggestion.type}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <div className="p-12 text-center">
               <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -881,7 +899,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           )}
         </div>
       )}
-    </div>,
-    document.body
+    </div>
   );
 }
