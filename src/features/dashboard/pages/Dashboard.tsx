@@ -1,134 +1,179 @@
 import { Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+
+// Core dashboard components (always loaded)
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardHome from "../components/DashboardHome";
-import CampaignsPage from "../../campaigns/pages/CampaignsPage";
-import CampaignsAnalyticsPage from "../../campaigns/pages/CampaignsAnalyticsPage";
-import CampaignDetailsPage from "../../campaigns/pages/CampaignDetailsPage";
-import CreateCampaignPage from "../../campaigns/pages/CreateCampaignPage";
-import CampaignCategoriesPage from "../../campaigns/pages/CampaignCategoriesPage";
-import CampaignTypesPage from "../../campaigns/pages/CampaignTypesPage";
-import CampaignObjectivesPage from "../../campaigns/pages/CampaignObjectivesPage";
-import TeamRolesPage from "../../campaigns/pages/TeamRolesPage";
-import ProgramsPage from "../../campaigns/pages/ProgramsPage";
-import ProgramDetailsPage from "../../campaigns/pages/ProgramDetailsPage";
-import CommunicationPolicyPage from "../../campaigns/pages/CommunicationPolicyPage";
-import OffersPage from "../../offers/pages/OffersPage";
-import OfferDetailsPage from "../../offers/pages/OfferDetailsPage";
-import OfferLifecycleHistoryPage from "../../offers/pages/OfferLifecycleHistoryPage";
-import OfferApprovalHistoryPage from "../../offers/pages/OfferApprovalHistoryPage";
-import SegmentManagementPage from "../../segments/pages/SegmentManagementPage";
-import SegmentDetailsPage from "../../segments/pages/SegmentDetailsPage";
-import EditSegmentPage from "../../segments/pages/EditSegmentPage";
-import SegmentCategoriesPage from "../../segments/pages/SegmentCategoriesPage";
-import SegmentListPage from "../../segments/pages/SegmentListPage";
-import SegmentTypesPage from "../../segments/pages/SegmentTypesPage";
-import CreateOfferPage from "../../offers/pages/CreateOfferPage";
-import ProductsPage from "../../products/pages/ProductsPage";
-import CreateProductPage from "../../products/pages/CreateProductPage";
-import EditProductPage from "../../products/pages/EditProductPage";
-import ProductDetailsPage from "../../products/pages/ProductDetailsPage";
-import ProductCategoriesPage from "../../products/pages/ProductCategoriesPage";
-import ProductTypesPage from "../../products/pages/ProductTypesPage";
-import ComboTypesPage from "../../products/pages/ComboTypesPage";
-import OfferTypesPage from "../../offers/pages/OfferTypesPage";
-import OfferCategoriesPage from "../../offers/pages/OfferCategoriesPage";
-import TrackingSourcesPage from "../../offers/pages/TrackingSourcesPage";
-import CreativeTemplatesPage from "../../offers/pages/CreativeTemplatesPage";
-import RewardTypesPage from "../../offers/pages/RewardTypesPage";
-import SenderIdsPage from "../../offers/pages/SenderIdsPage";
-import SMSRoutesPage from "../../offers/pages/SMSRoutesPage";
-import LanguagesPage from "../../offers/pages/LanguagesPage";
-import CharacterSetsPage from "../../offers/pages/CharacterSetsPage";
-// import CategoryDetailsPage from "../../offers/pages/CategoryDetailsPage";
-import UserManagementPage from "../components/UserManagementPage";
-import UserDetailsPage from "../../users/pages/UserDetailsPage";
-import UserProfilePage from "../../users/pages/UserProfilePage";
-import ConfigurationPage from "../components/ConfigurationPage";
-import ConfigurationDetailsPage from "../components/ConfigurationDetailsPage";
-import ControlGroupsPage from "../../products/pages/ControlGroupsPage";
-import DepartmentPage from "../../campaigns/pages/DepartmentPage";
-import LineOfBusinessPage from "../../campaigns/pages/LineOfBusinessPage";
-import OfferCreativeDetailsPage from "../../offers/pages/OfferCreativeDetailsPage";
-import QuickListsPage from "../../quicklists/pages/QuickListsPage";
-import QuickListDetailsPage from "../../quicklists/pages/QuickListDetailsPage";
-import CreateManualBroadcastPage from "../../manual-broadcast/pages/CreateManualBroadcastPage";
-import CreateManualRewardPage from "../../manual-rewards/pages/CreateManualRewardPage";
-import ManualRewardsPage from "../../manual-rewards/pages/ManualRewardsPage";
-import CustomerIdentityPage from "../../customer/pages/CustomerIdentityPage";
-import CustomerIdentityFieldDetailsPage from "../../customer/pages/CustomerIdentityFieldDetailsPage";
-import CampaignApprovalHistoryPage from "../../campaigns/pages/CampaignApprovalHistoryPage";
-import CampaignLifecycleHistoryPage from "../../campaigns/pages/CampaignLifecycleHistoryPage";
-import SearchResultsPage from "../../../shared/pages/SearchResultsPage";
-import OverallDashboardPerformancePage from "./OverallDashboardPerformancePage";
-import CustomerProfileReportsPage from "./CustomerProfileReportsPage";
-import CustomersPage from "./CustomersPage";
-import CustomerSearchResultsPage from "./CustomerSearchResultsPage";
-import CampaignReportsPage from "./CampaignReportsPage";
-import DeliverySMSReportsPage from "./DeliverySMSReportsPage";
-import DeliveryEmailReportsPage from "./DeliveryEmailReportsPage";
-import OfferReportsPage from "./OfferReportsPage";
-import SettingsPage from "../../settings/pages/SettingsPage";
-import CommunicationChannelsPage from "../../settings/pages/CommunicationChannelsPage";
-import SettingsSMSRoutesPage from "../../settings/pages/SMSRoutesPage";
-import RoutesPage from "../../settings/pages/RoutesPage";
-import ServersPage from "../../servers/pages/ServersPage";
-import ServerDetailsPage from "../../servers/pages/ServerDetailsPage";
-import ServerFormPage from "../../servers/pages/ServerFormPage";
-import ConnectionProfilesPage from "../../connection-profiles/pages/ConnectionProfilesPage";
-import ConnectionProfileDetailsPage from "../../connection-profiles/pages/ConnectionProfileDetailsPage";
-import ConnectionProfileFormPage from "../../connection-profiles/pages/ConnectionProfileFormPage";
-import ConnectionProfilesAnalyticsPage from "../../connection-profiles/pages/ConnectionProfilesAnalyticsPage";
-import JobTypesPage from "../../jobs/pages/JobTypesPage";
-import ScheduledJobsPage from "../../jobs/pages/ScheduledJobsPage";
-import ScheduledJobDetailsPage from "../../jobs/pages/ScheduledJobDetailsPage";
-import CreateScheduledJobPage from "../../jobs/pages/CreateScheduledJobPage";
-import ScheduledJobsAnalyticsPage from "../../jobs/pages/ScheduledJobsAnalyticsPage";
-import JobDependenciesPage from "../../jobs/pages/JobDependenciesPage";
-import JobDependenciesAnalyticsPage from "../../jobs/pages/JobDependenciesAnalyticsPage";
-import JobWorkflowStepsPage from "../../jobs/pages/JobWorkflowStepsPage";
-import JobWorkflowStepDetailsPage from "../../jobs/pages/JobWorkflowStepDetailsPage";
-import CreateJobWorkflowStepPage from "../../jobs/pages/CreateJobWorkflowStepPage";
-import JobWorkflowStepsAnalyticsPage from "../../jobs/pages/JobWorkflowStepsAnalyticsPage";
-import WorkflowsPage from "../../jobs/pages/WorkflowsPage";
-import WorkflowDetailsPage from "../../jobs/pages/WorkflowDetailsPage";
-import CreateWorkflowPage from "../../jobs/pages/CreateWorkflowPage";
-import WorkflowsAnalyticsPage from "../../jobs/pages/WorkflowsAnalyticsPage";
-import JobExecutionsPage from "../../jobs/pages/JobExecutionsPage";
-import JobExecutionDetailsPage from "../../jobs/pages/JobExecutionDetailsPage";
-import JobExecutionsAnalyticsPage from "../../jobs/pages/JobExecutionsAnalyticsPage";
-import StepExecutionsPage from "../../jobs/pages/StepExecutionsPage";
-import StepExecutionDetailsPage from "../../jobs/pages/StepExecutionDetailsPage";
-import StepExecutionsAnalyticsPage from "../../jobs/pages/StepExecutionsAnalyticsPage";
-import NotificationsPage from "../../notifications/pages/NotificationsPage";
-import DNDManagementPage from "../../campaigns/pages/DNDManagementPage";
-import DNDChannelPage from "../../campaigns/pages/DNDChannelPage";
-import VIPListManagementPage from "../../campaigns/pages/VIPListManagementPage";
-import SeedListManagementPage from "../../campaigns/pages/SeedListManagementPage";
+
+// Lazy loaded components grouped by feature
+const DashboardHome = lazy(() => import("../components/DashboardHome"));
+
+// Campaign Pages
+const CampaignPages = {
+  CampaignsPage: lazy(() => import("../../campaigns/pages/CampaignsPage")),
+  CampaignsAnalyticsPage: lazy(() => import("../../campaigns/pages/CampaignsAnalyticsPage")),
+  CampaignDetailsPage: lazy(() => import("../../campaigns/pages/CampaignDetailsPage")),
+  CreateCampaignPage: lazy(() => import("../../campaigns/pages/CreateCampaignPage")),
+  CampaignCategoriesPage: lazy(() => import("../../campaigns/pages/CampaignCategoriesPage")),
+  CampaignTypesPage: lazy(() => import("../../campaigns/pages/CampaignTypesPage")),
+  CampaignObjectivesPage: lazy(() => import("../../campaigns/pages/CampaignObjectivesPage")),
+  TeamRolesPage: lazy(() => import("../../campaigns/pages/TeamRolesPage")),
+  ProgramsPage: lazy(() => import("../../campaigns/pages/ProgramsPage")),
+  ProgramDetailsPage: lazy(() => import("../../campaigns/pages/ProgramDetailsPage")),
+  CommunicationPolicyPage: lazy(() => import("../../campaigns/pages/CommunicationPolicyPage")),
+  DepartmentPage: lazy(() => import("../../campaigns/pages/DepartmentPage")),
+  LineOfBusinessPage: lazy(() => import("../../campaigns/pages/LineOfBusinessPage")),
+  CampaignApprovalHistoryPage: lazy(() => import("../../campaigns/pages/CampaignApprovalHistoryPage")),
+  CampaignLifecycleHistoryPage: lazy(() => import("../../campaigns/pages/CampaignLifecycleHistoryPage")),
+  DNDManagementPage: lazy(() => import("../../campaigns/pages/DNDManagementPage")),
+  DNDChannelPage: lazy(() => import("../../campaigns/pages/DNDChannelPage")),
+  VIPListManagementPage: lazy(() => import("../../campaigns/pages/VIPListManagementPage")),
+  SeedListManagementPage: lazy(() => import("../../campaigns/pages/SeedListManagementPage")),
+};
+
+// Offer Pages
+const OfferPages = {
+  OffersPage: lazy(() => import("../../offers/pages/OffersPage")),
+  OfferDetailsPage: lazy(() => import("../../offers/pages/OfferDetailsPage")),
+  OfferLifecycleHistoryPage: lazy(() => import("../../offers/pages/OfferLifecycleHistoryPage")),
+  OfferApprovalHistoryPage: lazy(() => import("../../offers/pages/OfferApprovalHistoryPage")),
+  CreateOfferPage: lazy(() => import("../../offers/pages/CreateOfferPage")),
+  OfferTypesPage: lazy(() => import("../../offers/pages/OfferTypesPage")),
+  OfferCategoriesPage: lazy(() => import("../../offers/pages/OfferCategoriesPage")),
+  TrackingSourcesPage: lazy(() => import("../../offers/pages/TrackingSourcesPage")),
+  CreativeTemplatesPage: lazy(() => import("../../offers/pages/CreativeTemplatesPage")),
+  RewardTypesPage: lazy(() => import("../../offers/pages/RewardTypesPage")),
+  SenderIdsPage: lazy(() => import("../../offers/pages/SenderIdsPage")),
+  SMSRoutesPage: lazy(() => import("../../offers/pages/SMSRoutesPage")),
+  LanguagesPage: lazy(() => import("../../offers/pages/LanguagesPage")),
+  CharacterSetsPage: lazy(() => import("../../offers/pages/CharacterSetsPage")),
+  OfferCreativeDetailsPage: lazy(() => import("../../offers/pages/OfferCreativeDetailsPage")),
+};
+
+// Product Pages
+const ProductPages = {
+  ProductsPage: lazy(() => import("../../products/pages/ProductsPage")),
+  CreateProductPage: lazy(() => import("../../products/pages/CreateProductPage")),
+  EditProductPage: lazy(() => import("../../products/pages/EditProductPage")),
+  ProductDetailsPage: lazy(() => import("../../products/pages/ProductDetailsPage")),
+  ProductCategoriesPage: lazy(() => import("../../products/pages/ProductCategoriesPage")),
+  ProductTypesPage: lazy(() => import("../../products/pages/ProductTypesPage")),
+  ComboTypesPage: lazy(() => import("../../products/pages/ComboTypesPage")),
+  ControlGroupsPage: lazy(() => import("../../products/pages/ControlGroupsPage")),
+};
+
+// Segment Pages
+const SegmentPages = {
+  SegmentManagementPage: lazy(() => import("../../segments/pages/SegmentManagementPage")),
+  SegmentDetailsPage: lazy(() => import("../../segments/pages/SegmentDetailsPage")),
+  EditSegmentPage: lazy(() => import("../../segments/pages/EditSegmentPage")),
+  SegmentCategoriesPage: lazy(() => import("../../segments/pages/SegmentCategoriesPage")),
+  SegmentListPage: lazy(() => import("../../segments/pages/SegmentListPage")),
+  SegmentTypesPage: lazy(() => import("../../segments/pages/SegmentTypesPage")),
+};
+
+// Job Pages
+const JobPages = {
+  JobTypesPage: lazy(() => import("../../jobs/pages/JobTypesPage")),
+  ScheduledJobsPage: lazy(() => import("../../jobs/pages/ScheduledJobsPage")),
+  ScheduledJobDetailsPage: lazy(() => import("../../jobs/pages/ScheduledJobDetailsPage")),
+  CreateScheduledJobPage: lazy(() => import("../../jobs/pages/CreateScheduledJobPage")),
+  ScheduledJobsAnalyticsPage: lazy(() => import("../../jobs/pages/ScheduledJobsAnalyticsPage")),
+  JobDependenciesPage: lazy(() => import("../../jobs/pages/JobDependenciesPage")),
+  JobDependenciesAnalyticsPage: lazy(() => import("../../jobs/pages/JobDependenciesAnalyticsPage")),
+  JobWorkflowStepsPage: lazy(() => import("../../jobs/pages/JobWorkflowStepsPage")),
+  JobWorkflowStepDetailsPage: lazy(() => import("../../jobs/pages/JobWorkflowStepDetailsPage")),
+  CreateJobWorkflowStepPage: lazy(() => import("../../jobs/pages/CreateJobWorkflowStepPage")),
+  JobWorkflowStepsAnalyticsPage: lazy(() => import("../../jobs/pages/JobWorkflowStepsAnalyticsPage")),
+  WorkflowsPage: lazy(() => import("../../jobs/pages/WorkflowsPage")),
+  WorkflowDetailsPage: lazy(() => import("../../jobs/pages/WorkflowDetailsPage")),
+  CreateWorkflowPage: lazy(() => import("../../jobs/pages/CreateWorkflowPage")),
+  WorkflowsAnalyticsPage: lazy(() => import("../../jobs/pages/WorkflowsAnalyticsPage")),
+  JobExecutionsPage: lazy(() => import("../../jobs/pages/JobExecutionsPage")),
+  JobExecutionDetailsPage: lazy(() => import("../../jobs/pages/JobExecutionDetailsPage")),
+  JobExecutionsAnalyticsPage: lazy(() => import("../../jobs/pages/JobExecutionsAnalyticsPage")),
+  StepExecutionsPage: lazy(() => import("../../jobs/pages/StepExecutionsPage")),
+  StepExecutionDetailsPage: lazy(() => import("../../jobs/pages/StepExecutionDetailsPage")),
+  StepExecutionsAnalyticsPage: lazy(() => import("../../jobs/pages/StepExecutionsAnalyticsPage")),
+};
+
+// User Pages
+const UserPages = {
+  UserManagementPage: lazy(() => import("../components/UserManagementPage")),
+  UserDetailsPage: lazy(() => import("../../users/pages/UserDetailsPage")),
+  UserProfilePage: lazy(() => import("../../users/pages/UserProfilePage")),
+};
+
+// Settings & Configuration Pages
+const SettingsPages = {
+  ConfigurationPage: lazy(() => import("../components/ConfigurationPage")),
+  ConfigurationDetailsPage: lazy(() => import("../components/ConfigurationDetailsPage")),
+  SettingsPage: lazy(() => import("../../settings/pages/SettingsPage")),
+  CommunicationChannelsPage: lazy(() => import("../../settings/pages/CommunicationChannelsPage")),
+  SettingsSMSRoutesPage: lazy(() => import("../../settings/pages/SMSRoutesPage")),
+  RoutesPage: lazy(() => import("../../settings/pages/RoutesPage")),
+};
+
+// Server & Connection Pages
+const ServerPages = {
+  ServersPage: lazy(() => import("../../servers/pages/ServersPage")),
+  ServerDetailsPage: lazy(() => import("../../servers/pages/ServerDetailsPage")),
+  ServerFormPage: lazy(() => import("../../servers/pages/ServerFormPage")),
+  ConnectionProfilesPage: lazy(() => import("../../connection-profiles/pages/ConnectionProfilesPage")),
+  ConnectionProfileDetailsPage: lazy(() => import("../../connection-profiles/pages/ConnectionProfileDetailsPage")),
+  ConnectionProfileFormPage: lazy(() => import("../../connection-profiles/pages/ConnectionProfileFormPage")),
+  ConnectionProfilesAnalyticsPage: lazy(() => import("../../connection-profiles/pages/ConnectionProfilesAnalyticsPage")),
+};
+
+// Analytics & Reports Pages
+const AnalyticsPages = {
+  OverallDashboardPerformancePage: lazy(() => import("./OverallDashboardPerformancePage")),
+  CustomerProfileReportsPage: lazy(() => import("./CustomerProfileReportsPage")),
+  CustomersPage: lazy(() => import("./CustomersPage")),
+  CustomerSearchResultsPage: lazy(() => import("./CustomerSearchResultsPage")),
+  CampaignReportsPage: lazy(() => import("./CampaignReportsPage")),
+  DeliverySMSReportsPage: lazy(() => import("./DeliverySMSReportsPage")),
+  DeliveryEmailReportsPage: lazy(() => import("./DeliveryEmailReportsPage")),
+  OfferReportsPage: lazy(() => import("./OfferReportsPage")),
+};
+
+// Other Pages
+const OtherPages = {
+  QuickListsPage: lazy(() => import("../../quicklists/pages/QuickListsPage")),
+  QuickListDetailsPage: lazy(() => import("../../quicklists/pages/QuickListDetailsPage")),
+  CreateManualBroadcastPage: lazy(() => import("../../manual-broadcast/pages/CreateManualBroadcastPage")),
+  CreateManualRewardPage: lazy(() => import("../../manual-rewards/pages/CreateManualRewardPage")),
+  ManualRewardsPage: lazy(() => import("../../manual-rewards/pages/ManualRewardsPage")),
+  CustomerIdentityPage: lazy(() => import("../../customer/pages/CustomerIdentityPage")),
+  CustomerIdentityFieldDetailsPage: lazy(() => import("../../customer/pages/CustomerIdentityFieldDetailsPage")),
+  SearchResultsPage: lazy(() => import("../../../shared/pages/SearchResultsPage")),
+  NotificationsPage: lazy(() => import("../../notifications/pages/NotificationsPage")),
+};
 
 export default function Dashboard() {
   return (
     <DashboardLayout>
-      <Routes>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+        <Routes>
         <Route path="/" element={<DashboardHome />} />
-        <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route path="/campaigns" element={<CampaignPages.CampaignsPage />} />
         <Route
           path="/campaigns/analytics"
-          element={<CampaignsAnalyticsPage />}
+          element={<CampaignPages.CampaignsAnalyticsPage />}
         />
-        <Route path="/campaigns/:id" element={<CampaignDetailsPage />} />
-        <Route path="/campaigns/:id/edit" element={<CreateCampaignPage />} />
-        <Route path="/campaigns/create" element={<CreateCampaignPage />} />
+        <Route path="/campaigns/:id" element={<CampaignPages.CampaignDetailsPage />} />
+        <Route path="/campaigns/:id/edit" element={<CampaignPages.CreateCampaignPage />} />
+        <Route path="/campaigns/create" element={<CampaignPages.CreateCampaignPage />} />
         {/* Campaign history pages - placeholder for future use when backend endpoints are implemented */}
         <Route
           path="/campaigns/:id/approval-history"
-          element={<CampaignApprovalHistoryPage />}
+          element={<CampaignPages.CampaignApprovalHistoryPage />}
         />
         <Route
           path="/campaigns/:id/lifecycle-history"
-          element={<CampaignLifecycleHistoryPage />}
+          element={<CampaignPages.CampaignLifecycleHistoryPage />}
         />
-        <Route path="/campaign-catalogs" element={<CampaignCategoriesPage />} />
-        <Route path="/campaign-types" element={<CampaignTypesPage />} />
+        <Route path="/campaign-catalogs" element={<CampaignPages.CampaignCategoriesPage />} />
+        <Route path="/campaign-types" element={<CampaignPages.CampaignTypesPage />} />
         {/* Commented out - now using modal instead of page */}
         {/* <Route
           path="/campaign-catalogs/:catalogId/assign"
@@ -136,238 +181,239 @@ export default function Dashboard() {
         /> */}
         <Route
           path="/campaign-objectives"
-          element={<CampaignObjectivesPage />}
+          element={<CampaignPages.CampaignObjectivesPage />}
         />
-        <Route path="/team-roles" element={<TeamRolesPage />} />
-        <Route path="/departments" element={<DepartmentPage />} />
-        <Route path="/line-of-business" element={<LineOfBusinessPage />} />
-        <Route path="/programs" element={<ProgramsPage />} />
-        <Route path="/programs/:id" element={<ProgramDetailsPage />} />
+        <Route path="/team-roles" element={<CampaignPages.TeamRolesPage />} />
+        <Route path="/departments" element={<CampaignPages.DepartmentPage />} />
+        <Route path="/line-of-business" element={<CampaignPages.LineOfBusinessPage />} />
+        <Route path="/programs" element={<CampaignPages.ProgramsPage />} />
+        <Route path="/programs/:id" element={<CampaignPages.ProgramDetailsPage />} />
         <Route
           path="/campaign-communication-policy"
-          element={<CommunicationPolicyPage />}
+          element={<CampaignPages.CommunicationPolicyPage />}
         />
-        <Route path="/offers" element={<OffersPage />} />
-        <Route path="/offers/create" element={<CreateOfferPage />} />
-        <Route path="/offers/:id" element={<OfferDetailsPage />} />
-        <Route path="/offers/:id/edit" element={<CreateOfferPage />} />
+        <Route path="/offers" element={<OfferPages.OffersPage />} />
+        <Route path="/offers/create" element={<OfferPages.CreateOfferPage />} />
+        <Route path="/offers/:id" element={<OfferPages.OfferDetailsPage />} />
+        <Route path="/offers/:id/edit" element={<OfferPages.CreateOfferPage />} />
         <Route
           path="/offers/:id/approval-history"
-          element={<OfferApprovalHistoryPage />}
+          element={<OfferPages.OfferApprovalHistoryPage />}
         />
         <Route
           path="/offers/:id/lifecycle-history"
-          element={<OfferLifecycleHistoryPage />}
+          element={<OfferPages.OfferLifecycleHistoryPage />}
         />
         <Route
           path="/offer-creatives/:id"
-          element={<OfferCreativeDetailsPage />}
+          element={<OfferPages.OfferCreativeDetailsPage />}
         />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/create" element={<CreateProductPage />} />
-        <Route path="/products/:id" element={<ProductDetailsPage />} />
-        <Route path="/products/:id/edit" element={<EditProductPage />} />
-        <Route path="/products/catalogs" element={<ProductCategoriesPage />} />
+        <Route path="/products" element={<ProductPages.ProductsPage />} />
+        <Route path="/products/create" element={<ProductPages.CreateProductPage />} />
+        <Route path="/products/:id" element={<ProductPages.ProductDetailsPage />} />
+        <Route path="/products/:id/edit" element={<ProductPages.EditProductPage />} />
+        <Route path="/products/catalogs" element={<ProductPages.ProductCategoriesPage />} />
         {/* Commented out - now using modal instead of page */}
         {/* <Route
           path="/products/catalogs/:catalogId/assign"
           element={<AssignItemsPage itemType="products" />}
         /> */}
-        <Route path="/product-types" element={<ProductTypesPage />} />
-        <Route path="/combo-types" element={<ComboTypesPage />} />
-        <Route path="/offer-types" element={<OfferTypesPage />} />
-        <Route path="/offer-catalogs" element={<OfferCategoriesPage />} />
+        <Route path="/product-types" element={<ProductPages.ProductTypesPage />} />
+        <Route path="/combo-types" element={<ProductPages.ComboTypesPage />} />
+        <Route path="/offer-types" element={<OfferPages.OfferTypesPage />} />
+        <Route path="/offer-catalogs" element={<OfferPages.OfferCategoriesPage />} />
         {/* Commented out - now using modal instead of page */}
         {/* <Route
           path="/offer-catalogs/:catalogId/assign"
           element={<AssignItemsPage itemType="offers" />}
         /> */}
         {/* <Route path="/offer-catalogs/:id" element={<CategoryDetailsPage />} /> */}
-        <Route path="/user-management" element={<UserManagementPage />} />
-        <Route path="/user-management/:id" element={<UserDetailsPage />} />
-        <Route path="/profile" element={<UserProfilePage />} />
-        <Route path="/segments" element={<SegmentManagementPage />} />
-        <Route path="/segments/:id" element={<SegmentDetailsPage />} />
-        <Route path="/segments/:id/edit" element={<EditSegmentPage />} />
-        <Route path="/segment-catalogs" element={<SegmentCategoriesPage />} />
+        <Route path="/user-management" element={<UserPages.UserManagementPage />} />
+        <Route path="/user-management/:id" element={<UserPages.UserDetailsPage />} />
+        <Route path="/profile" element={<UserPages.UserProfilePage />} />
+        <Route path="/segments" element={<SegmentPages.SegmentManagementPage />} />
+        <Route path="/segments/:id" element={<SegmentPages.SegmentDetailsPage />} />
+        <Route path="/segments/:id/edit" element={<SegmentPages.EditSegmentPage />} />
+        <Route path="/segment-catalogs" element={<SegmentPages.SegmentCategoriesPage />} />
         {/* Commented out - now using modal instead of page */}
         {/* <Route
           path="/segment-catalogs/:catalogId/assign"
           element={<AssignItemsPage itemType="segments" />}
         /> */}
-        <Route path="/segment-list" element={<SegmentListPage />} />
-        <Route path="/segment-types" element={<SegmentTypesPage />} />
-        <Route path="/control-groups" element={<ControlGroupsPage />} />
-        <Route path="/quicklists" element={<QuickListsPage />} />
+        <Route path="/segment-list" element={<SegmentPages.SegmentListPage />} />
+        <Route path="/segment-types" element={<SegmentPages.SegmentTypesPage />} />
+        <Route path="/control-groups" element={<ProductPages.ControlGroupsPage />} />
+        <Route path="/quicklists" element={<OtherPages.QuickListsPage />} />
         <Route
           path="/quicklists/create"
-          element={<CreateManualBroadcastPage />}
+          element={<OtherPages.CreateManualBroadcastPage />}
         />
-        <Route path="/manual-rewards" element={<ManualRewardsPage />} />
+        <Route path="/manual-rewards" element={<OtherPages.ManualRewardsPage />} />
         <Route
           path="/manual-rewards/create"
-          element={<CreateManualRewardPage />}
+          element={<OtherPages.CreateManualRewardPage />}
         />
-        <Route path="/quicklists/:id" element={<QuickListDetailsPage />} />
-        <Route path="/customers" element={<CustomersPage />} />
-        <Route path="/configuration" element={<ConfigurationPage />} />
+        <Route path="/quicklists/:id" element={<OtherPages.QuickListDetailsPage />} />
+        <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
+        <Route path="/configuration" element={<SettingsPages.ConfigurationPage />} />
         <Route
           path="/configuration/:id"
-          element={<ConfigurationDetailsPage />}
+          element={<SettingsPages.ConfigurationDetailsPage />}
         />
         <Route
           path="/offer-tracking-sources"
-          element={<TrackingSourcesPage />}
+          element={<OfferPages.TrackingSourcesPage />}
         />
-        <Route path="/creative-templates" element={<CreativeTemplatesPage />} />
-        <Route path="/reward-types" element={<RewardTypesPage />} />
-        <Route path="/sender-ids" element={<SenderIdsPage />} />
-        <Route path="/languages" element={<LanguagesPage />} />
-        <Route path="/character-sets" element={<CharacterSetsPage />} />
+        <Route path="/creative-templates" element={<OfferPages.CreativeTemplatesPage />} />
+        <Route path="/reward-types" element={<OfferPages.RewardTypesPage />} />
+        <Route path="/sender-ids" element={<OfferPages.SenderIdsPage />} />
+        <Route path="/languages" element={<OfferPages.LanguagesPage />} />
+        <Route path="/character-sets" element={<OfferPages.CharacterSetsPage />} />
         <Route
           path="/communication-channels"
-          element={<CommunicationChannelsPage />}
+          element={<SettingsPages.CommunicationChannelsPage />}
         />
         <Route
           path="/sms-routes"
-          element={<SettingsSMSRoutesPage />}
+          element={<SettingsPages.SettingsSMSRoutesPage />}
         />
         <Route
           path="/routes"
-          element={<RoutesPage />}
+          element={<SettingsPages.RoutesPage />}
         />
-        <Route path="/customer-identity" element={<CustomerIdentityPage />} />
+        <Route path="/customer-identity" element={<OtherPages.CustomerIdentityPage />} />
         <Route
           path="/customer-identity/fields/:id"
-          element={<CustomerIdentityFieldDetailsPage />}
+          element={<OtherPages.CustomerIdentityFieldDetailsPage />}
         />
-        <Route path="/search" element={<SearchResultsPage />} />
+        <Route path="/search" element={<OtherPages.SearchResultsPage />} />
         <Route
           path="/reports/overview"
-          element={<OverallDashboardPerformancePage />}
+          element={<AnalyticsPages.OverallDashboardPerformancePage />}
         />
         <Route
           path="/reports/customer-profiles"
-          element={<CustomerProfileReportsPage />}
+          element={<AnalyticsPages.CustomerProfileReportsPage />}
         />
         <Route
           path="/reports/customer-profiles/search"
-          element={<CustomerSearchResultsPage />}
+          element={<AnalyticsPages.CustomerSearchResultsPage />}
         />
-        <Route path="/reports/campaigns" element={<CampaignReportsPage />} />
-        <Route path="/reports/offers" element={<OfferReportsPage />} />
-        <Route path="/reports/delivery" element={<DeliverySMSReportsPage />} />
+        <Route path="/reports/campaigns" element={<AnalyticsPages.CampaignReportsPage />} />
+        <Route path="/reports/offers" element={<AnalyticsPages.OfferReportsPage />} />
+        <Route path="/reports/delivery" element={<AnalyticsPages.DeliverySMSReportsPage />} />
         <Route
           path="/reports/email-delivery"
-          element={<DeliveryEmailReportsPage />}
+          element={<AnalyticsPages.DeliveryEmailReportsPage />}
         />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/servers" element={<ServersPage />} />
-        <Route path="/servers/new" element={<ServerFormPage mode="create" />} />
+        <Route path="/settings" element={<SettingsPages.SettingsPage />} />
+        <Route path="/servers" element={<ServerPages.ServersPage />} />
+        <Route path="/servers/new" element={<ServerPages.ServerFormPage mode="create" />} />
         <Route
           path="/servers/:id/edit"
-          element={<ServerFormPage mode="edit" />}
+          element={<ServerPages.ServerFormPage mode="edit" />}
         />
-        <Route path="/servers/:id" element={<ServerDetailsPage />} />
+        <Route path="/servers/:id" element={<ServerPages.ServerDetailsPage />} />
         <Route
           path="/connection-profiles"
-          element={<ConnectionProfilesPage />}
+          element={<ServerPages.ConnectionProfilesPage />}
         />
         <Route
           path="/connection-profiles/new"
-          element={<ConnectionProfileFormPage mode="create" />}
+          element={<ServerPages.ConnectionProfileFormPage mode="create" />}
         />
         <Route
           path="/connection-profiles/:id/edit"
-          element={<ConnectionProfileFormPage mode="edit" />}
+          element={<ServerPages.ConnectionProfileFormPage mode="edit" />}
         />
         <Route
           path="/connection-profiles/analytics"
-          element={<ConnectionProfilesAnalyticsPage />}
+          element={<ServerPages.ConnectionProfilesAnalyticsPage />}
         />
         <Route
           path="/connection-profiles/:id"
-          element={<ConnectionProfileDetailsPage />}
+          element={<ServerPages.ConnectionProfileDetailsPage />}
         />
-        <Route path="/jobs" element={<ScheduledJobsPage />} />
-        <Route path="/scheduled-jobs" element={<ScheduledJobsPage />} />
+        <Route path="/jobs" element={<JobPages.ScheduledJobsPage />} />
+        <Route path="/scheduled-jobs" element={<JobPages.ScheduledJobsPage />} />
         <Route
           path="/scheduled-jobs/:id"
-          element={<ScheduledJobDetailsPage />}
+          element={<JobPages.ScheduledJobDetailsPage />}
         />
         <Route
           path="/scheduled-jobs/:id/edit"
-          element={<CreateScheduledJobPage />}
+          element={<JobPages.CreateScheduledJobPage />}
         />
         <Route
           path="/scheduled-jobs/create"
-          element={<CreateScheduledJobPage />}
+          element={<JobPages.CreateScheduledJobPage />}
         />
         <Route
           path="/scheduled-jobs/analytics"
-          element={<ScheduledJobsAnalyticsPage />}
+          element={<JobPages.ScheduledJobsAnalyticsPage />}
         />
-        <Route path="/job-types" element={<JobTypesPage />} />
-        <Route path="/job-dependencies" element={<JobDependenciesPage />} />
+        <Route path="/job-types" element={<JobPages.JobTypesPage />} />
+        <Route path="/job-dependencies" element={<JobPages.JobDependenciesPage />} />
         <Route
           path="/job-dependencies/analytics"
-          element={<JobDependenciesAnalyticsPage />}
+          element={<JobPages.JobDependenciesAnalyticsPage />}
         />
-        <Route path="/job-workflow-steps" element={<JobWorkflowStepsPage />} />
+        <Route path="/job-workflow-steps" element={<JobPages.JobWorkflowStepsPage />} />
         <Route
           path="/job-workflow-steps/create"
-          element={<CreateJobWorkflowStepPage />}
+          element={<JobPages.CreateJobWorkflowStepPage />}
         />
         <Route
           path="/job-workflow-steps/:id"
-          element={<JobWorkflowStepDetailsPage />}
+          element={<JobPages.JobWorkflowStepDetailsPage />}
         />
         <Route
           path="/job-workflow-steps/:id/edit"
-          element={<CreateJobWorkflowStepPage />}
+          element={<JobPages.CreateJobWorkflowStepPage />}
         />
         <Route
           path="/job-workflow-steps/analytics"
-          element={<JobWorkflowStepsAnalyticsPage />}
+          element={<JobPages.JobWorkflowStepsAnalyticsPage />}
         />
-        <Route path="/workflows" element={<WorkflowsPage />} />
-        <Route path="/workflows/create" element={<CreateWorkflowPage />} />
-        <Route path="/workflows/:id" element={<WorkflowDetailsPage />} />
-        <Route path="/workflows/:id/edit" element={<CreateWorkflowPage />} />
+        <Route path="/workflows" element={<JobPages.WorkflowsPage />} />
+        <Route path="/workflows/create" element={<JobPages.CreateWorkflowPage />} />
+        <Route path="/workflows/:id" element={<JobPages.WorkflowDetailsPage />} />
+        <Route path="/workflows/:id/edit" element={<JobPages.CreateWorkflowPage />} />
         <Route
           path="/workflows/analytics"
-          element={<WorkflowsAnalyticsPage />}
+          element={<JobPages.WorkflowsAnalyticsPage />}
         />
-        <Route path="/job-executions" element={<JobExecutionsPage />} />
+        <Route path="/job-executions" element={<JobPages.JobExecutionsPage />} />
         <Route
           path="/job-executions/:id"
-          element={<JobExecutionDetailsPage />}
+          element={<JobPages.JobExecutionDetailsPage />}
         />
         <Route
           path="/job-executions/analytics"
-          element={<JobExecutionsAnalyticsPage />}
+          element={<JobPages.JobExecutionsAnalyticsPage />}
         />
-        <Route path="/step-executions" element={<StepExecutionsPage />} />
+        <Route path="/step-executions" element={<JobPages.StepExecutionsPage />} />
         <Route
           path="/step-executions/:id"
-          element={<StepExecutionDetailsPage />}
+          element={<JobPages.StepExecutionDetailsPage />}
         />
         <Route
           path="/step-executions/analytics"
-          element={<StepExecutionsAnalyticsPage />}
+          element={<JobPages.StepExecutionsAnalyticsPage />}
         />
-        <Route path="/notifications" element={<NotificationsPage />} />
-        <Route path="/dnd-management" element={<DNDManagementPage />} />
-        <Route path="/dnd-management/:channel" element={<DNDChannelPage />} />
+        <Route path="/notifications" element={<OtherPages.NotificationsPage />} />
+        <Route path="/dnd-management" element={<CampaignPages.DNDManagementPage />} />
+        <Route path="/dnd-management/:channel" element={<CampaignPages.DNDChannelPage />} />
         <Route
           path="/vip-list-management"
-          element={<VIPListManagementPage />}
+          element={<CampaignPages.VIPListManagementPage />}
         />
         <Route
           path="/seed-list-management"
-          element={<SeedListManagementPage />}
+          element={<CampaignPages.SeedListManagementPage />}
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </DashboardLayout>
   );
 }
