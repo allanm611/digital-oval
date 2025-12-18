@@ -23,7 +23,7 @@ import { Segment } from "../../../segments/types/segment";
 import ChampionChallengerDisplay from "../displays/ChampionChallengerDisplay";
 import ABTestDisplay from "../displays/ABTestDisplay";
 import SequentialCampaignDisplay from "../displays/SequentialCampaignDisplay";
-import { tw, components, color } from "../../../../shared/utils/utils";
+import { tw, components, color, zIndex } from "../../../../shared/utils/utils";
 import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 
 interface AvailableControlGroup {
@@ -378,7 +378,7 @@ export default function AudienceConfigurationStep({
           </button>
 
           {isCampaignTypeDropdownOpen && (
-            <div className={`absolute z-[100] w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}>
+            <div className={`absolute w-full mt-1 bg-white border border-gray-300 ${tw.rounded} shadow-xl max-h-64 overflow-hidden`} style={{ zIndex: zIndex.dropdown }}>
               {campaignTypeOptions.map((option) => {
                 const IconComponent = option.icon;
                 return (
@@ -844,7 +844,7 @@ function ControlGroupConfigModal({
 
   return createPortal(
     <div
-      className="fixed bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      className="fixed bg-black bg-opacity-50 flex items-center justify-center"
       style={{
         top: 0,
         left: 0,
@@ -852,6 +852,7 @@ function ControlGroupConfigModal({
         bottom: 0,
         width: "100vw",
         height: "100vh",
+        zIndex: zIndex.modal,
       }}
     >
       <div className={`bg-white ${tw.rounded} max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}>

@@ -9,7 +9,7 @@ import {
   Edit3,
 } from "lucide-react";
 import * as XLSX from "xlsx";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { UploadType } from "../types/quicklist";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
@@ -327,7 +327,8 @@ export default function CreateQuickListModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           handleClose();

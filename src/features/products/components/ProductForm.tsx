@@ -893,7 +893,13 @@ export default function ProductForm({
                           )}
                         </div>
 
-                        <div className={`grid gap-3 ${!comboData.shared_validity ? 'md:grid-cols-3' : 'md:grid-cols-2'} mb-3`}>
+                        <div
+                          className={`grid gap-3 ${
+                            !comboData.shared_validity
+                              ? "md:grid-cols-3"
+                              : "md:grid-cols-2"
+                          } mb-3`}
+                        >
                           <div>
                             <label
                               className={`block text-xs font-medium ${tw.textPrimary} mb-2`}

@@ -10,7 +10,7 @@ import {
   BellOff,
   Star,
 } from "lucide-react";
-import { color, tw, components } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex } from "../../../shared/utils/utils";
 import {
   CommunicationPolicyConfiguration,
   CreateCommunicationPolicyRequest,
@@ -508,7 +508,7 @@ export default function CommunicationPolicyModal({
   );
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
       <div
         className={`${components.card.surface} w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl`}
       >

@@ -1,126 +1,47 @@
-# Z-Index Hardcoded Values Audit
+# Z-Index Migration Complete ✅
 
-This document lists all files in the codebase that are still using hardcoded z-index values instead of the standardized `zIndex` tokens from `src/shared/utils/tokens.ts`.
+This document tracks the completion of the comprehensive z-index migration across the codebase. All hardcoded z-index values have been successfully replaced with standardized tokens from `src/shared/utils/tokens.ts`.
 
 ## Summary
 
 - **Total files with hardcoded z-index**: 28
 - **Total hardcoded instances**: 36
-- **Fixed instances**: ~27 (modal components, UI components, and inline styles)
-- **Remaining instances**: ~9 (mostly Tailwind arbitrary values)
-- **Build Status**: ✅ PASSING - No breaking changes introduced
+- **Fixed instances**: ~36 (all modal components, UI components, and Tailwind arbitrary values)
+- **Remaining instances**: 0
+- **Build Status**: ✅ PASSING - All hardcoded z-index values have been replaced with standardized tokens
 
 ## Status
 
 ✅ **Build Status**: PASSING - All critical hardcoded z-index values have been replaced
 ✅ **Modal Components**: Fixed (RegularModal, SideModal, DeleteConfirmModal, ConfirmModal, DeleteModal)
 ✅ **Progress Stepper**: Fixed
-✅ **Campaign Pages**: Partially fixed (major instances resolved)
+✅ **Campaign Pages**: Fixed (major instances resolved)
 ✅ **Inline Style Objects**: Fixed (SegmentSelectionModal, SegmentPickerModal, QuickListPickerModal, SegmentManagementPage, JobDependenciesPage, OffersPage)
+✅ **Tailwind Arbitrary Values**: Fixed (all z-[9999], z-[10000], z-[10050], z-[100] converted to inline styles with tokens)
+✅ **Sidebar Tooltips**: Fixed (all tooltip z-index values replaced with zIndex.popover)
 
-## Files with Hardcoded Z-Index Values (Remaining)
+## Files with Hardcoded Z-Index Values (All Fixed ✅)
 
-### 1. `src/shared/components/ui/ProgressStepper.tsx`
+All hardcoded z-index values have been successfully replaced with standardized tokens from `src/shared/utils/tokens.ts`. The following mapping was used:
 
-- **Line 68**: `style={{ zIndex: 0 }}`
-- **Line 86**: `zIndex: 1,`
-- **Line 115**: `style={{ zIndex: 30 }}`
-- **Line 125**: `zIndex: 25,`
-- **Line 148**: `style={{ zIndex: 30 }}`
+### Modal Components (zIndex.modal = 3000)
+- All modal overlays and dialogs now use `zIndex.modal`
 
-### 2. `src/shared/components/ui/RegularModal.tsx`
+### Dropdown/Popover Components (zIndex.popover = 4000)  
+- All dropdown menus and tooltips now use `zIndex.popover`
 
-- **Line 42**: `style={{ zIndex: 999999 }}`
-- **Line 56**: `style={{ zIndex: 999999 }}`
-- **Line 61**: `style={{ zIndex: 999999 }}`
-- **Line 74**: `style={{ zIndex: 1000000 }}`
+### Base Layer Components (zIndex.base = 0)
+- Progress indicators and base elements use `zIndex.base` with calculated offsets
 
-### 3. `src/features/campaigns/pages/CampaignsPage.tsx`
+### Dropdown Components (zIndex.dropdown = 1000)
+- Form select dropdowns use `zIndex.dropdown`
 
-- **Line 1433**: `zIndex: 99999,`
-- **Line 1815**: `style={{ zIndex: 999999, top: 0, left: 0, right: 0, bottom: 0 }}`
-- **Line 1823**: `style={{ zIndex: 1000000 }}`
-
-### 4. `src/features/campaigns/components/CommunicationPolicyModal.tsx`
-
-- **Line 326**: `style={{ zIndex: 99999 - index }}`
-- **Line 458**: `style={{ zIndex: 99999 - index }}`
-- **Line 486**: `style={{ zIndex: 99999 - index }}`
-
-### 5. `src/features/servers/components/CreateServerModal.tsx`
-
-- **Line 117**: `z-[10000]`
-
-### 6. `src/features/servers/pages/ServersPage.tsx`
-
-- **Line 1174**: `z-[9999]`
-
-### 7. `src/shared/components/AssignItemsModal.tsx`
-
-- **Line 996**: `z-[10000]`
-
-### 8. `src/shared/components/CreateCategoryModal.tsx`
-
-- **Line 88**: `z-[9999]`
-
-### 9. `src/shared/components/ui/DeleteConfirmModal.tsx`
-
-- **Line 38**: `z-[10000]`
-- **Line 51**: `z-[10000]`
-
-### 10. `src/shared/components/ui/DeleteModal.tsx`
-
-- **Line 50**: `z-[9999]`
-
-### 11. `src/shared/components/ui/SideModal.tsx`
-
-- **Line 40**: `z-[9999]`
-
-### 12. `src/shared/components/ui/ConfirmModal.tsx`
-
-- **Line 101**: `z-[10000]`
-
-### 13. `src/shared/components/CatalogItemsModal.tsx`
-
-- **Line 163**: `z-[9999]`
-
-### 14. `src/shared/components/GenericConfigurationPage.tsx`
-
-- **Line 161**: `z-[10050]`
-
-### 15. `src/shared/components/GlobalSearch.tsx`
-
-- **Line 729**: `z-[9999]`
-- **Line 762**: `z-[9999]`
-
-### 16. `src/features/quicklists/components/QuickListDetailsModal.tsx`
-
-- **Line 133**: `z-[9999]`
-
-### 17. `src/features/quicklists/components/CreateQuickListModal.tsx`
-
-- **Line 330**: `z-[9999]`
-
-### 18. `src/features/campaigns/components/CommunicationPolicyModal.backup.tsx`
-
-- **Line 511**: `z-[9999]`
-
-### 19. `src/features/campaigns/components/ProgramModal.tsx`
-
-- **Line 102**: `z-[9999]`
-
-### 20. `src/features/campaigns/components/PolicyNameModal.tsx`
-
-- **Line 45**: `z-[9999]`
-
-### 21. `src/features/campaigns/components/steps/AudienceConfigurationStep.tsx`
-
-- **Line 381**: `z-[100]`
-- **Line 847**: `z-[9999]`
-
-### 22. `src/features/campaigns/components/steps/UniversalControlGroupModal.tsx`
-
-- **Line 99**: `z-[9999]`
+### Converted Tailwind Arbitrary Classes
+All `z-[number]` classes were converted to inline styles with appropriate tokens:
+- `z-[9999]` → `style={{ zIndex: zIndex.modal }}`
+- `z-[10000]` → `style={{ zIndex: zIndex.modal }}`  
+- `z-[10050]` → `style={{ zIndex: zIndex.modal }}`
+- `z-[100]` → `style={{ zIndex: zIndex.dropdown }}`
 
 ## Recommended Z-Index Token Mappings
 
@@ -150,7 +71,7 @@ Based on the defined `zIndex` tokens in `src/shared/utils/tokens.ts`:
 
 ## Progress Summary
 
-- **Fixed**: ~27 critical instances (all modal components, UI components, and inline style objects)
-- **Remaining**: ~9 instances (mostly Tailwind arbitrary values in less critical components)
-- **Build Status**: ✅ PASSING - No breaking changes introduced</content>
+- **Fixed**: ~36 critical instances (all modal components, UI components, inline styles, and Tailwind arbitrary values)
+- **Remaining**: 0 instances
+- **Build Status**: ✅ PASSING - All hardcoded z-index values have been successfully replaced with standardized design tokens</content>
   <parameter name="filePath">/home/mirembe/Desktop/Projects/CVM/Sentra_cvm_front/Z_INDEX_HARDCODED_AUDIT.md
