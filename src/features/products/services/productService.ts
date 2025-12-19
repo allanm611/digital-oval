@@ -110,7 +110,7 @@ class ProductService {
         const text = await response.text();
         responseData = text ? JSON.parse(text) : {};
       }
-    } catch (parseError) {
+    } catch {
       responseData = {};
     }
 
@@ -138,9 +138,15 @@ class ProductService {
         // Check for error message in various possible locations
         // Backend returns: { success: false, error: "message" }
         if (errorData.error) {
-          errorMessage = errorData.error;
+          errorMessage =
+            typeof errorData.error === "string"
+              ? errorData.error
+              : String(errorData.error);
         } else if (errorData.message) {
-          errorMessage = errorData.message;
+          errorMessage =
+            typeof errorData.message === "string"
+              ? errorData.message
+              : String(errorData.message);
         } else if (errorData.details) {
           errorMessage =
             typeof errorData.details === "string"
@@ -175,7 +181,7 @@ class ProductService {
       throw new Error(friendlyMessage);
     }
 
-    return responseData;
+    return responseData as T;
   }
 
   // 1. Analytics & Stats Endpoints
@@ -232,7 +238,7 @@ class ProductService {
     skipCache?: boolean;
   }): Promise<PaginatedResponse<Product>> {
     const queryParams = new URLSearchParams();
-    queryParams.append("q", params.q);
+    queryParams.append("searchTerm", params.q);
     if (params.limit) queryParams.append("limit", params.limit.toString());
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");

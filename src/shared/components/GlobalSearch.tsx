@@ -9,8 +9,6 @@ import {
   Package,
   Users,
   FolderKanban,
-  ArrowRight,
-  Sparkles,
   UserCheck,
   Settings,
   FolderTree,
@@ -27,7 +25,7 @@ import { offerCategoryService } from "../../features/offers/services/offerCatego
 import { productCategoryService } from "../../features/products/services/productCategoryService";
 import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import { Role } from "../../features/roles/types/role";
-import { color, tw, zIndex } from "../utils/utils";
+import { tw, zIndex } from "../utils/utils";
 
 interface SearchSuggestion {
   id: string | number;
@@ -91,7 +89,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
 
   // Load recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
@@ -438,13 +436,6 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           })
           .slice(0, 3)
           .forEach((user) => {
-            const roleId = user.role_id || user.primary_role_id;
-            const role = roleId ? roleLookup[roleId] : null;
-            const roleName =
-              role?.name ||
-              user.role_name ||
-              (roleId ? `Role ${roleId}` : "No Role");
-
             allSuggestions.push({
               id: user.id,
               type: "user",
@@ -466,16 +457,19 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       ) {
         const catalogs = Array.isArray(offerCatalogsRes.value.data)
           ? offerCatalogsRes.value.data
-          : offerCatalogsRes.value.data.categories || [];
-        catalogs.slice(0, 3).forEach((catalog: Record<string, unknown>) => {
-          allSuggestions.push({
-            id: catalog.id,
-            type: "offer-catalog",
-            name: catalog.name || "Unnamed Catalog",
-            description: catalog.description || undefined,
-            url: `/dashboard/offer-catalogs`,
+          : (offerCatalogsRes.value.data as unknown as Record<string, unknown>)
+              ?.categories || [];
+        (catalogs as unknown[] as Record<string, unknown>[])
+          .slice(0, 3)
+          .forEach((catalog: Record<string, unknown>) => {
+            allSuggestions.push({
+              id: catalog.id as string | number,
+              type: "offer-catalog",
+              name: (catalog.name as string) || "Unnamed Catalog",
+              description: (catalog.description as string) || undefined,
+              url: `/dashboard/offer-catalogs`,
+            });
           });
-        });
       }
 
       // Process product catalogs
@@ -486,10 +480,12 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         const catalogs = Array.isArray(productCatalogsRes.value.data)
           ? productCatalogsRes.value.data
           : [];
-        catalogs
+        (catalogs as unknown[] as Record<string, unknown>[])
           .filter((catalog: Record<string, unknown>) => {
-            const nameMatch = catalog.name?.toLowerCase().includes(queryLower);
-            const descMatch = catalog.description
+            const nameMatch = (catalog.name as string)
+              ?.toLowerCase()
+              .includes(queryLower);
+            const descMatch = (catalog.description as string)
               ?.toLowerCase()
               .includes(queryLower);
             return nameMatch || descMatch;
@@ -497,10 +493,10 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((catalog: Record<string, unknown>) => {
             allSuggestions.push({
-              id: catalog.id,
+              id: catalog.id as string | number,
               type: "product-catalog",
-              name: catalog.name || "Unnamed Catalog",
-              description: catalog.description || undefined,
+              name: (catalog.name as string) || "Unnamed Catalog",
+              description: (catalog.description as string) || undefined,
               url: `/dashboard/products/catalogs`,
             });
           });
@@ -515,10 +511,12 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         const catalogs = Array.isArray(segmentCatalogsRes.value.data)
           ? segmentCatalogsRes.value.data
           : [];
-        catalogs
+        (catalogs as unknown[] as Record<string, unknown>[])
           .filter((catalog: Record<string, unknown>) => {
-            const nameMatch = catalog.name?.toLowerCase().includes(queryLower);
-            const descMatch = catalog.description
+            const nameMatch = (catalog.name as string)
+              ?.toLowerCase()
+              .includes(queryLower);
+            const descMatch = (catalog.description as string)
               ?.toLowerCase()
               .includes(queryLower);
             return nameMatch || descMatch;
@@ -526,10 +524,10 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((catalog: Record<string, unknown>) => {
             allSuggestions.push({
-              id: catalog.id,
+              id: catalog.id as string | number,
               type: "segment-catalog",
-              name: catalog.name || "Unnamed Catalog",
-              description: catalog.description || undefined,
+              name: (catalog.name as string) || "Unnamed Catalog",
+              description: (catalog.description as string) || undefined,
               url: `/dashboard/segment-catalogs`,
             });
           });
@@ -544,10 +542,12 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         const catalogs = Array.isArray(campaignCatalogsRes.value.data)
           ? campaignCatalogsRes.value.data
           : [];
-        catalogs
+        (catalogs as unknown[] as Record<string, unknown>[])
           .filter((catalog: Record<string, unknown>) => {
-            const nameMatch = catalog.name?.toLowerCase().includes(queryLower);
-            const descMatch = catalog.description
+            const nameMatch = (catalog.name as string)
+              ?.toLowerCase()
+              .includes(queryLower);
+            const descMatch = (catalog.description as string)
               ?.toLowerCase()
               .includes(queryLower);
             return nameMatch || descMatch;
@@ -555,10 +555,10 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((catalog: Record<string, unknown>) => {
             allSuggestions.push({
-              id: catalog.id,
+              id: catalog.id as string | number,
               type: "campaign-catalog",
-              name: catalog.name || "Unnamed Catalog",
-              description: catalog.description || undefined,
+              name: (catalog.name as string) || "Unnamed Catalog",
+              description: (catalog.description as string) || undefined,
               url: `/dashboard/campaign-catalogs`,
             });
           });
@@ -573,15 +573,15 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
         const quicklists = Array.isArray(quicklistsRes.value.data)
           ? quicklistsRes.value.data
           : [];
-        quicklists
+        (quicklists as unknown[] as Record<string, unknown>[])
           .filter((quicklist: Record<string, unknown>) => {
-            const nameMatch = quicklist.name
+            const nameMatch = (quicklist.name as string)
               ?.toLowerCase()
               .includes(queryLower);
-            const descMatch = quicklist.description
+            const descMatch = (quicklist.description as string)
               ?.toLowerCase()
               .includes(queryLower);
-            const typeMatch = quicklist.upload_type
+            const typeMatch = (quicklist.upload_type as string)
               ?.toLowerCase()
               .includes(queryLower);
             return nameMatch || descMatch || typeMatch;
@@ -589,12 +589,14 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .slice(0, 3)
           .forEach((quicklist: Record<string, unknown>) => {
             allSuggestions.push({
-              id: quicklist.id,
+              id: quicklist.id as string | number,
               type: "quicklist",
-              name: quicklist.name || "Unnamed Quicklist",
+              name: (quicklist.name as string) || "Unnamed Quicklist",
               description:
-                quicklist.description || quicklist.upload_type || undefined,
-              url: `/dashboard/quicklists/${quicklist.id}`,
+                (quicklist.description as string) ||
+                (quicklist.upload_type as string) ||
+                undefined,
+              url: `/dashboard/manual-broadcast/${quicklist.id}`,
             });
           });
       }
