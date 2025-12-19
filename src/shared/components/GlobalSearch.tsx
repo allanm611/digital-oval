@@ -594,7 +594,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
               name: quicklist.name || "Unnamed Quicklist",
               description:
                 quicklist.description || quicklist.upload_type || undefined,
-              url: `/dashboard/quicklists/${quicklist.id}`,
+              url: `/dashboard/manual-broadcast/${quicklist.id}`,
             });
           });
       }

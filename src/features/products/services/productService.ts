@@ -232,7 +232,7 @@ class ProductService {
     skipCache?: boolean;
   }): Promise<PaginatedResponse<Product>> {
     const queryParams = new URLSearchParams();
-    queryParams.append("q", params.q);
+    queryParams.append("searchTerm", params.q);
     if (params.limit) queryParams.append("limit", params.limit.toString());
     if (params.offset) queryParams.append("offset", params.offset.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
