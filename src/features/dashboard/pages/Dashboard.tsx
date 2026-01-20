@@ -430,6 +430,12 @@ const SettingsPages = {
 
 // Server & Connection Pages - All routes preloaded for instant access
 const ServerPages = {
+  DataConnectorsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../data-connectors/pages/DataConnectors"
+      )
+  ),
   ServersPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../servers/pages/ServersPage")
   ),
@@ -881,6 +887,10 @@ export default function Dashboard() {
           <Route
             path="/connection-profiles/:id"
             element={<ServerPages.ConnectionProfileDetailsPage />}
+          />
+          <Route
+            path="/data-connectors"
+            element={<ServerPages.DataConnectorsPage />}
           />
           <Route path="/jobs" element={<JobPages.ScheduledJobsPage />} />
           <Route

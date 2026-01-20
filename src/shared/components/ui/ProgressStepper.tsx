@@ -71,19 +71,18 @@ export default function ProgressStepper({
         />
 
         {/* Progress line for completed steps */}
-        {/* The line should reach from the center of the first circle to the center of the current step's circle */}
+        {/* The line goes from edge of first circle to edge of current step's circle */}
         {currentStep > 1 && (
           <div
             className="absolute top-4 h-0.5 transition-all duration-500"
             style={{
-              left: "0",
-              // Calculate width to reach the center of the current step's circle
-              // When on the last step, the line should reach 100% (the right edge where the last circle center is)
-              // For intermediate steps, calculate proportionally
-              width:
+              // Start after first circle
+              left: "calc(5% + 20px)",
+              // End before current step's circle
+              right:
                 currentStep === steps.length
-                  ? "100%"
-                  : `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
+                  ? "calc(5% + 20px)"
+                  : `calc(${(1 - (currentStep - 1) / (steps.length - 1)) * 100}% + 20px)`,
               backgroundColor: primaryColor,
               zIndex: zIndex.base + 2,
             }}
@@ -91,7 +90,7 @@ export default function ProgressStepper({
         )}
 
         {/* Cover divs to hide line at edges */}
-        {/* Hide right cover when on last step to allow line to reach the circle */}
+        {/* Hide left cover to prevent line extending past first step */}
         <div
           className="absolute top-4 left-0 h-0.5 bg-white"
           style={{
@@ -99,6 +98,7 @@ export default function ProgressStepper({
             zIndex: zIndex.base + 20,
           }}
         />
+        {/* Hide right cover when on last step, show otherwise to prevent line extending past current step */}
         {currentStep < steps.length && (
           <div
             className="absolute top-4 right-0 h-0.5 bg-white"

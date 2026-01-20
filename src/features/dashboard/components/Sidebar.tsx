@@ -37,6 +37,7 @@ import {
   Link2,
   PlayCircle,
   GitBranch,
+  Plug,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -434,6 +435,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             name: "Connection Profiles",
             href: "/dashboard/connection-profiles",
             icon: Database,
+            type: "single",
+            entity: "servers",
+          },
+          {
+            name: "Data Connectors",
+            href: "/dashboard/data-connectors",
+            icon: Plug,
             type: "single",
             entity: "servers",
           },
