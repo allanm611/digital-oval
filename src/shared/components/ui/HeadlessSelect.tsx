@@ -115,7 +115,7 @@ export default function HeadlessSelect({
       {isOpen &&
         createPortal(
           <div
-            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-60 overflow-auto`}
+            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-60 overflow-auto pointer-events-auto`}
             style={{
               position: "fixed",
               top: `${dropdownPosition.top}px`,
@@ -123,7 +123,6 @@ export default function HeadlessSelect({
               width: `${dropdownPosition.width}px`,
               zIndex: effectiveZIndex,
             }}
-            onClick={() => setIsOpen(false)}
           >
             {searchable && (
               <div
@@ -180,7 +179,7 @@ export default function HeadlessSelect({
 
       {isOpen && (
         <div
-          className="fixed inset-0"
+          className="fixed inset-0 pointer-events-none"
           onClick={() => setIsOpen(false)}
           style={{ zIndex: zIndexTokens.popover - 1 }}
         />
