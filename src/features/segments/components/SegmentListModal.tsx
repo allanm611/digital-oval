@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, FileText, AlertCircle } from "lucide-react";
-import { button as buttonTokens, color , tw} from "../../../shared/utils/utils";
+import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export type SegmentListFormValues = {
@@ -111,7 +111,7 @@ export default function SegmentListModal({
 
   const handleInputChange = (
     field: keyof SegmentListFormValues,
-    value: string
+    value: string,
   ) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
@@ -259,7 +259,9 @@ export default function SegmentListModal({
         }
       }}
     >
-      <div className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}>
+      <div
+        className={`w-full max-w-2xl ${tw.rounded} bg-white shadow-2xl max-h-[90vh] flex flex-col overflow-hidden`}
+      >
         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
           <div>
             <p className="text-xs uppercase tracking-wide text-gray-400">
@@ -323,7 +325,7 @@ export default function SegmentListModal({
                 onChange={(value) =>
                   handleInputChange(
                     "list_type",
-                    value as SegmentListFormValues["list_type"]
+                    value as SegmentListFormValues["list_type"],
                   )
                 }
                 placeholder="Select list type..."
@@ -496,9 +498,13 @@ export default function SegmentListModal({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}>
+                  <div
+                    className={`${tw.rounded} border border-gray-200 bg-white p-4 flex items-center justify-between`}
+                  >
                     <div className="flex items-center space-x-3">
-                      <div className={`${tw.rounded} bg-[var(--primary-color,#5EC6B1)]/10 p-2`}>
+                      <div
+                        className={`${tw.rounded} bg-[var(--primary-color,#5EC6B1)]/10 p-2`}
+                      >
                         <FileText className="h-6 w-6 text-[var(--primary-color,#5EC6B1)]" />
                       </div>
                       <div className="flex-1">
@@ -510,8 +516,8 @@ export default function SegmentListModal({
                             {uploadedFile
                               ? `${(uploadedFile.size / 1024).toFixed(1)} KB`
                               : form.file_size
-                              ? `${(form.file_size / 1024).toFixed(1)} KB`
-                              : null}
+                                ? `${(form.file_size / 1024).toFixed(1)} KB`
+                                : null}
                           </p>
                           {form.file_text &&
                             (() => {
@@ -587,7 +593,9 @@ export default function SegmentListModal({
                           <label className="text-sm font-medium text-black mb-2 block">
                             File Preview
                           </label>
-                          <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
+                          <div
+                            className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}
+                          >
                             <table className="w-full">
                               <thead
                                 style={{
@@ -690,7 +698,8 @@ export default function SegmentListModal({
                   padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
                 }}
               >
-                {submitLabel || (isCreateMode ? "Create List" : "Save Changes")}
+                {submitLabel ||
+                  (isCreateMode ? "Create quick list" : "Save Changes")}
               </button>
             </div>
           </div>

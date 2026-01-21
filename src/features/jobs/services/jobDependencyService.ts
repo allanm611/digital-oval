@@ -28,7 +28,7 @@ const BASE_URL = buildApiUrl("/job-dependencies");
 class JobDependencyService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
@@ -63,7 +63,7 @@ class JobDependencyService {
   }
 
   private buildQueryString(
-    params?: Record<string, string | number | boolean | undefined | null>
+    params?: Record<string, string | number | boolean | undefined | null>,
   ): string {
     if (!params) return "";
 
@@ -92,7 +92,7 @@ class JobDependencyService {
             hasMore: boolean;
           };
           source?: string;
-        }
+        },
   ): JobDependencyListResponse {
     if (Array.isArray(response)) {
       return {
@@ -115,7 +115,7 @@ class JobDependencyService {
   // GET Endpoints
 
   async listJobDependencies(
-    params: JobDependencyListParams = {}
+    params: JobDependencyListParams = {},
   ): Promise<JobDependencyListResponse> {
     const safeLimit = Math.min(Math.max(params.limit ?? 50, 1), 100);
     const query = this.buildQueryString({
@@ -144,7 +144,7 @@ class JobDependencyService {
   }
 
   async searchJobDependencies(
-    params: JobDependencySearchParams = {}
+    params: JobDependencySearchParams = {},
   ): Promise<JobDependencySearchResponse> {
     const safeLimit = Math.min(Math.max(params.limit ?? 50, 1), 100);
     const queryParams: Record<string, string | number | boolean> = {
@@ -174,7 +174,7 @@ class JobDependencyService {
 
     const query = this.buildQueryString(queryParams);
     const response = await this.request<JobDependencySearchResponse>(
-      `/search${query}`
+      `/search${query}`,
     );
 
     if (Array.isArray(response)) {
@@ -195,7 +195,7 @@ class JobDependencyService {
 
   async getJobDependencyById(
     id: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<JobDependency> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -213,7 +213,7 @@ class JobDependencyService {
     jobId: number,
     params: Omit<JobDependencyListParams, "activeOnly"> & {
       activeOnly?: boolean;
-    } = {}
+    } = {},
   ): Promise<JobDependencyListResponse> {
     const safeLimit = Math.min(Math.max(params.limit ?? 50, 1), 100);
     const query = this.buildQueryString({
@@ -243,7 +243,7 @@ class JobDependencyService {
 
   async getJobsDependingOn(
     dependsOnJobId: number,
-    params: JobDependencyListParams = {}
+    params: JobDependencyListParams = {},
   ): Promise<JobDependencyListResponse> {
     const safeLimit = Math.min(Math.max(params.limit ?? 50, 1), 100);
     const query = this.buildQueryString({
@@ -274,7 +274,7 @@ class JobDependencyService {
   async getSpecificDependency(
     jobId: number,
     dependsOnJobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<JobDependency> {
     const query = this.buildQueryString({
       job_id: jobId,
@@ -294,7 +294,7 @@ class JobDependencyService {
 
   async getBlockingDependencies(
     jobId: number,
-    params: Omit<JobDependencyListParams, "activeOnly"> = {}
+    params: Omit<JobDependencyListParams, "activeOnly"> = {},
   ): Promise<JobDependencyListResponse> {
     const safeLimit = Math.min(Math.max(params.limit ?? 50, 1), 100);
     const query = this.buildQueryString({
@@ -323,7 +323,7 @@ class JobDependencyService {
 
   async getDependencyChain(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<DependencyChainResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependencyChainResponse>(`/chain/${jobId}${query}`);
@@ -331,17 +331,17 @@ class JobDependencyService {
 
   async getCriticalPath(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<CriticalPathResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CriticalPathResponse>(
-      `/critical-path/${jobId}${query}`
+      `/critical-path/${jobId}${query}`,
     );
   }
 
   async getImmediateDependencies(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<JobDependencyListResponse> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -364,7 +364,7 @@ class JobDependencyService {
 
   async getAllDependents(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<DependentsResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependentsResponse>(`/dependents/${jobId}${query}`);
@@ -372,34 +372,34 @@ class JobDependencyService {
 
   async checkDependenciesSatisfied(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<DependencySatisfiedResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependencySatisfiedResponse>(
-      `/satisfied/${jobId}${query}`
+      `/satisfied/${jobId}${query}`,
     );
   }
 
   async getUnsatisfiedDependencies(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<UnsatisfiedDependenciesResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<UnsatisfiedDependenciesResponse>(
-      `/unsatisfied/${jobId}${query}`
+      `/unsatisfied/${jobId}${query}`,
     );
   }
 
   async getDependencyStatus(
     jobId: number,
-    skipCache = false
+    skipCache = false,
   ): Promise<DependencyStatusResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependencyStatusResponse>(`/status/${jobId}${query}`);
   }
 
   async getDependencyGraph(
-    skipCache = false
+    skipCache = false,
   ): Promise<DependencyGraphResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependencyGraphResponse>(`/graph${query}`);
@@ -412,7 +412,7 @@ class JobDependencyService {
 
   async getMostDependedOnJobs(
     limit = 10,
-    skipCache = false
+    skipCache = false,
   ): Promise<MostDependedResponse> {
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const query = this.buildQueryString({ limit: safeLimit, skipCache });
@@ -420,7 +420,7 @@ class JobDependencyService {
   }
 
   async getComplexDependencies(
-    skipCache = false
+    skipCache = false,
   ): Promise<JobDependencyListResponse> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -442,7 +442,7 @@ class JobDependencyService {
   }
 
   async getDependencyStatistics(
-    skipCache = false
+    skipCache = false,
   ): Promise<DependencyStatisticsResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<DependencyStatisticsResponse>(`/statistics${query}`);
@@ -451,7 +451,7 @@ class JobDependencyService {
   // POST Endpoints
 
   async createJobDependency(
-    payload: CreateJobDependencyPayload
+    payload: CreateJobDependencyPayload,
   ): Promise<JobDependency> {
     console.log("🔵 CREATE JOB DEPENDENCY - Request Details:");
     console.log("==========================================");
@@ -466,13 +466,14 @@ class JobDependencyService {
     console.log("depends_on_job_id:", payload.depends_on_job_id);
     console.log("==========================================");
 
-    // Some backend implementations expect fields like `created_by` or `user_id`.
-    // Add these aliases to the outgoing body to increase compatibility.
+    // Backend only accepts these fields, not created_by
     const body = {
       ...payload,
-      created_by: payload.userId ?? null,
       user_id: payload.userId ?? null,
     };
+
+    // Remove userId from body as it's now mapped to user_id
+    delete (body as any).userId;
 
     return this.request<JobDependency>("", {
       method: "POST",
@@ -484,7 +485,7 @@ class JobDependencyService {
   }
 
   async batchActivateDependencies(
-    payload: BatchActivatePayload
+    payload: BatchActivatePayload,
   ): Promise<BatchOperationResponse> {
     return this.request<BatchOperationResponse>("/batch/activate", {
       method: "POST",
@@ -496,7 +497,7 @@ class JobDependencyService {
   }
 
   async batchDeactivateDependencies(
-    payload: BatchDeactivatePayload
+    payload: BatchDeactivatePayload,
   ): Promise<BatchOperationResponse> {
     return this.request<BatchOperationResponse>("/batch/deactivate", {
       method: "POST",
@@ -511,7 +512,7 @@ class JobDependencyService {
 
   async updateJobDependency(
     id: number,
-    payload: UpdateJobDependencyPayload
+    payload: UpdateJobDependencyPayload,
   ): Promise<JobDependency> {
     // Include aliases for `updated_by` and `user_id` so backend accepting
     // different field names still receives the user information.

@@ -277,7 +277,7 @@ const SegmentPages = {
   SegmentListPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../segments/pages/SegmentListPage"
+        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListPage"
       ),
   ),
   SegmentTypesPage: lazy(
@@ -546,6 +546,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../quicklists/pages/QuickListsPage"
       ),
   ),
+  QuickListPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListPage"
+      ),
+  ),
   QuickListDetailsPage: lazy(
     () =>
       import(
@@ -790,6 +796,10 @@ export default function Dashboard() {
           <Route
             path="/manual-communications"
             element={<OtherPages.ManualBroadcastListsPage />}
+          />
+          <Route
+            path="/quick-lists"
+            element={<OtherPages.QuickListPage />}
           />
           {/* <Route path="/quicklists" element={<OtherPages.QuickListsPage />} /> */}
           <Route

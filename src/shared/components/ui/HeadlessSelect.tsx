@@ -179,9 +179,9 @@ export default function HeadlessSelect({
 
       {isOpen && (
         <div
-          className="fixed inset-0 pointer-events-none"
+          className="fixed inset-0"
           onClick={() => setIsOpen(false)}
-          style={{ zIndex: zIndexTokens.popover - 1 }}
+          style={{ zIndex: effectiveZIndex - 1 }}
         />
       )}
     </div>

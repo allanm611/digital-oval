@@ -69,6 +69,7 @@ export default function SubscriptionIdSelector({
         placeholder={t.manualBroadcast.subscriptionIdPlaceholder || "Select Subscription ID column..."}
         disabled={disabled || fileColumns.length === 0}
         error={error}
+        zIndex={10100}
       />
 
       {/* Error message display */}

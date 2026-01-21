@@ -31,7 +31,7 @@ export default function CreateOfferModalWrapper({
         bottom: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: zIndexTokens.overlay,
+        zIndex: 99998,
       }}
     >
       {/* Backdrop */}
@@ -43,7 +43,7 @@ export default function CreateOfferModalWrapper({
       {/* Modal Container */}
       <div
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden`}
-        style={{ zIndex: zIndexTokens.modal }}
+        style={{ zIndex: 99999 }}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">

@@ -22,6 +22,7 @@ import type { TemplateVariable, AudienceInputMethod } from "../types";
 export interface ManualBroadcastData {
   // Step 1: Audience
   audienceFile?: File;
+  audienceFileText?: string; // Raw file content
   audienceName?: string;
   audienceDescription?: string;
   uploadType?: string;
@@ -30,6 +31,8 @@ export interface ManualBroadcastData {
   // New fields for enhanced audience selection
   subscriptionIdColumn?: string; // Selected column containing Subscription IDs
   fileColumns?: string[]; // Columns extracted from uploaded file
+  fileDelimiter?: string; // Delimiter used in file (comma, semicolon, tab, pipe)
+  fileHeaders?: string; // CSV headers line
   inputMethod?: AudienceInputMethod; // "file" or "manual" input method
 
   // Step 2: Communication
@@ -121,27 +124,43 @@ export default function CreateManualBroadcastPage() {
 
   const handleSubmit = async () => {
     try {
-      // First create the QuickList from the stored audience data
-      const quicklistResponse = await quicklistService.createQuickList({
-        file: broadcastData.audienceFile!,
-        upload_type: broadcastData.uploadType!,
-        name: broadcastData.audienceName!,
-        description: null,
-        created_by: null,
-      });
+      let quicklistId: number;
 
-      if (!quicklistResponse.success) {
-        throw new Error(
-          "error" in quicklistResponse
-            ? quicklistResponse.error
-            : "Failed to create audience QuickList",
-        );
+      // If quicklistId is already set (from step 1 selection), use it directly
+      // Otherwise, create a new quicklist from the uploaded file
+      if (broadcastData.quicklistId) {
+        quicklistId = broadcastData.quicklistId;
+        showToast("Using selected QuickList");
+      } else if (broadcastData.audienceFileText) {
+        // Create the QuickList from the stored audience data
+        const quicklistResponse = await quicklistService.createQuickList({
+          file_text: broadcastData.audienceFileText!,
+          file_name: broadcastData.audienceName!,
+          name: broadcastData.audienceName!,
+          description: null,
+          created_by: null,
+          file_delimiter: broadcastData.fileDelimiter || ",",
+          subscriber_id_col_name: broadcastData.subscriptionIdColumn || "",
+          list_headers: broadcastData.fileHeaders || "",
+        });
+
+        if (!quicklistResponse.success) {
+          throw new Error(
+            "error" in quicklistResponse
+              ? quicklistResponse.error
+              : "Failed to create audience QuickList",
+          );
+        }
+
+        quicklistId = quicklistResponse.data.quicklist_id;
+        showToast("QuickList uploaded successfully");
+      } else {
+        throw new Error("No quicklist selected or file provided");
       }
 
-      // Now send the communication using the newly created QuickList
       const response = await communicationService.sendCommunication({
         source_type: "quicklist",
-        source_id: quicklistResponse.data.quicklist_id,
+        source_id: quicklistId,
         channels: broadcastData.channel ? [broadcastData.channel] : [],
         message_template: {
           ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
@@ -149,7 +168,6 @@ export default function CreateManualBroadcastPage() {
             : {}),
           body: broadcastData.messageBody || "",
         },
-        upload_type: broadcastData.uploadType,
         filters: {
           column_conditions: [],
           limit: 1000,
@@ -160,14 +178,15 @@ export default function CreateManualBroadcastPage() {
 
       if (response.success) {
         showToast(t.manualBroadcast.createdSuccess);
-
-        // Clear localStorage form data after successful creation
-        clearPersistedFormData("broadcast_form_data");
-
-        navigate("/dashboard/manual-communications");
       } else {
         throw new Error("Communication sending failed");
       }
+
+      // Clear localStorage form data after successful creation
+      clearPersistedFormData("broadcast_form_data");
+
+      // Navigate to manual communications page
+      navigate("/dashboard/manual-communications");
     } catch (err) {
       console.error("Failed to create manual broadcast:", err);
       showError(t.manualBroadcast.createFailed);

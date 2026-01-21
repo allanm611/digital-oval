@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -56,12 +56,6 @@ export default function ConnectionProfileFormPage({
     valid_from: new Date().toISOString().split("T")[0],
   });
 
-  useEffect(() => {
-    if (mode === "edit" && id) {
-      loadProfile();
-    }
-  }, [mode, id, loadProfile]);
-
   const ensureUniqueIdentifiers = async () => {
     // Note: Backend doesn't have /name/{name} or /code/{code} endpoints
     // Validation will be handled by backend on create/update
@@ -109,12 +103,18 @@ export default function ConnectionProfileFormPage({
       console.error("Failed to load connection profile:", err);
       showError(
         "Failed to load connection profile",
-        err instanceof Error ? err.message : "Please try again later."
+        err instanceof Error ? err.message : "Please try again later.",
       );
     } finally {
       setLoading(false);
     }
   }, [id, showError]);
+
+  useEffect(() => {
+    if (mode === "edit" && id) {
+      loadProfile();
+    }
+  }, [mode, id, loadProfile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +145,8 @@ export default function ConnectionProfileFormPage({
           }
         });
 
-        const payload = cleanedPayload as CreateConnectionProfilePayload;
+        const payload =
+          cleanedPayload as unknown as CreateConnectionProfilePayload;
         await connectionProfileService.createProfile(payload);
         success("Connection profile created successfully");
       } else if (id) {
@@ -166,14 +167,14 @@ export default function ConnectionProfileFormPage({
         err instanceof Error
           ? err.message
           : typeof err === "object" && err !== null && "message" in err
-          ? String(err.message)
-          : "Please try again later.";
+            ? String(err.message)
+            : "Please try again later.";
       console.error("Connection profile error:", err);
       showError(
         `Failed to ${
           mode === "create" ? "create" : "update"
         } connection profile`,
-        errorMessage
+        errorMessage,
       );
     } finally {
       setSaving(false);

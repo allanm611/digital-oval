@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../utils/utils";
-import { UploadType } from "../../features/quicklists/types/quicklist";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../features/manual-broadcast/components/SubscriptionIdSelector";
 
@@ -29,7 +28,7 @@ interface AudienceCreatorProps {
   mode: "quicklist" | "broadcast"; // Different UX contexts
   data: Partial<AudienceCreatorData>;
   onUpdate: (data: Partial<AudienceCreatorData>) => void;
-  uploadTypes: UploadType[];
+  uploadTypes?: any[]; // Legacy prop - no longer used
   disabled?: boolean;
   showSubscriptionIdSelector?: boolean; // Only for broadcasts
   onValidationChange?: (isValid: boolean) => void;
@@ -39,13 +38,13 @@ export default function AudienceCreator({
   mode,
   data,
   onUpdate,
-  uploadTypes,
+  uploadTypes = [],
   disabled = false,
   showSubscriptionIdSelector = false,
   onValidationChange,
 }: AudienceCreatorProps) {
   const [inputMode, setInputMode] = useState<InputMode>(
-    data.inputMethod || "file"
+    data.inputMethod || "file",
   );
   const [file, setFile] = useState<File | null>(data.file || null);
   const [uploadType, setUploadType] = useState<string>(data.uploadType || "");
@@ -54,7 +53,7 @@ export default function AudienceCreator({
   const [description, setDescription] = useState(data.description || "");
   const [manualInput, setManualInput] = useState(data.manualInput || "");
   const [fileColumns, setFileColumns] = useState<string[]>(
-    data.fileColumns || []
+    data.fileColumns || [],
   );
   const [subscriptionIdColumn, setSubscriptionIdColumn] = useState<
     string | null
@@ -93,8 +92,8 @@ export default function AudienceCreator({
         mode === "quicklist"
           ? uploadType
           : uploadTypes.length > 0
-          ? uploadTypes[0].upload_type
-          : "",
+            ? uploadTypes[0].upload_type
+            : "",
       listType: mode === "broadcast" ? listType : undefined,
       name,
       description,
@@ -142,6 +141,26 @@ export default function AudienceCreator({
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const downloadSampleFile = () => {
+    // Create a sample file with realistic data in Excel format
+    const columns = ["MSISDN", "Customer ID", "Full Name", "Age", "City"];
+
+    const sampleData = [
+      ["254712345678", "CUST001", "John Mwangi", "28", "Nairobi"],
+      ["254723456789", "CUST002", "Jane Kariuki", "35", "Mombasa"],
+    ];
+
+    // Create worksheet data with header and sample rows
+    const worksheetData: (string | number)[][] = [columns, ...sampleData];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Recipients");
+
+    // Download the file
+    XLSX.writeFile(workbook, "sample_broadcast_recipients.xlsx");
   };
 
   const manualInputValidation = useMemo(() => {
@@ -226,7 +245,7 @@ export default function AudienceCreator({
       let maxSizeMB = 10; // Default
       if (mode === "quicklist") {
         const selectedUploadType = uploadTypes.find(
-          (t) => t.upload_type === uploadType
+          (t) => t.upload_type === uploadType,
         );
         maxSizeMB = selectedUploadType?.max_file_size_mb || 10;
       }
@@ -262,7 +281,7 @@ export default function AudienceCreator({
         setSubscriptionIdColumn(null);
         setFilePreview(null);
         setFileError(
-          "Failed to read file. Please ensure the file is a valid Excel document."
+          "Failed to read file. Please ensure the file is a valid Excel document.",
         );
       }
     }
@@ -457,18 +476,17 @@ export default function AudienceCreator({
             <label className={`block text-sm font-medium ${tw.textPrimary}`}>
               Upload File
             </label>
-            {/* Commented out download template functionality
-            {((mode === "quicklist" && uploadType) || mode === "broadcast") && (
+            {mode === "broadcast" && (
               <button
                 type="button"
-                onClick={downloadTemplate}
+                onClick={downloadSampleFile}
                 className="text-xs font-medium hover:underline"
                 style={{ color: color.primary.accent }}
                 disabled={disabled}
               >
-                Download Template
+                Download Sample
               </button>
-            )} */}
+            )}
           </div>
           <p className={`text-xs mb-3`} style={{ color: color.text.secondary }}>
             {mode === "quicklist"

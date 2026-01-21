@@ -160,13 +160,13 @@ export default function QuickListPickerModal({
   const getUploadTypeBadgeColor = (uploadType: string) => {
     switch (uploadType) {
       case "email":
-        return { bg: "#3B82F620", text: "#3B82F6" };
+        return { bg: "#F3F4F620", text: color.text.primary };
       case "phone":
-        return { bg: "#10B98120", text: "#10B981" };
+        return { bg: "#F3F4F620", text: color.text.primary };
       case "multi":
-        return { bg: "#8B5CF620", text: "#8B5CF6" };
+        return { bg: "#F3F4F620", text: color.text.primary };
       default:
-        return { bg: `${color.primary.accent}20`, text: color.primary.accent };
+        return { bg: "#F3F4F620", text: color.text.primary };
     }
   };
 
@@ -265,7 +265,8 @@ export default function QuickListPickerModal({
               <div className="text-center py-12">
                 <Loader2
                   className="w-12 h-12 mx-auto mb-4 animate-spin"
-                  style={{ color: color.primary.accent }}
+                  strokeWidth={1.5}
+                  style={{ color: color.text.primary }}
                 />
                 <p className={tw.textSecondary}>Loading quicklists...</p>
               </div>
@@ -393,7 +394,7 @@ export default function QuickListPickerModal({
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium capitalize"
                               style={{
                                 backgroundColor: badgeColor.bg,
                                 color: badgeColor.text,

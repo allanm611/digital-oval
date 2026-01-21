@@ -10,6 +10,7 @@ import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
 import { color, tw } from "../../../shared/utils/utils";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+import CreateProductModalWrapper from "./CreateProductModalWrapper";
 
 interface ProductSelectorProps {
   selectedProducts: Product[];
@@ -35,17 +36,12 @@ export default function ProductSelector({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(autoOpenModal); // Auto-open if prop is true
+  const [createProductModalOpen, setCreateProductModalOpen] = useState(false);
 
-  // Handle Create Product button - navigate to product creation with returnUrl
+  // Handle Create Product button - open modal instead of navigating
   const handleCreateProduct = useCallback(() => {
-    const currentUrl = window.location.href;
-    const url = new URL(currentUrl);
-    url.searchParams.set("step", "2");
-    url.searchParams.set("returnFromProductCreate", "true");
-    navigate(
-      `/dashboard/products/create?returnToOfferFlow=true&returnUrl=${encodeURIComponent(url.toString())}`,
-    );
-  }, [navigate]);
+    setCreateProductModalOpen(true);
+  }, []);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -108,6 +104,16 @@ export default function ProductSelector({
     }
   }, [selectedCategory, searchTerm]);
 
+  const handleProductCreated = useCallback(
+    (_productId: number) => {
+      // Refresh product list to show newly created product
+      loadProducts();
+      // Close modal
+      setCreateProductModalOpen(false);
+    },
+    [loadProducts],
+  );
+
   useEffect(() => {
     loadCategories();
   }, [loadCategories]);
@@ -115,22 +121,6 @@ export default function ProductSelector({
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
-
-  // Detect return from product creation and auto-open modal
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const returnFromProductCreate = searchParams.get("returnFromProductCreate");
-
-    if (returnFromProductCreate === "true") {
-      // Auto-open the modal to show newly created products
-      setIsModalOpen(true);
-
-      // Clean up the flag from URL
-      const url = new URL(window.location);
-      url.searchParams.delete("returnFromProductCreate");
-      window.history.replaceState({}, "", url.toString());
-    }
-  }, []);
 
   const handleProductToggle = (product: Product) => {
     if (multiSelect) {
@@ -553,6 +543,13 @@ export default function ProductSelector({
           </div>,
           document.body,
         )}
+
+      {/* Create Product Modal */}
+      <CreateProductModalWrapper
+        isOpen={createProductModalOpen}
+        onClose={() => setCreateProductModalOpen(false)}
+        onProductCreated={handleProductCreated}
+      />
     </div>
   );
 }

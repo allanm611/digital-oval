@@ -4,13 +4,10 @@ import {
   SingleQuickListResponse,
   QuickListDataResponseUnion,
   ImportLogsResponse,
-  UploadTypesResponseUnion,
   CreateQuickListRequest,
   UpdateQuickListRequest,
   QuickListStatsResponseUnion,
-  UploadTypeSchemaResponseUnion,
   TableMappingsResponseUnion,
-  SingleTableMappingResponse,
   CreateQuickListResponseUnion,
   UpdateQuickListResponseUnion,
   DeleteQuickListResponseUnion,
@@ -68,7 +65,6 @@ class QuickListService {
 
   // QuickList Management
   async getAllQuickLists(params?: {
-    upload_type?: string;
     limit?: number;
     offset?: number;
     skipCache?: boolean;
@@ -77,8 +73,6 @@ class QuickListService {
     // Always skip cache by default
     queryParams.append("skipCache", "true");
     if (params) {
-      if (params.upload_type)
-        queryParams.append("upload_type", params.upload_type);
       if (params.limit) queryParams.append("limit", String(params.limit));
       if (params.offset) queryParams.append("offset", String(params.offset));
     }
@@ -138,20 +132,33 @@ class QuickListService {
     request: CreateQuickListRequest,
   ): Promise<CreateQuickListResponseUnion> {
     const formData = new FormData();
-    formData.append("file", request.file);
     formData.append("name", request.name);
-    if (request.description !== undefined) {
-      formData.append("description", request.description || "");
+    if (request.description) {
+      formData.append("description", request.description);
     }
     if (request.created_by) {
-      formData.append("created_by", request.created_by);
+      formData.append("created_by", String(request.created_by));
+    }
+    if (request.file_text) {
+      formData.append("file", new Blob([request.file_text], { type: "text/plain" }), request.file_name || "file.txt");
+    }
+    if (request.file_delimiter) {
+      formData.append("file_delimiter", request.file_delimiter);
+    }
+    if (request.subscriber_id_col_name) {
+      formData.append("subscriber_id_col_name", request.subscriber_id_col_name);
+    }
+    if (request.list_headers) {
+      formData.append("list_headers", request.list_headers);
     }
 
-    const url = `${BASE_URL}`;
+    const url = `${BASE_URL}/upload`;
     const response = await fetch(url, {
       method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+      },
       body: formData,
-      headers: getAuthHeaders(false), // Don't include Content-Type for multipart/form-data
     });
 
     const text = await response.text();
@@ -209,7 +216,6 @@ class QuickListService {
   // Search
   async searchQuickLists(params: {
     q: string;
-    upload_type?: string;
     created_by?: string;
     limit?: number;
     offset?: number;
@@ -219,8 +225,6 @@ class QuickListService {
     // Always skip cache by default
     queryParams.append("skipCache", "true");
     queryParams.append("q", params.q);
-    if (params.upload_type)
-      queryParams.append("upload_type", params.upload_type);
     if (params.created_by) queryParams.append("created_by", params.created_by);
     if (params.limit) queryParams.append("limit", String(params.limit));
     if (params.offset) queryParams.append("offset", String(params.offset));
@@ -258,35 +262,8 @@ class QuickListService {
     return response.blob();
   }
 
-  // Upload Types
-  async getUploadTypes(params?: {
-    activeOnly?: boolean;
-    skipCache?: boolean;
-  }): Promise<UploadTypesResponseUnion> {
-    const queryParams = new URLSearchParams();
-    // Always skip cache by default
-    queryParams.append("skipCache", "true");
-    if (params) {
-      if (params.activeOnly !== undefined)
-        queryParams.append("activeOnly", String(params.activeOnly));
-    }
-    const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    return this.request<UploadTypesResponseUnion>(`/upload-types${query}`);
-  }
-
-  async getUploadTypeSchema(
-    uploadType: string,
-    skipCache: boolean = true,
-  ): Promise<UploadTypeSchemaResponseUnion> {
-    const query = skipCache ? "?skipCache=true" : "";
-    return this.request<UploadTypeSchemaResponseUnion>(
-      `/upload-types/${encodeURIComponent(uploadType)}/schema${query}`,
-    );
-  }
-
   // Statistics
   async getStats(params?: {
-    upload_type?: string;
     created_by?: string;
     start_date?: string;
     end_date?: string;
@@ -296,8 +273,6 @@ class QuickListService {
     // Always skip cache by default
     queryParams.append("skipCache", "true");
     if (params) {
-      if (params.upload_type)
-        queryParams.append("upload_type", params.upload_type);
       if (params.created_by)
         queryParams.append("created_by", params.created_by);
       if (params.start_date)
@@ -321,16 +296,6 @@ class QuickListService {
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request<TableMappingsResponseUnion>(`/mappings${query}`);
-  }
-
-  async getTableMappingByUploadType(
-    uploadType: string,
-    skipCache: boolean = true,
-  ): Promise<SingleTableMappingResponse> {
-    const query = skipCache ? "?skipCache=true" : "";
-    return this.request<SingleTableMappingResponse>(
-      `/mappings/${encodeURIComponent(uploadType)}${query}`,
-    );
   }
 }
 

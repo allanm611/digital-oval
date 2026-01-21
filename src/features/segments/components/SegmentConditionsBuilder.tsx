@@ -23,7 +23,6 @@ import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
-import { UploadType } from "../../quicklists/types/quicklist";
 import { SYSTEM_EVENTS, type SystemEvent } from "../types/systemEvent";
 
 interface SegmentConditionsBuilderProps {
@@ -41,7 +40,6 @@ export default function SegmentConditionsBuilder({
   const [isSystemEventModalOpen, setIsSystemEventModalOpen] = useState(false);
   const [isCreateQuickListModalOpen, setIsCreateQuickListModalOpen] =
     useState(false);
-  const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
   const [currentEditingCondition, setCurrentEditingCondition] = useState<{
     groupId: string;
     conditionId: string;
@@ -71,24 +69,6 @@ export default function SegmentConditionsBuilder({
     error: fieldsError,
     getFieldByValue,
   } = useSegmentationFields();
-
-  // Load upload types for CreateQuickListModal
-  useEffect(() => {
-    const loadUploadTypes = async () => {
-      try {
-        const response = await quicklistService.getUploadTypes({
-          activeOnly: true,
-          skipCache: true,
-        });
-        if (response.data && Array.isArray(response.data)) {
-          setUploadTypes(response.data);
-        }
-      } catch (err) {
-        console.error("Failed to load upload types:", err);
-      }
-    };
-    loadUploadTypes();
-  }, []);
 
   const addConditionGroup = () => {
     const firstField = allFields.length > 0 ? allFields[0] : null;
@@ -550,7 +530,7 @@ export default function SegmentConditionsBuilder({
             className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white whitespace-nowrap`}
             style={{ backgroundColor: color.primary.action }}
           >
-            Create List
+            Create quick list
           </button>
         </div>
 
@@ -1007,7 +987,6 @@ export default function SegmentConditionsBuilder({
           setCurrentEditingCondition(null);
           // Optionally refresh the quicklist picker or show success message
         }}
-        uploadTypes={uploadTypes}
       />
 
       {/* System Event Picker Modal */}

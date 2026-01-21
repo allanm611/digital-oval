@@ -1,20 +1,26 @@
-import { useState, useMemo, useEffect } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
-import * as XLSX from "xlsx";
-import { color, tw } from "../../../shared/utils/utils";
-import { useToast } from "../../../contexts/ToastContext";
-import { quicklistService } from "../../quicklists/services/quicklistService";
-import { UploadType } from "../../quicklists/types/quicklist";
+import { useState, useMemo } from "react";
+import { AlertCircle, Loader2, Plus, List } from "lucide-react";
+import { color, tw, button as buttonTokens } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import AudienceCreator, {
-  AudienceCreatorData,
-} from "../../../shared/components/AudienceCreator";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
+import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 
 interface TargetAudienceStepProps {
   data: ManualBroadcastData;
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
   onNext: () => void;
+}
+
+interface QuickListItem {
+  id: number;
+  name: string;
+  description?: string;
+  upload_type: string;
+  row_count: number;
+  created_at: string;
 }
 
 export default function TargetAudienceStep({
@@ -23,287 +29,132 @@ export default function TargetAudienceStep({
   onNext,
 }: TargetAudienceStepProps) {
   const { t } = useLanguage();
-  const { error: showError } = useToast();
-  const [audienceData, setAudienceData] = useState<
-    Partial<AudienceCreatorData>
-  >({
-    inputMethod: data.inputMethod || "file",
-    file: data.audienceFile || undefined,
-    uploadType: data.uploadType || "",
-    listType: "Standard", // Default for broadcasts
-    name: data.audienceName || "",
-    fileColumns: data.fileColumns || [],
-    subscriptionIdColumn: data.subscriptionIdColumn || null,
-    manualInput: data.manualInput || "",
-  });
+  const [listName, setListName] = useState(data.audienceName || "");
+  const [listType, setListType] = useState(data.uploadType || "");
+  const [inputMethod, setInputMethod] = useState<"" | "file" | "manual">(
+    (data.inputMethod as "file" | "manual") || "",
+  );
+  const [selectedQuickList, setSelectedQuickList] =
+    useState<QuickListItem | null>(null);
+  const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
-  const [isFormValid, setIsFormValid] = useState(false);
+  const [showPickerModal, setShowPickerModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  // Sync incoming data prop changes to local state
-  useEffect(() => {
-    setAudienceData((prev) => ({
-      ...prev,
-      inputMethod: data.inputMethod || prev.inputMethod,
-      file: data.audienceFile !== undefined ? data.audienceFile : prev.file,
-      uploadType: data.uploadType || prev.uploadType,
-      name: data.audienceName || prev.name,
-      fileColumns: data.fileColumns || prev.fileColumns,
-      subscriptionIdColumn: data.subscriptionIdColumn !== undefined ? data.subscriptionIdColumn : prev.subscriptionIdColumn,
-      manualInput: data.manualInput !== undefined ? data.manualInput : prev.manualInput,
-    }));
-  }, [data]);
+  const inputMethodOptions = [
+    { value: "", label: "Select option" },
+    { value: "file", label: "Upload File" },
+    { value: "manual", label: "Manual Input" },
+  ];
 
-  useEffect(() => {
-    loadUploadTypes();
-  }, []);
+  const listTypeOptions = [
+    // { value: "", label: "Select option" },
+    { value: "Standard", label: "Standard" },
+    { value: "Premium", label: "Premium" },
+    { value: "VIP", label: "VIP" },
+  ];
 
-  const loadUploadTypes = async () => {
-    try {
-      const response = await quicklistService.getUploadTypes({
-        activeOnly: true,
-      });
-      if (response.success) {
-        const types = response.data || [];
-        setUploadTypes(types);
-        // Set first upload type as default if not already set
-        if (types.length > 0 && !audienceData.uploadType) {
-          setAudienceData((prev) => ({
-            ...prev,
-            uploadType: types[0].upload_type,
-          }));
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load upload types:", err);
-      showError(t.manualBroadcast.errorLoadUploadTypes);
-    }
+  // Validate manual input format (emails or phone numbers)
+  const validateManualInput = () => {
+    if (!manualInput.trim()) return false;
+    const lines = manualInput.split("\n").filter((line) => line.trim());
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[\d+\-() \s]{5,}$/;
+
+    return lines.some((line) => emailRegex.test(line) || phoneRegex.test(line));
   };
 
-  const manualInputValidation = useMemo(() => {
-    if (!audienceData.manualInput?.trim()) {
-      return { valid: [], invalid: [], validCount: 0, invalidCount: 0 };
-    }
+  const isFormValid =
+    listName.trim() &&
+    listType !== "" &&
+    inputMethod !== "" &&
+    (inputMethod === "manual"
+      ? validateManualInput()
+      : inputMethod === "file" && selectedQuickList);
 
-    const lines = audienceData.manualInput
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+  const handleSelectQuickList = (quicklist: QuickListItem) => {
+    setSelectedQuickList(quicklist);
+    setError("");
+  };
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[+]?[0-9\s()-]{8,}$/;
-
-    const valid: string[] = [];
-    const invalid: string[] = [];
-
-    lines.forEach((line) => {
-      if (emailRegex.test(line) || phoneRegex.test(line)) {
-        valid.push(line);
-      } else {
-        invalid.push(line);
+  const handleCreateQuickList = async (request: any) => {
+    try {
+      const response = await quicklistService.createQuickList(request);
+      if (response.success && response.data) {
+        const newQuickList: QuickListItem = {
+          id: response.data.quicklist_id,
+          name: request.name,
+          description: request.description,
+          upload_type: "multi",
+          row_count: response.data.rows_imported || 0,
+          created_at: new Date().toISOString(),
+        };
+        setSelectedQuickList(newQuickList);
+        setShowCreateModal(false);
+        setError("");
       }
-    });
-
-    return {
-      valid,
-      invalid,
-      validCount: valid.length,
-      invalidCount: invalid.length,
-    };
-  }, [audienceData.manualInput]);
-
-  const createFileFromManualInput = (): File => {
-    // For broadcast mode, use any available upload type since listType is just categorization
-    const selectedType = audienceData.uploadType
-      ? uploadTypes.find((t) => t.upload_type === audienceData.uploadType)
-      : uploadTypes.length > 0
-      ? uploadTypes[0]
-      : null;
-
-    let columns: string[] = [];
-    if (selectedType) {
-      if (Array.isArray(selectedType.expected_columns)) {
-        columns = selectedType.expected_columns;
-      } else if (
-        typeof selectedType.expected_columns === "object" &&
-        selectedType.expected_columns !== null
-      ) {
-        columns = Object.keys(selectedType.expected_columns);
-      }
+    } catch (err) {
+      console.error("Failed to create quicklist:", err);
+      setError("Failed to create quicklist. Please try again.");
     }
-
-    // If no columns defined, use defaults (fallback when backend not returning upload types)
-    if (columns.length === 0) {
-      columns = ["Email", "Phone"];
-    }
-
-    const worksheetData: string[][] = [columns];
-
-    const emailColumnIndex = columns.findIndex((col) =>
-      col.toLowerCase().includes("email")
-    );
-    const phoneColumnIndex = columns.findIndex(
-      (col) =>
-        col.toLowerCase().includes("phone") ||
-        col.toLowerCase().includes("mobile")
-    );
-
-    manualInputValidation.valid.forEach((contact) => {
-      const row = new Array(columns.length).fill("");
-      const isEmail = contact.includes("@");
-
-      if (isEmail && emailColumnIndex !== -1) {
-        row[emailColumnIndex] = contact;
-      } else if (!isEmail && phoneColumnIndex !== -1) {
-        row[phoneColumnIndex] = contact.replace(/\s/g, "");
-      } else {
-        row[0] = isEmail ? contact : contact.replace(/\s/g, "");
-      }
-
-      worksheetData.push(row);
-    });
-
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    return new File([blob], `manual_input_${Date.now()}.xlsx`, {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
   };
 
   const handleNext = async () => {
-    // Validation
     if (!isFormValid) {
-      setError("Please fill in all required fields");
+      if (inputMethod === "file" && !selectedQuickList) {
+        setError("Please select or create a quicklist");
+      } else if (inputMethod === "manual" && !validateManualInput()) {
+        setError("Please enter valid emails or phone numbers (one per line)");
+      } else if (!listName.trim()) {
+        setError("Please enter a list name");
+      } else if (listType === "") {
+        setError("Please select a list type");
+      } else if (inputMethod === "") {
+        setError("Please select an input method");
+      } else {
+        setError("Please fill in all required fields");
+      }
       return;
-    }
-
-    if (audienceData.inputMethod === "file") {
-      if (!audienceData.file) {
-        setError(t.manualBroadcast.errorSelectFile);
-        return;
-      }
-      // Validate Subscription ID selection for file mode
-      if (
-        audienceData.fileColumns &&
-        audienceData.fileColumns.length > 0 &&
-        !audienceData.subscriptionIdColumn
-      ) {
-        setError(t.manualBroadcast.errorSelectSubscriptionId);
-        return;
-      }
     }
 
     try {
       setIsSubmitting(true);
       setError("");
 
-      // Create file from manual input if in manual mode (don't create QuickList yet)
-      const fileToUpload =
-        audienceData.inputMethod === "manual"
-          ? createFileFromManualInput()
-          : audienceData.file!;
+      // Update broadcast data based on input method
+      const updateData: Partial<ManualBroadcastData> = {
+        audienceName: listName,
+        uploadType: listType,
+        inputMethod: inputMethod as "file" | "manual",
+      };
 
-      // Update broadcast data with audience info (QuickList will be created at submission)
-      onUpdate({
-        audienceFile: fileToUpload,
-        audienceName: audienceData.name || "",
-        audienceDescription: undefined,
-        uploadType: audienceData.uploadType || (uploadTypes.length > 0 ? uploadTypes[0].upload_type : ""),
-        // quicklistId will be set when broadcast is actually sent
-        rowCount: audienceData.inputMethod === "manual"
-          ? (audienceData.manualInput?.split('\n').filter(line => line.trim()).length || 0)
-          : 0, // Will be updated when QuickList is created
-        subscriptionIdColumn:
-          audienceData.inputMethod === "file"
-            ? audienceData.subscriptionIdColumn || undefined
-            : undefined,
-        fileColumns:
-          audienceData.inputMethod === "file"
-            ? audienceData.fileColumns
-            : undefined,
-        inputMethod: audienceData.inputMethod,
-        manualInput: audienceData.manualInput,
-      });
+      // Handle file upload method
+      if (inputMethod === "file" && selectedQuickList) {
+        updateData.quicklistId = selectedQuickList.id;
+        updateData.rowCount = selectedQuickList.row_count;
+      }
+
+      // Handle manual input method
+      if (inputMethod === "manual") {
+        updateData.audienceFileText = manualInput;
+      }
+
+      onUpdate(updateData);
 
       // Move to next step
       onNext();
     } catch (err) {
-      console.error("Failed to create audience:", err);
+      console.error("Failed to update audience:", err);
       const errorMessage =
         err instanceof Error
           ? err.message
-          : t.manualBroadcast.errorCreateAudience;
+          : "Failed to update audience information";
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const downloadTemplate = () => {
-    if (!audienceData.uploadType) return;
-
-    const selectedType = uploadTypes.find(
-      (t) => t.upload_type === audienceData.uploadType
-    );
-    if (!selectedType) return;
-
-    let columns: string[] = [];
-    if (Array.isArray(selectedType.expected_columns)) {
-      columns = selectedType.expected_columns;
-    } else if (
-      typeof selectedType.expected_columns === "object" &&
-      selectedType.expected_columns !== null
-    ) {
-      columns = Object.keys(selectedType.expected_columns);
-    }
-
-    if (columns.length === 0) return;
-
-    const escapeCsvValue = (value: string): string => {
-      if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value;
-    };
-
-    const BOM = "\uFEFF";
-    const headerRow = columns.map(escapeCsvValue).join(",");
-    const exampleRow = columns.map(() => "").join(",");
-    const fullContent = BOM + headerRow + "\n" + exampleRow + "\n";
-
-    const blob = new Blob([fullContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${uploadType}_template.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-  };
-
 
   return (
     <div
@@ -322,23 +173,163 @@ export default function TargetAudienceStep({
         </p>
       </div>
 
-      <div className="p-6">
-        <AudienceCreator
-          mode="broadcast"
-          data={audienceData}
-          onUpdate={setAudienceData}
-          uploadTypes={uploadTypes}
-          disabled={isSubmitting}
-          showSubscriptionIdSelector={true}
-          onValidationChange={setIsFormValid}
-        />
+      <div className="p-6 space-y-6">
+        {/* List Name */}
+        <div>
+          <label className="text-sm font-medium text-gray-900 block mb-1">
+            List Name *
+          </label>
+          <input
+            type="text"
+            value={listName}
+            onChange={(e) => {
+              setListName(e.target.value);
+              setError("");
+            }}
+            placeholder="e.g., Q4 Campaign Audience"
+            disabled={isSubmitting}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary-color,#5EC6B1)] disabled:opacity-50"
+          />
+        </div>
+
+        {/* List Type */}
+        <div>
+          <label className="text-sm font-medium text-gray-900 block mb-1">
+            List Type *
+          </label>
+          <HeadlessSelect
+            options={listTypeOptions}
+            value={listType}
+            onChange={(value) => {
+              setListType(value as string);
+              setError("");
+            }}
+            placeholder="Select list type"
+            disabled={isSubmitting}
+            zIndex={1050}
+          />
+        </div>
+
+        {/* Input Method */}
+        <div>
+          <label className="text-sm font-medium text-gray-900 block mb-1">
+            Input Method *
+          </label>
+          <HeadlessSelect
+            options={inputMethodOptions}
+            value={inputMethod}
+            onChange={(value) => {
+              setInputMethod(value as "" | "file" | "manual");
+              setError("");
+            }}
+            placeholder="Select input method"
+            disabled={isSubmitting}
+            zIndex={1050}
+          />
+        </div>
+
+        {/* QuickList Selection - Show only when Upload File is selected */}
+        {inputMethod === "file" && (
+          <div className="space-y-3  rounded-md">
+            <label className="text-sm font-medium text-gray-900 block">
+              Select or Create QuickList *
+            </label>
+
+            {selectedQuickList ? (
+              <div
+                className="p-3 rounded-md bg-white border-2 border-gray-300"
+                style={{ borderColor: color.primary.accent }}
+              >
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedQuickList.name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedQuickList.row_count.toLocaleString()} rows
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedQuickList(null)}
+                  className="text-xs hover:underline mt-2"
+                  style={{ color: color.primary.accent }}
+                >
+                  Change Selection
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-600 mb-3">
+                Select an existing quicklist or create a new one
+              </p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPickerModal(true)}
+                disabled={isSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+              >
+                <List className="w-4 h-4" />
+                Select from Existing
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                disabled={isSubmitting}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white"
+                style={{
+                  backgroundColor: buttonTokens.action.background,
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                Create Quicklist
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Manual Input - Show only when Manual Input is selected */}
+        {inputMethod === "manual" && (
+          <div>
+            <label className="text-sm font-medium text-gray-900 block mb-2">
+              Enter Contacts Manually *
+            </label>
+            <textarea
+              value={manualInput}
+              onChange={(e) => {
+                setManualInput(e.target.value);
+                setError("");
+              }}
+              placeholder="Enter emails or phone numbers (one per line)&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;+33612345678&#10;+1234567890"
+              rows={10}
+              disabled={isSubmitting}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary-color,#5EC6B1)] disabled:opacity-50 font-mono"
+            />
+            {manualInput.trim() && (
+              <div className="mt-3 flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: color.primary.accent }}
+                  ></div>
+                  <span
+                    className="font-medium"
+                    style={{ color: color.primary.accent }}
+                  >
+                    {manualInput.split("\n").filter((line) => line.trim()).length}{" "}
+                    line{manualInput.split("\n").filter((line) => line.trim()).length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="px-6 pb-6">
         {/* Error Message */}
         {error && (
           <div
-            className="p-3 rounded-md flex items-start space-x-2"
+            className="p-3 rounded-md flex items-start space-x-2 mb-4"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -372,7 +363,7 @@ export default function TargetAudienceStep({
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                Creating Audience...
+                Processing...
               </>
             ) : (
               "Next: Define Communication"
@@ -380,6 +371,21 @@ export default function TargetAudienceStep({
           </button>
         </div>
       </div>
+
+      {/* QuickList Picker Modal */}
+      <QuickListPickerModal
+        isOpen={showPickerModal}
+        onClose={() => setShowPickerModal(false)}
+        onSelect={handleSelectQuickList}
+      />
+
+      {/* Create QuickList Modal */}
+      <CreateQuickListModal
+        isOpen={showCreateModal}
+        mode="create"
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateQuickList}
+      />
     </div>
   );
 }

@@ -139,7 +139,7 @@ export default function CreateScheduledJobPage() {
         } catch (err) {
           showError(
             "Failed to load job",
-            err instanceof Error ? err.message : "Unknown error"
+            err instanceof Error ? err.message : "Unknown error",
           );
           navigate("/dashboard/scheduled-jobs");
         } finally {
@@ -203,10 +203,10 @@ export default function CreateScheduledJobPage() {
           ? formData.cron_expression.trim()
           : undefined,
         execution_window_start: sanitizeWindowValue(
-          formData.execution_window_start
+          formData.execution_window_start,
         ),
         execution_window_end: sanitizeWindowValue(
-          formData.execution_window_end
+          formData.execution_window_end,
         ),
       };
 
@@ -236,7 +236,7 @@ export default function CreateScheduledJobPage() {
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
         showToast(
           "Job updated",
-          `${jobDisplayName} has been updated successfully`
+          `${jobDisplayName} has been updated successfully`,
         );
       } else {
         await scheduledJobService.createScheduledJob({
@@ -245,14 +245,14 @@ export default function CreateScheduledJobPage() {
         });
         showToast(
           "Job created",
-          `${jobDisplayName} has been created successfully`
+          `${jobDisplayName} has been created successfully`,
         );
       }
       navigate("/dashboard/scheduled-jobs");
     } catch (err) {
       showError(
         isEditMode ? "Failed to update job" : "Failed to create job",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsSaving(false);
@@ -431,7 +431,7 @@ export default function CreateScheduledJobPage() {
                             active
                               ? "bg-gray-100 text-gray-900"
                               : "text-gray-900",
-                            "relative cursor-default select-none py-2 pl-10 pr-4"
+                            "relative cursor-default select-none py-2 pl-10 pr-4",
                           )
                         }
                       >
@@ -440,7 +440,7 @@ export default function CreateScheduledJobPage() {
                             <span
                               className={classNames(
                                 selected ? "font-semibold" : "font-normal",
-                                "block truncate"
+                                "block truncate",
                               )}
                             >
                               Select job type
@@ -462,7 +462,7 @@ export default function CreateScheduledJobPage() {
                               active
                                 ? "bg-gray-100 text-gray-900"
                                 : "text-gray-900",
-                              "relative cursor-default select-none py-2 pl-10 pr-4"
+                              "relative cursor-default select-none py-2 pl-10 pr-4",
                             )
                           }
                         >
@@ -471,7 +471,7 @@ export default function CreateScheduledJobPage() {
                               <span
                                 className={classNames(
                                   selected ? "font-semibold" : "font-normal",
-                                  "block truncate"
+                                  "block truncate",
                                 )}
                               >
                                 {jt.name}
@@ -511,7 +511,7 @@ export default function CreateScheduledJobPage() {
                     <span className="block truncate">
                       {
                         STATUS_OPTIONS.find(
-                          (option) => option.value === formData.status
+                          (option) => option.value === formData.status,
                         )?.label
                       }
                     </span>
@@ -537,7 +537,7 @@ export default function CreateScheduledJobPage() {
                               active
                                 ? "bg-gray-100 text-gray-900"
                                 : "text-gray-900",
-                              "relative cursor-default select-none py-2 pl-10 pr-4"
+                              "relative cursor-default select-none py-2 pl-10 pr-4",
                             )
                           }
                         >
@@ -546,7 +546,7 @@ export default function CreateScheduledJobPage() {
                               <span
                                 className={classNames(
                                   selected ? "font-semibold" : "font-normal",
-                                  "block truncate"
+                                  "block truncate",
                                 )}
                               >
                                 {option.label}
@@ -594,7 +594,7 @@ export default function CreateScheduledJobPage() {
                     <span className="block truncate">
                       {
                         SCHEDULE_TYPES.find(
-                          (option) => option.value === formData.schedule_type
+                          (option) => option.value === formData.schedule_type,
                         )?.label
                       }
                     </span>
@@ -620,7 +620,7 @@ export default function CreateScheduledJobPage() {
                               active
                                 ? "bg-gray-100 text-gray-900"
                                 : "text-gray-900",
-                              "relative cursor-default select-none py-2 pl-10 pr-4"
+                              "relative cursor-default select-none py-2 pl-10 pr-4",
                             )
                           }
                         >
@@ -629,7 +629,7 @@ export default function CreateScheduledJobPage() {
                               <span
                                 className={classNames(
                                   selected ? "font-semibold" : "font-normal",
-                                  "block truncate"
+                                  "block truncate",
                                 )}
                               >
                                 {option.label}
@@ -745,7 +745,7 @@ export default function CreateScheduledJobPage() {
                         PROCESSING_MODE_OPTIONS.find(
                           (option) =>
                             option.value ===
-                            (formData.processing_mode || "batch")
+                            (formData.processing_mode || "batch"),
                         )?.label
                       }
                     </span>
@@ -771,7 +771,7 @@ export default function CreateScheduledJobPage() {
                               active
                                 ? "bg-gray-100 text-gray-900"
                                 : "text-gray-900",
-                              "relative cursor-default select-none py-2 pl-10 pr-4"
+                              "relative cursor-default select-none py-2 pl-10 pr-4",
                             )
                           }
                         >
@@ -780,7 +780,7 @@ export default function CreateScheduledJobPage() {
                               <span
                                 className={classNames(
                                   selected ? "font-semibold" : "font-normal",
-                                  "block truncate"
+                                  "block truncate",
                                 )}
                               >
                                 {option.label}
@@ -959,8 +959,8 @@ export default function CreateScheduledJobPage() {
                 ? "Updating..."
                 : "Creating..."
               : isEditMode
-              ? "Update Job"
-              : "Create Job"}
+                ? "Update Job"
+                : "Create Job"}
           </button>
         </div>
       </form>

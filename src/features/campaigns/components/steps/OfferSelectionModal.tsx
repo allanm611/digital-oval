@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ import { offerService } from "../../../offers/services/offerService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useToast } from "../../../../contexts/ToastContext";
+import CreateOfferModalWrapper from "./CreateOfferModalWrapper";
 
 interface OfferSelectionModalProps {
   isOpen: boolean;
@@ -53,11 +54,12 @@ export default function OfferSelectionModal({
     useState<CampaignOffer[]>(selectedOffers);
   const [offers, setOffers] = useState<CampaignOffer[]>([]);
   const [offersWithStatus, setOffersWithStatus] = useState<Map<number, Offer>>(
-    new Map()
+    new Map(),
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingOfferId, setUpdatingOfferId] = useState<number | null>(null);
+  const [createOfferModalOpen, setCreateOfferModalOpen] = useState(false);
 
   const filterOptions = [
     { value: "all", label: "All Offers" },
@@ -82,7 +84,7 @@ export default function OfferSelectionModal({
 
       // Get offers created during this campaign flow session
       const campaignFlowOffersStr = sessionStorage.getItem(
-        "campaignFlowCreatedOffers"
+        "campaignFlowCreatedOffers",
       );
       const campaignFlowOfferIds: number[] = campaignFlowOffersStr
         ? JSON.parse(campaignFlowOffersStr)
@@ -116,13 +118,13 @@ export default function OfferSelectionModal({
         } else {
           console.warn(
             "Failed to load approved offers:",
-            approvedResponse.reason
+            approvedResponse.reason,
           );
         }
       } catch (err) {
         console.warn(
           "Error fetching standard offers, continuing with campaign flow offers only:",
-          err
+          err,
         );
       }
 
@@ -141,10 +143,10 @@ export default function OfferSelectionModal({
         try {
           const campaignFlowOffersPromises = campaignFlowOfferIds.map(
             (offerId) =>
-              offerService.getOfferById(offerId, true).catch(() => null)
+              offerService.getOfferById(offerId, true).catch(() => null),
           );
           const campaignFlowOffersResults = await Promise.all(
-            campaignFlowOffersPromises
+            campaignFlowOffersPromises,
           );
 
           campaignFlowOffersResults.forEach((response) => {
@@ -174,7 +176,7 @@ export default function OfferSelectionModal({
           validity_period: 30,
           terms_conditions: "See offer details",
           segments: [],
-        })
+        }),
       );
 
       setOffers(campaignOffers);
@@ -185,6 +187,38 @@ export default function OfferSelectionModal({
       setLoading(false);
     }
   };
+
+  // Define callbacks before the early return
+  const handleCreateNew = useCallback(() => {
+    // Open the create offer modal instead of navigating
+    setCreateOfferModalOpen(true);
+  }, []);
+
+  const handleOfferCreated = useCallback(
+    (offerId: number) => {
+      // Store the created offer ID in sessionStorage so it shows with action buttons
+      const campaignFlowOffersStr = sessionStorage.getItem(
+        "campaignFlowCreatedOffers",
+      );
+      const campaignFlowOfferIds: number[] = campaignFlowOffersStr
+        ? JSON.parse(campaignFlowOffersStr)
+        : [];
+
+      if (!campaignFlowOfferIds.includes(offerId)) {
+        campaignFlowOfferIds.push(offerId);
+        sessionStorage.setItem(
+          "campaignFlowCreatedOffers",
+          JSON.stringify(campaignFlowOfferIds),
+        );
+      }
+
+      // Reload offers to show newly created offer with action buttons
+      loadOffers();
+      // Close the create offer modal so you see the created offer in the selection modal
+      setCreateOfferModalOpen(false);
+    },
+    [loadOffers],
+  );
 
   if (!isOpen) return null;
 
@@ -209,7 +243,7 @@ export default function OfferSelectionModal({
 
   // Check if there are any campaign flow offers that need actions
   const campaignFlowOffersStr = sessionStorage.getItem(
-    "campaignFlowCreatedOffers"
+    "campaignFlowCreatedOffers",
   );
   const campaignFlowOfferIds: number[] = campaignFlowOffersStr
     ? JSON.parse(campaignFlowOffersStr)
@@ -230,7 +264,7 @@ export default function OfferSelectionModal({
     const isSelected = tempSelectedOffers.some((o) => o.id === offer.id);
     if (isSelected) {
       setTempSelectedOffers(
-        tempSelectedOffers.filter((o) => o.id !== offer.id)
+        tempSelectedOffers.filter((o) => o.id !== offer.id),
       );
     } else {
       setTempSelectedOffers([...tempSelectedOffers, offer]);
@@ -239,25 +273,6 @@ export default function OfferSelectionModal({
 
   const handleConfirm = () => {
     onSelect(tempSelectedOffers);
-  };
-
-  const handleCreateNew = () => {
-    // Save campaign form data before navigating
-    if (onSaveCampaignData) {
-      onSaveCampaignData();
-    }
-
-    // Navigate to offer creation page with return URL pointing to step 3
-    const currentUrl = window.location.href;
-    // Extract base URL and ensure we return to step 3
-    const url = new URL(currentUrl);
-    url.searchParams.set("step", "3");
-    url.searchParams.set("returnFromOfferCreate", "true");
-    navigate(
-      `/dashboard/offers/create?returnToCampaign=true&returnUrl=${encodeURIComponent(
-        url.toString()
-      )}`
-    );
   };
 
   const handleSubmitForApproval = async (offerId: number) => {
@@ -484,7 +499,7 @@ export default function OfferSelectionModal({
                 >
                   {filteredOffers.map((offer) => {
                     const isSelected = tempSelectedOffers.some(
-                      (o) => o.id === offer.id
+                      (o) => o.id === offer.id,
                     );
                     const fullOffer = offersWithStatus.get(Number(offer.id));
                     const offerStatus = fullOffer?.status;
@@ -549,13 +564,13 @@ export default function OfferSelectionModal({
                               offerStatus === OfferStatusEnum.ACTIVE
                                 ? "bg-green-100 text-green-700"
                                 : offerStatus === OfferStatusEnum.APPROVED
-                                ? "bg-blue-100 text-blue-700"
-                                : offerStatus ===
-                                  OfferStatusEnum.PENDING_APPROVAL
-                                ? "bg-yellow-100 text-yellow-700"
-                                : offerStatus === OfferStatusEnum.DRAFT
-                                ? "bg-gray-100 text-gray-700"
-                                : "bg-gray-100 text-gray-700"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : offerStatus ===
+                                      OfferStatusEnum.PENDING_APPROVAL
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : offerStatus === OfferStatusEnum.DRAFT
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-gray-100 text-gray-700"
                             }`}
                           >
                             {offerStatus || "Unknown"}
@@ -677,7 +692,14 @@ export default function OfferSelectionModal({
           </div>
         </div>
       </div>
+
+      {/* Create Offer Modal */}
+      <CreateOfferModalWrapper
+        isOpen={createOfferModalOpen}
+        onClose={() => setCreateOfferModalOpen(false)}
+        onOfferCreated={handleOfferCreated}
+      />
     </div>,
-    document.body
+    document.body,
   );
 }

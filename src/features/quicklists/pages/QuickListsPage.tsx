@@ -18,9 +18,8 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { quicklistService } from "../services/quicklistService";
-import { QuickList, UploadType, QuickListStats } from "../types/quicklist";
+import { QuickList, QuickListStats, CreateQuickListRequest } from "../types/quicklist";
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
@@ -35,10 +34,8 @@ export default function QuickListsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [quicklists, setQuicklists] = useState<QuickList[]>([]);
-  const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUploadType, setSelectedUploadType] = useState<string>("");
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -66,10 +63,10 @@ export default function QuickListsPage() {
       return;
     }
 
-    // Reset to page 1 and reload when search/filter changes
+    // Reset to page 1 and reload when search changes
     loadQuickLists(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, selectedUploadType]);
+  }, [searchTerm]);
 
   useEffect(() => {
     // Load quicklists when page changes (skip initial mount)
@@ -97,18 +94,11 @@ export default function QuickListsPage() {
     try {
       setLoading(true);
       const initialLimit = 10;
-      // Load upload types and quicklists
-      const [uploadTypesRes, quicklistsRes] = await Promise.all([
-        quicklistService.getUploadTypes({ activeOnly: true }),
-        quicklistService.getAllQuickLists({
-          limit: initialLimit,
-          offset: 0,
-        }),
-      ]);
-
-      if (uploadTypesRes.success) {
-        setUploadTypes(uploadTypesRes.data || []);
-      }
+      // Load quicklists
+      const quicklistsRes = await quicklistService.getAllQuickLists({
+        limit: initialLimit,
+        offset: 0,
+      });
 
       if (quicklistsRes.success) {
         setQuicklists(quicklistsRes.data || []);
@@ -137,13 +127,11 @@ export default function QuickListsPage() {
       if (searchTerm) {
         response = await quicklistService.searchQuickLists({
           q: searchTerm,
-          upload_type: selectedUploadType || undefined,
           limit: pagination.limit,
           offset,
         });
       } else {
         response = await quicklistService.getAllQuickLists({
-          upload_type: selectedUploadType || undefined,
           limit: pagination.limit,
           offset,
         });
@@ -172,14 +160,7 @@ export default function QuickListsPage() {
     }
   };
 
-  const handleCreateQuickList = async (request: {
-    file: File;
-    upload_type: string;
-    name: string;
-    description?: string | null;
-    created_by?: string | null;
-    isManualEntry?: boolean;
-  }) => {
+  const handleCreateQuickList = async (request: CreateQuickListRequest) => {
     try {
       const response = await quicklistService.createQuickList(request);
 
@@ -200,17 +181,12 @@ export default function QuickListsPage() {
             .join("\n") || "";
 
         showError(
-          `${t.quickList.validationErrors.replace(
-            "{count}",
-            String(errorCount)
-          )} ${
-            errorDetails
-              ? `\n\n${t.quickList.firstFewErrors}\n${errorDetails}`
-              : ""
+          `QuickList created with ${errorCount} validation errors ${
+            errorDetails ? `\n\n${errorDetails}` : ""
           }`
         );
       } else {
-        showToast(t.quickList.createdSuccess);
+        showToast("QuickList created successfully!");
       }
 
       setIsCreateModalOpen(false);
@@ -369,14 +345,6 @@ export default function QuickListsPage() {
       icon: XCircle,
       color: color.tertiary.tag2,
     },
-    {
-      name: t.quickList.uploadTypes,
-      value: statsLoading
-        ? "..."
-        : (stats?.overall.unique_upload_types || 0).toLocaleString(),
-      icon: FileText,
-      color: color.tertiary.tag3,
-    },
   ];
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);
@@ -426,7 +394,7 @@ export default function QuickListsPage() {
         })}
       </div>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <div className="flex flex-col lg:flex-row gap-4">
         <div className="flex-1 relative">
           <Search
@@ -438,22 +406,6 @@ export default function QuickListsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <HeadlessSelect
-            options={[
-              { value: "", label: t.quickList.allUploadTypes },
-              ...uploadTypes.map((type) => ({
-                value: type.upload_type,
-                label: type.upload_type,
-              })),
-            ]}
-            value={selectedUploadType}
-            onChange={(value) => setSelectedUploadType(value as string)}
-            placeholder={t.quickList.selectUploadType}
-            className="w-full sm:min-w-[220px]"
           />
         </div>
       </div>
@@ -511,12 +463,6 @@ export default function QuickListsPage() {
                     className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    {t.quickList.uploadType}
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
                     {t.quickList.rows}
                   </th>
                   <th
@@ -564,16 +510,6 @@ export default function QuickListsPage() {
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td
-                      className="px-6 py-4"
-                      style={{ backgroundColor: color.surface.tablebodybg }}
-                    >
-                      <span
-                        className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-700`}
-                      >
-                        {quicklist.upload_type}
-                      </span>
                     </td>
                     <td
                       className={`px-6 py-4 text-sm ${tw.textPrimary}`}
@@ -711,7 +647,6 @@ export default function QuickListsPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateQuickList}
-        uploadTypes={uploadTypes}
       />
 
 

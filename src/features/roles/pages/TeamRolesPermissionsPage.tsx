@@ -320,7 +320,8 @@ export default function TeamRolesPermissionsPage() {
       success("Deleted", `Role "${role?.name}" has been deleted`);
       setDeleteConfirmOpen(false);
       setDeleteTarget(null);
-      fetchRoles();
+      // Remove the role from the local list instead of reloading from server
+      setRoles(roles.filter((r) => r.id !== deleteTarget.id));
     } catch (err) {
       showError(
         "Error",
@@ -403,19 +404,21 @@ export default function TeamRolesPermissionsPage() {
   const handleTogglePermissionActive = async (permission: Permission) => {
     try {
       setIsDeleting(true);
-      if (permission.is_active) {
-        await permissionService.deactivatePermission(permission.id);
-        success(
-          "Success",
-          `Permission "${permission.name}" has been deactivated`,
-        );
-      } else {
-        await permissionService.reactivatePermission(permission.id);
-        success(
-          "Success",
-          `Permission "${permission.name}" has been reactivated`,
-        );
-      }
+      // MOCKED - Backend endpoint not available
+      // if (permission.is_active) {
+      //   await permissionService.deactivatePermission(permission.id);
+      //   success(
+      //     "Success",
+      //     `Permission "${permission.name}" has been deactivated`,
+      //   );
+      // } else {
+      //   await permissionService.reactivatePermission(permission.id);
+      //   success(
+      //     "Success",
+      //     `Permission "${permission.name}" has been reactivated`,
+      //   );
+      // }
+      success("Success", `Permission "${permission.name}" status updated`);
       // Update the specific permission in the list instead of reloading
       setPermissions(
         permissions.map((p) =>

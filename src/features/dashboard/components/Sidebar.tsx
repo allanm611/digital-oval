@@ -36,7 +36,6 @@ import {
   Link2,
   PlayCircle,
   GitBranch,
-  Plug,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -93,6 +92,7 @@ interface NavigationItem {
     | "products"
     | "offers"
     | "segments"
+    | "quicklists"
     | "users"
     | "analytics"
     | "configuration"
@@ -311,11 +311,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             entity: "segments",
           },
           {
-            name: "Segment Lists",
-            href: "/dashboard/segment-list",
+            name: "QuickLists",
+            href: "/dashboard/quick-lists",
             icon: List,
             type: "single",
-            entity: "segments",
+            entity: "quicklists",
           },
         ],
       },
@@ -437,13 +437,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             type: "single",
             entity: "servers",
           },
-          {
-            name: "Data Connectors",
-            href: "/dashboard/data-connectors",
-            icon: Plug,
-            type: "single",
-            entity: "servers",
-          },
+          // {
+          //   name: "Data Connectors",
+          //   href: "/dashboard/data-connectors",
+          //   icon: Plug,
+          //   type: "single",
+          //   entity: "servers",
+          // },
         ],
       },
 

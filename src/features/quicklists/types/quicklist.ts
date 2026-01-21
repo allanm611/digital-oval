@@ -18,7 +18,6 @@ export type ImportStatus = "success" | "failed" | "skipped";
 // QuickList Types
 export interface QuickListType {
   id: number;
-  upload_type: string;
   name: string;
   description: string | null;
   original_filename: string;
@@ -37,7 +36,6 @@ export interface QuickListType {
 
 export interface QuickListWithDetails extends Partial<QuickListType> {
   id: number;
-  upload_type: string;
   name: string;
   description: string | null;
   original_filename: string;
@@ -48,7 +46,6 @@ export interface QuickListWithDetails extends Partial<QuickListType> {
   created_by: string | null;
   created_at: string;
   column_mappings?: Record<string, string>;
-  upload_type_description?: string;
   // Optional fields that may not be in list responses
   file_hash?: string;
   file_size_bytes?: number;
@@ -60,45 +57,9 @@ export interface QuickListWithDetails extends Partial<QuickListType> {
 // For backward compatibility, use QuickListWithDetails as QuickList
 export type QuickList = QuickListWithDetails;
 
-// Upload Type Configuration
-export interface UploadTypeConfig {
-  id: number;
-  upload_type: string;
-  description: string | null;
-  expected_columns: string[] | Record<string, unknown>;
-  allow_extra_columns: boolean;
-  require_all_columns: boolean;
-  max_file_size_mb: number;
-  cache_ttl_seconds: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// For backward compatibility
-export type UploadType = UploadTypeConfig;
-
-// Upload Type Schema
-export interface UploadTypeSchema {
-  upload_type: string;
-  description: string | null;
-  expected_columns: string[] | Record<string, unknown>;
-  validation_rules: {
-    allow_extra_columns: boolean;
-    require_all_columns: boolean;
-  };
-  file_constraints: {
-    max_file_size_mb: number;
-  };
-  cache_ttl_seconds: number;
-  created_at: string;
-  updated_at: string;
-}
-
 // Table Mapping
 export interface QuickListTableMapping {
   id: number;
-  upload_type: string;
   table_name: string;
   schema_name: string;
   column_mappings: Record<string, string>; // { "Display Name": "column_name" }
@@ -144,16 +105,8 @@ export interface QuickListStats {
     total_rows_failed: number;
     avg_processing_time_ms: number;
     total_file_size_bytes: number;
-    unique_upload_types: number;
     unique_users: number;
   };
-  by_upload_type: Array<{
-    upload_type: string;
-    count: number;
-    total_rows_imported: number;
-    total_rows_failed: number;
-    avg_processing_time_ms: number;
-  }>;
   by_status: Array<{
     processing_status: ProcessingStatus;
     count: number;
@@ -167,11 +120,16 @@ export interface QuickListStats {
 
 // Request Types
 export interface CreateQuickListRequest {
-  file: File;
-  upload_type?: string;
   name: string;
   description?: string | null;
   created_by?: string | null;
+  file?: File; // Optional file if providing file_text instead
+  file_text?: string; // Raw file content
+  file_name?: string;
+  file_size?: number;
+  file_delimiter: string; // Delimiter used in file (comma, semicolon, tab, pipe)
+  subscriber_id_col_name: string; // Column name that contains subscriber IDs
+  list_headers?: string; // CSV headers line
 }
 
 export interface UpdateQuickListRequest {
@@ -207,20 +165,6 @@ export interface QuickListImportLogsResponse {
   success: true;
   data: QuickListImportLog[];
   pagination: PaginationMeta;
-  source: CacheSource;
-  message?: string;
-}
-
-export interface UploadTypesResponse {
-  success: true;
-  data: UploadTypeConfig[];
-  source: CacheSource;
-  message?: string;
-}
-
-export interface UploadTypeSchemaResponse {
-  success: true;
-  data: UploadTypeSchema;
   source: CacheSource;
   message?: string;
 }
@@ -276,7 +220,6 @@ export interface DeleteQuickListResponse {
   data: {
     id: number;
     name: string;
-    upload_type: string;
     table_name: string;
     rows_imported: number;
   };
@@ -305,14 +248,6 @@ export type QuickListDataResponseUnion =
 
 export type ImportLogsResponse =
   | QuickListImportLogsResponse
-  | QuickListErrorResponse;
-
-export type UploadTypesResponseUnion =
-  | UploadTypesResponse
-  | QuickListErrorResponse;
-
-export type UploadTypeSchemaResponseUnion =
-  | UploadTypeSchemaResponse
   | QuickListErrorResponse;
 
 export type TableMappingsResponseUnion =

@@ -154,14 +154,24 @@ export default function QuickListDetailsPage() {
         setData(response.data || []);
         setDataPagination(response.pagination || null);
 
-        // Extract columns from data - show all columns, not just first 10
+        // Extract columns - try row_data first, fall back to top-level fields
         if (response.data && response.data.length > 0) {
           const firstRow = response.data[0];
-          const extractedColumns = Object.keys(firstRow).filter(
-            (key) =>
-              !["id", "quicklist_id", "created_at", "row_number"].includes(key),
-          );
-          setDataColumns(extractedColumns);
+
+          // Check if row_data exists and is an object
+          if (firstRow.row_data && typeof firstRow.row_data === "object") {
+            const extractedColumns = Object.keys(firstRow.row_data);
+            setDataColumns(extractedColumns);
+          } else {
+            // Fall back to original method - extract top-level fields
+            const extractedColumns = Object.keys(firstRow).filter(
+              (key) =>
+                !["id", "quicklist_id", "created_at", "row_number"].includes(
+                  key,
+                ),
+            );
+            setDataColumns(extractedColumns);
+          }
         } else {
           setDataColumns([]);
         }
@@ -970,25 +980,47 @@ export default function QuickListDetailsPage() {
                           >
                             {index + 1}
                           </td>
-                          {dataColumns.map((column, columnIndex) => (
-                            <td
-                              key={column}
-                              className={`px-6 py-4 text-gray-600 ${
-                                columnIndex === dataColumns.length - 1
-                                  ? "rounded-r-md"
-                                  : ""
-                              }`}
-                              style={{ backgroundColor: tableBodyBackground }}
-                            >
-                              {(row as Record<string, unknown>)[column] !==
-                                undefined &&
-                              (row as Record<string, unknown>)[column] !== null
-                                ? String(
-                                    (row as Record<string, unknown>)[column],
-                                  )
-                                : "-"}
-                            </td>
-                          ))}
+                          {dataColumns.map((column, columnIndex) => {
+                            const rowDataObj = (row as Record<string, unknown>)
+                              .row_data as Record<string, unknown> | undefined;
+
+                            // Try to get value from row_data first, then fall back to direct row field
+                            let cellValue: unknown;
+                            if (
+                              rowDataObj &&
+                              rowDataObj[column] !== undefined
+                            ) {
+                              cellValue = rowDataObj[column];
+                            } else {
+                              cellValue = (row as Record<string, unknown>)[
+                                column
+                              ];
+                            }
+
+                            let displayValue: string;
+
+                            if (cellValue === undefined || cellValue === null) {
+                              displayValue = "-";
+                            } else if (typeof cellValue === "object") {
+                              displayValue = JSON.stringify(cellValue);
+                            } else {
+                              displayValue = String(cellValue);
+                            }
+
+                            return (
+                              <td
+                                key={column}
+                                className={`px-6 py-4 text-gray-600 text-xs break-all ${
+                                  columnIndex === dataColumns.length - 1
+                                    ? "rounded-r-md"
+                                    : ""
+                                }`}
+                                style={{ backgroundColor: tableBodyBackground }}
+                              >
+                                {displayValue}
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>

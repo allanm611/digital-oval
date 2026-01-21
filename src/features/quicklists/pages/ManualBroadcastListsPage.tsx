@@ -13,12 +13,11 @@ import {
   Edit,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
-import { QuickList, UploadType, QuickListStats } from "../types/quicklist";
+import { QuickList, QuickListStats } from "../types/quicklist";
 import { quicklistService } from "../services/quicklistService";
 import EditQuickListModal from "../components/EditQuickListModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 
 export default function ManualBroadcastListsPage() {
@@ -26,7 +25,6 @@ export default function ManualBroadcastListsPage() {
   const { success: showToast, error: showError } = useToast();
 
   const [quicklists, setQuicklists] = useState<QuickList[]>([]);
-  const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
@@ -38,7 +36,6 @@ export default function ManualBroadcastListsPage() {
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedUploadType, setSelectedUploadType] = useState<string>("");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -51,19 +48,14 @@ export default function ManualBroadcastListsPage() {
     try {
       setStatsLoading(true);
 
-      // Load upload types and quicklists
-      const [uploadTypesRes, quicklistsRes, statsRes] = await Promise.all([
-        quicklistService.getUploadTypes(),
+      // Load quicklists and stats
+      const [quicklistsRes, statsRes] = await Promise.all([
         quicklistService.getAllQuickLists({
           limit: 10,
           offset: 0,
         }),
         quicklistService.getStats(),
       ]);
-
-      if (uploadTypesRes.success) {
-        setUploadTypes(uploadTypesRes.data || []);
-      }
 
       if (quicklistsRes.success) {
         setQuicklists(quicklistsRes.data || []);
@@ -102,13 +94,11 @@ export default function ManualBroadcastListsPage() {
       if (trimmedSearch) {
         response = await quicklistService.searchQuickLists({
           q: trimmedSearch,
-          upload_type: selectedUploadType || undefined,
           limit: pagination.limit,
           offset: (page - 1) * pagination.limit,
         });
       } else {
         response = await quicklistService.getAllQuickLists({
-          upload_type: selectedUploadType || undefined,
           limit: pagination.limit,
           offset: (page - 1) * pagination.limit,
         });
@@ -276,14 +266,6 @@ export default function ManualBroadcastListsPage() {
       icon: XCircle,
       color: color.tertiary.tag2,
     },
-    {
-      name: "Unique Upload Types",
-      value: statsLoading
-        ? "..."
-        : (stats?.overall.unique_upload_types || 0).toLocaleString(),
-      icon: FileText,
-      color: color.tertiary.tag3,
-    },
   ];
 
   const totalPages = Math.ceil(pagination.total / pagination.limit);
@@ -313,7 +295,7 @@ export default function ManualBroadcastListsPage() {
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
-            Create Broadcast List
+            Create communication list
           </button>
         </div>
       </div>
@@ -356,22 +338,6 @@ export default function ManualBroadcastListsPage() {
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
           />
         </div>
-
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <HeadlessSelect
-            options={[
-              { value: "", label: "All Upload Types" },
-              ...uploadTypes.map((type) => ({
-                value: type.upload_type,
-                label: type.upload_type,
-              })),
-            ]}
-            value={selectedUploadType}
-            onChange={(value) => setSelectedUploadType(value as string)}
-            placeholder="Select upload type"
-            className="w-full sm:min-w-[220px]"
-          />
-        </div>
       </div>
 
       {/* Broadcast Lists Table */}
@@ -407,7 +373,7 @@ export default function ManualBroadcastListsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
-                Create Broadcast List
+                Create communication list
               </button>
             )}
           </div>

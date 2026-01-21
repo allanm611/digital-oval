@@ -436,6 +436,7 @@ export default function CreateCustomerModal({
                         tariff: String(value),
                       }))
                     }
+                    zIndex={zIndex.popover}
                   />
                 </div>
                 <div>
@@ -453,6 +454,7 @@ export default function CreateCustomerModal({
                         simType: String(value),
                       }))
                     }
+                    zIndex={zIndex.popover}
                   />
                 </div>
               </div>
@@ -472,6 +474,7 @@ export default function CreateCustomerModal({
                       status: String(value),
                     }))
                   }
+                  zIndex={zIndex.popover}
                 />
               </div>
             </>

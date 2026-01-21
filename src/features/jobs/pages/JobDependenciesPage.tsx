@@ -372,8 +372,8 @@ function JobDependencyModal({
               {isSaving
                 ? t.profile.saving
                 : initialData
-                ? "Update Dependency"
-                : "Create Dependency"}
+                  ? "Update Dependency"
+                  : "Create Dependency"}
             </button>
           </div>
         </form>
@@ -575,7 +575,7 @@ export default function JobDependenciesPage() {
   const [filterId, setFilterId] = useState<number | "">("");
   const [filterJobId, setFilterJobId] = useState<number | "">("");
   const [filterDependsOnJobId, setFilterDependsOnJobId] = useState<number | "">(
-    ""
+    "",
   );
   const [filterDependencyType, setFilterDependencyType] = useState<string>("");
   const [filterWaitForStatus, setFilterWaitForStatus] = useState<string>("");
@@ -636,7 +636,7 @@ export default function JobDependenciesPage() {
 
   const handleActionMenuToggle = (
     dependencyId: number,
-    event?: React.MouseEvent<HTMLButtonElement>
+    event?: React.MouseEvent<HTMLButtonElement>,
   ) => {
     if (showActionMenu === dependencyId) {
       setShowActionMenu(null);
@@ -847,9 +847,8 @@ export default function JobDependenciesPage() {
         if (filterMaxWaitMinutesMax)
           searchParams.max_wait_minutes_max = Number(filterMaxWaitMinutesMax);
 
-        const response = await jobDependencyService.searchJobDependencies(
-          searchParams
-        );
+        const response =
+          await jobDependencyService.searchJobDependencies(searchParams);
         setDependencies(response.data || []);
       } else {
         // No filters, use basic list endpoint
@@ -925,9 +924,8 @@ export default function JobDependenciesPage() {
         if (filterMaxWaitMinutesMax)
           searchParams.max_wait_minutes_max = Number(filterMaxWaitMinutesMax);
 
-        const response = await jobDependencyService.searchJobDependencies(
-          searchParams
-        );
+        const response =
+          await jobDependencyService.searchJobDependencies(searchParams);
 
         // If there's a search term, filter client-side (text search)
         if (term.trim()) {
@@ -936,7 +934,7 @@ export default function JobDependenciesPage() {
               dep.job_id.toString().includes(term) ||
               dep.depends_on_job_id.toString().includes(term) ||
               dep.dependency_type.toLowerCase().includes(term.toLowerCase()) ||
-              dep.wait_for_status.toLowerCase().includes(term.toLowerCase())
+              dep.wait_for_status.toLowerCase().includes(term.toLowerCase()),
           );
           setDependencies(filtered);
         } else {
@@ -967,7 +965,7 @@ export default function JobDependenciesPage() {
       filterMaxWaitMinutesMin,
       filterMaxWaitMinutesMax,
       showError,
-    ]
+    ],
   );
 
   const fetchStats = useCallback(async () => {
@@ -1134,7 +1132,7 @@ export default function JobDependenciesPage() {
     try {
       const freshDependency = await jobDependencyService.getJobDependencyById(
         dependency.id,
-        true
+        true,
       );
       setEditingDependency(freshDependency);
     } catch (err) {
@@ -1150,7 +1148,7 @@ export default function JobDependenciesPage() {
     try {
       const freshDependency = await jobDependencyService.getJobDependencyById(
         dependency.id,
-        true
+        true,
       );
       setViewingDependency(freshDependency);
     } catch (err) {
@@ -1173,7 +1171,7 @@ export default function JobDependenciesPage() {
       await jobDependencyService.deleteJobDependency(deletingDependency.id);
       showToast(
         "Job dependency deleted",
-        `Dependency ${deletingDependency.id} has been deleted`
+        `Dependency ${deletingDependency.id} has been deleted`,
       );
       setShowDeleteModal(false);
       setDeletingDependency(null);
@@ -1202,17 +1200,17 @@ export default function JobDependenciesPage() {
         };
         await jobDependencyService.updateJobDependency(
           editingDependency.id,
-          updatePayload
+          updatePayload,
         );
         showToast(
           "Job dependency updated",
-          `Dependency ${editingDependency.id} has been updated successfully`
+          `Dependency ${editingDependency.id} has been updated successfully`,
         );
       } else {
         await jobDependencyService.createJobDependency(values);
         showToast(
           "Job dependency created",
-          "Job dependency has been created successfully"
+          "Job dependency has been created successfully",
         );
       }
       setIsModalOpen(false);
@@ -1235,13 +1233,13 @@ export default function JobDependenciesPage() {
         await jobDependencyService.deactivateDependency(dependency.id);
         showToast(
           "Dependency deactivated",
-          `Dependency ${dependency.id} has been deactivated`
+          `Dependency ${dependency.id} has been deactivated`,
         );
       } else {
         await jobDependencyService.activateDependency(dependency.id);
         showToast(
           "Dependency activated",
-          `Dependency ${dependency.id} has been activated`
+          `Dependency ${dependency.id} has been activated`,
         );
       }
       await fetchDependencies();
@@ -1289,7 +1287,7 @@ export default function JobDependenciesPage() {
           limit: 100,
           skipCache: true,
           activeOnly: false,
-        }
+        },
       );
       setJobsDependingOnData(response.data || []);
     } catch (err) {
@@ -1305,13 +1303,13 @@ export default function JobDependenciesPage() {
   // Handler for getSpecificDependency
   const handleGetSpecificDependency = async (
     jobId: number,
-    dependsOnJobId: number
+    dependsOnJobId: number,
   ) => {
     try {
       const dependency = await jobDependencyService.getSpecificDependency(
         jobId,
         dependsOnJobId,
-        true
+        true,
       );
       setViewingDependency(dependency);
       setIsViewModalOpen(true);
@@ -1333,7 +1331,7 @@ export default function JobDependenciesPage() {
         {
           limit: 100,
           skipCache: true,
-        }
+        },
       );
       setBlockingDependenciesData(response.data || []);
     } catch (err) {
@@ -1355,7 +1353,7 @@ export default function JobDependenciesPage() {
     try {
       const response = await jobDependencyService.getDependencyChain(
         jobId,
-        true
+        true,
       );
       // Chain data returns JobDependency[] with additional fields
       setChainData(
@@ -1364,7 +1362,7 @@ export default function JobDependenciesPage() {
           depends_on_job_code?: string;
           depth?: number;
           path?: number[];
-        })[]
+        })[],
       );
     } catch (err) {
       const message =
@@ -1389,7 +1387,7 @@ export default function JobDependenciesPage() {
           depends_on_job_code?: string;
           depth?: number;
           path?: number[];
-        })[]
+        })[],
       );
     } catch (err) {
       const message =
@@ -1409,7 +1407,7 @@ export default function JobDependenciesPage() {
     try {
       const response = await jobDependencyService.getImmediateDependencies(
         jobId,
-        true
+        true,
       );
       // Response structure: {success: true, data: {jobIds: [20]}, ...}
       const responseData = response.data as unknown as { jobIds?: number[] };
@@ -1450,19 +1448,19 @@ export default function JobDependenciesPage() {
     try {
       const response = await jobDependencyService.checkDependenciesSatisfied(
         jobId,
-        true
+        true,
       );
       const isSatisfied = response.data?.satisfied;
 
       if (isSatisfied) {
         showToast(
           "All Dependencies Satisfied",
-          "This job can proceed with execution as all its dependencies have been completed successfully."
+          "This job can proceed with execution as all its dependencies have been completed successfully.",
         );
       } else {
         showError(
           "Dependencies Not Satisfied",
-          "This job cannot proceed yet. One or more dependencies have not been satisfied (not completed successfully)."
+          "This job cannot proceed yet. One or more dependencies have not been satisfied (not completed successfully).",
         );
       }
     } catch (err) {
@@ -1477,12 +1475,12 @@ export default function JobDependenciesPage() {
     setIsLoadingUnsatisfiedDependencies(true);
     setShowUnsatisfiedDependenciesModal(true);
     setUnsatisfiedDependenciesTitle(
-      `Unsatisfied Dependencies for Job ${jobId}`
+      `Unsatisfied Dependencies for Job ${jobId}`,
     );
     try {
       const response = await jobDependencyService.getUnsatisfiedDependencies(
         jobId,
-        true
+        true,
       );
       setUnsatisfiedDependenciesData(response.data || []);
     } catch (err) {
@@ -1504,7 +1502,7 @@ export default function JobDependenciesPage() {
     try {
       const response = await jobDependencyService.getDependencyStatus(
         jobId,
-        true
+        true,
       );
       console.log("🔵 DEPENDENCY STATUS - Response:", response);
       console.log("Response.data:", response.data);
@@ -1518,7 +1516,7 @@ export default function JobDependenciesPage() {
           satisfied_dependencies?: string | number;
           unsatisfied_blocking?: string | number;
           source?: string;
-        }) || null
+        }) || null,
       );
     } catch (err) {
       const message =
@@ -1536,7 +1534,7 @@ export default function JobDependenciesPage() {
       setSelectedDependencyIds(new Set());
     } else {
       setSelectedDependencyIds(
-        new Set(filteredDependencies.map((dep) => dep.id))
+        new Set(filteredDependencies.map((dep) => dep.id)),
       );
     }
   };
@@ -1560,7 +1558,7 @@ export default function JobDependenciesPage() {
       });
       showToast(
         "Dependencies activated",
-        `${response.data?.activated || 0} dependencies activated`
+        `${response.data?.activated || 0} dependencies activated`,
       );
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
@@ -1582,7 +1580,7 @@ export default function JobDependenciesPage() {
       });
       showToast(
         "Dependencies deactivated",
-        `${response.data?.deactivated || 0} dependencies deactivated`
+        `${response.data?.deactivated || 0} dependencies deactivated`,
       );
       setSelectedDependencyIds(new Set());
       setIsSelectionMode(false);
@@ -1625,7 +1623,7 @@ export default function JobDependenciesPage() {
       setOrphanedJobs((response.data || []) as unknown as JobDependency[]);
       showToast(
         "Orphaned jobs loaded",
-        `Found ${response.data?.length || 0} orphaned jobs`
+        `Found ${response.data?.length || 0} orphaned jobs`,
       );
     } catch (err) {
       const message =
@@ -1640,13 +1638,13 @@ export default function JobDependenciesPage() {
     try {
       const response = await jobDependencyService.getMostDependedOnJobs(
         10,
-        true
+        true,
       );
       // Most depended jobs returns MostDependedJob[], not JobDependency[]
       setMostDependedJobs((response.data || []) as unknown as JobDependency[]);
       showToast(
         "Most depended jobs loaded",
-        "Loaded top 10 most depended-on jobs"
+        "Loaded top 10 most depended-on jobs",
       );
     } catch (err) {
       const message =
@@ -1687,14 +1685,15 @@ export default function JobDependenciesPage() {
 
     try {
       setIsDeletingAll(true);
-      const response = await jobDependencyService.deleteAllDependenciesForJob(
-        deletingAllJobId
-      );
+      const response =
+        await jobDependencyService.deleteAllDependenciesForJob(
+          deletingAllJobId,
+        );
       showToast(
         "Dependencies deleted",
         `${
           response.data?.removed || 0
-        } dependencies removed for Job ${deletingAllJobId}`
+        } dependencies removed for Job ${deletingAllJobId}`,
       );
       setShowDeleteAllModal(false);
       setDeletingAllJobId(null);
@@ -1729,7 +1728,7 @@ export default function JobDependenciesPage() {
               if (!isSelectionMode) {
                 setIsSelectionMode(true);
                 setSelectedDependencyIds(
-                  new Set(filteredDependencies.map((dep) => dep.id))
+                  new Set(filteredDependencies.map((dep) => dep.id)),
                 );
               } else {
                 setIsSelectionMode(false);
@@ -2380,7 +2379,7 @@ export default function JobDependenciesPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleGetJobsDependingOn(
-                              dependency.depends_on_job_id
+                              dependency.depends_on_job_id,
                             );
                             setShowActionMenu(null);
                           }}
@@ -2397,7 +2396,7 @@ export default function JobDependenciesPage() {
                             e.stopPropagation();
                             handleGetSpecificDependency(
                               dependency.job_id,
-                              dependency.depends_on_job_id
+                              dependency.depends_on_job_id,
                             );
                             setShowActionMenu(null);
                           }}
@@ -2503,7 +2502,7 @@ export default function JobDependenciesPage() {
                           </span>
                         </button>
                       </div>,
-                      document.body
+                      document.body,
                     );
                   }
                   return null;
@@ -2627,7 +2626,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.job_id}`
+                                `/dashboard/scheduled-jobs/${item.job_id}`,
                               );
                               setShowChainModal(false);
                             }}
@@ -2656,7 +2655,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowChainModal(false);
                             }}
@@ -2975,7 +2974,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.job_id}`
+                                `/dashboard/scheduled-jobs/${item.job_id}`,
                               );
                               setShowDependenciesForJobModal(false);
                             }}
@@ -2998,7 +2997,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowDependenciesForJobModal(false);
                             }}
@@ -3224,7 +3223,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.job_id}`
+                                `/dashboard/scheduled-jobs/${item.job_id}`,
                               );
                               setShowJobsDependingOnModal(false);
                             }}
@@ -3247,7 +3246,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowJobsDependingOnModal(false);
                             }}
@@ -3465,7 +3464,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.job_id}`
+                                `/dashboard/scheduled-jobs/${item.job_id}`,
                               );
                               setShowBlockingDependenciesModal(false);
                             }}
@@ -3488,7 +3487,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowBlockingDependenciesModal(false);
                             }}
@@ -3892,7 +3891,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowUnsatisfiedDependenciesModal(false);
                             }}
@@ -4058,7 +4057,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.job_id}`
+                                `/dashboard/scheduled-jobs/${item.job_id}`,
                               );
                               setShowComplexDependenciesModal(false);
                             }}
@@ -4081,7 +4080,7 @@ export default function JobDependenciesPage() {
                           <button
                             onClick={() => {
                               navigate(
-                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`
+                                `/dashboard/scheduled-jobs/${item.depends_on_job_id}`,
                               );
                               setShowComplexDependenciesModal(false);
                             }}
@@ -4193,7 +4192,7 @@ export default function JobDependenciesPage() {
                         value={filterId || ""}
                         onChange={(e) =>
                           setFilterId(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All IDs"
@@ -4211,7 +4210,7 @@ export default function JobDependenciesPage() {
                         value={filterJobId || ""}
                         onChange={(e) =>
                           setFilterJobId(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Job IDs"
@@ -4229,7 +4228,7 @@ export default function JobDependenciesPage() {
                         value={filterDependsOnJobId || ""}
                         onChange={(e) =>
                           setFilterDependsOnJobId(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Depends On Job IDs"
@@ -4307,12 +4306,12 @@ export default function JobDependenciesPage() {
                           filterIsActive === ""
                             ? ""
                             : filterIsActive === true
-                            ? "true"
-                            : "false"
+                              ? "true"
+                              : "false"
                         }
                         onChange={(value) =>
                           setFilterIsActive(
-                            value === "" ? "" : value === "true" ? true : false
+                            value === "" ? "" : value === "true" ? true : false,
                           )
                         }
                         placeholder="All"
@@ -4330,7 +4329,7 @@ export default function JobDependenciesPage() {
                         value={filterLookbackDaysMin || ""}
                         onChange={(e) =>
                           setFilterLookbackDaysMin(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="Min"
@@ -4350,7 +4349,7 @@ export default function JobDependenciesPage() {
                         value={filterLookbackDaysMax || ""}
                         onChange={(e) =>
                           setFilterLookbackDaysMax(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="Max"
@@ -4370,7 +4369,7 @@ export default function JobDependenciesPage() {
                         value={filterMaxWaitMinutesMin || ""}
                         onChange={(e) =>
                           setFilterMaxWaitMinutesMin(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="Min"
@@ -4390,7 +4389,7 @@ export default function JobDependenciesPage() {
                         value={filterMaxWaitMinutesMax || ""}
                         onChange={(e) =>
                           setFilterMaxWaitMinutesMax(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="Max"
@@ -4434,7 +4433,7 @@ export default function JobDependenciesPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       <JobDependencyModal
