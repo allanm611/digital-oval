@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Search, User, Users, List } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Loader2,
+  Search,
+  User,
+  Users,
+  List,
+  Zap,
+} from "lucide-react";
 import {
   SegmentCondition,
   SegmentConditionGroup,
@@ -11,9 +20,11 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
 import SegmentPickerModal from "./SegmentPickerModal";
 import QuickListPickerModal from "./QuickListPickerModal";
+import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { UploadType } from "../../quicklists/types/quicklist";
+import { SYSTEM_EVENTS, type SystemEvent } from "../types/systemEvent";
 
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
@@ -27,6 +38,7 @@ export default function SegmentConditionsBuilder({
   const generateId = () => Math.random().toString(36).substr(2, 9);
   const [isSegmentModalOpen, setIsSegmentModalOpen] = useState(false);
   const [isQuickListModalOpen, setIsQuickListModalOpen] = useState(false);
+  const [isSystemEventModalOpen, setIsSystemEventModalOpen] = useState(false);
   const [isCreateQuickListModalOpen, setIsCreateQuickListModalOpen] =
     useState(false);
   const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
@@ -44,6 +56,8 @@ export default function SegmentConditionsBuilder({
         return Users;
       case "list":
         return List;
+      case "system_event":
+        return Zap;
       default:
         return User;
     }
@@ -111,12 +125,12 @@ export default function SegmentConditionsBuilder({
 
   const updateConditionGroup = (
     groupId: string,
-    updates: Partial<SegmentConditionGroup>
+    updates: Partial<SegmentConditionGroup>,
   ) => {
     onChange(
       conditions.map((group) =>
-        group.id === groupId ? { ...group, ...updates } : group
-      )
+        group.id === groupId ? { ...group, ...updates } : group,
+      ),
     );
   };
 
@@ -144,8 +158,8 @@ export default function SegmentConditionsBuilder({
       conditions.map((group) =>
         group.id === groupId
           ? { ...group, conditions: [...group.conditions, newCondition] }
-          : group
-      )
+          : group,
+      ),
     );
   };
 
@@ -157,15 +171,15 @@ export default function SegmentConditionsBuilder({
               ...group,
               conditions: group.conditions.filter((c) => c.id !== conditionId),
             }
-          : group
-      )
+          : group,
+      ),
     );
   };
 
   const updateCondition = (
     groupId: string,
     conditionId: string,
-    updates: Partial<SegmentCondition>
+    updates: Partial<SegmentCondition>,
   ) => {
     onChange(
       conditions.map((group) =>
@@ -175,11 +189,11 @@ export default function SegmentConditionsBuilder({
               conditions: group.conditions.map((condition) =>
                 condition.id === conditionId
                   ? { ...condition, ...updates }
-                  : condition
+                  : condition,
               ),
             }
-          : group
-      )
+          : group,
+      ),
     );
   };
 
@@ -225,7 +239,7 @@ export default function SegmentConditionsBuilder({
   // Render condition based on type
   const renderConditionFields = (
     groupId: string,
-    condition: SegmentCondition
+    condition: SegmentCondition,
   ) => {
     switch (condition.conditionType) {
       case "360_profile":
@@ -234,6 +248,8 @@ export default function SegmentConditionsBuilder({
         return renderSegmentFields(groupId, condition);
       case "list":
         return renderListFields(groupId, condition);
+      case "system_event":
+        return renderSystemEventFields(groupId, condition);
       default:
         return null;
     }
@@ -242,7 +258,7 @@ export default function SegmentConditionsBuilder({
   // Render 360 Profile condition fields
   const render360ProfileFields = (
     groupId: string,
-    condition: SegmentCondition
+    condition: SegmentCondition,
   ) => {
     const backendField = condition.field
       ? getFieldByValue(condition.field)
@@ -263,7 +279,7 @@ export default function SegmentConditionsBuilder({
             onChange={(value) => {
               const categoryId = parseInt(value as string);
               const selectedCategory = categories.find(
-                (c) => c.id === categoryId
+                (c) => c.id === categoryId,
               );
               const categoryFields = selectedCategory?.fields || [];
               const firstField =
@@ -290,7 +306,7 @@ export default function SegmentConditionsBuilder({
             options={(() => {
               if (condition.category) {
                 const selectedCategory = categories.find(
-                  (c) => c.id === condition.category
+                  (c) => c.id === condition.category,
                 );
                 const fieldsToShow = selectedCategory?.fields || [];
                 return fieldsToShow.map((field) => ({
@@ -440,7 +456,7 @@ export default function SegmentConditionsBuilder({
   // Render Segment condition fields
   const renderSegmentFields = (
     groupId: string,
-    condition: SegmentCondition
+    condition: SegmentCondition,
   ) => {
     const handleOpenSegmentModal = () => {
       setCurrentEditingCondition({
@@ -549,6 +565,61 @@ export default function SegmentConditionsBuilder({
             onChange={(value) => {
               updateCondition(groupId, condition.id, {
                 operator: value as "in" | "not_in",
+              });
+            }}
+            placeholder="Select operator"
+            className="text-sm"
+            zIndex={zIndex.popover}
+          />
+        </div>
+      </>
+    );
+  };
+
+  // Render System Event condition fields
+  const renderSystemEventFields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
+    const handleOpenSystemEventModal = () => {
+      setCurrentEditingCondition({
+        groupId,
+        conditionId: condition.id,
+      });
+      setIsSystemEventModalOpen(true);
+    };
+
+    return (
+      <>
+        {/* System Event Selection */}
+        <div className="min-w-[200px] flex-1 max-w-[500px]">
+          <button
+            type="button"
+            onClick={handleOpenSystemEventModal}
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
+          >
+            <span
+              className={
+                condition.system_event_name ? "text-gray-900" : "text-gray-500"
+              }
+            >
+              {condition.system_event_name || "Select an event..."}
+            </span>
+            <Search className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Operator for System Event */}
+        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+          <HeadlessSelect
+            options={[
+              { value: "equals", label: "Occurs" },
+              { value: "not_equals", label: "Does Not Occur" },
+            ]}
+            value={condition.operator}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                operator: value as "equals" | "not_equals",
               });
             }}
             placeholder="Select operator"
@@ -733,13 +804,15 @@ export default function SegmentConditionsBuilder({
                           { value: "360_profile", label: "360 Profile" },
                           { value: "segment", label: "Segment" },
                           { value: "list", label: "QuickList" },
+                          { value: "system_event", label: "System Event" },
                         ]}
                         value={condition.conditionType}
                         onChange={(value) => {
                           const condType = value as
                             | "360_profile"
                             | "segment"
-                            | "list";
+                            | "list"
+                            | "system_event";
                           // Reset condition based on type
                           if (condType === "360_profile") {
                             const firstField =
@@ -759,6 +832,9 @@ export default function SegmentConditionsBuilder({
                               segment_name: undefined,
                               list_id: undefined,
                               list_name: undefined,
+                              system_event_id: undefined,
+                              system_event_code: undefined,
+                              system_event_name: undefined,
                             });
                           } else if (condType === "segment") {
                             updateCondition(group.id, condition.id, {
@@ -770,6 +846,9 @@ export default function SegmentConditionsBuilder({
                               field_id: undefined,
                               list_id: undefined,
                               list_name: undefined,
+                              system_event_id: undefined,
+                              system_event_code: undefined,
+                              system_event_name: undefined,
                             });
                           } else if (condType === "list") {
                             updateCondition(group.id, condition.id, {
@@ -781,6 +860,22 @@ export default function SegmentConditionsBuilder({
                               field_id: undefined,
                               segment_id: undefined,
                               segment_name: undefined,
+                              system_event_id: undefined,
+                              system_event_code: undefined,
+                              system_event_name: undefined,
+                            });
+                          } else if (condType === "system_event") {
+                            updateCondition(group.id, condition.id, {
+                              conditionType: condType,
+                              operator: "equals",
+                              value: "",
+                              category: undefined,
+                              field: undefined,
+                              field_id: undefined,
+                              segment_id: undefined,
+                              segment_name: undefined,
+                              list_id: undefined,
+                              list_name: undefined,
                             });
                           }
                         }}
@@ -850,7 +945,7 @@ export default function SegmentConditionsBuilder({
               {
                 segment_id: segment.id,
                 segment_name: segment.name,
-              }
+              },
             );
           }
           setIsSegmentModalOpen(false);
@@ -861,7 +956,7 @@ export default function SegmentConditionsBuilder({
             ? conditions
                 .find((g) => g.id === currentEditingCondition.groupId)
                 ?.conditions.find(
-                  (c) => c.id === currentEditingCondition.conditionId
+                  (c) => c.id === currentEditingCondition.conditionId,
                 )?.segment_id
             : undefined
         }
@@ -882,7 +977,7 @@ export default function SegmentConditionsBuilder({
               {
                 list_id: quicklist.id,
                 list_name: quicklist.name,
-              }
+              },
             );
           }
           setIsQuickListModalOpen(false);
@@ -893,7 +988,7 @@ export default function SegmentConditionsBuilder({
             ? conditions
                 .find((g) => g.id === currentEditingCondition.groupId)
                 ?.conditions.find(
-                  (c) => c.id === currentEditingCondition.conditionId
+                  (c) => c.id === currentEditingCondition.conditionId,
                 )?.list_id
             : undefined
         }
@@ -913,6 +1008,30 @@ export default function SegmentConditionsBuilder({
           // Optionally refresh the quicklist picker or show success message
         }}
         uploadTypes={uploadTypes}
+      />
+
+      {/* System Event Picker Modal */}
+      <SystemEventPickerModal
+        isOpen={isSystemEventModalOpen}
+        onClose={() => {
+          setIsSystemEventModalOpen(false);
+          setCurrentEditingCondition(null);
+        }}
+        onSelect={(event: SystemEvent) => {
+          if (currentEditingCondition) {
+            updateCondition(
+              currentEditingCondition.groupId,
+              currentEditingCondition.conditionId,
+              {
+                system_event_id: event.id,
+                system_event_code: event.event_code,
+                system_event_name: event.event_name,
+              },
+            );
+          }
+          setIsSystemEventModalOpen(false);
+          setCurrentEditingCondition(null);
+        }}
       />
     </div>
   );

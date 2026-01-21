@@ -34,8 +34,8 @@ export default function ErrorState({
       <div className="flex items-start gap-3">
         <div>{Icon}</div>
         <div className="flex-1">
-          <h3 className={`${tw.cardHeading} text-gray-900`}>{title}</h3>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>{message}</p>
+          <h3 className={`${tw.cardHeading} text-gray-900`}>{String(title)}</h3>
+          {/* <p className={`${tw.textSecondary} mt-1 text-sm`}>{String(message)}</p> */}
           {children && (
             <div className="mt-2 text-sm text-gray-600">{children}</div>
           )}

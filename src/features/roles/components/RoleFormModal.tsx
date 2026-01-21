@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { Role, CreateRoleRequest, UpdateRoleRequest, DataAccessLevel } from "../types/role";
 import { roleService } from "../services/roleService";
 import { color } from "../../../shared/utils/utils";
@@ -44,15 +45,9 @@ export default function RoleFormModal({
   userId: propUserId,
 }: RoleFormModalProps) {
   const { success, error: showError } = useToast();
+  const { user } = useAuth();
 
-  const userId = propUserId || (() => {
-    try {
-      const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
-      return authUser?.user_id || undefined;
-    } catch {
-      return undefined;
-    }
-  })();
+  const userId = propUserId || user?.user_id;
 
   useEffect(() => {
     console.log("[RoleFormModal] userId:", userId);

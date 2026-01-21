@@ -36,7 +36,9 @@ export function ToastProvider({ children }: ToastProviderProps) {
   const showToast = useCallback(
     (type: ToastType, title: string, message?: string, duration?: number) => {
       const id = Math.random().toString(36).substr(2, 9);
-      const toast: Toast = { id, type, title, message, duration };
+      // Ensure message is always a string or undefined (never an object that renders as "[object Object]")
+      const safeMessage = message ? String(message) : undefined;
+      const toast: Toast = { id, type, title, message: safeMessage, duration };
 
       setToasts((prev) => [...prev, toast]);
     },

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search, List, Check } from "lucide-react";
+import { X, Search, List, Check, Loader2 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 
 // Type pour les QuickLists (simplifié pour la sélection)
 interface QuickListItem {
@@ -21,7 +22,7 @@ interface QuickListPickerModalProps {
   selectedQuickListId?: number;
 }
 
-// Données mockées pour les QuickLists (en attendant le backend)
+// Données mockées pour les QuickLists (backup en cas de problème backend)
 export const MOCK_QUICKLISTS: QuickListItem[] = [
   {
     id: 1,
@@ -88,10 +89,47 @@ export default function QuickListPickerModal({
   selectedQuickListId,
 }: QuickListPickerModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedFilter, setSelectedFilter] = useState("all"); // Default to "all" - no filter required
   const [hoveredQuickListId, setHoveredQuickListId] = useState<number | null>(
-    null
+    null,
   );
+  const [quickLists, setQuickLists] =
+    useState<QuickListItem[]>(MOCK_QUICKLISTS);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadQuickLists();
+    }
+  }, [isOpen]);
+
+  const loadQuickLists = async () => {
+    try {
+      setIsLoading(true);
+      const response = await quicklistService.getAllQuickLists({
+        page: 1,
+        limit: 100,
+      });
+      if (response.success && response.data) {
+        // Map backend response to QuickListItem format
+        const lists = response.data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          upload_type: item.upload_type,
+          row_count: item.row_count || 0,
+          created_at: item.created_at,
+        }));
+        setQuickLists(lists);
+      }
+    } catch (err) {
+      console.error("Failed to load quicklists:", err);
+      // Fall back to mock data on error
+      setQuickLists(MOCK_QUICKLISTS);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -102,11 +140,11 @@ export default function QuickListPickerModal({
     { value: "multi", label: "Multi-Channel" },
   ];
 
-  const filteredQuickLists = MOCK_QUICKLISTS.filter((quicklist) => {
+  const filteredQuickLists = quickLists.filter((quicklist) => {
     const matchesSearch =
       quicklist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (quicklist.description?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
+        searchTerm.toLowerCase(),
       );
 
     if (selectedFilter === "all") return matchesSearch;
@@ -223,7 +261,15 @@ export default function QuickListPickerModal({
 
           {/* QuickLists List */}
           <div className="flex-1 overflow-y-auto px-6">
-            {filteredQuickLists.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <Loader2
+                  className="w-12 h-12 mx-auto mb-4 animate-spin"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className={tw.textSecondary}>Loading quicklists...</p>
+              </div>
+            ) : filteredQuickLists.length === 0 ? (
               <div className="text-center py-12">
                 <List
                   className="w-12 h-12 mx-auto mb-4"
@@ -290,7 +336,7 @@ export default function QuickListPickerModal({
                       const isSelected = selectedQuickListId === quicklist.id;
                       const isHovered = hoveredQuickListId === quicklist.id;
                       const badgeColor = getUploadTypeBadgeColor(
-                        quicklist.upload_type
+                        quicklist.upload_type,
                       );
 
                       return (
@@ -306,8 +352,8 @@ export default function QuickListPickerModal({
                             backgroundColor: isSelected
                               ? `${color.primary.accent}15`
                               : isHovered
-                              ? color.interactive.hover
-                              : "white",
+                                ? color.interactive.hover
+                                : "white",
                           }}
                         >
                           <td className="px-4 py-4">
@@ -366,7 +412,7 @@ export default function QuickListPickerModal({
                           <td className="px-4 py-4 whitespace-nowrap">
                             <span className={`text-sm ${tw.textSecondary}`}>
                               {new Date(
-                                quicklist.created_at
+                                quicklist.created_at,
                               ).toLocaleDateString()}
                             </span>
                           </td>
@@ -404,6 +450,6 @@ export default function QuickListPickerModal({
         </div>
       </div>
     </>,
-    document.body
+    document.body,
   );
 }

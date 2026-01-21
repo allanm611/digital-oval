@@ -54,6 +54,9 @@ export default function ProductForm({
   const { data: productTypes } = useConfigurationData("productTypes");
   const { data: comboTypes } = useConfigurationData("comboTypes");
 
+  // Error state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // Combo data state
   const [comboData, setComboData] = useState<ComboProductData>(() => {
     if (formData.combo_data) {
@@ -71,6 +74,30 @@ export default function ProductForm({
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
+
+  // Validate form fields
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = "Product name is required";
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      newErrors.description = "Description is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission with validation
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(e);
+    }
+  };
 
   // Handle adding a tag
   const handleAddTag = (e: React.KeyboardEvent) => {
@@ -266,7 +293,7 @@ export default function ProductForm({
   return (
     <>
       {/* Form */}
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Product Information Card */}
         <div
           className={`${tw.rounded} border p-6`}
@@ -350,22 +377,36 @@ export default function ProductForm({
                 type="text"
                 required
                 value={formData.name || ""}
-                onChange={(e) => onInputChange("name", e.target.value)}
+                onChange={(e) => {
+                  onInputChange("name", e.target.value);
+                  if (errors.name) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.name;
+                      return newErrors;
+                    });
+                  }
+                }}
                 className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                 style={{
-                  borderColor: color.border.default,
+                  borderColor: errors.name ? color.status.danger : color.border.default,
                   outline: "none",
                 }}
                 placeholder="e.g., Premium Voice Bundle"
                 onFocus={(e) => {
-                  e.target.style.borderColor = color.primary.accent;
-                  e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                  e.target.style.borderColor = errors.name ? color.status.danger : color.primary.accent;
+                  e.target.style.boxShadow = `0 0 0 3px ${errors.name ? color.status.danger : color.primary.accent}20`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = color.border.default;
+                  e.target.style.borderColor = errors.name ? color.status.danger : color.border.default;
                   e.target.style.boxShadow = "none";
                 }}
               />
+              {errors.name && (
+                <p className="mt-1.5 text-sm" style={{ color: color.status.danger }}>
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* Description */}
@@ -373,27 +414,42 @@ export default function ProductForm({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Description
+                Description{" "}
+                <span style={{ color: color.status.danger }}>*</span>
               </label>
               <textarea
                 rows={4}
                 value={formData.description || ""}
-                onChange={(e) => onInputChange("description", e.target.value)}
+                onChange={(e) => {
+                  onInputChange("description", e.target.value);
+                  if (errors.description) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.description;
+                      return newErrors;
+                    });
+                  }
+                }}
                 className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all resize-none`}
                 style={{
-                  borderColor: color.border.default,
+                  borderColor: errors.description ? color.status.danger : color.border.default,
                   outline: "none",
                 }}
                 placeholder="Describe the product features and benefits..."
                 onFocus={(e) => {
-                  e.target.style.borderColor = color.primary.accent;
-                  e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                  e.target.style.borderColor = errors.description ? color.status.danger : color.primary.accent;
+                  e.target.style.boxShadow = `0 0 0 3px ${errors.description ? color.status.danger : color.primary.accent}20`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = color.border.default;
+                  e.target.style.borderColor = errors.description ? color.status.danger : color.border.default;
                   e.target.style.boxShadow = "none";
                 }}
               />
+              {errors.description && (
+                <p className="mt-1.5 text-sm" style={{ color: color.status.danger }}>
+                  {errors.description}
+                </p>
+              )}
             </div>
 
             {/* Price & Tags */}

@@ -91,7 +91,7 @@ export type ConditionGroupType = {
       field: string;
       operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "IN" | "NOT IN" | "LIKE";
       value: unknown;
-    }
+    },
   ];
 };
 
@@ -568,21 +568,26 @@ export enum ComputationStatusEnum {
 
 export interface SegmentCondition {
   id: string;
-  conditionType: "360_profile" | "segment" | "list"; // Type of condition
-  
+  conditionType: "360_profile" | "segment" | "list" | "system_event"; // Type of condition
+
   // For 360 Profile conditions
   category?: number; // Category ID for filtering fields
   field?: string; // field_value (e.g., "customer_id")
   field_id?: number; // Backend field ID - used for API calls
-  
+
   // For Segment conditions
   segment_id?: number; // Referenced segment ID
   segment_name?: string; // Referenced segment name (for display)
-  
+
   // For List conditions
   list_id?: number; // Referenced quicklist ID
   list_name?: string; // Referenced quicklist name (for display)
-  
+
+  // For System Event conditions
+  system_event_id?: number; // System event ID
+  system_event_code?: string; // Event code (e.g., "email_opened")
+  system_event_name?: string; // Event name (for display)
+
   // Common fields
   operator:
     | "equals"

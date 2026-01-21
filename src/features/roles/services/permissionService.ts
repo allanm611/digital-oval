@@ -377,20 +377,6 @@ class PermissionService {
     return this.extractPermission(response);
   }
 
-  async deactivatePermission(id: number): Promise<Permission | null> {
-    const response = await this.request<unknown>(`/${id}/deactivate`, {
-      method: "PATCH",
-    });
-    return this.extractPermission(response);
-  }
-
-  async reactivatePermission(id: number): Promise<Permission | null> {
-    const response = await this.request<unknown>(`/${id}/reactivate`, {
-      method: "PATCH",
-    });
-    return this.extractPermission(response);
-  }
-
   async markAsSensitive(
     id: number,
     body?: { requires_mfa?: boolean; requires_justification?: boolean }
@@ -432,6 +418,24 @@ class PermissionService {
       message: string;
       count: number;
     };
+  }
+
+  async deactivatePermission(
+    id: number,
+    body?: { deactivationReason: string }
+  ): Promise<Permission | null> {
+    const response = await this.request<unknown>(`/${id}/deactivate`, {
+      method: "PATCH",
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return this.extractPermission(response);
+  }
+
+  async reactivatePermission(id: number): Promise<Permission | null> {
+    const response = await this.request<unknown>(`/${id}/reactivate`, {
+      method: "PATCH",
+    });
+    return this.extractPermission(response);
   }
 }
 

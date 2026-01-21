@@ -107,10 +107,10 @@ export default function UserModal({
           }
 
           const fallbackRoleId =
-            user?.primary_role_id ?? user?.role_id
-              ? user?.primary_role_id ?? user?.role_id ?? undefined
-              : fetchedRoles.find((role) => role.is_default)?.id ??
-                fetchedRoles[0]?.id;
+            (user?.primary_role_id ?? user?.role_id)
+              ? (user?.primary_role_id ?? user?.role_id ?? undefined)
+              : (fetchedRoles.find((role) => role.is_default)?.id ??
+                fetchedRoles[0]?.id);
 
           return {
             ...prev,
@@ -120,14 +120,14 @@ export default function UserModal({
 
         if (meta?.total && meta.pageSize && meta.total > meta.pageSize) {
           console.warn(
-            "Role list truncated. Consider implementing pagination or search for roles."
+            "Role list truncated. Consider implementing pagination or search for roles.",
           );
         }
       } catch (err) {
         if (isCancelled) return;
         console.error("Failed to load roles", err);
         setRolesError(
-          err instanceof Error ? err.message : "Failed to load roles"
+          err instanceof Error ? err.message : "Failed to load roles",
         );
         setRoles([]);
       } finally {
@@ -150,11 +150,11 @@ export default function UserModal({
         value: role.id,
         label: role.name,
       })),
-    [roles]
+    [roles],
   );
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -199,7 +199,7 @@ export default function UserModal({
         }
         success(
           "User Updated",
-          `${formData.first_name} ${formData.last_name} has been updated successfully`
+          `${formData.first_name} ${formData.last_name} has been updated successfully`,
         );
       } else {
         console.log("✨ Creating new user...");
@@ -207,14 +207,14 @@ export default function UserModal({
           "Password provided:",
           !!formData.password,
           "Length:",
-          formData.password?.length
+          formData.password?.length,
         );
         // Create new user - need to hash password first
         if (!formData.password || formData.password.length < 8) {
           console.log("❌ Password validation failed");
           error(
             "Validation Error",
-            "Password is required and must be at least 8 characters"
+            "Password is required and must be at least 8 characters",
           );
           setIsLoading(false);
           return;
@@ -223,7 +223,7 @@ export default function UserModal({
         // Hash password using the dev endpoint
         console.log("🔐 Starting password hash...");
         const hashResponse = await accountService.hashPassword(
-          formData.password
+          formData.password,
         );
         console.log("🔐 Hash response:", hashResponse);
         if (!hashResponse.success) {
@@ -242,7 +242,7 @@ export default function UserModal({
 
         console.log(
           "✅ Using hashed password:",
-          hashedPassword.substring(0, 20) + "..."
+          hashedPassword.substring(0, 20) + "...",
         );
 
         const createData: CreateUserRequest = {
@@ -262,7 +262,7 @@ export default function UserModal({
         console.log("Create user response:", createResponse);
         success(
           "User Created",
-          `${formData.first_name} ${formData.last_name} has been created successfully`
+          `${formData.first_name} ${formData.last_name} has been created successfully`,
         );
       }
 
@@ -271,7 +271,7 @@ export default function UserModal({
     } catch (err) {
       error(
         user ? "Update Error" : "Creation Error",
-        err instanceof Error ? err.message : "An error occurred"
+        err instanceof Error ? err.message : "An error occurred",
       );
     } finally {
       setIsLoading(false);
@@ -281,11 +281,18 @@ export default function UserModal({
   return isOpen
     ? createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-          style={{ top: 0, left: 0, right: 0, bottom: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: zIndex.modal,
+          }}
         >
           <div
             className={`bg-white ${tw.rounded} shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto`}
+            style={{ zIndex: zIndex.modal + 1 }}
           >
             {/* Header */}
             <div
@@ -453,8 +460,8 @@ export default function UserModal({
                       isLoadingRoles
                         ? "Loading roles..."
                         : roleOptions.length > 0
-                        ? "Select a role"
-                        : "No roles available"
+                          ? "Select a role"
+                          : "No roles available"
                     }
                     disabled={isLoadingRoles || roleOptions.length === 0}
                     searchable
@@ -528,7 +535,7 @@ export default function UserModal({
             </form>
           </div>
         </div>,
-        document.body
+        document.body,
       )
     : null;
 }

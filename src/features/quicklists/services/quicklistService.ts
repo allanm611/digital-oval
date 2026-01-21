@@ -21,7 +21,7 @@ const BASE_URL = `${API_CONFIG.BASE_URL}/quicklists`;
 class QuickListService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
 
@@ -46,7 +46,7 @@ class QuickListService {
         url,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${text}`
+        `HTTP error! status: ${response.status}, details: ${text}`,
       );
     }
 
@@ -88,7 +88,7 @@ class QuickListService {
 
   async getQuickListById(
     id: number,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<SingleQuickListResponse> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<SingleQuickListResponse>(`/${id}${query}`);
@@ -100,7 +100,7 @@ class QuickListService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<QuickListDataResponseUnion> {
     const queryParams = new URLSearchParams();
     // Always skip cache by default
@@ -120,7 +120,7 @@ class QuickListService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<ImportLogsResponse> {
     const queryParams = new URLSearchParams();
     // Always skip cache by default
@@ -135,11 +135,10 @@ class QuickListService {
   }
 
   async createQuickList(
-    request: CreateQuickListRequest
+    request: CreateQuickListRequest,
   ): Promise<CreateQuickListResponseUnion> {
     const formData = new FormData();
     formData.append("file", request.file);
-    formData.append("upload_type", request.upload_type);
     formData.append("name", request.name);
     if (request.description !== undefined) {
       formData.append("description", request.description || "");
@@ -168,7 +167,7 @@ class QuickListService {
         url,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${text}`
+        `HTTP error! status: ${response.status}, details: ${text}`,
       );
     }
 
@@ -190,7 +189,7 @@ class QuickListService {
 
   async updateQuickList(
     id: number,
-    request: UpdateQuickListRequest
+    request: UpdateQuickListRequest,
   ): Promise<UpdateQuickListResponseUnion> {
     return this.request<UpdateQuickListResponseUnion>(`/${id}`, {
       method: "PATCH",
@@ -232,7 +231,7 @@ class QuickListService {
   // Export
   async exportQuickList(
     id: number,
-    format: "csv" | "json" = "csv"
+    format: "csv" | "json" = "csv",
   ): Promise<Blob> {
     const url = `${BASE_URL}/${id}/export?format=${format}`;
     const response = await fetch(url, {
@@ -277,11 +276,11 @@ class QuickListService {
 
   async getUploadTypeSchema(
     uploadType: string,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<UploadTypeSchemaResponseUnion> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<UploadTypeSchemaResponseUnion>(
-      `/upload-types/${encodeURIComponent(uploadType)}/schema${query}`
+      `/upload-types/${encodeURIComponent(uploadType)}/schema${query}`,
     );
   }
 
@@ -326,11 +325,11 @@ class QuickListService {
 
   async getTableMappingByUploadType(
     uploadType: string,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<SingleTableMappingResponse> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<SingleTableMappingResponse>(
-      `/mappings/${encodeURIComponent(uploadType)}${query}`
+      `/mappings/${encodeURIComponent(uploadType)}${query}`,
     );
   }
 }

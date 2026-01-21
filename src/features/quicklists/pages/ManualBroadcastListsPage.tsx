@@ -43,7 +43,7 @@ export default function ManualBroadcastListsPage() {
   const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(
-    null
+    null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -127,7 +127,7 @@ export default function ManualBroadcastListsPage() {
       } else {
         showError(
           "Failed to load broadcast lists",
-          response.error || "Please try again"
+          response.error || "Please try again",
         );
       }
     } catch (err) {
@@ -136,7 +136,7 @@ export default function ManualBroadcastListsPage() {
       if (!loading) {
         showError(
           "Failed to load broadcast lists",
-          "Please check your connection and try again"
+          "Please check your connection and try again",
         );
       }
     } finally {
@@ -159,7 +159,7 @@ export default function ManualBroadcastListsPage() {
   };
 
   const handleViewDetails = (quicklist: QuickList) => {
-    navigate(`/dashboard/manual-broadcast/${quicklist.id}`);
+    navigate(`/dashboard/manual-communication/${quicklist.id}`);
   };
 
   const handleDelete = (quicklist: QuickList) => {
@@ -173,12 +173,12 @@ export default function ManualBroadcastListsPage() {
     try {
       setIsDeleting(true);
       const response = await quicklistService.deleteQuickList(
-        quicklistToDelete.id
+        quicklistToDelete.id,
       );
 
       if (response.success) {
         showToast(
-          `Broadcast list "${quicklistToDelete.name}" deleted successfully!`
+          `Broadcast list "${quicklistToDelete.name}" deleted successfully!`,
         );
         setShowDeleteModal(false);
         setQuicklistToDelete(null);
@@ -227,7 +227,7 @@ export default function ManualBroadcastListsPage() {
     try {
       const response = await quicklistService.updateQuickList(
         editQuickList.id,
-        request
+        request,
       );
 
       if (response.success) {
@@ -294,10 +294,10 @@ export default function ManualBroadcastListsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Manual Broadcasts
+            Manual Communications
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage recipient lists created for manual broadcasts
+            Manage recipient lists created for Manual Communications
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function ManualBroadcastListsPage() {
             Analytics
           </button>
           <button
-            onClick={() => navigate("/dashboard/manual-broadcasts/create")}
+            onClick={() => navigate("/dashboard/manual-communications/create")}
             className={`${tw.button} flex items-center gap-2`}
           >
             <Plus className="w-4 h-4" />
@@ -400,7 +400,9 @@ export default function ManualBroadcastListsPage() {
             </p>
             {!searchTerm && (
               <button
-                onClick={() => navigate("/dashboard/manual-broadcasts/create")}
+                onClick={() =>
+                  navigate("/dashboard/manual-communications/create")
+                }
                 className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
@@ -556,7 +558,7 @@ export default function ManualBroadcastListsPage() {
                   Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
                   {Math.min(
                     pagination.page * pagination.limit,
-                    pagination.total
+                    pagination.total,
                   )}{" "}
                   of {pagination.total.toLocaleString()} broadcast lists
                 </div>

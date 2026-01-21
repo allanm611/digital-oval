@@ -73,16 +73,16 @@ export default function SelectCustomersStep({
         return;
       }
 
-      const selectedUploadType = uploadTypes.find(
-        (t) => t.upload_type === uploadType
-      );
-      if (!selectedUploadType) {
-        setError(t.manualRewards.selectUploadTypeFirst);
-        setFile(null);
-        return;
+      // File size validation (use default 10MB if no upload type selected)
+      let maxSizeMB = 10;
+      if (uploadType) {
+        const selectedUploadType = uploadTypes.find(
+          (t) => t.upload_type === uploadType
+        );
+        if (selectedUploadType) {
+          maxSizeMB = selectedUploadType.max_file_size_mb || 10;
+        }
       }
-
-      const maxSizeMB = selectedUploadType.max_file_size_mb || 10;
       const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
       if (selectedFile.size > maxSizeBytes) {
@@ -135,23 +135,25 @@ export default function SelectCustomersStep({
   }, [manualInput]);
 
   const createFileFromManualInput = (): File => {
-    const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
-    if (!selectedType) {
-      throw new Error("Upload type not selected");
-    }
-
     let columns: string[] = [];
-    if (Array.isArray(selectedType.expected_columns)) {
-      columns = selectedType.expected_columns;
-    } else if (
-      typeof selectedType.expected_columns === "object" &&
-      selectedType.expected_columns !== null
-    ) {
-      columns = Object.keys(selectedType.expected_columns);
+
+    if (uploadType) {
+      const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
+      if (selectedType) {
+        if (Array.isArray(selectedType.expected_columns)) {
+          columns = selectedType.expected_columns;
+        } else if (
+          typeof selectedType.expected_columns === "object" &&
+          selectedType.expected_columns !== null
+        ) {
+          columns = Object.keys(selectedType.expected_columns);
+        }
+      }
     }
 
+    // Default columns if no upload type selected or no columns found
     if (columns.length === 0) {
-      throw new Error("No expected columns defined for this upload type");
+      columns = ["Email", "Phone"];
     }
 
     const worksheetData: string[][] = [columns];
@@ -213,11 +215,6 @@ export default function SelectCustomersStep({
         setError(t.manualRewards.errorNoValidContacts);
         return;
       }
-    }
-
-    if (!uploadType) {
-      setError(t.manualRewards.errorSelectUploadType);
-      return;
     }
 
     if (!name.trim()) {
@@ -340,88 +337,68 @@ export default function SelectCustomersStep({
             <label className={`block text-sm font-medium ${tw.textPrimary}`}>
               {t.manualRewards.uploadFileLabel}
             </label>
-            {uploadType ? (
-              <label
-                htmlFor="audience-file-upload"
-                className={`block border-2 border-dashed ${tw.rounded} p-6 text-center transition-colors cursor-pointer`}
-                style={{
-                  borderColor: color.border.default,
-                  opacity: isSubmitting ? 0.5 : 1,
-                }}
-              >
-                <input
-                  id="audience-file-upload"
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  disabled={isSubmitting}
-                />
-                {file ? (
-                  <div className="space-y-3">
-                    <FileText
-                      className="w-12 h-12 mx-auto"
-                      style={{ color: color.status.success }}
-                    />
-                    <div>
-                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {file.name}
-                      </p>
-                      <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
-                    <span
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (fileInputRef.current) {
-                          fileInputRef.current.click();
-                        }
-                      }}
-                      className="text-sm font-medium cursor-pointer"
-                      style={{ color: color.primary.accent }}
-                    >
-                      {t.manualRewards.changeFile}
-                    </span>
+            <label
+              htmlFor="audience-file-upload"
+              className={`block border-2 border-dashed ${tw.rounded} p-6 text-center transition-colors cursor-pointer`}
+              style={{
+                borderColor: color.border.default,
+                opacity: isSubmitting ? 0.5 : 1,
+              }}
+            >
+              <input
+                id="audience-file-upload"
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={isSubmitting}
+              />
+              {file ? (
+                <div className="space-y-3">
+                  <FileText
+                    className="w-12 h-12 mx-auto"
+                    style={{ color: color.status.success }}
+                  />
+                  <div>
+                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {file.name}
+                    </p>
+                    <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                      {formatFileSize(file.size)}
+                    </p>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    <Upload
-                      className="w-12 h-12 mx-auto"
-                      style={{ color: color.text.muted }}
-                    />
-                    <div>
-                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {t.manualRewards.clickToUpload}
-                      </p>
-                      <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                        {t.manualRewards.dragAndDrop}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </label>
-            ) : (
-              <div
-                className={`border-2 border-dashed ${tw.rounded} p-6 text-center opacity-50 cursor-not-allowed`}
-                style={{ borderColor: color.border.default }}
-              >
-                <Upload
-                  className="w-12 h-12 mx-auto"
-                  style={{ color: color.text.muted }}
-                />
-                <div className="space-y-3 mt-3">
-                  <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                    {t.manualRewards.clickToUpload}
-                  </p>
-                  <p className={`text-xs ${tw.textSecondary}`}>
-                    {t.manualRewards.selectUploadTypeFirst}
-                  </p>
+                  <span
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (fileInputRef.current) {
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    className="text-sm font-medium cursor-pointer"
+                    style={{ color: color.primary.accent }}
+                  >
+                    {t.manualRewards.changeFile}
+                  </span>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="space-y-3">
+                  <Upload
+                    className="w-12 h-12 mx-auto"
+                    style={{ color: color.text.muted }}
+                  />
+                  <div>
+                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {t.manualRewards.clickToUpload}
+                    </p>
+                    <p className={`text-xs ${tw.textSecondary} mt-1`}>
+                      {t.manualRewards.dragAndDrop}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </label>
           </div>
         )}
 
@@ -519,7 +496,6 @@ export default function SelectCustomersStep({
           onClick={handleNext}
           disabled={
             isSubmitting ||
-            !uploadType ||
             !name.trim() ||
             (inputMode === "file" && !file) ||
             (inputMode === "manual" && manualInputValidation.validCount === 0)

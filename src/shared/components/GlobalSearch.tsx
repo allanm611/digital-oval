@@ -384,7 +384,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           .filter(
             (s) =>
               s.name?.toLowerCase().includes(query.toLowerCase()) ||
-              s.description?.toLowerCase().includes(query.toLowerCase())
+              s.description?.toLowerCase().includes(query.toLowerCase()),
           )
           .slice(0, 3)
           .forEach((segment) => {
@@ -596,7 +596,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
                 (quicklist.description as string) ||
                 (quicklist.upload_type as string) ||
                 undefined,
-              url: `/dashboard/manual-broadcast/${quicklist.id}`,
+              url: `/dashboard/manual-communication/${quicklist.id}`,
             });
           });
       }
@@ -607,7 +607,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           (config) =>
             config.name.toLowerCase().includes(query.toLowerCase()) ||
             config.description.toLowerCase().includes(query.toLowerCase()) ||
-            config.category.toLowerCase().includes(query.toLowerCase())
+            config.category.toLowerCase().includes(query.toLowerCase()),
         )
         .slice(0, 3)
         .forEach((config) => {
@@ -691,7 +691,7 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       setSelectedIndex((prev) =>
-        prev < suggestions.length - 1 ? prev + 1 : prev
+        prev < suggestions.length - 1 ? prev + 1 : prev,
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();

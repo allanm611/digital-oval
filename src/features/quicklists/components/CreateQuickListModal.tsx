@@ -45,12 +45,7 @@ export default function CreateQuickListModal({
   };
 
   const handleSubmit = async () => {
-    if (
-      !isFormValid ||
-      !audienceData.file ||
-      !audienceData.uploadType ||
-      !audienceData.name
-    ) {
+    if (!isFormValid || !audienceData.file || !audienceData.name) {
       setError("Please fill in all required fields");
       return;
     }
@@ -61,7 +56,7 @@ export default function CreateQuickListModal({
 
       await onSubmit({
         file: audienceData.file,
-        upload_type: audienceData.uploadType,
+        upload_type: audienceData.uploadType || "",
         name: audienceData.name,
         description: audienceData.description || null,
         created_by: null,
@@ -100,7 +95,7 @@ export default function CreateQuickListModal({
           <div>
             <h2 className={`text-lg font-medium ${tw.textPrimary}`}>
               {/* Create Broadcast List */}
-              Create Quicklist 
+              Create Quicklist
             </h2>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
               Upload an Excel file to create a new broadcast recipient list
@@ -138,6 +133,7 @@ export default function CreateQuickListModal({
             uploadTypes={uploadTypes}
             disabled={isSubmitting}
             onValidationChange={setIsFormValid}
+            // uploadTypeRequired={false}
           />
 
           {/* Error Message */}
@@ -200,6 +196,6 @@ export default function CreateQuickListModal({
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

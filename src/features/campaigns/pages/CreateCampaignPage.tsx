@@ -451,6 +451,8 @@ export default function CreateCampaignPage() {
           // Restore all data
           if (campaignData.formData) {
             setFormData(campaignData.formData);
+            // Also restore to localStorage to persist the data
+            localStorage.setItem("campaign_form_data", JSON.stringify(campaignData.formData));
           }
           if (
             campaignData.selectedSegments &&
@@ -458,18 +460,24 @@ export default function CreateCampaignPage() {
           ) {
             console.log("Restoring segments:", campaignData.selectedSegments);
             setSelectedSegments(campaignData.selectedSegments);
+            // Also restore to localStorage to persist the data
+            localStorage.setItem("campaign_segments", JSON.stringify(campaignData.selectedSegments));
           }
           if (
             campaignData.selectedOffers &&
             Array.isArray(campaignData.selectedOffers)
           ) {
             setSelectedOffers(campaignData.selectedOffers);
+            // Also restore to localStorage to persist the data
+            localStorage.setItem("campaign_offers", JSON.stringify(campaignData.selectedOffers));
           }
           if (
             campaignData.segmentOfferMappings &&
             Array.isArray(campaignData.segmentOfferMappings)
           ) {
             setSegmentOfferMappings(campaignData.segmentOfferMappings);
+            // Also restore to localStorage to persist the data
+            localStorage.setItem("campaign_mappings", JSON.stringify(campaignData.segmentOfferMappings));
           }
           if (campaignData.controlGroup) {
             setControlGroup(campaignData.controlGroup);

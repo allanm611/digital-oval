@@ -124,7 +124,7 @@ export default function QuickListDetailsPage() {
       const quicklistId = parseInt(id);
       const response = await quicklistService.getQuickListById(
         quicklistId,
-        true
+        true,
       );
 
       if (response.success) {
@@ -133,7 +133,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error loading quicklist",
-        err instanceof Error ? err.message : "Failed to load quicklist details"
+        err instanceof Error ? err.message : "Failed to load quicklist details",
       );
     } finally {
       setIsLoading(false);
@@ -159,7 +159,7 @@ export default function QuickListDetailsPage() {
           const firstRow = response.data[0];
           const extractedColumns = Object.keys(firstRow).filter(
             (key) =>
-              !["id", "quicklist_id", "created_at", "row_number"].includes(key)
+              !["id", "quicklist_id", "created_at", "row_number"].includes(key),
           );
           setDataColumns(extractedColumns);
         } else {
@@ -169,7 +169,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error loading data",
-        err instanceof Error ? err.message : "Failed to load quicklist data"
+        err instanceof Error ? err.message : "Failed to load quicklist data",
       );
     } finally {
       setLoadingData(false);
@@ -194,7 +194,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error loading import logs",
-        err instanceof Error ? err.message : "Failed to load import logs"
+        err instanceof Error ? err.message : "Failed to load import logs",
       );
     } finally {
       setLoadingLogs(false);
@@ -218,7 +218,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error exporting quicklist",
-        err instanceof Error ? err.message : "Failed to export quicklist"
+        err instanceof Error ? err.message : "Failed to export quicklist",
       );
     }
   };
@@ -242,7 +242,7 @@ export default function QuickListDetailsPage() {
     try {
       const response = await quicklistService.updateQuickList(
         quicklist.id,
-        request
+        request,
       );
       if (response.success) {
         setQuicklist(response.data);
@@ -252,7 +252,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error updating quicklist",
-        err instanceof Error ? err.message : "Failed to update QuickList"
+        err instanceof Error ? err.message : "Failed to update QuickList",
       );
       throw err;
     }
@@ -275,7 +275,7 @@ export default function QuickListDetailsPage() {
     } catch (err) {
       showError(
         "Error deleting quicklist",
-        err instanceof Error ? err.message : "Failed to delete QuickList"
+        err instanceof Error ? err.message : "Failed to delete QuickList",
       );
     } finally {
       setIsDeleting(false);
@@ -293,7 +293,7 @@ export default function QuickListDetailsPage() {
       setLoadingMapping(true);
       const response = await quicklistService.getTableMappingByUploadType(
         quicklist.upload_type,
-        true
+        true,
       );
       if (response.success) {
         setTableMapping(response.data);
@@ -313,7 +313,7 @@ export default function QuickListDetailsPage() {
       setLoadingSchema(true);
       const response = await quicklistService.getUploadTypeSchema(
         quicklist.upload_type,
-        true
+        true,
       );
       if (response.success) {
         setUploadTypeSchema(response.data);
@@ -341,8 +341,10 @@ export default function QuickListDetailsPage() {
 
     // Navigate back based on current route context
     const currentPath = location.pathname;
-    const isManualBroadcast = currentPath.includes('/manual-broadcast/');
-    const fallbackPath = isManualBroadcast ? "/dashboard/manual-broadcasts" : "/dashboard/quicklists";
+    const isManualBroadcast = currentPath.includes("/manual-communication/");
+    const fallbackPath = isManualBroadcast
+      ? "/dashboard/manual-communications"
+      : "/dashboard/quicklists";
     navigateBackOrFallback(navigate, fallbackPath);
   };
 
@@ -982,7 +984,7 @@ export default function QuickListDetailsPage() {
                                 undefined &&
                               (row as Record<string, unknown>)[column] !== null
                                 ? String(
-                                    (row as Record<string, unknown>)[column]
+                                    (row as Record<string, unknown>)[column],
                                   )
                                 : "-"}
                             </td>
@@ -1094,8 +1096,8 @@ export default function QuickListDetailsPage() {
                                 log.import_status === "success"
                                   ? "bg-green-100 text-green-800"
                                   : log.import_status === "failed"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-yellow-100 text-yellow-800"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-yellow-100 text-yellow-800"
                               }`}
                             >
                               {log.import_status}
@@ -1132,7 +1134,7 @@ export default function QuickListDetailsPage() {
           quicklist={quicklist}
           onSuccess={(result) => {
             showToast(
-              `Communication sent successfully! ${result.total_messages_sent} messages sent.`
+              `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
             );
             setIsCommunicateModalOpen(false);
           }}

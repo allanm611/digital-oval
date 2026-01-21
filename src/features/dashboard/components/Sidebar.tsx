@@ -24,7 +24,6 @@ import {
   Flag,
   // Bell,
   List,
-  Upload,
   Fingerprint,
   Activity,
   LineChart,
@@ -507,27 +506,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ],
       },
       {
-        name: "Manual Actions",
-        href: "/dashboard/manual-actions",
+        name: "Manual Broadcasts",
+        href: "/dashboard/manual-broadcasts",
         icon: Zap,
-        type: "parent",
+        type: "single",
         entity: "campaigns",
-        children: [
-          {
-            name: "Manual Broadcasts",
-            href: "/dashboard/manual-broadcasts",
-            icon: Upload,
-            type: "single",
-            entity: "segments",
-          },
-          {
-            name: "Manual Rewards",
-            href: "/dashboard/manual-rewards",
-            icon: Gift,
-            type: "single",
-            entity: "offers",
-          },
-        ],
       },
 
       {

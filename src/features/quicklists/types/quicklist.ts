@@ -168,7 +168,7 @@ export interface QuickListStats {
 // Request Types
 export interface CreateQuickListRequest {
   file: File;
-  upload_type: string;
+  upload_type?: string;
   name: string;
   description?: string | null;
   created_by?: string | null;

@@ -1,5 +1,15 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Plus, Trash2, Edit2, Copy, Power, Shield, Key, Lock, Search } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Copy,
+  Power,
+  Shield,
+  Key,
+  Lock,
+  Search,
+} from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -75,16 +85,7 @@ export default function TeamRolesPermissionsPage() {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
 
-  const userId = user && user.id
-    ? user.id
-    : (() => {
-        try {
-          const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
-          return authUser?.user_id || undefined;
-        } catch {
-          return undefined;
-        }
-      })();
+  const userId = user?.user_id;
 
   useEffect(() => {
     console.log("[TeamRolesPermissionsPage] userId calculated:", userId);
@@ -100,10 +101,12 @@ export default function TeamRolesPermissionsPage() {
   const [rolesSearch, setRolesSearch] = useState("");
   const [rolesLevelFilter, setRolesLevelFilter] = useState("");
   const [rolesDataAccessFilter, setRolesDataAccessFilter] = useState("");
-  const [rolesPaginationModel, setRolesPaginationModel] = useState<PaginationModel>({
-    page: 0,
-    pageSize: 25,
-  });
+  const [togglingRoleId, setTogglingRoleId] = useState<number | null>(null);
+  const [rolesPaginationModel, setRolesPaginationModel] =
+    useState<PaginationModel>({
+      page: 0,
+      pageSize: 25,
+    });
 
   // Permissions tab state
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -111,23 +114,39 @@ export default function TeamRolesPermissionsPage() {
   const [permissionsTotal, setPermissionsTotal] = useState(0);
   const [permissionsSearch, setPermissionsSearch] = useState("");
   const [permissionsActionFilter, setPermissionsActionFilter] = useState("");
-  const [permissionsPaginationModel, setPermissionsPaginationModel] = useState<PaginationModel>({
-    page: 0,
-    pageSize: 25,
-  });
+  const [permissionsPaginationModel, setPermissionsPaginationModel] =
+    useState<PaginationModel>({
+      page: 0,
+      pageSize: 25,
+    });
 
   // Modals state
   const [roleFormOpen, setRoleFormOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | undefined>();
   const [permFormOpen, setPermFormOpen] = useState(false);
-  const [editingPermission, setEditingPermission] = useState<Permission | undefined>();
+  const [editingPermission, setEditingPermission] = useState<
+    Permission | undefined
+  >();
   const [assignPermOpen, setAssignPermOpen] = useState(false);
-  const [selectedRoleForAssign, setSelectedRoleForAssign] = useState<Role | undefined>();
+  const [selectedRoleForAssign, setSelectedRoleForAssign] = useState<
+    Role | undefined
+  >();
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<{ type: "role" | "permission"; id: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    type: "role" | "permission";
+    id: number;
+  } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Role deactivation modal state
+  const [deactivateRoleModalOpen, setDeactivateRoleModalOpen] = useState(false);
+  const [roleToDeactivate, setRoleToDeactivate] = useState<Role | null>(null);
+  const [roleDeactivationReason, setRoleDeactivationReason] = useState("");
+  const [deactivatingRoleId, setDeactivatingRoleId] = useState<number | null>(
+    null,
+  );
 
   // ============ ROLES TAB FUNCTIONS ============
 
@@ -144,7 +163,10 @@ export default function TeamRolesPermissionsPage() {
       setRoles(response.roles);
       setRolesTotal(response.meta?.total || response.roles.length);
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to load roles");
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to load roles",
+      );
     } finally {
       setRolesLoading(false);
     }
@@ -164,16 +186,20 @@ export default function TeamRolesPermissionsPage() {
       filtered = filtered.filter(
         (r) =>
           r.name.toLowerCase().includes(term) ||
-          r.code.toLowerCase().includes(term)
+          r.code.toLowerCase().includes(term),
       );
     }
 
     if (rolesLevelFilter) {
-      filtered = filtered.filter((r) => r.role_level === Number(rolesLevelFilter));
+      filtered = filtered.filter(
+        (r) => r.role_level === Number(rolesLevelFilter),
+      );
     }
 
     if (rolesDataAccessFilter) {
-      filtered = filtered.filter((r) => r.data_access_level === rolesDataAccessFilter);
+      filtered = filtered.filter(
+        (r) => r.data_access_level === rolesDataAccessFilter,
+      );
     }
 
     return filtered;
@@ -203,26 +229,79 @@ export default function TeamRolesPermissionsPage() {
       success("Success", `Role "${role.name}" has been cloned`);
       fetchRoles();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to clone role");
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to clone role",
+      );
     } finally {
       setRolesLoading(false);
     }
   };
 
-  const handleToggleRoleActive = async (role: Role) => {
+  const handleToggleRoleActive = (role: Role) => {
+    if (role.is_active) {
+      // Show modal for deactivation reason
+      setRoleToDeactivate(role);
+      setRoleDeactivationReason("");
+      setDeactivateRoleModalOpen(true);
+    } else {
+      // Reactivate without reason
+      confirmReactivateRole(role);
+    }
+  };
+
+  const confirmDeactivateRole = async () => {
+    if (!roleToDeactivate) return;
+
+    if (!roleDeactivationReason.trim()) {
+      showError("Error", "Deactivation reason is required");
+      return;
+    }
+
     try {
-      setRolesLoading(true);
-      if (role.is_active) {
-        await roleService.deactivateRole(role.id, userId);
-      } else {
-        await roleService.activateRole(role.id, userId);
-      }
-      success("Success", `Role "${role.name}" has been ${role.is_active ? "deactivated" : "activated"}`);
-      fetchRoles();
+      setDeactivatingRoleId(roleToDeactivate.id);
+      await roleService.deactivateRole(roleToDeactivate.id, userId, {
+        reason: roleDeactivationReason.trim(),
+      });
+      success(
+        "Success",
+        `Role "${roleToDeactivate.name}" has been deactivated`,
+      );
+      setDeactivateRoleModalOpen(false);
+      setRoleToDeactivate(null);
+      setRoleDeactivationReason("");
+      // Update the specific role in the list instead of reloading
+      setRoles(
+        roles.map((r) =>
+          r.id === roleToDeactivate.id ? { ...r, is_active: false } : r,
+        ),
+      );
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to update role status");
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to deactivate role",
+      );
     } finally {
-      setRolesLoading(false);
+      setDeactivatingRoleId(null);
+    }
+  };
+
+  const confirmReactivateRole = async (role: Role) => {
+    try {
+      setTogglingRoleId(role.id);
+      await roleService.reactivateRole(role.id, { reactivated_by: userId });
+      success("Success", `Role "${role.name}" has been reactivated`);
+      // Update the specific role in the list instead of reloading
+      setRoles(
+        roles.map((r) => (r.id === role.id ? { ...r, is_active: true } : r)),
+      );
+    } catch (err) {
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to reactivate role",
+      );
+    } finally {
+      setTogglingRoleId(null);
     }
   };
 
@@ -243,7 +322,10 @@ export default function TeamRolesPermissionsPage() {
       setDeleteTarget(null);
       fetchRoles();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to delete role");
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to delete role",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -263,7 +345,8 @@ export default function TeamRolesPermissionsPage() {
       setPermissionsLoading(true);
       const permissionsArray = await permissionService.getActivePermissions({
         limit: permissionsPaginationModel.pageSize,
-        offset: permissionsPaginationModel.page * permissionsPaginationModel.pageSize,
+        offset:
+          permissionsPaginationModel.page * permissionsPaginationModel.pageSize,
         skipCache: true,
       });
 
@@ -272,7 +355,10 @@ export default function TeamRolesPermissionsPage() {
       setPermissionsTotal(permissionsArray?.length || 0);
     } catch (err) {
       console.error("Failed to load permissions:", err);
-      showError("Error", err instanceof Error ? err.message : "Failed to load permissions");
+      showError(
+        "Error",
+        err instanceof Error ? err.message : "Failed to load permissions",
+      );
       setPermissions([]);
     } finally {
       setPermissionsLoading(false);
@@ -293,7 +379,7 @@ export default function TeamRolesPermissionsPage() {
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(term) ||
-          p.code.toLowerCase().includes(term)
+          p.code.toLowerCase().includes(term),
       );
     }
 
@@ -314,23 +400,35 @@ export default function TeamRolesPermissionsPage() {
     setPermFormOpen(true);
   };
 
-  const handleDeletePermission = (permission: Permission) => {
-    setDeleteTarget({ type: "permission", id: permission.id });
-    setDeleteConfirmOpen(true);
-  };
-
-  const confirmDeletePermission = async () => {
-    if (!deleteTarget || deleteTarget.type !== "permission") return;
-
+  const handleTogglePermissionActive = async (permission: Permission) => {
     try {
       setIsDeleting(true);
-      const permission = permissions.find((p) => p.id === deleteTarget.id);
-      success("Success", `Permission "${permission?.name}" has been removed`);
-      setDeleteConfirmOpen(false);
-      setDeleteTarget(null);
-      fetchPermissions();
+      if (permission.is_active) {
+        await permissionService.deactivatePermission(permission.id);
+        success(
+          "Success",
+          `Permission "${permission.name}" has been deactivated`,
+        );
+      } else {
+        await permissionService.reactivatePermission(permission.id);
+        success(
+          "Success",
+          `Permission "${permission.name}" has been reactivated`,
+        );
+      }
+      // Update the specific permission in the list instead of reloading
+      setPermissions(
+        permissions.map((p) =>
+          p.id === permission.id ? { ...p, is_active: !p.is_active } : p,
+        ),
+      );
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to delete permission");
+      showError(
+        "Error",
+        err instanceof Error
+          ? err.message
+          : "Failed to update permission status",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -358,9 +456,7 @@ export default function TeamRolesPermissionsPage() {
         {activeTab !== "assign" && (
           <button
             onClick={
-              activeTab === "roles"
-                ? handleCreateRole
-                : handleCreatePermission
+              activeTab === "roles" ? handleCreateRole : handleCreatePermission
             }
             className={`${tw.button} flex items-center gap-2 flex-shrink-0`}
           >
@@ -381,9 +477,7 @@ export default function TeamRolesPermissionsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 relative flex-shrink-0 ${
-                  isActive
-                    ? "text-black"
-                    : "text-gray-600 hover:text-gray-900"
+                  isActive ? "text-black" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -427,7 +521,10 @@ export default function TeamRolesPermissionsPage() {
 
             <div className="w-48">
               <HeadlessSelect
-                options={[{ value: "", label: "All Data Access" }, ...DATA_ACCESS_LEVELS]}
+                options={[
+                  { value: "", label: "All Data Access" },
+                  ...DATA_ACCESS_LEVELS,
+                ]}
                 value={rolesDataAccessFilter}
                 onChange={(value) => setRolesDataAccessFilter(String(value))}
                 placeholder="Filter by access"
@@ -440,33 +537,106 @@ export default function TeamRolesPermissionsPage() {
             <div className="flex justify-center py-8">
               <LoadingSpinner />
             </div>
+          ) : filteredRoles.length === 0 ? (
+            <div
+              className="border border-gray-200 rounded-lg p-8 text-center"
+              style={{ backgroundColor: color.surface.cards }}
+            >
+              <p className="text-gray-600 font-medium">
+                No roles found matching the selected filters
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table className="w-full min-w-[800px]" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+              <table
+                className="w-full min-w-[800px]"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
                 <thead style={{ background: color.surface.tableHeader }}>
                   <tr>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Role Name</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Code</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Level</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Data Access</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Users</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Status</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Actions</th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Role Name
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Code
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Level
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Data Access
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Users
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRoles.map((role) => (
                     <tr key={role.id} className="transition-colors">
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>{role.name}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono" style={{ backgroundColor: color.surface.tablebodybg }}>{role.code}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600" style={{ backgroundColor: color.surface.tablebodybg }}>{role.role_level}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {role.name}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {role.code}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {role.role_level}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span className="inline-block px-2.5 py-1 rounded text-sm font-medium bg-gray-100 text-gray-800">
                           {role.data_access_level || "—"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600" style={{ backgroundColor: color.surface.tablebodybg }}>{role.current_user_count || 0}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {role.current_user_count || 0}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span
                           className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
                             role.is_active
@@ -477,7 +647,10 @@ export default function TeamRolesPermissionsPage() {
                           {role.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleEditRole(role)}
@@ -495,14 +668,21 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleToggleRoleActive(role)}
+                            disabled={togglingRoleId === role.id}
                             className={`p-1.5 rounded transition-colors ${
-                              role.is_active
-                                ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
-                                : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                              togglingRoleId === role.id
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : role.is_active
+                                  ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
+                                  : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                             }`}
-                            title={role.is_active ? "Deactivate" : "Activate"}
+                            title={role.is_active ? "Deactivate" : "Reactivate"}
                           >
-                            <Power className="w-4 h-4" />
+                            {togglingRoleId === role.id ? (
+                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            ) : (
+                              <Power className="w-4 h-4" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleDeleteRole(role)}
@@ -540,7 +720,10 @@ export default function TeamRolesPermissionsPage() {
 
             <div className="w-48">
               <HeadlessSelect
-                options={[{ value: "", label: "All Actions" }, ...PERMISSION_ACTIONS]}
+                options={[
+                  { value: "", label: "All Actions" },
+                  ...PERMISSION_ACTIONS,
+                ]}
                 value={permissionsActionFilter}
                 onChange={(value) => setPermissionsActionFilter(String(value))}
                 placeholder="Filter by action"
@@ -553,27 +736,92 @@ export default function TeamRolesPermissionsPage() {
             <div className="flex justify-center py-8">
               <LoadingSpinner />
             </div>
+          ) : filteredPermissions.length === 0 ? (
+            <div
+              className="border border-gray-200 rounded-lg p-8 text-center"
+              style={{ backgroundColor: color.surface.cards }}
+            >
+              <p className="text-gray-600 font-medium">
+                No permissions found matching the selected filters
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table className="w-full min-w-[800px]" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+              <table
+                className="w-full min-w-[800px]"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
                 <thead style={{ background: color.surface.tableHeader }}>
                   <tr>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Permission Name</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Code</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Action</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Sensitive</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Requires MFA</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Status</th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>Actions</th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Permission Name
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Code
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Action
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Sensitive
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Requires MFA
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredPermissions.map((permission) => (
                     <tr key={permission.id} className="transition-colors">
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>{permission.name}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono" style={{ backgroundColor: color.surface.tablebodybg }}>{permission.code}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600" style={{ backgroundColor: color.surface.tablebodybg }}>{permission.action}</td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {permission.name}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {permission.code}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        {permission.action}
+                      </td>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span
                           className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
                             permission.is_sensitive
@@ -584,7 +832,10 @@ export default function TeamRolesPermissionsPage() {
                           {permission.is_sensitive ? "Yes" : "No"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span
                           className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
                             permission.requires_mfa
@@ -595,7 +846,10 @@ export default function TeamRolesPermissionsPage() {
                           {permission.requires_mfa ? "Yes" : "No"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <span
                           className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
                             permission.is_active
@@ -606,7 +860,10 @@ export default function TeamRolesPermissionsPage() {
                           {permission.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                      <td
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleEditPermission(permission)}
@@ -616,11 +873,22 @@ export default function TeamRolesPermissionsPage() {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDeletePermission(permission)}
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
+                            onClick={() =>
+                              handleTogglePermissionActive(permission)
+                            }
+                            disabled={isDeleting}
+                            className={`p-1.5 rounded transition-colors ${
+                              isDeleting
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : permission.is_active
+                                  ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
+                                  : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                            }`}
+                            title={
+                              permission.is_active ? "Deactivate" : "Reactivate"
+                            }
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Power className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
@@ -675,7 +943,9 @@ export default function TeamRolesPermissionsPage() {
           <div className="bg-white rounded-lg shadow-lg max-w-sm w-full mx-4">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
-                {deleteTarget?.type === "role" ? "Delete Role?" : "Delete Permission?"}
+                {deleteTarget?.type === "role"
+                  ? "Delete Role?"
+                  : "Delete Permission?"}
               </h3>
             </div>
             <div className="px-6 py-4">
@@ -693,12 +963,75 @@ export default function TeamRolesPermissionsPage() {
                 Cancel
               </button>
               <button
-                onClick={deleteTarget?.type === "role" ? confirmDeleteRole : confirmDeletePermission}
+                onClick={
+                  deleteTarget?.type === "role"
+                    ? confirmDeleteRole
+                    : confirmDeletePermission
+                }
                 disabled={isDeleting}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isDeleting && <LoadingSpinner />}
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Deactivation Modal */}
+      {deactivateRoleModalOpen && roleToDeactivate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Deactivate Role
+              </h3>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-3">
+                  You are about to deactivate{" "}
+                  <span className="font-medium">"{roleToDeactivate.name}"</span>
+                  . Please provide a reason for this action.
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Deactivation Reason{" "}
+                  <span style={{ color: color.status.danger }}>*</span>
+                </label>
+                <textarea
+                  value={roleDeactivationReason}
+                  onChange={(e) => setRoleDeactivationReason(e.target.value)}
+                  placeholder="Enter the reason for deactivation..."
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  rows={4}
+                  disabled={deactivatingRoleId !== null}
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setDeactivateRoleModalOpen(false);
+                  setRoleToDeactivate(null);
+                  setRoleDeactivationReason("");
+                }}
+                disabled={deactivatingRoleId !== null}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeactivateRole}
+                disabled={
+                  deactivatingRoleId !== null || !roleDeactivationReason.trim()
+                }
+                className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deactivatingRoleId !== null && <LoadingSpinner />}
+                Deactivate
               </button>
             </div>
           </div>

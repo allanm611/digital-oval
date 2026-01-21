@@ -468,9 +468,13 @@ function BasicInfoStep({
 // Step 2: Offer Products
 function ProductStepWrapper({
   // formData,
+  formData,
   setFormData,
   selectedProducts,
   onProductsChange,
+  creatives,
+  trackingSources,
+  rewards,
 }: Omit<
   StepProps,
   | "currentStep"
@@ -478,11 +482,8 @@ function ProductStepWrapper({
   | "onNext"
   | "onPrev"
   | "onSubmit"
-  | "creatives"
   | "setCreatives"
-  | "trackingSources"
   | "setTrackingSources"
-  | "rewards"
   | "setRewards"
   | "isLoading"
   | "validationErrors"
@@ -494,9 +495,13 @@ function ProductStepWrapper({
 > & {
   selectedProducts: LinkedProduct[];
   onProductsChange: (products: LinkedProduct[]) => void;
+  creatives?: any[];
+  trackingSources?: any[];
+  rewards?: any[];
 }) {
   // Track previous products to prevent unnecessary updates
   const prevProductsRef = useRef<LinkedProduct[]>(selectedProducts);
+
 
   const handleProductsChange = useCallback(
     (products: LinkedProduct[]) => {
@@ -1257,7 +1262,13 @@ function ReviewStep({
   );
 }
 
-export default function CreateOfferPage() {
+interface CreateOfferPageProps {
+  onSuccess?: (offerId: number) => void;
+}
+
+export default function CreateOfferPage({
+  onSuccess,
+}: CreateOfferPageProps = {}) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
@@ -1310,6 +1321,7 @@ export default function CreateOfferPage() {
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1])); // Track visited steps
 
   const { user } = useAuth();
+  const hasRestoredDataRef = useRef(false);
 
   // Persist form data to localStorage
   useFormDataPersistence("offer_form_data", formData, setFormData, isEditMode);
@@ -1332,6 +1344,69 @@ export default function CreateOfferPage() {
     setSelectedProducts,
     isEditMode,
   );
+
+  // Restore offer data when returning from product creation
+  useEffect(() => {
+    // Prevent multiple restorations
+    if (hasRestoredDataRef.current) {
+      return;
+    }
+
+    const returnFromProductCreate = searchParams.get("returnFromProductCreate");
+    if (returnFromProductCreate === "true" && !id) {
+      hasRestoredDataRef.current = true;
+
+      const savedData = sessionStorage.getItem("offerFormData");
+      if (savedData) {
+        try {
+          const offerData = JSON.parse(savedData);
+
+          console.log("Restoring offer data after product creation:", {
+            formData: offerData.formData,
+            selectedProducts: offerData.selectedProducts?.length || 0,
+            creatives: offerData.creatives?.length || 0,
+            trackingSources: offerData.trackingSources?.length || 0,
+            rewards: offerData.rewards?.length || 0,
+          });
+
+          // Restore all data
+          if (offerData.formData) {
+            setFormData(offerData.formData);
+            localStorage.setItem("offer_form_data", JSON.stringify(offerData.formData));
+          }
+          if (offerData.selectedProducts && Array.isArray(offerData.selectedProducts)) {
+            setSelectedProducts(offerData.selectedProducts);
+            localStorage.setItem("offer_products", JSON.stringify(offerData.selectedProducts));
+          }
+          if (offerData.creatives && Array.isArray(offerData.creatives)) {
+            setCreatives(offerData.creatives);
+            localStorage.setItem("offer_creatives", JSON.stringify(offerData.creatives));
+          }
+          if (offerData.trackingSources && Array.isArray(offerData.trackingSources)) {
+            setTrackingSources(offerData.trackingSources);
+            localStorage.setItem("offer_tracking_sources", JSON.stringify(offerData.trackingSources));
+          }
+          if (offerData.rewards && Array.isArray(offerData.rewards)) {
+            setRewards(offerData.rewards);
+            localStorage.setItem("offer_rewards", JSON.stringify(offerData.rewards));
+          }
+
+          // Set current step to 2 (product step)
+          setCurrentStep(2);
+
+          // Clean up sessionStorage
+          sessionStorage.removeItem("offerFormData");
+        } catch (error) {
+          console.error("Failed to restore offer data:", error);
+          sessionStorage.removeItem("offerFormData");
+          setCurrentStep(2);
+        }
+      } else {
+        // No saved data, just set step to 2
+        setCurrentStep(2);
+      }
+    }
+  }, [searchParams, id]);
 
   // Helper to replace variables in text
   const replaceVariables = (
@@ -1936,6 +2011,12 @@ export default function CreateOfferPage() {
       // Show success message
       showToast(`Offer ${isEditMode ? "updated" : "created"} successfully`);
 
+      // Call onSuccess callback if provided (modal mode) and not in edit mode
+      if (offerId && onSuccess && !isEditMode) {
+        onSuccess(offerId);
+        return;
+      }
+
       // Check if we should return to campaign creation flow
       if (returnToCampaign && returnUrl && !isEditMode) {
         // Store the created offer ID in sessionStorage for campaign flow tracking
@@ -2268,6 +2349,9 @@ export default function CreateOfferPage() {
                 onProductsChange={setSelectedProducts}
                 formData={formData}
                 setFormData={setFormData}
+                creatives={creatives}
+                trackingSources={trackingSources}
+                rewards={rewards}
               />
             )}
             {currentStep === 3 && <OfferCreativeStepWrapper {...stepProps} />}

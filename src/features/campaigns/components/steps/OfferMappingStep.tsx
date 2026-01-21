@@ -443,6 +443,13 @@ export default function OfferMappingStep({
                 "campaignFormData",
                 JSON.stringify(campaignData)
               );
+              // Clear localStorage to prevent stale data from interfering with restoration
+              // When returning from offer creation, useFormDataPersistence hooks will run
+              // and load from localStorage. We need to clear these so sessionStorage restoration works correctly
+              localStorage.removeItem("campaign_form_data");
+              localStorage.removeItem("campaign_segments");
+              localStorage.removeItem("campaign_offers");
+              localStorage.removeItem("campaign_mappings");
               // Clear the auto-opened flag so modal can open when returning
               sessionStorage.removeItem("offerModalAutoOpened");
               // Reset the ref so modal can open when component remounts

@@ -164,7 +164,7 @@ export default function CreateManualBroadcastPage() {
         // Clear localStorage form data after successful creation
         clearPersistedFormData("broadcast_form_data");
 
-        navigate("/dashboard/manual-broadcasts");
+        navigate("/dashboard/manual-communications");
       } else {
         throw new Error("Communication sending failed");
       }
@@ -227,7 +227,7 @@ export default function CreateManualBroadcastPage() {
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => navigate("/dashboard/manual-broadcasts")}
+                onClick={() => navigate("/dashboard/manual-communications")}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />

@@ -70,9 +70,9 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
       <div className="flex items-start">
         <div className="flex-shrink-0">{getIcon()}</div>
         <div className="ml-3 flex-1">
-          <p className="text-sm font-semibold">{toast.title}</p>
+          <p className="text-sm font-semibold">{String(toast.title)}</p>
           {toast.message && (
-            <p className="text-sm mt-1 opacity-90">{toast.message}</p>
+            <p className="text-sm mt-1 opacity-90">{String(toast.message)}</p>
           )}
         </div>
         <button

@@ -6,14 +6,20 @@ import { tw, zIndexTokens } from "../../../../shared/utils/utils";
 interface CreateOfferModalWrapperProps {
   isOpen: boolean;
   onClose: () => void;
-  onOfferCreated?: (offerId: string) => void;
+  onOfferCreated?: (offerId: number) => void;
 }
 
 export default function CreateOfferModalWrapper({
   isOpen,
   onClose,
+  onOfferCreated,
 }: CreateOfferModalWrapperProps) {
   if (!isOpen) return null;
+
+  const handleSuccess = (offerId: number) => {
+    onOfferCreated?.(offerId);
+    onClose();
+  };
 
   return createPortal(
     <div
@@ -60,7 +66,7 @@ export default function CreateOfferModalWrapper({
         {/* Modal Content - Scrollable */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-6">
-            <CreateOfferPage />
+            <CreateOfferPage onSuccess={handleSuccess} />
           </div>
         </div>
       </div>

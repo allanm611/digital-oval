@@ -26,6 +26,7 @@ import {
 } from "../utils/customerDataService";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import CreateCustomerModal from "../components/CreateCustomerModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -43,7 +44,15 @@ export default function CustomersPage() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const dataset = customerSubscriptions;
+
+  // Customer creation modal state
+  const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
+    useState(false);
+  const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>(
+    customerSubscriptions,
+  );
+
+  const dataset = customers;
 
   // Simulate async loading when inputs change (placeholder until API wiring exists)
   useEffect(() => {
@@ -64,18 +73,18 @@ export default function CustomersPage() {
     (term: string, customers: CustomerSubscriptionRecord[]) => {
       return searchCustomersUtil(term, customers);
     },
-    []
+    [],
   );
 
   const filteredCustomers = useMemo(() => {
-    let results = customerSubscriptions;
+    let results = customers;
 
     if (searchTerm.trim()) {
       results = searchCustomers(searchTerm, results);
     }
 
     return results;
-  }, [searchTerm, searchCustomers]);
+  }, [searchTerm, searchCustomers, customers]);
 
   // Debounced search results for modal
   const [modalSearchResults, setModalSearchResults] = useState<
@@ -115,7 +124,7 @@ export default function CustomersPage() {
       filteredCustomers.slice((page - 1) * pageSize, page * pageSize) as
         | CustomerSubscriptionRecord[]
         | [],
-    [filteredCustomers, page]
+    [filteredCustomers, page],
   );
 
   const hasSearchFilters = searchTerm.trim().length > 0;
@@ -196,7 +205,7 @@ export default function CustomersPage() {
             ? `${Math.round(
                 (customerStats.activeSubscriptions /
                   customerStats.totalSubscriptions) *
-                  100
+                  100,
               )}${t.customer360.ofBase}`
             : "—",
         icon: Activity,
@@ -209,7 +218,7 @@ export default function CustomersPage() {
             ? `${Math.round(
                 (customerStats.pendingActivations /
                   customerStats.totalSubscriptions) *
-                  100
+                  100,
               )}${t.customer360.awaitingSimSwap}`
             : "—",
         icon: AlertTriangle,
@@ -221,11 +230,11 @@ export default function CustomersPage() {
         icon: Target,
       },
     ],
-    [customerStats]
+    [customerStats],
   );
 
   const handleSelectCustomer = (
-    customerToSelect: CustomerSubscriptionRecord
+    customerToSelect: CustomerSubscriptionRecord,
   ) => {
     const derivedCustomer = convertSubscriptionToCustomerRow(customerToSelect);
     const params = new URLSearchParams();
@@ -240,8 +249,13 @@ export default function CustomersPage() {
           subscription: customerToSelect,
           source: "customers" as const,
         },
-      }
+      },
     );
+  };
+
+  const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
+    setCustomers((prevCustomers) => [...prevCustomers, ...newCustomers]);
+    setIsCreateCustomerModalOpen(false);
   };
 
   const handleOpenSearchModal = () => {
@@ -261,7 +275,7 @@ export default function CustomersPage() {
   };
 
   const handleSelectCustomerFromModal = (
-    customer: CustomerSubscriptionRecord
+    customer: CustomerSubscriptionRecord,
   ) => {
     handleCloseSearchModal();
     handleSelectCustomer(customer);
@@ -308,7 +322,11 @@ export default function CustomersPage() {
               </button>
             )}
           </div>
-          <button className={`${tw.button} flex items-center gap-2`}>
+          <button
+            type="button"
+            onClick={() => setIsCreateCustomerModalOpen(true)}
+            className={`${tw.button} flex items-center gap-2`}
+          >
             <Plus className="h-4 w-4" />
             {t.customer360.addCustomer}
           </button>
@@ -397,7 +415,7 @@ export default function CustomersPage() {
                 {paginatedResults.map((row) => {
                   const name = getSubscriptionDisplayName(
                     row,
-                    `Customer ${row.customerId}`
+                    `Customer ${row.customerId}`,
                   );
                   const status = row.status ?? "Unknown";
                   const statusLower = status.toLowerCase();
@@ -405,8 +423,8 @@ export default function CustomersPage() {
                     statusLower === "active"
                       ? "bg-emerald-50 text-emerald-700"
                       : statusLower === "pending"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-gray-100 text-gray-700";
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-gray-100 text-gray-700";
 
                   return (
                     <tr key={`${row.customerId}-${row.subscriptionId}`}>
@@ -504,7 +522,9 @@ export default function CustomersPage() {
 
         {/* Pagination */}
         {!isLoading && !error && paginatedResults.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between`}>
+          <div
+            className={`${tw.rounded} border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between`}
+          >
             <p className={`${tw.textSecondary} text-sm`}>
               {t.customerProfileReports.page
                 .replace("{current}", page.toString())
@@ -571,7 +591,9 @@ export default function CustomersPage() {
           </p>
 
           {/* Search Results */}
-          <div className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}>
+          <div
+            className={`max-h-[400px] overflow-y-auto border border-gray-200 ${tw.rounded}`}
+          >
             {isSearching ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <LoadingSpinner variant="modern" size="md" />
@@ -609,7 +631,7 @@ export default function CustomersPage() {
                         <p className="text-sm font-semibold text-gray-900 truncate">
                           {getSubscriptionDisplayName(
                             customer,
-                            `Customer ${customer.customerId}`
+                            `Customer ${customer.customerId}`,
                           )}
                         </p>
                         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
@@ -661,6 +683,13 @@ export default function CustomersPage() {
           </div>
         </div>
       </RegularModal>
+
+      {/* Create customer modal */}
+      <CreateCustomerModal
+        isOpen={isCreateCustomerModalOpen}
+        onClose={() => setIsCreateCustomerModalOpen(false)}
+        onCustomersAdded={handleCustomersAdded}
+      />
 
       {/* Advanced filters modal */}
     </div>

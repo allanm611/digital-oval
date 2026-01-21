@@ -40,6 +40,89 @@ import {
   Tooltip,
 } from "recharts";
 
+// Helper function to extract error messages from various error types
+const extractErrorMessage = (error: unknown): string => {
+  // Check for 401 Unauthorized / authentication errors
+  if (error && typeof error === "object") {
+    const errorObj = error as Record<string, unknown>;
+
+    // Check for status code 401
+    if (errorObj.status === 401 || errorObj.statusCode === 401) {
+      return "Your session has expired. Please refresh the page and log in again.";
+    }
+
+    // Check for 403 Forbidden
+    if (errorObj.status === 403 || errorObj.statusCode === 403) {
+      return "You don't have permission to perform this action.";
+    }
+
+    // Check for network errors
+    if (
+      errorObj.message === "Failed to fetch" ||
+      (typeof errorObj.message === "string" && errorObj.message.includes("network"))
+    ) {
+      return "Network connection error. Please check your internet connection and try again.";
+    }
+  }
+
+  // Standard Error instance
+  if (error instanceof Error) {
+    // Filter out unhelpful backend error messages
+    if (error.message.toLowerCase().includes("unauthorized")) {
+      return "Your session has expired. Please refresh the page and log in again.";
+    }
+    if (error.message.toLowerCase().includes("forbidden")) {
+      return "You don't have permission to perform this action.";
+    }
+    // Return the error message if it's somewhat helpful
+    if (error.message && error.message.trim().length > 0) {
+      return error.message;
+    }
+  }
+
+  // String error
+  if (typeof error === "string" && error.trim().length > 0) {
+    return error;
+  }
+
+  // Try to extract from object properties
+  if (error && typeof error === "object") {
+    const errorObj = error as Record<string, unknown>;
+    if (
+      errorObj.message &&
+      typeof errorObj.message === "string" &&
+      errorObj.message.trim().length > 0
+    ) {
+      return errorObj.message;
+    }
+    if (
+      errorObj.reason &&
+      typeof errorObj.reason === "string" &&
+      errorObj.reason.trim().length > 0
+    ) {
+      return errorObj.reason;
+    }
+    if (
+      errorObj.error &&
+      typeof errorObj.error === "string" &&
+      errorObj.error.trim().length > 0
+    ) {
+      return errorObj.error;
+    }
+    if (
+      errorObj.detail &&
+      typeof errorObj.detail === "string" &&
+      errorObj.detail.trim().length > 0
+    ) {
+      return errorObj.detail;
+    }
+  }
+
+  // Fallback to generic user-friendly message
+  // Ensure we never return "[object Object]" by not rendering the error object directly
+  return "Unable to load data. Please try again.";
+};
+
 type AccountRequestListItem = {
   id?: number;
   requestId?: number;
@@ -142,7 +225,7 @@ export default function UserManagementPage() {
 
       return query;
     },
-    [searchTerm]
+    [searchTerm],
   );
 
   const fetchUsers = useCallback(
@@ -156,7 +239,7 @@ export default function UserManagementPage() {
       const term = (searchTermOverride ?? searchTerm)?.trim();
       if (term) {
         return userService.searchUsers(
-          buildSearchQuery({ skipCache, searchTermOverride: term })
+          buildSearchQuery({ skipCache, searchTermOverride: term }),
         );
       }
 
@@ -167,7 +250,7 @@ export default function UserManagementPage() {
 
       return userService.getUsers(baseQuery);
     },
-    [buildSearchQuery, searchTerm]
+    [buildSearchQuery, searchTerm],
   );
 
   const loadData = useCallback(
@@ -197,7 +280,7 @@ export default function UserManagementPage() {
                 typeof candidateStatus === "string" &&
                 candidateStatus.toLowerCase() === "pending_activation"
               );
-            }
+            },
           );
 
           const activeUsers = usersResponse.data.filter((candidate) => {
@@ -259,7 +342,7 @@ export default function UserManagementPage() {
                 roleName: resolvedRoleName,
                 created_at: pending.created_at,
               };
-            })
+            }),
           );
           const totalFromResponse =
             (usersResponse.meta?.total as number | undefined) ??
@@ -273,15 +356,14 @@ export default function UserManagementPage() {
 
         // Account requests derived from pending activation users above
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to load data";
+        const message = extractErrorMessage(err);
         setErrorState(message);
         showError("Error loading users", message);
       } finally {
         setIsLoading(false);
       }
     },
-    [fetchUsers, showError]
+    [fetchUsers, showError],
   );
 
   // Load both users and roles in parallel on initial mount
@@ -398,7 +480,7 @@ export default function UserManagementPage() {
                 roleName: resolvedRoleName,
                 created_at: pending.created_at,
               };
-            })
+            }),
           );
           const totalFromResponse =
             (usersResponse.value.meta?.total as number | undefined) ??
@@ -409,16 +491,12 @@ export default function UserManagementPage() {
             cached: Boolean(usersResponse.value.meta?.isCachedResponse),
           });
         } else if (usersResponse.status === "rejected") {
-          const message =
-            usersResponse.reason instanceof Error
-              ? usersResponse.reason.message
-              : "Failed to load users";
+          const message = extractErrorMessage(usersResponse.reason);
           setErrorState(message);
           showError("Error loading users", message);
         }
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Failed to load data";
+        const message = extractErrorMessage(err);
         setErrorState(message);
         showError("Error loading data", message);
       } finally {
@@ -470,7 +548,7 @@ export default function UserManagementPage() {
         data:
           | Record<string, number>
           | Array<{ [key: string]: unknown; count: number }>,
-        isRoleCount = false
+        isRoleCount = false,
       ): Record<string, number> => {
         if (Array.isArray(data)) {
           const result: Record<string, number> = {};
@@ -487,7 +565,7 @@ export default function UserManagementPage() {
               const key = Object.keys(item).find(
                 (k) =>
                   k !== "count" &&
-                  (typeof item[k] === "string" || typeof item[k] === "number")
+                  (typeof item[k] === "string" || typeof item[k] === "number"),
               );
               if (key) {
                 const value = item[key];
@@ -565,7 +643,7 @@ export default function UserManagementPage() {
               typeof candidateStatus === "string" &&
               candidateStatus.toLowerCase() === "pending_activation"
             );
-          }
+          },
         );
 
         const activeUsers = searchResponse.data.filter((candidate) => {
@@ -592,7 +670,7 @@ export default function UserManagementPage() {
             department: pending.department || undefined,
             role: (pending as unknown as { role_name?: string }).role_name,
             created_at: pending.created_at,
-          }))
+          })),
         );
 
         const totalFromResponse =
@@ -606,7 +684,7 @@ export default function UserManagementPage() {
     } catch (err) {
       showError(
         "Search Error",
-        err instanceof Error ? err.message : "Failed to search users"
+        err instanceof Error ? err.message : "Failed to search users",
       );
     } finally {
       setIsLoading(false);
@@ -618,7 +696,7 @@ export default function UserManagementPage() {
   };
 
   const resolveAccountRequestId = (
-    request: AccountRequestListItem
+    request: AccountRequestListItem,
   ): number | null => {
     const identifier = request.id ?? request.requestId;
     return typeof identifier === "number" ? identifier : null;
@@ -629,7 +707,7 @@ export default function UserManagementPage() {
     if (!requestId) {
       showError(
         "Unable to approve request",
-        "Missing identifier for the selected request."
+        "Missing identifier for the selected request.",
       );
       return;
     }
@@ -666,19 +744,19 @@ export default function UserManagementPage() {
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
         t.userManagement.requestApproved,
-        `${t.userManagement.requestApproved} - ${request.first_name} ${request.last_name}`
+        `${t.userManagement.requestApproved} - ${request.first_name} ${request.last_name}`,
       );
     } catch (err) {
       showError(
         "Error approving request",
-        err instanceof Error ? err.message : "Error approving request"
+        err instanceof Error ? err.message : "Error approving request",
       );
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
         ...prev,
         approving: new Set(
-          [...prev.approving].filter((id) => id !== requestId)
+          [...prev.approving].filter((id) => id !== requestId),
         ),
       }));
     }
@@ -689,7 +767,7 @@ export default function UserManagementPage() {
     if (!requestId) {
       showError(
         "Unable to reject request",
-        "Missing identifier for the selected request."
+        "Missing identifier for the selected request.",
       );
       return;
     }
@@ -726,19 +804,19 @@ export default function UserManagementPage() {
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
         t.userManagement.requestRejected,
-        `${t.userManagement.requestRejected} - ${request.first_name} ${request.last_name}`
+        `${t.userManagement.requestRejected} - ${request.first_name} ${request.last_name}`,
       );
     } catch (err) {
       showError(
         "Error rejecting request",
-        err instanceof Error ? err.message : "Error rejecting request"
+        err instanceof Error ? err.message : "Error rejecting request",
       );
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
         ...prev,
         rejecting: new Set(
-          [...prev.rejecting].filter((id) => id !== requestId)
+          [...prev.rejecting].filter((id) => id !== requestId),
         ),
       }));
     }
@@ -757,20 +835,20 @@ export default function UserManagementPage() {
         await userService.deactivateUser(user.id);
         success(
           t.userManagement.userDeactivated,
-          `User ${user.first_name} ${user.last_name} deactivated successfully`
+          `User ${user.first_name} ${user.last_name} deactivated successfully`,
         );
       } else {
         await userService.activateUser(user.id);
         success(
           t.userManagement.userActivated,
-          `User ${user.first_name} ${user.last_name} activated successfully`
+          `User ${user.first_name} ${user.last_name} activated successfully`,
         );
       }
       await loadData({ skipCache: true }); // Skip cache to get fresh data
     } catch (err) {
       showError(
         "Error updating status",
-        err instanceof Error ? err.message : "Error toggling user status"
+        err instanceof Error ? err.message : "Error toggling user status",
       );
     } finally {
       // Clear loading state
@@ -805,21 +883,21 @@ export default function UserManagementPage() {
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
         t.userManagement.userDeleted,
-        `${userToDelete.first_name} ${userToDelete.last_name} deleted successfully`
+        `${userToDelete.first_name} ${userToDelete.last_name} deleted successfully`,
       );
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (err) {
       showError(
         "Error deleting user",
-        err instanceof Error ? err.message : "Error deleting user"
+        err instanceof Error ? err.message : "Error deleting user",
       );
     } finally {
       // Clear loading state
       setLoadingActions((prev) => ({
         ...prev,
         deleting: new Set(
-          [...prev.deleting].filter((id) => id !== userToDelete.id)
+          [...prev.deleting].filter((id) => id !== userToDelete.id),
         ),
       }));
       setIsDeleting(false);
@@ -842,12 +920,12 @@ export default function UserManagementPage() {
       return user.status.toLowerCase();
     }
     const isSuspended = Boolean(
-      (user as unknown as { is_suspended?: boolean })?.is_suspended
+      (user as unknown as { is_suspended?: boolean })?.is_suspended,
     );
     if (isSuspended) return "suspended";
     const isActive = Boolean(
       (user as unknown as { is_active?: boolean })?.is_active ??
-        (user as unknown as { is_activated?: boolean })?.is_activated
+      (user as unknown as { is_activated?: boolean })?.is_activated,
     );
     return isActive ? "active" : "inactive";
   };
@@ -872,7 +950,7 @@ export default function UserManagementPage() {
     if (status === "inactive") return false;
     return Boolean(
       (user as unknown as { is_active?: boolean })?.is_active ??
-        (user as unknown as { is_activated?: boolean })?.is_activated
+      (user as unknown as { is_activated?: boolean })?.is_activated,
     );
   };
 
@@ -881,8 +959,8 @@ export default function UserManagementPage() {
     new Set(
       users
         .map((user) => user.department)
-        .filter((dept): dept is string => Boolean(dept && dept.trim() !== ""))
-    )
+        .filter((dept): dept is string => Boolean(dept && dept.trim() !== "")),
+    ),
   ).sort((a, b) => a.localeCompare(b));
 
   // Get unique roles from users
@@ -905,15 +983,15 @@ export default function UserManagementPage() {
       }
       return user.role_name || "N/A";
     },
-    [roleLookup]
+    [roleLookup],
   );
 
   const uniqueRoles = Array.from(
     new Set(
       users
         .map((user) => getUserRoleName(user))
-        .filter((role): role is string => Boolean(role && role !== "N/A"))
-    )
+        .filter((role): role is string => Boolean(role && role !== "N/A")),
+    ),
   ).sort((a, b) => a.localeCompare(b));
 
   const aggregateCounts = users.reduce(
@@ -931,7 +1009,7 @@ export default function UserManagementPage() {
 
       return acc;
     },
-    { active: 0, inactive: 0, locked: 0 }
+    { active: 0, inactive: 0, locked: 0 },
   );
 
   const totalUsersValue =
@@ -1029,7 +1107,7 @@ export default function UserManagementPage() {
 
       return "N/A";
     },
-    [roleLookup]
+    [roleLookup],
   );
 
   return (
@@ -1266,7 +1344,11 @@ export default function UserManagementPage() {
           <div className="p-8">
             <ErrorState
               title={t.userManagement.unableToLoad.replace("{tab}", activeTab)}
-              message={errorState}
+              message={
+                typeof errorState === "string"
+                  ? errorState
+                  : extractErrorMessage(errorState)
+              }
               onRetry={() => loadData({ skipCache: true })}
             />
           </div>
@@ -1462,8 +1544,8 @@ export default function UserManagementPage() {
                                   loadingActions.toggling.has(user.id)
                                     ? t.profile.saving
                                     : userIsActive
-                                    ? t.userManagement.deactivateUserTitle
-                                    : t.userManagement.activateUserTitle
+                                      ? t.userManagement.deactivateUserTitle
+                                      : t.userManagement.activateUserTitle
                                 }
                               >
                                 {loadingActions.toggling.has(user.id) ? (
@@ -1607,8 +1689,8 @@ export default function UserManagementPage() {
                               loadingActions.toggling.has(user.id)
                                 ? t.profile.saving
                                 : userIsActive
-                                ? t.userManagement.deactivateUserTitle
-                                : t.userManagement.activateUserTitle
+                                  ? t.userManagement.deactivateUserTitle
+                                  : t.userManagement.activateUserTitle
                             }
                           >
                             {loadingActions.toggling.has(user.id) ? (
@@ -1813,8 +1895,8 @@ export default function UserManagementPage() {
                                   actionDisabled
                                     ? "Missing request identifier"
                                     : approvingLoading
-                                    ? t.profile.saving
-                                    : t.userManagement.approveRequest
+                                      ? t.profile.saving
+                                      : t.userManagement.approveRequest
                                 }
                               >
                                 {approvingLoading ? (
@@ -1835,8 +1917,8 @@ export default function UserManagementPage() {
                                   actionDisabled
                                     ? "Missing request identifier"
                                     : rejectingLoading
-                                    ? t.profile.saving
-                                    : t.userManagement.rejectRequest
+                                      ? t.profile.saving
+                                      : t.userManagement.rejectRequest
                                 }
                               >
                                 {rejectingLoading ? (
@@ -1978,7 +2060,9 @@ export default function UserManagementPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Users by Status */}
-                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
+                <div
+                  className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}
+                >
                   {Object.keys(statusCounts).length > 0 ? (
                     (() => {
                       const statusColors: Record<string, string> = {
@@ -2000,7 +2084,7 @@ export default function UserManagementPage() {
                         }));
                       const total = statusData.reduce(
                         (sum, item) => sum + (Number(item.value) || 0),
-                        0
+                        0,
                       );
 
                       return (
@@ -2096,7 +2180,9 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Users by Department */}
-                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
+                <div
+                  className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}
+                >
                   {Object.keys(departmentCounts).length > 0 ? (
                     (() => {
                       const departmentColors = [
@@ -2117,7 +2203,7 @@ export default function UserManagementPage() {
                         }));
                       const total = departmentData.reduce(
                         (sum, item) => sum + (Number(item.value) || 0),
-                        0
+                        0,
                       );
 
                       return (
@@ -2219,7 +2305,9 @@ export default function UserManagementPage() {
                 </div>
 
                 {/* Users by Role */}
-                <div className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}>
+                <div
+                  className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 min-w-0`}
+                >
                   {Object.keys(roleCounts).length > 0 ? (
                     (() => {
                       const roleColors = [
@@ -2239,7 +2327,7 @@ export default function UserManagementPage() {
                         }));
                       const total = roleData.reduce(
                         (sum, item) => sum + (Number(item.value) || 0),
-                        0
+                        0,
                       );
 
                       return (

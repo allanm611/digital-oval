@@ -62,7 +62,7 @@ export default function MultiCategorySelector({
   // Update dropdown position on scroll/resize
   useEffect(() => {
     const updatePosition = () => {
-      if (isOpen && dropdownRef.current) {
+      if (dropdownRef.current) {
         const rect = dropdownRef.current.querySelector("button")?.getBoundingClientRect();
         if (rect) {
           setDropdownPosition({
@@ -75,7 +75,11 @@ export default function MultiCategorySelector({
     };
 
     if (isOpen) {
+      // Calculate position immediately and also after a frame to ensure portal is rendered
       updatePosition();
+      requestAnimationFrame(() => {
+        updatePosition();
+      });
       window.addEventListener("scroll", updatePosition);
       window.addEventListener("resize", updatePosition);
       return () => {
@@ -309,10 +313,10 @@ export default function MultiCategorySelector({
           ref={portalRef}
           style={{
             position: "fixed",
-            top: `${dropdownRef.current?.getBoundingClientRect().bottom || 0}px`,
-            left: `${dropdownRef.current?.getBoundingClientRect().left || 0}px`,
-            width: `${dropdownRef.current?.getBoundingClientRect().width || 0}px`,
-            zIndex: zIndex.dropdown,
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+            zIndex: 9999,
           }}
           className={`bg-white border border-gray-300 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
         >

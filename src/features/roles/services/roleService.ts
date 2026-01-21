@@ -17,7 +17,7 @@ const BASE_URL = buildApiUrl("/roles");
 class RoleService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     const response = await fetch(url, {
@@ -44,8 +44,8 @@ class RoleService {
       throw new Error(
         `Invalid JSON response from roles API. First 200 chars: ${responseText.substring(
           0,
-          200
-        )}`
+          200,
+        )}`,
       );
     }
 
@@ -155,14 +155,14 @@ class RoleService {
   }): Promise<Role[]> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
-      `/available-slots${queryString}`
+      `/available-slots${queryString}`,
     );
     return this.extractRoleList(response).roles;
   }
 
   async getRoleById(
     id: number,
-    query?: { skipCache?: boolean }
+    query?: { skipCache?: boolean },
   ): Promise<Role> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(`/${id}${queryString}`);
@@ -175,22 +175,22 @@ class RoleService {
 
   async getRoleChildren(
     id: number,
-    query?: { activeOnly?: boolean }
+    query?: { activeOnly?: boolean },
   ): Promise<Role[]> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
-      `/${id}/children${queryString}`
+      `/${id}/children${queryString}`,
     );
     return this.extractRoleList(response).roles;
   }
 
   async getRoleDescendants(
     id: number,
-    query?: { activeOnly?: boolean }
+    query?: { activeOnly?: boolean },
   ): Promise<Role[]> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
-      `/${id}/descendants${queryString}`
+      `/${id}/descendants${queryString}`,
     );
     return this.extractRoleList(response).roles;
   }
@@ -232,27 +232,29 @@ class RoleService {
 
   async getRolesByLevel(
     level: number,
-    query?: { limit?: number; offset?: number }
+    query?: { limit?: number; offset?: number },
   ): Promise<RoleListResult> {
     const queryString = this.buildQueryParams(query);
-    const response = await this.request<unknown>(`/level/${level}${queryString}`);
+    const response = await this.request<unknown>(
+      `/level/${level}${queryString}`,
+    );
     return this.extractRoleList(response);
   }
 
   async getRolesByDataAccessLevel(
     level: DataAccessLevel,
-    query?: { limit?: number; offset?: number }
+    query?: { limit?: number; offset?: number },
   ): Promise<RoleListResult> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
-      `/data-access-level/${level}${queryString}`
+      `/data-access-level/${level}${queryString}`,
     );
     return this.extractRoleList(response);
   }
 
   async getRolesByTag(
     tag: string,
-    query?: { limit?: number; offset?: number }
+    query?: { limit?: number; offset?: number },
   ): Promise<RoleListResult> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(`/tag/${tag}${queryString}`);
@@ -289,7 +291,7 @@ class RoleService {
 
   async reactivateRole(
     id: number,
-    body?: { reactivated_by?: number }
+    body?: { reactivated_by?: number },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/reactivate`, {
       method: "PATCH",
@@ -300,18 +302,22 @@ class RoleService {
 
   async deactivateRole(
     id: number,
-    body?: { deactivated_by?: number; reason?: string }
+    userId: number,
+    body?: { reason?: string },
   ): Promise<Role | null> {
-    const response = await this.request<unknown>(`/${id}/deactivate`, {
-      method: "PATCH",
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    const response = await this.request<unknown>(
+      `/${id}/users/${userId}/deactivate`,
+      {
+        method: "PATCH",
+        body: body ? JSON.stringify(body) : undefined,
+      },
+    );
     return this.extractRole(response);
   }
 
   async setDefaultRole(
     id: number,
-    body?: { updated_by?: number }
+    body?: { updated_by?: number },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/set-default`, {
       method: "PATCH",
@@ -322,7 +328,7 @@ class RoleService {
 
   async incrementRoleUsers(
     id: number,
-    body?: { increment_by?: number; updated_by?: number }
+    body?: { increment_by?: number; updated_by?: number },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/increment-users`, {
       method: "PATCH",
@@ -333,7 +339,7 @@ class RoleService {
 
   async decrementRoleUsers(
     id: number,
-    body?: { decrement_by?: number; updated_by?: number }
+    body?: { decrement_by?: number; updated_by?: number },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/decrement-users`, {
       method: "PATCH",
@@ -351,7 +357,7 @@ class RoleService {
 
   async isUserLimitReached(
     id: number,
-    query?: { skipCache?: boolean }
+    query?: { skipCache?: boolean },
   ): Promise<boolean> {
     const checkResponse = await this.getUserLimitStatus(id, query);
     return checkResponse.limit_reached;
@@ -359,11 +365,11 @@ class RoleService {
 
   async getUserLimitStatus(
     id: number,
-    query?: { skipCache?: boolean }
+    query?: { skipCache?: boolean },
   ): Promise<UserLimitCheckResponse> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
-      `/${id}/user-limit-reached${queryString}`
+      `/${id}/user-limit-reached${queryString}`,
     );
 
     if (response && typeof response === "object") {

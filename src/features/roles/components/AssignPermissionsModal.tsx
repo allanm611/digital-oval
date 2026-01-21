@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Check, Plus, Search, AlertCircle } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { Role, Permission } from "../types/role";
 import { rolePermissionService } from "../services/rolePermissionService";
 import { permissionService } from "../services/permissionService";
@@ -26,15 +27,9 @@ export default function AssignPermissionsModal({
   userId: propUserId,
 }: AssignPermissionsModalProps) {
   const { success, error: showError } = useToast();
+  const { user } = useAuth();
 
-  const userId = propUserId || (() => {
-    try {
-      const authUser = JSON.parse(localStorage.getItem("auth_user") || "{}");
-      return authUser?.user_id || undefined;
-    } catch {
-      return undefined;
-    }
-  })();
+  const userId = propUserId || user?.user_id;
 
   useEffect(() => {
     console.log("[AssignPermissionsModal] userId:", userId);

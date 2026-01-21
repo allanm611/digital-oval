@@ -7,7 +7,13 @@ import ProductForm from "../components/ProductForm";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 
-export default function CreateProductPage() {
+interface CreateProductPageProps {
+  onSuccess?: (productId: number) => void;
+}
+
+export default function CreateProductPage({
+  onSuccess,
+}: CreateProductPageProps = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { success, error: showError } = useToast();
@@ -135,11 +141,18 @@ export default function CreateProductPage() {
       // Note: combo_data is kept for frontend only, not sent to backend yet
       // Backend support will be added later
 
-      await productService.createProduct(finalSubmitData);
+      const result = await productService.createProduct(finalSubmitData);
       success(
         "Product Created",
         `"${formData.name}" has been created successfully.`,
       );
+
+      // Call onSuccess callback if provided (modal mode)
+      const productId = result?.data?.id || result?.id;
+      if (productId && onSuccess) {
+        onSuccess(productId);
+        return;
+      }
 
       // Check if we should return to offer creation flow
       if (returnToOfferFlow && returnUrl) {

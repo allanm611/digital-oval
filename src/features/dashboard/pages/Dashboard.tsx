@@ -53,7 +53,9 @@ const CampaignPages = {
   ),
   TeamRolesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../roles/pages/TeamRolesPermissionsPage"),
+      import(
+        /* webpackPrefetch: true */ "../../roles/pages/TeamRolesPermissionsPage"
+      ),
   ),
   ProgramsPage: lazy(
     () =>
@@ -526,6 +528,12 @@ const AnalyticsPages = {
 
 // Other Pages - All routes preloaded for instant access
 const OtherPages = {
+  ManualBroadcastsHubPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../manual-actions/pages/ManualBroadcastsHubPage"
+      ),
+  ),
   ManualBroadcastListsPage: lazy(
     () =>
       import(
@@ -777,6 +785,10 @@ export default function Dashboard() {
           />
           <Route
             path="/manual-broadcasts"
+            element={<OtherPages.ManualBroadcastsHubPage />}
+          />
+          <Route
+            path="/manual-communications"
             element={<OtherPages.ManualBroadcastListsPage />}
           />
           {/* <Route path="/quicklists" element={<OtherPages.QuickListsPage />} /> */}
@@ -785,7 +797,7 @@ export default function Dashboard() {
             element={<OtherPages.CommunicationAnalyticsPage />}
           />
           <Route
-            path="/manual-broadcasts/create"
+            path="/manual-communications/create"
             element={<OtherPages.CreateManualBroadcastPage />}
           />
           <Route
@@ -801,7 +813,7 @@ export default function Dashboard() {
             element={<OtherPages.QuickListDetailsPage />}
           /> */}
           <Route
-            path="/manual-broadcast/:id"
+            path="/manual-communication/:id"
             element={<OtherPages.QuickListDetailsPage />}
           />
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
