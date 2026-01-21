@@ -99,38 +99,6 @@ const hardcodedDepartments: ConfigurationItem[] = [
   },
 ];
 
-// Hardcoded team roles data
-const hardcodedTeamRoles: ConfigurationItem[] = [
-  {
-    id: 1,
-    name: "Campaign Manager",
-    description: "Responsible for planning and executing marketing campaigns",
-    created_at: "2025-01-15T10:30:00Z",
-    updated_at: "2025-01-20T14:45:00Z",
-  },
-  {
-    id: 2,
-    name: "Content Creator",
-    description: "Creates and manages content for campaigns",
-    created_at: "2025-01-10T09:15:00Z",
-    updated_at: "2025-01-18T16:20:00Z",
-  },
-  {
-    id: 3,
-    name: "Data Analyst",
-    description: "Analyzes campaign performance and provides insights",
-    created_at: "2025-01-12T11:00:00Z",
-    updated_at: "2025-01-19T13:30:00Z",
-  },
-  {
-    id: 4,
-    name: "Designer",
-    description: "Creates visual assets and designs for campaigns",
-    created_at: "2025-01-14T15:30:00Z",
-    updated_at: "2025-01-21T10:15:00Z",
-  },
-];
-
 // Hardcoded line of business data
 const hardcodedLineOfBusiness: ConfigurationItem[] = [
   {
@@ -1328,51 +1296,6 @@ export const departmentsConfig: ConfigurationPageConfig = {
   createSuccessMessage: "Department created successfully",
   updateSuccessMessage: "Department updated successfully",
   deleteErrorMessage: "Failed to delete department",
-  saveErrorMessage: "Please try again later.",
-};
-
-// Team Roles Configuration
-export const teamRolesConfig: ConfigurationPageConfig = {
-  // Page configuration
-  title: "Team Roles",
-  subtitle: "Define and manage team roles and responsibilities",
-  entityName: "role",
-  entityNamePlural: "roles",
-
-  // Navigation
-  backPath: "/dashboard/configuration",
-
-  // UI
-  icon: Users,
-  searchPlaceholder: "Search roles by name or description...",
-
-  // Data
-  initialData: hardcodedTeamRoles,
-
-  // Labels
-  createButtonText: "Create Role",
-  modalTitle: {
-    create: "Create New Team Role",
-    edit: "Edit Team Role",
-  },
-  nameLabel: "Role Name",
-  nameRequired: true,
-  descriptionLabel: "Role Description",
-  descriptionRequired: true,
-
-  // Validation
-  nameMaxLength: 80,
-  descriptionMaxLength: 300,
-
-  // Messages
-  deleteConfirmTitle: "Delete Role",
-  deleteConfirmMessage: (name: string) =>
-    `Are you sure you want to delete the role "${name}"? This action cannot be undone.`,
-  deleteSuccessMessage: (name: string) =>
-    `Role "${name}" has been deleted successfully.`,
-  createSuccessMessage: "Team role created successfully",
-  updateSuccessMessage: "Team role updated successfully",
-  deleteErrorMessage: "Failed to delete team role",
   saveErrorMessage: "Please try again later.",
 };
 
@@ -2921,12 +2844,6 @@ export function getDepartmentsConfig(
   t: (key: string) => string,
 ): ConfigurationPageConfig {
   return departmentsConfig;
-}
-
-export function getTeamRolesConfig(
-  t: (key: string) => string,
-): ConfigurationPageConfig {
-  return teamRolesConfig;
 }
 
 export function getLineOfBusinessConfig(

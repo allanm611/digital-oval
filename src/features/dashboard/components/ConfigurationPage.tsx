@@ -82,15 +82,6 @@ export default function ConfigurationPage() {
         navigationPath: "/dashboard/departments",
       },
       {
-        id: "team-roles",
-        name: "Team Roles",
-        description: "Define and manage team roles and responsibilities",
-        type: "user",
-        category: "User Configuration",
-        status: "active",
-        navigationPath: "/dashboard/team-roles",
-      },
-      {
         id: "programs",
         name: "Programs",
         description: "Manage campaign programs and initiatives",

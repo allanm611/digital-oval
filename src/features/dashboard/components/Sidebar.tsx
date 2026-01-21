@@ -358,8 +358,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             entity: "users",
           },
           {
-            name: "Team Roles",
-            href: "/dashboard/team-roles",
+            name: "Access Control",
+            href: "/dashboard/access-control",
             icon: UserCheck,
             type: "single",
             entity: "users",

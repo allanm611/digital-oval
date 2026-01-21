@@ -32,7 +32,6 @@ const subConfigRoutes: Record<string, string> = {
   "Campaign Communication Policy": "/dashboard/campaign-communication-policy",
   "Campaign Objective": "/dashboard/campaign-objectives",
   Department: "/dashboard/departments",
-  "Team Roles": "/dashboard/team-roles",
   Programs: "/dashboard/programs",
   "Offer Types": "/dashboard/offer-types",
   "Offer Catalogs": "/dashboard/offer-catalogs",

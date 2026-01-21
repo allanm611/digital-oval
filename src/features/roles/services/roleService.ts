@@ -5,6 +5,11 @@ import {
   RoleListMeta,
   RoleListResult,
   RoleSearchQuery,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  CloneRoleRequest,
+  DataAccessLevel,
+  UserLimitCheckResponse,
 } from "../types/role";
 
 const BASE_URL = buildApiUrl("/roles");
@@ -170,12 +175,34 @@ class RoleService {
 
   async getRoleChildren(
     id: number,
-    query?: { skipCache?: boolean }
+    query?: { activeOnly?: boolean }
   ): Promise<Role[]> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
       `/${id}/children${queryString}`
     );
+    return this.extractRoleList(response).roles;
+  }
+
+  async getRoleDescendants(
+    id: number,
+    query?: { activeOnly?: boolean }
+  ): Promise<Role[]> {
+    const queryString = this.buildQueryParams(query);
+    const response = await this.request<unknown>(
+      `/${id}/descendants${queryString}`
+    );
+    return this.extractRoleList(response).roles;
+  }
+
+  async getRoleAncestors(id: number): Promise<Role[]> {
+    const response = await this.request<unknown>(`/${id}/ancestors`);
+    return this.extractRoleList(response).roles;
+  }
+
+  async getRootRoles(query?: { activeOnly?: boolean }): Promise<Role[]> {
+    const queryString = this.buildQueryParams(query);
+    const response = await this.request<unknown>(`/roots${queryString}`);
     return this.extractRoleList(response).roles;
   }
 
@@ -185,9 +212,54 @@ class RoleService {
     return this.extractRoleList(response);
   }
 
-  async createRole(
-    body: Partial<Role> & { name: string; code: string }
-  ): Promise<Role> {
+  async getRoleByCode(code: string): Promise<Role> {
+    const response = await this.request<unknown>(`/code/${code}`);
+    const role = this.extractRole(response);
+    if (!role) {
+      throw new Error(`Role with code ${code} not found`);
+    }
+    return role;
+  }
+
+  async getRoleByName(name: string): Promise<Role> {
+    const response = await this.request<unknown>(`/name/${name}`);
+    const role = this.extractRole(response);
+    if (!role) {
+      throw new Error(`Role with name ${name} not found`);
+    }
+    return role;
+  }
+
+  async getRolesByLevel(
+    level: number,
+    query?: { limit?: number; offset?: number }
+  ): Promise<RoleListResult> {
+    const queryString = this.buildQueryParams(query);
+    const response = await this.request<unknown>(`/level/${level}${queryString}`);
+    return this.extractRoleList(response);
+  }
+
+  async getRolesByDataAccessLevel(
+    level: DataAccessLevel,
+    query?: { limit?: number; offset?: number }
+  ): Promise<RoleListResult> {
+    const queryString = this.buildQueryParams(query);
+    const response = await this.request<unknown>(
+      `/data-access-level/${level}${queryString}`
+    );
+    return this.extractRoleList(response);
+  }
+
+  async getRolesByTag(
+    tag: string,
+    query?: { limit?: number; offset?: number }
+  ): Promise<RoleListResult> {
+    const queryString = this.buildQueryParams(query);
+    const response = await this.request<unknown>(`/tag/${tag}${queryString}`);
+    return this.extractRoleList(response);
+  }
+
+  async createRole(body: CreateRoleRequest): Promise<Role> {
     const response = await this.request<unknown>("/", {
       method: "POST",
       body: JSON.stringify(body),
@@ -199,10 +271,7 @@ class RoleService {
     return role;
   }
 
-  async updateRole(
-    id: number,
-    body: Partial<Role> & { updated_by?: number }
-  ): Promise<Role | null> {
+  async updateRole(id: number, body: UpdateRoleRequest): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(body),
@@ -210,16 +279,7 @@ class RoleService {
     return this.extractRole(response);
   }
 
-  async cloneRole(
-    id: number,
-    body: {
-      name: string;
-      code: string;
-      include_permissions?: boolean;
-      include_tags?: boolean;
-      created_by?: number;
-    }
-  ): Promise<Role | null> {
+  async cloneRole(id: number, body: CloneRoleRequest): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/clone`, {
       method: "POST",
       body: JSON.stringify(body),
@@ -293,22 +353,32 @@ class RoleService {
     id: number,
     query?: { skipCache?: boolean }
   ): Promise<boolean> {
+    const checkResponse = await this.getUserLimitStatus(id, query);
+    return checkResponse.limit_reached;
+  }
+
+  async getUserLimitStatus(
+    id: number,
+    query?: { skipCache?: boolean }
+  ): Promise<UserLimitCheckResponse> {
     const queryString = this.buildQueryParams(query);
     const response = await this.request<unknown>(
       `/${id}/user-limit-reached${queryString}`
     );
 
-    if (typeof response === "boolean") {
-      return response;
-    }
+    if (response && typeof response === "object") {
+      const withData = response as {
+        data?: unknown;
+        limit_reached?: boolean;
+      };
 
-    if (
-      response &&
-      typeof response === "object" &&
-      "data" in response &&
-      typeof (response as { data?: unknown }).data === "boolean"
-    ) {
-      return (response as { data: boolean }).data;
+      if (withData.data && typeof withData.data === "object") {
+        return withData.data as UserLimitCheckResponse;
+      }
+
+      if ("limit_reached" in withData) {
+        return withData as UserLimitCheckResponse;
+      }
     }
 
     throw new Error("Unexpected response from user limit endpoint");

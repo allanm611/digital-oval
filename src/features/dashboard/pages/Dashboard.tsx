@@ -53,7 +53,7 @@ const CampaignPages = {
   ),
   TeamRolesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/TeamRolesPage"),
+      import(/* webpackPrefetch: true */ "../../roles/pages/TeamRolesPermissionsPage"),
   ),
   ProgramsPage: lazy(
     () =>
@@ -649,7 +649,10 @@ export default function Dashboard() {
             path="/campaign-objectives"
             element={<CampaignPages.CampaignObjectivesPage />}
           />
-          <Route path="/team-roles" element={<CampaignPages.TeamRolesPage />} />
+          <Route
+            path="/access-control"
+            element={<CampaignPages.TeamRolesPage />}
+          />
           <Route
             path="/departments"
             element={<CampaignPages.DepartmentPage />}

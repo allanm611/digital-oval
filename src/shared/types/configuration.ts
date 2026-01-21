@@ -481,7 +481,6 @@ export const CONFIGURATION_ENDPOINTS = {
 
   // Organization
   DEPARTMENTS: "/api/configuration/departments",
-  TEAM_ROLES: "/api/configuration/team-roles",
   LINE_OF_BUSINESS: "/api/configuration/line-of-business",
 
   // Localization
