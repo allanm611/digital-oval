@@ -34,13 +34,26 @@ export default function TargetAudienceStep({
     name: data.audienceName || "",
     fileColumns: data.fileColumns || [],
     subscriptionIdColumn: data.subscriptionIdColumn || null,
-    manualInput: "",
+    manualInput: data.manualInput || "",
   });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isFormValid, setIsFormValid] = useState(false);
+
+  // Sync incoming data prop changes to local state
+  useEffect(() => {
+    setAudienceData((prev) => ({
+      ...prev,
+      inputMethod: data.inputMethod || prev.inputMethod,
+      file: data.audienceFile !== undefined ? data.audienceFile : prev.file,
+      uploadType: data.uploadType || prev.uploadType,
+      name: data.audienceName || prev.name,
+      fileColumns: data.fileColumns || prev.fileColumns,
+      subscriptionIdColumn: data.subscriptionIdColumn !== undefined ? data.subscriptionIdColumn : prev.subscriptionIdColumn,
+      manualInput: data.manualInput !== undefined ? data.manualInput : prev.manualInput,
+    }));
+  }, [data]);
 
   useEffect(() => {
     loadUploadTypes();
@@ -48,7 +61,6 @@ export default function TargetAudienceStep({
 
   const loadUploadTypes = async () => {
     try {
-      setLoading(true);
       const response = await quicklistService.getUploadTypes({
         activeOnly: true,
       });
@@ -66,8 +78,6 @@ export default function TargetAudienceStep({
     } catch (err) {
       console.error("Failed to load upload types:", err);
       showError(t.manualBroadcast.errorLoadUploadTypes);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -111,22 +121,21 @@ export default function TargetAudienceStep({
       ? uploadTypes[0]
       : null;
 
-    if (!selectedType) {
-      throw new Error("No upload types available");
-    }
-
     let columns: string[] = [];
-    if (Array.isArray(selectedType.expected_columns)) {
-      columns = selectedType.expected_columns;
-    } else if (
-      typeof selectedType.expected_columns === "object" &&
-      selectedType.expected_columns !== null
-    ) {
-      columns = Object.keys(selectedType.expected_columns);
+    if (selectedType) {
+      if (Array.isArray(selectedType.expected_columns)) {
+        columns = selectedType.expected_columns;
+      } else if (
+        typeof selectedType.expected_columns === "object" &&
+        selectedType.expected_columns !== null
+      ) {
+        columns = Object.keys(selectedType.expected_columns);
+      }
     }
 
+    // If no columns defined, use defaults (fallback when backend not returning upload types)
     if (columns.length === 0) {
-      throw new Error("No expected columns defined for this upload type");
+      columns = ["Email", "Phone"];
     }
 
     const worksheetData: string[][] = [columns];
@@ -225,6 +234,7 @@ export default function TargetAudienceStep({
             ? audienceData.fileColumns
             : undefined,
         inputMethod: audienceData.inputMethod,
+        manualInput: audienceData.manualInput,
       });
 
       // Move to next step
@@ -294,18 +304,6 @@ export default function TargetAudienceStep({
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  if (loading) {
-    return (
-      <div
-        className="bg-white rounded-md shadow-sm border p-8"
-        style={{ borderColor: color.border.default }}
-      >
-        <div className="text-center py-12">
-          <p className={tw.textMuted}>{t.manualBroadcast.loading}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
