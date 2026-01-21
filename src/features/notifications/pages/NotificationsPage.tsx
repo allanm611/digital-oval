@@ -90,7 +90,7 @@ export default function NotificationsPage() {
 
   const handleSelectNotification = (id: string | number) => {
     setSelectedNotifications((prev) =>
-      prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((n) => n !== id) : [...prev, id],
     );
   };
 
@@ -127,12 +127,14 @@ export default function NotificationsPage() {
       await markAsRead([notification.id]);
     }
     if (notification.actionUrl) {
-      navigate(notification.actionUrl);
+      navigate(notification.actionUrl, {
+        state: { fromNotification: true },
+      });
     }
   };
 
   const notificationTypes = Object.keys(
-    NOTIFICATION_TYPE_METADATA
+    NOTIFICATION_TYPE_METADATA,
   ) as NotificationType[];
   const priorities: NotificationPriority[] = [
     "low",
@@ -284,8 +286,8 @@ export default function NotificationsPage() {
               filter.isRead === undefined
                 ? ""
                 : filter.isRead
-                ? "read"
-                : "unread"
+                  ? "read"
+                  : "unread"
             }
             onChange={(value) =>
               setFilter((prev) => ({
@@ -336,7 +338,7 @@ export default function NotificationsPage() {
               {selectedNotifications.length > 0
                 ? t.notifications.selectedCount.replace(
                     "{count}",
-                    String(selectedNotifications.length)
+                    String(selectedNotifications.length),
                   )
                 : t.notifications.selectPrompt}
             </span>
@@ -418,7 +420,7 @@ export default function NotificationsPage() {
                   NOTIFICATION_TYPE_METADATA[notification.type] ||
                   NOTIFICATION_TYPE_METADATA.general;
                 const isSelected = selectedNotifications.includes(
-                  notification.id
+                  notification.id,
                 );
 
                 return (
@@ -466,10 +468,10 @@ export default function NotificationsPage() {
                                     notification.priority === "urgent"
                                       ? "bg-red-100 text-red-700"
                                       : notification.priority === "high"
-                                      ? "bg-orange-100 text-orange-700"
-                                      : notification.priority === "medium"
-                                      ? "bg-yellow-100 text-yellow-700"
-                                      : "bg-gray-100 text-gray-700"
+                                        ? "bg-orange-100 text-orange-700"
+                                        : notification.priority === "medium"
+                                          ? "bg-yellow-100 text-yellow-700"
+                                          : "bg-gray-100 text-gray-700"
                                   }`}
                                 >
                                   {priorityLabel(notification.priority)}
@@ -481,7 +483,7 @@ export default function NotificationsPage() {
                               <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-gray-500">
                                 <span className="whitespace-nowrap">
                                   {new Date(
-                                    notification.createdAt
+                                    notification.createdAt,
                                   ).toLocaleString()}
                                 </span>
                                 <span className="text-gray-400">

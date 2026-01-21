@@ -1,5 +1,4 @@
 import { Check, LucideIcon } from "lucide-react";
-import { zIndex } from "../../../shared/utils/utils";
 
 export interface Step {
   id: number;
@@ -36,8 +35,7 @@ export default function ProgressStepper({
   return (
     <nav
       aria-label="Progress"
-      className="sticky top-16 bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0"
-      style={{ zIndex: zIndex.base + 100 }}
+      className="sticky top-16 z-40 bg-white border-b border-gray-200 py-4 sm:py-6 px-2 sm:px-0"
     >
       {/* Mobile - Simple dots */}
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
@@ -67,44 +65,42 @@ export default function ProgressStepper({
         {/* Background line - full width */}
         <div
           className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200"
-          style={{ zIndex: zIndex.base + 1 }}
+          style={{ zIndex: 0 }}
         />
 
         {/* Progress line for completed steps */}
-        {/* The line goes from edge of first circle to edge of current step's circle */}
+        {/* The line should reach from the center of the first circle to the center of the current step's circle */}
         {currentStep > 1 && (
           <div
             className="absolute top-4 h-0.5 transition-all duration-500"
             style={{
-              // Start after first circle
-              left: "calc(5% + 20px)",
-              // End before current step's circle
-              right:
+              left: "0",
+              // Calculate width to reach the center of the current step's circle
+              // When on the last step, the line should reach 100% (the right edge where the last circle center is)
+              // For intermediate steps, calculate proportionally
+              width:
                 currentStep === steps.length
-                  ? "calc(5% + 20px)"
-                  : `calc(${(1 - (currentStep - 1) / (steps.length - 1)) * 100}% + 20px)`,
+                  ? "100%"
+                  : `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
               backgroundColor: primaryColor,
-              zIndex: zIndex.base + 2,
+              zIndex: 1,
             }}
           />
         )}
 
         {/* Cover divs to hide line at edges */}
-        {/* Hide left cover to prevent line extending past first step */}
+        {/* Hide right cover when on last step to allow line to reach the circle */}
         <div
-          className="absolute top-4 left-0 h-0.5 bg-white"
+          className="absolute top-4 left-0 h-0.5 bg-white z-20"
           style={{
             width: "5rem",
-            zIndex: zIndex.base + 20,
           }}
         />
-        {/* Hide right cover when on last step, show otherwise to prevent line extending past current step */}
         {currentStep < steps.length && (
           <div
-            className="absolute top-4 right-0 h-0.5 bg-white"
+            className="absolute top-4 right-0 h-0.5 bg-white z-20"
             style={{
               width: "5rem",
-              zIndex: zIndex.base + 20,
             }}
           />
         )}
@@ -116,11 +112,7 @@ export default function ProgressStepper({
           const isLast = stepIdx === steps.length - 1;
 
           return (
-            <div
-              key={step.id}
-              className="relative"
-                  style={{ zIndex: zIndex.base + 10 }}
-            >
+            <div key={step.id} className="relative" style={{ zIndex: 30 }}>
               <button
                 onClick={() => onStepClick(step.id)}
                 className="relative flex flex-col items-center group"
@@ -130,7 +122,7 @@ export default function ProgressStepper({
                 <div
                   className="absolute top-4 left-1/2 w-10 h-10 rounded-full -translate-x-1/2 -translate-y-1/2"
                   style={{
-                    zIndex: zIndex.base + 5,
+                    zIndex: 25,
                     backgroundColor:
                       status === "completed" ? primaryColor : "white",
                   }}
@@ -153,7 +145,7 @@ export default function ProgressStepper({
                         : "cursor-not-allowed"
                     }
                   `}
-                  style={{ zIndex: zIndex.base + 10 }}
+                  style={{ zIndex: 30 }}
                 >
                   {status === "completed" ? (
                     <Check className="w-4 h-4" />
@@ -162,7 +154,7 @@ export default function ProgressStepper({
                   )}
                 </div>
 
-                <div className="mt-2 text-center" style={{ zIndex: zIndex.base + 15 }}>
+                <div className="mt-2 text-center">
                   <div
                     className={`text-sm font-medium ${
                       status === "current"
@@ -177,7 +169,6 @@ export default function ProgressStepper({
                   {step.description && (
                     <div
                       className={`text-xs mt-1 hidden lg:block ${textMuted}`}
-                      style={{ zIndex: zIndex.base + 15 }}
                     >
                       {step.description}
                     </div>

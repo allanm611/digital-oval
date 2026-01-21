@@ -23,6 +23,10 @@ import {
   XCircle,
 } from "lucide-react";
 import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
+import {
   CreateOfferRequest,
   Offer,
   OfferTypeEnum,
@@ -74,7 +78,7 @@ interface ApiErrorResponseData {
 }
 
 const hasResponseData = (
-  error: unknown
+  error: unknown,
 ): error is { response?: { data?: ApiErrorResponseData } } => {
   return (
     typeof error === "object" &&
@@ -526,7 +530,7 @@ function ProductStepWrapper({
         };
       });
     },
-    [onProductsChange, setFormData]
+    [onProductsChange, setFormData],
   );
 
   // Update ref when selectedProducts prop changes
@@ -715,7 +719,7 @@ function ReviewStep({
   | "onCancel"
 >) {
   const [editingCreativeId, setEditingCreativeId] = useState<string | null>(
-    null
+    null,
   );
   const [editingCreative, setEditingCreative] =
     useState<LocalOfferCreative | null>(null);
@@ -723,7 +727,7 @@ function ReviewStep({
   // Helper to replace variables in text
   const replaceVariables = (
     text: string,
-    variables: Record<string, string | number | boolean> = {}
+    variables: Record<string, string | number | boolean> = {},
   ): string => {
     if (!text) return "";
     let result = text;
@@ -737,7 +741,7 @@ function ReviewStep({
 
   // Helper to parse variables safely - tries to extract partial values even from invalid JSON
   const parseVariables = (
-    vars: string | Record<string, string | number | boolean> | undefined
+    vars: string | Record<string, string | number | boolean> | undefined,
   ): Record<string, string | number | boolean> => {
     try {
       if (typeof vars === "string") {
@@ -794,7 +798,9 @@ function ReviewStep({
   const handleSaveCreative = () => {
     if (editingCreative && editingCreativeId) {
       setCreatives(
-        creatives.map((c) => (c.id === editingCreativeId ? editingCreative : c))
+        creatives.map((c) =>
+          c.id === editingCreativeId ? editingCreative : c,
+        ),
       );
       setEditingCreativeId(null);
       setEditingCreative(null);
@@ -940,7 +946,7 @@ function ReviewStep({
                   {formData.category_id
                     ? offerCategories?.find(
                         (cat: OfferCategoryType) =>
-                          cat.id === formData.category_id
+                          cat.id === formData.category_id,
                       )?.name || `Catalog ${formData.category_id}`
                     : "Not selected"}
                 </div>
@@ -989,15 +995,15 @@ function ReviewStep({
                   // Compute rendered values - these update in real-time
                   const renderedTitle = replaceVariables(
                     displayCreative.title || "",
-                    variables
+                    variables,
                   );
                   const renderedTextBody = replaceVariables(
                     displayCreative.text_body || "",
-                    variables
+                    variables,
                   );
                   const renderedHtmlBody = replaceVariables(
                     displayCreative.html_body || "",
-                    variables
+                    variables,
                   );
 
                   return (
@@ -1052,7 +1058,9 @@ function ReviewStep({
               Products
             </h3>
             {formData.primary_product_id ? (
-              <div className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}>
+              <div
+                className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
+              >
                 <div className="flex items-center gap-3">
                   <Package
                     className="w-5 h-5"
@@ -1161,7 +1169,9 @@ function ReviewStep({
 
         {/* Sidebar */}
         <aside className="space-y-4">
-          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3 text-sm`}
+          >
             <h3 className="text-sm font-semibold text-gray-900">
               Offer Settings
             </h3>
@@ -1191,7 +1201,9 @@ function ReviewStep({
             </div>
           </div>
 
-          <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}
+          >
             <h3 className="text-sm font-semibold text-gray-900">
               Readiness Checklist
             </h3>
@@ -1200,7 +1212,9 @@ function ReviewStep({
                 {
                   label: "Basic information completed",
                   complete: Boolean(
-                    formData.name && formData.offer_type && formData.category_id
+                    formData.name &&
+                    formData.offer_type &&
+                    formData.category_id,
                   ),
                 },
                 {
@@ -1248,6 +1262,25 @@ export default function CreateOfferPage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const { success: showToast, error: showError } = useToast();
+
+  // Get return URL if coming from campaign flow
+  const returnToCampaign = searchParams.get("returnToCampaign") === "true";
+  const returnUrlParam = searchParams.get("returnUrl");
+  const returnUrl = returnUrlParam ? decodeURIComponent(returnUrlParam) : null;
+
+  // Extract the path to return to (with step parameter preserved)
+  const getBackButtonFallback = (): string => {
+    if (returnUrl) {
+      try {
+        const url = new URL(returnUrl);
+        return url.pathname + url.search;
+      } catch (e) {
+        return "/dashboard/offers";
+      }
+    }
+    return "/dashboard/offers";
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -1278,10 +1311,32 @@ export default function CreateOfferPage() {
 
   const { user } = useAuth();
 
+  // Persist form data to localStorage
+  useFormDataPersistence("offer_form_data", formData, setFormData, isEditMode);
+  useFormDataPersistence(
+    "offer_creatives",
+    creatives,
+    setCreatives,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "offer_tracking_sources",
+    trackingSources,
+    setTrackingSources,
+    isEditMode,
+  );
+  useFormDataPersistence("offer_rewards", rewards, setRewards, isEditMode);
+  useFormDataPersistence(
+    "offer_products",
+    selectedProducts,
+    setSelectedProducts,
+    isEditMode,
+  );
+
   // Helper to replace variables in text
   const replaceVariables = (
     text: string,
-    variables: Record<string, string | number | boolean> = {}
+    variables: Record<string, string | number | boolean> = {},
   ): string => {
     if (!text) return "";
     let result = text;
@@ -1295,7 +1350,7 @@ export default function CreateOfferPage() {
 
   // Helper to parse variables safely - tries to extract partial values even from invalid JSON
   const parseVariables = (
-    vars: string | Record<string, string | number | boolean> | undefined
+    vars: string | Record<string, string | number | boolean> | undefined,
   ): Record<string, string | number | boolean> => {
     try {
       if (typeof vars === "string") {
@@ -1401,7 +1456,7 @@ export default function CreateOfferPage() {
           async (link: OfferProductLink) => {
             try {
               const productResponse = await productService.getProductById(
-                link.product_id
+                link.product_id,
               );
               const productData = productResponse.data || productResponse;
               return {
@@ -1437,7 +1492,7 @@ export default function CreateOfferPage() {
               };
               return fallbackProduct;
             }
-          }
+          },
         );
 
         const fullProducts = await Promise.all(productDetailsPromises);
@@ -1478,7 +1533,7 @@ export default function CreateOfferPage() {
             updated_at: creative.updated_at,
             created_by: creative.created_by,
             updated_by: creative.updated_by,
-          })
+          }),
         );
         setCreatives(mappedCreatives);
       }
@@ -1493,7 +1548,7 @@ export default function CreateOfferPage() {
 
   // Offer categories state
   const [offerCategories, setOfferCategories] = useState<OfferCategoryType[]>(
-    []
+    [],
   );
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
@@ -1613,7 +1668,7 @@ export default function CreateOfferPage() {
       // Can't go to future steps beyond current + 1
       return false;
     },
-    [visitedSteps, currentStep, validateCurrentStep]
+    [visitedSteps, currentStep, validateCurrentStep],
   );
 
   const handleNext = useCallback(() => {
@@ -1658,7 +1713,7 @@ export default function CreateOfferPage() {
         setVisitedSteps((prev) => new Set(prev).add(stepId));
       }
     },
-    [canNavigateToStep]
+    [canNavigateToStep],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -1717,20 +1772,20 @@ export default function CreateOfferPage() {
           if (isEditMode) {
             // In edit mode, compare initial products with current products
             const initialProductIds = new Set(
-              initialProducts.map((p) => String(p.id))
+              initialProducts.map((p) => String(p.id)),
             );
             const currentProductIds = new Set(
-              selectedProducts.map((p) => String(p.id))
+              selectedProducts.map((p) => String(p.id)),
             );
 
             // Find products to unlink (in initial but not in current)
             const productsToUnlink = initialProducts.filter(
-              (p) => !currentProductIds.has(String(p.id))
+              (p) => !currentProductIds.has(String(p.id)),
             );
 
             // Find products to link (in current but not in initial)
             const productsToLink = selectedProducts.filter(
-              (p) => !initialProductIds.has(String(p.id))
+              (p) => !initialProductIds.has(String(p.id)),
             );
 
             // Unlink removed products
@@ -1769,7 +1824,7 @@ export default function CreateOfferPage() {
             const currentPrimaryId = formData.primary_product_id;
             if (currentPrimaryId) {
               const primaryProduct = selectedProducts.find(
-                (p) => p.id === currentPrimaryId
+                (p) => p.id === currentPrimaryId,
               );
               const initialPrimary = initialProducts.find((p) => p.is_primary);
 
@@ -1807,7 +1862,7 @@ export default function CreateOfferPage() {
           showError(
             `Offer ${isEditMode ? "updated" : "created"}, but failed to ${
               isEditMode ? "update" : "link"
-            } products. Creatives will still be saved.`
+            } products. Creatives will still be saved.`,
           );
         }
       }
@@ -1871,7 +1926,7 @@ export default function CreateOfferPage() {
             `Offer ${
               isEditMode ? "updated" : "created"
             }, but failed to save creatives`,
-            errorMessage
+            errorMessage,
           );
           navigate("/dashboard/offers");
           return;
@@ -1882,14 +1937,11 @@ export default function CreateOfferPage() {
       showToast(`Offer ${isEditMode ? "updated" : "created"} successfully`);
 
       // Check if we should return to campaign creation flow
-      const returnToCampaign = searchParams.get("returnToCampaign");
-      const returnUrl = searchParams.get("returnUrl");
-
-      if (returnToCampaign === "true" && returnUrl && !isEditMode) {
+      if (returnToCampaign && returnUrl && !isEditMode) {
         // Store the created offer ID in sessionStorage for campaign flow tracking
         if (offerId) {
           const campaignFlowOffersStr = sessionStorage.getItem(
-            "campaignFlowCreatedOffers"
+            "campaignFlowCreatedOffers",
           );
           const campaignFlowOfferIds: number[] = campaignFlowOffersStr
             ? JSON.parse(campaignFlowOffersStr)
@@ -1898,19 +1950,33 @@ export default function CreateOfferPage() {
             campaignFlowOfferIds.push(offerId);
             sessionStorage.setItem(
               "campaignFlowCreatedOffers",
-              JSON.stringify(campaignFlowOfferIds)
+              JSON.stringify(campaignFlowOfferIds),
             );
           }
         }
 
         // Navigate back to campaign creation at step 3
-        const decodedUrl = decodeURIComponent(returnUrl);
-        const url = new URL(decodedUrl);
+        const url = new URL(returnUrl);
         // Ensure we're on step 3
         url.searchParams.set("step", "3");
         url.searchParams.set("returnFromOfferCreate", "true");
+
+        // Clear localStorage form data after successful creation
+        clearPersistedFormData("offer_form_data");
+        clearPersistedFormData("offer_creatives");
+        clearPersistedFormData("offer_tracking_sources");
+        clearPersistedFormData("offer_rewards");
+        clearPersistedFormData("offer_products");
+
         navigate(url.pathname + url.search);
       } else {
+        // Clear localStorage form data after successful creation
+        clearPersistedFormData("offer_form_data");
+        clearPersistedFormData("offer_creatives");
+        clearPersistedFormData("offer_tracking_sources");
+        clearPersistedFormData("offer_rewards");
+        clearPersistedFormData("offer_products");
+
         navigate("/dashboard/offers");
       }
     } catch (err: unknown) {
@@ -2093,7 +2159,7 @@ export default function CreateOfferPage() {
       categoriesLoading,
       handleSaveDraft,
       handleCancel,
-    ]
+    ],
   );
 
   // Render step directly in JSX instead of memoizing to avoid dependency issues
@@ -2158,7 +2224,7 @@ export default function CreateOfferPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <button
-                onClick={() => navigate("/dashboard/offers")}
+                onClick={() => navigate(getBackButtonFallback())}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -2186,7 +2252,9 @@ export default function CreateOfferPage() {
           />
 
           {error && (
-            <div className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}>
+            <div
+              className={`bg-red-50 border border-red-200 ${tw.rounded} p-4 mb-6`}
+            >
               <p className="text-red-700">{error}</p>
             </div>
           )}
@@ -2232,7 +2300,7 @@ export default function CreateOfferPage() {
                   btn.style.setProperty(
                     "background-color",
                     color.primary.action,
-                    "important"
+                    "important",
                   );
                   btn.style.setProperty("color", "white", "important");
                 }}
@@ -2241,7 +2309,7 @@ export default function CreateOfferPage() {
                   btn.style.setProperty(
                     "background-color",
                     color.primary.action,
-                    "important"
+                    "important",
                   );
                   btn.style.setProperty("color", "white", "important");
                 }}

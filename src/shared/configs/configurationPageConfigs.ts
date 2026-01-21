@@ -937,6 +937,133 @@ const hardcodedSMSRoutes: TypeConfigurationItem[] = [
   },
 ];
 
+// Hardcoded sample campaigns data for notifications/real entity references
+export const hardcodedCampaigns = [
+  {
+    id: 1,
+    name: "Summer Promotion 2024",
+    description: "Summer seasonal promotion campaign",
+    status: "active",
+    created_at: "2025-01-10T08:00:00Z",
+  },
+  {
+    id: 2,
+    name: "Holiday Special",
+    description: "Holiday festive season campaign",
+    status: "approved",
+    created_at: "2025-01-12T10:30:00Z",
+  },
+  {
+    id: 3,
+    name: "Black Friday Sale",
+    description: "Black Friday shopping event",
+    status: "active",
+    created_at: "2025-01-14T09:15:00Z",
+  },
+  {
+    id: 4,
+    name: "Spring Promotion",
+    description: "Spring collection launch campaign",
+    status: "completed",
+    created_at: "2025-01-08T11:00:00Z",
+  },
+  {
+    id: 5,
+    name: "Customer Loyalty Program",
+    description: "Reward loyal customers",
+    status: "active",
+    created_at: "2025-01-05T14:30:00Z",
+  },
+];
+
+// Hardcoded sample segments data for notifications/real entity references
+export const hardcodedSegments = [
+  {
+    id: 1,
+    name: "High Value Customers",
+    description: "Customers with high lifetime value",
+    status: "active",
+    member_count: 15234,
+    created_at: "2025-01-09T08:00:00Z",
+  },
+  {
+    id: 2,
+    name: "VIP Members",
+    description: "Premium tier VIP customers",
+    status: "active",
+    member_count: 3456,
+    created_at: "2025-01-11T10:15:00Z",
+  },
+  {
+    id: 3,
+    name: "Active Users",
+    description: "Users with recent activity",
+    status: "active",
+    member_count: 87654,
+    created_at: "2025-01-07T09:30:00Z",
+  },
+  {
+    id: 4,
+    name: "At-Risk Customers",
+    description: "Customers showing churn signals",
+    status: "active",
+    member_count: 5432,
+    created_at: "2025-01-13T15:00:00Z",
+  },
+  {
+    id: 5,
+    name: "New Customers",
+    description: "Recently onboarded customers",
+    status: "active",
+    member_count: 2341,
+    created_at: "2025-01-06T12:45:00Z",
+  },
+];
+
+// Hardcoded sample offers data for notifications/real entity references
+export const hardcodedOffers = [
+  {
+    id: 1,
+    name: "50% Off Premium Plan",
+    description: "Limited time premium subscription discount",
+    status: "active",
+    discount_value: 50,
+    created_at: "2025-01-09T08:00:00Z",
+  },
+  {
+    id: 2,
+    name: "Welcome Bonus",
+    description: "New user welcome incentive",
+    status: "active",
+    discount_value: 100,
+    created_at: "2025-01-11T10:15:00Z",
+  },
+  {
+    id: 3,
+    name: "Loyalty Cashback",
+    description: "Cashback for loyalty members",
+    status: "active",
+    discount_value: 25,
+    created_at: "2025-01-07T09:30:00Z",
+  },
+  {
+    id: 4,
+    name: "Limited Time Deal",
+    description: "Flash sale limited offer",
+    status: "active",
+    discount_value: 35,
+    created_at: "2025-01-13T15:00:00Z",
+  },
+  {
+    id: 5,
+    name: "Bundle Package",
+    description: "Multi-product bundle discount",
+    status: "active",
+    discount_value: 40,
+    created_at: "2025-01-06T12:45:00Z",
+  },
+];
+
 // Hardcoded languages/locales data
 const hardcodedLanguages: TypeConfigurationItem[] = [
   {
@@ -2733,7 +2860,7 @@ export const characterSetsConfig: TypeConfigurationPageConfig = {
 
 // Helper function to create new configuration easily
 export function createConfigurationPageConfig(
-  overrides: Partial<ConfigurationPageConfig>
+  overrides: Partial<ConfigurationPageConfig>,
 ): ConfigurationPageConfig {
   return {
     // Default values
@@ -2773,91 +2900,91 @@ export function createConfigurationPageConfig(
 
 // Missing functions for pages that expect them
 export function getCampaignTypesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return campaignTypesConfig;
 }
 
 export function getOfferTypesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return offerTypesConfig;
 }
 
 export function getCampaignObjectivesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): ConfigurationPageConfig {
   return campaignObjectivesConfig;
 }
 
 export function getDepartmentsConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): ConfigurationPageConfig {
   return departmentsConfig;
 }
 
 export function getTeamRolesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): ConfigurationPageConfig {
   return teamRolesConfig;
 }
 
 export function getLineOfBusinessConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): ConfigurationPageConfig {
   return lineOfBusinessConfig;
 }
 
 export function getSegmentTypesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return segmentTypesConfig;
 }
 
 export function getProductTypesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return productTypesConfig;
 }
 
 export function getCreativeTemplatesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return creativeTemplatesConfig;
 }
 
 export function getTrackingSourcesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): ConfigurationPageConfig {
   return trackingSourcesConfig;
 }
 
 export function getSenderIdsConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return senderIdsConfig;
 }
 
 export function getLanguagesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return languagesConfig;
 }
 
 export function getRewardTypesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return rewardTypesConfig;
 }
 
 export function getCharacterSetsConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return characterSetsConfig;
 }
 
 export function getSmsRoutesConfig(
-  t: (key: string) => string
+  t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return smsRoutesConfig;
 }

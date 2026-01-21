@@ -11,6 +11,25 @@ export default function CreateProductPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { success, error: showError } = useToast();
+
+  // Get return URL if coming from offer flow
+  const returnToOfferFlow = searchParams.get("returnToOfferFlow") === "true";
+  const returnUrlParam = searchParams.get("returnUrl");
+  const returnUrl = returnUrlParam ? decodeURIComponent(returnUrlParam) : null;
+
+  // Extract the path to return to (with step parameter preserved)
+  const getBackButtonFallback = (): string => {
+    if (returnUrl) {
+      try {
+        const url = new URL(returnUrl);
+        return url.pathname + url.search;
+      } catch (e) {
+        return "/dashboard/products";
+      }
+    }
+    return "/dashboard/products";
+  };
+
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -74,7 +93,7 @@ export default function CreateProductPage() {
     ) {
       showError(
         "Validation Error",
-        "Product Code, Name, Price, and DA ID are required"
+        "Product Code, Name, Price, and DA ID are required",
       );
       return;
     }
@@ -119,9 +138,35 @@ export default function CreateProductPage() {
       await productService.createProduct(finalSubmitData);
       success(
         "Product Created",
-        `"${formData.name}" has been created successfully.`
+        `"${formData.name}" has been created successfully.`,
       );
-      navigate("/dashboard/products");
+
+      // Check if we should return to offer creation flow
+      if (returnToOfferFlow && returnUrl) {
+        // Store the created product ID in sessionStorage for offer flow tracking
+        // Note: The created product will be available in product list immediately since it's active by default
+        const offerFlowCreatedProductsStr = sessionStorage.getItem(
+          "offerFlowCreatedProducts",
+        );
+        const offerFlowProductIds: number[] = offerFlowCreatedProductsStr
+          ? JSON.parse(offerFlowCreatedProductsStr)
+          : [];
+
+        sessionStorage.setItem(
+          "offerFlowCreatedProducts",
+          JSON.stringify(offerFlowProductIds),
+        );
+
+        // Navigate back to offer creation at step 2
+        const url = new URL(returnUrl);
+        // Ensure we're on step 2
+        url.searchParams.set("step", "2");
+        url.searchParams.set("returnFromProductCreate", "true");
+
+        navigate(url.pathname + url.search);
+      } else {
+        navigate("/dashboard/products");
+      }
     } catch (err) {
       // Extract detailed error message from backend response
       let errorMessage = "Failed to create product";
@@ -156,7 +201,7 @@ export default function CreateProductPage() {
       | number
       | boolean
       | undefined
-      | CreateProductRequest["combo_data"]
+      | CreateProductRequest["combo_data"],
   ) => {
     setFormData({ ...formData, [field]: value as any });
   };
@@ -174,7 +219,7 @@ export default function CreateProductPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
           <BackButton
-            fallbackTo="/dashboard/products"
+            fallbackTo={getBackButtonFallback()}
             style={{ color: color.text.secondary }}
           />
           <div>

@@ -16,7 +16,7 @@ interface ToastContextType {
     type: ToastType,
     title: string,
     message?: string,
-    duration?: number
+    duration?: number,
   ) => void;
   success: (title: string, message?: string) => void;
   error: (title: string, message?: string) => void;
@@ -40,7 +40,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
       setToasts((prev) => [...prev, toast]);
     },
-    []
+    [],
   );
 
   const removeToast = useCallback((id: string) => {
@@ -49,24 +49,31 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
   const success = useCallback(
     (title: string, message?: string) => showToast("success", title, message),
-    [showToast]
+    [showToast],
   );
   const error = useCallback(
-    (title: string, message?: string) => showToast("error", title, message),
-    [showToast]
+    (title: string, message?: string) => {
+      // Silent mode: suppress error toasts for presentations, but log to console
+      if (import.meta.env.VITE_SILENT_MODE === "true") {
+        console.error(title, message);
+        return;
+      }
+      showToast("error", title, message);
+    },
+    [showToast],
   );
   const warning = useCallback(
     (title: string, message?: string) => showToast("warning", title, message),
-    [showToast]
+    [showToast],
   );
   const info = useCallback(
     (title: string, message?: string) => showToast("info", title, message),
-    [showToast]
+    [showToast],
   );
 
   const contextValue = useMemo(
     () => ({ showToast, success, error, warning, info }),
-    [showToast, success, error, warning, info]
+    [showToast, success, error, warning, info],
   );
 
   return (

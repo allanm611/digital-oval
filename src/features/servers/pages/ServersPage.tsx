@@ -8,6 +8,7 @@ import {
   Eye,
   HeartPulse,
   Loader2,
+  MoreVertical,
   Play,
   Plus,
   PowerOff,
@@ -66,7 +67,7 @@ export default function ServersPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedServerIds, setSelectedServerIds] = useState<Set<number>>(
-    () => new Set()
+    () => new Set(),
   );
   const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
   const [actionState, setActionState] = useState<{
@@ -77,16 +78,22 @@ export default function ServersPage() {
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
 
   const [healthStats, setHealthStats] = useState<ServerHealthStats | null>(
-    null
+    null,
   );
   const [environmentCounts, setEnvironmentCounts] =
     useState<ServerCountByEnvironment>([]);
   const [protocolCounts, setProtocolCounts] = useState<ServerCountByProtocol>(
-    []
+    [],
   );
   const [regionCounts, setRegionCounts] = useState<ServerCountByRegion>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [isClosingFilters, setIsClosingFilters] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,6 +101,23 @@ export default function ServersPage() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+        setMenuPosition(null);
+      }
+    };
+
+    if (openMenuId !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [openMenuId]);
 
   const closeFilters = useCallback(() => {
     setIsClosingFilters(true);
@@ -118,7 +142,7 @@ export default function ServersPage() {
     } catch (err) {
       showError(
         "Failed to load server analytics",
-        (err as Error).message || "Please try again later."
+        (err as Error).message || "Please try again later.",
       );
     } finally {
       setIsLoadingStats(false);
@@ -154,22 +178,22 @@ export default function ServersPage() {
       } else if (environmentFilter !== "all") {
         dataset = await serverService.getServersByEnvironment(
           environmentFilter,
-          listQuery
+          listQuery,
         );
       } else if (protocolFilter !== "all") {
         dataset = await serverService.getServersByProtocol(
           protocolFilter,
-          listQuery
+          listQuery,
         );
       } else if (regionFilter !== "all") {
         dataset = await serverService.getServersByRegion(
           regionFilter,
-          listQuery
+          listQuery,
         );
       } else if (serverTypeFilter !== "all") {
         dataset = await serverService.getServersByType(
           serverTypeFilter,
-          listQuery
+          listQuery,
         );
       } else {
         const response = await serverService.listServers({
@@ -184,7 +208,7 @@ export default function ServersPage() {
       setSourceServers([]);
       showError(
         "Failed to load servers",
-        (err as Error).message || "Unable to load server registry."
+        (err as Error).message || "Unable to load server registry.",
       );
     } finally {
       setIsLoadingServers(false);
@@ -317,7 +341,7 @@ export default function ServersPage() {
 
   const visibleIds = useMemo(
     () => visibleServers.map((server) => server.id),
-    [visibleServers]
+    [visibleServers],
   );
 
   const allVisibleSelected =
@@ -325,7 +349,7 @@ export default function ServersPage() {
     visibleIds.every((id) => selectedServerIds.has(id));
 
   const someVisibleSelected = visibleIds.some((id) =>
-    selectedServerIds.has(id)
+    selectedServerIds.has(id),
   );
 
   const hasSelection = selectedServerIds.size > 0;
@@ -341,7 +365,7 @@ export default function ServersPage() {
     const values = new Set(
       environmentCounts
         .map((env) => env.environment)
-        .filter((env): env is string => Boolean(env))
+        .filter((env): env is string => Boolean(env)),
     );
     sourceServers.forEach((server) => {
       if (server.environment) {
@@ -355,7 +379,7 @@ export default function ServersPage() {
     const values = new Set(
       protocolCounts
         .map((protocol) => protocol.protocol)
-        .filter((protocol): protocol is string => Boolean(protocol))
+        .filter((protocol): protocol is string => Boolean(protocol)),
     );
     sourceServers.forEach((server) => {
       if (server.protocol) {
@@ -369,7 +393,7 @@ export default function ServersPage() {
     const values = new Set(
       regionCounts
         .map((region) => region.region)
-        .filter((region): region is string => Boolean(region))
+        .filter((region): region is string => Boolean(region)),
     );
     sourceServers.forEach((server) => {
       if (server.region) {
@@ -490,7 +514,7 @@ export default function ServersPage() {
   };
 
   const handleBulkStatusChange = async (
-    action: "activate" | "deactivate"
+    action: "activate" | "deactivate",
   ): Promise<void> => {
     const ids = Array.from(selectedServerIds);
     if (ids.length === 0) return;
@@ -530,7 +554,7 @@ export default function ServersPage() {
         }`,
         `Successfully ${
           action === "activate" ? "activated" : "deactivated"
-        } ${updatedCount} server${updatedCount === 1 ? "" : "s"}.`
+        } ${updatedCount} server${updatedCount === 1 ? "" : "s"}.`,
       );
       setSelectedServerIds(new Set());
       await loadServers();
@@ -540,7 +564,7 @@ export default function ServersPage() {
         `Failed to ${
           action === "activate" ? "activate" : "deactivate"
         } servers`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setIsBulkActionLoading(false);
@@ -549,7 +573,7 @@ export default function ServersPage() {
 
   const handleActivationToggle = async (
     server: ServerType,
-    event?: React.MouseEvent
+    event?: React.MouseEvent,
   ) => {
     event?.stopPropagation();
     const action = server.is_active ? "deactivate" : "activate";
@@ -571,19 +595,19 @@ export default function ServersPage() {
 
       // Update the server in place to maintain position
       setSourceServers((prev) =>
-        prev.map((s) => (s.id === server.id ? updatedServer : s))
+        prev.map((s) => (s.id === server.id ? updatedServer : s)),
       );
 
       success(
         `Server ${action === "activate" ? "activated" : "deactivated"}`,
         `${server.name} is now ${
           action === "activate" ? "active" : "inactive"
-        }.`
+        }.`,
       );
     } catch (err) {
       showError(
         `Failed to ${action} server`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -592,7 +616,7 @@ export default function ServersPage() {
 
   const handleDeprecationToggle = async (
     server: ServerType,
-    event?: React.MouseEvent
+    event?: React.MouseEvent,
   ) => {
     event?.stopPropagation();
     const nextAction = server.is_deprecated ? "undeprecate" : "deprecate";
@@ -614,7 +638,7 @@ export default function ServersPage() {
 
       // Update the server in place to maintain position
       setSourceServers((prev) =>
-        prev.map((s) => (s.id === server.id ? updatedServer : s))
+        prev.map((s) => (s.id === server.id ? updatedServer : s)),
       );
 
       success(
@@ -623,12 +647,12 @@ export default function ServersPage() {
           nextAction === "deprecate"
             ? "will no longer receive jobs"
             : "is available again"
-        }.`
+        }.`,
       );
     } catch (err) {
       showError(
         `Failed to ${nextAction} server`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -637,7 +661,7 @@ export default function ServersPage() {
 
   const handleHealthToggle = async (
     server: ServerType,
-    event?: React.MouseEvent
+    event?: React.MouseEvent,
   ) => {
     event?.stopPropagation();
     const action = server.health_check_enabled ? "disable" : "enable";
@@ -665,14 +689,14 @@ export default function ServersPage() {
           action === "enable"
             ? "will report uptime again"
             : "will stop automated health polling"
-        }.`
+        }.`,
       );
       await loadServers();
       await loadStats(); // Refetch health stats to update the stat card
     } catch (err) {
       showError(
         `Failed to ${action} health checks`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -681,7 +705,7 @@ export default function ServersPage() {
 
   const isServerActionInFlight = (
     serverId: number,
-    actions: Array<"activate" | "deactivate" | "health" | "deprecate">
+    actions: Array<"activate" | "deactivate" | "health" | "deprecate">,
   ) => actionState?.id === serverId && actions.includes(actionState.action);
 
   return (
@@ -1035,6 +1059,7 @@ export default function ServersPage() {
                         }}
                       >
                         <div className="flex items-center justify-end gap-1">
+                          {/* View Details Button */}
                           <button
                             type="button"
                             onClick={() =>
@@ -1046,6 +1071,8 @@ export default function ServersPage() {
                           >
                             <Eye size={16} />
                           </button>
+
+                          {/* Edit Button */}
                           <button
                             type="button"
                             onClick={(e) => handleEdit(server, e)}
@@ -1055,88 +1082,123 @@ export default function ServersPage() {
                           >
                             <Edit size={16} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleHealthToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${
-                              tw.rounded
-                            } p-2 transition-colors ${
-                              server.health_check_enabled
-                                ? "text-green-600 hover:bg-green-50"
-                                : "text-black hover:bg-gray-100"
-                            } ${healthLoading ? "opacity-50" : ""}`}
-                            aria-label={
-                              server.health_check_enabled
-                                ? `Disable health checks for ${server.name}`
-                                : `Enable health checks for ${server.name}`
-                            }
-                            title={
-                              server.health_check_enabled
-                                ? "Disable health checks"
-                                : "Enable health checks"
-                            }
-                            disabled={healthLoading}
-                          >
-                            {healthLoading ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : (
-                              <HeartPulse size={16} />
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleActivationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${
-                              tw.rounded
-                            } p-2 transition-colors ${
-                              server.is_active
-                                ? "text-red-600 hover:bg-red-50"
-                                : "text-green-600 hover:bg-green-50"
-                            } ${activationLoading ? "opacity-50" : ""}`}
-                            aria-label={
-                              server.is_active
-                                ? `Deactivate ${server.name}`
-                                : `Activate ${server.name}`
-                            }
-                            title={server.is_active ? "Deactivate" : "Activate"}
-                            disabled={activationLoading}
-                          >
-                            {activationLoading ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : server.is_active ? (
-                              <PowerOff size={16} />
-                            ) : (
-                              <Play size={16} />
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeprecationToggle(server, e)}
-                            className={`relative inline-flex items-center justify-center ${
-                              tw.rounded
-                            } p-2 transition-colors ${
-                              server.is_deprecated
-                                ? "text-purple-600 hover:bg-purple-50"
-                                : "text-purple-600 hover:bg-purple-50"
-                            } ${deprecateLoading ? "opacity-50" : ""}`}
-                            aria-label={
-                              server.is_deprecated
-                                ? `Restore ${server.name}`
-                                : `Deprecate ${server.name}`
-                            }
-                            title={
-                              server.is_deprecated ? "Undeprecate" : "Deprecate"
-                            }
-                            disabled={deprecateLoading}
-                          >
-                            {deprecateLoading ? (
-                              <Loader2 size={16} className="animate-spin" />
-                            ) : server.is_deprecated ? (
-                              <RotateCcw size={16} />
-                            ) : (
-                              <Archive size={16} />
-                            )}
-                          </button>
+
+                          {/* More Actions Menu */}
+                          <div className="relative" ref={menuRef}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                const button = e.currentTarget;
+                                if (openMenuId === server.id) {
+                                  setOpenMenuId(null);
+                                  setMenuPosition(null);
+                                } else {
+                                  setOpenMenuId(server.id);
+                                  // Calculate menu position
+                                  const buttonRect =
+                                    button.getBoundingClientRect();
+                                  setMenuPosition({
+                                    top: buttonRect.bottom + 4,
+                                    left: buttonRect.right - 160, // w-40 = 160px, align right
+                                  });
+                                }
+                              }}
+                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+                              aria-label={`More actions for ${server.name}`}
+                              title="More actions"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+
+                            {/* Dropdown Menu - Using createPortal to avoid overflow issues */}
+                            {openMenuId === server.id &&
+                              menuPosition &&
+                              createPortal(
+                                <div
+                                  ref={menuRef}
+                                  className="fixed bg-white rounded shadow-lg border border-gray-200 w-40 py-1"
+                                  style={{
+                                    top: `${menuPosition.top}px`,
+                                    left: `${menuPosition.left}px`,
+                                    zIndex: zIndex.popover,
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {/* Health Check Option */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      handleHealthToggle(server, e);
+                                      setOpenMenuId(null);
+                                      setMenuPosition(null);
+                                    }}
+                                    disabled={healthLoading}
+                                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors ${
+                                      healthLoading ? "opacity-50" : ""
+                                    } ${
+                                      server.health_check_enabled
+                                        ? "text-green-600"
+                                        : "text-black"
+                                    }`}
+                                    title={
+                                      server.health_check_enabled
+                                        ? "Disable health checks"
+                                        : "Enable health checks"
+                                    }
+                                  >
+                                    {healthLoading ? (
+                                      <Loader2
+                                        size={14}
+                                        className="animate-spin"
+                                      />
+                                    ) : (
+                                      <HeartPulse size={14} />
+                                    )}
+                                    <span>
+                                      {server.health_check_enabled
+                                        ? "Disable Health"
+                                        : "Enable Health"}
+                                    </span>
+                                  </button>
+
+                                  {/* Deprecate Option */}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      handleDeprecationToggle(server, e);
+                                      setOpenMenuId(null);
+                                      setMenuPosition(null);
+                                    }}
+                                    disabled={deprecateLoading}
+                                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors border-t border-gray-100 ${
+                                      deprecateLoading ? "opacity-50" : ""
+                                    } text-purple-600`}
+                                    title={
+                                      server.is_deprecated
+                                        ? "Undeprecate"
+                                        : "Deprecate"
+                                    }
+                                  >
+                                    {deprecateLoading ? (
+                                      <Loader2
+                                        size={14}
+                                        className="animate-spin"
+                                      />
+                                    ) : server.is_deprecated ? (
+                                      <RotateCcw size={14} />
+                                    ) : (
+                                      <Archive size={14} />
+                                    )}
+                                    <span>
+                                      {server.is_deprecated
+                                        ? "Undeprecate"
+                                        : "Deprecate"}
+                                    </span>
+                                  </button>
+                                </div>,
+                                document.body,
+                              )}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -1319,7 +1381,7 @@ export default function ServersPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

@@ -144,14 +144,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         setCurrentUserRole(
           user.role
             ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-            : "User"
+            : "User",
         );
       }
     } catch {
       setCurrentUserRole(
         user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-          : "User"
+          : "User",
       );
     }
   }, [user]);
@@ -507,25 +507,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         ],
       },
       {
-        name: "Manual Broadcast",
-        href: "/dashboard/manual-broadcasts",
-        icon: Upload,
-        type: "single",
-        entity: "segments",
-      },
-      // {
-      //   name: "QuickLists",
-      //   href: "/dashboard/quicklists",
-      //   icon: Database,
-      //   type: "single",
-      //   entity: "segments",
-      // },
-      {
-        name: "Manual Rewards",
-        href: "/dashboard/manual-rewards",
-        icon: Gift,
-        type: "single",
-        entity: "offers",
+        name: "Manual Actions",
+        href: "/dashboard/manual-actions",
+        icon: Zap,
+        type: "parent",
+        entity: "campaigns",
+        children: [
+          {
+            name: "Manual Broadcasts",
+            href: "/dashboard/manual-broadcasts",
+            icon: Upload,
+            type: "single",
+            entity: "segments",
+          },
+          {
+            name: "Manual Rewards",
+            href: "/dashboard/manual-rewards",
+            icon: Gift,
+            type: "single",
+            entity: "offers",
+          },
+        ],
       },
 
       {
@@ -536,7 +538,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         entity: "configuration",
       },
     ],
-    []
+    [],
   );
 
   const secondaryNavigation = [
@@ -591,7 +593,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     if (item.type === "parent") {
       return (
         item.children?.some(
-          (child: NavigationItem) => location.pathname === child.href
+          (child: NavigationItem) => location.pathname === child.href,
         ) || location.pathname === item.href
       );
     }
@@ -605,7 +607,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       if (pathname.startsWith(href + "/")) return true;
       return false;
     },
-    []
+    [],
   );
 
   // Auto-expand parent items when a child is active
@@ -626,14 +628,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         // Check if any direct child is active (exact match or sub-route)
         const hasActiveChild = item.children.some((child) =>
-          isPathActive(location.pathname, child.href)
+          isPathActive(location.pathname, child.href),
         );
 
         // Also check nested children (grandchildren)
         const hasActiveNestedChild = item.children.some((child) => {
           if (child.type === "parent" && child.children) {
             return child.children.some((grandchild) =>
-              isPathActive(location.pathname, grandchild.href)
+              isPathActive(location.pathname, grandchild.href),
             );
           }
           return false;
@@ -646,7 +648,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           item.children.forEach((child) => {
             if (child.type === "parent" && child.children) {
               const hasActiveGrandchild = child.children.some((grandchild) =>
-                isPathActive(location.pathname, grandchild.href)
+                isPathActive(location.pathname, grandchild.href),
               );
               if (hasActiveGrandchild) {
                 activeParentNames.push(child.name.toLowerCase());
@@ -722,7 +724,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                   const isActive = isItemActive(item);
                   const isExpanded = expandedItems.includes(
-                    item.name.toLowerCase()
+                    item.name.toLowerCase(),
                   );
 
                   if (item.type === "parent") {
@@ -732,7 +734,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           onClick={() =>
                             toggleExpanded(
                               item.name.toLowerCase(),
-                              parentItemNames
+                              parentItemNames,
                             )
                           }
                           className={`group w-full flex items-center justify-between ${
@@ -744,7 +746,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           <div className="flex items-center gap-x-3">
                             <Icon
                               className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                isActive
+                                isActive,
                               )}`}
                             />
                             {item.name}
@@ -772,7 +774,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                               // Check if child has its own children (nested dropdown)
                               if (child.type === "parent" && child.children) {
                                 const isChildExpanded = expandedItems.includes(
-                                  child.name.toLowerCase()
+                                  child.name.toLowerCase(),
                                 );
                                 return (
                                   <div key={child.name}>
@@ -791,7 +793,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                       <div className="flex items-center gap-x-3">
                                         <ChildIcon
                                           className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                            isChildActive
+                                            isChildActive,
                                           )}`}
                                         />
                                         {child.name}
@@ -821,14 +823,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                               } p-2.5 text-sm transition-all duration-200 ${
                                                 isGrandchildActive
                                                   ? getItemClasses(
-                                                      isGrandchildActive
+                                                      isGrandchildActive,
                                                     )
                                                   : getItemClasses(false)
                                               }`}
                                             >
                                               <GrandchildIcon
                                                 className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                                  isGrandchildActive
+                                                  isGrandchildActive,
                                                 )}`}
                                               />
                                               {grandchild.name}
@@ -850,12 +852,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                   className={`group flex items-center gap-x-3 ${
                                     tw.rounded
                                   } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
-                                    isChildActive
+                                    isChildActive,
                                   )}`}
                                 >
                                   <ChildIcon
                                     className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                      isChildActive
+                                      isChildActive,
                                     )}`}
                                   />
                                   {child.name}
@@ -881,7 +883,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     >
                       <Icon
                         className={`h-5 w-5 shrink-0 ${getIconClasses(
-                          isActive
+                          isActive,
                         )}`}
                       />
                       {item.name}
@@ -906,7 +908,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     >
                       <Icon
                         className={`h-5 w-5 shrink-0 ${getIconClasses(
-                          isActive
+                          isActive,
                         )}`}
                       />
                       {item.name}
@@ -970,7 +972,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 const Icon = item.icon;
                 const isActive = isItemActive(item);
                 const isExpanded = expandedItems.includes(
-                  item.name.toLowerCase()
+                  item.name.toLowerCase(),
                 );
 
                 if (item.type === "parent") {
@@ -988,7 +990,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         onClick={() =>
                           toggleExpanded(
                             item.name.toLowerCase(),
-                            parentItemNames
+                            parentItemNames,
                           )
                         }
                         className={`group w-full flex items-center md:justify-center xl:justify-between ${
@@ -1001,7 +1003,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <div className="flex items-center gap-x-3">
                           <Icon
                             className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                              isActive
+                              isActive,
                             )}`}
                           />
                           <span className="hidden xl:block">{item.name}</span>
@@ -1041,7 +1043,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             // Check if child has its own children (nested dropdown)
                             if (child.type === "parent" && child.children) {
                               const isChildExpanded = expandedItems.includes(
-                                child.name.toLowerCase()
+                                child.name.toLowerCase(),
                               );
                               return (
                                 <li key={child.name} className="relative group">
@@ -1061,7 +1063,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     <div className="flex items-center gap-x-3">
                                       <ChildIcon
                                         className={`md:h-5 md:w-5 xl:h-4 xl:w-4 shrink-0 ${getIconClasses(
-                                          isChildActive
+                                          isChildActive,
                                         )}`}
                                       />
                                       <span className="hidden xl:block">
@@ -1105,13 +1107,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                               className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                                 tw.rounded
                                               } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${getItemClasses(
-                                                isGrandchildActive
+                                                isGrandchildActive,
                                               )}`}
                                               title={grandchild.name}
                                             >
                                               <GrandchildIcon
                                                 className={`md:h-5 md:w-5 xl:h-4 xl:w-4 shrink-0 ${getIconClasses(
-                                                  isGrandchildActive
+                                                  isGrandchildActive,
                                                 )}`}
                                               />
                                               <span className="hidden xl:block">
@@ -1157,7 +1159,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                 >
                                   <ChildIcon
                                     className={`md:h-5 md:w-5 xl:h-4 xl:w-4 shrink-0 ${getIconClasses(
-                                      isChildActive
+                                      isChildActive,
                                     )}`}
                                   />
                                   <span className="hidden xl:block">
@@ -1201,13 +1203,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                         tw.rounded
                       } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
-                        isActive
+                        isActive,
                       )}`}
                       title={item.name}
                     >
                       <Icon
                         className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                          isActive
+                          isActive,
                         )}`}
                       />
                       <span className="hidden xl:block">{item.name}</span>
@@ -1251,14 +1253,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                         tw.rounded
                       } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
-                        isActive
+                        isActive,
                       )}`}
                       title={item.name}
                       onClick={() => onClose()}
                     >
                       <Icon
                         className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                          isActive
+                          isActive,
                         )}`}
                       />
                       <span className="hidden xl:block">{item.name}</span>

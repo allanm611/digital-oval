@@ -18,6 +18,7 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import HeadlessSelect from "./ui/HeadlessSelect";
+import BackButton from "./ui/BackButton";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -192,7 +193,7 @@ function TypeConfigurationModal({
     if (!isLanguage || !config.customFields) return [];
     const characterSetField = config.customFields.find(
       (f) =>
-        f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets"
+        f.fieldKey === "characterSet" && f.dynamicOptions === "characterSets",
     );
     if (characterSetField) {
       const characterSets = configurationDataService.getData("characterSets");
@@ -212,14 +213,14 @@ function TypeConfigurationModal({
       setDescription(item.description || "");
       setIsActive(item.isActive ?? true);
       setMetadataValue(
-        item.metadataValue !== undefined ? String(item.metadataValue) : ""
+        item.metadataValue !== undefined ? String(item.metadataValue) : "",
       );
       if (isCreativeTemplate) {
         setTitle(item.title || "");
         setTextBody(item.text_body || "");
         setHtmlBody(item.html_body || "");
         setVariablesText(
-          item.variables ? JSON.stringify(item.variables, null, 2) : ""
+          item.variables ? JSON.stringify(item.variables, null, 2) : "",
         );
         setLocale(item.locale || "");
       }
@@ -233,7 +234,7 @@ function TypeConfigurationModal({
             String(
               (item as TypeConfigurationItem)[
                 field.fieldKey as keyof TypeConfigurationItem
-              ]
+              ],
             ) || "";
         });
         setCustomFields(fields);
@@ -300,14 +301,14 @@ function TypeConfigurationModal({
       setError(
         t.genericConfig.mustBeCharactersOrLess
           .replace("{field}", config.nameLabel)
-          .replace("{maxLength}", config.nameMaxLength.toString())
+          .replace("{maxLength}", config.nameMaxLength.toString()),
       );
       return;
     }
 
     if (config.descriptionRequired && !description.trim()) {
       setError(
-        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel)
+        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel),
       );
       return;
     }
@@ -316,7 +317,7 @@ function TypeConfigurationModal({
       setError(
         t.genericConfig.mustBeCharactersOrLess
           .replace("{field}", config.descriptionLabel)
-          .replace("{maxLength}", config.descriptionMaxLength.toString())
+          .replace("{maxLength}", config.descriptionMaxLength.toString()),
       );
       return;
     }
@@ -406,8 +407,8 @@ function TypeConfigurationModal({
       setError(
         t.genericConfig.mustBeValidNumber.replace(
           "{field}",
-          config.metadataField.label
-        )
+          config.metadataField.label,
+        ),
       );
       return;
     }
@@ -416,18 +417,21 @@ function TypeConfigurationModal({
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: zIndex.modal }}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{ zIndex: zIndex.modal }}
+    >
       <div
         className={`${tw.rounded} shadow-2xl w-full bg-white ${
           isCreativeTemplate
             ? "max-w-4xl max-h-[90vh] flex flex-col"
             : isLanguage
-            ? "max-w-lg"
-            : isComboType
-            ? "max-w-2xl"
-            : isSmsRoutes
-            ? "max-w-md"
-            : "max-w-md"
+              ? "max-w-lg"
+              : isComboType
+                ? "max-w-2xl"
+                : isSmsRoutes
+                  ? "max-w-md"
+                  : "max-w-md"
         }`}
       >
         <div
@@ -464,7 +468,7 @@ function TypeConfigurationModal({
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
-                config.nameLabel.toLowerCase()
+                config.nameLabel.toLowerCase(),
               )}
               maxLength={config.nameMaxLength}
               required={config.nameRequired}
@@ -481,7 +485,7 @@ function TypeConfigurationModal({
               className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
               placeholder={t.genericConfig.enter.replace(
                 "{field}",
-                config.descriptionLabel?.toLowerCase() || "description"
+                config.descriptionLabel?.toLowerCase() || "description",
               )}
               rows={3}
               maxLength={config.descriptionMaxLength}
@@ -514,7 +518,7 @@ function TypeConfigurationModal({
                         ? e.target.value
                           ? parseFloat(e.target.value)
                           : ""
-                        : e.target.value
+                        : e.target.value,
                     )
                   }
                   className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
@@ -530,7 +534,7 @@ function TypeConfigurationModal({
               <>
                 {config.customFields
                   .filter(
-                    (field) => !config.hideFields?.includes(field.fieldKey)
+                    (field) => !config.hideFields?.includes(field.fieldKey),
                   )
                   .map((field, index) => (
                     <div
@@ -746,8 +750,8 @@ function TypeConfigurationModal({
                         {resource.type === "data"
                           ? "Data"
                           : resource.type === "voice"
-                          ? "Voice"
-                          : "SMS"}
+                            ? "Voice"
+                            : "SMS"}
                       </p>
                       <p className="text-sm text-gray-500">{resource.unit}</p>
                     </div>
@@ -780,7 +784,7 @@ function TypeConfigurationModal({
                       type="button"
                       onClick={() => {
                         setComboResources(
-                          comboResources.filter((_, i) => i !== idx)
+                          comboResources.filter((_, i) => i !== idx),
                         );
                       }}
                       className="col-span-1 flex justify-center items-center text-red-600 hover:text-red-700"
@@ -934,7 +938,7 @@ function TypeConfigurationModal({
                         comboResources.map((r) => ({
                           ...r,
                           sharedValidity: e.target.checked,
-                        }))
+                        })),
                       );
                     }}
                     className="rounded"
@@ -960,7 +964,7 @@ function TypeConfigurationModal({
                             comboResources.map((r) => ({
                               ...r,
                               sharedValidityHours: newHours,
-                            }))
+                            })),
                           );
                         }}
                         className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -982,7 +986,7 @@ function TypeConfigurationModal({
                         setComboPrice(
                           e.target.value
                             ? parseFloat(e.target.value)
-                            : undefined
+                            : undefined,
                         )
                       }
                       className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -1026,7 +1030,7 @@ function TypeConfigurationModal({
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -1051,7 +1055,7 @@ export default function TypeConfigurationPage({
     }));
 
   const [items, setItems] = useState<TypeConfigurationItem[]>(
-    normalizeItems(config.initialData)
+    normalizeItems(config.initialData),
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1067,14 +1071,14 @@ export default function TypeConfigurationPage({
     if (config.configType) {
       configurationDataService.setData(
         config.configType,
-        normalizeItems(config.initialData)
+        normalizeItems(config.initialData),
       );
 
       const unsubscribe = configurationDataService.subscribe(
         config.configType,
         (data) => {
           setItems(normalizeItems(data as TypeConfigurationItem[]));
-        }
+        },
       );
 
       return unsubscribe;
@@ -1087,7 +1091,7 @@ export default function TypeConfigurationPage({
     return (items || []).filter(
       (item) =>
         item.name.toLowerCase().includes(term) ||
-        (item.description && item.description.toLowerCase().includes(term))
+        (item.description && item.description.toLowerCase().includes(term)),
     );
   }, [items, searchTerm]);
 
@@ -1118,13 +1122,13 @@ export default function TypeConfigurationPage({
       configurationDataService.deleteItem(config.configType, item.id);
       showToast(
         config.deleteConfirmTitle,
-        config.deleteSuccessMessage(item.name)
+        config.deleteSuccessMessage(item.name),
       );
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
         "Error",
-        err instanceof Error ? err.message : config.deleteErrorMessage
+        err instanceof Error ? err.message : config.deleteErrorMessage,
       );
     }
   };
@@ -1142,7 +1146,7 @@ export default function TypeConfigurationPage({
         configurationDataService.updateItem(
           config.configType,
           editingItem.id,
-          itemData
+          itemData,
         );
         showToast(config.updateSuccessMessage);
       } else {
@@ -1163,13 +1167,7 @@ export default function TypeConfigurationPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <button
-            onClick={() => navigate(config.backPath)}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallbackTo={config.backPath} />
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
@@ -1385,7 +1383,7 @@ export default function TypeConfigurationPage({
                           <div className={`text-sm ${tw.textPrimary}`}>
                             {String(
                               (item as unknown as Record<string, unknown>)
-                                .messageType || "—"
+                                .messageType || "—",
                             )}
                           </div>
                         </td>
@@ -1398,7 +1396,7 @@ export default function TypeConfigurationPage({
                           <div className={`text-sm ${tw.textPrimary}`}>
                             {String(
                               (item as unknown as Record<string, unknown>)
-                                .characterSetType || "—"
+                                .characterSetType || "—",
                             )}
                           </div>
                         </td>
@@ -1409,7 +1407,7 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <span className={`text-sm ${tw.textPrimary}`}>
-                            {item.isActive ?? true
+                            {(item.isActive ?? true)
                               ? t.genericConfig.active
                               : t.genericConfig.inactive}
                           </span>
@@ -1436,7 +1434,7 @@ export default function TypeConfigurationPage({
                           }}
                         >
                           <span className={`text-sm ${tw.textPrimary}`}>
-                            {item.isActive ?? true
+                            {(item.isActive ?? true)
                               ? t.genericConfig.active
                               : t.genericConfig.inactive}
                           </span>
@@ -1476,7 +1474,7 @@ export default function TypeConfigurationPage({
                                   label: string;
                                 }>;
                                 const channel = hardcodedChannels.find(
-                                  (ch) => ch.value === String(channelId)
+                                  (ch) => ch.value === String(channelId),
                                 );
                                 return channel?.label || "—";
                               })()}

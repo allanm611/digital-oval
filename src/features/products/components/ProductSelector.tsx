@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Search, Plus, Check, Package, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Product } from "../types/product";
 import { ProductCategory } from "../types/productCategory";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
-import { color , tw} from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 
 interface ProductSelectorProps {
@@ -25,6 +26,7 @@ export default function ProductSelector({
   showAddButtonInline = false,
   autoOpenModal = false,
 }: ProductSelectorProps) {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<
     Array<{ value: string; label: string }>
@@ -33,6 +35,17 @@ export default function ProductSelector({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(autoOpenModal); // Auto-open if prop is true
+
+  // Handle Create Product button - navigate to product creation with returnUrl
+  const handleCreateProduct = useCallback(() => {
+    const currentUrl = window.location.href;
+    const url = new URL(currentUrl);
+    url.searchParams.set("step", "2");
+    url.searchParams.set("returnFromProductCreate", "true");
+    navigate(
+      `/dashboard/products/create?returnToOfferFlow=true&returnUrl=${encodeURIComponent(url.toString())}`,
+    );
+  }, [navigate]);
 
   const loadCategories = useCallback(async () => {
     try {
@@ -82,7 +95,7 @@ export default function ProductSelector({
       if (selectedCategory !== "all") {
         filteredProducts = filteredProducts.filter(
           (product: Product) =>
-            product.category_id?.toString() === selectedCategory
+            product.category_id?.toString() === selectedCategory,
         );
       }
 
@@ -102,6 +115,22 @@ export default function ProductSelector({
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Detect return from product creation and auto-open modal
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const returnFromProductCreate = searchParams.get("returnFromProductCreate");
+
+    if (returnFromProductCreate === "true") {
+      // Auto-open the modal to show newly created products
+      setIsModalOpen(true);
+
+      // Clean up the flag from URL
+      const url = new URL(window.location);
+      url.searchParams.delete("returnFromProductCreate");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const handleProductToggle = (product: Product) => {
     if (multiSelect) {
@@ -130,7 +159,7 @@ export default function ProductSelector({
   const getCategoryName = (categoryId?: number): string => {
     if (!categoryId) return "-";
     const category = categories.find(
-      (cat) => cat.value === categoryId.toString()
+      (cat) => cat.value === categoryId.toString(),
     );
     return category?.label || "-";
   };
@@ -169,7 +198,9 @@ export default function ProductSelector({
                 className={`flex items-center justify-between p-4 bg-gray-50 border border-gray-200 ${tw.rounded}`}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}>
+                  <div
+                    className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                  >
                     {getCategoryIcon()}
                   </div>
                   <div>
@@ -207,7 +238,9 @@ export default function ProductSelector({
           </div>
         </div>
       ) : (
-        <div className={`bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 ${tw.rounded} p-12`}>
+        <div
+          className={`bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 ${tw.rounded} p-12`}
+        >
           <div className="flex flex-col items-center justify-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4">
               <Package className="w-8 h-8 text-gray-400" />
@@ -266,7 +299,9 @@ export default function ProductSelector({
               height: "100vh",
             }}
           >
-            <div className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}>
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}
+            >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
                 <div>
@@ -277,12 +312,23 @@ export default function ProductSelector({
                     Choose products to include in your offer
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCreateProduct}
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
+                    style={{ backgroundColor: color.primary.action }}
+                    title="Create a new product"
+                  >
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    Create Product
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Search and Filters */}
@@ -399,7 +445,7 @@ export default function ProductSelector({
                       >
                         {products.map((product) => {
                           const isSelected = selectedProducts.some(
-                            (p) => p.id === product.id
+                            (p) => p.id === product.id,
                           );
                           return (
                             <tr
@@ -505,7 +551,7 @@ export default function ProductSelector({
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

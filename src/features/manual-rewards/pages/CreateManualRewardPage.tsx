@@ -5,6 +5,10 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -71,6 +75,9 @@ export default function CreateManualRewardPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [rewardData, setRewardData] = useState<ManualRewardData>({});
 
+  // Persist form data to localStorage
+  useFormDataPersistence("reward_form_data", rewardData, setRewardData, false);
+
   const updateRewardData = (data: Partial<ManualRewardData>) => {
     setRewardData((prev) => ({ ...prev, ...data }));
   };
@@ -102,6 +109,10 @@ export default function CreateManualRewardPage() {
     try {
       // TODO: Save manual reward to database
       showToast(t.manualRewards.createdSuccess);
+
+      // Clear localStorage form data after successful creation
+      clearPersistedFormData("reward_form_data");
+
       navigate("/dashboard/manual-rewards");
     } catch (err) {
       console.error("Failed to create manual reward:", err);

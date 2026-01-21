@@ -1,4 +1,5 @@
 import { color } from "../utils/utils";
+import packageJson from "../../../package.json";
 
 interface FooterProps {
   className?: string;
@@ -6,10 +7,11 @@ interface FooterProps {
 
 export default function Footer({ className = "" }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const version = packageJson.version;
 
   return (
     <footer
-      className={`w-full py-6 ${className}`}
+      className={`w-full py-3 ${className}`}
       style={{
         backgroundColor: color.gradients.sidebar.bottom,
         zIndex: 100,
@@ -19,7 +21,9 @@ export default function Footer({ className = "" }: FooterProps) {
       <div className="px-5 lg:px-8">
         <div className="flex flex-col md:flex-row justify-end items-center gap-4">
           <div className="text-white text-xs">
-            <p>&copy; {currentYear} @Sentra. All rights reserved.</p>
+            <p>
+              &copy; {currentYear} @Sentra. All rights reserved. v{version}
+            </p>
           </div>
           <div className="flex items-center gap-6 text-sm hidden">
             {/* <a

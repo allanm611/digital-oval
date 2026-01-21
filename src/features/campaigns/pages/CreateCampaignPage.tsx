@@ -8,6 +8,10 @@ import {
 import { ArrowLeft, Target, Users, Gift, Calendar, Eye } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ProgressStepper, {
@@ -144,7 +148,7 @@ export default function CreateCampaignPage() {
       }
       // Scroll any scrollable containers
       const scrollableContainers = document.querySelectorAll(
-        '[style*="overflow"], [class*="overflow"]'
+        '[style*="overflow"], [class*="overflow"]',
       );
       scrollableContainers.forEach((container) => {
         if (container instanceof HTMLElement && container.scrollTop > 0) {
@@ -188,7 +192,7 @@ export default function CreateCampaignPage() {
   });
 
   const [selectedSegments, setSelectedSegments] = useState<CampaignSegment[]>(
-    []
+    [],
   );
   const [selectedOffers, setSelectedOffers] = useState<CampaignOffer[]>([]);
   const [segmentOfferMappings, setSegmentOfferMappings] = useState<
@@ -205,12 +209,38 @@ export default function CreateCampaignPage() {
     [key: string]: string;
   }>({});
 
+  // Persist form data to localStorage
+  useFormDataPersistence(
+    "campaign_form_data",
+    formData,
+    setFormData,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "campaign_segments",
+    selectedSegments,
+    setSelectedSegments,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "campaign_offers",
+    selectedOffers,
+    setSelectedOffers,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "campaign_mappings",
+    segmentOfferMappings,
+    setSegmentOfferMappings,
+    isEditMode,
+  );
+
   const loadCampaignData = useCallback(
     async (
       campaignId: string,
       isDuplicate: boolean = false,
       skipFormData: boolean = false,
-      silent: boolean = false
+      silent: boolean = false,
     ) => {
       if (!campaignId) return;
 
@@ -272,7 +302,7 @@ export default function CreateCampaignPage() {
               try {
                 const response = await segmentService.getSegmentById(
                   parseInt(segmentId),
-                  true
+                  true,
                 );
                 const segment = response.data;
                 return {
@@ -299,7 +329,7 @@ export default function CreateCampaignPage() {
                   const from = new Date(offer.valid_from);
                   const to = new Date(offer.valid_to);
                   validityPeriod = Math.ceil(
-                    (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)
+                    (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
                   );
                 }
 
@@ -331,7 +361,7 @@ export default function CreateCampaignPage() {
                   reward_value: rewardValue,
                   validity_period: validityPeriod,
                   terms_conditions: JSON.stringify(
-                    offer.eligibility_rules || {}
+                    offer.eligibility_rules || {},
                   ),
                 } as CampaignOffer;
               } catch {
@@ -347,10 +377,10 @@ export default function CreateCampaignPage() {
 
             // Filter out failed loads and set state
             const validSegments = loadedSegments.filter(
-              (s): s is CampaignSegment => s !== null
+              (s): s is CampaignSegment => s !== null,
             );
             const validOffers = loadedOffers.filter(
-              (o): o is CampaignOffer => o !== null
+              (o): o is CampaignOffer => o !== null,
             );
 
             setSelectedSegments(validSegments);
@@ -377,7 +407,7 @@ export default function CreateCampaignPage() {
         }
       }
     },
-    [showToast, navigate]
+    [showToast, navigate],
   );
 
   // Restore campaign data when returning from offer creation
@@ -556,9 +586,9 @@ export default function CreateCampaignPage() {
         if (!formData.category_id) {
           errors.category_id = "Campaign catalog is required";
         }
+        // Budget is now optional - only validate if provided and must be > 0
         if (
-          !formData.budget_allocated ||
-          formData.budget_allocated === null ||
+          formData.budget_allocated &&
           Number(formData.budget_allocated) <= 0
         ) {
           errors.budget_allocated = "Budget allocated must be greater than 0";
@@ -602,8 +632,8 @@ export default function CreateCampaignPage() {
             const segmentsWithoutOffers = selectedSegments.filter(
               (segment) =>
                 !segmentOfferMappings.some(
-                  (mapping) => mapping.segment_id === segment.id
-                )
+                  (mapping) => mapping.segment_id === segment.id,
+                ),
             );
             if (segmentsWithoutOffers.length > 0) {
               errors.offers = `All segments must have at least one offer mapped. Missing offers for: ${segmentsWithoutOffers
@@ -776,7 +806,7 @@ export default function CreateCampaignPage() {
         // Get objective label from value
         const objectiveOption = objectiveOptions.find(
           (o: { value: string; label: string }) =>
-            o.value === formData.objective
+            o.value === formData.objective,
         );
         const objectiveLabel = objectiveOption
           ? objectiveOption.label
@@ -791,7 +821,7 @@ export default function CreateCampaignPage() {
         const department = departmentId
           ? departmentsConfig.initialData.find(
               (d: { id: number | string; name: string }) =>
-                Number(d.id) === Number(departmentId)
+                Number(d.id) === Number(departmentId),
             )
           : undefined;
         const ownerTeam = department?.name || undefined;
@@ -821,7 +851,7 @@ export default function CreateCampaignPage() {
         // Get objective label from value
         const objectiveOption = objectiveOptions.find(
           (o: { value: string; label: string }) =>
-            o.value === formData.objective
+            o.value === formData.objective,
         );
         const objectiveLabel = objectiveOption
           ? objectiveOption.label
@@ -836,7 +866,7 @@ export default function CreateCampaignPage() {
         const department = departmentId
           ? departmentsConfig.initialData.find(
               (d: { id: number | string; name: string }) =>
-                Number(d.id) === Number(departmentId)
+                Number(d.id) === Number(departmentId),
             )
           : undefined;
         const ownerTeam = department?.name || undefined;
@@ -859,9 +889,8 @@ export default function CreateCampaignPage() {
           }),
         };
         // New campaigns are created with status: 'draft' and approval_status: 'pending'
-        const createResponse = await campaignService.createCampaign(
-          campaignData
-        );
+        const createResponse =
+          await campaignService.createCampaign(campaignData);
 
         // Check if backend returned an error
         if (
@@ -899,7 +928,7 @@ export default function CreateCampaignPage() {
             console.error("Error saving segments:", segmentError);
             showToast(
               "warning",
-              "Campaign created but some segments failed to save. Please check the campaign details."
+              "Campaign created but some segments failed to save. Please check the campaign details.",
             );
           }
         }
@@ -916,18 +945,18 @@ export default function CreateCampaignPage() {
               }));
 
             await campaignSegmentOfferService.createBatchMappings(
-              mappingsToCreate
+              mappingsToCreate,
             );
 
             showToast(
               "success",
-              "Campaign created and mappings configured successfully!"
+              "Campaign created and mappings configured successfully!",
             );
           } catch (mappingError) {
             console.error("Error saving mappings:", mappingError);
             showToast(
               "warning",
-              "Campaign created but some mappings failed. Please check the campaign details."
+              "Campaign created but some mappings failed. Please check the campaign details.",
             );
           }
         } else {
@@ -940,6 +969,12 @@ export default function CreateCampaignPage() {
       sessionStorage.removeItem("campaignFormData");
       sessionStorage.removeItem("offerModalAutoOpened");
       sessionStorage.removeItem("campaignDataRestored");
+
+      // Clear localStorage form data after successful submission
+      clearPersistedFormData("campaign_form_data");
+      clearPersistedFormData("campaign_segments");
+      clearPersistedFormData("campaign_offers");
+      clearPersistedFormData("campaign_mappings");
 
       navigate("/dashboard/campaigns");
     } catch (error) {
@@ -1006,7 +1041,7 @@ export default function CreateCampaignPage() {
 
       // Get objective label from value
       const objectiveOption = objectiveOptions.find(
-        (o: { value: string; label: string }) => o.value === formData.objective
+        (o: { value: string; label: string }) => o.value === formData.objective,
       );
       const objectiveLabel = objectiveOption
         ? objectiveOption.label
@@ -1021,7 +1056,7 @@ export default function CreateCampaignPage() {
       const department = departmentId
         ? departmentsConfig.initialData.find(
             (d: { id: number | string; name: string }) =>
-              Number(d.id) === Number(departmentId)
+              Number(d.id) === Number(departmentId),
           )
         : undefined;
       const ownerTeam = department?.name || undefined;
@@ -1085,7 +1120,7 @@ export default function CreateCampaignPage() {
           console.error("Error saving segments:", segmentError);
           showToast(
             "warning",
-            "Campaign saved but some segments failed to save. Please check the campaign details."
+            "Campaign saved but some segments failed to save. Please check the campaign details.",
           );
         }
       }
@@ -1106,13 +1141,13 @@ export default function CreateCampaignPage() {
             }));
 
           await campaignSegmentOfferService.createBatchMappings(
-            mappingsToCreate
+            mappingsToCreate,
           );
         } catch (mappingError) {
           console.error("Error saving mappings:", mappingError);
           showToast(
             "warning",
-            "Campaign saved but some offer mappings failed to save. Please check the campaign details."
+            "Campaign saved but some offer mappings failed to save. Please check the campaign details.",
           );
         }
       }
@@ -1235,8 +1270,8 @@ export default function CreateCampaignPage() {
                 {isEditMode
                   ? "Edit Campaign"
                   : isDuplicateMode
-                  ? "Duplicate Campaign"
-                  : "Create Campaign"}
+                    ? "Duplicate Campaign"
+                    : "Create Campaign"}
               </h1>
             </div>
             {currentStep !== 5 && (

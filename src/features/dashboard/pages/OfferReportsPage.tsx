@@ -355,7 +355,7 @@ const generateOfferRows = (): OfferRow[] => {
   ];
   const offerNames = [
     "Welcome 20% Off",
-    "Flash Friday $15 Off",
+    "Flash Friday Ksh15 Off",
     "Bundle & Save 30%",
     "Free Shipping",
     "VIP 25% Exclusive",

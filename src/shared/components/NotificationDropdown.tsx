@@ -106,7 +106,7 @@ export default function NotificationDropdown({
         console.error("Failed to mark as read:", err);
       }
     },
-    [markAsRead]
+    [markAsRead],
   );
 
   const handleDelete = useCallback(
@@ -118,7 +118,7 @@ export default function NotificationDropdown({
         console.error("Failed to delete notification:", err);
       }
     },
-    [deleteNotification]
+    [deleteNotification],
   );
 
   const handleNotificationClick = useCallback(
@@ -127,12 +127,14 @@ export default function NotificationDropdown({
         markAsRead([notification.id]);
       }
       if (notification.actionUrl) {
-        navigate(notification.actionUrl);
+        navigate(notification.actionUrl, {
+          state: { fromNotification: true },
+        });
         setIsOpen(false);
         onClose?.();
       }
     },
-    [navigate, markAsRead, onClose]
+    [navigate, markAsRead, onClose],
   );
 
   const unreadCount = stats?.unread || 0;
@@ -181,7 +183,7 @@ export default function NotificationDropdown({
                   <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
                     {t.notifications.dropdownNew.replace(
                       "{count}",
-                      unreadCount.toString()
+                      unreadCount.toString(),
                     )}
                   </span>
                 )}
@@ -309,7 +311,7 @@ export default function NotificationDropdown({
                                 </p>
                                 <p className="text-xs text-gray-400 mt-1">
                                   {new Date(
-                                    notification.createdAt
+                                    notification.createdAt,
                                   ).toLocaleString()}
                                 </p>
                               </div>
@@ -370,7 +372,7 @@ export default function NotificationDropdown({
               </div>
             )}
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

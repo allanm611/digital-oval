@@ -5,282 +5,119 @@ import {
   GetNotificationsQuery,
   MarkAsReadRequest,
   MarkAllAsReadResponse,
-  ApiSuccessResponse,
+  // ApiSuccessResponse,
 } from "../types/notification";
+import {
+  hardcodedCampaigns,
+  hardcodedSegments,
+  hardcodedOffers,
+} from "../../../shared/configs/configurationPageConfigs";
 
-// Mock data - will be replaced when backend is ready
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: 1,
     type: "campaign_approval_request",
     title: "Campaign Approval Required",
-    message: "Campaign 'Summer Promotion 2024' is pending your approval",
+    message: `Campaign '${hardcodedCampaigns[0].name}' is pending your approval`,
     priority: "high",
     isRead: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 minutes ago
-    actionUrl: "/dashboard/campaigns/123",
+    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), 
+    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[0].id}`,
     actionLabel: "Review Campaign",
   },
   {
     id: 2,
     type: "campaign_approved",
     title: "Campaign Approved",
-    message:
-      "Your campaign 'Holiday Special' has been approved and is now active",
+    message: `Your campaign '${hardcodedCampaigns[1].name}' has been approved and is now active`,
     priority: "medium",
     isRead: false,
-    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), // 15 minutes ago
-    actionUrl: "/dashboard/campaigns/456",
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(), 
+    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[1].id}`,
     actionLabel: "View Campaign",
   },
   {
     id: 3,
-    type: "campaign_rejected",
-    title: "Campaign Rejected",
-    message:
-      "Campaign 'Test Campaign' was rejected. Reason: Missing required segments",
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-    actionUrl: "/dashboard/campaigns/789",
-    actionLabel: "View Details",
-  },
-  {
-    id: 4,
     type: "offer_approval_request",
     title: "Offer Approval Required",
-    message: "Offer '50% Off Premium Plan' requires your approval",
+    message: `Offer '${hardcodedOffers[2].name}' requires your approval`,
     priority: "high",
     isRead: false,
-    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-    actionUrl: "/dashboard/offers/101",
+    createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), 
+    actionUrl: `/dashboard/offers/${hardcodedOffers[2].id}`,
     actionLabel: "Review Offer",
   },
   {
-    id: 5,
+    id: 4,
     type: "segment_computation_completed",
     title: "Segment Computation Completed",
-    message:
-      "Segment 'High Value Customers' has finished computing with 15,234 members",
+    message: `Segment '${hardcodedSegments[0].name}' has finished computing with ${hardcodedSegments[0].member_count.toLocaleString()} members`,
     priority: "low",
     isRead: true,
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-    actionUrl: "/dashboard/segments/202",
+    actionUrl: `/dashboard/segments/${hardcodedSegments[0].id}`,
     actionLabel: "View Segment",
   },
   {
-    id: 6,
+    id: 5,
     type: "segment_computation_failed",
     title: "Segment Computation Failed",
-    message:
-      "Segment 'VIP Members' computation failed. Please check the segment criteria",
+    message: `Segment '${hardcodedSegments[1].name}' computation failed. Please check the segment criteria`,
     priority: "high",
     isRead: false,
     createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
-    actionUrl: "/dashboard/segments/303",
+    actionUrl: `/dashboard/segments/${hardcodedSegments[1].id}`,
     actionLabel: "Fix Segment",
   },
   {
-    id: 7,
-    type: "scheduled_job_completed",
-    title: "Scheduled Job Completed",
-    message: "Daily report generation job completed successfully",
-    priority: "low",
-    isRead: true,
-    createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-  },
-  {
-    id: 8,
-    type: "scheduled_job_failed",
-    title: "Scheduled Job Failed",
-    message:
-      "Weekly segment refresh job failed. Error: Database connection timeout",
-    priority: "urgent",
-    isRead: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-    actionUrl: "/dashboard/scheduled-jobs/404",
-    actionLabel: "View Job",
-  },
-  {
-    id: 9,
-    type: "user_account_request",
-    title: "New Account Request",
-    message: "John Doe has requested access to the platform",
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
-    actionUrl: "/dashboard/user-management",
-    actionLabel: "Review Request",
-  },
-  {
-    id: 10,
+    id: 6,
     type: "campaign_execution_started",
     title: "Campaign Execution Started",
-    message: "Campaign 'Black Friday Sale' has started executing",
+    message: `Campaign '${hardcodedCampaigns[2].name}' has started executing`,
     priority: "medium",
     isRead: true,
     createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7 hours ago
-    actionUrl: "/dashboard/campaigns/505",
+    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[2].id}`,
     actionLabel: "View Campaign",
   },
   {
-    id: 11,
-    type: "campaign_execution_completed",
-    title: "Campaign Execution Completed",
-    message:
-      "Campaign 'Spring Promotion' has completed execution. 45,678 messages sent",
-    priority: "medium",
-    isRead: true,
-    createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(), // 8 hours ago
-    actionUrl: "/dashboard/campaigns/606",
-    actionLabel: "View Results",
-  },
-  {
-    id: 12,
-    type: "campaign_error",
-    title: "Campaign Error",
-    message: "Campaign 'Test Campaign 2' encountered an error during execution",
-    priority: "urgent",
-    isRead: false,
-    createdAt: new Date(Date.now() - 9 * 60 * 60 * 1000).toISOString(), // 9 hours ago
-    actionUrl: "/dashboard/campaigns/707",
-    actionLabel: "View Error",
-  },
-  {
-    id: 13,
+    id: 7,
     type: "offer_approved",
     title: "Offer Approved",
-    message: "Offer 'Welcome Bonus' has been approved",
+    message: `Offer '${hardcodedOffers[3].name}' has been approved`,
     priority: "medium",
     isRead: true,
     createdAt: new Date(Date.now() - 10 * 60 * 60 * 1000).toISOString(), // 10 hours ago
-    actionUrl: "/dashboard/offers/808",
+    actionUrl: `/dashboard/offers/${hardcodedOffers[3].id}`,
     actionLabel: "View Offer",
   },
   {
-    id: 14,
-    type: "offer_rejected",
-    title: "Offer Rejected",
-    message:
-      "Offer 'Limited Time Deal' was rejected. Please review the rejection reason",
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(), // 11 hours ago
-    actionUrl: "/dashboard/offers/909",
-    actionLabel: "View Details",
-  },
-  {
-    id: 15,
-    type: "security_alert",
-    title: "Security Alert",
-    message:
-      "Multiple failed login attempts detected from IP address 192.168.1.100",
-    priority: "urgent",
-    isRead: false,
-    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // 12 hours ago
-    actionUrl: "/dashboard/settings",
-    actionLabel: "View Security",
-  },
-  {
-    id: 16,
-    type: "system_maintenance",
-    title: "Scheduled Maintenance",
-    message:
-      "System maintenance scheduled for tonight at 2:00 AM. Expected downtime: 30 minutes",
-    priority: "high",
-    isRead: true,
-    createdAt: new Date(Date.now() - 13 * 60 * 60 * 1000).toISOString(), // 13 hours ago
-  },
-  {
-    id: 17,
+    id: 8,
     type: "channel_delivery_failure",
     title: "Channel Delivery Failure",
-    message:
-      "SMS delivery failed for campaign 'Promo Campaign'. 234 messages failed to deliver",
+    message: `SMS delivery failed for campaign '${hardcodedCampaigns[0].name}'. 234 messages failed to deliver`,
     priority: "high",
     isRead: false,
     createdAt: new Date(Date.now() - 14 * 60 * 60 * 1000).toISOString(), // 14 hours ago
-    actionUrl: "/dashboard/campaigns/1010",
+    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[0].id}`,
     actionLabel: "View Campaign",
   },
   {
-    id: 18,
+    id: 9,
     type: "communication_policy_violation",
     title: "Communication Policy Violation",
-    message:
-      "Campaign 'Flash Sale' violated DND policy. 12 messages sent outside allowed hours",
+    message: `Campaign '${hardcodedCampaigns[2].name}' violated DND policy. 12 messages sent outside allowed hours`,
     priority: "high",
     isRead: false,
     createdAt: new Date(Date.now() - 15 * 60 * 60 * 1000).toISOString(), // 15 hours ago
-    actionUrl: "/dashboard/campaign-communication-policy",
-    actionLabel: "View Policy",
+    actionUrl: `/dashboard/campaigns/${hardcodedCampaigns[2].id}`,
+    actionLabel: "View Campaign",
   },
   {
-    id: 19,
-    type: "feature_announcement",
-    title: "New Feature Available",
-    message:
-      "Advanced segment analytics is now available. Explore new insights for your segments",
-    priority: "low",
-    isRead: true,
-    createdAt: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(), // 16 hours ago
-    actionUrl: "/dashboard/segments",
-    actionLabel: "Explore Feature",
-  },
-  {
-    id: 20,
-    type: "segment_refresh_needed",
-    title: "Segment Refresh Needed",
-    message:
-      "Segment 'Active Users' hasn't been refreshed in 7 days. Consider refreshing it",
-    priority: "medium",
-    isRead: true,
-    createdAt: new Date(Date.now() - 17 * 60 * 60 * 1000).toISOString(), // 17 hours ago
-    actionUrl: "/dashboard/segments/404",
-    actionLabel: "Refresh Segment",
-  },
-  {
-    id: 21,
-    type: "role_permission_changed",
-    title: "Role Permission Changed",
-    message:
-      "Your role permissions have been updated. You now have access to campaign management",
-    priority: "high",
-    isRead: false,
-    createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(), // 18 hours ago
-    actionUrl: "/dashboard/profile",
-    actionLabel: "View Profile",
-  },
-  {
-    id: 22,
-    type: "broadcast_delivery_status",
-    title: "Broadcast Delivery Status",
-    message:
-      "Manual broadcast 'Product Launch' has been delivered to 98.5% of recipients",
-    priority: "medium",
-    isRead: true,
-    createdAt: new Date(Date.now() - 19 * 60 * 60 * 1000).toISOString(), // 19 hours ago
-    actionUrl: "/dashboard/quicklists/505",
-    actionLabel: "View Broadcast",
-  },
-  {
-    id: 23,
-    type: "segment_large_computation_warning",
-    title: "Large Segment Computation",
-    message:
-      "Segment 'All Customers' computation is taking longer than expected. Estimated time: 2 hours",
-    priority: "medium",
-    isRead: false,
-    createdAt: new Date(Date.now() - 20 * 60 * 60 * 1000).toISOString(), // 20 hours ago
-    actionUrl: "/dashboard/segments/606",
-    actionLabel: "View Segment",
-  },
-  {
-    id: 24,
+    id: 10,
     type: "system_update",
     title: "System Update Available",
-    message:
-      "A new system update is available. New features include improved analytics and performance enhancements",
+    message: `New system update with offer '${hardcodedOffers[4].name}' integration and improved analytics`,
     priority: "low",
     isRead: true,
     createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 24 hours ago

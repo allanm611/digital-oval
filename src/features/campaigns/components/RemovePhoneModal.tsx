@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Eye, ArrowLeft } from "lucide-react";
+import { Search, Eye, ArrowLeft, AlertCircle } from "lucide-react";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -13,12 +13,11 @@ import {
   getSubscriptionDisplayName,
   formatMsisdn,
 } from "../../dashboard/utils/customerSubscriptionHelpers";
-import { DND_CATEGORIES } from "../types/communicationPolicyConfig";
 
-interface AddPhoneModalProps {
+interface RemovePhoneModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (customer: {
+  onRemove: (customer: {
     id: number;
     name?: string;
     email?: string;
@@ -35,11 +34,11 @@ const DND_TYPES = [
   { value: "other", label: "Other" },
 ];
 
-export default function AddPhoneModal({
+export default function RemovePhoneModal({
   isOpen,
   onClose,
-  onAdd,
-}: AddPhoneModalProps) {
+  onRemove,
+}: RemovePhoneModalProps) {
   const [step, setStep] = useState<"search" | "selectType">("search");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -107,9 +106,9 @@ export default function AddPhoneModal({
     setStep("selectType");
   };
 
-  const handleConfirmAdd = () => {
+  const handleConfirmRemove = () => {
     if (selectedCustomer) {
-      onAdd({
+      onRemove({
         ...selectedCustomer,
         dndType: selectedDndType,
       });
@@ -141,7 +140,11 @@ export default function AddPhoneModal({
     <RegularModal
       isOpen={isOpen}
       onClose={handleClose}
-      title={step === "search" ? "Add Phone to DND" : "Select DND Type"}
+      title={
+        step === "search"
+          ? "Remove Phone from DND"
+          : "Select DND Type to Remove"
+      }
       size="xl"
     >
       <div className="space-y-4">
@@ -273,13 +276,24 @@ export default function AddPhoneModal({
               </div>
             </div>
 
+            {/* Warning Alert */}
+            <div
+              className={`p-3 ${tw.rounded} bg-orange-50 border border-orange-200 flex gap-2`}
+            >
+              <AlertCircle className="h-4 w-4 text-orange-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-orange-800">
+                After removal, this customer will be able to receive{" "}
+                {selectedDndType} messages again.
+              </p>
+            </div>
+
             {/* DND Type Selector */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Select DND Type
+                Select DND Type to Remove
               </label>
               <p className="text-xs text-gray-500 mb-3">
-                Choose which type of messages this customer should NOT receive
+                Choose which DND restriction to remove for this customer
               </p>
               <HeadlessSelect
                 value={selectedDndType}
@@ -298,15 +312,15 @@ export default function AddPhoneModal({
             <div className={`p-3 ${tw.rounded} bg-gray-50`}>
               <p className="text-xs text-gray-600">
                 {selectedDndType === "promotional" &&
-                  "Promotional: Customer will NOT receive marketing and promotional SMS"}
+                  "Will allow: Marketing and promotional SMS"}
                 {selectedDndType === "transactional" &&
-                  "Transactional: Customer will NOT receive transaction confirmations and receipts"}
+                  "Will allow: Transaction confirmations and receipts"}
                 {selectedDndType === "marketing" &&
-                  "Marketing: Customer will NOT receive marketing campaigns"}
+                  "Will allow: Marketing campaigns"}
                 {selectedDndType === "service" &&
-                  "Service: Customer will NOT receive service-related messages"}
+                  "Will allow: Service-related messages"}
                 {selectedDndType === "other" &&
-                  "Other: Customer will NOT receive other types of messages"}
+                  "Will allow: Other types of messages"}
               </p>
             </div>
 
@@ -320,11 +334,11 @@ export default function AddPhoneModal({
                 Back
               </button>
               <button
-                onClick={handleConfirmAdd}
+                onClick={handleConfirmRemove}
                 className={`flex-1 px-4 py-2 ${tw.rounded} text-white font-medium text-sm transition-colors`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                Add to DND
+                Remove from DND
               </button>
             </div>
           </>

@@ -4,6 +4,10 @@ import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -80,6 +84,14 @@ export default function CreateManualBroadcastPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [broadcastData, setBroadcastData] = useState<ManualBroadcastData>({});
 
+  // Persist form data to localStorage
+  useFormDataPersistence(
+    "broadcast_form_data",
+    broadcastData,
+    setBroadcastData,
+    false,
+  );
+
   const updateBroadcastData = (data: Partial<ManualBroadcastData>) => {
     setBroadcastData((prev) => ({ ...prev, ...data }));
   };
@@ -122,7 +134,7 @@ export default function CreateManualBroadcastPage() {
         throw new Error(
           "error" in quicklistResponse
             ? quicklistResponse.error
-            : "Failed to create audience QuickList"
+            : "Failed to create audience QuickList",
         );
       }
 
@@ -148,6 +160,10 @@ export default function CreateManualBroadcastPage() {
 
       if (response.success) {
         showToast(t.manualBroadcast.createdSuccess);
+
+        // Clear localStorage form data after successful creation
+        clearPersistedFormData("broadcast_form_data");
+
         navigate("/dashboard/manual-broadcasts");
       } else {
         throw new Error("Communication sending failed");

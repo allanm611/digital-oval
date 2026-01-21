@@ -6,186 +6,195 @@ import DashboardLayout from "../components/DashboardLayout";
 
 // Lazy loaded components grouped by feature - All preloaded for instant access
 const DashboardHome = lazy(
-  () => import(/* webpackPrefetch: true */ "../components/DashboardHome")
+  () => import(/* webpackPrefetch: true */ "../components/DashboardHome"),
 );
 
 // Campaign Pages - All routes preloaded for instant access
 const CampaignPages = {
   CampaignsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/CampaignsPage")
+      import(/* webpackPrefetch: true */ "../../campaigns/pages/CampaignsPage"),
   ),
   CampaignsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignsAnalyticsPage"
-      )
+      ),
   ),
   CampaignDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignDetailsPage"
-      )
+      ),
   ),
   CreateCampaignPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CreateCampaignPage"
-      )
+      ),
   ),
   CampaignCategoriesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignCategoriesPage"
-      )
+      ),
   ),
   CampaignTypesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignTypesPage"
-      )
+      ),
   ),
   CampaignObjectivesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignObjectivesPage"
-      )
+      ),
   ),
   TeamRolesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/TeamRolesPage")
+      import(/* webpackPrefetch: true */ "../../campaigns/pages/TeamRolesPage"),
   ),
   ProgramsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/ProgramsPage")
+      import(/* webpackPrefetch: true */ "../../campaigns/pages/ProgramsPage"),
   ),
   ProgramDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/ProgramDetailsPage"
-      )
+      ),
   ),
   CommunicationPolicyPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CommunicationPolicyPage"
-      )
+      ),
   ),
   DepartmentPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/DepartmentPage")
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/DepartmentPage"
+      ),
   ),
   LineOfBusinessPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/LineOfBusinessPage"
-      )
+      ),
   ),
   CampaignApprovalHistoryPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignApprovalHistoryPage"
-      )
+      ),
   ),
   CampaignLifecycleHistoryPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignLifecycleHistoryPage"
-      )
+      ),
   ),
   DNDManagementPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/DNDManagementPage"
-      )
+      ),
   ),
   DNDChannelPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../campaigns/pages/DNDChannelPage")
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/DNDChannelPage"
+      ),
   ),
   VIPListManagementPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/VIPListManagementPage"
-      )
+      ),
   ),
   SeedListManagementPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/SeedListManagementPage"
-      )
+      ),
   ),
 };
 
 // Offer Pages - All routes preloaded for instant access
 const OfferPages = {
   OffersPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../offers/pages/OffersPage")
+    () => import(/* webpackPrefetch: true */ "../../offers/pages/OffersPage"),
   ),
   OfferDetailsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/OfferDetailsPage")
+      import(/* webpackPrefetch: true */ "../../offers/pages/OfferDetailsPage"),
   ),
   OfferLifecycleHistoryPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/OfferLifecycleHistoryPage"
-      )
+      ),
   ),
   OfferApprovalHistoryPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/OfferApprovalHistoryPage"
-      )
+      ),
   ),
   CreateOfferPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/CreateOfferPage")
+      import(/* webpackPrefetch: true */ "../../offers/pages/CreateOfferPage"),
   ),
   OfferTypesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/OfferTypesPage")
+      import(/* webpackPrefetch: true */ "../../offers/pages/OfferTypesPage"),
   ),
   OfferCategoriesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/OfferCategoriesPage"
-      )
+      ),
   ),
   TrackingSourcesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/TrackingSourcesPage"
-      )
+      ),
   ),
   CreativeTemplatesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/CreativeTemplatesPage"
-      )
+      ),
   ),
   RewardTypesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/RewardTypesPage")
+      import(/* webpackPrefetch: true */ "../../offers/pages/RewardTypesPage"),
   ),
   SenderIdsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../offers/pages/SenderIdsPage")
+    () =>
+      import(/* webpackPrefetch: true */ "../../offers/pages/SenderIdsPage"),
   ),
   SMSRoutesPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../offers/pages/SMSRoutesPage")
+    () =>
+      import(/* webpackPrefetch: true */ "../../offers/pages/SMSRoutesPage"),
   ),
   LanguagesPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../offers/pages/LanguagesPage")
+    () =>
+      import(/* webpackPrefetch: true */ "../../offers/pages/LanguagesPage"),
   ),
   CharacterSetsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/CharacterSetsPage")
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/CharacterSetsPage"
+      ),
   ),
   OfferCreativeDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../offers/pages/OfferCreativeDetailsPage"
-      )
+      ),
   ),
 };
 
@@ -193,45 +202,47 @@ const OfferPages = {
 const ProductPages = {
   ProductsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../products/pages/ProductsPage")
+      import(/* webpackPrefetch: true */ "../../products/pages/ProductsPage"),
   ),
   CreateProductPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/CreateProductPage"
-      )
+      ),
   ),
   EditProductPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../products/pages/EditProductPage")
+      import(
+        /* webpackPrefetch: true */ "../../products/pages/EditProductPage"
+      ),
   ),
   ProductDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/ProductDetailsPage"
-      )
+      ),
   ),
   ProductCategoriesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/ProductCategoriesPage"
-      )
+      ),
   ),
   ProductTypesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/ProductTypesPage"
-      )
+      ),
   ),
   ComboTypesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../products/pages/ComboTypesPage")
+      import(/* webpackPrefetch: true */ "../../products/pages/ComboTypesPage"),
   ),
   ControlGroupsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../products/pages/ControlGroupsPage"
-      )
+      ),
   ),
 };
 
@@ -241,190 +252,199 @@ const SegmentPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/SegmentManagementPage"
-      )
+      ),
   ),
   SegmentDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/SegmentDetailsPage"
-      )
+      ),
   ),
   EditSegmentPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../segments/pages/EditSegmentPage")
+      import(
+        /* webpackPrefetch: true */ "../../segments/pages/EditSegmentPage"
+      ),
   ),
   SegmentCategoriesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/SegmentCategoriesPage"
-      )
+      ),
   ),
   SegmentListPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../segments/pages/SegmentListPage")
+      import(
+        /* webpackPrefetch: true */ "../../segments/pages/SegmentListPage"
+      ),
   ),
   SegmentTypesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/SegmentTypesPage"
-      )
+      ),
   ),
 };
 
 // Job Pages - All routes preloaded for instant access
 const JobPages = {
   JobTypesPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../jobs/pages/JobTypesPage")
+    () => import(/* webpackPrefetch: true */ "../../jobs/pages/JobTypesPage"),
   ),
   ScheduledJobsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/ScheduledJobsPage")
+      import(/* webpackPrefetch: true */ "../../jobs/pages/ScheduledJobsPage"),
   ),
   ScheduledJobDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/ScheduledJobDetailsPage"
-      )
+      ),
   ),
   CreateScheduledJobPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/CreateScheduledJobPage"
-      )
+      ),
   ),
   ScheduledJobsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/ScheduledJobsAnalyticsPage"
-      )
+      ),
   ),
   JobDependenciesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/JobDependenciesPage")
+      import(
+        /* webpackPrefetch: true */ "../../jobs/pages/JobDependenciesPage"
+      ),
   ),
   JobDependenciesAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobDependenciesAnalyticsPage"
-      )
+      ),
   ),
   JobWorkflowStepsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobWorkflowStepsPage"
-      )
+      ),
   ),
   JobWorkflowStepDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobWorkflowStepDetailsPage"
-      )
+      ),
   ),
   CreateJobWorkflowStepPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/CreateJobWorkflowStepPage"
-      )
+      ),
   ),
   JobWorkflowStepsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobWorkflowStepsAnalyticsPage"
-      )
+      ),
   ),
   WorkflowsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../jobs/pages/WorkflowsPage")
+    () => import(/* webpackPrefetch: true */ "../../jobs/pages/WorkflowsPage"),
   ),
   WorkflowDetailsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/WorkflowDetailsPage")
+      import(
+        /* webpackPrefetch: true */ "../../jobs/pages/WorkflowDetailsPage"
+      ),
   ),
   CreateWorkflowPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/CreateWorkflowPage")
+      import(/* webpackPrefetch: true */ "../../jobs/pages/CreateWorkflowPage"),
   ),
   WorkflowsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/WorkflowsAnalyticsPage"
-      )
+      ),
   ),
   JobExecutionsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/JobExecutionsPage")
+      import(/* webpackPrefetch: true */ "../../jobs/pages/JobExecutionsPage"),
   ),
   JobExecutionDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobExecutionDetailsPage"
-      )
+      ),
   ),
   JobExecutionsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/JobExecutionsAnalyticsPage"
-      )
+      ),
   ),
   StepExecutionsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../jobs/pages/StepExecutionsPage")
+      import(/* webpackPrefetch: true */ "../../jobs/pages/StepExecutionsPage"),
   ),
   StepExecutionDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/StepExecutionDetailsPage"
-      )
+      ),
   ),
   StepExecutionsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../jobs/pages/StepExecutionsAnalyticsPage"
-      )
+      ),
   ),
 };
 
 // User Pages - All routes preloaded for instant access
 const UserPages = {
   UserManagementPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../components/UserManagementPage")
+    () =>
+      import(/* webpackPrefetch: true */ "../components/UserManagementPage"),
   ),
   UserDetailsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../users/pages/UserDetailsPage")
+      import(/* webpackPrefetch: true */ "../../users/pages/UserDetailsPage"),
   ),
   UserProfilePage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../users/pages/UserProfilePage")
+      import(/* webpackPrefetch: true */ "../../users/pages/UserProfilePage"),
   ),
 };
 
 // Settings & Configuration Pages - All routes preloaded for instant access
 const SettingsPages = {
   ConfigurationPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../components/ConfigurationPage")
+    () => import(/* webpackPrefetch: true */ "../components/ConfigurationPage"),
   ),
   ConfigurationDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../components/ConfigurationDetailsPage"
-      )
+      ),
   ),
   SettingsPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../settings/pages/SettingsPage")
+      import(/* webpackPrefetch: true */ "../../settings/pages/SettingsPage"),
   ),
   CommunicationChannelsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../settings/pages/CommunicationChannelsPage"
-      )
+      ),
   ),
   SettingsSMSRoutesPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../settings/pages/SMSRoutesPage")
+      import(/* webpackPrefetch: true */ "../../settings/pages/SMSRoutesPage"),
   ),
   RoutesPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage")
+    () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage"),
   ),
 };
 
@@ -434,44 +454,44 @@ const ServerPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../data-connectors/pages/DataConnectors"
-      )
+      ),
   ),
   ServersPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../servers/pages/ServersPage")
+    () => import(/* webpackPrefetch: true */ "../../servers/pages/ServersPage"),
   ),
   ServerDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../servers/pages/ServerDetailsPage"
-      )
+      ),
   ),
   ServerFormPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../servers/pages/ServerFormPage")
+      import(/* webpackPrefetch: true */ "../../servers/pages/ServerFormPage"),
   ),
   ConnectionProfilesPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfilesPage"
-      )
+      ),
   ),
   ConnectionProfileDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfileDetailsPage"
-      )
+      ),
   ),
   ConnectionProfileFormPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfileFormPage"
-      )
+      ),
   ),
   ConnectionProfilesAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfilesAnalyticsPage"
-      )
+      ),
   ),
 };
 
@@ -479,28 +499,28 @@ const ServerPages = {
 const AnalyticsPages = {
   OverallDashboardPerformancePage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "./OverallDashboardPerformancePage")
+      import(/* webpackPrefetch: true */ "./OverallDashboardPerformancePage"),
   ),
   CustomerProfileReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CustomerProfileReportsPage")
+    () => import(/* webpackPrefetch: true */ "./CustomerProfileReportsPage"),
   ),
   CustomersPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CustomersPage")
+    () => import(/* webpackPrefetch: true */ "./CustomersPage"),
   ),
   CustomerSearchResultsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CustomerSearchResultsPage")
+    () => import(/* webpackPrefetch: true */ "./CustomerSearchResultsPage"),
   ),
   CampaignReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CampaignReportsPage")
+    () => import(/* webpackPrefetch: true */ "./CampaignReportsPage"),
   ),
   DeliverySMSReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./DeliverySMSReportsPage")
+    () => import(/* webpackPrefetch: true */ "./DeliverySMSReportsPage"),
   ),
   DeliveryEmailReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./DeliveryEmailReportsPage")
+    () => import(/* webpackPrefetch: true */ "./DeliveryEmailReportsPage"),
   ),
   OfferReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./OfferReportsPage")
+    () => import(/* webpackPrefetch: true */ "./OfferReportsPage"),
   ),
 };
 
@@ -510,67 +530,67 @@ const OtherPages = {
     () =>
       import(
         /* webpackPrefetch: true */ "../../quicklists/pages/ManualBroadcastListsPage"
-      )
+      ),
   ),
   QuickListsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../quicklists/pages/QuickListsPage"
-      )
+      ),
   ),
   QuickListDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../quicklists/pages/QuickListDetailsPage"
-      )
+      ),
   ),
   CreateManualBroadcastPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../manual-broadcast/pages/CreateManualBroadcastPage"
-      )
+      ),
   ),
   CommunicationAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../communications/pages/CommunicationAnalyticsPage"
-      )
+      ),
   ),
   CreateManualRewardPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../manual-rewards/pages/CreateManualRewardPage"
-      )
+      ),
   ),
   ManualRewardsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../manual-rewards/pages/ManualRewardsPage"
-      )
+      ),
   ),
   CustomerIdentityPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../customer/pages/CustomerIdentityPage"
-      )
+      ),
   ),
   CustomerIdentityFieldDetailsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../customer/pages/CustomerIdentityFieldDetailsPage"
-      )
+      ),
   ),
   SearchResultsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../../shared/pages/SearchResultsPage"
-      )
+      ),
   ),
   NotificationsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../notifications/pages/NotificationsPage"
-      )
+      ),
   ),
 };
 

@@ -107,6 +107,56 @@ const dateFormats = [
 
 const numberFormats = ["1,234.56", "1 234,56", "1.234,56", "1'234.56"];
 
+// Character Sets for SMS encoding
+const characterSets = [
+  { value: "gsm-7", label: "GSM-7 (Standard SMS)" },
+  { value: "utf-8", label: "UTF-8 (Unicode)" },
+  { value: "ascii", label: "ASCII (English only)" },
+  { value: "ucs-2", label: "UCS-2 (Full Unicode)" },
+];
+
+// Default communication channels
+const communicationChannels = [
+  { value: "sms", label: "SMS" },
+  { value: "email", label: "Email" },
+  { value: "ussd", label: "USSD" },
+  { value: "push", label: "Push Notification" },
+  { value: "ivr", label: "IVR" },
+  { value: "voice", label: "Voice" },
+];
+
+// Default Sender IDs - Using actual hardcoded data from configurationPageConfigs
+const senderIds = [
+  { value: "Effortel", label: "Effortel" },
+  { value: "Equitel", label: "Equitel" },
+  { value: "EquitelKE", label: "EquitelKE" },
+  { value: "EquitelAlert", label: "EquitelAlert" },
+  { value: "EquitelPromo", label: "EquitelPromo" },
+];
+
+// Routes - Using actual hardcoded data from configurationPageConfigs
+const routes = [
+  { value: "Route 1", label: "Route 1" },
+  { value: "Route 2", label: "Route 2" },
+  { value: "Route 3", label: "Route 3" },
+  { value: "Route 4", label: "Route 4" },
+  { value: "Route 5", label: "Route 5" },
+];
+
+// DND Days
+const dndDays = [
+  { value: "weekdays", label: "Weekdays (Mon-Fri)" },
+  { value: "weekends", label: "Weekends (Sat-Sun)" },
+  { value: "daily", label: "Daily" },
+  { value: "custom", label: "Custom Days" },
+];
+
+// Time options for DND hours
+const timeOptions = Array.from({ length: 24 }, (_, i) => ({
+  value: `${String(i).padStart(2, "0")}:00`,
+  label: `${String(i).padStart(2, "0")}:00`,
+}));
+
 // Helper function to get country by name
 const getCountryByName = (countryName: string) => {
   return countriesList.find((c) => c.name === countryName);
@@ -120,6 +170,14 @@ interface SettingsType {
   date_format: string;
   currency: string;
   number_formatting: string;
+  character_set: string;
+  default_communication_channel: string;
+  default_sender_id: string;
+  default_route: string;
+  dnd_enabled: boolean;
+  dnd_start_time: string;
+  dnd_end_time: string;
+  dnd_days: string;
 }
 
 export default function SettingsPage() {
@@ -140,6 +198,16 @@ export default function SettingsPage() {
           date_format: parsed.date_format || "YYYY-MM-DD",
           currency: parsed.currency || "KES",
           number_formatting: parsed.number_formatting || "1,234.56",
+          character_set: parsed.character_set || "gsm-7",
+          default_communication_channel:
+            parsed.default_communication_channel || "sms",
+          default_sender_id: parsed.default_sender_id || "Effortel",
+          default_route: parsed.default_route || "Route 1",
+          dnd_enabled:
+            parsed.dnd_enabled !== undefined ? parsed.dnd_enabled : true,
+          dnd_start_time: parsed.dnd_start_time || "21:00",
+          dnd_end_time: parsed.dnd_end_time || "08:00",
+          dnd_days: parsed.dnd_days || "daily",
         };
       }
     } catch (error) {
@@ -154,6 +222,14 @@ export default function SettingsPage() {
       date_format: "YYYY-MM-DD",
       currency: "KES",
       number_formatting: "1,234.56",
+      character_set: "gsm-7",
+      default_communication_channel: "sms",
+      default_sender_id: "Effortel",
+      default_route: "Route 1",
+      dnd_enabled: true,
+      dnd_start_time: "21:00",
+      dnd_end_time: "08:00",
+      dnd_days: "daily",
     };
   };
 
@@ -215,6 +291,40 @@ export default function SettingsPage() {
     setSettings({ ...settings, number_formatting });
   };
 
+  const handleCharacterSetChange = (character_set: string) => {
+    setSettings({ ...settings, character_set });
+  };
+
+  const handleCommunicationChannelChange = (
+    default_communication_channel: string,
+  ) => {
+    setSettings({ ...settings, default_communication_channel });
+  };
+
+  const handleSenderIdChange = (default_sender_id: string) => {
+    setSettings({ ...settings, default_sender_id });
+  };
+
+  const handleRouteChange = (default_route: string) => {
+    setSettings({ ...settings, default_route });
+  };
+
+  const handleDNDEnabledChange = (enabled: boolean) => {
+    setSettings({ ...settings, dnd_enabled: enabled });
+  };
+
+  const handleDNDStartTimeChange = (dnd_start_time: string) => {
+    setSettings({ ...settings, dnd_start_time });
+  };
+
+  const handleDNDEndTimeChange = (dnd_end_time: string) => {
+    setSettings({ ...settings, dnd_end_time });
+  };
+
+  const handleDNDDaysChange = (dnd_days: string) => {
+    setSettings({ ...settings, dnd_days });
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
@@ -267,6 +377,20 @@ export default function SettingsPage() {
     value: format,
     label: format,
   }));
+
+  const characterSetOptions = characterSets;
+
+  const communicationChannelOptions = communicationChannels;
+
+  const senderIdOptions = senderIds;
+
+  const routeOptions = routes;
+
+  const dndDaysOptions = dndDays;
+
+  const startTimeOptions = timeOptions;
+
+  const endTimeOptions = timeOptions;
 
   return (
     <div className="space-y-6">
@@ -525,6 +649,251 @@ export default function SettingsPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Character Sets Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Character Sets
+            </h2>
+            <p className="text-sm text-gray-500">
+              Select SMS text encoding for message delivery
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="character-set"
+              className="block text-sm font-semibold text-gray-700 mb-2.5"
+            >
+              Encoding
+            </label>
+            <HeadlessSelect
+              value={settings.character_set}
+              onChange={(value) => handleCharacterSetChange(value as string)}
+              options={characterSetOptions}
+              placeholder="Select character set"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              {settings.character_set === "gsm-7" &&
+                "Standard SMS encoding, supports most languages with optimal message length."}
+              {settings.character_set === "utf-8" &&
+                "Full Unicode support for complex characters and multiple languages."}
+              {settings.character_set === "ascii" &&
+                "English-only encoding, most compact format."}
+              {settings.character_set === "ucs-2" &&
+                "Complete Unicode support for all international characters."}
+            </p>
+          </div>
+        </div>
+
+        {/* Communication Channel Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Default Communication Channel
+            </h2>
+            <p className="text-sm text-gray-500">
+              Set the default channel when none is specified
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="communication-channel"
+              className="block text-sm font-semibold text-gray-700 mb-2.5"
+            >
+              Channel
+            </label>
+            <HeadlessSelect
+              value={settings.default_communication_channel}
+              onChange={(value) =>
+                handleCommunicationChannelChange(value as string)
+              }
+              options={communicationChannelOptions}
+              placeholder="Select default channel"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              This channel will be used as the default for campaigns when no
+              specific channel is selected.
+            </p>
+          </div>
+        </div>
+
+        {/* Sender ID Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Default Sender ID
+            </h2>
+            <p className="text-sm text-gray-500">
+              Set the default SMS sender ID for campaigns
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="sender-id"
+              className="block text-sm font-semibold text-gray-700 mb-2.5"
+            >
+              Sender ID
+            </label>
+            <HeadlessSelect
+              value={settings.default_sender_id}
+              onChange={(value) => handleSenderIdChange(value as string)}
+              options={senderIdOptions}
+              placeholder="Select sender ID"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              The sender ID that will appear on SMS messages by default.
+            </p>
+          </div>
+        </div>
+
+        {/* Routes Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Default Route
+            </h2>
+            <p className="text-sm text-gray-500">
+              Set the default message routing strategy
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="route"
+              className="block text-sm font-semibold text-gray-700 mb-2.5"
+            >
+              Route
+            </label>
+            <HeadlessSelect
+              value={settings.default_route}
+              onChange={(value) => handleRouteChange(value as string)}
+              options={routeOptions}
+              placeholder="Select route"
+            />
+            <p className="text-xs text-gray-500 mt-3">
+              Determines which carrier or gateway handles message delivery.
+            </p>
+          </div>
+        </div>
+
+        {/* Do Not Disturb (DND) Settings Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Do Not Disturb (DND) Settings
+            </h2>
+            <p className="text-sm text-gray-500">
+              Configure default quiet hours for message delivery
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {/* DND Enabled */}
+            <div className="flex items-center gap-4">
+              <input
+                id="dnd-enabled"
+                type="checkbox"
+                checked={settings.dnd_enabled}
+                onChange={(e) => handleDNDEnabledChange(e.target.checked)}
+                className="w-5 h-5 text-emerald-600 rounded"
+              />
+              <label
+                htmlFor="dnd-enabled"
+                className="text-sm font-semibold text-gray-700"
+              >
+                Enable Do Not Disturb
+              </label>
+            </div>
+
+            {/* DND Settings - Only show if enabled */}
+            {settings.dnd_enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg">
+                {/* DND Days */}
+                <div>
+                  <label
+                    htmlFor="dnd-days"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    Apply To
+                  </label>
+                  <HeadlessSelect
+                    value={settings.dnd_days}
+                    onChange={(value) => handleDNDDaysChange(value as string)}
+                    options={dndDaysOptions}
+                    placeholder="Select days"
+                  />
+                </div>
+
+                {/* DND Start Time */}
+                <div>
+                  <label
+                    htmlFor="dnd-start-time"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    Start Time (DND begins)
+                  </label>
+                  <HeadlessSelect
+                    value={settings.dnd_start_time}
+                    onChange={(value) =>
+                      handleDNDStartTimeChange(value as string)
+                    }
+                    options={startTimeOptions}
+                    placeholder="Select start time"
+                  />
+                </div>
+
+                {/* DND End Time */}
+                <div>
+                  <label
+                    htmlFor="dnd-end-time"
+                    className="block text-sm font-semibold text-gray-700 mb-2.5"
+                  >
+                    End Time (DND ends)
+                  </label>
+                  <HeadlessSelect
+                    value={settings.dnd_end_time}
+                    onChange={(value) =>
+                      handleDNDEndTimeChange(value as string)
+                    }
+                    options={endTimeOptions}
+                    placeholder="Select end time"
+                  />
+                </div>
+
+                {/* Preview */}
+                <div className="md:col-span-2 p-3 bg-white border border-gray-200 rounded-lg">
+                  <p className="text-xs text-gray-500 mb-1">
+                    DND Window Preview:
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {settings.dnd_days === "weekdays" && "Monday - Friday: "}
+                    {settings.dnd_days === "weekends" && "Saturday - Sunday: "}
+                    {settings.dnd_days === "daily" && "Daily: "}
+                    {settings.dnd_days === "custom" && "Custom Days: "}
+                    {settings.dnd_start_time} to {settings.dnd_end_time}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Messages will not be delivered during these hours.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
