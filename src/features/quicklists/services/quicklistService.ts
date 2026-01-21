@@ -35,7 +35,7 @@ class QuickListService {
     try {
       data = JSON.parse(text);
     } catch (_) {
-      // If response is not JSON, treat as error
+      // If response is not JSON, it's likely an HTML error from the server
       console.error("API Error Response (non-JSON):", {
         status: response.status,
         statusText: response.statusText,
@@ -50,7 +50,9 @@ class QuickListService {
     // Check if response is an error response
     if (!response.ok || ("success" in data && !data.success)) {
       const errorMessage =
-        "error" in data ? data.error : `HTTP error! status: ${response.status}`;
+        "error" in data
+          ? data.error
+          : `Request failed with status ${response.status}`;
       console.error("API Error Response:", {
         status: response.status,
         statusText: response.statusText,
@@ -131,33 +133,31 @@ class QuickListService {
   async createQuickList(
     request: CreateQuickListRequest,
   ): Promise<CreateQuickListResponseUnion> {
+    // Convert file_text back to a File object for multipart upload
+    const fileContent = request.file_text || "";
+    const blob = new Blob([fileContent], { type: "text/csv" });
+    const fileName = request.file_name || "quicklist.csv";
+    const file = new File([blob], fileName, { type: "text/csv" });
+
     const formData = new FormData();
-    formData.append("name", request.name);
-    if (request.description) {
+    formData.append("file", file);
+    if (request.name) formData.append("name", request.name);
+    if (request.description)
       formData.append("description", request.description);
-    }
-    if (request.created_by) {
+    if (request.created_by)
       formData.append("created_by", String(request.created_by));
-    }
-    if (request.file_text) {
-      formData.append("file", new Blob([request.file_text], { type: "text/plain" }), request.file_name || "file.txt");
-    }
-    if (request.file_delimiter) {
-      formData.append("file_delimiter", request.file_delimiter);
-    }
-    if (request.subscriber_id_col_name) {
-      formData.append("subscriber_id_col_name", request.subscriber_id_col_name);
-    }
-    if (request.list_headers) {
-      formData.append("list_headers", request.list_headers);
-    }
 
     const url = `${BASE_URL}/upload`;
+
+    // Get auth headers but remove Content-Type for multipart/form-data
+    const authHeaders = getAuthHeaders();
+    const { "Content-Type": _contentType, ...headersWithoutContentType } =
+      authHeaders as Record<string, string>;
+
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        ...getAuthHeaders(),
-      },
+      headers: headersWithoutContentType,
+      // Don't set Content-Type - browser will automatically set it to multipart/form-data with boundary
       body: formData,
     });
 
@@ -166,28 +166,44 @@ class QuickListService {
     try {
       data = JSON.parse(text);
     } catch (_) {
-      // If response is not JSON, treat as error
+      // If response is not JSON, it's likely an HTML error from the server
       console.error("API Error Response (non-JSON):", {
         status: response.status,
         statusText: response.statusText,
         body: text,
         url,
       });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${text}`,
-      );
+
+      let errorMessage = "Failed to create quicklist. Please try again.";
+      if (response.status === 400) {
+        errorMessage = "Invalid file or missing required fields.";
+      } else if (response.status === 401) {
+        errorMessage = "Unauthorized. Please log in again.";
+      } else if (response.status === 413) {
+        errorMessage = "File is too large. Please upload a smaller file.";
+      } else if (response.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+
+      throw new Error(errorMessage);
     }
 
     // Check if response is an error response
     if (!response.ok || ("success" in data && !data.success)) {
       const errorMessage =
-        "error" in data ? data.error : `HTTP error! status: ${response.status}`;
+        "error" in data
+          ? data.error
+          : typeof data === "string"
+            ? data
+            : "Failed to create quicklist";
+
       console.error("API Error Response:", {
         status: response.status,
         statusText: response.statusText,
         body: data,
         url,
       });
+
       throw new Error(errorMessage);
     }
 

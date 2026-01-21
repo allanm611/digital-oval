@@ -183,14 +183,14 @@ export default function QuickListPage() {
           description: formData.description,
         });
         closeModal();
-        await loadLists();
+        await loadQuickLists();
         return;
       }
 
       // Create new list
       await quicklistService.createQuickList(formData);
       closeModal();
-      await loadLists();
+      await loadQuickLists();
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "Failed to save QuickList";

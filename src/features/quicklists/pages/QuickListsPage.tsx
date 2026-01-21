@@ -19,7 +19,11 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { quicklistService } from "../services/quicklistService";
-import { QuickList, QuickListStats, CreateQuickListRequest } from "../types/quicklist";
+import {
+  QuickList,
+  QuickListStats,
+  CreateQuickListRequest,
+} from "../types/quicklist";
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
@@ -29,7 +33,7 @@ export default function QuickListsPage() {
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(
-    null
+    null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -149,7 +153,7 @@ export default function QuickListsPage() {
         }
       } else {
         throw new Error(
-          "error" in response ? response.error : "Failed to load QuickLists"
+          "error" in response ? response.error : "Failed to load QuickLists",
         );
       }
     } catch (err) {
@@ -166,7 +170,7 @@ export default function QuickListsPage() {
 
       if (!response.success) {
         throw new Error(
-          "error" in response ? response.error : "Failed to create QuickList"
+          "error" in response ? response.error : "Failed to create QuickList",
         );
       }
 
@@ -183,7 +187,7 @@ export default function QuickListsPage() {
         showError(
           `QuickList created with ${errorCount} validation errors ${
             errorDetails ? `\n\n${errorDetails}` : ""
-          }`
+          }`,
         );
       } else {
         showToast("QuickList created successfully!");
@@ -199,7 +203,7 @@ export default function QuickListsPage() {
       ) {
         // Fetch the complete quicklist data by ID
         const quicklistResponse = await quicklistService.getQuickListById(
-          response.data.quicklist_id
+          response.data.quicklist_id,
         );
         if (quicklistResponse.success && quicklistResponse.data) {
           setCommunicateQuickList(quicklistResponse.data);
@@ -212,8 +216,8 @@ export default function QuickListsPage() {
       // Reload the quicklists list to show the new one
       // Small delay to allow backend to process the file
       setTimeout(async () => {
-        await loadQuickLists(pagination.page);
-      }, 1500);
+        await loadQuickLists(1); // Always reload from page 1 to see the new quicklist
+      }, 2000);
     } catch (err) {
       console.error("Failed to create quicklist:", err);
       const errorMessage =
@@ -244,7 +248,7 @@ export default function QuickListsPage() {
     try {
       await quicklistService.deleteQuickList(quicklistToDelete.id);
       showToast(
-        t.quickList.deletedSuccess.replace("{name}", quicklistToDelete.name)
+        t.quickList.deletedSuccess.replace("{name}", quicklistToDelete.name),
       );
       setShowDeleteModal(false);
       setQuicklistToDelete(null);
@@ -274,14 +278,13 @@ export default function QuickListsPage() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       showToast(
-        t.quickList.exportSuccess.replace("{format}", format.toUpperCase())
+        t.quickList.exportSuccess.replace("{format}", format.toUpperCase()),
       );
     } catch (err) {
       console.error("Failed to export quicklist:", err);
       showError(t.quickList.exportFailed);
     }
   };
-
 
   const handleEdit = (quicklist: QuickList) => {
     setEditQuickList(quicklist);
@@ -297,7 +300,7 @@ export default function QuickListsPage() {
     try {
       const response = await quicklistService.updateQuickList(
         editQuickList.id,
-        request
+        request,
       );
       if (response.success) {
         showToast(t.quickList.updatedSuccess);
@@ -545,7 +548,7 @@ export default function QuickListsPage() {
                           year: "numeric",
                           month: "short",
                           day: "numeric",
-                        }
+                        },
                       )}
                     </td>
                     <td
@@ -603,7 +606,7 @@ export default function QuickListsPage() {
               Showing{" "}
               {Math.min(
                 (pagination.page - 1) * pagination.limit + 1,
-                pagination.total
+                pagination.total,
               )}{" "}
               to{" "}
               {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
@@ -648,7 +651,6 @@ export default function QuickListsPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateQuickList}
       />
-
 
       {/* Edit Modal */}
       {isEditModalOpen && editQuickList && (

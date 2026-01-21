@@ -7,6 +7,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
+import type { CreateQuickListRequest } from "../../quicklists/types/quicklist";
 
 interface TargetAudienceStepProps {
   data: ManualBroadcastData;
@@ -76,16 +77,17 @@ export default function TargetAudienceStep({
   const handleSelectQuickList = (quicklist: QuickListItem) => {
     setSelectedQuickList(quicklist);
     setError("");
+    setShowPickerModal(false);
   };
 
-  const handleCreateQuickList = async (request: any) => {
+  const handleCreateQuickList = async (request: CreateQuickListRequest) => {
     try {
       const response = await quicklistService.createQuickList(request);
       if (response.success && response.data) {
         const newQuickList: QuickListItem = {
           id: response.data.quicklist_id,
           name: request.name,
-          description: request.description,
+          description: request.description || undefined,
           upload_type: "multi",
           row_count: response.data.rows_imported || 0,
           created_at: new Date().toISOString(),
