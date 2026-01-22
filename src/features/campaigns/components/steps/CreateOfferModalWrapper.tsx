@@ -2,7 +2,8 @@ import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import CreateOfferPage from "../../../offers/pages/CreateOfferPage";
 
-import { tw, zIndexTokens } from "../../../../shared/utils/utils";
+import { tw } from "../../../../shared/utils/utils";
+import { zIndex } from "../../../../shared/utils/tokens";
 interface CreateOfferModalWrapperProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,7 +32,7 @@ export default function CreateOfferModalWrapper({
         bottom: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: 99998,
+        zIndex: zIndex.overlay,
       }}
     >
       {/* Backdrop */}
@@ -43,7 +44,7 @@ export default function CreateOfferModalWrapper({
       {/* Modal Container */}
       <div
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden`}
-        style={{ zIndex: 99999 }}
+        style={{ zIndex: zIndex.modal }}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
