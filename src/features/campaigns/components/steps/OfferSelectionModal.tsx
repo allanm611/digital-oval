@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,7 +17,8 @@ import { offerService } from "../../../offers/services/offerService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useToast } from "../../../../contexts/ToastContext";
-import CreateOfferModalWrapper from "./CreateOfferModalWrapper";
+
+const CreateOfferModalWrapper = lazy(() => import("./CreateOfferModalWrapper"));
 
 interface OfferSelectionModalProps {
   isOpen: boolean;
@@ -694,11 +695,13 @@ export default function OfferSelectionModal({
       </div>
 
       {/* Create Offer Modal */}
-      <CreateOfferModalWrapper
-        isOpen={createOfferModalOpen}
-        onClose={() => setCreateOfferModalOpen(false)}
-        onOfferCreated={handleOfferCreated}
-      />
+      <Suspense fallback={null}>
+        <CreateOfferModalWrapper
+          isOpen={createOfferModalOpen}
+          onClose={() => setCreateOfferModalOpen(false)}
+          onOfferCreated={handleOfferCreated}
+        />
+      </Suspense>
     </div>,
     document.body,
   );

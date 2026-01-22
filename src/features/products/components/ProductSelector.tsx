@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { Search, Plus, Check, Package, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,8 @@ import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
 import { color, tw } from "../../../shared/utils/utils";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
-import CreateProductModalWrapper from "./CreateProductModalWrapper";
+
+const CreateProductModalWrapper = lazy(() => import("./CreateProductModalWrapper"));
 
 interface ProductSelectorProps {
   selectedProducts: Product[];
@@ -545,11 +546,13 @@ export default function ProductSelector({
         )}
 
       {/* Create Product Modal */}
-      <CreateProductModalWrapper
-        isOpen={createProductModalOpen}
-        onClose={() => setCreateProductModalOpen(false)}
-        onProductCreated={handleProductCreated}
-      />
+      <Suspense fallback={null}>
+        <CreateProductModalWrapper
+          isOpen={createProductModalOpen}
+          onClose={() => setCreateProductModalOpen(false)}
+          onProductCreated={handleProductCreated}
+        />
+      </Suspense>
     </div>
   );
 }

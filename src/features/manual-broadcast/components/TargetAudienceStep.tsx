@@ -37,6 +37,7 @@ export default function TargetAudienceStep({
   );
   const [selectedQuickList, setSelectedQuickList] =
     useState<QuickListItem | null>(null);
+  const [isQuickListCreated, setIsQuickListCreated] = useState(false);
   const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +94,7 @@ export default function TargetAudienceStep({
           created_at: new Date().toISOString(),
         };
         setSelectedQuickList(newQuickList);
+        setIsQuickListCreated(true); // Mark as created
         setShowCreateModal(false);
         setError("");
       }
@@ -248,14 +250,19 @@ export default function TargetAudienceStep({
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedQuickList.row_count.toLocaleString()} rows
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSelectedQuickList(null)}
-                  className="text-xs hover:underline mt-2"
-                  style={{ color: color.primary.accent }}
-                >
-                  Change Selection
-                </button>
+                {isQuickListCreated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedQuickList(null);
+                      setIsQuickListCreated(false);
+                    }}
+                    className="text-xs hover:underline mt-2"
+                    style={{ color: color.primary.accent }}
+                  >
+                    Create Different QuickList
+                  </button>
+                )}
               </div>
             ) : (
               <p className="text-xs text-gray-600 mb-3">
@@ -263,29 +270,31 @@ export default function TargetAudienceStep({
               </p>
             )}
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowPickerModal(true)}
-                disabled={isSubmitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
-              >
-                <List className="w-4 h-4" />
-                Select from Existing
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(true)}
-                disabled={isSubmitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white"
-                style={{
-                  backgroundColor: buttonTokens.action.background,
-                }}
-              >
-                <Plus className="w-4 h-4" />
-                Create Quicklist
-              </button>
-            </div>
+            {!isQuickListCreated && !selectedQuickList && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPickerModal(true)}
+                  disabled={isSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                >
+                  <List className="w-4 h-4" />
+                  Select from Existing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={isSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white"
+                  style={{
+                    backgroundColor: buttonTokens.action.background,
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Quicklist
+                </button>
+              </div>
+            )}
           </div>
         )}
 
