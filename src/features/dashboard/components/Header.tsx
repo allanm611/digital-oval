@@ -14,9 +14,10 @@ import NotificationDropdown from "../../../shared/components/NotificationDropdow
 
 interface HeaderProps {
   onMenuClick?: () => void;
+  sidebarMinimized?: boolean;
 }
 
-export default function Header({ onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick, sidebarMinimized = false }: HeaderProps) {
   const { user, logout } = useAuth();
   const [currentUserRole, setCurrentUserRole] = useState<string>("User");
 
@@ -74,8 +75,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 m-0 p-0"
+      className={`m-0 p-0 transition-all duration-300 ${sidebarMinimized ? "md:ml-24 xl:ml-24" : "md:ml-32 xl:ml-80"}`}
       style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
         backgroundColor: color.gradients.sidebar.top,
         zIndex: zIndex.sticky,
       }}

@@ -24,7 +24,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div
         className={`transition-all duration-300 flex flex-col flex-1 ${sidebarMinimized ? "md:ml-24 xl:ml-24" : "md:ml-32 xl:ml-80"}`}
       >
-        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <div style={{ height: "64px" }} />
+        <Header onMenuClick={() => setSidebarOpen(true)} sidebarMinimized={sidebarMinimized} />
 
         <main
           className={`flex-1 px-5 lg:px-8 py-6 ${tw.primaryBackground} pb-24`}

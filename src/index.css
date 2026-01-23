@@ -2445,6 +2445,7 @@ Satoshi
 
   html {
     scroll-behavior: smooth;
+    overscroll-behavior: none;
   }
 
   body {
@@ -2453,6 +2454,7 @@ Satoshi
     @apply bg-white text-secondary-900 antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     font-variation-settings: normal;
+    overscroll-behavior: none;
   }
 
   /* Remove all focus outlines and rings */
