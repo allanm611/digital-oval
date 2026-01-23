@@ -14,6 +14,9 @@ import {
   FolderTree,
   List,
 } from "lucide-react";
+import { InputAdornment, TextField } from "@mui/material";
+import { AutoAwesome } from "@mui/icons-material";
+import { color } from "../utils/utils";
 import { campaignService } from "../../features/campaigns/services/campaignService";
 import { offerService } from "../../features/offers/services/offerService";
 import { productService } from "../../features/products/services/productService";
@@ -731,39 +734,84 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       className="relative flex-1 max-w-2xl mx-auto"
       style={{ zIndex: zIndex.popover }}
     >
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white" />
-        <input
-          ref={inputRef}
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          placeholder="★ Global Search..."
-          className={`w-full pl-11 pr-10 py-2.5 bg-white/10 border border-transparent ${tw.rounded} text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm`}
-        />
-        {searchTerm && (
-          <button
-            onClick={() => {
-              setSearchTerm("");
-              setSuggestions([]);
-              inputRef.current?.focus();
-            }}
-            className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 text-white/70 hover:text-white ${tw.rounded} hover:bg-white/10 transition-colors`}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      <TextField
+        inputRef={inputRef}
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder="Global Search..."
+        variant="outlined"
+        size="small"
+        fullWidth
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <AutoAwesome
+                fontSize="medium"
+                sx={{
+                  color: color.primary.accent,
+                  marginLeft: "8px",
+                  marginRight: "-10px",
+                }}
+              />
+            </InputAdornment>
+          ),
+          endAdornment: searchTerm && (
+            <InputAdornment position="end">
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSuggestions([]);
+                  inputRef.current?.focus();
+                }}
+                className={`p-1.5 text-white/70 hover:text-white ${tw.rounded} hover:bg-white/10 transition-colors border-0 bg-transparent cursor-pointer`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          borderRadius: "0.375rem",
+          "& .MuiOutlinedInput-root": {
+            color: "white",
+            padding: "0",
+            "& fieldset": {
+              borderColor: "transparent",
+            },
+            "&:hover fieldset": {
+              borderColor: "transparent",
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: "rgb(96, 165, 250)",
+              borderWidth: "2px",
+            },
+          },
+          "& .MuiOutlinedInput-input": {
+            padding: "10px 12px",
+            fontSize: "0.875rem",
+            "&::placeholder": {
+              color: "rgba(255, 255, 255, 1)",
+              opacity: 1,
+            },
+          },
+        }}
+      />
 
       {/* Suggestions Dropdown */}
       {showSuggestions && (
         <div
           ref={suggestionsRef}
           className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto`}
-          style={{ zIndex: zIndex.popover, width: "100%", maxWidth: "calc(100% + 0px)" }}
+          style={{
+            zIndex: zIndex.popover,
+            width: "100%",
+            maxWidth: "calc(100% + 0px)",
+          }}
         >
           {isLoading ? (
             <div className="p-12 text-center">

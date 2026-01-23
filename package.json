@@ -13,8 +13,12 @@
     "deploy:staging": "vercel --local-config vercel.staging.json --prod --confirm"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.8",
     "@heroicons/react": "^2.2.0",
+    "@mui/icons-material": "^7.3.7",
+    "@mui/material": "^7.3.7",
     "currency-codes": "^2.2.0",
     "i18n-iso-countries": "^7.14.0",
     "lucide-react": "^0.344.0",
