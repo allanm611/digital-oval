@@ -728,11 +728,11 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 max-w-xs sm:max-w-md"
+      className="relative flex-1 max-w-2xl mx-auto"
       style={{ zIndex: zIndex.popover }}
     >
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white/70" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-white" />
         <input
           ref={inputRef}
           type="text"
@@ -741,8 +741,8 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
           onFocus={handleFocus}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
-          placeholder="Search campaigns, offers, products..."
-          className={`w-full pl-11 pr-10 py-2.5 bg-white/20 border border-white/30 ${tw.rounded} text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm`}
+          placeholder="★ Global Search..."
+          className={`w-full pl-11 pr-10 py-2.5 bg-white/10 border border-transparent ${tw.rounded} text-white placeholder-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-sm`}
         />
         {searchTerm && (
           <button
@@ -762,8 +762,8 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
       {showSuggestions && (
         <div
           ref={suggestionsRef}
-          className={`absolute top-full left-0 right-0 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto w-full max-w-[calc(100vw-2rem)] sm:max-w-[500px] mx-auto sm:mx-0`}
-          style={{ zIndex: zIndex.popover }}
+          className={`absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-white ${tw.rounded} shadow-lg border border-gray-200 max-h-[600px] overflow-y-auto`}
+          style={{ zIndex: zIndex.popover, width: "100%", maxWidth: "calc(100% + 0px)" }}
         >
           {isLoading ? (
             <div className="p-12 text-center">

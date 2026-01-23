@@ -17,7 +17,10 @@ interface HeaderProps {
   sidebarMinimized?: boolean;
 }
 
-export default function Header({ onMenuClick, sidebarMinimized = false }: HeaderProps) {
+export default function Header({
+  onMenuClick,
+  sidebarMinimized = false,
+}: HeaderProps) {
   const { user, logout } = useAuth();
   const [currentUserRole, setCurrentUserRole] = useState<string>("User");
 
@@ -57,14 +60,14 @@ export default function Header({ onMenuClick, sidebarMinimized = false }: Header
         setCurrentUserRole(
           user.role
             ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-            : "User"
+            : "User",
         );
       }
     } catch {
       setCurrentUserRole(
         user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-          : "User"
+          : "User",
       );
     }
   }, [user]);
