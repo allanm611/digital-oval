@@ -306,7 +306,10 @@ export default function DataConnectors() {
                             className={`p-2 ${tw.rounded} hover:bg-[${color.interactive.hover}] transition-colors`}
                             aria-label="View connector"
                           >
-                            <Eye className="h-5 w-5" style={{ color: color.text.primary }} />
+                            <Eye
+                              className="h-5 w-5"
+                              style={{ color: color.text.primary }}
+                            />
                           </button>
                         </div>
                       </td>

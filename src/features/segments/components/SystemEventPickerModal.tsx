@@ -1,13 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  X,
-  Search,
-  Mail,
-  MessageSquare,
-  Bell,
-  MessageCircle,
-  Zap,
-} from "lucide-react";
+import { X, Search } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import {
   SYSTEM_EVENTS,
@@ -20,17 +12,6 @@ interface SystemEventPickerModalProps {
   onClose: () => void;
   onSelect: (event: SystemEvent) => void;
 }
-
-const channelIcons: Record<
-  string,
-  React.ComponentType<{ className?: string }>
-> = {
-  email: Mail,
-  sms: MessageSquare,
-  push: Bell,
-  in_app: MessageCircle,
-  other: Zap,
-};
 
 export default function SystemEventPickerModal({
   isOpen,
@@ -193,11 +174,6 @@ export default function SystemEventPickerModal({
           ) : (
             <div className="space-y-2">
               {filteredEvents.map((event) => {
-                // Map channel to icon, with fallback for 'all' channel
-                const iconKey =
-                  event.channel === "all" ? "other" : event.channel || "other";
-                const IconComponent =
-                  channelIcons[iconKey as keyof typeof channelIcons] || Zap;
                 return (
                   <button
                     key={event.id}
@@ -209,18 +185,12 @@ export default function SystemEventPickerModal({
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="pt-1">
-                        <IconComponent className="w-5 h-5 flex-shrink-0" />
-                      </div>
                       <div className="flex-1">
                         <h3 className={`font-medium ${tw.textPrimary}`}>
                           {event.event_name}
                         </h3>
                         <p className={`text-sm ${tw.textSecondary} mt-1`}>
                           {event.event_description}
-                        </p>
-                        <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                          {event.event_code}
                         </p>
                       </div>
                     </div>

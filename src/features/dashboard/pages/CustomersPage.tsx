@@ -391,15 +391,15 @@ export default function CustomersPage() {
               >
                 <tr>
                   {[
-                    t.customer360.customer,
-                    t.customer360.msisdn,
                     t.customer360.subscriptionId,
+                    t.customer360.msisdn,
+                    t.customer360.customer,
                     t.customer360.customerType,
+                    t.customer360.city,
+                    t.customer360.status,
                     t.customer360.tariff,
                     t.customer360.simType,
-                    t.customer360.status,
                     t.customer360.activationDate,
-                    t.customer360.city,
                     t.customer360.actions,
                   ].map((header) => (
                     <th
@@ -429,9 +429,18 @@ export default function CustomersPage() {
                   return (
                     <tr key={`${row.customerId}-${row.subscriptionId}`}>
                       <td
-                        className="rounded-l-md px-6 py-5"
+                        className="rounded-l-md px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
+                        {row.subscriptionId}
+                      </td>
+                      <td
+                        className="px-6 py-5 text-sm text-gray-900"
+                        style={cellBackground}
+                      >
+                        {formatMsisdn(row.msisdn)}
+                      </td>
+                      <td className="px-6 py-5 text-sm" style={cellBackground}>
                         <button
                           type="button"
                           onClick={() => handleSelectCustomer(row)}
@@ -440,48 +449,21 @@ export default function CustomersPage() {
                           <p className="font-semibold text-gray-900 hover:underline">
                             {name}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {t.customer360.customerNumber}
-                            {row.customerId}
-                          </p>
-                          {row.email && (
-                            <p className="text-xs text-gray-500 mt-0.5 truncate">
-                              {row.email}
-                            </p>
-                          )}
                         </button>
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
-                        style={cellBackground}
-                      >
-                        {formatMsisdn(row.msisdn)}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.subscriptionId}
-                      </td>
-                      <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
                         {row.customerType ?? "—"}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
-                        {row.tariff ?? "—"}
+                        {row.city ?? "—"}
                       </td>
-                      <td
-                        className="px-6 py-5 text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.simType ?? "—"}
-                      </td>
-                      <td className="px-6 py-5" style={cellBackground}>
+                      <td className="px-6 py-5 text-sm" style={cellBackground}>
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${statusStyles}`}
                         >
@@ -489,19 +471,25 @@ export default function CustomersPage() {
                         </span>
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
+                        style={cellBackground}
+                      >
+                        {row.tariff ?? "—"}
+                      </td>
+                      <td
+                        className="px-6 py-5 text-sm text-gray-900"
+                        style={cellBackground}
+                      >
+                        {row.simType ?? "—"}
+                      </td>
+                      <td
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
                         {formatDateTime(row.activationDate)}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
-                        style={cellBackground}
-                      >
-                        {row.city ?? "—"}
-                      </td>
-                      <td
-                        className="rounded-r-md px-6 py-5 text-right"
+                        className="rounded-r-md px-6 py-5 text-sm text-right"
                         style={cellBackground}
                       >
                         <button
