@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
-  Plus,
   Filter,
   Users,
   Tag,
@@ -28,6 +27,7 @@ import {
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import SegmentModal from "../components/SegmentModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -45,7 +45,7 @@ export default function SegmentManagementPage() {
   const [allSegments, setAllSegments] = useState<Segment[]>([]); // Store all segments for tag calculation
   const [isLoading, setIsLoading] = useState(true);
   const [duplicatingSegment, setDuplicatingSegment] = useState<number | null>(
-    null
+    null,
   );
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,7 +85,7 @@ export default function SegmentManagementPage() {
   // Bulk selection state
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedSegmentIds, setSelectedSegmentIds] = useState<Set<number>>(
-    () => new Set()
+    () => new Set(),
   );
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
 
@@ -141,7 +141,7 @@ export default function SegmentManagementPage() {
 
   const handleActionMenuToggle = (
     segmentId: number,
-    event?: React.MouseEvent<HTMLButtonElement>
+    event?: React.MouseEvent<HTMLButtonElement>,
   ) => {
     if (showActionMenu === segmentId) {
       setShowActionMenu(null);
@@ -187,7 +187,7 @@ export default function SegmentManagementPage() {
             // Get max scroll position
             const documentHeight = Math.max(
               document.documentElement.scrollHeight,
-              document.body.scrollHeight
+              document.body.scrollHeight,
             );
             const maxScrollY = Math.max(0, documentHeight - window.innerHeight);
             const finalScrollY = Math.min(newScrollY, maxScrollY);
@@ -222,7 +222,7 @@ export default function SegmentManagementPage() {
             // After scrolling, we should have enough space
             const maxHeight = Math.max(
               estimatedDropdownHeight,
-              updatedSpaceBelow + 100
+              updatedSpaceBelow + 100,
             );
 
             setDropdownPosition({ top, left, maxHeight });
@@ -265,12 +265,12 @@ export default function SegmentManagementPage() {
       const target = event.target as Node;
       // Check if click is inside any action menu button
       const clickedInsideButton = Object.values(actionMenuRefs.current).some(
-        (ref) => ref && ref.contains(target)
+        (ref) => ref && ref.contains(target),
       );
 
       // Check if click is inside any dropdown menu (portal)
       const clickedInsideDropdown = Object.values(
-        dropdownMenuRefs.current
+        dropdownMenuRefs.current,
       ).some((ref) => ref && ref.contains(target));
 
       // Only close if clicked outside both button and dropdown
@@ -284,7 +284,7 @@ export default function SegmentManagementPage() {
       return () => {
         document.removeEventListener(
           "mousedown",
-          handleClickOutsideActionMenus
+          handleClickOutsideActionMenus,
         );
       };
     }
@@ -344,12 +344,12 @@ export default function SegmentManagementPage() {
                   typeof item.segment_count === "number"
                     ? item.segment_count
                     : typeof item.count === "number"
-                    ? item.count
-                    : typeof item.segment_count === "string"
-                    ? parseInt(item.segment_count, 10) || 0
-                    : typeof item.count === "string"
-                    ? parseInt(item.count, 10) || 0
-                    : 0,
+                      ? item.count
+                      : typeof item.segment_count === "string"
+                        ? parseInt(item.segment_count, 10) || 0
+                        : typeof item.count === "string"
+                          ? parseInt(item.count, 10) || 0
+                          : 0,
                 percentage: item.percentage ?? 0,
               }))
             : [],
@@ -539,12 +539,12 @@ export default function SegmentManagementPage() {
       await loadSegments();
       success(
         "Segment deleted",
-        `Segment "${segmentToDelete.name}" has been deleted successfully`
+        `Segment "${segmentToDelete.name}" has been deleted successfully`,
       );
     } catch (err: unknown) {
       showError(
         "Error deleting segment",
-        (err as Error).message || "Failed to delete segment"
+        (err as Error).message || "Failed to delete segment",
       );
     } finally {
       setIsDeleting(false);
@@ -560,7 +560,7 @@ export default function SegmentManagementPage() {
     setShowActionMenu(null);
     showInfo(
       "Duplicate unavailable",
-      "Cannot access this functionality right now."
+      "Cannot access this functionality right now.",
     );
     return;
 
@@ -591,12 +591,12 @@ export default function SegmentManagementPage() {
       // Success: show toast and close modal
       success(
         "Segment duplicated",
-        `Segment "${newName}" has been created successfully`
+        `Segment "${newName}" has been created successfully`,
       );
     } catch (err: unknown) {
       showError(
         "Error duplicating segment",
-        (err as Error).message || "Failed to duplicate segment"
+        (err as Error).message || "Failed to duplicate segment",
       );
     } finally {
       setDuplicatingSegment(null);
@@ -677,7 +677,7 @@ export default function SegmentManagementPage() {
       selectedSegment ? "Segment updated" : "Segment created",
       `Segment "${segment.name}" has been ${
         selectedSegment ? "updated" : "created"
-      } successfully`
+      } successfully`,
     );
   };
 
@@ -700,12 +700,12 @@ export default function SegmentManagementPage() {
       await loadSegments();
       success(
         "Segment refreshed",
-        `Segment "${segment.name}" has been refreshed successfully`
+        `Segment "${segment.name}" has been refreshed successfully`,
       );
     } catch (err: unknown) {
       showError(
         "Refresh failed",
-        (err as Error).message || "Failed to refresh segment"
+        (err as Error).message || "Failed to refresh segment",
       );
     }
   };
@@ -748,7 +748,7 @@ export default function SegmentManagementPage() {
     if (segmentIdsArray.length > 50) {
       showError(
         "Too many segments",
-        "Bulk refresh supports a maximum of 50 segments. Please select fewer segments."
+        "Bulk refresh supports a maximum of 50 segments. Please select fewer segments.",
       );
       return;
     }
@@ -770,7 +770,7 @@ export default function SegmentManagementPage() {
 
       success(
         "Segments refreshed",
-        `${segmentIdsArray.length} segment(s) have been refreshed successfully`
+        `${segmentIdsArray.length} segment(s) have been refreshed successfully`,
       );
 
       // Clear selection and reload segments
@@ -780,7 +780,7 @@ export default function SegmentManagementPage() {
     } catch (err: unknown) {
       showError(
         "Bulk refresh failed",
-        (err as Error).message || "Failed to refresh segments"
+        (err as Error).message || "Failed to refresh segments",
       );
     }
   };
@@ -789,7 +789,7 @@ export default function SegmentManagementPage() {
     setShowActionMenu(null);
     showInfo(
       "Export unavailable",
-      "Cannot access this functionality right now."
+      "Cannot access this functionality right now.",
     );
     return;
 
@@ -813,7 +813,7 @@ export default function SegmentManagementPage() {
     } catch (err: unknown) {
       showError(
         "Export failed",
-        (err as Error).message || "Failed to export segment"
+        (err as Error).message || "Failed to export segment",
       );
     }
   };
@@ -844,7 +844,7 @@ export default function SegmentManagementPage() {
 
   // Get all unique tags from all segments (not just filtered ones)
   const allTags = Array.from(
-    new Set(allSegments?.flatMap((s) => s.tags || []) || [])
+    new Set(allSegments?.flatMap((s) => s.tags || []) || []),
   );
 
   const filteredSegments = (segments || []).filter((segment) => {
@@ -866,7 +866,7 @@ export default function SegmentManagementPage() {
 
   const visibleIds = useMemo(
     () => filteredSegments.map((segment) => segment.id),
-    [filteredSegments]
+    [filteredSegments],
   );
 
   const allVisibleSelected =
@@ -874,7 +874,7 @@ export default function SegmentManagementPage() {
     visibleIds.every((id) => selectedSegmentIds.has(id));
 
   const someVisibleSelected = visibleIds.some((id) =>
-    selectedSegmentIds.has(id)
+    selectedSegmentIds.has(id),
   );
 
   const hasSelection = selectedSegmentIds.size > 0;
@@ -994,13 +994,7 @@ export default function SegmentManagementPage() {
               )}
               {isSelectionMode ? "Exit Selection" : "Select Segments"}
             </button>
-            <button
-              onClick={handleCreateSegment}
-              className={`${tw.button} flex items-center gap-2`}
-            >
-              <Plus className="h-5 w-5" />
-              {t.pages.createSegment}
-            </button>
+            <CreateButton route="/dashboard/segments/create" />
           </div>
         </div>
       </div>
@@ -1152,7 +1146,7 @@ export default function SegmentManagementPage() {
                     | "behavioral"
                     | "demographic"
                     | "geographic"
-                    | "transactional") || "all"
+                    | "transactional") || "all",
                 )
               }
               placeholder="Filter by type"
@@ -1398,16 +1392,16 @@ export default function SegmentManagementPage() {
                             segment.type === "dynamic"
                               ? `bg-[${color.primary.accent}]`
                               : segment.type === "static"
-                              ? `bg-[${color.primary.action}]`
-                              : `bg-[${color.status.warning}]`
+                                ? `bg-[${color.primary.action}]`
+                                : `bg-[${color.status.warning}]`
                           }`}
                           style={{
                             color:
                               segment.type === "dynamic"
                                 ? "#1F2223" // Dark text on light accent background
                                 : segment.type === "static"
-                                ? "white" // White text on dark action background
-                                : "white", // White text on warning background
+                                  ? "white" // White text on dark action background
+                                  : "white", // White text on warning background
                           }}
                         >
                           {segment.type
@@ -1629,7 +1623,7 @@ export default function SegmentManagementPage() {
                       Delete Segment
                     </button>
                   </div>,
-                  document.body
+                  document.body,
                 );
               }
               // Clean up ref when dropdown is closed
@@ -1720,8 +1714,8 @@ export default function SegmentManagementPage() {
                         segment.type === "dynamic"
                           ? "bg-purple-100 text-purple-700"
                           : segment.type === "static"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-orange-100 text-orange-700"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-orange-100 text-orange-700"
                       }`}
                     >
                       {segment.type
@@ -1891,7 +1885,7 @@ export default function SegmentManagementPage() {
                           | "behavioral"
                           | "demographic"
                           | "geographic"
-                          | "transactional") || "all"
+                          | "transactional") || "all",
                       )
                     }
                     placeholder="Select segment type"
@@ -1918,7 +1912,7 @@ export default function SegmentManagementPage() {
                                 setSelectedTags((prev) => [...prev, tag]);
                               } else {
                                 setSelectedTags((prev) =>
-                                  prev.filter((t) => t !== tag)
+                                  prev.filter((t) => t !== tag),
                                 );
                               }
                             }}
@@ -1958,7 +1952,7 @@ export default function SegmentManagementPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

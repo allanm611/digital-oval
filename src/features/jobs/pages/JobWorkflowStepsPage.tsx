@@ -28,6 +28,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
@@ -84,7 +85,7 @@ export default function JobWorkflowStepsPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingStep, setDeletingStep] = useState<JobWorkflowStep | null>(
-    null
+    null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
   const [rowLoading, setRowLoading] = useState<{
@@ -92,7 +93,7 @@ export default function JobWorkflowStepsPage() {
     action: "clone";
   } | null>(null);
   const [validateLoadingId, setValidateLoadingId] = useState<number | null>(
-    null
+    null,
   );
   const [jobMap, setJobMap] = useState<Record<number, ScheduledJob>>({});
   // Bulk selection and batch operations
@@ -173,7 +174,7 @@ export default function JobWorkflowStepsPage() {
             const step = await jobWorkflowStepService.getStepByJobAndCode(
               Number(jobIdFilter),
               stepCodeFilter.trim(),
-              true
+              true,
             );
             response = { data: [step], count: 1 };
           } catch (err) {
@@ -193,7 +194,7 @@ export default function JobWorkflowStepsPage() {
             const step = await jobWorkflowStepService.getStepByJobAndOrder(
               Number(jobIdFilter),
               Number(stepOrderFilter),
-              true
+              true,
             );
             response = { data: [step], count: 1 };
           } catch (err) {
@@ -269,7 +270,8 @@ export default function JobWorkflowStepsPage() {
           };
         } else if (showOrphanedSteps) {
           // Get orphaned steps - these endpoints don't support pagination, so we'll get all and paginate client-side
-          const allResponse = await jobWorkflowStepService.getOrphanedSteps(true);
+          const allResponse =
+            await jobWorkflowStepService.getOrphanedSteps(true);
           const allSteps = allResponse.data || [];
           const startIndex = page * pageSize;
           const endIndex = startIndex + pageSize;
@@ -330,7 +332,7 @@ export default function JobWorkflowStepsPage() {
               const failureActionResponse =
                 await jobWorkflowStepService.getStepsByFailureAction(
                   failureActionFilter,
-                  true
+                  true,
                 );
               if (
                 failureActionResponse.data &&
@@ -345,9 +347,8 @@ export default function JobWorkflowStepsPage() {
           if (parallelGroupIdFilter) {
             params.parallel_group_id = Number(parallelGroupIdFilter);
           }
-          response = await jobWorkflowStepService.searchJobWorkflowSteps(
-            params
-          );
+          response =
+            await jobWorkflowStepService.searchJobWorkflowSteps(params);
         } else {
           // Use list endpoint
           const params = {
@@ -368,7 +369,7 @@ export default function JobWorkflowStepsPage() {
           return a.step_order - b.step_order;
         });
         setSteps(sortedSteps);
-        
+
         // Update total count from pagination response
         if (response.pagination?.total !== undefined) {
           setTotalCount(response.pagination.total);
@@ -406,7 +407,7 @@ export default function JobWorkflowStepsPage() {
       showError,
       page,
       pageSize,
-    ]
+    ],
   );
 
   const fetchStats = useCallback(async () => {
@@ -477,7 +478,7 @@ export default function JobWorkflowStepsPage() {
           typeof healthData.steps_with_validation === "number"
             ? healthData.steps_with_validation
             : steps.filter(
-                (s) => s.pre_validation_query || s.post_validation_query
+                (s) => s.pre_validation_query || s.post_validation_query,
               ).length,
         parallelGroups:
           typeof healthData.parallel_groups === "number"
@@ -485,7 +486,7 @@ export default function JobWorkflowStepsPage() {
             : new Set(
                 steps
                   .filter((s) => s.parallel_group_id)
-                  .map((s) => s.parallel_group_id)
+                  .map((s) => s.parallel_group_id),
               ).size,
       });
     } catch (err) {
@@ -556,7 +557,7 @@ export default function JobWorkflowStepsPage() {
   };
 
   const handleBatchAction = async (
-    action: "activate" | "deactivate" | "delete" | "update"
+    action: "activate" | "deactivate" | "delete" | "update",
   ) => {
     if (selectedSteps.size === 0) return;
 
@@ -600,7 +601,7 @@ export default function JobWorkflowStepsPage() {
           `Batch ${action} completed`,
           `${result.success} step(s) ${action}d successfully${
             result.failed > 0 ? `, ${result.failed} failed` : ""
-          }`
+          }`,
         );
       }
 
@@ -610,7 +611,7 @@ export default function JobWorkflowStepsPage() {
     } catch (err) {
       showError(
         `Batch ${action} failed`,
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -621,7 +622,7 @@ export default function JobWorkflowStepsPage() {
     if (!jobIdFilter) {
       showError(
         "Job ID required",
-        "Please filter by a specific job to reorder steps."
+        "Please filter by a specific job to reorder steps.",
       );
       return;
     }
@@ -697,18 +698,18 @@ export default function JobWorkflowStepsPage() {
         Number(jobIdFilter),
         {
           stepOrderMapping,
-        }
+        },
       );
 
       if (result.data?.updated && result.data.updated > 0) {
         showToast(
           "Steps reordered",
-          `${result.data.updated} step(s) reordered successfully.`
+          `${result.data.updated} step(s) reordered successfully.`,
         );
       } else {
         showToast(
           "Steps reordered",
-          "Step order has been updated successfully."
+          "Step order has been updated successfully.",
         );
       }
 
@@ -718,7 +719,7 @@ export default function JobWorkflowStepsPage() {
     } catch (err) {
       showError(
         "Reorder failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsReordering(false);
@@ -730,12 +731,11 @@ export default function JobWorkflowStepsPage() {
 
     setIsDeletingAll(true);
     try {
-      const result = await jobWorkflowStepService.deleteAllStepsForJob(
-        deleteAllJobId
-      );
+      const result =
+        await jobWorkflowStepService.deleteAllStepsForJob(deleteAllJobId);
       showToast(
         "All steps deleted",
-        `${result.deleted_count} step(s) deleted successfully.`
+        `${result.deleted_count} step(s) deleted successfully.`,
       );
       setShowDeleteAllModal(false);
       setDeleteAllJobId(null);
@@ -743,7 +743,7 @@ export default function JobWorkflowStepsPage() {
     } catch (err) {
       showError(
         "Delete failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsDeletingAll(false);
@@ -771,7 +771,7 @@ export default function JobWorkflowStepsPage() {
         "Batch update completed",
         `${result.success} step(s) updated successfully${
           result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`
+        }`,
       );
 
       setShowBatchUpdateModal(false);
@@ -782,7 +782,7 @@ export default function JobWorkflowStepsPage() {
     } catch (err) {
       showError(
         "Batch update failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchUpdating(false);
@@ -794,22 +794,21 @@ export default function JobWorkflowStepsPage() {
       await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
-        `"${step.step_name}" has been duplicated successfully.`
+        `"${step.step_name}" has been duplicated successfully.`,
       );
       fetchSteps();
     } catch (err) {
       showError(
         "Failed to duplicate step",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     }
   };
 
   const handleValidateIntegrity = async (jobId: number) => {
     try {
-      const result = await jobWorkflowStepService.validateWorkflowIntegrity(
-        jobId
-      );
+      const result =
+        await jobWorkflowStepService.validateWorkflowIntegrity(jobId);
       type IntegrityResult = {
         isValid?: boolean;
         valid?: boolean;
@@ -830,20 +829,20 @@ export default function JobWorkflowStepsPage() {
           "Workflow Valid",
           warnings.length > 0
             ? `Workflow is valid. Warnings: ${warnings.join(", ")}`
-            : "Workflow is valid with no issues."
+            : "Workflow is valid with no issues.",
         );
       } else {
         showError(
           "Workflow Validation Failed",
           errors.length > 0
             ? `Errors: ${errors.join(", ")}`
-            : "Validation failed."
+            : "Validation failed.",
         );
       }
     } catch (err) {
       showError(
         "Validation failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     }
   };
@@ -929,28 +928,19 @@ export default function JobWorkflowStepsPage() {
             )}
             {isSelectionMode ? "Exit Selection" : "Select Steps"}
           </button>
-          <button
-            onClick={() => {
-              if (jobIdFilter) {
-                navigate(
-                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
-                );
-              } else {
-                navigate("/dashboard/job-workflow-steps/create");
-              }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="h-4 w-4" />
-            Create Step
-          </button>
+          <CreateButton
+            route={
+              jobIdFilter
+                ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
+                : "/dashboard/job-workflow-steps/create"
+            }
+          />
           {jobIdFilter && (
             <button
               onClick={() => {
                 // Open batch create modal - for now navigate to create page
                 navigate(
-                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`
+                  `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}&batch=true`,
                 );
               }}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -1153,7 +1143,7 @@ export default function JobWorkflowStepsPage() {
               onClick={() => {
                 if (
                   window.confirm(
-                    `Are you sure you want to delete ${selectedSteps.size} step(s)? This action cannot be undone.`
+                    `Are you sure you want to delete ${selectedSteps.size} step(s)? This action cannot be undone.`,
                   )
                 ) {
                   handleBatchAction("delete");
@@ -1394,7 +1384,7 @@ export default function JobWorkflowStepsPage() {
                             navigate(
                               `/dashboard/job-workflow-steps/${step.id}${
                                 jobIdFilter ? `?job_id=${jobIdFilter}` : ""
-                              }`
+                              }`,
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
@@ -1408,7 +1398,7 @@ export default function JobWorkflowStepsPage() {
                             navigate(
                               `/dashboard/job-workflow-steps/${step.id}/edit${
                                 jobIdFilter ? `?job_id=${jobIdFilter}` : ""
-                              }`
+                              }`,
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600 transition-colors`}
@@ -1422,7 +1412,7 @@ export default function JobWorkflowStepsPage() {
                             setRowLoading({ id: step.id, action: "clone" });
                             await handleDuplicateStep(step);
                             setRowLoading((prev) =>
-                              prev?.id === step.id ? null : prev
+                              prev?.id === step.id ? null : prev,
                             );
                           }}
                           disabled={
@@ -1445,10 +1435,10 @@ export default function JobWorkflowStepsPage() {
                             onClick={async () => {
                               setValidateLoadingId(Number(jobIdFilter));
                               await handleValidateIntegrity(
-                                Number(jobIdFilter)
+                                Number(jobIdFilter),
                               );
                               setValidateLoadingId((prev) =>
-                                prev === Number(jobIdFilter) ? null : prev
+                                prev === Number(jobIdFilter) ? null : prev,
                               );
                             }}
                             disabled={validateLoadingId === Number(jobIdFilter)}
@@ -1502,15 +1492,13 @@ export default function JobWorkflowStepsPage() {
                 Previous
               </button>
               <span className="text-gray-500">
-                Page {page + 1} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+                Page {page + 1} of{" "}
+                {Math.max(1, Math.ceil(totalCount / pageSize))}
               </span>
               <button
                 onClick={() =>
                   setPage((prev) =>
-                    Math.min(
-                      Math.ceil(totalCount / pageSize) - 1,
-                      prev + 1
-                    )
+                    Math.min(Math.ceil(totalCount / pageSize) - 1, prev + 1),
                   )
                 }
                 disabled={page + 1 >= Math.ceil(totalCount / pageSize)}
@@ -1535,11 +1523,11 @@ export default function JobWorkflowStepsPage() {
             try {
               setIsDeleting(true);
               await jobWorkflowStepService.deleteJobWorkflowStep(
-                deletingStep.id
+                deletingStep.id,
               );
               showToast(
                 "Workflow step deleted",
-                `"${deletingStep.step_name}" has been deleted successfully.`
+                `"${deletingStep.step_name}" has been deleted successfully.`,
               );
               setShowDeleteModal(false);
               setDeletingStep(null);
@@ -1628,7 +1616,7 @@ export default function JobWorkflowStepsPage() {
                         value={stepOrderFilter || ""}
                         onChange={(e) =>
                           setStepOrderFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="Enter step order"
@@ -1657,7 +1645,7 @@ export default function JobWorkflowStepsPage() {
                         }
                         onChange={(value) =>
                           setIsCriticalFilter(
-                            value === "" ? "" : value === "true" ? true : false
+                            value === "" ? "" : value === "true" ? true : false,
                           )
                         }
                         placeholder="All"
@@ -1683,7 +1671,7 @@ export default function JobWorkflowStepsPage() {
                         }
                         onChange={(value) =>
                           setIsParallelFilter(
-                            value === "" ? "" : value === "true" ? true : false
+                            value === "" ? "" : value === "true" ? true : false,
                           )
                         }
                         placeholder="All"
@@ -1707,7 +1695,7 @@ export default function JobWorkflowStepsPage() {
                         }
                         onChange={(value) =>
                           setIsActiveFilter(
-                            value === "" ? "" : value === "true" ? true : false
+                            value === "" ? "" : value === "true" ? true : false,
                           )
                         }
                         placeholder="All"
@@ -1796,7 +1784,7 @@ export default function JobWorkflowStepsPage() {
                         value={parallelGroupIdFilter || ""}
                         onChange={(e) =>
                           setParallelGroupIdFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Groups"
@@ -1838,7 +1826,7 @@ export default function JobWorkflowStepsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Reorder Steps Modal */}
@@ -1898,8 +1886,8 @@ export default function JobWorkflowStepsPage() {
                           draggedItem === idx
                             ? "opacity-50 border border-gray-400 bg-gray-100"
                             : dragOverIndex === idx
-                            ? "border border-gray-400 bg-gray-100 border-dashed"
-                            : "border-gray-200 bg-gray-50 hover:bg-gray-100"
+                              ? "border border-gray-400 bg-gray-100 border-dashed"
+                              : "border-gray-200 bg-gray-50 hover:bg-gray-100"
                         }`}
                       >
                         <div className="flex items-center gap-3 flex-1">
@@ -1970,7 +1958,7 @@ export default function JobWorkflowStepsPage() {
                     ))}
                   </div>
                   {reorderData.some(
-                    (item) => item.currentOrder !== item.newOrder
+                    (item) => item.currentOrder !== item.newOrder,
                   ) && (
                     <div
                       className={`mt-4 ${tw.rounded} border p-3`}
@@ -2012,7 +2000,7 @@ export default function JobWorkflowStepsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete All Steps Modal */}
@@ -2299,7 +2287,7 @@ export default function JobWorkflowStepsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

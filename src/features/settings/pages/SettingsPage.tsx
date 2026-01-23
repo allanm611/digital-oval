@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, Moon, Sun } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useTheme } from "../../../contexts/ThemeContext";
+import { useNotificationSettings } from "../../../contexts/NotificationSettingsContext";
 import { setLanguageSettings } from "../../../shared/services/languageService";
 import { formatDate } from "../../../shared/services/dateService";
 import { tw } from "../../../shared/utils/utils";
@@ -178,11 +180,17 @@ interface SettingsType {
   dnd_start_time: string;
   dnd_end_time: string;
   dnd_days: string;
+  theme: "light" | "dark";
 }
 
 export default function SettingsPage() {
   const { success: showToast } = useToast();
   const { setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const {
+    settings: notificationSettings,
+    updateSettings: updateNotificationSettings,
+  } = useNotificationSettings();
 
   // Load settings from localStorage or use defaults (Kenya/KES)
   const loadSettings = (): SettingsType => {
@@ -208,6 +216,7 @@ export default function SettingsPage() {
           dnd_start_time: parsed.dnd_start_time || "21:00",
           dnd_end_time: parsed.dnd_end_time || "08:00",
           dnd_days: parsed.dnd_days || "daily",
+          theme: parsed.theme || "light",
         };
       }
     } catch (error) {
@@ -230,6 +239,7 @@ export default function SettingsPage() {
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",
       dnd_days: "daily",
+      theme: "light",
     };
   };
 
@@ -325,6 +335,11 @@ export default function SettingsPage() {
     setSettings({ ...settings, dnd_days });
   };
 
+  const handleThemeChange = (newTheme: "light" | "dark") => {
+    setSettings({ ...settings, theme: newTheme });
+    setTheme(newTheme);
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
@@ -335,6 +350,8 @@ export default function SettingsPage() {
       // Update language if it changed
       setLanguageSettings(settings.language);
       setLanguage(settings.language);
+      // Update theme if it changed
+      setTheme(settings.theme);
       showToast(t.messages.saved);
     } catch (err) {
       console.error("Failed to save settings:", err);
@@ -894,6 +911,264 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Theme Settings Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Display Theme
+            </h2>
+            <p className="text-sm text-gray-500">
+              Choose your preferred color scheme
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2.5">
+              Theme
+            </label>
+            <HeadlessSelect
+              value={settings.theme}
+              onChange={(value) => handleThemeChange(value as "light" | "dark")}
+              options={[
+                { label: "Light - Bright and clean", value: "light" },
+                { label: "Dark - Easy on the eyes", value: "dark" },
+              ]}
+              placeholder="Select theme"
+            />
+            <p className="text-xs text-gray-400 mt-3">
+              Changes apply immediately when saved
+            </p>
+          </div>
+        </div>
+
+        {/* Notification Preferences Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Notification Preferences
+            </h2>
+            <p className="text-sm text-gray-500">
+              Configure how and when you receive notifications
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {/* Email Notifications */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Email Notifications
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Receive updates via email
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.email_notifications_enabled}
+                  onChange={(e) =>
+                    updateNotificationSettings({
+                      email_notifications_enabled: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 text-emerald-600 rounded"
+                />
+              </div>
+
+              {notificationSettings.email_notifications_enabled && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Email Digest Frequency
+                  </label>
+                  <HeadlessSelect
+                    value={notificationSettings.email_digest_frequency}
+                    onChange={(value) =>
+                      updateNotificationSettings({
+                        email_digest_frequency: value as any,
+                      })
+                    }
+                    options={[
+                      {
+                        label: "Instant - Get notified immediately",
+                        value: "instant",
+                      },
+                      {
+                        label: "Daily Digest - Summary once per day",
+                        value: "daily",
+                      },
+                      {
+                        label: "Weekly Digest - Summary once per week",
+                        value: "weekly",
+                      },
+                      {
+                        label: "Never - Disable email notifications",
+                        value: "never",
+                      },
+                    ]}
+                    placeholder="Select frequency"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* In-App Notifications */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    In-App Notifications
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Show notifications in the app
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.in_app_notifications_enabled}
+                  onChange={(e) =>
+                    updateNotificationSettings({
+                      in_app_notifications_enabled: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 text-emerald-600 rounded"
+                />
+              </div>
+
+              {notificationSettings.in_app_notifications_enabled && (
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={notificationSettings.in_app_sound_enabled}
+                      onChange={(e) =>
+                        updateNotificationSettings({
+                          in_app_sound_enabled: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-emerald-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Play sound for notifications
+                    </span>
+                  </label>
+                  {notificationSettings.in_app_sound_enabled && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-2">
+                        Notification Sound
+                      </label>
+                      <HeadlessSelect
+                        value={
+                          notificationSettings.notification_sound || "default"
+                        }
+                        onChange={(value) =>
+                          updateNotificationSettings({
+                            notification_sound: value as any,
+                          })
+                        }
+                        options={[
+                          {
+                            label: "Default - Classic notification",
+                            value: "default",
+                          },
+                          { label: "Chime - Soft bell sound", value: "chime" },
+                          { label: "Ding - Quick alert", value: "ding" },
+                          { label: "Pop - Subtle pop", value: "pop" },
+                          { label: "Tone - Professional tone", value: "tone" },
+                        ]}
+                        placeholder="Select sound"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Browser Notifications */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Browser Notifications
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Desktop push notifications even when app is closed
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.desktop_notifications_enabled}
+                  onChange={(e) =>
+                    updateNotificationSettings({
+                      desktop_notifications_enabled: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 text-emerald-600 rounded"
+                />
+              </div>
+            </div>
+
+            {/* SMS Alerts */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    SMS Alerts
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Critical alerts via SMS (may incur charges)
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={notificationSettings.sms_alerts_enabled}
+                  onChange={(e) =>
+                    updateNotificationSettings({
+                      sms_alerts_enabled: e.target.checked,
+                    })
+                  }
+                  className="w-5 h-5 text-emerald-600 rounded"
+                />
+              </div>
+            </div>
+
+            {/* Notification Categories */}
+            <div className="border-t border-gray-200 pt-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                Notification Categories
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {Object.entries(
+                  notificationSettings.notification_categories,
+                ).map(([category, enabled]) => (
+                  <label key={category} className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={enabled}
+                      onChange={(e) =>
+                        updateNotificationSettings({
+                          notification_categories: {
+                            ...notificationSettings.notification_categories,
+                            [category]: e.target.checked,
+                          },
+                        })
+                      }
+                      className="w-4 h-4 text-emerald-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700 capitalize">
+                      {category.replace("_", " ")}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

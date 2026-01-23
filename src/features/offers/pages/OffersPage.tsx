@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Plus,
   Search,
   Clock,
   MoreHorizontal,
@@ -25,6 +24,7 @@ import { offerCategoryService } from "../services/offerCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -58,10 +58,10 @@ export default function OffersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<OfferStatusEnum | "all">(
-    "all"
+    "all",
   );
   const [selectedApproval, setSelectedApproval] = useState<string | "all">(
-    "all"
+    "all",
   );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
@@ -125,7 +125,7 @@ export default function OffersPage() {
             limit: filters.limit || 10,
             offset: filters.offset || 0,
             skipCache: skipCache,
-          }
+          },
         );
 
         if (response.success && response.data) {
@@ -135,14 +135,14 @@ export default function OffersPage() {
           // Filter by status if selected
           if (selectedStatus && selectedStatus !== "all") {
             filteredOffers = filteredOffers.filter(
-              (offer) => offer.status === selectedStatus
+              (offer) => offer.status === selectedStatus,
             );
           } else if (selectedStatus === "all") {
             // By default, exclude archived and expired offers
             filteredOffers = filteredOffers.filter(
               (offer) =>
                 offer.status !== OfferStatusEnum.ARCHIVED &&
-                offer.status !== OfferStatusEnum.EXPIRED
+                offer.status !== OfferStatusEnum.EXPIRED,
             );
           }
 
@@ -153,7 +153,7 @@ export default function OffersPage() {
               (offer) =>
                 offer.name?.toLowerCase().includes(searchLower) ||
                 offer.code?.toLowerCase().includes(searchLower) ||
-                offer.description?.toLowerCase().includes(searchLower)
+                offer.description?.toLowerCase().includes(searchLower),
             );
           }
 
@@ -221,14 +221,14 @@ export default function OffersPage() {
           let filteredOffers = allOffers;
           if (selectedStatus && selectedStatus !== "all") {
             filteredOffers = filteredOffers.filter(
-              (offer) => offer.status === selectedStatus
+              (offer) => offer.status === selectedStatus,
             );
           } else if (selectedStatus === "all") {
             // By default, exclude archived and expired offers
             filteredOffers = filteredOffers.filter(
               (offer) =>
                 offer.status !== OfferStatusEnum.ARCHIVED &&
-                offer.status !== OfferStatusEnum.EXPIRED
+                offer.status !== OfferStatusEnum.EXPIRED,
             );
           }
 
@@ -269,7 +269,7 @@ export default function OffersPage() {
         "Failed to load offers",
         filters.categoryId
           ? "Unable to retrieve offers for this category."
-          : "Unable to retrieve offers. Please try again."
+          : "Unable to retrieve offers. Please try again.",
       );
     } catch (err) {
       // Only show error if it's an actual exception (network error, etc.)
@@ -288,7 +288,7 @@ export default function OffersPage() {
   const getCategoryName = (categoryId: string | number | undefined): string => {
     if (!categoryId) return "Uncategorized";
     const category = categories.find(
-      (cat) => String(cat.id) === String(categoryId)
+      (cat) => String(cat.id) === String(categoryId),
     );
     return category?.name || "Uncategorized";
   };
@@ -345,19 +345,19 @@ export default function OffersPage() {
           active = allOffers.filter(
             (offer) =>
               offer.status === OfferStatusEnum.ACTIVE ||
-              offer.status === OfferStatusEnum.APPROVED
+              offer.status === OfferStatusEnum.APPROVED,
           ).length;
 
           // Expired offers
           expired = allOffers.filter(
-            (offer) => offer.status === OfferStatusEnum.EXPIRED
+            (offer) => offer.status === OfferStatusEnum.EXPIRED,
           ).length;
 
           // Pending approval = pending_approval + draft
           pendingApproval = allOffers.filter(
             (offer) =>
               offer.status === OfferStatusEnum.PENDING_APPROVAL ||
-              offer.status === OfferStatusEnum.DRAFT
+              offer.status === OfferStatusEnum.DRAFT,
           ).length;
         } else {
           // Fallback: try stats endpoint
@@ -445,7 +445,7 @@ export default function OffersPage() {
 
   const handleFilterChange = (
     key: keyof SearchParams,
-    value: string | number | boolean | undefined
+    value: string | number | boolean | undefined,
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -466,7 +466,7 @@ export default function OffersPage() {
   // Calculate dropdown position
   const handleActionMenuToggle = (
     offerId: number,
-    event?: React.MouseEvent<HTMLButtonElement>
+    event?: React.MouseEvent<HTMLButtonElement>,
   ) => {
     if (showActionMenu === offerId) {
       setShowActionMenu(null);
@@ -512,7 +512,7 @@ export default function OffersPage() {
             // Get max scroll position
             const documentHeight = Math.max(
               document.documentElement.scrollHeight,
-              document.body.scrollHeight
+              document.body.scrollHeight,
             );
             const maxScrollY = Math.max(0, documentHeight - window.innerHeight);
             const finalScrollY = Math.min(newScrollY, maxScrollY);
@@ -547,7 +547,7 @@ export default function OffersPage() {
             // After scrolling, we should have enough space
             const maxHeight = Math.max(
               estimatedDropdownHeight,
-              updatedSpaceBelow + 100
+              updatedSpaceBelow + 100,
             );
 
             setDropdownPosition({ top, left, maxHeight });
@@ -582,12 +582,12 @@ export default function OffersPage() {
       const target = event.target as Node;
       // Check if click is inside any action menu button
       const clickedInsideButton = Object.values(actionMenuRefs.current).some(
-        (ref) => ref && ref.contains(target)
+        (ref) => ref && ref.contains(target),
       );
 
       // Check if click is inside any dropdown menu (portal)
       const clickedInsideDropdown = Object.values(
-        dropdownMenuRefs.current
+        dropdownMenuRefs.current,
       ).some((ref) => ref && ref.contains(target));
 
       // Only close if clicked outside both button and dropdown
@@ -601,7 +601,7 @@ export default function OffersPage() {
       return () => {
         document.removeEventListener(
           "mousedown",
-          handleClickOutsideActionMenus
+          handleClickOutsideActionMenus,
         );
       };
     }
@@ -621,7 +621,7 @@ export default function OffersPage() {
       await offerService.deleteOffer(offerToDelete.id);
       success(
         "Offer Deleted",
-        `"${offerToDelete.name}" has been deleted successfully.`
+        `"${offerToDelete.name}" has been deleted successfully.`,
       );
       await loadOffers(true); // Skip cache for immediate update
       fetchOfferStats(); // Refresh stats cards
@@ -650,8 +650,8 @@ export default function OffersPage() {
           prevOffers.map((offer) =>
             Number(offer.id) === id
               ? { ...offer, lifecycle_status: newStatus as string }
-              : offer
-          )
+              : offer,
+          ),
         );
       } else {
         // Fallback: reload if response doesn't include status
@@ -719,8 +719,8 @@ export default function OffersPage() {
           prevOffers.map((offer) =>
             Number(offer.id) === id
               ? { ...offer, lifecycle_status: newStatus as string }
-              : offer
-          )
+              : offer,
+          ),
         );
       } else {
         // Fallback: reload if response doesn't include status
@@ -770,8 +770,8 @@ export default function OffersPage() {
           prevOffers.map((offer) =>
             Number(offer.id) === id
               ? { ...offer, lifecycle_status: newStatus as string }
-              : offer
-          )
+              : offer,
+          ),
         );
       } else {
         // Fallback: reload if response doesn't include status
@@ -795,7 +795,7 @@ export default function OffersPage() {
       await offerService.requestApproval(id);
       success(
         "Approval Requested",
-        "Approval request has been sent successfully."
+        "Approval request has been sent successfully.",
       );
       await loadOffers(true); // Skip cache for immediate update
       fetchOfferStats(); // Refresh stats cards
@@ -964,8 +964,8 @@ export default function OffersPage() {
       (offer.status === "approved"
         ? "approved"
         : offer.status === "rejected"
-        ? "rejected"
-        : "pending") === selectedApproval;
+          ? "rejected"
+          : "pending") === selectedApproval;
 
     return matchesSearch && matchesStatus && matchesApproval;
   });
@@ -1010,14 +1010,7 @@ export default function OffersPage() {
             {t.pages.offersDescription}
           </p>
         </div>
-        <button
-          onClick={() => navigate("/dashboard/offers/create")}
-          className={`inline-flex items-center px-4 py-2 text-sm font-semibold ${tw.rounded} shadow-sm transition-all duration-200 text-white`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t.pages.createOffer}
-        </button>
+        <CreateButton route="/dashboard/offers/create" />
       </div>
 
       {/* Offer Stats Cards */}
@@ -1130,14 +1123,9 @@ export default function OffersPage() {
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className={`${tw.textSecondary}`}>No offers found</p>
-              <button
-                onClick={() => navigate("/dashboard/offers/create")}
-                className={`mt-4 inline-flex items-center px-3 py-2 text-base text-white font-semibold ${tw.rounded} shadow-sm transition-all duration-200`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Create Your First Offer
-              </button>
+              <div className="mt-4">
+                <CreateButton route="/dashboard/offers/create" />
+              </div>
             </div>
           </div>
         ) : (
@@ -1219,18 +1207,18 @@ export default function OffersPage() {
                           getCategoryName(offer.category_id) === "Data Offers"
                             ? `bg-[${color.status.info}]/10 text-[${color.status.info}]`
                             : getCategoryName(offer.category_id) ===
-                              "Voice Offers"
-                            ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
-                            : getCategoryName(offer.category_id) ===
-                              "Combo Offers"
-                            ? `bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`
-                            : getCategoryName(offer.category_id) ===
-                              "Loyalty Rewards"
-                            ? `bg-[${color.status.warning}]/10 text-[${color.status.warning}]`
-                            : getCategoryName(offer.category_id) ===
-                              "Promotional"
-                            ? `bg-[${color.primary.action}]/10 text-[${color.primary.action}]`
-                            : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
+                                "Voice Offers"
+                              ? `bg-[${color.status.success}]/10 text-[${color.status.success}]`
+                              : getCategoryName(offer.category_id) ===
+                                  "Combo Offers"
+                                ? `bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`
+                                : getCategoryName(offer.category_id) ===
+                                    "Loyalty Rewards"
+                                  ? `bg-[${color.status.warning}]/10 text-[${color.status.warning}]`
+                                  : getCategoryName(offer.category_id) ===
+                                      "Promotional"
+                                    ? `bg-[${color.primary.action}]/10 text-[${color.primary.action}]`
+                                    : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
                         }`}
                       >
                         {getCategoryName(offer.category_id)}
@@ -1250,8 +1238,8 @@ export default function OffersPage() {
                         offer.status === "approved"
                           ? "approved"
                           : offer.status === "rejected"
-                          ? "rejected"
-                          : "pending"
+                            ? "rejected"
+                            : "pending",
                       )}
                     </td>
                     <td
@@ -1645,7 +1633,7 @@ export default function OffersPage() {
                           Delete Offer
                         </button>
                       </div>,
-                      document.body
+                      document.body,
                     );
                   }
                   // Clean up ref when dropdown is closed
@@ -1673,7 +1661,7 @@ export default function OffersPage() {
               to{" "}
               {Math.min(
                 (filters.page || 1) * (filters.pageSize || 10),
-                totalOffers
+                totalOffers,
               )}{" "}
               of {totalOffers} offers
             </div>
@@ -1773,7 +1761,7 @@ export default function OffersPage() {
                           checked={selectedStatus === option.value}
                           onChange={() =>
                             handleStatusFilter(
-                              option.value as OfferStatusEnum | "all"
+                              option.value as OfferStatusEnum | "all",
                             )
                           }
                           className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
@@ -1843,7 +1831,7 @@ export default function OffersPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

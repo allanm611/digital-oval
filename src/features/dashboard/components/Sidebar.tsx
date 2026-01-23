@@ -36,6 +36,7 @@ import {
   Link2,
   PlayCircle,
   GitBranch,
+  ChevronLeft,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -79,6 +80,8 @@ const hideScrollbarStyle = `
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isMinimized?: boolean;
+  onMinimizeChange?: (minimized: boolean) => void;
 }
 
 interface NavigationItem {
@@ -100,12 +103,24 @@ interface NavigationItem {
     | "servers";
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({
+  isOpen,
+  onClose,
+  isMinimized: initialMinimized = false,
+  onMinimizeChange,
+}: SidebarProps) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const previousPathnameRef = useRef<string>("");
   const { user, logout } = useAuth();
   const [currentUserRole, setCurrentUserRole] = useState<string>("User");
+
+  const handleMinimizeToggle = useCallback(() => {
+    const newState = !isMinimized;
+    setIsMinimized(newState);
+    onMinimizeChange?.(newState);
+  }, [isMinimized, onMinimizeChange]);
 
   const loadCurrentUserRole = useCallback(async () => {
     if (!user?.user_id) {
@@ -928,14 +943,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       )}
 
       {/* Desktop Sidebar - Minimized on md/lg, Full on xl */}
-      <div className="hidden md:fixed md:inset-y-0 md:z-50 md:flex md:w-32 xl:w-80 md:flex-col">
+      <div
+        className={`hidden md:fixed md:inset-y-0 md:z-50 md:flex md:flex-col transition-all duration-300 ${isMinimized ? "md:w-24 xl:w-24" : "md:w-32 xl:w-80"}`}
+      >
         <div
           className="flex flex-col h-screen md:px-3 xl:px-6 md:pt-2 xl:pt-0 pb-6"
           style={{
             background: `linear-gradient(to bottom, ${color.gradients.sidebar.top} 0%, ${color.gradients.sidebar.middle} 70%, ${color.gradients.sidebar.bottom} 100%)`,
           }}
         >
-          <div className="md:h-0 xl:h-16 md:hidden xl:flex items-center flex-shrink-0 xl:justify-start xl:px-5">
+          <div className="md:h-0 xl:h-16 md:hidden xl:flex items-center flex-shrink-0 xl:justify-between xl:px-5">
             <Link
               to="/landingpage"
               onClick={handleLinkClick}
@@ -947,10 +964,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="w-full h-full object-contain"
               />
             </Link>
+            <button
+              onClick={handleMinimizeToggle}
+              className={`hidden xl:flex items-center justify-center p-2 rounded-lg hover:bg-white/10 transition-all duration-300 ${isMinimized ? "-ml-2" : ""}`}
+              title={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
+            >
+              {isMinimized ? (
+                <ChevronRight className="h-5 w-5 text-white/70 hover:text-white" />
+              ) : (
+                <ChevronLeft className="h-5 w-5 text-white/70 hover:text-white" />
+              )}
+            </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto md:py-2 xl:py-4 hide-scrollbar">
-            <ul className="md:space-y-6 xl:space-y-3">
+            <ul
+              className={`md:space-y-6 ${isMinimized ? "xl:space-y-4" : "xl:space-y-3"}`}
+            >
               {navigation.map((item, index) => {
                 const Icon = item.icon;
                 const isActive = isItemActive(item);
@@ -976,7 +1006,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             parentItemNames,
                           )
                         }
-                        className={`group w-full flex items-center md:justify-center xl:justify-between ${
+                        className={`group w-full flex items-center ${
+                          isMinimized
+                            ? "md:justify-center xl:justify-center"
+                            : "md:justify-center xl:justify-between"
+                        } ${
                           tw.rounded
                         } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                           !isActive ? "hover:scale-105 hover:shadow-lg" : ""
@@ -989,18 +1023,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                               isActive,
                             )}`}
                           />
-                          <span className="hidden xl:block">{item.name}</span>
+                          <span
+                            className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                          >
+                            {item.name}
+                          </span>
                         </div>
                         {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-gray-400 hidden xl:block" />
+                          <ChevronDown
+                            className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                          />
                         ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-400 hidden xl:block" />
+                          <ChevronRight
+                            className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                          />
                         )}
                       </button>
 
                       {/* Tooltip for minimized sidebar */}
                       <div
-                        className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
+                        className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                         style={{
                           top: "50%",
                           transform: "translateY(-50%)",
@@ -1013,7 +1055,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                       <div
                         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isExpanded
+                          !isMinimized && isExpanded
                             ? "max-h-[1000px] opacity-100"
                             : "max-h-0 opacity-0"
                         }`}
@@ -1062,7 +1104,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                   {/* Tooltip for child */}
                                   <div
-                                    className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
+                                    className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                                     style={{
                                       top: "50%",
                                       transform: "translateY(-50%)",
@@ -1106,7 +1148,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                             {/* Tooltip for grandchild */}
                                             <div
-                                              className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
+                                              className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
                                               style={{
                                                 top: "50%",
                                                 transform: "translateY(-50%)",
@@ -1152,7 +1194,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                                 {/* Tooltip for child */}
                                 <div
-                                  className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
+                                  className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                                   style={{
                                     top: "50%",
                                     transform: "translateY(-50%)",
@@ -1195,12 +1237,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           isActive,
                         )}`}
                       />
-                      <span className="hidden xl:block">{item.name}</span>
+                      <span
+                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                      >
+                        {item.name}
+                      </span>
                     </Link>
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-                      className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
+                      className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",
@@ -1246,12 +1292,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           isActive,
                         )}`}
                       />
-                      <span className="hidden xl:block">{item.name}</span>
+                      <span
+                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                      >
+                        {item.name}
+                      </span>
                     </Link>
 
                     {/* Tooltip for minimized sidebar */}
                     <div
-                      className={`md:block xl:hidden absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
+                      className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-sm font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl`}
                       style={{
                         top: "50%",
                         transform: "translateY(-50%)",

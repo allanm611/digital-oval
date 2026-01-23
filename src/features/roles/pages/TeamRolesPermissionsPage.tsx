@@ -464,7 +464,7 @@ export default function TeamRolesPermissionsPage() {
             className={`${tw.button} flex items-center gap-2 flex-shrink-0`}
           >
             <Plus className="w-4 h-4" />
-            {activeTab === "roles" ? "Create Role" : "Create Permission"}
+            Create
           </button>
         )}
       </div>

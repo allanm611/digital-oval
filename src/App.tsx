@@ -5,12 +5,14 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import React, { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { NotificationSettingsProvider } from "./contexts/NotificationSettingsContext";
 import { color } from "./shared/utils/utils";
 
 // ScrollToTop component to scroll to top on route change
@@ -31,7 +33,7 @@ function ScrollToTop() {
       }
       // Scroll any scrollable containers
       const scrollableContainers = document.querySelectorAll(
-        '[style*="overflow"], [class*="overflow"]'
+        '[style*="overflow"], [class*="overflow"]',
       );
       scrollableContainers.forEach((container) => {
         if (container instanceof HTMLElement && container.scrollTop > 0) {
@@ -64,14 +66,14 @@ function ScrollToTop() {
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
 const RequestAccountPage = lazy(
-  () => import("./features/auth/pages/RequestAccountPage")
+  () => import("./features/auth/pages/RequestAccountPage"),
 );
 const ResetPasswordPage = lazy(
-  () => import("./features/auth/pages/ResetPasswordPage")
+  () => import("./features/auth/pages/ResetPasswordPage"),
 );
 const LandingPage = lazy(() => import("./features/auth/pages/LandingPage"));
 const AuthenticatedLandingPage = lazy(
-  () => import("./features/dashboard/components/AuthenticatedLandingPage")
+  () => import("./features/dashboard/components/AuthenticatedLandingPage"),
 );
 const Dashboard = lazy(() => import("./features/dashboard/pages/Dashboard"));
 
@@ -132,24 +134,28 @@ function AppRoutes() {
 
 function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <ConfirmProvider>
-            <NotificationProvider>
-              <Router>
-                <div
-                  className="min-h-screen"
-                  style={{ backgroundColor: color.primary.background }}
-                >
-                  <AppRoutes />
-                </div>
-              </Router>
-            </NotificationProvider>
-          </ConfirmProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <ConfirmProvider>
+              <NotificationProvider>
+                <NotificationSettingsProvider>
+                  <Router>
+                    <div
+                      className="min-h-screen"
+                      style={{ backgroundColor: color.primary.background }}
+                    >
+                      <AppRoutes />
+                    </div>
+                  </Router>
+                </NotificationSettingsProvider>
+              </NotificationProvider>
+            </ConfirmProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

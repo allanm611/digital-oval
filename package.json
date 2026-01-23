@@ -8,7 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "analyze": "vite-bundle-analyzer"
+    "analyze": "vite-bundle-analyzer",
+    "deploy:prod": "vercel --local-config vercel.prod.json --prod --confirm",
+    "deploy:staging": "vercel --local-config vercel.staging.json --prod --confirm"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",

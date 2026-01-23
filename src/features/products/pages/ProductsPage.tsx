@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
-  Plus,
   Search,
   Edit,
   Eye,
@@ -18,6 +17,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { Product } from "../types/product";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { ProductCategory } from "../types/productCategory";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
@@ -135,7 +135,7 @@ export default function ProductsPage() {
         setLoading(false);
       }
     },
-    [filters]
+    [filters],
   );
 
   // Load products and categories when filters change or when navigating back to this page
@@ -190,7 +190,7 @@ export default function ProductsPage() {
 
   const handleFilterChange = (
     key: keyof ProductFilters,
-    value: string | number | boolean | undefined
+    value: string | number | boolean | undefined,
   ) => {
     setFilters({ ...filters, [key]: value, page: 1 });
   };
@@ -205,13 +205,13 @@ export default function ProductsPage() {
         await productService.deactivateProduct(Number(product.id));
         showToast(
           "Product Deactivated",
-          `"${product.name}" has been deactivated successfully.`
+          `"${product.name}" has been deactivated successfully.`,
         );
       } else {
         await productService.activateProduct(Number(product.id));
         showToast(
           "Product Activated",
-          `"${product.name}" has been activated successfully.`
+          `"${product.name}" has been activated successfully.`,
         );
       }
       loadProducts();
@@ -236,7 +236,7 @@ export default function ProductsPage() {
       await productService.deleteProduct(Number(productToDelete.id));
       showToast(
         "Product Deleted",
-        `"${productToDelete.name}" has been deleted successfully.`
+        `"${productToDelete.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       setProductToDelete(null);
@@ -273,22 +273,7 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={() => navigate("/dashboard/products/create")}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.action;
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.action;
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            {t.pages.createProduct}
-          </button>
+          <CreateButton route="/dashboard/products/create" />
         </div>
       </div>
 
@@ -432,7 +417,7 @@ export default function ProductsPage() {
             onChange={(value) =>
               handleFilterChange(
                 "categoryId",
-                value ? Number(value) : undefined
+                value ? Number(value) : undefined,
               )
             }
             placeholder="All Categories"
@@ -452,7 +437,7 @@ export default function ProductsPage() {
             onChange={(value) =>
               handleFilterChange(
                 "isActive",
-                value === "" ? undefined : value === "true"
+                value === "" ? undefined : value === "true",
               )
             }
             placeholder="All Status"
@@ -517,22 +502,9 @@ export default function ProductsPage() {
             <p className={`text-sm ${tw.textMuted} mb-6`}>
               Get started by creating your first product.
             </p>
-            <button
-              onClick={() => navigate("/dashboard/products/create")}
-              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-base text-white`}
-              style={{ backgroundColor: color.primary.action }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-            >
-              <Plus className="w-5 h-5" />
-              {t.pages.createProduct}
-            </button>
+            <div className="mx-auto">
+              <CreateButton route="/dashboard/products/create" />
+            </div>
           </div>
         ) : (
           <div className="hidden lg:block overflow-x-auto">
@@ -590,7 +562,7 @@ export default function ProductsPage() {
                 {products.map((product) => {
                   const categoryName =
                     categories.find(
-                      (cat) => cat.id === parseInt(product.category_id)
+                      (cat) => cat.id === parseInt(product.category_id),
                     )?.name || "Uncategorized";
                   const status = product.is_active ? "Active" : "Inactive";
                   const statusBadge = product.is_active
@@ -729,7 +701,7 @@ export default function ProductsPage() {
                   {((filters.page || 1) - 1) * (filters.pageSize || 10) + 1} to{" "}
                   {Math.min(
                     (filters.page || 1) * (filters.pageSize || 10),
-                    total
+                    total,
                   )}{" "}
                   of {total} products
                 </>

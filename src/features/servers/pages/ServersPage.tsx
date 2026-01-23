@@ -10,7 +10,6 @@ import {
   Loader2,
   MoreVertical,
   Play,
-  Plus,
   PowerOff,
   RotateCcw,
   Search,
@@ -20,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { serverService } from "../services/serverService";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import {
   ServerCountByEnvironment,
   ServerCountByProtocol,
@@ -746,13 +746,7 @@ export default function ServersPage() {
               ? t.servers.exitSelection
               : t.servers.selectServers}
           </button>
-          <button
-            onClick={() => navigate("/dashboard/servers/new")}
-            className={`${tw.button} inline-flex items-center gap-2`}
-          >
-            <Plus size={16} />
-            Add Server
-          </button>
+          <CreateButton route="/dashboard/servers/new" />
         </div>
       </div>
 

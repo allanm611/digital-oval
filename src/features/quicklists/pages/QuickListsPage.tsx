@@ -7,13 +7,13 @@ import {
   Download,
   Trash2,
   Eye,
-  Plus,
   Database,
   CheckCircle,
   XCircle,
   Edit,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -363,13 +363,7 @@ export default function QuickListsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            Create QuickList
-          </button>
+          <CreateButton route="/dashboard/quicklists/create" />
         </div>
       </div>
 

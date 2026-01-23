@@ -57,7 +57,7 @@ export default function WorkflowsPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<Workflow | null>(
-    null
+    null,
   );
   const [deleteName, setDeleteName] = useState<string>("this workflow");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -67,7 +67,7 @@ export default function WorkflowsPage() {
   } | null>(null);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedWorkflows, setSelectedWorkflows] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [page, setPage] = useState(0);
@@ -87,7 +87,7 @@ export default function WorkflowsPage() {
             limit: pageSize,
             offset: page * pageSize,
             skipCache: true,
-          }
+          },
         );
       } else if (searchTerm.trim()) {
         response = await workflowService.searchWorkflows({
@@ -126,7 +126,7 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         "Error",
-        err instanceof Error ? err.message : "Failed to load workflows"
+        err instanceof Error ? err.message : "Failed to load workflows",
       );
     } finally {
       setIsLoading(false);
@@ -233,7 +233,7 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         "Delete failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsDeleting(false);
@@ -268,7 +268,7 @@ export default function WorkflowsPage() {
       });
       showToast(
         "Workflows activated",
-        `${result.success} workflow(s) activated successfully.`
+        `${result.success} workflow(s) activated successfully.`,
       );
       setSelectedWorkflows(new Set());
       setIsSelectionMode(false);
@@ -277,7 +277,7 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         "Batch activate failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -294,7 +294,7 @@ export default function WorkflowsPage() {
       });
       showToast(
         "Workflows deactivated",
-        `${result.success} workflow(s) deactivated successfully.`
+        `${result.success} workflow(s) deactivated successfully.`,
       );
       setSelectedWorkflows(new Set());
       setIsSelectionMode(false);
@@ -303,7 +303,7 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         "Batch deactivate failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -323,7 +323,7 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         "Clone failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setRowLoading((prev) => (prev?.id === workflow.id ? null : prev));
@@ -378,14 +378,7 @@ export default function WorkflowsPage() {
           >
             {isSelectionMode ? "Cancel" : "Select"}
           </button>
-          <button
-            onClick={() => navigate("/dashboard/workflows/create")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="h-4 w-4" />
-            Create Workflow
-          </button>
+          <CreateButton route="/dashboard/workflows/create" />
         </div>
       </div>
 
@@ -672,7 +665,7 @@ export default function WorkflowsPage() {
                           setRowLoading({ id: workflow.id, action: "clone" });
                           await handleClone(workflow);
                           setRowLoading((prev) =>
-                            prev?.id === workflow.id ? null : prev
+                            prev?.id === workflow.id ? null : prev,
                           );
                         }}
                         disabled={
@@ -693,7 +686,7 @@ export default function WorkflowsPage() {
                         onClick={() => {
                           setDeletingWorkflow(workflow);
                           setDeleteName(
-                            workflow.name?.trim() || "this workflow"
+                            workflow.name?.trim() || "this workflow",
                           );
                           setShowDeleteModal(true);
                         }}

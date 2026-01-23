@@ -10,12 +10,20 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
   return (
     <div className={`w-full flex flex-col min-h-screen`}>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isMinimized={sidebarMinimized}
+        onMinimizeChange={setSidebarMinimized}
+      />
 
-      <div className="md:ml-32 xl:ml-80 flex flex-col flex-1 ">
+      <div
+        className={`transition-all duration-300 flex flex-col flex-1 ${sidebarMinimized ? "md:ml-24 xl:ml-24" : "md:ml-32 xl:ml-80"}`}
+      >
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <main
@@ -24,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
         <div
-          className="fixed bottom-0 left-0 md:left-32 xl:left-80 right-0"
+          className={`fixed bottom-0 left-0 right-0 transition-all duration-300 ${sidebarMinimized ? "md:left-24 xl:left-24" : "md:left-32 xl:left-80"}`}
           style={{ zIndex: zIndex.base }}
         >
           <Footer />

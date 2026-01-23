@@ -93,7 +93,7 @@ export default function ConnectionProfilesPage() {
   const [serverFilter, setServerFilter] = useState("");
   const [debouncedServerFilter, setDebouncedServerFilter] = useState("");
   const [selectedProfileIds, setSelectedProfileIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -145,17 +145,17 @@ export default function ConnectionProfilesPage() {
         : null;
       const shouldUseSearch = Boolean(
         debouncedSearchTerm ||
-          filters.status === "inactive" ||
-          filters.status === "active" ||
-          filters.pii !== "all" ||
-          filters.health !== "all"
+        filters.status === "inactive" ||
+        filters.status === "active" ||
+        filters.pii !== "all" ||
+        filters.health !== "all",
       );
 
       if (filters.connectionType !== "all") {
         data =
           (await connectionProfileService.getProfilesByConnectionType(
             filters.connectionType,
-            { limit: DEFAULT_FETCH_LIMIT, skipCache: true }
+            { limit: DEFAULT_FETCH_LIMIT, skipCache: true },
           )) || [];
       } else if (
         filters.environment !== "all" &&
@@ -164,13 +164,13 @@ export default function ConnectionProfilesPage() {
         data =
           (await connectionProfileService.getProfilesByEnvironment(
             filters.environment,
-            { limit: DEFAULT_FETCH_LIMIT, skipCache: true }
+            { limit: DEFAULT_FETCH_LIMIT, skipCache: true },
           )) || [];
       } else if (filters.classification !== "all") {
         data =
           (await connectionProfileService.getProfilesByClassification(
             filters.classification,
-            { limit: DEFAULT_FETCH_LIMIT, skipCache: true }
+            { limit: DEFAULT_FETCH_LIMIT, skipCache: true },
           )) || [];
       } else if (serverId) {
         data =
@@ -219,9 +219,8 @@ export default function ConnectionProfilesPage() {
         if (filters.health === "disabled") {
           searchPayload.health_check_enabled = false;
         }
-        const response = await connectionProfileService.searchProfiles(
-          searchPayload
-        );
+        const response =
+          await connectionProfileService.searchProfiles(searchPayload);
         data = response.data || [];
       } else {
         const response = await connectionProfileService.listProfiles({
@@ -242,7 +241,7 @@ export default function ConnectionProfilesPage() {
       console.error("Failed to load connection profiles", err);
       showError(
         "Failed to load connection profiles",
-        err instanceof Error ? err.message : "Please try again later."
+        err instanceof Error ? err.message : "Please try again later.",
       );
       setProfiles([]);
     } finally {
@@ -293,7 +292,7 @@ export default function ConnectionProfilesPage() {
           (governance?.classificationCounts
             ? Object.values(governance.classificationCounts).reduce(
                 (sum, count) => sum + (Number(count) || 0),
-                0
+                0,
               )
             : prev.total),
         active: activeProfiles?.length ?? prev.active,
@@ -304,7 +303,7 @@ export default function ConnectionProfilesPage() {
       console.error("Failed to load connection profile stats", err);
       showError(
         "Failed to load stats",
-        err instanceof Error ? err.message : "Please try again later."
+        err instanceof Error ? err.message : "Please try again later.",
       );
     } finally {
       setLoadingStats(false);
@@ -401,7 +400,7 @@ export default function ConnectionProfilesPage() {
 
   const handleToggleActive = async (
     profile: ConnectionProfileType,
-    event?: React.MouseEvent
+    event?: React.MouseEvent,
   ) => {
     event?.stopPropagation();
     const action = profile.is_active ? "deactivate" : "activate";
@@ -418,20 +417,20 @@ export default function ConnectionProfilesPage() {
       if (action === "activate") {
         await connectionProfileService.activateProfile(
           profile.id,
-          user?.user_id
+          user?.user_id,
         );
         showSuccess(
           "Profile activated",
-          `${profile.profile_name} is now active.`
+          `${profile.profile_name} is now active.`,
         );
       } else {
         await connectionProfileService.deactivateProfile(
           profile.id,
-          user?.user_id
+          user?.user_id,
         );
         showSuccess(
           "Profile deactivated",
-          `${profile.profile_name} is now inactive.`
+          `${profile.profile_name} is now inactive.`,
         );
       }
       await reloadProfiles();
@@ -439,7 +438,7 @@ export default function ConnectionProfilesPage() {
     } catch (err) {
       showError(
         `Failed to ${action} profile`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     }
   };
@@ -474,7 +473,7 @@ export default function ConnectionProfilesPage() {
     } catch (err) {
       showError(
         "Failed to activate selected profiles",
-        err instanceof Error ? err.message : "Please try again later."
+        err instanceof Error ? err.message : "Please try again later.",
       );
     } finally {
       setBulkActionType(null);
@@ -493,7 +492,7 @@ export default function ConnectionProfilesPage() {
     } catch (err) {
       showError(
         "Failed to auto-deactivate expired profiles",
-        err instanceof Error ? err.message : "Please try again later."
+        err instanceof Error ? err.message : "Please try again later.",
       );
     } finally {
       setBulkActionType(null);
@@ -506,25 +505,25 @@ export default function ConnectionProfilesPage() {
 
   const connectionTypeOptions = useMemo(() => {
     const typesFromStats = connectionTypeStats.map(
-      (item) => item.connection_type
+      (item) => item.connection_type,
     );
     const typesFromProfiles = Array.from(
-      new Set(profiles.map((profile) => profile.connection_type))
+      new Set(profiles.map((profile) => profile.connection_type)),
     );
     return Array.from(
-      new Set([...typesFromStats, ...typesFromProfiles])
+      new Set([...typesFromStats, ...typesFromProfiles]),
     ).filter(Boolean);
   }, [connectionTypeStats, profiles]);
 
   const environmentOptions = useMemo(() => {
     const fromStats = environmentStats.map((item) => item.environment);
     const fromProfiles = Array.from(
-      new Set(profiles.map((profile) => profile.environment))
+      new Set(profiles.map((profile) => profile.environment)),
     );
     const combined = Array.from(new Set([...fromStats, ...fromProfiles]));
     // Filter to only include valid environments
     const validCombined = combined.filter((env) =>
-      VALID_ENVIRONMENTS.includes(env)
+      VALID_ENVIRONMENTS.includes(env),
     );
     return validCombined.length ? validCombined : ENVIRONMENT_FALLBACKS;
   }, [environmentStats, profiles]);
@@ -591,14 +590,7 @@ export default function ConnectionProfilesPage() {
           : "Create your first connection profile to get started"}
       </p>
       {!profiles.length && (
-        <button
-          onClick={handleCreate}
-          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Create Connection Profile
-        </button>
+        <CreateButton route="/dashboard/connection-profiles/create" />
       )}
     </div>
   );
@@ -623,7 +615,7 @@ export default function ConnectionProfilesPage() {
                   // Entering selection mode - select all visible profiles
                   setIsSelectionMode(true);
                   setSelectedProfileIds(
-                    new Set(filteredProfiles.map((p) => p.id))
+                    new Set(filteredProfiles.map((p) => p.id)),
                   );
                 } else {
                   // Exiting selection mode - clear selection
@@ -694,7 +686,9 @@ export default function ConnectionProfilesPage() {
         </div>
 
         {isSelectionMode && selectedProfileIds.size > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white px-4 py-3 shadow-sm flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between`}
+          >
             <div className="flex items-center gap-3 text-sm text-black">
               <span>
                 {selectedCount} selected / {filteredProfiles.length} visible
@@ -810,7 +804,7 @@ export default function ConnectionProfilesPage() {
                         onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedProfileIds(
-                              new Set(filteredProfiles.map((p) => p.id))
+                              new Set(filteredProfiles.map((p) => p.id)),
                             );
                           } else {
                             setSelectedProfileIds(new Set());
@@ -1133,7 +1127,7 @@ export default function ConnectionProfilesPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );

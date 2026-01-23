@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
 import {
-  Plus,
   Filter,
   Search,
   // Calendar,
@@ -25,6 +24,7 @@ import {
 } from "lucide-react";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
@@ -153,7 +153,7 @@ export default function CampaignsPage() {
 
   const handleActionMenuToggle = (
     campaignId: number,
-    event?: React.MouseEvent<HTMLButtonElement>
+    event?: React.MouseEvent<HTMLButtonElement>,
   ) => {
     if (showActionMenu === campaignId) {
       setShowActionMenu(null);
@@ -240,7 +240,7 @@ export default function CampaignsPage() {
           const availableSpace = Math.min(spaceAbove, maxDropdownHeight);
           calculatedMaxHeight = Math.max(
             availableSpace - 10,
-            minDropdownHeight
+            minDropdownHeight,
           );
         } else {
           // Position below button (default)
@@ -312,19 +312,19 @@ export default function CampaignsPage() {
       };
       const categoriesData = Array.isArray(response)
         ? response
-        : (response as { data?: CategoryRecord[] })?.data ?? [];
+        : ((response as { data?: CategoryRecord[] })?.data ?? []);
       setCategories(
         categoriesData as Array<{
           id: number;
           name: string;
           description?: string;
-        }>
+        }>,
       );
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
       showToast(
         "error",
-        "Failed to load Campaigns catalogs. Please try again."
+        "Failed to load Campaigns catalogs. Please try again.",
       );
       setCategories([]);
     }
@@ -333,7 +333,7 @@ export default function CampaignsPage() {
   // Fetch offer and segment counts for campaigns
   const fetchCampaignCounts = useCallback(
     async (
-      campaignIds: number[]
+      campaignIds: number[],
     ): Promise<Map<number, { offers: number; segments: number }>> => {
       const countsMap = new Map<number, { offers: number; segments: number }>();
 
@@ -343,7 +343,7 @@ export default function CampaignsPage() {
           // Fetch segments count
           const segmentsResponse = await campaignService.getCampaignSegments(
             campaignId,
-            true
+            true,
           );
 
           let segmentCount = 0;
@@ -363,7 +363,7 @@ export default function CampaignsPage() {
               "data" in segmentsResponse.data &&
               Array.isArray(
                 (segmentsResponse.data as { data?: CampaignSegmentDetail[] })
-                  .data
+                  .data,
               )
             ) {
               // Nested: { data: { data: [...] } }
@@ -396,7 +396,7 @@ export default function CampaignsPage() {
         } catch (error) {
           console.error(
             `Failed to fetch counts for campaign ${campaignId}:`,
-            error
+            error,
           );
           return { campaignId, offers: 0, segments: 0 };
         }
@@ -409,7 +409,7 @@ export default function CampaignsPage() {
 
       return countsMap;
     },
-    []
+    [],
   );
 
   // Fetch campaigns from API
@@ -503,7 +503,7 @@ export default function CampaignsPage() {
           created_at: campaign.created_at,
           offer_count: 0, // Will be updated below
           segment_count: 0, // Will be updated below
-        })
+        }),
       );
 
       // When status is "all", exclude archived campaigns from default view
@@ -511,7 +511,7 @@ export default function CampaignsPage() {
       let campaignsToDisplay = campaignsData;
       if (selectedStatus === "all") {
         campaignsToDisplay = campaignsData.filter(
-          (c) => c.status !== "archived"
+          (c) => c.status !== "archived",
         );
       }
 
@@ -549,7 +549,7 @@ export default function CampaignsPage() {
       console.error("Failed to load campaigns list:", error);
       showToast(
         "error",
-        "Failed to load campaigns. Please try again in a moment."
+        "Failed to load campaigns. Please try again in a moment.",
       );
       setCampaigns([]);
       setTotalCampaigns(0);
@@ -650,12 +650,12 @@ export default function CampaignsPage() {
       const target = event.target as Node;
       // Check if click is inside any action menu button
       const clickedInsideButton = Object.values(actionMenuRefs.current).some(
-        (ref) => ref && ref.contains(target)
+        (ref) => ref && ref.contains(target),
       );
 
       // Check if click is inside any dropdown menu (portal)
       const clickedInsideDropdown = Object.values(
-        dropdownMenuRefs.current
+        dropdownMenuRefs.current,
       ).some((ref) => ref && ref.contains(target));
 
       // Only close if clicked outside both button and dropdown
@@ -670,7 +670,7 @@ export default function CampaignsPage() {
       return () => {
         document.removeEventListener(
           "mousedown",
-          handleClickOutsideActionMenus
+          handleClickOutsideActionMenus,
         );
       };
     }
@@ -742,7 +742,7 @@ export default function CampaignsPage() {
             const availableSpace = Math.min(spaceAbove, maxDropdownHeight);
             calculatedMaxHeight = Math.max(
               availableSpace - 10,
-              minDropdownHeight
+              minDropdownHeight,
             );
           } else {
             if (spaceBelow >= maxDropdownHeight) {
@@ -750,7 +750,7 @@ export default function CampaignsPage() {
             } else if (spaceBelow >= minDropdownHeight) {
               calculatedMaxHeight = Math.max(
                 spaceBelow - 10,
-                minDropdownHeight
+                minDropdownHeight,
               );
             } else {
               calculatedMaxHeight = minDropdownHeight;
@@ -761,7 +761,7 @@ export default function CampaignsPage() {
           calculatedMaxHeight = Math.min(calculatedMaxHeight, maxAllowedHeight);
           calculatedMaxHeight = Math.max(
             calculatedMaxHeight,
-            minDropdownHeight
+            minDropdownHeight,
           );
 
           const top = shouldPositionAbove
@@ -932,7 +932,7 @@ export default function CampaignsPage() {
       await campaignService.deleteCampaign(campaignToDelete.id, userId);
       showToast(
         "success",
-        `Campaign "${campaignToDelete.name}" deleted successfully!`
+        `Campaign "${campaignToDelete.name}" deleted successfully!`,
       );
       setShowDeleteModal(false);
       setCampaignToDelete(null);
@@ -983,8 +983,8 @@ export default function CampaignsPage() {
           prevCampaigns.map((campaign) =>
             campaign.id === campaignId
               ? { ...campaign, status: newStatus }
-              : campaign
-          )
+              : campaign,
+          ),
         );
       }
 
@@ -1011,8 +1011,8 @@ export default function CampaignsPage() {
           prevCampaigns.map((campaign) =>
             campaign.id === campaignId
               ? { ...campaign, status: newStatus }
-              : campaign
-          )
+              : campaign,
+          ),
         );
       }
 
@@ -1093,14 +1093,7 @@ export default function CampaignsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <button
-            onClick={() => navigate("/dashboard/campaigns/create")}
-            className={`inline-flex items-center px-4 py-2 font-semibold ${tw.rounded} shadow-sm text-sm whitespace-nowrap text-white self-start sm:self-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            {t.pages.createCampaign}
-          </button>
+          <CreateButton route="/dashboard/campaigns/create" />
         </div>
       </div>
 
@@ -1310,7 +1303,7 @@ export default function CampaignsPage() {
                     >
                       <span
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                          campaign.status
+                          campaign.status,
                         )}`}
                       >
                         {campaign.status.charAt(0).toUpperCase() +
@@ -1390,7 +1383,7 @@ export default function CampaignsPage() {
                               `/dashboard/campaigns/${campaign.id}/edit`,
                               {
                                 state: { campaign: campaign },
-                              }
+                              },
                             )
                           }
                           className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
@@ -1466,11 +1459,11 @@ export default function CampaignsPage() {
                               setShowActionMenu(null);
                               try {
                                 await campaignService.submitForApproval(
-                                  campaign.id
+                                  campaign.id,
                                 );
                                 showToast(
                                   "success",
-                                  `Campaign "${campaign.name}" submitted for approval!`
+                                  `Campaign "${campaign.name}" submitted for approval!`,
                                 );
                                 fetchCampaigns();
                               } catch (error) {
@@ -1568,11 +1561,11 @@ export default function CampaignsPage() {
                               setShowActionMenu(null);
                               try {
                                 await campaignService.activateCampaign(
-                                  campaign.id
+                                  campaign.id,
                                 );
                                 showToast(
                                   "success",
-                                  `Campaign "${campaign.name}" activated successfully!`
+                                  `Campaign "${campaign.name}" activated successfully!`,
                                 );
                                 fetchCampaigns();
                               } catch (error) {
@@ -1616,11 +1609,11 @@ export default function CampaignsPage() {
                               setShowActionMenu(null);
                               try {
                                 await campaignService.pauseCampaign(
-                                  campaign.id
+                                  campaign.id,
                                 );
                                 showToast(
                                   "success",
-                                  `Campaign "${campaign.name}" paused successfully!`
+                                  `Campaign "${campaign.name}" paused successfully!`,
                                 );
                                 fetchCampaigns();
                               } catch (error) {
@@ -1646,7 +1639,7 @@ export default function CampaignsPage() {
                             e.stopPropagation();
                             navigate(
                               `/dashboard/campaigns/${campaign.id}/edit`,
-                              { state: { campaign: campaign } }
+                              { state: { campaign: campaign } },
                             );
                             setShowActionMenu(null);
                           }}
@@ -1738,7 +1731,7 @@ export default function CampaignsPage() {
                           Delete Campaign
                         </button>
                       </div>,
-                      document.body
+                      document.body,
                     );
                   }
                   return null;
@@ -1757,13 +1750,9 @@ export default function CampaignsPage() {
                 : `No ${selectedStatus} campaigns found. Try creating a new campaign or check other status filters.`}
             </p>
             {selectedStatus !== "completed" && (
-              <button
-                onClick={() => navigate("/dashboard/campaigns/create")}
-                className={`mt-4 px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                Create Your First Campaign
-              </button>
+              <div className="mt-4">
+                <CreateButton route="/dashboard/campaigns/create" />
+              </div>
             )}
           </div>
         )}
@@ -2012,7 +2001,7 @@ export default function CampaignsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Gift,
   Search,
-  Plus,
   Edit,
   Trash2,
   CheckCircle,
@@ -17,6 +15,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 // Dummy data for manual rewards
 interface ManualReward {
@@ -98,12 +97,11 @@ const dummyManualRewards: ManualReward[] = [
 ];
 
 export default function ManualRewardsPage() {
-  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [rewardToDelete, setRewardToDelete] = useState<ManualReward | null>(
-    null
+    null,
   );
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -268,13 +266,7 @@ export default function ManualRewardsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/dashboard/manual-rewards/create")}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            {t.manualRewards.title}
-          </button>
+          <CreateButton route="/dashboard/manual-rewards/create" />
         </div>
       </div>
 
@@ -361,13 +353,9 @@ export default function ManualRewardsPage() {
             <p className={`${tw.textSecondary} text-center`}>
               No manual rewards found
             </p>
-            <button
-              onClick={() => navigate("/dashboard/manual-rewards/create")}
-              className={`mt-4 ${tw.button} flex items-center gap-2`}
-            >
-              <Plus className="w-4 h-4" />
-              Create Your First Reward
-            </button>
+            <div className="mt-4">
+              <CreateButton route="/dashboard/manual-rewards/create" />
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -613,10 +601,10 @@ export default function ManualRewardsPage() {
                 editFormData.rewardType === "bundle"
                   ? t.manualRewards.rewardValuePlaceholderBundle
                   : editFormData.rewardType === "points"
-                  ? t.manualRewards.rewardValuePlaceholderPoints
-                  : editFormData.rewardType === "discount"
-                  ? t.manualRewards.rewardValuePlaceholderDiscount
-                  : t.manualRewards.rewardValuePlaceholderCashback
+                    ? t.manualRewards.rewardValuePlaceholderPoints
+                    : editFormData.rewardType === "discount"
+                      ? t.manualRewards.rewardValuePlaceholderDiscount
+                      : t.manualRewards.rewardValuePlaceholderCashback
               }
             />
           </div>

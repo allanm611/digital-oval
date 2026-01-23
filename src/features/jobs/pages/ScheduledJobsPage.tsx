@@ -114,7 +114,7 @@ export default function ScheduledJobsPage() {
   const [jobCodeFilter, setJobCodeFilter] = useState<string>("");
   const [activeJobsFilter, setActiveJobsFilter] = useState<boolean>(false);
   const [jobTypes, setJobTypes] = useState<Array<{ id: number; name: string }>>(
-    []
+    [],
   );
   const filterRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +141,7 @@ export default function ScheduledJobsPage() {
           // getScheduledJobByCode returns a single job, convert to array format
           try {
             const job = await scheduledJobService.getScheduledJobByCode(
-              jobCodeFilter.trim()
+              jobCodeFilter.trim(),
             );
             response = { data: [job], pagination: { total: 1 } };
           } catch {
@@ -150,33 +150,33 @@ export default function ScheduledJobsPage() {
           }
         } else if (jobTypeFilter) {
           response = await scheduledJobService.getScheduledJobsByJobType(
-            Number(jobTypeFilter)
+            Number(jobTypeFilter),
           );
         } else if (ownerFilter) {
           response = await scheduledJobService.getScheduledJobsByOwner(
             Number(ownerFilter),
-            true
+            true,
           );
         } else if (tagFilter.trim()) {
           response = await scheduledJobService.getScheduledJobsByTag(
             tagFilter.trim(),
-            true
+            true,
           );
         } else if (scheduleTypeFilter) {
           response = await scheduledJobService.getScheduledJobsByScheduleType(
             scheduleTypeFilter,
-            true
+            true,
           );
         } else if (connectionProfileFilter) {
           response =
             await scheduledJobService.getScheduledJobsByConnectionProfile(
               Number(connectionProfileFilter),
-              true
+              true,
             );
         } else if (tenantFilter) {
           response = await scheduledJobService.getScheduledJobsByTenant(
             Number(tenantFilter),
-            true
+            true,
           );
         } else if (hasSearchTerm) {
           // Use search endpoint when there's a search term
@@ -239,7 +239,7 @@ export default function ScheduledJobsPage() {
       jobCodeFilter,
       activeJobsFilter,
       showError,
-    ]
+    ],
   );
 
   const fetchStats = useCallback(async () => {
@@ -397,7 +397,7 @@ export default function ScheduledJobsPage() {
   };
 
   const handleBatchAction = async (
-    action: "activate" | "deactivate" | "pause" | "archive" | "delete"
+    action: "activate" | "deactivate" | "pause" | "archive" | "delete",
   ) => {
     if (selectedJobs.size === 0) return;
 
@@ -410,13 +410,13 @@ export default function ScheduledJobsPage() {
         case "activate":
           result = await scheduledJobService.batchActivate(
             jobIds,
-            user?.user_id
+            user?.user_id,
           );
           break;
         case "deactivate":
           result = await scheduledJobService.batchDeactivate(
             jobIds,
-            user?.user_id
+            user?.user_id,
           );
           break;
         case "pause":
@@ -425,13 +425,13 @@ export default function ScheduledJobsPage() {
         case "archive":
           result = await scheduledJobService.batchArchive(
             jobIds,
-            user?.user_id
+            user?.user_id,
           );
           break;
         case "delete":
           if (
             !window.confirm(
-              `Are you sure you want to delete ${jobIds.length} job(s)? This action cannot be undone.`
+              `Are you sure you want to delete ${jobIds.length} job(s)? This action cannot be undone.`,
             )
           ) {
             setIsBatchProcessing(false);
@@ -445,7 +445,7 @@ export default function ScheduledJobsPage() {
         `Batch ${action} completed`,
         `${result.success} job(s) ${action}d successfully${
           result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`
+        }`,
       );
 
       setSelectedJobs(new Set());
@@ -453,7 +453,7 @@ export default function ScheduledJobsPage() {
     } catch (err) {
       showError(
         `Batch ${action} failed`,
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -512,14 +512,7 @@ export default function ScheduledJobsPage() {
             )}
             {isSelectionMode ? "Exit Selection" : "Select Jobs"}
           </button>
-          <button
-            onClick={() => navigate("/dashboard/scheduled-jobs/create")}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="h-4 w-4" />
-            Create Job
-          </button>
+          <CreateButton route="/dashboard/scheduled-jobs/create" />
         </div>
       </div>
 
@@ -866,8 +859,8 @@ export default function ScheduledJobsPage() {
                         {job.job_type_id && jobTypeMap[job.job_type_id]
                           ? jobTypeMap[job.job_type_id]
                           : job.job_type_id
-                          ? `Type #${job.job_type_id}`
-                          : "—"}
+                            ? `Type #${job.job_type_id}`
+                            : "—"}
                       </div>
                     </td>
                     <td
@@ -947,7 +940,7 @@ export default function ScheduledJobsPage() {
               await scheduledJobService.deleteScheduledJob(deletingJob.id);
               showToast(
                 "Scheduled job deleted",
-                `"${deletingJob.name}" has been deleted successfully.`
+                `"${deletingJob.name}" has been deleted successfully.`,
               );
               setShowDeleteModal(false);
               setDeletingJob(null);
@@ -1043,7 +1036,7 @@ export default function ScheduledJobsPage() {
                         value={ownerFilter || ""}
                         onChange={(e) =>
                           setOwnerFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Owners"
@@ -1099,7 +1092,7 @@ export default function ScheduledJobsPage() {
                         value={connectionProfileFilter || ""}
                         onChange={(e) =>
                           setConnectionProfileFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Profiles"
@@ -1117,7 +1110,7 @@ export default function ScheduledJobsPage() {
                         value={tenantFilter || ""}
                         onChange={(e) =>
                           setTenantFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                         placeholder="All Tenants"
@@ -1186,7 +1179,7 @@ export default function ScheduledJobsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

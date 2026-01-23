@@ -6,13 +6,13 @@ import {
   Download,
   Trash2,
   Eye,
-  Plus,
   Database,
   CheckCircle,
   XCircle,
   Edit,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { QuickList, QuickListStats } from "../types/quicklist";
 import { quicklistService } from "../services/quicklistService";
 import EditQuickListModal from "../components/EditQuickListModal";
@@ -290,13 +290,7 @@ export default function ManualBroadcastListsPage() {
             <Database className="w-4 h-4" />
             Analytics
           </button>
-          <button
-            onClick={() => navigate("/dashboard/manual-communications/create")}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            Create communication list
-          </button>
+          <CreateButton route="/dashboard/manual-communications/create" />
         </div>
       </div>
 
