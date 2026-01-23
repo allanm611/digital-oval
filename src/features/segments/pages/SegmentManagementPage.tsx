@@ -994,7 +994,16 @@ export default function SegmentManagementPage() {
               )}
               {isSelectionMode ? "Exit Selection" : "Select Segments"}
             </button>
-            <CreateButton route="/dashboard/segments/create" />
+            <button
+              onClick={handleCreateSegment}
+              className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+              style={{
+                backgroundColor: color.primary.action,
+                color: "white",
+              }}
+            >
+              + Create
+            </button>
           </div>
         </div>
       </div>

@@ -1061,7 +1061,7 @@ export default function SettingsPage() {
                   </label>
                   {notificationSettings.in_app_sound_enabled && (
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Notification Sound
                       </label>
                       <HeadlessSelect
@@ -1092,8 +1092,8 @@ export default function SettingsPage() {
             </div>
 
             {/* Browser Notifications */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-gray-50 pb-2 rounded-lg">
+              <div className="flex items-center justify-between  ">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
                     Browser Notifications
@@ -1116,8 +1116,8 @@ export default function SettingsPage() {
             </div>
 
             {/* SMS Alerts */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-gray-50 p-2 rounded-lg">
+              <div className="flex items-center justify-between ">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
                     SMS Alerts

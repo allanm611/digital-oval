@@ -37,6 +37,7 @@ import {
   PlayCircle,
   GitBranch,
   ChevronLeft,
+  Plug,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -452,13 +453,13 @@ export default function Sidebar({
             type: "single",
             entity: "servers",
           },
-          // {
-          //   name: "Data Connectors",
-          //   href: "/dashboard/data-connectors",
-          //   icon: Plug,
-          //   type: "single",
-          //   entity: "servers",
-          // },
+          {
+            name: "Data Connectors",
+            href: "/dashboard/data-connectors",
+            icon: Plug,
+            type: "single",
+            entity: "servers",
+          },
         ],
       },
 
