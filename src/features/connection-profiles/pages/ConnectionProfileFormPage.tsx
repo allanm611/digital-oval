@@ -18,6 +18,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw } from "../../../shared/utils/utils";
+import { CONNECTION_TYPE_OPTIONS } from "../constants/connectionTypes";
 
 interface ConnectionProfileFormPageProps {
   mode: "create" | "edit";
@@ -253,16 +254,7 @@ export default function ConnectionProfileFormPage({
                 Connection Type *
               </label>
               <HeadlessSelect
-                options={[
-                  { value: "database", label: "Database" },
-                  { value: "api", label: "API" },
-                  { value: "sftp", label: "SFTP" },
-                  { value: "ftp", label: "FTP" },
-                  { value: "s3", label: "S3" },
-                  { value: "azure_blob", label: "Azure Blob" },
-                  { value: "kafka", label: "Kafka" },
-                  { value: "webhook", label: "Webhook" },
-                ]}
+                options={CONNECTION_TYPE_OPTIONS}
                 value={formData.connection_type}
                 onChange={(value) =>
                   setFormData({

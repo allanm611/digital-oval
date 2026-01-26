@@ -50,7 +50,7 @@ export default function ConnectionProfileDetailsPage() {
   const [validityStatus, setValidityStatus] = useState<boolean | null>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  const fetchValidityStatus = async (profileId: number) => {
+  const fetchValidityStatus = useCallback(async (profileId: number) => {
     try {
       const validity = await connectionProfileService.checkProfileValidity(
         profileId
@@ -60,7 +60,7 @@ export default function ConnectionProfileDetailsPage() {
       console.error("Failed to check connection profile validity:", err);
       setValidityStatus(null);
     }
-  };
+  }, []);
 
   const loadProfile = useCallback(async () => {
     if (!id) return;
@@ -86,7 +86,7 @@ export default function ConnectionProfileDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, showError]);
+  }, [id, showError, fetchValidityStatus]);
 
   useEffect(() => {
     if (id) {
@@ -113,32 +113,6 @@ export default function ConnectionProfileDetailsPage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showMoreMenu]);
-
-  const loadProfile = useCallback(async () => {
-    if (!id) return;
-
-    try {
-      setLoading(true);
-      const data = await connectionProfileService.getProfile(Number(id), true);
-      setProfile(data);
-      setHealthStatus(
-        data.last_health_check_status === "unhealthy" ? "unhealthy" : "healthy"
-      );
-      setValidityForm({
-        valid_from: data.valid_from?.split("T")[0] ?? "",
-        valid_to: data.valid_to ? data.valid_to.split("T")[0] : "",
-      });
-      await fetchValidityStatus(Number(id));
-    } catch (err) {
-      console.error("Failed to load connection profile:", err);
-      showError(
-        "Failed to load connection profile",
-        err instanceof Error ? err.message : "Please try again later."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [id, showError]);
 
   const handleEdit = () => {
     if (id) {
@@ -278,20 +252,10 @@ export default function ConnectionProfileDetailsPage() {
         <p className="text-sm text-gray-500 mb-6">
           The connection profile you're looking for doesn't exist.
         </p>
-        <button
-          onClick={() =>
-            navigateBackOrFallback(navigate, "/dashboard/connection-profiles")
-          }
-          className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-          style={{ backgroundColor: color.primary.action }}
-        >
-          <BackButton
-            fallbackTo="/dashboard/connection-profiles"
-            iconSize="w-5 h-5"
-            className="mr-2 p-0 text-white hover:text-white"
-          />
-          Back to Connection Profiles
-        </button>
+        <BackButton
+          fallbackTo="/dashboard/connection-profiles"
+          label="Back to Connection Profiles"
+        />
       </div>
     );
   }

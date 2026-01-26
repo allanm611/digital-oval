@@ -426,6 +426,12 @@ const ServerPages = {
         /* webpackPrefetch: true */ "../../data-connectors/pages/DataConnectors"
       ),
   ),
+  DataConnectorDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../data-connectors/pages/DataConnectorDetailsPage"
+      ),
+  ),
   ServersPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../servers/pages/ServersPage"),
   ),
@@ -902,6 +908,10 @@ export default function Dashboard() {
           <Route
             path="/data-connectors"
             element={<ServerPages.DataConnectorsPage />}
+          />
+          <Route
+            path="/data-connectors/:id"
+            element={<ServerPages.DataConnectorDetailsPage />}
           />
           <Route path="/jobs" element={<JobPages.ScheduledJobsPage />} />
           <Route

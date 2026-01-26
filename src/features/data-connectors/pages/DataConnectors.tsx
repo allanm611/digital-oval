@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Filter,
@@ -6,7 +7,9 @@ import {
   CheckCircle,
   Database,
   Layers,
+  MoreVertical,
   Eye,
+  Edit,
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
@@ -15,11 +18,17 @@ import {
   getConnectorIcon,
 } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
+import CreateDataConnectorModal from "../components/CreateDataConnectorModal";
+import { useToast } from "../../../contexts/ToastContext";
 
 export default function DataConnectors() {
+  const navigate = useNavigate();
+  const { error: showError } = useToast();
   const [connectors, setConnectors] = useState<DataConnector[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 
   const loadConnectors = async () => {
     try {
@@ -40,12 +49,71 @@ export default function DataConnectors() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Close action menu on outside click
+  useEffect(() => {
+    const handleClickOutside = () => setActionMenuOpen(null);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
   const handleCreateConnector = () => {
-    // TODO: Implement create connector modal
+    setCreateModalOpen(true);
   };
 
   const handleConnectorClick = (connector: DataConnector) => {
-    // Placeholder for navigation to connector detail or connections view
+    navigate(`/dashboard/data-connectors/${connector.id}`);
+  };
+
+  const handleMenuToggle = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    connectorId: string
+  ) => {
+    e.stopPropagation();
+    setActionMenuOpen((prev) => (prev === connectorId ? null : connectorId));
+  };
+
+  const handleMenuAction = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    action: "view" | "edit" | "clone" | "export" | "import" | "delete",
+    connector: DataConnector
+  ) => {
+    e.stopPropagation();
+    setActionMenuOpen(null);
+
+    switch (action) {
+      case "view":
+        handleConnectorClick(connector);
+        break;
+      case "edit":
+        showError(
+          "Not implemented",
+          "Edit connector will be available soon"
+        );
+        break;
+      case "clone":
+        showError("Not implemented", "Clone connector will be available soon");
+        break;
+      case "export":
+        showError(
+          "Not implemented",
+          "Export connector will be available soon"
+        );
+        break;
+      case "import":
+        showError(
+          "Not implemented",
+          "Import connector will be available soon"
+        );
+        break;
+      case "delete":
+        showError(
+          "Not implemented",
+          "Delete connector will be available soon"
+        );
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -312,17 +380,59 @@ export default function DataConnectors() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="flex items-center justify-center">
+                        <div className="relative flex items-center justify-center space-x-2">
                           <button
                             onClick={() => handleConnectorClick(connector)}
-                            className={`p-2 ${tw.rounded} hover:bg-[${color.interactive.hover}] transition-colors`}
-                            aria-label="View connector"
+                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                            title="View details"
                           >
-                            <Eye
-                              className="h-5 w-5"
-                              style={{ color: color.text.primary }}
-                            />
+                            <Eye className="h-4 w-4" />
                           </button>
+                          <button
+                            onClick={(e) => handleMenuAction(e, "edit", connector)}
+                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => handleMenuToggle(e, connector.id)}
+                              className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
+                              aria-label="More actions"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </button>
+                            {actionMenuOpen === connector.id && (
+                              <div
+                                className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-gray-200 bg-white shadow-lg"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {[
+                                  { key: "clone", label: "Clone" },
+                                  { key: "export", label: "Export" },
+                                  { key: "import", label: "Import" },
+                                  { key: "delete", label: "Delete", danger: true },
+                                ].map((item) => (
+                                  <button
+                                    key={item.key}
+                                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${tw.textPrimary} hover:bg-gray-50 ${
+                                      item.danger ? "text-red-600 hover:bg-red-50" : ""
+                                    }`}
+                                    onClick={(e) =>
+                                      handleMenuAction(
+                                        e,
+                                        item.key as any,
+                                        connector
+                                      )
+                                    }
+                                  >
+                                    {item.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -333,6 +443,13 @@ export default function DataConnectors() {
           </div>
         </div>
       )}
+      
+      {/* Create Modal */}
+      <CreateDataConnectorModal
+        isOpen={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
+        onSuccess={loadConnectors}
+      />
     </div>
   );
 }

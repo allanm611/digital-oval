@@ -8,12 +8,14 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { tw, button } from "../../../shared/utils/utils";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function WorkflowDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,8 +42,8 @@ export default function WorkflowDetailsPage() {
         setIsActive(activeCheck.is_active);
       } catch (err) {
         showError(
-          "Error",
-          err instanceof Error ? err.message : "Failed to load workflow"
+          t.common.error,
+          err instanceof Error ? err.message : t.workflows.failedToLoadWorkflow
         );
       } finally {
         setIsLoading(false);
@@ -58,10 +60,10 @@ export default function WorkflowDetailsPage() {
     try {
       if (isActive) {
         await workflowService.deactivateWorkflow(Number(id));
-        showToast("Workflow deactivated", "Workflow has been deactivated.");
+        showToast(t.workflows.workflowDeactivated, t.workflows.workflowDeactivatedSuccess);
       } else {
         await workflowService.activateWorkflow(Number(id));
-        showToast("Workflow activated", "Workflow has been activated.");
+        showToast(t.workflows.workflowActivated, t.workflows.workflowActivatedSuccess);
       }
       setIsActive(!isActive);
       if (workflow) {
@@ -69,8 +71,8 @@ export default function WorkflowDetailsPage() {
       }
     } catch (err) {
       showError(
-        "Toggle failed",
-        err instanceof Error ? err.message : "Unknown error"
+        t.workflows.toggleFailed,
+        err instanceof Error ? err.message : t.common.error
       );
     } finally {
       setIsToggling(false);
@@ -86,12 +88,12 @@ export default function WorkflowDetailsPage() {
         newName: `${workflow.name} (Copy)`,
         created_by: user?.user_id || null,
       });
-      showToast("Workflow cloned", "Workflow has been cloned successfully.");
+      showToast(t.workflows.cloneSuccess, t.workflows.workflowClonedSuccess);
       navigate("/dashboard/workflows");
     } catch (err) {
       showError(
-        "Clone failed",
-        err instanceof Error ? err.message : "Unknown error"
+        t.workflows.cloneFailed,
+        err instanceof Error ? err.message : t.common.error
       );
     } finally {
       setIsCloning(false);

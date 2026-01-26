@@ -9,12 +9,14 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function EditProductPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   // Check if we came from a returnTo state (e.g., from offer details)
   const returnTo = (
@@ -132,8 +134,8 @@ export default function EditProductPage() {
       }
     } catch (err) {
       showError(
-        "Failed to Load Product",
-        err instanceof Error ? err.message : "Failed to load product"
+        t.products.failedToLoadProduct,
+        err instanceof Error ? err.message : t.products.failedToLoadProduct
       );
     } finally {
       setIsLoadingProduct(false);
@@ -150,8 +152,8 @@ export default function EditProductPage() {
       !formData.da_id?.trim()
     ) {
       showError(
-        "Validation Error",
-        "Product code, name, and DA ID are required"
+        t.products.validationError,
+        t.products.productCodeNameRequired
       );
       return;
     }
@@ -197,13 +199,13 @@ export default function EditProductPage() {
       // Update product data
       await productService.updateProduct(Number(id), finalUpdateData);
       success(
-        "Product Updated",
-        `"${formData.name}" has been updated successfully.`
+        t.products.productUpdated,
+        t.products.productUpdateSuccess.replace("{name}", formData.name)
       );
       navigate("/dashboard/products");
     } catch (err) {
       // Extract detailed error message from backend response
-      let errorMessage = "Failed to update product";
+      let errorMessage = t.products.failedToUpdateProduct;
 
       if (err instanceof Error) {
         // Error from service (already extracted and translated to user-friendly message)
@@ -222,7 +224,7 @@ export default function EditProductPage() {
       }
 
       console.error("Product update error:", err);
-      showError("Failed to Update Product", errorMessage);
+      showError(t.products.productUpdated, errorMessage);
     } finally {
       setIsLoading(false);
     }

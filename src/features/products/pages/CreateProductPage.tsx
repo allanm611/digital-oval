@@ -6,6 +6,7 @@ import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface CreateProductPageProps {
   onSuccess?: (productId: number) => void;
@@ -17,6 +18,7 @@ export default function CreateProductPage({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   // Get return URL if coming from offer flow
   const returnToOfferFlow = searchParams.get("returnToOfferFlow") === "true";
@@ -98,8 +100,8 @@ export default function CreateProductPage({
       !formData.da_id.trim()
     ) {
       showError(
-        "Validation Error",
-        "Product Code, Name, Price, and DA ID are required",
+        t.products.validationError,
+        t.products.productCodeNameRequired,
       );
       return;
     }
@@ -143,8 +145,8 @@ export default function CreateProductPage({
 
       const result = await productService.createProduct(finalSubmitData);
       success(
-        "Product Created",
-        `"${formData.name}" has been created successfully.`,
+        t.products.productCreated,
+        t.products.productCreateSuccess.replace("{name}", formData.name),
       );
 
       // Call onSuccess callback if provided (modal mode)
@@ -182,7 +184,7 @@ export default function CreateProductPage({
       }
     } catch (err) {
       // Extract detailed error message from backend response
-      let errorMessage = "Failed to create product";
+      let errorMessage = t.products.failedToCreateProduct;
 
       if (err instanceof Error) {
         // Error from service (already extracted and translated to user-friendly message)
@@ -201,7 +203,7 @@ export default function CreateProductPage({
       }
 
       console.error("Product creation error:", err);
-      showError("Failed to Create Product", errorMessage);
+      showError(t.products.failedToCreateProduct, errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -237,10 +239,10 @@ export default function CreateProductPage({
           />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Create New Product
+              {t.products.createNewProduct}
             </h1>
             <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Add a new product to your catalog
+              {t.products.addNewProduct}
             </p>
           </div>
         </div>
