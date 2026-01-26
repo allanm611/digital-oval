@@ -7,6 +7,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const DetailItem = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="space-y-1">
@@ -24,6 +25,7 @@ export default function OfferCreativeDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
   const [creative, setCreative] = useState<OfferCreative | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
