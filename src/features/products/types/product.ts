@@ -7,6 +7,9 @@ export type ProductUnit =
   | "onnet_minutes"
   | "offnet_minutes"
   | "allnet_minutes"
+  | "roaming_data_mb"
+  | "roaming_minutes"
+  | "roaming_sms_count"
   | "utility"
   | "points"
   | "other";
@@ -21,8 +24,8 @@ export type ProductOfferCategory =
   | "loyalty"
   | "other";
 
-// Combo resource types
-export type ComboResourceType = "data" | "voice" | "sms";
+// Combo resource types - now supports all ProductUnit types
+export type ComboResourceType = ProductUnit;
 
 // Combo resource structure
 export interface ComboResource {
@@ -30,6 +33,7 @@ export interface ComboResource {
   unit: ProductUnit;
   unit_value: number;
   validity_hours?: number; // Individual validity (if not using shared)
+  price?: number; // Individual price (if not using shared_price)
 }
 
 // Combo product structure
@@ -38,7 +42,8 @@ export interface ComboProductData {
   resources: ComboResource[];
   shared_validity?: boolean; // true = all resources share same validity, false = individual validity
   shared_validity_hours?: number; // Validity when shared_validity is true
-  price?: number; // Price for the entire combo
+  shared_price?: boolean; // true = single combo price, false = individual resource pricing
+  price?: number; // Price for the entire combo (when shared_price is true)
 }
 
 export interface Product {

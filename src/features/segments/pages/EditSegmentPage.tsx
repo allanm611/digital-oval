@@ -10,6 +10,7 @@ import {
 } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
@@ -19,6 +20,7 @@ export default function EditSegmentPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [segment, setSegment] = useState<Segment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +57,7 @@ export default function EditSegmentPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     if (id) {
@@ -74,7 +76,7 @@ export default function EditSegmentPage() {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     // Validation
     if (!name.trim()) {
       showError("Validation Error", "Segment name is required");
@@ -105,7 +107,7 @@ export default function EditSegmentPage() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [name, description, visibility, tags, refreshFrequency, businessPurpose, id, showError, success, navigate, t]);
 
   const handleCancel = () => {
     navigate(`/dashboard/segments/${id}`);

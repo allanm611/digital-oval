@@ -20,7 +20,7 @@ interface ProductFormProps {
   formData: CreateProductRequest | UpdateProductRequest;
   onInputChange: (
     field: keyof (CreateProductRequest | UpdateProductRequest),
-    value: string | number | boolean | undefined
+    value: string | number | boolean | undefined,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
@@ -66,11 +66,18 @@ export default function ProductForm({
       resources: [],
       shared_validity: true,
       shared_validity_hours: undefined,
+      shared_price: true,
+      price: undefined,
     };
   });
 
   // Track if user is in custom combo creation mode
   const [isCustomComboMode, setIsCustomComboMode] = useState(false);
+
+  // Selected resource type for dropdown
+  const [selectedResourceType, setSelectedResourceType] = useState<
+    ProductUnit | ""
+  >("");
 
   // Tags input state
   const [tagInput, setTagInput] = useState("");
@@ -121,7 +128,7 @@ export default function ProductForm({
 
   // Check if selected product type is Combo
   const selectedProductType = productTypes.find(
-    (pt) => String(pt.id) === String(formData.product_type_id)
+    (pt) => String(pt.id) === String(formData.product_type_id),
   );
   const isComboType = selectedProductType?.name === "Combo";
 
@@ -131,7 +138,7 @@ export default function ProductForm({
       // Update formData with combo_data using type assertion
       onInputChange(
         "combo_data",
-        comboData as unknown as string | number | boolean | undefined
+        comboData as unknown as string | number | boolean | undefined,
       );
     } else {
       onInputChange("combo_data", undefined);
@@ -217,29 +224,39 @@ export default function ProductForm({
     { label: "On-net Minutes", value: "onnet_minutes" },
     { label: "Off-net Minutes", value: "offnet_minutes" },
     { label: "All-net Minutes", value: "allnet_minutes" },
+    { label: "Roaming Data (MB)", value: "roaming_data_mb" },
+    { label: "Roaming Minutes", value: "roaming_minutes" },
+    { label: "Roaming SMS Count", value: "roaming_sms_count" },
     { label: "Utility", value: "utility" },
     { label: "Points", value: "points" },
     { label: "Others", value: "other" },
   ];
 
-  // Unit options for combo resources
-  const getComboUnitOptions = (
-    resourceType: ComboResourceType
-  ): { label: string; value: ProductUnit }[] => {
-    switch (resourceType) {
-      case "data":
-        return [{ label: "Data (MB)", value: "data_mb" }];
-      case "voice":
-        return [
-          { label: "On-net Minutes", value: "onnet_minutes" },
-          { label: "Off-net Minutes", value: "offnet_minutes" },
-          { label: "All-net Minutes", value: "allnet_minutes" },
-        ];
-      case "sms":
-        return [{ label: "SMS Count", value: "sms_count" }];
-      default:
-        return [];
-    }
+  // Resource type options for dropdown
+  const resourceTypeOptions: {
+    label: string;
+    value: ProductUnit;
+    category: string;
+  }[] = [
+    { label: "Data (MB)", value: "data_mb", category: "Data" },
+    { label: "On-net Minutes", value: "onnet_minutes", category: "Voice" },
+    { label: "Off-net Minutes", value: "offnet_minutes", category: "Voice" },
+    { label: "All-net Minutes", value: "allnet_minutes", category: "Voice" },
+    { label: "SMS Count", value: "sms_count", category: "SMS" },
+    { label: "Roaming Data (MB)", value: "roaming_data_mb", category: "Roaming" },
+    { label: "Roaming Minutes", value: "roaming_minutes", category: "Roaming" },
+    { label: "Roaming SMS Count", value: "roaming_sms_count", category: "Roaming" },
+    { label: "Airtime", value: "airtime", category: "Other" },
+    { label: "Utility", value: "utility", category: "Other" },
+    { label: "Points", value: "points", category: "Other" },
+  ];
+
+  // Get label for a resource type
+  const getResourceTypeLabel = (resourceType: ProductUnit): string => {
+    return (
+      resourceTypeOptions.find((opt) => opt.value === resourceType)?.label ||
+      resourceType
+    );
   };
 
   const currentUnitLabel =
@@ -252,19 +269,19 @@ export default function ProductForm({
   ];
 
   // Combo resource handlers
-  const addComboResource = (resourceType: ComboResourceType) => {
-    const defaultUnit =
-      getComboUnitOptions(resourceType)[0]?.value || "data_mb";
+  const addComboResource = (resourceType: ProductUnit) => {
     const newResource: ComboResource = {
       resource_type: resourceType,
-      unit: defaultUnit,
+      unit: resourceType,
       unit_value: 0,
       validity_hours: undefined,
+      price: undefined,
     };
     setComboData({
       ...comboData,
       resources: [...comboData.resources, newResource],
     });
+    setSelectedResourceType(""); // Reset dropdown
   };
 
   const removeComboResource = (index: number) => {
@@ -277,7 +294,7 @@ export default function ProductForm({
   const updateComboResource = (
     index: number,
     field: keyof ComboResource,
-    value: string | number | boolean
+    value: string | number | boolean,
   ) => {
     const updatedResources = [...comboData.resources];
     updatedResources[index] = {
@@ -389,21 +406,30 @@ export default function ProductForm({
                 }}
                 className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                 style={{
-                  borderColor: errors.name ? color.status.danger : color.border.default,
+                  borderColor: errors.name
+                    ? color.status.danger
+                    : color.border.default,
                   outline: "none",
                 }}
                 placeholder="e.g., Premium Voice Bundle"
                 onFocus={(e) => {
-                  e.target.style.borderColor = errors.name ? color.status.danger : color.primary.accent;
+                  e.target.style.borderColor = errors.name
+                    ? color.status.danger
+                    : color.primary.accent;
                   e.target.style.boxShadow = `0 0 0 3px ${errors.name ? color.status.danger : color.primary.accent}20`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = errors.name ? color.status.danger : color.border.default;
+                  e.target.style.borderColor = errors.name
+                    ? color.status.danger
+                    : color.border.default;
                   e.target.style.boxShadow = "none";
                 }}
               />
               {errors.name && (
-                <p className="mt-1.5 text-sm" style={{ color: color.status.danger }}>
+                <p
+                  className="mt-1.5 text-sm"
+                  style={{ color: color.status.danger }}
+                >
                   {errors.name}
                 </p>
               )}
@@ -432,21 +458,30 @@ export default function ProductForm({
                 }}
                 className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all resize-none`}
                 style={{
-                  borderColor: errors.description ? color.status.danger : color.border.default,
+                  borderColor: errors.description
+                    ? color.status.danger
+                    : color.border.default,
                   outline: "none",
                 }}
                 placeholder="Describe the product features and benefits..."
                 onFocus={(e) => {
-                  e.target.style.borderColor = errors.description ? color.status.danger : color.primary.accent;
+                  e.target.style.borderColor = errors.description
+                    ? color.status.danger
+                    : color.primary.accent;
                   e.target.style.boxShadow = `0 0 0 3px ${errors.description ? color.status.danger : color.primary.accent}20`;
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = errors.description ? color.status.danger : color.border.default;
+                  e.target.style.borderColor = errors.description
+                    ? color.status.danger
+                    : color.border.default;
                   e.target.style.boxShadow = "none";
                 }}
               />
               {errors.description && (
-                <p className="mt-1.5 text-sm" style={{ color: color.status.danger }}>
+                <p
+                  className="mt-1.5 text-sm"
+                  style={{ color: color.status.danger }}
+                >
                   {errors.description}
                 </p>
               )}
@@ -627,7 +662,7 @@ export default function ProductForm({
                       | CreateProductRequest
                       | UpdateProductRequest
                     ),
-                    value as string
+                    value as string,
                   )
                 }
                 placeholder="Select product type"
@@ -657,6 +692,8 @@ export default function ProductForm({
                         resources: [],
                         shared_validity: true,
                         shared_validity_hours: undefined,
+                        shared_price: true,
+                        price: undefined,
                       });
                       setIsCustomComboMode(true);
                     }}
@@ -667,7 +704,7 @@ export default function ProductForm({
                     }}
                   >
                     <Plus className="w-4 h-4" />
-                    Create Custom Combo
+                    Create Combo Type
                   </button>
                 </div>
 
@@ -730,34 +767,59 @@ export default function ProductForm({
                   </p>
                 </div>
 
-                {/* Combo Price and Validity - Same Line */}
+                {/* Combo Price and Validity Configuration */}
                 <div
                   style={{ borderColor: color.border.default }}
                   className="mb-6 pb-6 border-b"
                 >
-                  {/* Shared Validity Checkbox */}
-                  <div className="mb-4">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={comboData.shared_validity ?? true}
-                        onChange={(e) =>
-                          setComboData({
-                            ...comboData,
-                            shared_validity: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        Shared Validity
-                      </span>
-                    </label>
+                  {/* Shared Configuration Checkboxes */}
+                  <div className="grid gap-4 md:grid-cols-2 mb-4">
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={comboData.shared_validity ?? true}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              shared_validity: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                        <span
+                          className={`text-sm font-medium ${tw.textPrimary}`}
+                        >
+                          Shared Validity
+                        </span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={comboData.shared_price ?? true}
+                          onChange={(e) =>
+                            setComboData({
+                              ...comboData,
+                              shared_price: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 cursor-pointer"
+                        />
+                        <span
+                          className={`text-sm font-medium ${tw.textPrimary}`}
+                        >
+                          Shared Price
+                        </span>
+                      </label>
+                    </div>
                   </div>
 
-                  {/* Validity Hours and Combo Price - Same Line */}
-                  {comboData.shared_validity && (
-                    <div className="grid gap-4 md:grid-cols-2">
+                  {/* Validity and Price Fields */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Shared Validity Hours */}
+                    {comboData.shared_validity && (
                       <div>
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -783,7 +845,10 @@ export default function ProductForm({
                           placeholder="e.g., 720 (30 days)"
                         />
                       </div>
+                    )}
 
+                    {/* Shared Combo Price */}
+                    {comboData.shared_price && (
                       <div>
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -809,111 +874,62 @@ export default function ProductForm({
                           placeholder="Enter combo price"
                         />
                       </div>
-                    </div>
-                  )}
-
-                  {!comboData.shared_validity && (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <label
-                          className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                        >
-                          Combo Price{" "}
-                          <span style={{ color: color.status.danger }}>*</span>
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={comboData.price ?? ""}
-                          onChange={(e) =>
-                            setComboData({
-                              ...comboData,
-                              price: e.target.value
-                                ? parseFloat(e.target.value)
-                                : undefined,
-                            })
-                          }
-                          className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                          style={{ borderColor: color.border.default }}
-                          placeholder="Enter combo price"
-                        />
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                {/* Show Add Resource Buttons only for custom combos */}
+                {/* Show Add Resource Selector only for custom combos */}
                 {isCustomComboMode && !comboData.combo_type_id && (
-                  <div className="flex gap-2 mb-4 flex-wrap">
+                  <div className="flex gap-3 mb-4 items-end">
+                    <div className="flex-1">
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Add Resource to Combo
+                      </label>
+                      <HeadlessSelect
+                        options={[
+                          { value: "", label: "Select resource type to add" },
+                          ...resourceTypeOptions
+                            .filter(
+                              (opt) =>
+                                !existingResourceTypes.includes(opt.value),
+                            )
+                            .map((opt) => ({
+                              value: opt.value,
+                              label: opt.label,
+                            })),
+                        ]}
+                        value={selectedResourceType}
+                        onChange={(value) =>
+                          setSelectedResourceType(value as ProductUnit | "")
+                        }
+                        placeholder="Select resource type"
+                        className="w-full"
+                        zIndex={zIndex.dropdown}
+                      />
+                    </div>
                     <button
                       type="button"
-                      onClick={() => addComboResource("data")}
-                      disabled={existingResourceTypes.includes("data")}
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
+                      onClick={() =>
+                        selectedResourceType &&
+                        addComboResource(selectedResourceType)
+                      }
+                      disabled={!selectedResourceType}
+                      className={`px-4 py-2.5 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap`}
                       style={{
-                        borderWidth: "1px",
-                        borderColor: color.primary.action,
-                        color: existingResourceTypes.includes("data")
-                          ? color.text.secondary
-                          : color.primary.action,
-                        backgroundColor: "transparent",
-                        opacity: existingResourceTypes.includes("data")
-                          ? 0.5
-                          : 1,
-                        cursor: existingResourceTypes.includes("data")
-                          ? "not-allowed"
-                          : "pointer",
+                        color: "#FFFFFF",
+                        backgroundColor: selectedResourceType
+                          ? color.primary.action
+                          : color.text.secondary,
+                        opacity: selectedResourceType ? 1 : 0.5,
+                        cursor: selectedResourceType
+                          ? "pointer"
+                          : "not-allowed",
                       }}
                     >
                       <Plus className="w-4 h-4" />
-                      Add Data
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addComboResource("voice")}
-                      disabled={existingResourceTypes.includes("voice")}
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
-                      style={{
-                        borderWidth: "1px",
-                        borderColor: color.primary.action,
-                        color: existingResourceTypes.includes("voice")
-                          ? color.text.secondary
-                          : color.primary.action,
-                        backgroundColor: "transparent",
-                        opacity: existingResourceTypes.includes("voice")
-                          ? 0.5
-                          : 1,
-                        cursor: existingResourceTypes.includes("voice")
-                          ? "not-allowed"
-                          : "pointer",
-                      }}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Voice
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addComboResource("sms")}
-                      disabled={existingResourceTypes.includes("sms")}
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2`}
-                      style={{
-                        borderWidth: "1px",
-                        borderColor: color.primary.action,
-                        color: existingResourceTypes.includes("sms")
-                          ? color.text.secondary
-                          : color.primary.action,
-                        backgroundColor: "transparent",
-                        opacity: existingResourceTypes.includes("sms")
-                          ? 0.5
-                          : 1,
-                        cursor: existingResourceTypes.includes("sms")
-                          ? "not-allowed"
-                          : "pointer",
-                      }}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add SMS
+                      Add Resource
                     </button>
                   </div>
                 )}
@@ -933,9 +949,9 @@ export default function ProductForm({
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <span
-                              className={`text-sm font-medium ${tw.textPrimary} capitalize`}
+                              className={`text-sm font-medium ${tw.textPrimary}`}
                             >
-                              {resource.resource_type}
+                              {getResourceTypeLabel(resource.resource_type)}
                             </span>
                           </div>
                           {!comboData.combo_type_id && (
@@ -962,24 +978,15 @@ export default function ProductForm({
                             >
                               Unit
                             </label>
-                            <HeadlessSelect
-                              options={getComboUnitOptions(
-                                resource.resource_type
-                              ).map((opt) => ({
-                                value: opt.value,
-                                label: opt.label,
-                              }))}
-                              value={resource.unit}
-                              onChange={(value) =>
-                                updateComboResource(
-                                  index,
-                                  "unit",
-                                  value as ProductUnit
-                                )
-                              }
-                              placeholder="Select unit"
-                              className="w-full"
-                              zIndex={zIndex.dropdown}
+                            <input
+                              type="text"
+                              value={getResourceTypeLabel(resource.unit)}
+                              disabled
+                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                              style={{ 
+                                borderColor: color.border.default,
+                                color: color.text.secondary,
+                              }}
                             />
                           </div>
 
@@ -998,7 +1005,7 @@ export default function ProductForm({
                                 updateComboResource(
                                   index,
                                   "unit_value",
-                                  parseFloat(e.target.value) || 0
+                                  parseFloat(e.target.value) || 0,
                                 )
                               }
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
@@ -1025,12 +1032,40 @@ export default function ProductForm({
                                     "validity_hours",
                                     e.target.value
                                       ? parseInt(e.target.value, 10)
-                                      : (0 as number)
+                                      : (0 as number),
                                   )
                                 }
                                 className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
                                 style={{ borderColor: color.border.default }}
                                 placeholder="e.g., 72"
+                              />
+                            </div>
+                          )}
+
+                          {!comboData.shared_price && (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Price
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={resource.price ?? ""}
+                                onChange={(e) =>
+                                  updateComboResource(
+                                    index,
+                                    "price",
+                                    e.target.value
+                                      ? parseFloat(e.target.value)
+                                      : (0 as number),
+                                  )
+                                }
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                                style={{ borderColor: color.border.default }}
+                                placeholder="Enter price"
                               />
                             </div>
                           )}
@@ -1075,89 +1110,93 @@ export default function ProductForm({
                 />
               </div>
 
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
-                >
-                  Unit
-                  <HelpCircle
-                    className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Unit defines the measurement type for this product (e.g., Data in MB, SMS count, Airtime, Minutes, etc.)"
+              {!isComboType && (
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
+                  >
+                    Unit
+                    <HelpCircle
+                      className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Unit defines the measurement type for this product (e.g., Data in MB, SMS count, Airtime, Minutes, etc.)"
+                    />
+                  </label>
+                  <HeadlessSelect
+                    options={unitOptions.map((opt) => ({
+                      value: opt.value,
+                      label: opt.label,
+                    }))}
+                    value={formData.unit || "data_mb"}
+                    onChange={(value) =>
+                      onInputChange("unit", value as ProductUnit)
+                    }
+                    placeholder="Select unit"
+                    className="w-full"
+                    zIndex={zIndex.dropdown}
                   />
-                </label>
-                <HeadlessSelect
-                  options={unitOptions.map((opt) => ({
-                    value: opt.value,
-                    label: opt.label,
-                  }))}
-                  value={formData.unit || "data_mb"}
-                  onChange={(value) =>
-                    onInputChange("unit", value as ProductUnit)
-                  }
-                  placeholder="Select unit"
-                  className="w-full"
-                  zIndex={zIndex.dropdown}
-                />
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Value & Validity (Not sent to backend - for future use) */}
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Value ({currentUnitLabel})
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.unit_value ?? ""}
-                  onChange={(e) =>
-                    onInputChange("unit_value", parseFloat(e.target.value) || 0)
-                  }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{ borderColor: color.border.default }}
-                  placeholder="Enter unit value"
-                />
-              </div>
-
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
-                >
-                  Validity (Hours)
-                  <HelpCircle
-                    className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
+            {!isComboType && (
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Value ({currentUnitLabel})
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.unit_value ?? ""}
+                    onChange={(e) =>
+                      onInputChange("unit_value", parseFloat(e.target.value) || 0)
+                    }
+                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                    style={{ borderColor: color.border.default }}
+                    placeholder="Enter unit value"
                   />
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={formData.validity_hours ?? ""}
-                  onChange={(e) =>
-                    onInputChange(
-                      "validity_hours",
-                      e.target.value ? parseInt(e.target.value, 10) : undefined
-                    )
-                  }
-                  className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
-                  style={{ borderColor: color.border.default }}
-                  placeholder="e.g., 72"
-                  onFocus={(e) => {
-                    e.target.style.borderColor = color.primary.accent;
-                    e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = color.border.default;
-                    e.target.style.boxShadow = "none";
-                  }}
-                />
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2 flex items-center gap-2 group`}
+                  >
+                    Validity (Hours)
+                    <HelpCircle
+                      className="w-4 h-4 text-gray-400 cursor-help opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Validity period specifies how long the product remains active after purchase (e.g., 24 hours = product expires 24 hours after activation). This should be set together with the Value field."
+                    />
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={formData.validity_hours ?? ""}
+                    onChange={(e) =>
+                      onInputChange(
+                        "validity_hours",
+                        e.target.value ? parseInt(e.target.value, 10) : undefined,
+                      )
+                    }
+                    className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
+                    style={{ borderColor: color.border.default }}
+                    placeholder="e.g., 72"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = color.primary.accent;
+                      e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = color.border.default;
+                      e.target.style.boxShadow = "none";
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}

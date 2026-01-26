@@ -471,6 +471,28 @@ const ServerPages = {
   ),
 };
 
+// ETL Pages - All routes preloaded for instant access
+const EtlPages = {
+  EtlFileRegistryPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../etl/pages/EtlFileRegistryPage"),
+  ),
+  EtlPendingFilesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../etl/pages/EtlPendingFilesPage"),
+  ),
+  EtlFetchControlsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../etl/pages/EtlFetchControlsPage"
+      ),
+  ),
+  EtlStatisticsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../etl/pages/EtlStatisticsPage"),
+  ),
+};
+
 // Analytics & Reports Pages - All routes preloaded for instant access
 // Using Suspense wrapper for faster perceived loading
 import CustomersPageWrapper from "./CustomersPageWrapper";
@@ -1023,6 +1045,15 @@ export default function Dashboard() {
           <Route
             path="/seed-list-management"
             element={<CampaignPages.SeedListManagementPage />}
+          />
+          <Route path="/etl" element={<EtlPages.EtlFileRegistryPage />} />
+          <Route
+            path="/etl/fetch"
+            element={<EtlPages.EtlFetchControlsPage />}
+          />
+          <Route
+            path="/etl/analytics"
+            element={<EtlPages.EtlStatisticsPage />}
           />
         </Routes>
       </Suspense>

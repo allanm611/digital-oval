@@ -101,6 +101,8 @@ export default function WorkflowsAnalyticsPage() {
     Array<{ workflow_type: string | null; count: number }>
   >([]);
 
+  const { t } = useLanguage();
+
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -128,7 +130,7 @@ export default function WorkflowsAnalyticsPage() {
     } catch (err) {
       showError(
         t.common.error,
-        err instanceof Error ? err.message : t.common.error
+        err instanceof Error ? err.message : t.analytics.failedToLoadAnalytics
       );
     } finally {
       setIsLoading(false);
@@ -180,10 +182,10 @@ export default function WorkflowsAnalyticsPage() {
         </button>
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Workflows Analytics
+            {t.analytics.workflowsAnalytics}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Insights and metrics for workflows
+            {t.analytics.performanceMetrics}
           </p>
         </div>
       </div>
@@ -201,7 +203,7 @@ export default function WorkflowsAnalyticsPage() {
                   style={{ color: color.primary.accent }}
                 />
                 <p className="text-sm font-medium text-gray-600">
-                  Total Workflows
+                  {t.analytics.totalWorkflows}
                 </p>
               </div>
               <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -270,7 +272,7 @@ export default function WorkflowsAnalyticsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Status Distribution
+            {t.analytics.statusDistribution}
           </h2>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
@@ -306,7 +308,7 @@ export default function WorkflowsAnalyticsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Workflows by Type
+            {t.analytics.countByType}
           </h2>
           <ResponsiveContainer width="100%" height={360}>
             <BarChart data={typeChartData}>

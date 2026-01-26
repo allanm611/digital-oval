@@ -33,7 +33,7 @@ export const DATA_CONNECTOR_TO_CONNECTION_PROFILE_TYPE_MAP: Record<
  * Get connection profile types that can be used with a data connector
  */
 export function getConnectionProfileTypesForDataConnector(
-  dataConnectorType: DataConnectorType
+  dataConnectorType: DataConnectorType,
 ): string[] {
   return DATA_CONNECTOR_TO_CONNECTION_PROFILE_TYPE_MAP[dataConnectorType] || [];
 }

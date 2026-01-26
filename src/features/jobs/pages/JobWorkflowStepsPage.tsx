@@ -28,6 +28,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
@@ -66,6 +67,7 @@ const FAILURE_ACTION_OPTIONS: Array<{ label: string; value: FailureAction }> = [
 export default function JobWorkflowStepsPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   const [steps, setSteps] = useState<JobWorkflowStep[]>([]);
@@ -383,9 +385,9 @@ export default function JobWorkflowStepsPage() {
         const message =
           err instanceof Error
             ? err.message
-            : "Failed to load job workflow steps";
+            : t("jobWorkflowSteps.loadFailed", "Failed to load job workflow steps");
         setErrorMessage(message);
-        showError("Job Workflow Steps", message);
+        showError(t("common.jobWorkflowSteps", "Job Workflow Steps"), message);
       } finally {
         setIsLoading(false);
       }
@@ -407,6 +409,7 @@ export default function JobWorkflowStepsPage() {
       showError,
       page,
       pageSize,
+      t,
     ],
   );
 
@@ -598,10 +601,10 @@ export default function JobWorkflowStepsPage() {
 
       if (result) {
         showToast(
-          `Batch ${action} completed`,
-          `${result.success} step(s) ${action}d successfully${
+          t("jobWorkflowSteps.batchCompleted", `Batch ${action} completed`),
+          t("jobWorkflowSteps.batchSuccess", `${result.success} step(s) ${action}d successfully${
             result.failed > 0 ? `, ${result.failed} failed` : ""
-          }`,
+          }`),
         );
       }
 
@@ -610,8 +613,8 @@ export default function JobWorkflowStepsPage() {
       fetchSteps(); // Refresh the list
     } catch (err) {
       showError(
-        `Batch ${action} failed`,
-        err instanceof Error ? err.message : "Unknown error",
+        t("jobWorkflowSteps.batchFailed", `Batch ${action} failed`),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -621,8 +624,8 @@ export default function JobWorkflowStepsPage() {
   const handleOpenReorderModal = () => {
     if (!jobIdFilter) {
       showError(
-        "Job ID required",
-        "Please filter by a specific job to reorder steps.",
+        t("jobWorkflowSteps.jobIdRequired", "Job ID required"),
+        t("jobWorkflowSteps.filterByJobToReorder", "Please filter by a specific job to reorder steps."),
       );
       return;
     }
@@ -703,13 +706,13 @@ export default function JobWorkflowStepsPage() {
 
       if (result.data?.updated && result.data.updated > 0) {
         showToast(
-          "Steps reordered",
-          `${result.data.updated} step(s) reordered successfully.`,
+          t("jobWorkflowSteps.reordered", "Steps reordered"),
+          t("jobWorkflowSteps.reorderedSuccess", `${result.data.updated} step(s) reordered successfully.`),
         );
       } else {
         showToast(
-          "Steps reordered",
-          "Step order has been updated successfully.",
+          t("jobWorkflowSteps.reordered", "Steps reordered"),
+          t("jobWorkflowSteps.orderUpdated", "Step order has been updated successfully."),
         );
       }
 
@@ -718,8 +721,8 @@ export default function JobWorkflowStepsPage() {
       fetchSteps();
     } catch (err) {
       showError(
-        "Reorder failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t("jobWorkflowSteps.reorderFailed", "Reorder failed"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsReordering(false);
@@ -734,16 +737,16 @@ export default function JobWorkflowStepsPage() {
       const result =
         await jobWorkflowStepService.deleteAllStepsForJob(deleteAllJobId);
       showToast(
-        "All steps deleted",
-        `${result.deleted_count} step(s) deleted successfully.`,
+        t("jobWorkflowSteps.allDeleted", "All steps deleted"),
+        t("jobWorkflowSteps.deleteSuccess", `${result.deleted_count} step(s) deleted successfully.`),
       );
       setShowDeleteAllModal(false);
       setDeleteAllJobId(null);
       fetchSteps();
     } catch (err) {
       showError(
-        "Delete failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t("jobWorkflowSteps.deleteFailed", "Delete failed"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsDeletingAll(false);
@@ -768,10 +771,10 @@ export default function JobWorkflowStepsPage() {
       });
 
       showToast(
-        "Batch update completed",
-        `${result.success} step(s) updated successfully${
+        t("jobWorkflowSteps.updateCompleted", "Batch update completed"),
+        t("jobWorkflowSteps.updateSuccess", `${result.success} step(s) updated successfully${
           result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`,
+        }`),
       );
 
       setShowBatchUpdateModal(false);
@@ -781,8 +784,8 @@ export default function JobWorkflowStepsPage() {
       fetchSteps();
     } catch (err) {
       showError(
-        "Batch update failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t("jobWorkflowSteps.updateFailed", "Batch update failed"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsBatchUpdating(false);
@@ -793,14 +796,14 @@ export default function JobWorkflowStepsPage() {
     try {
       await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
-        "Step duplicated",
-        `"${step.step_name}" has been duplicated successfully.`,
+        t("jobWorkflowSteps.duplicated", "Step duplicated"),
+        t("jobWorkflowSteps.duplicateSuccess", `"${step.step_name}" has been duplicated successfully.`),
       );
       fetchSteps();
     } catch (err) {
       showError(
-        "Failed to duplicate step",
-        err instanceof Error ? err.message : "Unknown error",
+        t("jobWorkflowSteps.duplicateFailed", "Failed to duplicate step"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     }
   };
@@ -1526,8 +1529,8 @@ export default function JobWorkflowStepsPage() {
                 deletingStep.id,
               );
               showToast(
-                "Workflow step deleted",
-                `"${deletingStep.step_name}" has been deleted successfully.`,
+                t("jobWorkflowSteps.stepDeleted", "Workflow step deleted"),
+                t("jobWorkflowSteps.stepDeleteSuccess", `"${deletingStep.step_name}" has been deleted successfully.`),
               );
               setShowDeleteModal(false);
               setDeletingStep(null);
@@ -1536,8 +1539,8 @@ export default function JobWorkflowStepsPage() {
               const message =
                 err instanceof Error
                   ? err.message
-                  : "Failed to delete workflow step";
-              showError("Unable to delete workflow step", message);
+                  : t("jobWorkflowSteps.stepDeleteFailed", "Failed to delete workflow step");
+              showError(t("jobWorkflowSteps.unableToDelete", "Unable to delete workflow step"), message);
             } finally {
               setIsDeleting(false);
             }

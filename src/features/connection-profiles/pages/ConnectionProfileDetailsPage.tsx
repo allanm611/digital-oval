@@ -22,6 +22,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 
@@ -30,6 +31,7 @@ export default function ConnectionProfileDetailsPage() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<ConnectionProfileType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function ConnectionProfileDetailsPage() {
   const [markUsedLoading, setMarkUsedLoading] = useState(false);
   const [healthModalOpen, setHealthModalOpen] = useState(false);
   const [healthStatus, setHealthStatus] = useState<"healthy" | "unhealthy">(
-    "healthy"
+    "healthy",
   );
   const [healthSaving, setHealthSaving] = useState(false);
   const [validityModalOpen, setValidityModalOpen] = useState(false);
@@ -50,17 +52,19 @@ export default function ConnectionProfileDetailsPage() {
   const [validityStatus, setValidityStatus] = useState<boolean | null>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  const fetchValidityStatus = useCallback(async (profileId: number) => {
-    try {
-      const validity = await connectionProfileService.checkProfileValidity(
-        profileId
-      );
-      setValidityStatus(validity?.data?.is_valid ?? null);
-    } catch (err) {
-      console.error("Failed to check connection profile validity:", err);
-      setValidityStatus(null);
-    }
-  }, []);
+  const fetchValidityStatus = useCallback(
+    async (profileId: number) => {
+      try {
+        const validity =
+          await connectionProfileService.checkProfileValidity(profileId);
+        setValidityStatus(validity?.data?.is_valid ?? null);
+      } catch (err) {
+        console.error("Failed to check connection profile validity:", err);
+        setValidityStatus(null);
+      }
+    },
+    [t],
+  );
 
   const loadProfile = useCallback(async () => {
     if (!id) return;
@@ -70,7 +74,7 @@ export default function ConnectionProfileDetailsPage() {
       const data = await connectionProfileService.getProfile(Number(id), true);
       setProfile(data);
       setHealthStatus(
-        data.last_health_check_status === "unhealthy" ? "unhealthy" : "healthy"
+        data.last_health_check_status === "unhealthy" ? "unhealthy" : "healthy",
       );
       setValidityForm({
         valid_from: data.valid_from?.split("T")[0] ?? "",
@@ -80,13 +84,15 @@ export default function ConnectionProfileDetailsPage() {
     } catch (err) {
       console.error("Failed to load connection profile:", err);
       showError(
-        "Failed to load connection profile",
-        err instanceof Error ? err.message : "Please try again later."
+        t.analytics?.["failed_to_load"] || "Failed to load connection profile",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setLoading(false);
     }
-  }, [id, showError, fetchValidityStatus]);
+  }, [id, showError, fetchValidityStatus, t]);
 
   useEffect(() => {
     if (id) {
@@ -127,21 +133,23 @@ export default function ConnectionProfileDetailsPage() {
       if (profile.is_active) {
         await connectionProfileService.deactivateProfile(
           profile.id,
-          user?.user_id
+          user?.user_id,
         );
         success("Connection profile deactivated");
       } else {
         await connectionProfileService.activateProfile(
           profile.id,
-          user?.user_id
+          user?.user_id,
         );
         success("Connection profile activated");
       }
       await loadProfile();
     } catch (err) {
       showError(
-        "Failed to update status",
-        err instanceof Error ? err.message : "Please try again later."
+        t.analytics?.["failed_to_update"] || "Failed to update status",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setTogglingStatus(false);
@@ -157,8 +165,10 @@ export default function ConnectionProfileDetailsPage() {
       await loadProfile();
     } catch (err) {
       showError(
-        "Failed to mark profile as used",
-        err instanceof Error ? err.message : "Please try again later."
+        t.analytics?.["failed_to_update"] || "Failed to mark profile as used",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setMarkUsedLoading(false);
@@ -177,8 +187,10 @@ export default function ConnectionProfileDetailsPage() {
       await loadProfile();
     } catch (err) {
       showError(
-        "Failed to update health status",
-        err instanceof Error ? err.message : "Please try again later."
+        t.analytics?.["failed_to_update"] || "Failed to update health status",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setHealthSaving(false);
@@ -188,7 +200,9 @@ export default function ConnectionProfileDetailsPage() {
   const handleOpenHealthModal = () => {
     if (!profile) return;
     setHealthStatus(
-      profile.last_health_check_status === "unhealthy" ? "unhealthy" : "healthy"
+      profile.last_health_check_status === "unhealthy"
+        ? "unhealthy"
+        : "healthy",
     );
     setHealthModalOpen(true);
   };
@@ -205,7 +219,10 @@ export default function ConnectionProfileDetailsPage() {
   const handleSaveValidity = async () => {
     if (!profile) return;
     if (!validityForm.valid_from) {
-      showError("Validation error", "Valid from date is required.");
+      showError(
+        t.common?.["validation_error"] || "Validation error",
+        t.common?.["required_field"] || "Valid from date is required.",
+      );
       return;
     }
 
@@ -223,8 +240,10 @@ export default function ConnectionProfileDetailsPage() {
       await fetchValidityStatus(profile.id);
     } catch (err) {
       showError(
-        "Failed to update validity",
-        err instanceof Error ? err.message : "Please try again later."
+        t.analytics?.["failed_to_update"] || "Failed to update validity",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setValiditySaving(false);

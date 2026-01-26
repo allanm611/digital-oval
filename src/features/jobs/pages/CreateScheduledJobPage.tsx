@@ -15,6 +15,7 @@ import {
 } from "../types/scheduledJob";
 import { JobType } from "../types/job";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -53,6 +54,7 @@ export default function CreateScheduledJobPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const isEditMode = !!id;
 
@@ -138,8 +140,8 @@ export default function CreateScheduledJobPage() {
           });
         } catch (err) {
           showError(
-            "Failed to load job",
-            err instanceof Error ? err.message : "Unknown error",
+            t("scheduledJob.loadFailed", "Failed to load job"),
+            err instanceof Error ? err.message : t.common.error || "Unknown error",
           );
           navigate("/dashboard/scheduled-jobs");
         } finally {
@@ -148,7 +150,7 @@ export default function CreateScheduledJobPage() {
       };
       loadJob();
     }
-  }, [id, isEditMode, navigate, showError]);
+  }, [id, isEditMode, navigate, showError, t]);
 
   const validateForm = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
@@ -235,8 +237,8 @@ export default function CreateScheduledJobPage() {
         };
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
         showToast(
-          "Job updated",
-          `${jobDisplayName} has been updated successfully`,
+          t("scheduledJob.updated", "Job updated"),
+          t("scheduledJob.updateSuccess", `${jobDisplayName} has been updated successfully`),
         );
       } else {
         await scheduledJobService.createScheduledJob({
@@ -244,15 +246,15 @@ export default function CreateScheduledJobPage() {
           created_by: created_by ?? (user?.user_id || 1),
         });
         showToast(
-          "Job created",
-          `${jobDisplayName} has been created successfully`,
+          t("scheduledJob.created", "Job created"),
+          t("scheduledJob.createSuccess", `${jobDisplayName} has been created successfully`),
         );
       }
       navigate("/dashboard/scheduled-jobs");
     } catch (err) {
       showError(
-        isEditMode ? "Failed to update job" : "Failed to create job",
-        err instanceof Error ? err.message : "Unknown error",
+        isEditMode ? t("scheduledJob.updateFailed", "Failed to update job") : t("scheduledJob.createFailed", "Failed to create job"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsSaving(false);
@@ -263,7 +265,7 @@ export default function CreateScheduledJobPage() {
     const trimmed = newTag.trim();
     if (!trimmed) return;
     if (formData.tags?.includes(trimmed)) {
-      showError("Duplicate tag", "This tag has already been added");
+      showError(t("scheduledJob.duplicateTag", "Duplicate tag"), t("scheduledJob.duplicateTagMessage", "This tag has already been added"));
       return;
     }
     setFormData({

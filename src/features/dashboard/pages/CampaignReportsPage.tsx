@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Activity,
   ArrowUpRight,
@@ -403,6 +404,7 @@ const statIcons = {
 };
 
 export default function CampaignReportsPage() {
+  const { t } = useLanguage();
   const [tableQuery, setTableQuery] = useState("");
   const [segmentFilter, setSegmentFilter] = useState("All");
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");

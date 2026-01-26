@@ -17,6 +17,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { CONNECTION_TYPE_OPTIONS } from "../constants/connectionTypes";
 
@@ -31,6 +32,7 @@ export default function ConnectionProfileFormPage({
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -103,13 +105,15 @@ export default function ConnectionProfileFormPage({
     } catch (err) {
       console.error("Failed to load connection profile:", err);
       showError(
-        "Failed to load connection profile",
-        err instanceof Error ? err.message : "Please try again later.",
+        t.analytics?.["failed_to_load"] || "Failed to load connection profile",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setLoading(false);
     }
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     if (mode === "edit" && id) {
@@ -171,10 +175,12 @@ export default function ConnectionProfileFormPage({
             ? String(err.message)
             : "Please try again later.";
       console.error("Connection profile error:", err);
+      const action = mode === "create" ? "create" : "update";
+      const translationKey =
+        mode === "create" ? "failed_to_create" : "failed_to_update";
       showError(
-        `Failed to ${
-          mode === "create" ? "create" : "update"
-        } connection profile`,
+        t.analytics?.[translationKey] ||
+          `Failed to ${action} connection profile`,
         errorMessage,
       );
     } finally {

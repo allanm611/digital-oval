@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import type { StepType, JobWorkflowStep } from "../types/jobWorkflowStep";
@@ -101,6 +102,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
   const [searchParams] = useSearchParams();
   const jobIdParam = searchParams.get("job_id");
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState(true);
   const [statistics, setStatistics] = useState<{
@@ -281,13 +283,13 @@ export default function JobWorkflowStepsAnalyticsPage() {
     } catch (err) {
       console.error("Failed to load analytics:", err);
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to load analytics data"
+        t.analytics.failedToLoadAnalytics,
+        t.analytics.errorLoadingData
       );
     } finally {
       setIsLoading(false);
     }
-  }, [jobIdParam, showError]);
+  }, [jobIdParam, showError, t]);
 
   useEffect(() => {
     loadAnalytics();

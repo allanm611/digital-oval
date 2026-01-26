@@ -1880,6 +1880,101 @@ export interface Translations {
     };
   };
 
+  // Workflows
+  workflows: {
+    createWorkflow: string;
+    editWorkflow: string;
+    workflowInformation: string;
+    nameRequired: string;
+    workflowUpdated: string;
+    workflowUpdateSuccess: string;
+    workflowCreated: string;
+    workflowCreateSuccess: string;
+    failedToLoadWorkflow: string;
+    failedToSaveWorkflow: string;
+    enterWorkflowName: string;
+    enterWorkflowDescription: string;
+    enterWorkflowType: string;
+    updating: string;
+    creating: string;
+    loadingWorkflows: string;
+    workflowDeactivated: string;
+    workflowDeactivatedSuccess: string;
+    workflowActivated: string;
+    workflowActivatedSuccess: string;
+    toggleFailed: string;
+    cloneSuccess: string;
+    workflowClonedSuccess: string;
+    cloneFailed: string;
+    deleteSuccess: string;
+    workflowDeletedSuccess: string;
+    deleteFailed: string;
+  };
+
+  // Products
+  products: {
+    createNewProduct: string;
+    addNewProduct: string;
+    editProduct: string;
+    validationError: string;
+    productCodeNameRequired: string;
+    productCreated: string;
+    productCreateSuccess: string;
+    failedToCreateProduct: string;
+    productUpdated: string;
+    productUpdateSuccess: string;
+    failedToUpdateProduct: string;
+    failedToLoadProduct: string;
+    createProduct: string;
+    editProductPage: string;
+  };
+
+  // Analytics
+  analytics: {
+    title: string;
+    loadingAnalytics: string;
+    failedToLoadAnalytics: string;
+    errorLoadingData: string;
+    noData: string;
+    timeRange: string;
+    timeRangeLastDay: string;
+    timeRangeLastWeek: string;
+    timeRangeLastMonth: string;
+    timeRangeLastQuarter: string;
+    timeRangeLastYear: string;
+    timeRangeCustom: string;
+    from: string;
+    to: string;
+    apply: string;
+    totalWorkflows: string;
+    workflowsAnalytics: string;
+    campaignsAnalytics: string;
+    statusDistribution: string;
+    countByType: string;
+    performanceMetrics: string;
+    chartTitle: string;
+    refreshing: string;
+  };
+
+  // Reports
+  reports: {
+    title: string;
+    campaignReports: string;
+    customerReports: string;
+    offerReports: string;
+    generateReport: string;
+    exportReport: string;
+    exportPDF: string;
+    exportCSV: string;
+    downloadReport: string;
+    reportGenerated: string;
+    failedToGenerateReport: string;
+    selectDateRange: string;
+    runReport: string;
+    running: string;
+    reportTitle: string;
+  };
+
   // Sidebar
   sidebar: {
     logo: {

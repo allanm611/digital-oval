@@ -47,6 +47,7 @@ import {
   ExecutionTimelineItem,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { XCircle, Activity, Clock } from "lucide-react";
@@ -107,6 +108,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 export default function JobExecutionsAnalyticsPage() {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -382,13 +384,13 @@ export default function JobExecutionsAnalyticsPage() {
       setTriggerDistribution(normalizeArray(triggers));
     } catch (err) {
       showError(
-        "Analytics",
-        err instanceof Error ? err.message : "Failed to load analytics"
+        t.analytics.title,
+        err instanceof Error ? err.message : t.analytics.failedToLoadAnalytics
       );
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();

@@ -13,6 +13,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   Role,
@@ -84,6 +85,7 @@ const PERMISSION_ACTIONS = [
 export default function TeamRolesPermissionsPage() {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const userId = user?.user_id;
 
@@ -163,13 +165,13 @@ export default function TeamRolesPermissionsPage() {
       setRolesTotal(response.meta?.total || response.roles.length);
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to load roles",
+        t.common.error,
+        err instanceof Error ? err.message : t.analytics.failedToLoad,
       );
     } finally {
       setRolesLoading(false);
     }
-  }, [activeTab, rolesPaginationModel, showError]);
+  }, [activeTab, rolesPaginationModel, showError, t]);
 
   useEffect(() => {
     if (activeTab === "roles") {
@@ -229,8 +231,8 @@ export default function TeamRolesPermissionsPage() {
       fetchRoles();
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to clone role",
+        t.common.error,
+        err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
       setRolesLoading(false);
@@ -253,7 +255,7 @@ export default function TeamRolesPermissionsPage() {
     if (!roleToDeactivate) return;
 
     if (!roleDeactivationReason.trim()) {
-      showError("Error", "Deactivation reason is required");
+      showError(t.common.error, t.common.fieldRequired);
       return;
     }
 
@@ -277,8 +279,8 @@ export default function TeamRolesPermissionsPage() {
       );
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to deactivate role",
+        t.common.error,
+        err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
       setDeactivatingRoleId(null);
@@ -296,8 +298,8 @@ export default function TeamRolesPermissionsPage() {
       );
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to reactivate role",
+        t.common.error,
+        err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
       setTogglingRoleId(null);
@@ -323,8 +325,8 @@ export default function TeamRolesPermissionsPage() {
       setRoles(roles.filter((r) => r.id !== deleteTarget.id));
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to delete role",
+        t.common.error,
+        err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
       setIsDeleting(false);
@@ -355,14 +357,14 @@ export default function TeamRolesPermissionsPage() {
     } catch (err) {
       console.error("Failed to load permissions:", err);
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to load permissions",
+        t.common.error,
+        err instanceof Error ? err.message : t.analytics.failedToLoad,
       );
       setPermissions([]);
     } finally {
       setPermissionsLoading(false);
     }
-  }, [activeTab, permissionsPaginationModel, showError]);
+  }, [activeTab, permissionsPaginationModel, showError, t]);
 
   useEffect(() => {
     if (activeTab === "permissions") {
@@ -425,10 +427,10 @@ export default function TeamRolesPermissionsPage() {
       );
     } catch (err) {
       showError(
-        "Error",
+        t.common.error,
         err instanceof Error
           ? err.message
-          : "Failed to update permission status",
+          : t.common.failedToPerformAction,
       );
     } finally {
       setIsDeleting(false);

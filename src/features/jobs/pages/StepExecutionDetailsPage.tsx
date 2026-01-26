@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { stepExecutionService } from "../services/stepExecutionService";
 import { StepExecution } from "../types/stepExecution";
 import { ExecutionProgress, ResourceUsage } from "../types/jobExecution";
@@ -64,6 +65,7 @@ export default function StepExecutionDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const canWrite =
     ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
@@ -113,8 +115,8 @@ export default function StepExecutionDetailsPage() {
         }
       } catch (err) {
         showError(
-          "Step Execution",
-          err instanceof Error ? err.message : "Failed to load execution"
+          t("stepExecution.title", "Step Execution"),
+          err instanceof Error ? err.message : t("stepExecution.loadFailed", "Failed to load execution")
         );
       } finally {
         setIsLoading(false);
@@ -134,7 +136,7 @@ export default function StepExecutionDetailsPage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [id, execution?.execution_status, showError]);
+  }, [id, execution?.execution_status, showError, t]);
 
   if (isLoading) {
     return (
@@ -188,14 +190,14 @@ export default function StepExecutionDetailsPage() {
                 try {
                   await stepExecutionService.markStepExecutionAborted(id);
                   showToast(
-                    "Step Execution Aborted",
-                    "The step execution has been aborted"
+                    t("stepExecution.aborted", "Step Execution Aborted"),
+                    t("stepExecution.abortedSuccess", "The step execution has been aborted")
                   );
                   navigate("/dashboard/step-executions");
                 } catch (err) {
                   showError(
-                    "Abort Failed",
-                    err instanceof Error ? err.message : "Unknown error"
+                    t("stepExecution.abortFailed", "Abort Failed"),
+                    err instanceof Error ? err.message : t.common.error || "Unknown error"
                   );
                 }
               }}
@@ -208,7 +210,7 @@ export default function StepExecutionDetailsPage() {
           {canWrite && execution.execution_status === "failure" && (
             <button
               onClick={async () => {
-                if (!window.confirm("Retry this failed step execution?"))
+                if (!window.confirm(t("stepExecution.retryConfirm", "Retry this failed step execution?")))
                   return;
                 try {
                   await stepExecutionService.retryFailedSteps({
@@ -217,14 +219,14 @@ export default function StepExecutionDetailsPage() {
                     userId: user?.user_id,
                   });
                   showToast(
-                    "Retry Initiated",
-                    "Failed step execution is being retried"
+                    t("stepExecution.retryInitiated", "Retry Initiated"),
+                    t("stepExecution.retrySuccess", "Failed step execution is being retried")
                   );
                   navigate("/dashboard/step-executions");
                 } catch (err) {
                   showError(
-                    "Retry Failed",
-                    err instanceof Error ? err.message : "Unknown error"
+                    t("stepExecution.retryFailed", "Retry Failed"),
+                    err instanceof Error ? err.message : t.common.error || "Unknown error"
                   );
                 }
               }}
@@ -479,14 +481,14 @@ export default function StepExecutionDetailsPage() {
                   try {
                     await stepExecutionService.markStepExecutionStarted(id);
                     showToast(
-                      "Step Execution Started",
-                      "The step execution has been marked as started"
+                      t("stepExecution.started", "Step Execution Started"),
+                      t("stepExecution.startedSuccess", "The step execution has been marked as started")
                     );
                     window.location.reload();
                   } catch (err) {
                     showError(
-                      "Action Failed",
-                      err instanceof Error ? err.message : "Unknown error"
+                      t("stepExecution.actionFailed", "Action Failed"),
+                      err instanceof Error ? err.message : t.common.error || "Unknown error"
                     );
                   }
                 }}
@@ -505,14 +507,14 @@ export default function StepExecutionDetailsPage() {
                     try {
                       await stepExecutionService.markStepExecutionCompleted(id);
                       showToast(
-                        "Step Execution Completed",
-                        "The step execution has been marked as completed"
+                        t("stepExecution.completed", "Step Execution Completed"),
+                        t("stepExecution.completedSuccess", "The step execution has been marked as completed")
                       );
                       window.location.reload();
                     } catch (err) {
                       showError(
-                        "Action Failed",
-                        err instanceof Error ? err.message : "Unknown error"
+                        t("stepExecution.actionFailed", "Action Failed"),
+                        err instanceof Error ? err.message : t.common.error || "Unknown error"
                       );
                     }
                   }}
@@ -527,17 +529,17 @@ export default function StepExecutionDetailsPage() {
                     if (!id) return;
                     try {
                       await stepExecutionService.markStepExecutionFailed(id, {
-                        error_message: "Manually marked as failed",
+                        error_message: t("stepExecution.manuallyMarked", "Manually marked as failed"),
                       });
                       showToast(
-                        "Step Execution Failed",
-                        "The step execution has been marked as failed"
+                        t("stepExecution.failed", "Step Execution Failed"),
+                        t("stepExecution.failedSuccess", "The step execution has been marked as failed")
                       );
                       window.location.reload();
                     } catch (err) {
                       showError(
-                        "Action Failed",
-                        err instanceof Error ? err.message : "Unknown error"
+                        t("stepExecution.actionFailed", "Action Failed"),
+                        err instanceof Error ? err.message : t.common.error || "Unknown error"
                       );
                     }
                   }}
@@ -552,14 +554,14 @@ export default function StepExecutionDetailsPage() {
                     try {
                       await stepExecutionService.markStepExecutionTimeout(id);
                       showToast(
-                        "Step Execution Timed Out",
-                        "The step execution has been marked as timed out"
+                        t("stepExecution.timedOut", "Step Execution Timed Out"),
+                        t("stepExecution.timedOutSuccess", "The step execution has been marked as timed out")
                       );
                       window.location.reload();
                     } catch (err) {
                       showError(
-                        "Action Failed",
-                        err instanceof Error ? err.message : "Unknown error"
+                        t("stepExecution.actionFailed", "Action Failed"),
+                        err instanceof Error ? err.message : t.common.error || "Unknown error"
                       );
                     }
                   }}

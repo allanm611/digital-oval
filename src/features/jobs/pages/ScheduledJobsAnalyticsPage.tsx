@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -77,6 +78,7 @@ type GenericRecord = Record<string, unknown>;
 export default function ScheduledJobsAnalyticsPage(): JSX.Element {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [executionStats, setExecutionStats] = useState<Record<
@@ -326,11 +328,11 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
       setOwnerCounts(normalizedOwners);
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError("Failed to load analytics", "Unable to fetch analytics data");
+      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();

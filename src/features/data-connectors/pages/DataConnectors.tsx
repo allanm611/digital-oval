@@ -66,7 +66,7 @@ export default function DataConnectors() {
 
   const handleMenuToggle = (
     e: React.MouseEvent<HTMLButtonElement>,
-    connectorId: string
+    connectorId: string,
   ) => {
     e.stopPropagation();
     setActionMenuOpen((prev) => (prev === connectorId ? null : connectorId));
@@ -75,7 +75,7 @@ export default function DataConnectors() {
   const handleMenuAction = (
     e: React.MouseEvent<HTMLButtonElement>,
     action: "view" | "edit" | "clone" | "export" | "import" | "delete",
-    connector: DataConnector
+    connector: DataConnector,
   ) => {
     e.stopPropagation();
     setActionMenuOpen(null);
@@ -85,31 +85,19 @@ export default function DataConnectors() {
         handleConnectorClick(connector);
         break;
       case "edit":
-        showError(
-          "Not implemented",
-          "Edit connector will be available soon"
-        );
+        showError("Not implemented", "Edit connector will be available soon");
         break;
       case "clone":
         showError("Not implemented", "Clone connector will be available soon");
         break;
       case "export":
-        showError(
-          "Not implemented",
-          "Export connector will be available soon"
-        );
+        showError("Not implemented", "Export connector will be available soon");
         break;
       case "import":
-        showError(
-          "Not implemented",
-          "Import connector will be available soon"
-        );
+        showError("Not implemented", "Import connector will be available soon");
         break;
       case "delete":
-        showError(
-          "Not implemented",
-          "Delete connector will be available soon"
-        );
+        showError("Not implemented", "Delete connector will be available soon");
         break;
       default:
         break;
@@ -389,7 +377,9 @@ export default function DataConnectors() {
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={(e) => handleMenuAction(e, "edit", connector)}
+                            onClick={(e) =>
+                              handleMenuAction(e, "edit", connector)
+                            }
                             className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
                             title="Edit"
                           >
@@ -412,18 +402,24 @@ export default function DataConnectors() {
                                   { key: "clone", label: "Clone" },
                                   { key: "export", label: "Export" },
                                   { key: "import", label: "Import" },
-                                  { key: "delete", label: "Delete", danger: true },
+                                  {
+                                    key: "delete",
+                                    label: "Delete",
+                                    danger: true,
+                                  },
                                 ].map((item) => (
                                   <button
                                     key={item.key}
                                     className={`w-full px-4 py-2 text-left text-sm transition-colors ${tw.textPrimary} hover:bg-gray-50 ${
-                                      item.danger ? "text-red-600 hover:bg-red-50" : ""
+                                      item.danger
+                                        ? "text-red-600 hover:bg-red-50"
+                                        : ""
                                     }`}
                                     onClick={(e) =>
                                       handleMenuAction(
                                         e,
                                         item.key as any,
-                                        connector
+                                        connector,
                                       )
                                     }
                                   >
@@ -443,7 +439,7 @@ export default function DataConnectors() {
           </div>
         </div>
       )}
-      
+
       {/* Create Modal */}
       <CreateDataConnectorModal
         isOpen={createModalOpen}

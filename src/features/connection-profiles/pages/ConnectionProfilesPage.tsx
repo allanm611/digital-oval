@@ -24,6 +24,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -67,6 +68,7 @@ export default function ConnectionProfilesPage() {
   const { error: showError, success: showSuccess } = useToast();
   const { confirm } = useConfirm();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [profiles, setProfiles] = useState<ConnectionProfileType[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<
@@ -241,8 +243,8 @@ export default function ConnectionProfilesPage() {
     } catch (err) {
       console.error("Failed to load connection profiles", err);
       showError(
-        "Failed to load connection profiles",
-        err instanceof Error ? err.message : "Please try again later.",
+        t.analytics?.["failed_to_load"] || "Failed to load connection profiles",
+        err instanceof Error ? err.message : t.common?.["try_again_later"] || "Please try again later.",
       );
       setProfiles([]);
     } finally {
@@ -258,6 +260,7 @@ export default function ConnectionProfilesPage() {
     filters.pii,
     filters.health,
     showError,
+    t,
   ]);
 
   useEffect(() => {
@@ -303,13 +306,13 @@ export default function ConnectionProfilesPage() {
     } catch (err) {
       console.error("Failed to load connection profile stats", err);
       showError(
-        "Failed to load stats",
-        err instanceof Error ? err.message : "Please try again later.",
+        t.analytics?.["failed_to_load"] || "Failed to load stats",
+        err instanceof Error ? err.message : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setLoadingStats(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadStats();

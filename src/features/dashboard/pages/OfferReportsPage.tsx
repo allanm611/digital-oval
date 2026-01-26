@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   Download,
   Gift,
@@ -508,6 +509,7 @@ const statIcons = {
 };
 
 export default function OfferReportsPage() {
+  const { t } = useLanguage();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
   const [segmentFilter, setSegmentFilter] = useState("All Segments");

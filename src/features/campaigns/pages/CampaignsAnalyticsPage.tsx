@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { getCurrencySymbol } from "../../../shared/services/currencyService";
@@ -97,6 +98,7 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
 export default function CampaignsAnalyticsPage(): JSX.Element {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [stats, setStats] = useState<CampaignStatsSummary | null>(null);
@@ -363,11 +365,11 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       }
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError("Failed to load analytics", "Unable to fetch analytics data");
+      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();
@@ -468,10 +470,10 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
         <BackButton fallbackTo="/dashboard/campaigns" className="self-start" />
         <div className="sm:ml-2">
           <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Campaign Analytics
+            {t.analytics.campaignsAnalytics}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Insights and metrics for campaign performance
+            {t.analytics.performanceMetrics}
           </p>
         </div>
       </div>
@@ -494,7 +496,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                     style={{ color: color.primary.accent }}
                   />
                   <p className="text-sm font-medium text-gray-600">
-                    Total Campaigns
+                    {t.common.total} {t.campaigns.campaigns}
                   </p>
                 </div>
                 <p className="mt-2 text-3xl font-bold text-gray-900">

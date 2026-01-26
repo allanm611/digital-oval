@@ -36,27 +36,30 @@ export default function CreateDataConnectorModal({
 
     try {
       setSaving(true);
-      
+
       // TODO: Replace with actual API call
       // await createDataConnector(formData);
-      
+
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
-      
-      success("Data Connector Created", `${formData.name} has been created successfully`);
-      
+
+      success(
+        "Data Connector Created",
+        `${formData.name} has been created successfully`,
+      );
+
       setFormData({
         name: "",
         description: "",
         isActive: true,
       });
-      
+
       onSuccess?.();
       onClose();
     } catch (err) {
       error(
         "Failed to create data connector",
-        err instanceof Error ? err.message : "Please try again later"
+        err instanceof Error ? err.message : "Please try again later",
       );
     } finally {
       setSaving(false);
@@ -121,7 +124,9 @@ export default function CreateDataConnectorModal({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-700">Active status</p>
-              <p className="text-xs text-gray-500">Toggle to deactivate if needed</p>
+              <p className="text-xs text-gray-500">
+                Toggle to deactivate if needed
+              </p>
             </div>
             <Toggle
               checked={formData.isActive}

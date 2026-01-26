@@ -12,6 +12,7 @@ import {
 import { serverService } from "../services/serverService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -46,6 +47,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
   const navigate = useNavigate();
   const { success, error } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [form, setForm] = useState({ ...defaultFormValues });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,8 +82,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           });
         } catch (err) {
           const message =
-            err instanceof Error ? err.message : "Unable to load server.";
-          error("Failed to load server", message);
+            err instanceof Error ? err.message : t("errors.unableLoadServer");
+          error(t("errors.failedLoadServer"), message);
           navigate("/dashboard/servers");
         } finally {
           setIsLoading(false);
@@ -89,7 +91,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
       };
       loadServer();
     }
-  }, [mode, id, navigate, error]);
+  }, [mode, id, navigate, error, t]);
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -112,10 +114,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!form.name.trim()) newErrors.name = "Name is required";
-    if (!form.code.trim()) newErrors.code = "Code is required";
-    if (!form.host.trim()) newErrors.host = "Host is required";
-    if (!form.protocol) newErrors.protocol = "Protocol is required";
+    if (!form.name.trim()) newErrors.name = t("validation.nameRequired");
+    if (!form.code.trim()) newErrors.code = t("validation.codeRequired");
+    if (!form.host.trim()) newErrors.host = t("validation.hostRequired");
+    if (!form.protocol) newErrors.protocol = t("validation.protocolRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -151,7 +153,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         };
 
         const newServer = await serverService.createServer(payload);
-        success("Server created", `${newServer.name} is now available.`);
+        success(t("success.serverCreated"), t("success.serverCreatedMessage", { name: newServer.name }));
         navigate("/dashboard/servers");
       } else if (mode === "edit" && id) {
         const payload: UpdateServerPayload = {
@@ -181,16 +183,16 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           Number(id),
           payload
         );
-        success("Server updated", `${updatedServer.name} has been updated.`);
+        success(t("success.serverUpdated"), t("success.serverUpdatedMessage", { name: updatedServer.name }));
         navigate(`/dashboard/servers/${id}`);
       }
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : `Unable to ${mode === "create" ? "create" : "update"} server.`;
+          : t(`errors.unableUpdate${mode === "create" ? "Create" : "Update"}Server`);
       error(
-        `Failed to ${mode === "create" ? "create" : "update"} server`,
+        t(`errors.failed${mode === "create" ? "Create" : "Update"}Server`),
         message
       );
     } finally {

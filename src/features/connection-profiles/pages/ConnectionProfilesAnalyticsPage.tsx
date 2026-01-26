@@ -17,6 +17,7 @@ import {
 } from "recharts";
 import { connectionProfileService } from "../services/connectionProfileService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import {
@@ -94,6 +95,7 @@ const COLORS = [
 export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [connectionTypeStats, setConnectionTypeStats] = useState<
@@ -153,11 +155,11 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
       setHealthEnabledProfiles(healthEnabled || []);
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError("Failed to load analytics", "Unable to fetch analytics data");
+      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();

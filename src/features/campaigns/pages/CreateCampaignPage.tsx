@@ -8,6 +8,7 @@ import {
 import { ArrowLeft, Target, Users, Gift, Calendar, Eye } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -125,6 +126,7 @@ export default function CreateCampaignPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showToast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -398,7 +400,7 @@ export default function CreateCampaignPage() {
         }
       } catch {
         if (!silent) {
-          showToast("error", "Failed to load campaign data");
+          showToast("error", t("campaigns.loadError"));
           navigate("/dashboard/campaigns");
         }
       } finally {
@@ -407,7 +409,7 @@ export default function CreateCampaignPage() {
         }
       }
     },
-    [showToast, navigate],
+    [showToast, navigate, t],
   );
 
   // Restore campaign data when returning from offer creation
@@ -792,13 +794,13 @@ export default function CreateCampaignPage() {
     setIsLoading(true);
     try {
       if (!formData.name.trim()) {
-        showToast("error", "Campaign name is required");
+        showToast("error", t("campaigns.nameRequired"));
         setIsLoading(false);
         return;
       }
 
       if (selectedSegments.length === 0) {
-        showToast("error", "Please add at least one segment before continuing");
+        showToast("error", t("campaigns.segmentRequired"));
         setIsLoading(false);
         return;
       }
@@ -845,7 +847,7 @@ export default function CreateCampaignPage() {
         };
 
         await campaignService.updateCampaign(parseInt(id), updateData);
-        showToast("success", "Campaign updated successfully!");
+        showToast("success", t("campaigns.updateSuccess"));
       } else {
         // Generate unique code from campaign name for NEW campaigns
         const campaignCode = generateCampaignCode(formData.name);
@@ -930,7 +932,7 @@ export default function CreateCampaignPage() {
             console.error("Error saving segments:", segmentError);
             showToast(
               "warning",
-              "Campaign created but some segments failed to save. Please check the campaign details.",
+              t("campaigns.createSegmentWarning"),
             );
           }
         }
@@ -952,17 +954,17 @@ export default function CreateCampaignPage() {
 
             showToast(
               "success",
-              "Campaign created and mappings configured successfully!",
+              t("campaigns.createMappingSuccess"),
             );
           } catch (mappingError) {
             console.error("Error saving mappings:", mappingError);
             showToast(
               "warning",
-              "Campaign created but some mappings failed. Please check the campaign details.",
+              t("campaigns.createMappingWarning"),
             );
           }
         } else {
-          showToast("success", "Campaign created and submitted for approval!");
+          showToast("success", t("campaigns.createSuccess"));
         }
       }
 
@@ -983,9 +985,9 @@ export default function CreateCampaignPage() {
       console.error("Failed to create/update campaign:", error);
 
       // Extract error message from backend response
-      let errorMessage = `Failed to ${
-        isEditMode ? "update" : "create"
-      } campaign. Please try again.`;
+      let errorMessage = isEditMode
+        ? t("campaigns.updateError")
+        : t("campaigns.createError");
 
       if (error instanceof Error) {
         // Check if the error message contains backend error details
@@ -1028,12 +1030,12 @@ export default function CreateCampaignPage() {
     try {
       setIsSavingDraft(true);
       if (!formData.name.trim()) {
-        showToast("error", "Campaign name is required to save draft");
+        showToast("error", t("campaigns.nameDraftRequired"));
         return;
       }
 
       if (selectedSegments.length === 0) {
-        showToast("error", "Please add at least one segment before saving");
+        showToast("error", t("campaigns.segmentDraftRequired"));
         setIsSavingDraft(false);
         return;
       }
@@ -1122,7 +1124,7 @@ export default function CreateCampaignPage() {
           console.error("Error saving segments:", segmentError);
           showToast(
             "warning",
-            "Campaign saved but some segments failed to save. Please check the campaign details.",
+            t("campaigns.draftSegmentWarning"),
           );
         }
       }
@@ -1149,13 +1151,13 @@ export default function CreateCampaignPage() {
           console.error("Error saving mappings:", mappingError);
           showToast(
             "warning",
-            "Campaign saved but some offer mappings failed to save. Please check the campaign details.",
+            t("campaigns.draftMappingWarning"),
           );
         }
       }
     } catch (error) {
       console.error("Error saving draft:", error);
-      showToast("error", "Failed to save draft. Please try again.");
+      showToast("error", t("campaigns.draftError"));
     } finally {
       setIsSavingDraft(false);
     }

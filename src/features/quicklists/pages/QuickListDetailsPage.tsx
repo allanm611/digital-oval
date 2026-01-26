@@ -20,6 +20,7 @@ import {
   UploadTypeSchema,
 } from "../types/quicklist";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
@@ -33,6 +34,7 @@ export default function QuickListDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 

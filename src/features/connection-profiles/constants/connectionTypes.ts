@@ -9,4 +9,5 @@ export const CONNECTION_TYPE_OPTIONS = [
   { value: "webhook", label: "Webhook" },
 ] as const;
 
-export type ConnectionTypeValue = typeof CONNECTION_TYPE_OPTIONS[number]['value'];
+export type ConnectionTypeValue =
+  (typeof CONNECTION_TYPE_OPTIONS)[number]["value"];

@@ -22,6 +22,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
@@ -48,6 +49,7 @@ export default function ServerDetailsPage() {
   const { error: showError, success } = useToast();
   const { confirm } = useConfirm();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [server, setServer] = useState<ServerType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +73,7 @@ export default function ServerDetailsPage() {
 
   const loadServer = useCallback(async () => {
     if (!id) {
-      setErrorMessage("Server id missing from route.");
+      setErrorMessage(t("errors.serverIdMissing"));
       setIsLoading(false);
       return;
     }
@@ -83,13 +85,13 @@ export default function ServerDetailsPage() {
       setServer(response);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to load server.";
+        err instanceof Error ? err.message : t("errors.failedLoadServer");
       setErrorMessage(message);
-      showError("Unable to load server", message);
+      showError(t("errors.unableLoadServer"), message);
     } finally {
       setIsLoading(false);
     }
-  }, [id, showError]);
+  }, [id, showError, t]);
 
   useEffect(() => {
     loadServer();
@@ -373,10 +375,10 @@ export default function ServerDetailsPage() {
           <AlertTriangle size={20} />
         </div>
         <h2 className="text-lg font-semibold text-black">
-          Unable to load server
+          {t("errors.unableLoadServer")}
         </h2>
         <p className="mt-2 text-sm text-black">
-          {errorMessage || "This server could not be found."}
+          {errorMessage || t("errors.serverNotFound")}
         </p>
         <button
           onClick={() => navigateBackOrFallback(navigate, "/dashboard/servers")}

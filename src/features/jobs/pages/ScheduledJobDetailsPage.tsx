@@ -20,6 +20,7 @@ import {
 import { scheduledJobService } from "../services/scheduledJobService";
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -110,6 +111,7 @@ export default function ScheduledJobDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   const [job, setJob] = useState<ScheduledJob | null>(null);
@@ -203,8 +205,8 @@ export default function ScheduledJobDetailsPage() {
       }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to load scheduled job";
-      showError("Unable to load scheduled job", message);
+        err instanceof Error ? err.message : t("scheduledJob.loadFailed", "Failed to load scheduled job");
+      showError(t("scheduledJob.unableToLoad", "Unable to load scheduled job"), message);
       console.error("Error loading job:", err); // Debug log
     } finally {
       setIsLoading(false);
@@ -270,14 +272,14 @@ export default function ScheduledJobDetailsPage() {
       setIsDeleting(true);
       await scheduledJobService.deleteScheduledJob(job.id);
       showToast(
-        "Scheduled job deleted",
-        `"${job.name}" has been deleted successfully.`
+        t("scheduledJob.deleted", "Scheduled job deleted"),
+        t("scheduledJob.deleteSuccess", `"${job.name}" has been deleted successfully.`)
       );
       navigate("/dashboard/scheduled-jobs");
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to delete scheduled job";
-      showError("Unable to delete scheduled job", message);
+        err instanceof Error ? err.message : t("scheduledJob.deleteFailed", "Failed to delete scheduled job");
+      showError(t("scheduledJob.unableToDelete", "Unable to delete scheduled job"), message);
     } finally {
       setIsDeleting(false);
     }
@@ -293,19 +295,19 @@ export default function ScheduledJobDetailsPage() {
       switch (action) {
         case "activate":
           updatedJob = await scheduledJobService.activateScheduledJob(job.id);
-          showToast("Job activated", `"${job.name}" has been activated`);
+          showToast(t("scheduledJob.activated", "Job activated"), t("scheduledJob.activatedSuccess", `"${job.name}" has been activated`));
           break;
         case "deactivate":
           updatedJob = await scheduledJobService.deactivateScheduledJob(job.id);
-          showToast("Job deactivated", `"${job.name}" has been deactivated`);
+          showToast(t("scheduledJob.deactivated", "Job deactivated"), t("scheduledJob.deactivatedSuccess", `"${job.name}" has been deactivated`));
           break;
         case "pause":
           updatedJob = await scheduledJobService.pauseScheduledJob(job.id);
-          showToast("Job paused", `"${job.name}" has been paused`);
+          showToast(t("scheduledJob.paused", "Job paused"), t("scheduledJob.pausedSuccess", `"${job.name}" has been paused`));
           break;
         case "archive":
           updatedJob = await scheduledJobService.archiveScheduledJob(job.id);
-          showToast("Job archived", `"${job.name}" has been archived`);
+          showToast(t("scheduledJob.archived", "Job archived"), t("scheduledJob.archivedSuccess", `"${job.name}" has been archived`));
           break;
       }
       setJob(updatedJob);
@@ -313,8 +315,8 @@ export default function ScheduledJobDetailsPage() {
       const message =
         err instanceof Error
           ? err.message
-          : `Failed to ${action} scheduled job`;
-      showError(`Unable to ${action} scheduled job`, message);
+          : t("scheduledJob.actionFailed", `Failed to ${action} scheduled job`);
+      showError(t("scheduledJob.unableToAction", `Unable to ${action} scheduled job`), message);
     } finally {
       setIsActionLoading(false);
     }
@@ -330,11 +332,11 @@ export default function ScheduledJobDetailsPage() {
       );
       setJob(updatedJob);
       setNewTag("");
-      showToast("Tag added", "Tag has been added successfully");
+      showToast(t("scheduledJob.tagAdded", "Tag added"), t("scheduledJob.tagAddSuccess", "Tag has been added successfully"));
     } catch (err) {
       showError(
-        "Failed to add tag",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.tagAddFailed", "Failed to add tag"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     } finally {
       setIsAddingTag(false);
@@ -346,11 +348,11 @@ export default function ScheduledJobDetailsPage() {
     try {
       const updatedJob = await scheduledJobService.removeTag(job.id, tag);
       setJob(updatedJob);
-      showToast("Tag removed", "Tag has been removed successfully");
+      showToast(t("scheduledJob.tagRemoved", "Tag removed"), t("scheduledJob.tagRemoveSuccess", "Tag has been removed successfully"));
     } catch (err) {
       showError(
-        "Failed to remove tag",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.tagRemoveFailed", "Failed to remove tag"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     }
   };
@@ -369,13 +371,13 @@ export default function ScheduledJobDetailsPage() {
       setJob(updatedJob);
       setNewRecipient("");
       showToast(
-        "Recipient added",
-        "Notification recipient has been added successfully"
+        t("scheduledJob.recipientAdded", "Recipient added"),
+        t("scheduledJob.recipientAddSuccess", "Notification recipient has been added successfully")
       );
     } catch (err) {
       showError(
-        "Failed to add recipient",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.recipientAddFailed", "Failed to add recipient"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     } finally {
       setIsAddingRecipient(false);
@@ -391,13 +393,13 @@ export default function ScheduledJobDetailsPage() {
       );
       setJob(updatedJob);
       showToast(
-        "Recipient removed",
-        "Notification recipient has been removed successfully"
+        t("scheduledJob.recipientRemoved", "Recipient removed"),
+        t("scheduledJob.recipientRemoveSuccess", "Notification recipient has been removed successfully")
       );
     } catch (err) {
       showError(
-        "Failed to remove recipient",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.recipientRemoveFailed", "Failed to remove recipient"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     }
   };
@@ -408,11 +410,11 @@ export default function ScheduledJobDetailsPage() {
     try {
       const updatedJob = await scheduledJobService.resetFailureCount(job.id);
       setJob(updatedJob);
-      showToast("Failure count reset", "Failure counters have been reset");
+      showToast(t("scheduledJob.failureCountReset", "Failure count reset"), t("scheduledJob.failureCountResetSuccess", "Failure counters have been reset"));
     } catch (err) {
       showError(
-        "Failed to reset failure count",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.resetFailureFailed", "Failed to reset failure count"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     } finally {
       setIsActionLoading(false);
@@ -426,13 +428,13 @@ export default function ScheduledJobDetailsPage() {
       await scheduledJobService.createVersion(job.id, {
         created_by: user.user_id || 1,
       });
-      showToast("Version created", "Job version snapshot has been created");
+      showToast(t("scheduledJob.versionCreated", "Version created"), t("scheduledJob.versionSnapshot", "Job version snapshot has been created"));
       loadVersions();
       loadJob(); // Reload to get updated version number
     } catch (err) {
       showError(
-        "Failed to create version",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.versionCreateFailed", "Failed to create version"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     } finally {
       setIsActionLoading(false);
@@ -443,7 +445,7 @@ export default function ScheduledJobDetailsPage() {
     if (!job || !user) return;
     if (
       !window.confirm(
-        "Are you sure you want to rollback to this version? This will restore the job configuration to this snapshot."
+        t("scheduledJob.rollbackConfirm", "Are you sure you want to rollback to this version? This will restore the job configuration to this snapshot.")
       )
     ) {
       return;
@@ -455,19 +457,19 @@ export default function ScheduledJobDetailsPage() {
         versionId,
         {
           created_by: user.user_id || 1,
-          reason: `Rollback to version ${versionId} at ${new Date().toLocaleString()}`,
+          reason: t("scheduledJob.rollbackReason", `Rollback to version ${versionId} at ${new Date().toLocaleString()}`),
         }
       );
       setJob(updatedJob);
       showToast(
-        "Version rolled back",
-        "Job has been restored to the selected version"
+        t("scheduledJob.versionRolledBack", "Version rolled back"),
+        t("scheduledJob.rollbackSuccess", "Job has been restored to the selected version")
       );
       loadVersions();
     } catch (err) {
       showError(
-        "Failed to rollback version",
-        err instanceof Error ? err.message : "Unknown error"
+        t("scheduledJob.rollbackFailed", "Failed to rollback version"),
+        err instanceof Error ? err.message : t.common.error || "Unknown error"
       );
     } finally {
       setIsActionLoading(false);

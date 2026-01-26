@@ -17,6 +17,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -24,6 +25,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 export default function WorkflowsPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
 
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -126,13 +128,13 @@ export default function WorkflowsPage() {
       setTotalCount(total);
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to load workflows",
+        t("common.error", "Error"),
+        err instanceof Error ? err.message : t("workflows.loadFailed", "Failed to load workflows"),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, statusFilter, workflowTypeFilter, page, pageSize, showError]);
+  }, [searchTerm, statusFilter, workflowTypeFilter, page, pageSize, showError, t]);
 
   // Reset pagination when filters/search change
   useEffect(() => {
@@ -225,7 +227,7 @@ export default function WorkflowsPage() {
     setIsDeleting(true);
     try {
       await workflowService.deleteWorkflow(deletingWorkflow.id);
-      showToast("Workflow deleted", "Workflow has been deleted successfully.");
+      showToast(t.workflows.deleteSuccess, "Workflow has been deleted successfully.");
       setShowDeleteModal(false);
       setDeletingWorkflow(null);
       setRowLoading(null);
@@ -233,8 +235,8 @@ export default function WorkflowsPage() {
       fetchStats();
     } catch (err) {
       showError(
-        "Delete failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t.workflows.deleteFailed || "Delete failed",
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsDeleting(false);
@@ -268,7 +270,7 @@ export default function WorkflowsPage() {
         workflowIds: Array.from(selectedWorkflows),
       });
       showToast(
-        "Workflows activated",
+        t.workflows.workflowActivated || "Workflows activated",
         `${result.success} workflow(s) activated successfully.`,
       );
       setSelectedWorkflows(new Set());
@@ -277,8 +279,8 @@ export default function WorkflowsPage() {
       fetchStats();
     } catch (err) {
       showError(
-        "Batch activate failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t.workflows.toggleFailed || "Batch activate failed",
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -294,7 +296,7 @@ export default function WorkflowsPage() {
         workflowIds: Array.from(selectedWorkflows),
       });
       showToast(
-        "Workflows deactivated",
+        t.workflows.workflowDeactivated || "Workflows deactivated",
         `${result.success} workflow(s) deactivated successfully.`,
       );
       setSelectedWorkflows(new Set());
@@ -303,8 +305,8 @@ export default function WorkflowsPage() {
       fetchStats();
     } catch (err) {
       showError(
-        "Batch deactivate failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t.workflows.toggleFailed || "Batch deactivate failed",
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -318,13 +320,13 @@ export default function WorkflowsPage() {
         newName: `${workflow.name} (Copy)`,
         created_by: user?.user_id || null,
       });
-      showToast("Workflow cloned", "Workflow has been cloned successfully.");
+      showToast(t.workflows.cloneSuccess || "Workflow cloned", "Workflow has been cloned successfully.");
       fetchWorkflows();
       fetchStats();
     } catch (err) {
       showError(
-        "Clone failed",
-        err instanceof Error ? err.message : "Unknown error",
+        t.workflows.cloneFailed || "Clone failed",
+        err instanceof Error ? err.message : t.common.error || "Unknown error",
       );
     } finally {
       setRowLoading((prev) => (prev?.id === workflow.id ? null : prev));

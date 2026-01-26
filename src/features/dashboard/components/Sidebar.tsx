@@ -16,15 +16,11 @@ import {
   Cog,
   Tag,
   Layers,
-  BarChart3,
   Calendar,
-  Zap,
-  Folder,
+ 
   Briefcase,
-  Flag,
-  // Bell,
+ 
   List,
-  Fingerprint,
   Activity,
   LineChart,
   Gift,
@@ -38,9 +34,7 @@ import {
   GitBranch,
   ChevronLeft,
   Plug,
-  Volume2,
   ListChecks,
-  Goal,
   Archive,
   LayoutGrid,
   Network,
@@ -50,6 +44,8 @@ import {
   TrendingUp,
   Send,
   Box,
+  Download,
+ 
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -473,6 +469,13 @@ export default function Sidebar({
             name: t.sidebar.navigation.dataConnectors,
             href: "/dashboard/data-connectors",
             icon: Plug,
+            type: "single",
+            entity: "servers",
+          },
+          {
+            name: "ETL",
+            href: "/dashboard/etl",
+            icon: Download,
             type: "single",
             entity: "servers",
           },

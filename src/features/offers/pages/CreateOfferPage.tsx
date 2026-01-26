@@ -48,6 +48,7 @@ import MultiCategorySelector from "../../../shared/components/MultiCategorySelec
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -1321,6 +1322,7 @@ export default function CreateOfferPage({
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1])); // Track visited steps
 
   const { user } = useAuth();
+  const { t } = useLanguage();
   const hasRestoredDataRef = useRef(false);
 
   // Persist form data to localStorage
@@ -1927,9 +1929,11 @@ export default function CreateOfferPage({
         } catch {
           // Failed to manage products
           showError(
-            `Offer ${isEditMode ? "updated" : "created"}, but failed to ${
-              isEditMode ? "update" : "link"
-            } products. Creatives will still be saved.`,
+            t(
+              isEditMode
+                ? "offers.updateWithProductError"
+                : "offers.createWithProductError",
+            ),
           );
         }
       }
@@ -1990,9 +1994,11 @@ export default function CreateOfferPage({
           const errorMessage =
             err instanceof Error ? err.message : "Unknown error occurred";
           showError(
-            `Offer ${
-              isEditMode ? "updated" : "created"
-            }, but failed to save creatives`,
+            t(
+              isEditMode
+                ? "offers.updateWithCreativeError"
+                : "offers.createWithCreativeError",
+            ),
             errorMessage,
           );
           navigate("/dashboard/offers");
@@ -2001,7 +2007,9 @@ export default function CreateOfferPage({
       }
 
       // Show success message
-      showToast(`Offer ${isEditMode ? "updated" : "created"} successfully`);
+      showToast(
+        t(isEditMode ? "offers.updateSuccess" : "offers.createSuccess"),
+      );
 
       // Call onSuccess callback if provided (modal mode) and not in edit mode
       if (offerId && onSuccess && !isEditMode) {
@@ -2153,7 +2161,7 @@ export default function CreateOfferPage({
     try {
       setIsSavingDraft(true);
       if (!formData.name.trim()) {
-        showError("Offer name is required to save draft");
+        showError(t("offers.nameRequired"));
         return;
       }
 
@@ -2179,13 +2187,13 @@ export default function CreateOfferPage({
       };
 
       await offerService.createOffer(draftData);
-      showToast("Draft saved successfully!");
+      showToast(t("offers.draftSaveSuccess"));
     } catch {
-      showError("Failed to save draft. Please try again.");
+      showError(t("offers.draftSaveError"));
     } finally {
       setIsSavingDraft(false);
     }
-  }, [formData, showError, showToast]);
+  }, [formData, showError, showToast, t]);
 
   const handleCancel = useCallback(() => {
     navigate("/dashboard/offers");

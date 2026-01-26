@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -315,6 +316,7 @@ const getDateConstraints = () => {
 };
 
 export default function DeliveryEmailReportsPage() {
+  const { t } = useLanguage();
   const [deliveryRange, setDeliveryRange] = useState<RangeOption>("7d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({

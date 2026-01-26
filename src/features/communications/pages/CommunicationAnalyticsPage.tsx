@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { communicationService } from "../services/communicationService";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 
@@ -33,6 +34,7 @@ interface CommunicationLog {
 
 export default function CommunicationAnalyticsPage() {
   const { error: showError } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -148,7 +150,7 @@ export default function CommunicationAnalyticsPage() {
       setLoading(false);
     } catch (err) {
       console.error("Failed to load communication analytics:", err);
-      showError("Failed to load analytics data");
+      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
       setLoading(false);
     }
   };
@@ -200,17 +202,16 @@ export default function CommunicationAnalyticsPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleBack}
-            className=" text-gray-700flex items-center gap-2"
+            className="text-gray-700 flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              Communication Analytics
+              {t.analytics.campaignsAnalytics}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Monitor communication performance, execution history, and delivery
-              metrics
+              {t.analytics.performanceMetrics}
             </p>
           </div>
         </div>

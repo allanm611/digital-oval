@@ -22,6 +22,7 @@ import { Segment } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -46,6 +47,7 @@ export default function SegmentDetailsPage() {
   const location = useLocation();
   const { success, error: showError, info: showInfo } = useToast();
   const confirm = useConfirm();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -124,7 +126,7 @@ export default function SegmentDetailsPage() {
     } catch {
       setCategoryName("Uncategorized");
     }
-  }, []);
+  }, [t]);
 
   const loadSegment = useCallback(async () => {
     try {
@@ -149,7 +151,7 @@ export default function SegmentDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [id, showError, loadCategoryName]);
+  }, [id, showError, loadCategoryName, t]);
 
   const loadMembersCount = useCallback(async () => {
     if (!id) return;
@@ -167,7 +169,7 @@ export default function SegmentDetailsPage() {
     } finally {
       setIsLoadingMembers(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   // Debounce members search term
   useEffect(() => {
@@ -216,7 +218,7 @@ export default function SegmentDetailsPage() {
     } finally {
       setIsLoadingMembersList(false);
     }
-  }, [id, membersPage, debouncedMembersSearchTerm]);
+  }, [id, membersPage, debouncedMembersSearchTerm, t]);
 
   useEffect(() => {
     if (id) {

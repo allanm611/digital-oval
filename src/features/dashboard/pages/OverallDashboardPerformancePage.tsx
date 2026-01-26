@@ -31,6 +31,7 @@ import type {
   RangeOption,
   OverallDashboardPerformanceResponse,
 } from "../types/ReportsAPI";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 import { tw } from '../../../shared/utils/utils';
 // Extract types from API response type
@@ -639,6 +640,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 };
 
 export default function OverallDashboardPerformancePage() {
+  const { t } = useLanguage();
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({

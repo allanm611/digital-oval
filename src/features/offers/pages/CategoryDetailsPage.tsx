@@ -14,6 +14,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { OfferCategoryType } from "../types/offerCategory";
 import { Offer } from "../types/offer";
@@ -26,6 +27,7 @@ export default function CategoryDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
+  const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -77,7 +79,7 @@ export default function CategoryDetailsPage() {
       if (categoryResponse.success && categoryResponse.data) {
         setCategory(categoryResponse.data);
       } else {
-        setError("Category not found");
+        setError(t("categories.notFound"));
         return;
       }
 
@@ -112,7 +114,7 @@ export default function CategoryDetailsPage() {
       await loadAnalytics();
     } catch (err) {
       // Failed to load category details
-      setError("Failed to load category details");
+      setError(t("categories.loadError"));
     } finally {
       setLoading(false);
     }
@@ -173,13 +175,13 @@ export default function CategoryDetailsPage() {
         editingCategory.id,
         categoryData
       );
-      showToast("Category updated successfully");
+      showToast(t("categories.updateSuccess"));
       await loadCategoryDetails(); // Reload category details
       setIsEditModalOpen(false);
       setEditingCategory(null);
     } catch (err) {
       // Failed to update category
-      showError("Failed to update category");
+      showError(t("categories.updateError"));
     }
   };
 
@@ -199,15 +201,15 @@ export default function CategoryDetailsPage() {
     try {
       const response = await offerCategoryService.deleteCategory(category.id);
       if (response.success) {
-        showToast("Category deleted successfully");
+        showToast(t("categories.deleteSuccess"));
         setShowDeleteModal(false);
         navigate("/dashboard/offer-catalogs");
       } else {
-        showError("Failed to delete category");
+        showError(t("categories.deleteError"));
       }
     } catch (err) {
       // Failed to delete category
-      showError("Failed to delete category");
+      showError(t("categories.deleteError"));
     } finally {
       setIsDeleting(false);
     }
@@ -232,7 +234,7 @@ export default function CategoryDetailsPage() {
       await loadCategoryDetails();
     } catch (err) {
       // Failed to toggle category status
-      showError("Failed to update category status");
+      showError(t("categories.statusError"));
     }
   };
 
@@ -610,7 +612,7 @@ export default function CategoryDetailsPage() {
                   <button
                     onClick={() => {
                       // TODO: Navigate to offer details
-                      showToast("Offer details coming soon");
+                      showToast(t("offers.detailsComingSoon"));
                     }}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                   >
@@ -733,7 +735,7 @@ export default function CategoryDetailsPage() {
                       onClick={() => {
                         setIsOffersModalOpen(false);
                         // TODO: Open assign offers modal
-                        showToast("Assign offers functionality coming soon");
+                        showToast(t("offers.assignComingSoon"));
                       }}
                       className={`px-4 py-2 text-white ${tw.rounded} transition-colors`}
                       style={{ backgroundColor: color.primary.action }}
@@ -769,7 +771,7 @@ export default function CategoryDetailsPage() {
                           <button
                             onClick={() => {
                               // TODO: Navigate to offer details
-                              showToast("Offer details coming soon");
+                              showToast(t("offers.detailsComingSoon"));
                             }}
                             className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
                           >

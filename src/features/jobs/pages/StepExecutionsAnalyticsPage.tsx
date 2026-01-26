@@ -46,6 +46,7 @@ import {
   ConcurrentExecutionAnalysis,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 
@@ -54,6 +55,7 @@ const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
 export default function StepExecutionsAnalyticsPage() {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState(true);
   const [statistics, setStatistics] = useState<ExecutionStatistics | null>(
@@ -308,13 +310,13 @@ export default function StepExecutionsAnalyticsPage() {
       }
     } catch (err) {
       showError(
-        "Analytics",
-        err instanceof Error ? err.message : "Failed to load analytics"
+        t.analytics.failedToLoadAnalytics,
+        t.analytics.errorLoadingData
       );
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();

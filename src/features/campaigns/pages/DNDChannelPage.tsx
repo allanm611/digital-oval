@@ -11,6 +11,7 @@ import {
   Minus,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -121,6 +122,7 @@ export default function DNDChannelPage() {
   const navigate = useNavigate();
   const { channel } = useParams<{ channel: string }>();
   const { success: showToast } = useToast();
+  const { t } = useLanguage();
   const [dndSubscriptions, setDndSubscriptions] = useState<DNDSubscription[]>(
     DUMMY_DND_SUBSCRIPTIONS,
   );
@@ -172,8 +174,8 @@ export default function DNDChannelPage() {
     setDndSubscriptions([...dndSubscriptions, newSubscription]);
     showToast(
       `success`,
-      `${customer.name || customer.phone} added to ${customer.dndType} DND`,
-      "Customer will not receive these messages",
+      t("dnd.customerAdded", { name: customer.name || customer.phone, type: customer.dndType }),
+      t("dnd.customerAddedDesc"),
     );
     setShowAddModal(false);
   };
@@ -217,8 +219,8 @@ export default function DNDChannelPage() {
 
     showToast(
       `success`,
-      `${customerName} removed from ${dndType} DND`,
-      "Customer can now receive these messages",
+      t("dnd.customerRemoved", { name: customerName, type: dndType }),
+      t("dnd.customerRemovedDesc"),
     );
     setShowRemoveModal(false);
   };
@@ -227,8 +229,8 @@ export default function DNDChannelPage() {
     // TODO: Implement delete functionality
     showToast(
       `success`,
-      "DND record deleted",
-      `Record for ${name} has been permanently removed`,
+      t("dnd.recordDeleted"),
+      t("dnd.recordDeletedDesc", { name }),
     );
   };
 
