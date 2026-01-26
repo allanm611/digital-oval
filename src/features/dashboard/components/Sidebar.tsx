@@ -38,6 +38,18 @@ import {
   GitBranch,
   ChevronLeft,
   Plug,
+  Volume2,
+  ListChecks,
+  Goal,
+  Archive,
+  LayoutGrid,
+  Network,
+  UserRound,
+  UsersRound,
+  UserCog,
+  TrendingUp,
+  Send,
+  Box,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -117,7 +129,9 @@ export default function Sidebar({
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const previousPathnameRef = useRef<string>("");
   const { user, logout } = useAuth();
-  const [currentUserRole, setCurrentUserRole] = useState<string>(t.sidebar.user.defaultRole);
+  const [currentUserRole, setCurrentUserRole] = useState<string>(
+    t.sidebar.user.defaultRole,
+  );
 
   const handleMinimizeToggle = useCallback(() => {
     const newState = !isMinimized;
@@ -199,42 +213,42 @@ export default function Sidebar({
       {
         name: t.sidebar.navigation.campaignManagement,
         href: "/dashboard/campaigns",
-        icon: BarChart3,
+        icon: TrendingUp,
         type: "parent",
         entity: "campaigns",
         children: [
           {
             name: t.sidebar.navigation.allCampaigns,
             href: "/dashboard/campaigns",
-            icon: Target,
+            icon: ListChecks,
             type: "single",
             entity: "campaigns",
           },
           {
             name: t.sidebar.navigation.campaignObjective,
             href: "/dashboard/campaign-objectives",
-            icon: Flag,
+            icon: Target,
             type: "single",
             entity: "campaigns",
           },
           {
             name: t.sidebar.navigation.programs,
             href: "/dashboard/programs",
-            icon: Briefcase,
+            icon: GitBranch,
             type: "single",
             entity: "campaigns",
           },
           {
             name: t.sidebar.navigation.campaignCatalogs,
             href: "/dashboard/campaign-catalogs",
-            icon: Folder,
+            icon: Archive,
             type: "single",
             entity: "campaigns",
           },
           {
             name: t.sidebar.navigation.campaignTypes,
             href: "/dashboard/campaign-types",
-            icon: Layers,
+            icon: LayoutGrid,
             type: "single",
             entity: "campaigns",
           },
@@ -273,7 +287,7 @@ export default function Sidebar({
       {
         name: t.sidebar.navigation.productManagement,
         href: "/dashboard/products",
-        icon: Zap,
+        icon: Box,
         type: "parent",
         entity: "products",
         children: [
@@ -303,14 +317,14 @@ export default function Sidebar({
       {
         name: t.sidebar.navigation.segmentManagement,
         href: "/dashboard/segments",
-        icon: Users,
+        icon: Network,
         type: "parent",
         entity: "segments",
         children: [
           {
             name: t.sidebar.navigation.allSegments,
             href: "/dashboard/segments",
-            icon: Users,
+            icon: UsersRound,
             type: "single",
             entity: "segments",
           },
@@ -340,21 +354,21 @@ export default function Sidebar({
       {
         name: t.sidebar.navigation.customer360Profile,
         href: "/dashboard/customers",
-        icon: Users,
+        icon: UserRound,
         type: "parent",
         entity: "customers",
         children: [
           {
             name: t.sidebar.navigation.customers,
             href: "/dashboard/customers",
-            icon: Users,
+            icon: UserRound,
             type: "single",
             entity: "customers",
           },
           {
             name: t.sidebar.navigation.customerIdentity,
             href: "/dashboard/customer-identity",
-            icon: Fingerprint,
+            icon: UserCog,
             type: "single",
             entity: "customers",
           },
@@ -526,7 +540,7 @@ export default function Sidebar({
       {
         name: t.sidebar.navigation.manualBroadcasts,
         href: "/dashboard/manual-broadcasts",
-        icon: Zap,
+        icon: Send,
         type: "single",
         entity: "campaigns",
       },

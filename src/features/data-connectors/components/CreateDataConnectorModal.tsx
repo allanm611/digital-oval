@@ -4,6 +4,7 @@ import RegularModal from "../../../shared/components/ui/RegularModal";
 import Toggle from "../../../shared/components/ui/Toggle";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface CreateDataConnectorModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export default function CreateDataConnectorModal({
   onSuccess,
 }: CreateDataConnectorModalProps) {
   const { success, error } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -28,7 +30,7 @@ export default function CreateDataConnectorModal({
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      error("Name is required", "Please enter a connector name");
+      error(t.common.name, `${t.common.name} ${t.common.submit.toLowerCase()}`);
       return;
     }
 
