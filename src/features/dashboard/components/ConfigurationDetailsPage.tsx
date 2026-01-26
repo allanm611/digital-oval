@@ -4,6 +4,7 @@ import { Search, ChevronRight, Settings } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface ConfigurationItem {
   id: string;
@@ -44,6 +45,7 @@ const subConfigRoutes: Record<string, string> = {
 export default function ConfigurationDetailsPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const { t } = useLanguage();
   const [config, setConfig] = useState<ConfigurationItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 

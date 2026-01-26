@@ -18,6 +18,7 @@ import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type ChartTooltipEntry = {
   name?: string;
@@ -82,6 +83,7 @@ const COLORS = [
 export default function WorkflowsAnalyticsPage() {
   const navigate = useNavigate();
   const { error: showError } = useToast();
+  const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState(true);
   const [totalWorkflows, setTotalWorkflows] = useState<number>(0);
@@ -125,13 +127,13 @@ export default function WorkflowsAnalyticsPage() {
       setTotalWorkflows(totalFromPagination || totalFromCount || 0);
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to load analytics"
+        t.common.error,
+        err instanceof Error ? err.message : t.common.error
       );
     } finally {
       setIsLoading(false);
     }
-  }, [showError]);
+  }, [showError, t]);
 
   useEffect(() => {
     loadAnalytics();

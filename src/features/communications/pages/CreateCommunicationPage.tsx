@@ -15,10 +15,12 @@ import {
   CommunicationResult,
 } from "../types/communication";
 import { QuickList } from "../../quicklists/types/quicklist";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // State
   const [quicklist, setQuickList] = useState<QuickList | null>(null);
@@ -128,7 +130,7 @@ export default function CreateCommunicationPage() {
   if (!quicklist) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className={tw.textMuted}>QuickList not found</p>
+        <p className={tw.textMuted}>{t.common.noData}</p>
       </div>
     );
   }
