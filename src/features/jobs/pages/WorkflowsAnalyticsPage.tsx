@@ -101,8 +101,6 @@ export default function WorkflowsAnalyticsPage() {
     Array<{ workflow_type: string | null; count: number }>
   >([]);
 
-  const { t } = useLanguage();
-
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
     try {

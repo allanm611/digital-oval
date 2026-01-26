@@ -5,7 +5,6 @@ import {
   UpdateProductRequest,
   ProductScope,
   ProductUnit,
-  ComboResourceType,
   ComboResource,
   ComboProductData,
 } from "../types/product";
@@ -20,7 +19,7 @@ interface ProductFormProps {
   formData: CreateProductRequest | UpdateProductRequest;
   onInputChange: (
     field: keyof (CreateProductRequest | UpdateProductRequest),
-    value: string | number | boolean | undefined,
+    value: string | number | boolean | string[] | undefined,
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
@@ -179,21 +178,21 @@ export default function ProductForm({
       // Parse resources from combo type name and add default values
       if (selectedComboType.name.toLowerCase().includes("data")) {
         resources.push({
-          resource_type: "data",
+          resource_type: "data_mb",
           unit: "data_mb",
           unit_value: 5,
         });
       }
       if (selectedComboType.name.toLowerCase().includes("voice")) {
         resources.push({
-          resource_type: "voice",
+          resource_type: "onnet_minutes",
           unit: "onnet_minutes",
           unit_value: 500,
         });
       }
       if (selectedComboType.name.toLowerCase().includes("sms")) {
         resources.push({
-          resource_type: "sms",
+          resource_type: "sms_count",
           unit: "sms_count",
           unit_value: 100,
         });

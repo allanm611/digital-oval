@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
-import Toggle from "../../../shared/components/ui/Toggle";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -125,15 +124,17 @@ export default function CreateDataConnectorModal({
             <div>
               <p className="text-sm font-medium text-gray-700">Active status</p>
               <p className="text-xs text-gray-500">
-                Toggle to deactivate if needed
+                Check to activate/deactivate
               </p>
             </div>
-            <Toggle
+            <input
+              type="checkbox"
               checked={formData.isActive}
-              onChange={(checked) =>
-                setFormData((prev) => ({ ...prev, isActive: checked }))
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, isActive: e.target.checked }))
               }
               disabled={saving}
+              className="w-5 h-5 rounded"
             />
           </div>
         </div>

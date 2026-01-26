@@ -3,7 +3,7 @@ import { Calendar, AlertCircle } from "lucide-react";
 import { CampaignScheduling } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { CreateCampaignRequest } from "../../types/campaign";
+import { CreateCampaignRequest } from "../../types/createCampaign";
 
 interface SchedulingStepProps {
   formData: CreateCampaignRequest;
@@ -25,12 +25,14 @@ export default function SchedulingStep({
   setFormData,
 }: SchedulingStepProps) {
   const [scheduling, setScheduling] = useState<CampaignScheduling>(
-    formData.scheduling || {
-      type: "scheduled",
-      time_zone: "(GMT+02:00) Sudan",
-      start_date: new Date().toISOString().split("T")[0], // Today's date
-      end_date: "",
-    }
+    formData.scheduling && formData.scheduling.type
+      ? formData.scheduling as CampaignScheduling
+      : {
+          type: "scheduled",
+          time_zone: "(GMT+02:00) Sudan",
+          start_date: new Date().toISOString().split("T")[0], // Today's date
+          end_date: "",
+        }
   );
 
   const [endType, setEndType] = useState<"never" | "at">("never");
@@ -54,7 +56,7 @@ export default function SchedulingStep({
   // Initialize formData with default scheduling if not present
   useEffect(() => {
     if (!formData.scheduling) {
-      const defaultScheduling = {
+      const defaultScheduling: CampaignScheduling = {
         type: "scheduled",
         time_zone: "(GMT+02:00) Sudan",
         start_date: new Date().toISOString().split("T")[0], // Today's date

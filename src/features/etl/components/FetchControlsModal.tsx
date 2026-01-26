@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { X, Play, Calendar } from "lucide-react";
 import { etlService } from "../services/etlService";
 import {
@@ -10,6 +10,8 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { scheduledJobService } from "../../jobs/services/scheduledJobService";
+import { ScheduledJob } from "../../jobs/types/scheduledJob";
 
 type FetchMode = "immediate" | "by-time" | "by-range";
 
@@ -17,7 +19,10 @@ interface FetchControlsModalProps {
   mode: FetchMode | null;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (executionId: string, timeFilter?: { category: string; month: string; day: string; hour: string }) => void;
+  onSuccess: (
+    executionId: string,
+    timeFilter?: { category: string; month: string; day: string; hour: string },
+  ) => void;
 }
 
 export default function FetchControlsModal({
@@ -30,6 +35,8 @@ export default function FetchControlsModal({
   const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [scheduledJobs, setScheduledJobs] = useState<ScheduledJob[]>([]);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
 
   // Immediate fetch
   const [jobId, setJobId] = useState("");
@@ -223,6 +230,27 @@ export default function FetchControlsModal({
     label: String(i).padStart(2, "0"),
   }));
 
+  // Load active scheduled jobs when modal opens
+  useEffect(() => {
+    if (isOpen && (mode === "immediate" || mode === "by-range")) {
+      const loadJobs = async () => {
+        setIsLoadingJobs(true);
+        try {
+          const response = await scheduledJobService.getActiveJobs(true);
+          setScheduledJobs(response.data || []);
+        } catch (err) {
+          showError(
+            "Failed to load scheduled jobs",
+            (err as Error).message || "Please try again.",
+          );
+        } finally {
+          setIsLoadingJobs(false);
+        }
+      };
+      loadJobs();
+    }
+  }, [isOpen, mode, showError]);
+
   if (!isOpen || !mode) return null;
 
   const getModalTitle = () => {
@@ -276,17 +304,23 @@ export default function FetchControlsModal({
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
-                  Job ID <span style={{ color: color.status.danger }}>*</span>
+                  Scheduled Job <span style={{ color: color.status.danger }}>*</span>
                 </label>
-                <input
-                  type="number"
-                  value={jobId}
-                  onChange={(e) => setJobId(e.target.value)}
-                  placeholder="Enter job ID"
-                  className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-                  style={{ borderColor: color.border.default }}
-                  disabled={isLoading}
-                />
+                {isLoadingJobs ? (
+                  <div className="text-sm text-gray-500">Loading jobs...</div>
+                ) : (
+                  <HeadlessSelect
+                    options={scheduledJobs.map((job) => ({
+                      value: String(job.id),
+                      label: `${job.name} (ID: ${job.id})`,
+                    }))}
+                    value={jobId}
+                    onChange={(v) => setJobId(v || "")}
+                    placeholder="Select a scheduled job"
+                    className="w-full"
+                    zIndex={zIndex.modal}
+                  />
+                )}
               </div>
               <label className="flex items-center gap-2">
                 <input
@@ -314,7 +348,7 @@ export default function FetchControlsModal({
                 <HeadlessSelect
                   options={categoryOptions}
                   value={byTimeCategory}
-                  onChange={(v) => setByTimeCategory(v || "CDR")}
+                  onChange={(v) => setByTimeCategory(String(v || "CDR"))}
                   placeholder="Select category"
                   className="w-full"
                   zIndex={zIndex.modal}
@@ -330,7 +364,7 @@ export default function FetchControlsModal({
                   <HeadlessSelect
                     options={monthOptions}
                     value={byTimeMonth}
-                    onChange={(v) => setByTimeMonth(v || "1")}
+                    onChange={(v) => setByTimeMonth(String(v || "1"))}
                     placeholder="Month"
                     className="w-full"
                     zIndex={zIndex.modal}
@@ -345,7 +379,7 @@ export default function FetchControlsModal({
                   <HeadlessSelect
                     options={dayOptions}
                     value={byTimeDay}
-                    onChange={(v) => setByTimeDay(v || "1")}
+                    onChange={(v) => setByTimeDay(String(v || "1"))}
                     placeholder="Day"
                     className="w-full"
                     zIndex={zIndex.modal}
@@ -360,7 +394,7 @@ export default function FetchControlsModal({
                   <HeadlessSelect
                     options={hourOptions}
                     value={byTimeHour}
-                    onChange={(v) => setByTimeHour(v || "0")}
+                    onChange={(v) => setByTimeHour(String(v || "0"))}
                     placeholder="Hour"
                     className="w-full"
                     zIndex={zIndex.modal}
@@ -376,17 +410,23 @@ export default function FetchControlsModal({
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
-                  Job ID <span style={{ color: color.status.danger }}>*</span>
+                  Scheduled Job <span style={{ color: color.status.danger }}>*</span>
                 </label>
-                <input
-                  type="number"
-                  value={byRangeJobId}
-                  onChange={(e) => setByRangeJobId(e.target.value)}
-                  placeholder="Enter job ID"
-                  className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
-                  style={{ borderColor: color.border.default }}
-                  disabled={isLoading}
-                />
+                {isLoadingJobs ? (
+                  <div className="text-sm text-gray-500">Loading jobs...</div>
+                ) : (
+                  <HeadlessSelect
+                    options={scheduledJobs.map((job) => ({
+                      value: String(job.id),
+                      label: `${job.name} (ID: ${job.id})`,
+                    }))}
+                    value={byRangeJobId}
+                    onChange={(v) => setByRangeJobId(v || "")}
+                    placeholder="Select a scheduled job"
+                    className="w-full"
+                    zIndex={zIndex.modal}
+                  />
+                )}
               </div>
 
               <div className="pt-4">
@@ -401,7 +441,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={monthOptions}
                       value={byRangeStartMonth}
-                      onChange={(v) => setByRangeStartMonth(v || "1")}
+                      onChange={(v) => setByRangeStartMonth(String(v || "1"))}
                       placeholder="Month"
                       className="w-full"
                       zIndex={zIndex.modal}
@@ -416,7 +456,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={dayOptions}
                       value={byRangeStartDay}
-                      onChange={(v) => setByRangeStartDay(v || "1")}
+                      onChange={(v) => setByRangeStartDay(String(v || "1"))}
                       placeholder="Day"
                       className="w-full"
                       zIndex={zIndex.modal}
@@ -431,7 +471,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={hourOptions}
                       value={byRangeStartHour}
-                      onChange={(v) => setByRangeStartHour(v || "0")}
+                      onChange={(v) => setByRangeStartHour(String(v || "0"))}
                       placeholder="Hour"
                       className="w-full"
                       zIndex={zIndex.modal}
@@ -452,7 +492,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={monthOptions}
                       value={byRangeEndMonth}
-                      onChange={(v) => setByRangeEndMonth(v || "1")}
+                      onChange={(v) => setByRangeEndMonth(String(v || "1"))}
                       placeholder="Month"
                       className="w-full"
                       zIndex={zIndex.modal}
@@ -467,7 +507,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={dayOptions}
                       value={byRangeEndDay}
-                      onChange={(v) => setByRangeEndDay(v || "3")}
+                      onChange={(v) => setByRangeEndDay(String(v || "3"))}
                       placeholder="Day"
                       className="w-full"
                       zIndex={zIndex.modal}
@@ -482,7 +522,7 @@ export default function FetchControlsModal({
                     <HeadlessSelect
                       options={hourOptions}
                       value={byRangeEndHour}
-                      onChange={(v) => setByRangeEndHour(v || "23")}
+                      onChange={(v) => setByRangeEndHour(String(v || "23"))}
                       placeholder="Hour"
                       className="w-full"
                       zIndex={zIndex.modal}

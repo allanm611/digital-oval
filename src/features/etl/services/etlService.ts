@@ -131,7 +131,7 @@ class EtlService {
     query?: FileRegistryQuery,
   ): Promise<FileRegistryListResponse> {
     const res = await this.request<FileRegistryListResponse>(
-      `/file-registry${this.buildQueryParams(query)}`,
+      `/file-registry${this.buildQueryParams(query as Record<string, unknown>)}`,
     );
     return res;
   }
@@ -141,7 +141,7 @@ class EtlService {
     query?: PendingFilesQuery,
   ): Promise<PendingFilesResponse> {
     const res = await this.request<PendingFilesResponse>(
-      `/file-registry/pending${this.buildQueryParams(query)}`,
+      `/file-registry/pending${this.buildQueryParams(query as Record<string, unknown>)}`,
     );
     return res;
   }

@@ -52,13 +52,6 @@ export default function EtlFileRegistryPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [executionIdFilter, setExecutionIdFilter] = useState<string | null>(null);
-  const [activeTimeFilter, setActiveTimeFilter] = useState<{
-    category: string;
-    month: string;
-    day: string;
-    hour: string;
-  } | null>(null);
 
   // Load stats
   const loadStats = useCallback(async () => {
@@ -83,8 +76,6 @@ export default function EtlFileRegistryPage() {
       const response = await etlService.getFileRegistry({
         category: categoryFilter !== "all" ? categoryFilter : undefined,
         status: statusFilter !== "all" ? statusFilter : undefined,
-        job_execution_id: executionIdFilter || undefined,
-        execution_id: executionIdFilter || undefined,
         limit: PAGE_SIZE,
         offset: (page - 1) * PAGE_SIZE,
       });
@@ -104,50 +95,7 @@ export default function EtlFileRegistryPage() {
     } finally {
       setIsLoadingFiles(false);
     }
-  }, [page, categoryFilter, statusFilter, executionIdFilter, showError]);
-
-  const pollRegistryForExecution = useCallback(
-    async (execId: string, retries = 4, delayMs = 1500) => {
-      setIsLoadingFiles(true);
-
-      for (let attempt = 0; attempt < retries; attempt += 1) {
-        try {
-          const response = await etlService.getFileRegistry({
-            category: categoryFilter !== "all" ? categoryFilter : undefined,
-            status: statusFilter !== "all" ? statusFilter : undefined,
-            job_execution_id: execId,
-            execution_id: execId,
-            limit: PAGE_SIZE,
-            offset: 0,
-          });
-
-          const filesList = Array.isArray(response.data) ? response.data : [];
-          if (filesList.length > 0) {
-            setFiles(filesList);
-            if (response.pagination) {
-              setTotalCount(response.pagination.total);
-            } else {
-              setTotalCount(filesList.length);
-            }
-            setIsLoadingFiles(false);
-            return;
-          }
-        } catch (err) {
-          showError(
-            "Failed to load file registry",
-            (err as Error).message || "Unable to fetch files.",
-          );
-          break;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, delayMs));
-      }
-
-      // Fallback: if polling found nothing, reload without execution filter
-      await loadRegistry();
-    },
-    [categoryFilter, statusFilter, showError, loadRegistry],
-  );
+  }, [page, categoryFilter, statusFilter, showError]);
 
   useEffect(() => {
     loadStats();
@@ -159,7 +107,7 @@ export default function EtlFileRegistryPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, categoryFilter, executionIdFilter]);
+  }, [statusFilter, categoryFilter]);
 
   const handleReprocess = async (file: EtlFileRegistryRowType) => {
     const confirmed = await confirm({
@@ -361,34 +309,6 @@ export default function EtlFileRegistryPage() {
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        {/* Active Time Filter Badge */}
-        {activeTimeFilter && (
-          <div className="flex items-center gap-2">
-            <span
-              className={`${tw.rounded} px-3 py-1.5 text-sm font-medium text-white`}
-              style={{ backgroundColor: color.primary.accent }}
-            >
-              Filtered: {activeTimeFilter.category} {activeTimeFilter.month}/{activeTimeFilter.day} {activeTimeFilter.hour}:00
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setExecutionIdFilter(null);
-                setActiveTimeFilter(null);
-                setPage(1);
-              }}
-              className={`px-2 py-1 ${tw.rounded} text-xs font-medium transition-colors`}
-              style={{
-                backgroundColor: color.surface.cards,
-                color: color.text.secondary,
-                border: `1px solid ${color.border.default}`,
-              }}
-            >
-              Clear
-            </button>
-          </div>
-        )}
-
         <div className="relative flex-1">
           <Search
             className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
@@ -590,19 +510,12 @@ export default function EtlFileRegistryPage() {
         isOpen={isFetchModalOpen}
         onClose={handleFetchModalClose}
         onSuccess={(executionId, timeFilter) => {
-          setExecutionIdFilter(executionId || null);
+          // Set category filter to match what was fetched
+          if (timeFilter?.category) {
+            setCategoryFilter(timeFilter.category as CategoryFilter);
+          }
           setPage(1);
-
-          if (timeFilter) {
-            setActiveTimeFilter(timeFilter);
-          }
-
-          if (executionId) {
-            pollRegistryForExecution(executionId);
-          } else {
-            loadRegistry();
-          }
-
+          loadRegistry();
           loadStats();
         }}
       />

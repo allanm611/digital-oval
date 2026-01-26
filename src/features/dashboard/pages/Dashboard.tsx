@@ -477,19 +477,11 @@ const EtlPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../etl/pages/EtlFileRegistryPage"),
   ),
-  EtlPendingFilesPage: lazy(
-    () =>
-      import(/* webpackPrefetch: true */ "../../etl/pages/EtlPendingFilesPage"),
-  ),
   EtlFetchControlsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../etl/pages/EtlFetchControlsPage"
       ),
-  ),
-  EtlStatisticsPage: lazy(
-    () =>
-      import(/* webpackPrefetch: true */ "../../etl/pages/EtlStatisticsPage"),
   ),
 };
 
