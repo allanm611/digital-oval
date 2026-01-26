@@ -27,7 +27,6 @@ class SessionService {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
-    console.log("Making request to:", url);
 
     const response = await fetch(url, {
       headers: {

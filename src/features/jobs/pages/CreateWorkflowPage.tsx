@@ -6,6 +6,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import type { CreateWorkflowPayload, UpdateWorkflowPayload } from "../types/workflow";
 
 export default function CreateWorkflowPage() {
@@ -13,6 +14,7 @@ export default function CreateWorkflowPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isEditMode = !!id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -41,8 +43,8 @@ export default function CreateWorkflowPage() {
           });
         } catch (err) {
           showError(
-            "Error",
-            err instanceof Error ? err.message : "Failed to load workflow"
+            t.common.error,
+            err instanceof Error ? err.message : t.workflows.failedToLoadWorkflow
           );
         } finally {
           setIsLoading(false);
@@ -56,7 +58,7 @@ export default function CreateWorkflowPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name?.trim()) {
-      newErrors.name = "Name is required";
+      newErrors.name = t.workflows.nameRequired;
     }
 
     setErrors(newErrors);
@@ -76,7 +78,7 @@ export default function CreateWorkflowPage() {
           workflow_type: formData.workflow_type,
         };
         await workflowService.updateWorkflow(Number(id), updatePayload);
-        showToast("Workflow updated", "Workflow has been updated successfully.");
+        showToast(t.workflows.workflowUpdated, t.workflows.workflowUpdateSuccess);
       } else {
         const createPayload: CreateWorkflowPayload = {
           name: formData.name,
@@ -85,13 +87,13 @@ export default function CreateWorkflowPage() {
           created_by: formData.created_by,
         };
         await workflowService.createWorkflow(createPayload);
-        showToast("Workflow created", "Workflow has been created successfully.");
+        showToast(t.workflows.workflowCreated, t.workflows.workflowCreateSuccess);
       }
       navigate("/dashboard/workflows");
     } catch (err) {
       showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to save workflow"
+        t.common.error,
+        err instanceof Error ? err.message : t.workflows.failedToSaveWorkflow
       );
     } finally {
       setIsSaving(false);
@@ -118,19 +120,19 @@ export default function CreateWorkflowPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-          {isEditMode ? "Edit Workflow" : "Create Workflow"}
+          {isEditMode ? t.workflows.editWorkflow : t.workflows.createWorkflow}
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
           <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Workflow Information
+            {t.workflows.workflowInformation}
           </h2>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name <span className="text-red-500">*</span>
+                {t.common.name} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -141,7 +143,7 @@ export default function CreateWorkflowPage() {
                 className={`w-full ${tw.rounded} border ${
                   errors.name ? "border-red-300" : "border-gray-300"
                 } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                placeholder="Enter workflow name"
+                placeholder={t.workflows.enterWorkflowName}
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -150,7 +152,7 @@ export default function CreateWorkflowPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t.common.description}
               </label>
               <textarea
                 value={formData.description || ""}
@@ -162,13 +164,13 @@ export default function CreateWorkflowPage() {
                 }
                 rows={4}
                 className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                placeholder="Enter workflow description (optional)"
+                placeholder={t.workflows.enterWorkflowDescription}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Workflow Type
+                {t.common.type}
               </label>
               <input
                 type="text"
@@ -180,7 +182,7 @@ export default function CreateWorkflowPage() {
                   })
                 }
                 className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                placeholder="Enter workflow type (optional)"
+                placeholder={t.workflows.enterWorkflowType}
               />
             </div>
           </div>
@@ -193,7 +195,7 @@ export default function CreateWorkflowPage() {
             onClick={() => navigate("/dashboard/workflows")}
             className={`${tw.rounded} border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             type="submit"
@@ -204,12 +206,12 @@ export default function CreateWorkflowPage() {
             {isSaving ? (
               <>
                 <LoadingSpinner />
-                {isEditMode ? "Updating..." : "Creating..."}
+                {isEditMode ? t.workflows.updating : t.workflows.creating}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                {isEditMode ? "Update Workflow" : "Create Workflow"}
+                {isEditMode ? t.workflows.editWorkflow : t.workflows.createWorkflow}
               </>
             )}
           </button>

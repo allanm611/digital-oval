@@ -119,10 +119,6 @@ export default function CommunicationAnalyticsPage() {
             : [];
           setExecutions(executionsData);
         } else {
-          console.log(
-            "Executions response failed or no data:",
-            executionsResponse
-          );
           setExecutions([]);
         }
       } catch (executionsErr) {
@@ -143,7 +139,6 @@ export default function CommunicationAnalyticsPage() {
             : [];
           setLogs(logsData);
         } else {
-          console.log("Logs response failed or no data:", logsResponse);
           setLogs([]);
         }
       } catch (logsErr) {

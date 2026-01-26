@@ -143,7 +143,6 @@ export default function ExecuteCampaignModal({
         mode: executionMode,
       };
 
-      console.log("Executing campaign with request:", request);
       await campaignService.executeCampaign(request);
 
       showToast("success", `Campaign "${campaignName}" executed successfully!`);

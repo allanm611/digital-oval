@@ -42,6 +42,7 @@ import {
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { roleService } from "../../roles/services/roleService";
 import { userService } from "../../users/services/userService";
 import { Role } from "../../roles/types/role";
@@ -111,11 +112,12 @@ export default function Sidebar({
   onMinimizeChange,
 }: SidebarProps) {
   const location = useLocation();
+  const { t } = useLanguage();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const previousPathnameRef = useRef<string>("");
   const { user, logout } = useAuth();
-  const [currentUserRole, setCurrentUserRole] = useState<string>("User");
+  const [currentUserRole, setCurrentUserRole] = useState<string>(t.sidebar.user.defaultRole);
 
   const handleMinimizeToggle = useCallback(() => {
     const newState = !isMinimized;
@@ -125,7 +127,7 @@ export default function Sidebar({
 
   const loadCurrentUserRole = useCallback(async () => {
     if (!user?.user_id) {
-      setCurrentUserRole("User");
+      setCurrentUserRole(t.sidebar.user.defaultRole);
       return;
     }
 
@@ -159,17 +161,17 @@ export default function Sidebar({
         setCurrentUserRole(
           user.role
             ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-            : "User",
+            : t.sidebar.user.defaultRole,
         );
       }
     } catch {
       setCurrentUserRole(
         user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-          : "User",
+          : t.sidebar.user.defaultRole,
       );
     }
-  }, [user]);
+  }, [user, t.sidebar.user.defaultRole]);
 
   useEffect(() => {
     loadCurrentUserRole();
@@ -188,49 +190,49 @@ export default function Sidebar({
   const navigation: NavigationItem[] = useMemo(
     () => [
       {
-        name: "Dashboard",
+        name: t.sidebar.navigation.dashboard,
         href: "/dashboard",
         icon: Home,
         type: "single",
         entity: "campaigns",
       },
       {
-        name: "Campaign Management",
+        name: t.sidebar.navigation.campaignManagement,
         href: "/dashboard/campaigns",
         icon: BarChart3,
         type: "parent",
         entity: "campaigns",
         children: [
           {
-            name: "All Campaigns",
+            name: t.sidebar.navigation.allCampaigns,
             href: "/dashboard/campaigns",
             icon: Target,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Campaign Objective",
+            name: t.sidebar.navigation.campaignObjective,
             href: "/dashboard/campaign-objectives",
             icon: Flag,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Programs",
+            name: t.sidebar.navigation.programs,
             href: "/dashboard/programs",
             icon: Briefcase,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Campaign Catalogs",
+            name: t.sidebar.navigation.campaignCatalogs,
             href: "/dashboard/campaign-catalogs",
             icon: Folder,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Campaign Types",
+            name: t.sidebar.navigation.campaignTypes,
             href: "/dashboard/campaign-types",
             icon: Layers,
             type: "single",
@@ -239,28 +241,28 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Offer Management",
+        name: t.sidebar.navigation.offerManagement,
         href: "/dashboard/offers",
         icon: Calendar,
         type: "parent",
         entity: "offers",
         children: [
           {
-            name: "All Offers",
+            name: t.sidebar.navigation.allOffers,
             href: "/dashboard/offers",
             icon: MessageSquare,
             type: "single",
             entity: "offers",
           },
           {
-            name: "Offer Types",
+            name: t.sidebar.navigation.offerTypes,
             href: "/dashboard/offer-types",
             icon: Tag,
             type: "single",
             entity: "offers",
           },
           {
-            name: "Offer Catalogs",
+            name: t.sidebar.navigation.offerCatalogs,
             href: "/dashboard/offer-catalogs",
             icon: FolderOpen,
             type: "single",
@@ -269,28 +271,28 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Product Management",
+        name: t.sidebar.navigation.productManagement,
         href: "/dashboard/products",
         icon: Zap,
         type: "parent",
         entity: "products",
         children: [
           {
-            name: "All Products",
+            name: t.sidebar.navigation.allProducts,
             href: "/dashboard/products",
             icon: Package,
             type: "single",
             entity: "products",
           },
           {
-            name: "Product Types",
+            name: t.sidebar.navigation.productTypes,
             href: "/dashboard/product-types",
             icon: Layers,
             type: "single",
             entity: "products",
           },
           {
-            name: "Product Catalogs",
+            name: t.sidebar.navigation.productCatalogs,
             href: "/dashboard/products/catalogs",
             icon: FolderOpen,
             type: "single",
@@ -299,35 +301,35 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Segment Management",
+        name: t.sidebar.navigation.segmentManagement,
         href: "/dashboard/segments",
         icon: Users,
         type: "parent",
         entity: "segments",
         children: [
           {
-            name: "All Segments",
+            name: t.sidebar.navigation.allSegments,
             href: "/dashboard/segments",
             icon: Users,
             type: "single",
             entity: "segments",
           },
           {
-            name: "Segment Types",
+            name: t.sidebar.navigation.segmentTypes,
             href: "/dashboard/segment-types",
             icon: Layers,
             type: "single",
             entity: "segments",
           },
           {
-            name: "Segment Catalogs",
+            name: t.sidebar.navigation.segmentCatalogs,
             href: "/dashboard/segment-catalogs",
             icon: FolderOpen,
             type: "single",
             entity: "segments",
           },
           {
-            name: "QuickLists",
+            name: t.sidebar.navigation.quickLists,
             href: "/dashboard/quick-lists",
             icon: List,
             type: "single",
@@ -336,21 +338,21 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Customer 360 profile",
+        name: t.sidebar.navigation.customer360Profile,
         href: "/dashboard/customers",
         icon: Users,
         type: "parent",
         entity: "customers",
         children: [
           {
-            name: "Customers",
+            name: t.sidebar.navigation.customers,
             href: "/dashboard/customers",
             icon: Users,
             type: "single",
             entity: "customers",
           },
           {
-            name: "Customer Identity",
+            name: t.sidebar.navigation.customerIdentity,
             href: "/dashboard/customer-identity",
             icon: Fingerprint,
             type: "single",
@@ -359,21 +361,21 @@ export default function Sidebar({
         ],
       },
       {
-        name: "User Management",
+        name: t.sidebar.navigation.userManagement,
         href: "/dashboard/user-management",
         icon: UserCheck,
         type: "parent",
         entity: "users",
         children: [
           {
-            name: "All Users",
+            name: t.sidebar.navigation.allUsers,
             href: "/dashboard/user-management",
             icon: Users,
             type: "single",
             entity: "users",
           },
           {
-            name: "Access Control",
+            name: t.sidebar.navigation.accessControl,
             href: "/dashboard/access-control",
             icon: UserCheck,
             type: "single",
@@ -382,49 +384,49 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Reports & Analytics",
+        name: t.sidebar.navigation.reportsAndAnalytics,
         href: "/dashboard/reports",
         icon: LineChart,
         type: "parent",
         entity: "analytics",
         children: [
           {
-            name: "Overall Dashboard Performance",
+            name: t.sidebar.navigation.overallDashboardPerformance,
             href: "/dashboard/reports/overview",
             icon: Activity,
             type: "single",
             entity: "analytics",
           },
           {
-            name: "Customer Profile Reports",
+            name: t.sidebar.navigation.customerProfileReports,
             href: "/dashboard/reports/customer-profiles",
             icon: Users,
             type: "single",
             entity: "analytics",
           },
           {
-            name: "Campaign Reports",
+            name: t.sidebar.navigation.campaignReports,
             href: "/dashboard/reports/campaigns",
             icon: Target,
             type: "single",
             entity: "analytics",
           },
           {
-            name: "Offer Reports",
+            name: t.sidebar.navigation.offerReports,
             href: "/dashboard/reports/offers",
             icon: Gift,
             type: "single",
             entity: "analytics",
           },
           {
-            name: "Delivery & SMS Reports",
+            name: t.sidebar.navigation.deliverySmsReports,
             href: "/dashboard/reports/delivery",
             icon: MessageSquare,
             type: "single",
             entity: "analytics",
           },
           {
-            name: "Delivery & Email Reports",
+            name: t.sidebar.navigation.deliveryEmailReports,
             href: "/dashboard/reports/email-delivery",
             icon: Mail,
             type: "single",
@@ -433,28 +435,28 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Infrastructure",
+        name: t.sidebar.navigation.infrastructure,
         href: "/dashboard/servers",
         icon: Server,
         type: "parent",
         entity: "servers",
         children: [
           {
-            name: "Servers",
+            name: t.sidebar.navigation.servers,
             href: "/dashboard/servers",
             icon: Server,
             type: "single",
             entity: "servers",
           },
           {
-            name: "Connection Profiles",
+            name: t.sidebar.navigation.connectionProfiles,
             href: "/dashboard/connection-profiles",
             icon: Database,
             type: "single",
             entity: "servers",
           },
           {
-            name: "Data Connectors",
+            name: t.sidebar.navigation.dataConnectors,
             href: "/dashboard/data-connectors",
             icon: Plug,
             type: "single",
@@ -464,21 +466,21 @@ export default function Sidebar({
       },
 
       {
-        name: "Job Management",
+        name: t.sidebar.navigation.jobManagement,
         href: "/dashboard/jobs",
         icon: Briefcase,
         type: "parent",
         entity: "campaigns",
         children: [
           {
-            name: "Scheduled Jobs",
+            name: t.sidebar.navigation.scheduledJobs,
             href: "/dashboard/jobs",
             icon: Briefcase,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Job Executions",
+            name: t.sidebar.navigation.jobExecutions,
             href: "/dashboard/job-executions",
             icon: PlayCircle,
             type: "single",
@@ -492,28 +494,28 @@ export default function Sidebar({
           //   entity: "campaigns",
           // },
           {
-            name: "Job Types",
+            name: t.sidebar.navigation.jobTypes,
             href: "/dashboard/job-types",
             icon: Layers,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Job Dependencies",
+            name: t.sidebar.navigation.jobDependencies,
             href: "/dashboard/job-dependencies",
             icon: Link2,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Job Workflow Steps",
+            name: t.sidebar.navigation.jobWorkflowSteps,
             href: "/dashboard/job-workflow-steps",
             icon: Activity,
             type: "single",
             entity: "campaigns",
           },
           {
-            name: "Job Workflows",
+            name: t.sidebar.navigation.jobWorkflows,
             href: "/dashboard/workflows",
             icon: GitBranch,
             type: "single",
@@ -522,7 +524,7 @@ export default function Sidebar({
         ],
       },
       {
-        name: "Manual Broadcasts",
+        name: t.sidebar.navigation.manualBroadcasts,
         href: "/dashboard/manual-broadcasts",
         icon: Zap,
         type: "single",
@@ -530,26 +532,26 @@ export default function Sidebar({
       },
 
       {
-        name: "Configuration",
+        name: t.sidebar.navigation.configuration,
         href: "/dashboard/configuration",
         icon: Cog,
         type: "single",
         entity: "configuration",
       },
     ],
-    [],
+    [t],
   );
 
   const secondaryNavigation = [
     {
-      name: "My Profile",
+      name: t.sidebar.secondary.myProfile,
       href: "/dashboard/profile",
       icon: User,
       type: "single",
       entity: "users" as const,
     },
     {
-      name: "Settings",
+      name: t.sidebar.secondary.settings,
       href: "/dashboard/settings",
       icon: Settings,
       type: "single",
@@ -704,7 +706,7 @@ export default function Sidebar({
                 >
                   <img
                     src={logo}
-                    alt="Sentra Logo"
+                    alt={t.sidebar.logo.alt}
                     className="w-full h-full object-contain"
                   />
                 </Link>
@@ -936,7 +938,7 @@ export default function Sidebar({
                 className={`mt-4 inline-flex w-full items-center justify-center gap-x-2 ${tw.rounded} border border-white/20 px-3 py-2 text-sm text-white/80 hover:text-white hover:bg-white/10 transition-colors`}
               >
                 <LogOut className="h-4 w-4" />
-                Sign out
+                {t.sidebar.user.signOut}
               </button>
             </div>
           </div>
@@ -961,7 +963,7 @@ export default function Sidebar({
             >
               <img
                 src={logo}
-                alt="Sentra Logo"
+                alt={t.sidebar.logo.alt}
                 className="w-full h-full object-contain"
               />
             </Link>

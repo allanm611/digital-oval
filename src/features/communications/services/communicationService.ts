@@ -49,7 +49,6 @@ class CommunicationService {
   async sendCommunication(
     request: SendCommunicationRequest
   ): Promise<SendCommunicationResponse> {
-    console.log('Sending communication:', request);
     return this.request<SendCommunicationResponse>('/send', {
       method: 'POST',
       body: JSON.stringify(request),

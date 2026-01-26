@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Filter,
 } from "lucide-react";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -95,11 +96,11 @@ export default function ProgramsPage() {
       const inactive = programs.filter((p) => !p.is_active).length;
       const totalBudget = programs.reduce(
         (sum, p) => sum + (parseFloat(String(p.budget_total || 0)) || 0),
-        0
+        0,
       );
       const spentBudget = programs.reduce(
         (sum, p) => sum + (parseFloat(String(p.budget_spent || 0)) || 0),
-        0
+        0,
       );
       setStats({
         total: programs.length,
@@ -120,7 +121,7 @@ export default function ProgramsPage() {
       const hasFilters =
         Object.keys(filters).length > 0 &&
         Object.values(filters).some(
-          (v) => v !== undefined && v !== "" && v !== "all"
+          (v) => v !== undefined && v !== "" && v !== "all",
         );
 
       // Check if only budget filters are applied
@@ -175,14 +176,14 @@ export default function ProgramsPage() {
             filtered = filtered.filter(
               (p) =>
                 p.budget_total &&
-                parseFloat(p.budget_total) >= (filters.budget_min as number)
+                parseFloat(p.budget_total) >= (filters.budget_min as number),
             );
           }
           if (filters.budget_max) {
             filtered = filtered.filter(
               (p) =>
                 p.budget_total &&
-                parseFloat(p.budget_total) <= (filters.budget_max as number)
+                parseFloat(p.budget_total) <= (filters.budget_max as number),
             );
           }
           response.data = filtered;
@@ -215,7 +216,7 @@ export default function ProgramsPage() {
 
   const handleFilterChange = (
     key: keyof typeof filters,
-    value: boolean | "all" | string | number | undefined
+    value: boolean | "all" | string | number | undefined,
   ) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
@@ -340,7 +341,7 @@ export default function ProgramsPage() {
     (program) =>
       program?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (program?.description &&
-        program.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        program.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const programStatsCards = [
@@ -398,14 +399,7 @@ export default function ProgramsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleCreateProgram}
-            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {t.programs.createProgram}
-          </button>
+          <CreateButton onClick={handleCreateProgram} />
         </div>
       </div>
 
@@ -489,14 +483,7 @@ export default function ProgramsPage() {
                 : "Create your first program to get started."}
             </p>
             {!searchTerm && (
-              <button
-                onClick={handleCreateProgram}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Create Program
-              </button>
+              <CreateButton onClick={handleCreateProgram} className="mx-auto" />
             )}
           </div>
         ) : (
@@ -583,7 +570,8 @@ export default function ProgramsPage() {
                             onMouseEnter={(e) => {
                               (
                                 e.target as HTMLButtonElement
-                              ).style.backgroundColor = `${color.primary.action}10`;
+                              ).style.backgroundColor =
+                                `${color.primary.action}10`;
                             }}
                             onMouseLeave={(e) => {
                               (
@@ -680,7 +668,7 @@ export default function ProgramsPage() {
                           onChange={() =>
                             handleFilterChange(
                               "is_active",
-                              option.value === "all" ? "all" : option.value
+                              option.value === "all" ? "all" : option.value,
                             )
                           }
                           className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
@@ -706,7 +694,7 @@ export default function ProgramsPage() {
                     onChange={(e) =>
                       handleFilterChange(
                         "program_type",
-                        e.target.value || undefined
+                        e.target.value || undefined,
                       )
                     }
                     placeholder="Enter program type"
@@ -727,7 +715,7 @@ export default function ProgramsPage() {
                     onChange={(e) =>
                       handleFilterChange(
                         "created_by",
-                        e.target.value ? Number(e.target.value) : undefined
+                        e.target.value ? Number(e.target.value) : undefined,
                       )
                     }
                     placeholder="Enter user ID"
@@ -749,7 +737,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "start_date_from",
-                          e.target.value || undefined
+                          e.target.value || undefined,
                         )
                       }
                       className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
@@ -760,7 +748,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "start_date_to",
-                          e.target.value || undefined
+                          e.target.value || undefined,
                         )
                       }
                       placeholder="To"
@@ -783,7 +771,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "end_date_from",
-                          e.target.value || undefined
+                          e.target.value || undefined,
                         )
                       }
                       className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
@@ -794,7 +782,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "end_date_to",
-                          e.target.value || undefined
+                          e.target.value || undefined,
                         )
                       }
                       placeholder="To"
@@ -817,7 +805,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "budget_min",
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Min Budget"
@@ -829,7 +817,7 @@ export default function ProgramsPage() {
                       onChange={(e) =>
                         handleFilterChange(
                           "budget_max",
-                          e.target.value ? Number(e.target.value) : undefined
+                          e.target.value ? Number(e.target.value) : undefined,
                         )
                       }
                       placeholder="Max Budget"
@@ -859,7 +847,7 @@ export default function ProgramsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

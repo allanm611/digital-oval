@@ -32,7 +32,6 @@ export default function AssignPermissionsModal({
   const userId = propUserId || user?.user_id;
 
   useEffect(() => {
-    console.log("[AssignPermissionsModal] userId:", userId);
   }, [userId]);
 
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);

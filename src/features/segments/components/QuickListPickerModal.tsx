@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Search, List, Check, Loader2 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { quicklistService } from "../../quicklists/services/quicklistService";
+import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
+import type { CreateQuickListRequest } from "../../quicklists/types/quicklist";
 
 // Type pour les QuickLists (simplifié pour la sélection)
 interface QuickListItem {
@@ -96,6 +99,7 @@ export default function QuickListPickerModal({
   const [quickLists, setQuickLists] =
     useState<QuickListItem[]>(MOCK_QUICKLISTS);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -157,6 +161,31 @@ export default function QuickListPickerModal({
     onClose();
   };
 
+  const handleCreateQuickList = async (request: CreateQuickListRequest) => {
+    try {
+      const response = await quicklistService.createQuickList(request);
+      if (response.success && response.data) {
+        const newQuickList: QuickListItem = {
+          id: response.data.quicklist_id,
+          name: request.name,
+          description: request.description || undefined,
+          upload_type: "multi",
+          row_count: response.data.rows_imported || 0,
+          created_at: new Date().toISOString(),
+        };
+        // Reload the list
+        await loadQuickLists();
+        // Auto-select the newly created quicklist
+        onSelect(newQuickList);
+        setShowCreateModal(false);
+        onClose();
+      }
+    } catch (err) {
+      console.error("Failed to create quicklist:", err);
+      throw err;
+    }
+  };
+
   const getUploadTypeBadgeColor = (uploadType: string) => {
     switch (uploadType) {
       case "email":
@@ -203,19 +232,23 @@ export default function QuickListPickerModal({
                 Choose a quicklist to use in this condition
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2 transition-colors"
-              style={{ color: color.text.secondary }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = color.interactive.hover;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <CreateButton onClick={() => setShowCreateModal(true)} />
+              <button
+                onClick={onClose}
+                className="p-2 transition-colors"
+                style={{ color: color.text.secondary }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    color.interactive.hover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Search and Filter */}
@@ -450,6 +483,15 @@ export default function QuickListPickerModal({
           </div>
         </div>
       </div>
+
+      {/* Create QuickList Modal */}
+      {showCreateModal && (
+        <CreateQuickListModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={handleCreateQuickList}
+        />
+      )}
     </>,
     document.body,
   );

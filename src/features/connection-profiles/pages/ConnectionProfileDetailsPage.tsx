@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Edit,
@@ -47,6 +47,7 @@ export default function ConnectionProfileDetailsPage() {
   });
   const [validitySaving, setValiditySaving] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [validityStatus, setValidityStatus] = useState<boolean | null>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
   const fetchValidityStatus = async (profileId: number) => {
@@ -60,6 +61,32 @@ export default function ConnectionProfileDetailsPage() {
       setValidityStatus(null);
     }
   };
+
+  const loadProfile = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      setLoading(true);
+      const data = await connectionProfileService.getProfile(Number(id), true);
+      setProfile(data);
+      setHealthStatus(
+        data.last_health_check_status === "unhealthy" ? "unhealthy" : "healthy"
+      );
+      setValidityForm({
+        valid_from: data.valid_from?.split("T")[0] ?? "",
+        valid_to: data.valid_to ? data.valid_to.split("T")[0] : "",
+      });
+      await fetchValidityStatus(Number(id));
+    } catch (err) {
+      console.error("Failed to load connection profile:", err);
+      showError(
+        "Failed to load connection profile",
+        err instanceof Error ? err.message : "Please try again later."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id, showError]);
 
   useEffect(() => {
     if (id) {

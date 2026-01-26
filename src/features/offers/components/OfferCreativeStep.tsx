@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import {
   Plus,
   Trash2,
@@ -13,6 +13,7 @@ import {
   FileText,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import {
@@ -29,6 +30,12 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "./CreativePreviewComponents";
+import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
+import {
+  insertVariableAtCursor,
+  formatVariablePlaceholder,
+} from "../../manual-broadcast/utils/variableInsertion";
+import type { TemplateVariable } from "../../manual-broadcast/types";
 
 interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
   id: string; // Use string for local temp ID
@@ -38,7 +45,7 @@ interface LocalOfferCreative extends Omit<OfferCreative, "id" | "offer_id"> {
 // Helper function to replace variables in text (client-side preview)
 const replaceVariables = (
   text: string,
-  variables: Record<string, string | number | boolean>
+  variables: Record<string, string | number | boolean>,
 ): string => {
   if (!text) return "";
   let result = text;
@@ -50,46 +57,13 @@ const replaceVariables = (
   return result;
 };
 
-// Helper function to calculate SMS segments
-// Rules: First segment = 160 chars, subsequent segments = 153 chars each
-// Sender ID is automatically prepended, so it counts toward the total
-const calculateSMSSegments = (
-  messageText: string,
-  senderId: string = ""
-): { totalChars: number; smsCount: number } => {
-  if (!messageText && !senderId) {
-    return { totalChars: 0, smsCount: 0 };
-  }
-
-  // Sender ID is prepended with ": " (2 chars) if message exists
-  const senderIdPrefix = senderId ? `${senderId}: ` : "";
-  const fullMessage = senderIdPrefix + messageText;
-  const totalChars = fullMessage.length;
-
-  if (totalChars === 0) {
-    return { totalChars: 0, smsCount: 0 };
-  }
-
-  // Calculate SMS segments
-  // First segment: 160 characters
-  // Subsequent segments: 153 characters each
-  if (totalChars <= 160) {
-    return { totalChars, smsCount: 1 };
-  }
-
-  // More than 160 chars - calculate segments
-  const remainingChars = totalChars - 160;
-  const additionalSegments = Math.ceil(remainingChars / 153);
-  const smsCount = 1 + additionalSegments;
-
-  return { totalChars, smsCount };
-};
-
 interface OfferCreativeStepProps {
   creatives: LocalOfferCreative[];
   onCreativesChange: (creatives: LocalOfferCreative[]) => void;
   validationError?: string; // Optional validation error message
 }
+
+type ActiveField = "title" | "body";
 
 // Channel configuration with icons
 const CHANNELS: Array<{
@@ -110,7 +84,7 @@ const CHANNELS: Array<{
 // Locale labels for display - will use languages from config
 const getLocaleLabel = (
   locale: Locale,
-  languages?: TypeConfigurationItem[]
+  languages?: TypeConfigurationItem[],
 ): string => {
   // If languages config is available, use it
   if (languages && languages.length > 0) {
@@ -501,11 +475,7 @@ export default function OfferCreativeStep({
   const [selectedCreative, setSelectedCreative] = useState<string | null>(
     () => {
       return creatives.length > 0 ? creatives[0].id : null;
-    }
-  );
-  // Track raw JSON text for variables to allow free typing
-  const [variablesText, setVariablesText] = useState<Record<string, string>>(
-    {}
+    },
   );
   // Track selected template for each creative
   const [selectedTemplates, setSelectedTemplates] = useState<
@@ -527,7 +497,19 @@ export default function OfferCreativeStep({
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewResult, setPreviewResult] =
     useState<RenderCreativeResponse | null>(null);
-  const [variableOverrides, setVariableOverrides] = useState<string>("");
+
+  // Variable insertion state (aligned with Manual Communications step)
+  const [showVariableSelector, setShowVariableSelector] = useState(false);
+  const [activeField, setActiveField] = useState<ActiveField>("body");
+  const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [selectedVariables, setSelectedVariables] = useState<
+    TemplateVariable[]
+  >([]);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isRichTextMap, setIsRichTextMap] = useState<Record<string, boolean>>(
+    {},
+  );
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -546,8 +528,6 @@ export default function OfferCreativeStep({
     const updatedCreatives = [...creatives, newCreative];
     onCreativesChange(updatedCreatives);
     setSelectedCreative(newCreative.id);
-    // Initialize empty variables text for new creative
-    setVariablesText((prev) => ({ ...prev, [newCreative.id]: "" }));
     // Initialize empty template selection for new creative
     setSelectedTemplates((prev) => ({ ...prev, [newCreative.id]: null }));
   };
@@ -558,11 +538,6 @@ export default function OfferCreativeStep({
 
     // Clean up template selection and variables text
     setSelectedTemplates((prev) => {
-      const updated = { ...prev };
-      delete updated[id];
-      return updated;
-    });
-    setVariablesText((prev) => {
       const updated = { ...prev };
       delete updated[id];
       return updated;
@@ -578,7 +553,7 @@ export default function OfferCreativeStep({
 
   const updateCreative = (id: string, updates: Partial<LocalOfferCreative>) => {
     const updatedCreatives = creatives.map((c) =>
-      c.id === id ? { ...c, ...updates } : c
+      c.id === id ? { ...c, ...updates } : c,
     );
     onCreativesChange(updatedCreatives);
   };
@@ -591,7 +566,7 @@ export default function OfferCreativeStep({
   // Templates use metadataValue for channel, and locale field for language matching
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
-    locale: Locale
+    locale: Locale,
   ) => {
     return (templates as TypeConfigurationItem[]).filter((template) => {
       if (!template.isActive) return false;
@@ -615,7 +590,7 @@ export default function OfferCreativeStep({
     if (!selectedCreativeData) return [];
     return getTemplatesForChannelAndLocale(
       selectedCreativeData.channel,
-      selectedCreativeData.locale
+      selectedCreativeData.locale,
     );
   }, [selectedCreativeData?.channel, selectedCreativeData?.locale, templates]);
 
@@ -653,22 +628,17 @@ export default function OfferCreativeStep({
     if (template.text_body) {
       updates.text_body = replaceVariables(
         template.text_body,
-        templateVariables
+        templateVariables,
       );
     }
     if (template.html_body) {
       updates.html_body = replaceVariables(
         template.html_body,
-        templateVariables
+        templateVariables,
       );
     }
     if (template.variables) {
       updates.variables = template.variables;
-      // Update variables text for display
-      setVariablesText((prev) => ({
-        ...prev,
-        [selectedCreativeData.id]: JSON.stringify(template.variables, null, 2),
-      }));
     }
 
     updateCreative(selectedCreativeData.id, updates);
@@ -687,45 +657,69 @@ export default function OfferCreativeStep({
     });
   };
 
-  // Get variables text for current creative (with fallback)
-  const getVariablesText = (creativeId: string): string => {
-    if (variablesText[creativeId]) {
-      return variablesText[creativeId];
+  // Variable selection handlers (matches Manual Communications step)
+  const handleVariableSelect = (variable: TemplateVariable) => {
+    if (!selectedVariables.find((v) => v.id === variable.id)) {
+      setSelectedVariables((prev) => [...prev, variable]);
     }
-    const creative = creatives.find((c) => c.id === creativeId);
-    if (creative?.variables && Object.keys(creative.variables).length > 0) {
-      return JSON.stringify(creative.variables, null, 2);
+
+    if (!selectedCreativeData) return;
+
+    const isRichText = isRichTextMap[selectedCreativeData.id] || false;
+
+    if (activeField === "title") {
+      const result = insertVariableAtCursor(
+        selectedCreativeData.title || "",
+        cursorPosition,
+        variable,
+      );
+      updateCreative(selectedCreativeData.id, { title: result.newText });
+      setTimeout(() => {
+        if (titleInputRef.current) {
+          titleInputRef.current.setSelectionRange(
+            result.newCursorPosition,
+            result.newCursorPosition,
+          );
+          titleInputRef.current.focus();
+        }
+      }, 0);
+    } else {
+      if (selectedCreativeData.channel === "Email" && isRichText) {
+        const placeholder = formatVariablePlaceholder(variable);
+        const newBody = `${selectedCreativeData.text_body || ""} ${placeholder} `;
+        updateCreative(selectedCreativeData.id, { text_body: newBody });
+      } else {
+        const result = insertVariableAtCursor(
+          selectedCreativeData.text_body || "",
+          cursorPosition,
+          variable,
+        );
+        updateCreative(selectedCreativeData.id, { text_body: result.newText });
+        setTimeout(() => {
+          if (bodyTextareaRef.current) {
+            bodyTextareaRef.current.setSelectionRange(
+              result.newCursorPosition,
+              result.newCursorPosition,
+            );
+            bodyTextareaRef.current.focus();
+          }
+        }, 0);
+      }
     }
-    return "";
+
+    setShowVariableSelector(false);
   };
 
-  // Update variables text and try to parse
-  const handleVariablesChange = (creativeId: string, text: string) => {
-    // Store the raw text
-    setVariablesText((prev) => ({ ...prev, [creativeId]: text }));
-
-    // Try to parse and update if valid JSON
-    if (text.trim() === "") {
-      updateCreative(creativeId, { variables: {} });
-      return;
+  const getCharacterInfo = (text: string) => {
+    const charCount = text.length;
+    const isUnicode = /[^\x00-\x7F]/.test(text);
+    const singleSegmentLimit = isUnicode ? 70 : 160;
+    const multiSegmentLimit = isUnicode ? 67 : 153;
+    let segments = 1;
+    if (charCount > singleSegmentLimit) {
+      segments = Math.ceil(charCount / multiSegmentLimit);
     }
-
-    try {
-      const parsed = JSON.parse(text);
-      if (
-        typeof parsed === "object" &&
-        parsed !== null &&
-        !Array.isArray(parsed)
-      ) {
-        updateCreative(creativeId, { variables: parsed });
-      } else {
-        // Invalid structure - keep the text but don't update variables
-        // This allows user to continue typing to fix it
-      }
-    } catch {
-      // Invalid JSON while typing - that's okay, just don't update variables yet
-      // User can continue typing
-    }
+    return { charCount, segments, isUnicode };
   };
 
   // Handle preview button click
@@ -737,9 +731,7 @@ export default function OfferCreativeStep({
     setPreviewError(null);
     setPreviewResult(null);
 
-    // Initialize variable overrides with stored variables
     const storedVars = selectedCreativeData.variables || {};
-    setVariableOverrides(JSON.stringify(storedVars, null, 2));
 
     // Check if creative has been saved (has numeric ID)
     // Saved creatives have numeric string IDs (e.g., "123"), unsaved have random strings (e.g., "abc123xyz")
@@ -748,10 +740,10 @@ export default function OfferCreativeStep({
       typeof creativeId === "number"
         ? creativeId
         : !isNaN(Number(creativeId)) &&
-          Number(creativeId) > 0 &&
-          String(Number(creativeId)) === String(creativeId)
-        ? Number(creativeId)
-        : null;
+            Number(creativeId) > 0 &&
+            String(Number(creativeId)) === String(creativeId)
+          ? Number(creativeId)
+          : null;
 
     if (numericId !== null) {
       // Creative has been saved - use render endpoint
@@ -760,7 +752,7 @@ export default function OfferCreativeStep({
         const response = await offerCreativeService.render(
           numericId,
           { variableOverrides: overrides },
-          true // Skip cache
+          true, // Skip cache
         );
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -769,22 +761,22 @@ export default function OfferCreativeStep({
       } catch (err) {
         // Failed to render creative
         setPreviewError(
-          err instanceof Error ? err.message : "Failed to render creative"
+          err instanceof Error ? err.message : "Failed to render creative",
         );
 
         // Fallback to client-side preview
         const clientPreview = {
           rendered_title: replaceVariables(
             selectedCreativeData.title || "",
-            storedVars
+            storedVars,
           ),
           rendered_text_body: replaceVariables(
             selectedCreativeData.text_body || "",
-            storedVars
+            storedVars,
           ),
           rendered_html_body: replaceVariables(
             selectedCreativeData.html_body || "",
-            storedVars
+            storedVars,
           ),
         };
         setPreviewResult(clientPreview);
@@ -794,90 +786,21 @@ export default function OfferCreativeStep({
       const clientPreview = {
         rendered_title: replaceVariables(
           selectedCreativeData.title || "",
-          storedVars
+          storedVars,
         ),
         rendered_text_body: replaceVariables(
           selectedCreativeData.text_body || "",
-          storedVars
+          storedVars,
         ),
         rendered_html_body: replaceVariables(
           selectedCreativeData.html_body || "",
-          storedVars
+          storedVars,
         ),
       };
       setPreviewResult(clientPreview);
     }
 
     setPreviewLoading(false);
-  };
-
-  // Handle preview with custom variable overrides
-  const handlePreviewWithOverrides = async () => {
-    if (!selectedCreativeData) return;
-
-    setPreviewLoading(true);
-    setPreviewError(null);
-
-    try {
-      // Parse variable overrides
-      let overrides: Record<string, string | number | boolean> = {};
-      if (variableOverrides.trim()) {
-        overrides = JSON.parse(variableOverrides);
-      }
-
-      // Merge with stored variables (overrides take precedence)
-      const finalOverrides = {
-        ...(selectedCreativeData.variables || {}),
-        ...overrides,
-      };
-
-      // Check if creative has been saved
-      const creativeId = selectedCreativeData.id;
-      const numericId =
-        typeof creativeId === "number"
-          ? creativeId
-          : !isNaN(Number(creativeId)) &&
-            Number(creativeId) > 0 &&
-            String(Number(creativeId)) === String(creativeId)
-          ? Number(creativeId)
-          : null;
-
-      if (numericId !== null) {
-        // Use render endpoint
-        const response = await offerCreativeService.render(
-          numericId,
-          { variableOverrides: finalOverrides },
-          true
-        );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rendered = (response as any).data || response;
-        setPreviewResult(rendered);
-      } else {
-        // Client-side preview
-        const clientPreview = {
-          rendered_title: replaceVariables(
-            selectedCreativeData.title || "",
-            finalOverrides
-          ),
-          rendered_text_body: replaceVariables(
-            selectedCreativeData.text_body || "",
-            finalOverrides
-          ),
-          rendered_html_body: replaceVariables(
-            selectedCreativeData.html_body || "",
-            finalOverrides
-          ),
-        };
-        setPreviewResult(clientPreview);
-      }
-    } catch (err) {
-      // Failed to preview with overrides
-      setPreviewError(
-        err instanceof Error ? err.message : "Invalid variable overrides JSON"
-      );
-    } finally {
-      setPreviewLoading(false);
-    }
   };
 
   return (
@@ -1040,6 +963,7 @@ export default function OfferCreativeStep({
                           label: channel.label,
                         }))}
                         placeholder="Select channel"
+                        zIndex={zIndex.popover}
                       />
                     </div>
 
@@ -1078,12 +1002,13 @@ export default function OfferCreativeStep({
                             : []),
                         ]}
                         placeholder="Select language"
+                        zIndex={zIndex.popover}
                       />
                     </div>
                   </div>
 
-                  {/* Template Selector */}
-                  {availableTemplates.length > 0 && (
+                  {/* Template Selector - Temporarily Disabled
+                  availableTemplates.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700">
@@ -1149,213 +1074,268 @@ export default function OfferCreativeStep({
                         )}
                       </div>
                     </div>
-                  )}
+                  )} */}
 
-                  {/* Sender ID (for SMS) or Title (for other channels) */}
-                  {selectedCreativeData.channel === "SMS" ? (
+                  {/* Sender / Subject / Variable toolbar */}
+                  <div className="space-y-4">
+                    {/* Sender ID (SMS) or Subject (Email/Web) */}
+                    {selectedCreativeData.channel === "SMS" ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Sender ID
+                        </label>
+                        <HeadlessSelect
+                          value={selectedCreativeData.title || ""}
+                          onChange={(value) =>
+                            updateCreative(selectedCreativeData.id, {
+                              title: value || "",
+                            })
+                          }
+                          options={[
+                            { label: "Select Sender ID", value: "" },
+                            ...((senderIds as TypeConfigurationItem[]) || [])
+                              .filter(
+                                (senderId) =>
+                                  senderId.isActive &&
+                                  senderId.metadataValue === "active",
+                              )
+                              .map((senderId) => ({
+                                label: senderId.name,
+                                value: senderId.name,
+                              })),
+                          ]}
+                          placeholder="Select Sender ID..."
+                          className="w-full"
+                          zIndex={zIndex.popover}
+                        />
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Subject Line
+                        </label>
+                        <input
+                          ref={titleInputRef}
+                          type="text"
+                          maxLength={160}
+                          value={selectedCreativeData.title}
+                          onChange={(e) => {
+                            setActiveField("title");
+                            setCursorPosition(e.target.selectionStart || 0);
+                            updateCreative(selectedCreativeData.id, {
+                              title: e.target.value,
+                            });
+                          }}
+                          onClick={(e) => {
+                            setActiveField("title");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          onFocus={(e) => {
+                            setActiveField("title");
+                            setCursorPosition(
+                              e.currentTarget.selectionStart || 0,
+                            );
+                          }}
+                          placeholder="Enter email subject..."
+                          className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                        />
+                      </div>
+                    )}
+
+                    {/* SMS Route (for SMS channel only) */}
+                    {selectedCreativeData.channel === "SMS" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          SMS Route
+                        </label>
+                        <HeadlessSelect
+                          value={
+                            (selectedCreativeData.variables as any)
+                              ?.sms_route || ""
+                          }
+                          onChange={(value) =>
+                            updateCreative(selectedCreativeData.id, {
+                              variables: {
+                                ...selectedCreativeData.variables,
+                                sms_route: value || undefined,
+                              },
+                            })
+                          }
+                          options={[
+                            { label: "Select Route", value: "" },
+                            ...((smsRoutes as TypeConfigurationItem[]) || [])
+                              .filter((route) => route.isActive)
+                              .map((route) => ({
+                                label: route.name,
+                                value: route.name,
+                              })),
+                          ]}
+                          placeholder="Select SMS Route..."
+                          className="w-full"
+                          zIndex={zIndex.popover}
+                        />
+                      </div>
+                    )}
+
+                    {/* Message content toolbar */}
+                    <div
+                      className="flex items-center justify-between p-3 rounded-lg"
+                      style={{ backgroundColor: color.surface.cards }}
+                    >
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                        Message Content
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {selectedCreativeData.channel === "Email" && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setIsRichTextMap((prev) => ({
+                                ...prev,
+                                [selectedCreativeData.id]:
+                                  !prev[selectedCreativeData.id],
+                              }))
+                            }
+                            className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                            style={{
+                              backgroundColor: isRichTextMap[
+                                selectedCreativeData.id
+                              ]
+                                ? `${color.primary.accent}10`
+                                : "white",
+                              borderColor: isRichTextMap[
+                                selectedCreativeData.id
+                              ]
+                                ? color.primary.accent
+                                : color.border.default,
+                              color: isRichTextMap[selectedCreativeData.id]
+                                ? color.primary.accent
+                                : color.text.secondary,
+                            }}
+                          >
+                            {isRichTextMap[selectedCreativeData.id]
+                              ? "Rich Text"
+                              : "Plain Text"}
+                          </button>
+                        )}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowVariableSelector(!showVariableSelector)
+                            }
+                            className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                            style={{
+                              backgroundColor: color.primary.accent,
+                              color: "white",
+                            }}
+                          >
+                            Insert Variable
+                          </button>
+                          <div
+                            className="absolute left-0 mt-1"
+                            style={{ zIndex: zIndex.popover }}
+                          >
+                            <CascadingVariableSelector
+                              isOpen={showVariableSelector}
+                              onClose={() => setShowVariableSelector(false)}
+                              onVariableSelect={handleVariableSelect}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Message Body */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sender ID
-                      </label>
-                      <HeadlessSelect
-                        value={selectedCreativeData.title || ""}
-                        onChange={(value) =>
-                          updateCreative(selectedCreativeData.id, {
-                            title: value || "",
-                          })
-                        }
-                        options={[
-                          { label: "Select Sender ID", value: "" },
-                          ...((senderIds as TypeConfigurationItem[]) || [])
-                            .filter(
-                              (senderId) =>
-                                senderId.isActive &&
-                                senderId.metadataValue === "active"
-                            )
-                            .map((senderId) => ({
-                              label: senderId.name,
-                              value: senderId.name,
-                            })),
-                        ]}
-                        placeholder="Select Sender ID..."
-                        className="w-full"
-                      />
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Title
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={160}
-                        value={selectedCreativeData.title}
-                        onChange={(e) =>
-                          updateCreative(selectedCreativeData.id, {
-                            title: e.target.value,
-                          })
-                        }
-                        placeholder="Enter creative title..."
-                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                      />
-                    </div>
-                  )}
-
-                  {/* SMS Route (for SMS channel only) */}
-                  {selectedCreativeData.channel === "SMS" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        SMS Route
-                      </label>
-                      <HeadlessSelect
-                        value={
-                          (selectedCreativeData.variables as any)?.sms_route ||
-                          ""
-                        }
-                        onChange={(value) =>
-                          updateCreative(selectedCreativeData.id, {
-                            variables: {
-                              ...selectedCreativeData.variables,
-                              sms_route: value || undefined,
-                            },
-                          })
-                        }
-                        options={[
-                          { label: "Select Route", value: "" },
-                          ...((smsRoutes as TypeConfigurationItem[]) || [])
-                            .filter((route) => route.isActive)
-                            .map((route) => ({
-                              label: route.name,
-                              value: route.name,
-                            })),
-                        ]}
-                        placeholder="Select SMS Route..."
-                        className="w-full"
-                      />
-                    </div>
-                  )}
-
-                  {/* Text Body */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Text Body
-                      </label>
-                      {selectedCreativeData.channel === "SMS" &&
-                        (() => {
-                          const senderId = selectedCreativeData.title || "";
-                          const { totalChars, smsCount } = calculateSMSSegments(
-                            selectedCreativeData.text_body || "",
-                            senderId
-                          );
-                          return (
-                            <span
-                              className={`text-xs font-medium ${
-                                smsCount > 1
-                                  ? "text-orange-600"
-                                  : totalChars > 150
-                                  ? "text-yellow-600"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {totalChars} / {smsCount} SMS
-                            </span>
-                          );
-                        })()}
-                    </div>
-                    <textarea
-                      value={selectedCreativeData.text_body}
-                      onChange={(e) => {
-                        // Allow any length - messages will split into multiple SMS
-                        updateCreative(selectedCreativeData.id, {
-                          text_body: e.target.value,
-                        });
-                      }}
-                      placeholder="Enter the text content..."
-                      rows={4}
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                    />
-                    {selectedCreativeData.channel === "SMS" &&
-                      (() => {
-                        const senderId = selectedCreativeData.title || "";
-                        const { totalChars, smsCount } = calculateSMSSegments(
-                          selectedCreativeData.text_body || "",
-                          senderId
-                        );
-                        if (smsCount > 1) {
-                          return (
-                            <p className="mt-1 text-xs text-orange-600">
-                              Message will be sent as {smsCount} SMS
-                              {smsCount > 1 ? "es" : ""} (charged separately)
-                            </p>
-                          );
-                        }
-                        return null;
-                      })()}
-                  </div>
-
-                  {/* HTML Body (for email/web) */}
-                  {(selectedCreativeData.channel === "Email" ||
-                    selectedCreativeData.channel === "Web") && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        HTML Body
+                        Message Body
                       </label>
                       <textarea
-                        value={selectedCreativeData.html_body}
-                        onChange={(e) =>
+                        ref={bodyTextareaRef}
+                        value={selectedCreativeData.text_body || ""}
+                        onChange={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(e.target.selectionStart || 0);
                           updateCreative(selectedCreativeData.id, {
-                            html_body: e.target.value,
-                          })
-                        }
-                        placeholder="Enter HTML content..."
-                        rows={6}
-                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none font-mono text-sm`}
+                            text_body: e.target.value,
+                          });
+                        }}
+                        onClick={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(
+                            e.currentTarget.selectionStart || 0,
+                          );
+                        }}
+                        onFocus={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(
+                            e.currentTarget.selectionStart || 0,
+                          );
+                        }}
+                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        rows={8}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                       />
-                    </div>
-                  )}
 
-                  {/* Variables */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Variables (JSON)
-                    </label>
-                    <textarea
-                      value={getVariablesText(selectedCreativeData.id)}
-                      onChange={(e) =>
-                        handleVariablesChange(
-                          selectedCreativeData.id,
-                          e.target.value
-                        )
-                      }
-                      placeholder='{"variable_name": "value"}'
-                      rows={4}
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none font-mono text-sm`}
-                    />
-                    <div className="text-xs text-gray-500 mt-1 flex items-start gap-2">
-                      <span>
-                        Use variables like {`{{variable_name}}`} in your content
-                      </span>
-                      {(() => {
-                        const text = getVariablesText(selectedCreativeData.id);
-                        if (text.trim() && text.trim() !== "{}") {
-                          try {
-                            JSON.parse(text);
-                            return (
-                              <span className="text-green-600">
-                                ✓ Valid JSON
+                      {/* Info bar */}
+                      <div className="mt-2 flex items-center justify-between">
+                        {selectedCreativeData.channel === "SMS" ||
+                        selectedCreativeData.channel === "WhatsApp" ? (
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span>
+                              {
+                                getCharacterInfo(
+                                  selectedCreativeData.text_body || "",
+                                ).charCount
+                              }{" "}
+                              characters
+                            </span>
+                            <span>
+                              {
+                                getCharacterInfo(
+                                  selectedCreativeData.text_body || "",
+                                ).segments
+                              }{" "}
+                              segment(s)
+                            </span>
+                            {getCharacterInfo(
+                              selectedCreativeData.text_body || "",
+                            ).isUnicode && (
+                              <span className="text-amber-600">Unicode</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-500">
+                            Variables like {"{{field}}"} will be replaced with
+                            customer data
+                          </span>
+                        )}
+
+                        {selectedVariables.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            {selectedVariables.slice(0, 3).map((v) => (
+                              <span
+                                key={v.id}
+                                className="px-2 py-0.5 rounded text-xs"
+                                style={{
+                                  backgroundColor: `${color.primary.accent}10`,
+                                  color: color.primary.accent,
+                                }}
+                              >
+                                {v.name}
                               </span>
-                            );
-                          } catch {
-                            return (
-                              <span className="text-red-600">
-                                ⚠ Invalid JSON (keep typing...)
+                            ))}
+                            {selectedVariables.length > 3 && (
+                              <span className="text-xs text-gray-400">
+                                +{selectedVariables.length - 3} more
                               </span>
-                            );
-                          }
-                        }
-                        return null;
-                      })()}
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1400,54 +1380,11 @@ export default function OfferCreativeStep({
           setIsPreviewOpen(false);
           setPreviewError(null);
           setPreviewResult(null);
-          setVariableOverrides("");
         }}
         title="Preview Creative"
         size="2xl"
       >
         <div className="space-y-6">
-          {/* Variable Overrides */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Variable Overrides (JSON) - Optional
-            </label>
-            <p className="text-xs text-gray-500 mb-2">
-              Override variable values to see how the creative looks with
-              different data. Leave empty to use stored variables.
-            </p>
-            <textarea
-              value={variableOverrides}
-              onChange={(e) => setVariableOverrides(e.target.value)}
-              placeholder='{"customerName": "Alice", "discount": "75%"}'
-              rows={4}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none font-mono text-sm`}
-            />
-            <div className="flex items-center justify-between mt-2">
-              <div className="text-xs text-gray-500">
-                {(() => {
-                  if (!variableOverrides.trim())
-                    return "Using stored variables";
-                  try {
-                    JSON.parse(variableOverrides);
-                    return <span className="text-green-600">✓ Valid JSON</span>;
-                  } catch {
-                    return <span className="text-red-600">⚠ Invalid JSON</span>;
-                  }
-                })()}
-              </div>
-              <button
-                onClick={handlePreviewWithOverrides}
-                disabled={previewLoading}
-                className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                style={{
-                  backgroundColor: color.primary.action,
-                }}
-              >
-                {previewLoading ? "Rendering..." : "Update Preview"}
-              </button>
-            </div>
-          </div>
-
           {/* Error Display */}
           {previewError && (
             <div
@@ -1557,7 +1494,9 @@ export default function OfferCreativeStep({
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>Click "Update Preview" to see how your creative will look.</p>
+              <p>
+                Click "Preview Creative" to see how your creative will look.
+              </p>
             </div>
           )}
         </div>

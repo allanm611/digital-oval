@@ -41,6 +41,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateCategoryModal from "../../../shared/components/CreateCategoryModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 interface ProductsModalProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ interface ProductsModalProps {
   categories: ProductCategory[];
   refreshCategoryProductCounts: (
     categoriesOverride?: ProductCategory[],
-    productsSnapshotOverride?: Product[]
+    productsSnapshotOverride?: Product[],
   ) => Promise<CategoryCountMap>;
 }
 
@@ -80,7 +81,7 @@ const parseCountValue = (value?: number | string | null): number => {
 const mergeTagCountsFromSnapshot = (
   baseCounts: CategoryCountMap,
   categoriesList: ProductCategory[],
-  productsSnapshot: Product[]
+  productsSnapshot: Product[],
 ): CategoryCountMap => {
   if (!categoriesList.length || !productsSnapshot.length) {
     return baseCounts;
@@ -89,7 +90,7 @@ const mergeTagCountsFromSnapshot = (
   const allowedCategoryIds = new Set(
     categoriesList
       .map((category) => Number(category.id))
-      .filter((id) => Number.isFinite(id))
+      .filter((id) => Number.isFinite(id)),
   );
 
   const updatedCounts: CategoryCountMap = { ...baseCounts };
@@ -127,9 +128,10 @@ const mergeTagCountsFromSnapshot = (
           .map((tag) => parseCatalogTag(tag))
           .filter(
             (catalogId): catalogId is number =>
-              typeof catalogId === "number" && allowedCategoryIds.has(catalogId)
-          )
-      )
+              typeof catalogId === "number" &&
+              allowedCategoryIds.has(catalogId),
+          ),
+      ),
     );
 
     uniqueTaggedCatalogs.forEach((catalogId) => {
@@ -336,7 +338,7 @@ export default function ProductCatalogsPage() {
     useState<ProductCategory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
-    null
+    null,
   );
 
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -345,7 +347,7 @@ export default function ProductCatalogsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [editingCatalog, setEditingCatalog] = useState<ProductCategory | null>(
-    null
+    null,
   );
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -455,7 +457,7 @@ export default function ProductCatalogsPage() {
 
   const refreshCategoryProductCounts = async (
     categoriesOverride?: ProductCategory[],
-    productsSnapshotOverride?: Product[]
+    productsSnapshotOverride?: Product[],
   ) => {
     // Force refresh counts with skipCache to get latest data
     // loadCategoryProductCounts already uses skipCache: true
@@ -472,7 +474,7 @@ export default function ProductCatalogsPage() {
       finalCounts = mergeTagCountsFromSnapshot(
         baseCounts,
         targetCategories,
-        productsSnapshot
+        productsSnapshot,
       );
     }
 
@@ -548,7 +550,7 @@ export default function ProductCatalogsPage() {
 
   const loadCategories = async (
     skipCache = false,
-    productsSnapshotOverride?: Product[]
+    productsSnapshotOverride?: Product[],
   ) => {
     try {
       setLoading(true);
@@ -682,7 +684,7 @@ export default function ProductCatalogsPage() {
             "Cannot Deactivate Category",
             `This category cannot be deactivated because it has ${
               activeProductsResponse.pagination?.total || activeProducts.length
-            } active product(s) using it. Please deactivate or reassign those products first.`
+            } active product(s) using it. Please deactivate or reassign those products first.`,
           );
           setTogglingCategoryId(null);
           return;
@@ -701,7 +703,7 @@ export default function ProductCatalogsPage() {
           : t.productCatalogs.deactivateSuccess,
         newActiveStatus
           ? t.productCatalogs.activateSuccess
-          : t.productCatalogs.deactivateSuccess
+          : t.productCatalogs.deactivateSuccess,
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
@@ -839,7 +841,7 @@ export default function ProductCatalogsPage() {
       ? inactiveFromBackend
       : inactiveFromList;
   const clientSideUnusedCount = categories.filter(
-    (cat) => (categoryProductCounts[String(cat.id)]?.total_products || 0) === 0
+    (cat) => (categoryProductCounts[String(cat.id)]?.total_products || 0) === 0,
   ).length;
 
   const unusedCatalogs = stats?.empty_categories ?? clientSideUnusedCount;
@@ -895,7 +897,7 @@ export default function ProductCatalogsPage() {
       icon: Star,
       color: color.primary.accent,
       description: `${formatNumber(
-        mostPopulatedCategory?.count ?? 0
+        mostPopulatedCategory?.count ?? 0,
       )} products`,
       title: mostPopulatedCategory?.name || undefined,
       valueClass: "text-xl",
@@ -929,21 +931,7 @@ export default function ProductCatalogsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className={`px-3 sm:px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white whitespace-nowrap`}
-            style={{ backgroundColor: color.primary.action }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.action;
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.backgroundColor =
-                color.primary.action;
-            }}
-          >
-            {t.productCatalogs.createCatalog}
-          </button>
+          <CreateButton onClick={() => setShowCreateModal(true)} />
         </div>
       </div>
 
@@ -954,7 +942,7 @@ export default function ProductCatalogsPage() {
           const valueClass = stat.valueClass ?? "text-3xl";
           const shouldMask = stat.loading ?? true;
           const displayValue =
-            statsLoading && shouldMask ? "..." : stat.value ?? "...";
+            statsLoading && shouldMask ? "..." : (stat.value ?? "...");
 
           return (
             <div
@@ -1184,21 +1172,7 @@ export default function ProductCatalogsPage() {
               : "Create your first product catalog to organize your products"}
           </p>
           {!searchTerm && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-              style={{ backgroundColor: color.primary.action }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-            >
-              Create Your First Catalog
-            </button>
+            <CreateButton onClick={() => setShowCreateModal(true)} />
           )}
         </div>
       ) : viewMode === "grid" ? (
@@ -1503,7 +1477,7 @@ export default function ProductCatalogsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       <ProductsModal
@@ -1602,7 +1576,7 @@ export default function ProductCatalogsPage() {
                                 | "all"
                                 | "active"
                                 | "with_products"
-                                | "empty"
+                                | "empty",
                             )
                           }
                           className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
@@ -1771,7 +1745,7 @@ export default function ProductCatalogsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

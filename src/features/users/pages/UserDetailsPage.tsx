@@ -139,7 +139,7 @@ export default function UserDetailsPage() {
     } catch (err) {
       showError(
         "Error loading user",
-        err instanceof Error ? err.message : "Failed to load user details"
+        err instanceof Error ? err.message : "Failed to load user details",
       );
     } finally {
       setIsLoading(false);
@@ -210,12 +210,12 @@ export default function UserDetailsPage() {
       return userRecord.status.toLowerCase();
     }
     const isSuspended = Boolean(
-      (userRecord as unknown as { is_suspended?: boolean })?.is_suspended
+      (userRecord as unknown as { is_suspended?: boolean })?.is_suspended,
     );
     if (isSuspended) return "suspended";
     const isActive = Boolean(
       (userRecord as unknown as { is_active?: boolean })?.is_active ??
-        (userRecord as unknown as { is_activated?: boolean })?.is_activated
+      (userRecord as unknown as { is_activated?: boolean })?.is_activated,
     );
     return isActive ? "active" : "inactive";
   };
@@ -577,7 +577,7 @@ export default function UserDetailsPage() {
                   acc[category] = (acc[category] || 0) + 1;
                   return acc;
                 },
-                {} as Record<string, number>
+                {} as Record<string, number>,
               );
 
               if (!hasPermissions && !hasRoles) {
@@ -776,7 +776,7 @@ export default function UserDetailsPage() {
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">
                         {t.userManagement.allPermissions.replace(
                           "{count}",
-                          permissionsList.length.toString()
+                          permissionsList.length.toString(),
                         )}
                       </h3>
                       <div
@@ -843,7 +843,7 @@ export default function UserDetailsPage() {
                                     {perm.name}
                                   </td>
                                   <td
-                                    className="px-6 py-4 text-sm text-gray-700 font-mono hidden md:table-cell"
+                                    className="px-6 py-4 text-sm text-gray-700 hidden md:table-cell" /* font-mono commented out - use normal font */
                                     style={{
                                       backgroundColor:
                                         color.surface.tablebodybg,
@@ -926,7 +926,7 @@ export default function UserDetailsPage() {
                       <h3 className="text-sm font-semibold text-gray-900 mb-3">
                         {t.userManagement.assignedRoles.replace(
                           "{count}",
-                          rolesList.length.toString()
+                          rolesList.length.toString(),
                         )}
                       </h3>
                       <div className="flex flex-wrap gap-2">
@@ -973,7 +973,7 @@ export default function UserDetailsPage() {
                   <Users className="w-4 h-4" />
                   {t.userManagement.directReports.replace(
                     "{count}",
-                    directReports.length.toString()
+                    directReports.length.toString(),
                   )}
                 </h3>
                 <div className="space-y-2">
@@ -1016,7 +1016,7 @@ export default function UserDetailsPage() {
                   <Users className="w-4 h-4" />
                   {t.userManagement.allReports.replace(
                     "{count}",
-                    allReports.length.toString()
+                    allReports.length.toString(),
                   )}
                 </h3>
                 <p className="text-xs text-gray-600 mb-3">
@@ -1025,7 +1025,7 @@ export default function UserDetailsPage() {
                 <div className="space-y-2">
                   {allReports.map((report) => {
                     const isDirectReport = directReports.some(
-                      (dr) => dr.id === report.id
+                      (dr) => dr.id === report.id,
                     );
                     return (
                       <div
@@ -1080,7 +1080,7 @@ export default function UserDetailsPage() {
                   <Building2 className="w-4 h-4" />
                   {t.userManagement.managerChain.replace(
                     "{count}",
-                    managerChain.length.toString()
+                    managerChain.length.toString(),
                   )}
                 </h3>
                 <div className="space-y-2">

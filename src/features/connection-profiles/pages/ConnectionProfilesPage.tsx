@@ -26,6 +26,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
@@ -653,14 +654,7 @@ export default function ConnectionProfilesPage() {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </button>
-            <button
-              onClick={handleCreate}
-              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white whitespace-nowrap`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-4 h-4" />
-              Create Connection Profile
-            </button>
+            <CreateButton route="/dashboard/connection-profiles/create" />
           </div>
         </div>
 

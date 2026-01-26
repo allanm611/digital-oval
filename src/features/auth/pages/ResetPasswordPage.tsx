@@ -9,6 +9,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import AnimatedButton from "../../../shared/components/ui/AnimatedButton";
 import AnimatedInput from "../../../shared/components/ui/AnimatedInput";
 import AnimatedCard from "../../../shared/components/ui/AnimatedCard";
@@ -17,6 +18,7 @@ import { tw } from '../../../shared/utils/utils';
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +41,7 @@ export default function ResetPasswordPage() {
         "Invalid or missing reset parameters. Please request a new password reset."
       );
     }
-  }, [token, email]);
+  }, [token, email, t]);
 
   const validatePasswords = () => {
     setError("");
@@ -67,7 +69,7 @@ export default function ResetPasswordPage() {
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t.auth.resetPassword.passwordMismatch);
       return false;
     }
 
@@ -106,9 +108,7 @@ export default function ResetPasswordPage() {
           "This password reset link has expired. Please request a new password reset."
         );
       } else {
-        setError(
-          "Failed to reset password. Please try again or contact support."
-        );
+        setError(t.auth.resetPassword.errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -123,11 +123,10 @@ export default function ResetPasswordPage() {
             <CheckCircle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Password Reset Successful!
+            {t.auth.resetPassword.successMessage}
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Your password has been successfully reset. You can now log in with
-            your new password.
+            {t.auth.resetPassword.successMessage}
           </p>
           <p className="text-sm text-gray-500 mb-6">
             Redirecting to login page in 3 seconds...
@@ -136,7 +135,7 @@ export default function ResetPasswordPage() {
             to="/login"
             className={`inline-flex items-center px-4 py-2 border border-transparent ${tw.rounded} shadow-sm text-base font-medium text-white bg-[#3b8169] hover:bg-[#2d5f4e] transition-all duration-200 transform hover:scale-105`}
           >
-            Go to Login
+            {t.common.goToLogin}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </div>
@@ -201,10 +200,10 @@ export default function ResetPasswordPage() {
                   <Lock className="w-8 h-8 text-emerald-600" />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  New Password
+                  {t.auth.resetPassword.newPasswordLabel}
                 </h3>
                 <p className="text-gray-600 text-sm mb-6">
-                  Create a strong, secure password for your account
+                  {t.auth.resetPassword.description}
                 </p>
 
                 {/* Password requirements */}
@@ -249,12 +248,12 @@ export default function ResetPasswordPage() {
         {/* Title and description */}
         <div className="text-center text-white mt-16">
           <h1 className="text-2xl font-bold mb-4">
-            Create Your
+            {t.auth.resetPassword.title}
             <br />
-            <span className="text-amber-300">New Password</span>
+            <span className="text-amber-300">{t.auth.resetPassword.newPasswordLabel}</span>
           </h1>
           <p className="text-emerald-100 text-sm font-light max-w-sm">
-            Choose a strong password to keep your account secure
+            {t.auth.resetPassword.description}
           </p>
         </div>
       </div>
@@ -278,20 +277,20 @@ export default function ResetPasswordPage() {
               </div>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-emerald-900 to-green-900 bg-clip-text text-transparent mb-3 tracking-tight">
-              New Password
+              {t.auth.resetPassword.newPasswordLabel}
             </h1>
             <p className="text-slate-600 text-sm font-medium">
-              Create a secure password for your account
+              {t.auth.resetPassword.description}
             </p>
           </div>
 
           {/* Desktop Header */}
           <div className="text-center mb-10 hidden lg:block">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-emerald-900 to-green-900 bg-clip-text text-transparent mb-3 tracking-tight">
-              New Password
+              {t.auth.resetPassword.newPasswordLabel}
             </h1>
             <p className="text-slate-600 text-base font-medium">
-              Create a secure password for your account
+              {t.auth.resetPassword.description}
             </p>
           </div>
 
@@ -316,8 +315,8 @@ export default function ResetPasswordPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(value) => setPassword(value)}
-                    placeholder="Enter your new password"
-                    label="New Password"
+                    placeholder={t.auth.resetPassword.newPasswordPlaceholder}
+                    label={t.auth.resetPassword.newPasswordLabel}
                     icon={Lock}
                     required
                   />
@@ -342,8 +341,8 @@ export default function ResetPasswordPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(value) => setConfirmPassword(value)}
-                    placeholder="Confirm your new password"
-                    label="Confirm Password"
+                    placeholder={t.auth.resetPassword.confirmPasswordPlaceholder}
+                    label={t.auth.resetPassword.confirmPasswordLabel}
                     icon={Lock}
                     required
                   />
@@ -373,7 +372,7 @@ export default function ResetPasswordPage() {
               >
                 {!isLoading && (
                   <>
-                    <span>Reset Password</span>
+                    <span>{t.auth.resetPassword.resetButton}</span>
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
@@ -386,7 +385,7 @@ export default function ResetPasswordPage() {
                 to="/login"
                 className="text-sm text-slate-500 hover:text-slate-700 transition-all duration-300 hover:scale-105 font-medium"
               >
-                Back to Login
+                {t.common.backToLogin}
               </Link>
             </div>
 

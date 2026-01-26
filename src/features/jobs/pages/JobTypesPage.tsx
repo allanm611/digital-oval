@@ -11,6 +11,7 @@ import {
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -40,11 +41,11 @@ function JobTypeModal({
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [codeValidationError, setCodeValidationError] = useState<string | null>(
-    null
+    null,
   );
   const [isValidatingCode, setIsValidatingCode] = useState(false);
   const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -92,7 +93,7 @@ function JobTypeModal({
             setCodeValidationError(null);
           } else {
             setCodeValidationError(
-              "This code already exists. Please choose a different code."
+              "This code already exists. Please choose a different code.",
             );
           }
         } else {
@@ -141,7 +142,7 @@ function JobTypeModal({
 
     if (!codeRegex.test(code)) {
       setError(
-        "Code must be lowercase snake_case, start with a letter, and contain only letters, numbers, or underscores"
+        "Code must be lowercase snake_case, start with a letter, and contain only letters, numbers, or underscores",
       );
       return;
     }
@@ -298,8 +299,8 @@ function JobTypeModal({
               {isSaving
                 ? t.profile.saving
                 : initialData
-                ? t.jobs.updateJobType
-                : t.jobs.createJobType}
+                  ? t.jobs.updateJobType
+                  : t.jobs.createJobType}
             </button>
           </div>
         </form>
@@ -478,7 +479,7 @@ export default function JobTypesPage() {
         setIsSearching(false);
       }
     },
-    [fetchJobTypes, showError]
+    [fetchJobTypes, showError],
   );
 
   const fetchStats = useCallback(async () => {
@@ -632,13 +633,13 @@ export default function JobTypesPage() {
         await jobTypeService.updateJobType(editingJobType.id, values);
         showToast(
           "Job type updated",
-          `${jobTypeName} has been updated successfully`
+          `${jobTypeName} has been updated successfully`,
         );
       } else {
         await jobTypeService.createJobType(values);
         showToast(
           "Job type created",
-          `${jobTypeName} has been created successfully`
+          `${jobTypeName} has been created successfully`,
         );
       }
       setIsModalOpen(false);
@@ -668,14 +669,7 @@ export default function JobTypesPage() {
           </p>
         </div>
         <div className="flex justify-end">
-          <button
-            onClick={handleCreate}
-            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            Create Job Type
-          </button>
+          <CreateButton onClick={handleCreate} />
         </div>
       </div>
 
@@ -771,14 +765,7 @@ export default function JobTypesPage() {
                 : "Create your first job type to get started."}
             </p>
             {!searchTerm && (
-              <button
-                onClick={handleCreate}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Create Job Type
-              </button>
+              <CreateButton onClick={handleCreate} className="mx-auto" />
             )}
           </div>
         ) : (

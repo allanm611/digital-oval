@@ -50,7 +50,6 @@ export default function RoleFormModal({
   const userId = propUserId || user?.user_id;
 
   useEffect(() => {
-    console.log("[RoleFormModal] userId:", userId);
   }, [userId]);
 
   const [formData, setFormData] = useState<FormData>({

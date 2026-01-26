@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
-  Plus,
   Search,
   Edit,
   Trash2,
@@ -34,6 +33,7 @@ import {
 } from "../types/segment";
 import { Segment } from "../types/segment";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 const SEGMENT_CATALOG_TAG_PREFIX = "catalog:";
 
@@ -192,14 +192,14 @@ function CategoryModal({
                   {isLoading
                     ? "Saving..."
                     : category
-                    ? "Update Catalog"
-                    : "Create Catalog"}
+                      ? "Update Catalog"
+                      : "Create Catalog"}
                 </button>
               </div>
             </form>
           </div>
         </div>,
-        document.body
+        document.body,
       )
     : null;
 }
@@ -267,7 +267,7 @@ function SegmentsModal({
 
   // Handle assignment
   const handleAssignSegments = async (
-    segmentIds: (number | string)[]
+    segmentIds: (number | string)[],
   ): Promise<{ success: number; failed: number; errors?: string[] }> => {
     if (!category) {
       return { success: 0, failed: 0 };
@@ -362,7 +362,7 @@ export default function SegmentCategoriesPage() {
     useState<SegmentCategory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
-    null
+    null,
   );
 
   const [categories, setCategories] = useState<SegmentCategory[]>([]);
@@ -374,7 +374,7 @@ export default function SegmentCategoriesPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isSegmentsModalOpen, setIsSegmentsModalOpen] = useState(false);
   const [segmentCounts, setSegmentCounts] = useState<Record<number, number>>(
-    {}
+    {},
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const formatNumber = (value?: number | null) =>
@@ -393,12 +393,12 @@ export default function SegmentCategoriesPage() {
         if (debouncedSearchTerm.trim()) {
           response = await segmentService.searchSegmentCategories(
             debouncedSearchTerm,
-            shouldSkipCache
+            shouldSkipCache,
           );
         } else {
           response = await segmentService.getSegmentCategories(
             undefined,
-            shouldSkipCache
+            shouldSkipCache,
           );
         }
         const categoriesData = response.data || [];
@@ -408,7 +408,7 @@ export default function SegmentCategoriesPage() {
           (cat: SegmentCategory & { id: number | string }) => ({
             ...cat,
             id: typeof cat.id === "string" ? parseInt(cat.id, 10) : cat.id,
-          })
+          }),
         );
 
         setCategories(validCategoriesData);
@@ -418,14 +418,14 @@ export default function SegmentCategoriesPage() {
       } catch (err) {
         showError(
           "Error loading categories",
-          (err as Error).message || "Failed to load segment catalogs"
+          (err as Error).message || "Failed to load segment catalogs",
         );
         setCategories([]);
       } finally {
         setIsLoading(false);
       }
     },
-    [showError, debouncedSearchTerm]
+    [showError, debouncedSearchTerm],
   );
 
   // Debounce search term
@@ -506,12 +506,12 @@ export default function SegmentCategoriesPage() {
       await segmentService.createSegmentCategory(request);
       success(
         "Catalog created",
-        `Segment catalog "${categoryData.name}" has been created successfully`
+        `Segment catalog "${categoryData.name}" has been created successfully`,
       );
       await loadCategories(true); // skipCache = true
     } catch (err) {
       throw new Error(
-        (err as Error).message || "Failed to create segment catalog"
+        (err as Error).message || "Failed to create segment catalog",
       );
     }
   };
@@ -531,12 +531,12 @@ export default function SegmentCategoriesPage() {
       await segmentService.updateSegmentCategory(selectedCategory.id, request);
       success(
         "Catalog updated",
-        `Segment catalog "${categoryData.name}" has been updated successfully`
+        `Segment catalog "${categoryData.name}" has been updated successfully`,
       );
       await loadCategories(true); // skipCache = true
     } catch (err) {
       throw new Error(
-        (err as Error).message || "Failed to update segment catalog"
+        (err as Error).message || "Failed to update segment catalog",
       );
     }
   };
@@ -562,7 +562,7 @@ export default function SegmentCategoriesPage() {
         newActiveStatus ? "Category Activated" : "Category Deactivated",
         `"${category.name}" has been ${
           newActiveStatus ? "activated" : "deactivated"
-        } successfully.`
+        } successfully.`,
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
@@ -584,7 +584,7 @@ export default function SegmentCategoriesPage() {
       await segmentService.deleteSegmentCategory(categoryToDelete.id);
       success(
         "Catalog deleted",
-        `Segment catalog "${categoryToDelete.name}" has been deleted successfully`
+        `Segment catalog "${categoryToDelete.name}" has been deleted successfully`,
       );
       setShowDeleteModal(false);
       setCategoryToDelete(null);
@@ -593,7 +593,7 @@ export default function SegmentCategoriesPage() {
     } catch (err) {
       showError(
         "Error deleting catalog",
-        (err as Error).message || "Failed to delete segment catalog"
+        (err as Error).message || "Failed to delete segment catalog",
       );
     } finally {
       setIsDeleting(false);
@@ -609,18 +609,18 @@ export default function SegmentCategoriesPage() {
     (category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (category.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        category.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const totalCategories = categories.length;
   const activeCategories = categories.filter((cat) => cat.is_active).length;
   const inactiveCategories = Math.max(0, totalCategories - activeCategories);
   const categoriesWithSegmentsCount = categories.filter(
-    (cat) => (segmentCounts[cat.id] || 0) > 0
+    (cat) => (segmentCounts[cat.id] || 0) > 0,
   ).length;
   const emptyCategoriesCount = Math.max(
     0,
-    totalCategories - categoriesWithSegmentsCount
+    totalCategories - categoriesWithSegmentsCount,
   );
 
   const mostPopularCategoryRaw = categories.reduce<{
@@ -641,7 +641,7 @@ export default function SegmentCategoriesPage() {
 
   const totalSegments = Object.values(segmentCounts).reduce(
     (sum, count) => sum + count,
-    0
+    0,
   );
   const averageSegments =
     totalCategories > 0 ? totalSegments / totalCategories : 0;
@@ -700,28 +700,12 @@ export default function SegmentCategoriesPage() {
           </div>
         </div>
 
-        <button
+        <CreateButton
           onClick={() => {
             setSelectedCategory(null);
             setIsCategoryModalOpen(true);
           }}
-          className={`inline-flex items-center px-3 sm:px-4 py-2 text-white ${tw.rounded} transition-all text-sm sm:text-base whitespace-nowrap`}
-          style={{ backgroundColor: color.primary.action }}
-          onMouseEnter={(e) => {
-            (e.target as HTMLButtonElement).style.backgroundColor =
-              color.primary.action;
-          }}
-          onMouseLeave={(e) => {
-            (e.target as HTMLButtonElement).style.backgroundColor =
-              color.primary.action;
-          }}
-        >
-          <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-          <span className="hidden sm:inline">
-            {t.segmentCatalogs.createCatalog}
-          </span>
-          <span className="sm:hidden">{t.segmentCatalogs.createCatalog}</span>
-        </button>
+        />
       </div>
 
       {/* Stats Cards */}
@@ -732,7 +716,7 @@ export default function SegmentCategoriesPage() {
             const valueClass = stat.valueClass ?? "text-3xl";
             const shouldMask = stat.loading ?? true;
             const displayValue =
-              statsLoading && shouldMask ? "..." : stat.value ?? "...";
+              statsLoading && shouldMask ? "..." : (stat.value ?? "...");
 
             return (
               <div
@@ -844,25 +828,12 @@ export default function SegmentCategoriesPage() {
               : "Create your first segment catalog to organize your segments"}
           </p>
           {!searchTerm && (
-            <button
+            <CreateButton
               onClick={() => {
                 setSelectedCategory(null);
                 setIsCategoryModalOpen(true);
               }}
-              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-              style={{ backgroundColor: color.primary.action }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.backgroundColor =
-                  color.primary.action;
-              }}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create Your First Catalog
-            </button>
+            />
           )}
         </div>
       ) : viewMode === "grid" ? (

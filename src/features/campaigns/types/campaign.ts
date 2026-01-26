@@ -484,6 +484,10 @@ interface CampaignBase {
     revenue: number;
     last_updated?: string;
   };
+  tags?: string[];
+  budget_allocated?: string | number | null;
+  budget_spent?: string | number | null;
+  rejection_reason?: string | null;
 }
 
 // Multiple Target Group Campaign

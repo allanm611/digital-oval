@@ -64,6 +64,30 @@ export interface CreateCampaignRequest {
   tags?: string[]; // optional, array of tags
   metadata?: Record<string, unknown>; // optional, JSON object for additional data
 
+  // Scheduling (frontend-only, maps to individual date/time fields for backend)
+  scheduling?: {
+    type?: "scheduled" | "recurring" | "trigger_based" | "immediate";
+    time_zone?: string;
+    start_date?: string;
+    end_date?: string;
+    delivery_times?: string[];
+    frequency?: {
+      type?: "daily" | "weekly" | "monthly";
+      interval?: number;
+      days_of_week?: number[];
+      days_of_month?: number[];
+    };
+    frequency_capping?: {
+      max_per_day?: number;
+      max_per_week?: number;
+      max_per_month?: number;
+    };
+    throttling?: {
+      max_per_hour?: number;
+      max_per_day?: number;
+    };
+  };
+
   // Frontend-only fields
   campaign_type?:
     | "multiple_target_group"

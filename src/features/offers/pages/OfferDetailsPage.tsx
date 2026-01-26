@@ -29,6 +29,7 @@ import {
   CreateOfferCreativeRequest,
 } from "../types/offerCreative";
 import { color, tw } from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
@@ -49,6 +50,12 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
+import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
+import {
+  insertVariableAtCursor,
+  formatVariablePlaceholder,
+} from "../../manual-broadcast/utils/variableInsertion";
+import type { TemplateVariable } from "../../manual-broadcast/types";
 
 const localeLabelMap: Record<string, string> = {
   en: "English",
@@ -150,7 +157,7 @@ export default function OfferDetailsPage() {
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [primaryProductId, setPrimaryProductId] = useState<number | null>(null);
   const [unlinkingProductId, setUnlinkingProductId] = useState<number | null>(
-    null
+    null,
   );
   const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null);
   const [offerCreatives, setOfferCreatives] = useState<OfferCreative[]>([]);
@@ -160,7 +167,7 @@ export default function OfferDetailsPage() {
   // Creative edit modal state
   const [isEditCreativeModalOpen, setIsEditCreativeModalOpen] = useState(false);
   const [editingCreative, setEditingCreative] = useState<OfferCreative | null>(
-    null
+    null,
   );
   const [editFormData, setEditFormData] = useState({
     title: "",
@@ -189,9 +196,20 @@ export default function OfferDetailsPage() {
     is_active: true,
     variables: {},
   });
+  const [showVariableSelectorAdd, setShowVariableSelectorAdd] = useState(false);
+  const [activeFieldAdd, setActiveFieldAdd] = useState<"title" | "body">(
+    "body",
+  );
+  const [cursorPositionAdd, setCursorPositionAdd] = useState<number>(0);
+  const [selectedVariablesAdd, setSelectedVariablesAdd] = useState<
+    TemplateVariable[]
+  >([]);
+  const titleInputRefAdd = useRef<HTMLInputElement>(null);
+  const bodyTextareaRefAdd = useRef<HTMLTextAreaElement>(null);
+  const [isRichTextAdd, setIsRichTextAdd] = useState(false);
   const [newCreativeVariables, setNewCreativeVariables] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
-    null
+    null,
   );
 
   // Preview modal state
@@ -213,7 +231,7 @@ export default function OfferDetailsPage() {
   // Helper function to calculate SMS segments
   const calculateSMSSegments = (
     messageText: string,
-    senderId: string = ""
+    senderId: string = "",
   ): { totalChars: number; smsCount: number } => {
     if (!messageText && !senderId) {
       return { totalChars: 0, smsCount: 0 };
@@ -244,7 +262,7 @@ export default function OfferDetailsPage() {
   // Helper to replace variables in text
   const replaceVariables = (
     text: string,
-    variables: Record<string, string | number | boolean> = {}
+    variables: Record<string, string | number | boolean> = {},
   ): string => {
     if (!text) return "";
     let result = text;
@@ -259,7 +277,7 @@ export default function OfferDetailsPage() {
   // Filter templates by channel and locale
   const getTemplatesForChannelAndLocale = (
     channel: CreativeChannel,
-    locale: string
+    locale: string,
   ) => {
     return (templates as TypeConfigurationItem[]).filter((template) => {
       if (!template.isActive) return false;
@@ -283,15 +301,15 @@ export default function OfferDetailsPage() {
     () =>
       getTemplatesForChannelAndLocale(
         newCreativeForm.channel,
-        newCreativeForm.locale
+        newCreativeForm.locale,
       ),
-    [newCreativeForm.channel, newCreativeForm.locale, templates]
+    [newCreativeForm.channel, newCreativeForm.locale, templates],
   );
 
   // Add product modal state
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [selectedProductsToAdd, setSelectedProductsToAdd] = useState<Product[]>(
-    []
+    [],
   );
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
   const [productsSearchLoading, setProductsSearchLoading] = useState(false);
@@ -319,6 +337,68 @@ export default function OfferDetailsPage() {
     setSelectedTemplateId(null);
     setPreviewResult(null);
     setIsPreviewOpen(false);
+    setSelectedVariablesAdd([]);
+    setShowVariableSelectorAdd(false);
+  };
+
+  const handleVariableSelectAdd = (variable: TemplateVariable) => {
+    if (!selectedVariablesAdd.find((v) => v.id === variable.id)) {
+      setSelectedVariablesAdd((prev) => [...prev, variable]);
+    }
+
+    if (activeFieldAdd === "title") {
+      const result = insertVariableAtCursor(
+        newCreativeForm.title || "",
+        cursorPositionAdd,
+        variable,
+      );
+      setNewCreativeForm((prev) => ({ ...prev, title: result.newText }));
+      setTimeout(() => {
+        if (titleInputRefAdd.current) {
+          titleInputRefAdd.current.setSelectionRange(
+            result.newCursorPosition,
+            result.newCursorPosition,
+          );
+          titleInputRefAdd.current.focus();
+        }
+      }, 0);
+    } else {
+      if (newCreativeForm.channel === "Email" && isRichTextAdd) {
+        const placeholder = formatVariablePlaceholder(variable);
+        const newBody = `${newCreativeForm.text_body || ""} ${placeholder} `;
+        setNewCreativeForm((prev) => ({ ...prev, text_body: newBody }));
+      } else {
+        const result = insertVariableAtCursor(
+          newCreativeForm.text_body || "",
+          cursorPositionAdd,
+          variable,
+        );
+        setNewCreativeForm((prev) => ({ ...prev, text_body: result.newText }));
+        setTimeout(() => {
+          if (bodyTextareaRefAdd.current) {
+            bodyTextareaRefAdd.current.setSelectionRange(
+              result.newCursorPosition,
+              result.newCursorPosition,
+            );
+            bodyTextareaRefAdd.current.focus();
+          }
+        }, 0);
+      }
+    }
+
+    setShowVariableSelectorAdd(false);
+  };
+
+  const getCharacterInfoAdd = (text: string) => {
+    const charCount = text.length;
+    const isUnicode = /[^\x00-\x7F]/.test(text);
+    const singleSegmentLimit = isUnicode ? 70 : 160;
+    const multiSegmentLimit = isUnicode ? 67 : 153;
+    let segments = 1;
+    if (charCount > singleSegmentLimit) {
+      segments = Math.ceil(charCount / multiSegmentLimit);
+    }
+    return { charCount, segments, isUnicode };
   };
 
   // Handle template selection
@@ -377,15 +457,15 @@ export default function OfferDetailsPage() {
     const clientPreview = {
       rendered_title: replaceVariables(
         newCreativeForm.title || "",
-        parsedVariables
+        parsedVariables,
       ),
       rendered_text_body: replaceVariables(
         newCreativeForm.text_body || "",
-        parsedVariables
+        parsedVariables,
       ),
       rendered_html_body: replaceVariables(
         newCreativeForm.html_body || "",
-        parsedVariables
+        parsedVariables,
       ),
     };
 
@@ -419,7 +499,7 @@ export default function OfferDetailsPage() {
               (categoriesResponse as unknown as OfferCategoryType[]);
             const category = categories.find(
               (cat: OfferCategoryType) =>
-                String(cat.id) === String(offerData.category_id)
+                String(cat.id) === String(offerData.category_id),
             );
             if (category) {
               setCategoryName(category.name);
@@ -436,13 +516,13 @@ export default function OfferDetailsPage() {
         setLoading(false);
       }
     },
-    [id]
+    [id],
   );
 
   const loadProducts = useCallback(
     async (
       skipCache: boolean = false,
-      preservePrimaryProductId?: number | null
+      preservePrimaryProductId?: number | null,
     ) => {
       if (!id) return;
 
@@ -452,7 +532,7 @@ export default function OfferDetailsPage() {
         // Get products using new endpoint
         const productsResponse = await offerService.getProductsByOffer(
           Number(id),
-          { skipCache }
+          { skipCache },
         );
 
         // Try to get primary product from dedicated endpoint first (more efficient)
@@ -471,7 +551,7 @@ export default function OfferDetailsPage() {
           try {
             const primaryResponse = await offerService.getPrimaryProductByOffer(
               Number(id),
-              skipCache
+              skipCache,
             );
             if (primaryResponse.data && primaryResponse.data.product_id) {
               primaryProductIdFromEndpoint = primaryResponse.data.product_id;
@@ -494,7 +574,7 @@ export default function OfferDetailsPage() {
         // Use legacy method for compatibility
         const response = await offerService.getOfferProducts(
           Number(id),
-          skipCache
+          skipCache,
         );
 
         // Extract products from response.data if wrapped, otherwise use response directly
@@ -528,7 +608,7 @@ export default function OfferDetailsPage() {
             try {
               const productResponse = await productService.getProductById(
                 link.product_id,
-                skipCache
+                skipCache,
               );
               const productData =
                 (productResponse as { data?: unknown }).data || productResponse;
@@ -558,7 +638,7 @@ export default function OfferDetailsPage() {
           // Only if we didn't get it from the endpoint (fallback for when endpoint doesn't exist)
           if (!primaryProductIdFromEndpoint) {
             const primaryProduct = fullProducts.find(
-              (p: any) => p.is_primary === true
+              (p: any) => p.is_primary === true,
             );
             if (primaryProduct && primaryProduct.product_id) {
               const primaryId = Number(primaryProduct.product_id);
@@ -576,7 +656,7 @@ export default function OfferDetailsPage() {
         setProductsLoading(false);
       }
     },
-    [id]
+    [id],
   );
 
   const loadCreatives = useCallback(
@@ -598,7 +678,7 @@ export default function OfferDetailsPage() {
         setCreativesLoading(false);
       }
     },
-    [id]
+    [id],
   );
 
   // Handle edit creative
@@ -653,7 +733,7 @@ export default function OfferDetailsPage() {
 
       await offerCreativeService.update(
         editingCreative.id as number,
-        updatePayload
+        updatePayload,
       );
 
       success("Creative Updated", "Creative has been updated successfully");
@@ -713,7 +793,7 @@ export default function OfferDetailsPage() {
       !newCreativeForm.html_body.trim()
     ) {
       showError(
-        "Provide at least a title, text body, or HTML body before creating a creative."
+        "Provide at least a title, text body, or HTML body before creating a creative.",
       );
       return;
     }
@@ -843,7 +923,7 @@ export default function OfferDetailsPage() {
       if (selectedProductCategory !== "all") {
         products = products.filter(
           (product: Product) =>
-            product.category_id?.toString() === selectedProductCategory
+            product.category_id?.toString() === selectedProductCategory,
         );
       }
 
@@ -875,7 +955,7 @@ export default function OfferDetailsPage() {
     const isSelected = selectedProductsToAdd.some((p) => p.id === product.id);
     if (isSelected) {
       setSelectedProductsToAdd(
-        selectedProductsToAdd.filter((p) => p.id !== product.id)
+        selectedProductsToAdd.filter((p) => p.id !== product.id),
       );
     } else {
       setSelectedProductsToAdd([...selectedProductsToAdd, product]);
@@ -912,7 +992,7 @@ export default function OfferDetailsPage() {
         "Products Linked",
         `${selectedProductsToAdd.length} product${
           selectedProductsToAdd.length > 1 ? "s" : ""
-        } linked successfully`
+        } linked successfully`,
       );
 
       // Reset state and close modal
@@ -952,7 +1032,7 @@ export default function OfferDetailsPage() {
       await offerService.deleteOffer(Number(id));
       success(
         "Offer Deleted",
-        `"${offer.name}" has been deleted successfully.`
+        `"${offer.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       navigate("/dashboard/offers");
@@ -979,7 +1059,7 @@ export default function OfferDetailsPage() {
       });
       success(
         "Offer Approved",
-        `"${offer?.name}" has been approved successfully.`
+        `"${offer?.name}" has been approved successfully.`,
       );
       loadOffer(true); // Skip cache to get fresh data after approval
     } catch {
@@ -1012,7 +1092,7 @@ export default function OfferDetailsPage() {
       await offerService.submitForApproval(Number(id), {});
       success(
         "Approval Requested",
-        "Your approval request has been submitted successfully."
+        "Your approval request has been submitted successfully.",
       );
       loadOffer(true); // Skip cache to get fresh data after approval request
     } catch {
@@ -1099,7 +1179,7 @@ export default function OfferDetailsPage() {
         await offerService.setPrimaryProduct(Number(id), null);
         success(
           "Primary Product Removed",
-          `"${productToUnlink.name}" is no longer the primary product, but remains linked to this offer.`
+          `"${productToUnlink.name}" is no longer the primary product, but remains linked to this offer.`,
         );
         setPrimaryProductId(null);
       } else {
@@ -1107,7 +1187,7 @@ export default function OfferDetailsPage() {
         await offerService.unlinkProductById(productToUnlink.linkId);
         success(
           "Product Unlinked",
-          `"${productToUnlink.name}" has been unlinked from this offer.`
+          `"${productToUnlink.name}" has been unlinked from this offer.`,
         );
       }
 
@@ -1137,7 +1217,7 @@ export default function OfferDetailsPage() {
       await productService.deleteProduct(productToDelete.id);
       success(
         "Product Deleted",
-        `"${productToDelete.name}" has been deleted. It will also be unlinked from this offer.`
+        `"${productToDelete.name}" has been deleted. It will also be unlinked from this offer.`,
       );
       setShowDeleteProductModal(false);
       setProductToDelete(null);
@@ -1151,7 +1231,7 @@ export default function OfferDetailsPage() {
 
   const handleSetPrimaryProduct = async (
     productId: number,
-    productName: string
+    productName: string,
   ) => {
     if (!user?.user_id) {
       showError("Error", "User ID not available. Please log in again.");
@@ -1163,7 +1243,7 @@ export default function OfferDetailsPage() {
     try {
       const primaryResponse = await offerService.getPrimaryProductByOffer(
         Number(id),
-        true
+        true,
       );
       if (primaryResponse.success && primaryResponse.data) {
         existingPrimaryLink = primaryResponse.data;
@@ -1176,7 +1256,7 @@ export default function OfferDetailsPage() {
     if (existingPrimaryLink && existingPrimaryLink.product_id !== productId) {
       // Get the name of the current primary product
       const currentPrimaryProduct = linkedProducts.find(
-        (p: any) => p.product_id === existingPrimaryLink.product_id
+        (p: any) => p.product_id === existingPrimaryLink.product_id,
       );
       const currentPrimaryName =
         currentPrimaryProduct?.name ||
@@ -1200,7 +1280,7 @@ export default function OfferDetailsPage() {
       // This will automatically handle setting the old primary to null
       const response = await offerService.setPrimaryProduct(
         Number(id),
-        productId
+        productId,
       );
 
       // Update primaryProductId state immediately from response
@@ -1230,7 +1310,7 @@ export default function OfferDetailsPage() {
 
       success(
         "Primary Product Set",
-        `"${productName}" is now the primary product for this offer.`
+        `"${productName}" is now the primary product for this offer.`,
       );
     } catch (err) {
       // Failed to set primary product
@@ -1865,7 +1945,7 @@ export default function OfferDetailsPage() {
                                   onClick={() =>
                                     handleSetPrimaryProduct(
                                       productId as number,
-                                      productName
+                                      productName,
                                     )
                                   }
                                   disabled={isSettingPrimary || isUnlinking}
@@ -1884,7 +1964,7 @@ export default function OfferDetailsPage() {
                                 onClick={() => {
                                   if (!product.link_id) {
                                     showError(
-                                      "Cannot unlink: Link ID not available. Product may need to be re-linked."
+                                      "Cannot unlink: Link ID not available. Product may need to be re-linked.",
                                     );
                                     return;
                                   }
@@ -2039,7 +2119,7 @@ export default function OfferDetailsPage() {
                                 type="button"
                                 onClick={() =>
                                   navigateToCreativeDetails(
-                                    creativeId as number
+                                    creativeId as number,
                                   )
                                 }
                                 className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
@@ -2134,7 +2214,7 @@ export default function OfferDetailsPage() {
                           </td>
                         </tr>
                       );
-                    }
+                    },
                   )}
                 </tbody>
               </table>
@@ -2178,6 +2258,7 @@ export default function OfferDetailsPage() {
                 }}
                 options={creativeChannelOptions}
                 placeholder="Select a channel"
+                zIndex={zIndex.popover}
               />
             </div>
             <div>
@@ -2211,11 +2292,12 @@ export default function OfferDetailsPage() {
                 ]}
                 placeholder="Select language"
                 searchable
+                zIndex={zIndex.popover}
               />
             </div>
           </div>
 
-          {/* Template Selector */}
+          {/* Template Selector - Temporarily Disabled
           {availableTemplates.length > 0 && (
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
@@ -2265,6 +2347,7 @@ export default function OfferDetailsPage() {
                     }),
                   ]}
                   placeholder="Select a template to start with..."
+                  zIndex={zIndex.popover}
                 />
                 {selectedTemplateId && (
                   <div className="mt-2 flex items-center gap-2 text-xs text-gray-600">
@@ -2277,186 +2360,248 @@ export default function OfferDetailsPage() {
               </div>
             </div>
           )}
+          */}
 
-          {/* Sender ID (for SMS) or Title (for other channels) */}
-          {newCreativeForm.channel === "SMS" ? (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sender ID
-              </label>
-              <HeadlessSelect
-                value={newCreativeForm.title || ""}
-                onChange={(value) =>
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    title: value || "",
-                  }))
-                }
-                options={[
-                  { label: "Select Sender ID", value: "" },
-                  ...((senderIds as TypeConfigurationItem[]) || [])
-                    .filter(
-                      (senderId) =>
-                        senderId.isActive && senderId.metadataValue === "active"
-                    )
-                    .map((senderId) => ({
-                      label: senderId.name,
-                      value: senderId.name,
-                    })),
-                ]}
-                placeholder="Select Sender ID..."
-                className="w-full"
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                maxLength={160}
-                value={newCreativeForm.title}
-                onChange={(e) =>
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }))
-                }
-                placeholder="Enter creative title..."
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
-            </div>
-          )}
-
-          {/* SMS Route (for SMS channel only) */}
-          {newCreativeForm.channel === "SMS" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                SMS Route
-              </label>
-              <HeadlessSelect
-                value={(newCreativeForm.variables as any)?.sms_route || ""}
-                onChange={(value) =>
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    variables: {
-                      ...(prev.variables || {}),
-                      sms_route: value || undefined,
-                    },
-                  }))
-                }
-                options={[
-                  { label: "Select Route", value: "" },
-                  ...((smsRoutes as TypeConfigurationItem[]) || [])
-                    .filter((route) => route.isActive)
-                    .map((route) => ({
-                      label: route.name,
-                      value: route.name,
-                    })),
-                ]}
-                placeholder="Select SMS Route..."
-                className="w-full"
-              />
-            </div>
-          )}
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Text Body
-              </label>
-              {newCreativeForm.channel === "SMS" &&
-                (() => {
-                  const senderId = newCreativeForm.title || "";
-                  const { totalChars, smsCount } = calculateSMSSegments(
-                    newCreativeForm.text_body || "",
-                    senderId
-                  );
-                  return (
-                    <span
-                      className={`text-xs font-medium ${
-                        smsCount > 1
-                          ? "text-orange-600"
-                          : totalChars > 150
-                          ? "text-yellow-600"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      {totalChars} / {smsCount} SMS
-                    </span>
-                  );
-                })()}
-            </div>
-            <textarea
-              value={newCreativeForm.text_body}
-              onChange={(e) =>
-                setNewCreativeForm((prev) => ({
-                  ...prev,
-                  text_body: e.target.value,
-                }))
-              }
-              placeholder="Enter text content..."
-              rows={4}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-            {newCreativeForm.channel === "SMS" &&
-              (() => {
-                const senderId = newCreativeForm.title || "";
-                const { totalChars, smsCount } = calculateSMSSegments(
-                  newCreativeForm.text_body || "",
-                  senderId
-                );
-                if (smsCount > 1) {
-                  return (
-                    <p className="mt-1 text-xs text-orange-600">
-                      Message will be sent as {smsCount} SMS
-                      {smsCount > 1 ? "es" : ""} (charged separately)
-                    </p>
-                  );
-                }
-                return null;
-              })()}
-            {newCreativeForm.channel !== "SMS" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Provide at least one of Title, Text Body, or HTML Body.
-              </p>
+          <div className="space-y-4">
+            {/* Sender ID (SMS) or Subject (Email/Web) */}
+            {newCreativeForm.channel === "SMS" ? (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sender ID
+                </label>
+                <HeadlessSelect
+                  value={newCreativeForm.title || ""}
+                  onChange={(value) =>
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      title: value || "",
+                    }))
+                  }
+                  options={[
+                    { label: "Select Sender ID", value: "" },
+                    ...((senderIds as TypeConfigurationItem[]) || [])
+                      .filter(
+                        (senderId) =>
+                          senderId.isActive &&
+                          senderId.metadataValue === "active",
+                      )
+                      .map((senderId) => ({
+                        label: senderId.name,
+                        value: senderId.name,
+                      })),
+                  ]}
+                  placeholder="Select Sender ID..."
+                  className="w-full"
+                  zIndex={zIndex.popover}
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject Line
+                </label>
+                <input
+                  ref={titleInputRefAdd}
+                  type="text"
+                  maxLength={160}
+                  value={newCreativeForm.title}
+                  onChange={(e) => {
+                    setActiveFieldAdd("title");
+                    setCursorPositionAdd(e.target.selectionStart || 0);
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }));
+                  }}
+                  onClick={(e) => {
+                    setActiveFieldAdd("title");
+                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                  }}
+                  onFocus={(e) => {
+                    setActiveFieldAdd("title");
+                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                  }}
+                  placeholder="Enter email subject..."
+                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
             )}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              HTML Body (optional)
-            </label>
-            <textarea
-              value={newCreativeForm.html_body}
-              onChange={(e) =>
-                setNewCreativeForm((prev) => ({
-                  ...prev,
-                  html_body: e.target.value,
-                }))
-              }
-              placeholder="Enter HTML content..."
-              rows={6}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
-            />
-          </div>
+            {/* SMS Route (for SMS channel only) */}
+            {newCreativeForm.channel === "SMS" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  SMS Route
+                </label>
+                <HeadlessSelect
+                  value={(newCreativeForm.variables as any)?.sms_route || ""}
+                  onChange={(value) =>
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      variables: {
+                        ...(prev.variables || {}),
+                        sms_route: value || undefined,
+                      },
+                    }))
+                  }
+                  options={[
+                    { label: "Select Route", value: "" },
+                    ...((smsRoutes as TypeConfigurationItem[]) || [])
+                      .filter((route) => route.isActive)
+                      .map((route) => ({
+                        label: route.name,
+                        value: route.name,
+                      })),
+                  ]}
+                  placeholder="Select SMS Route..."
+                  className="w-full"
+                  zIndex={zIndex.popover}
+                />
+              </div>
+            )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Variables (JSON)
-            </label>
-            <textarea
-              value={newCreativeVariables}
-              onChange={(e) => setNewCreativeVariables(e.target.value)}
-              placeholder='{"variable_name": "value"}'
-              rows={4}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              Provide key/value pairs for template variables. Example:{" "}
-              {'{"firstName":"John"}'}
+            {/* Message content toolbar */}
+            <div
+              className="flex items-center justify-between p-3 rounded-lg"
+              style={{ backgroundColor: color.surface.cards }}
+            >
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Message Content
+              </span>
+              <div className="flex items-center gap-2">
+                {newCreativeForm.channel === "Email" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsRichTextAdd((prev) => !prev)}
+                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                    style={{
+                      backgroundColor: isRichTextAdd
+                        ? `${color.primary.accent}10`
+                        : "white",
+                      borderColor: isRichTextAdd
+                        ? color.primary.accent
+                        : color.border.default,
+                      color: isRichTextAdd
+                        ? color.primary.accent
+                        : color.text.secondary,
+                    }}
+                  >
+                    {isRichTextAdd ? "Rich Text" : "Plain Text"}
+                  </button>
+                )}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowVariableSelectorAdd(!showVariableSelectorAdd)
+                    }
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                    style={{
+                      backgroundColor: color.primary.accent,
+                      color: "white",
+                    }}
+                  >
+                    Insert Variable
+                  </button>
+                  <div
+                    className="absolute left-0 mt-1"
+                    style={{ zIndex: zIndex.popover }}
+                  >
+                    <CascadingVariableSelector
+                      isOpen={showVariableSelectorAdd}
+                      onClose={() => setShowVariableSelectorAdd(false)}
+                      onVariableSelect={handleVariableSelectAdd}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Message Body */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Message Body
+              </label>
+              <textarea
+                ref={bodyTextareaRefAdd}
+                value={newCreativeForm.text_body || ""}
+                onChange={(e) => {
+                  setActiveFieldAdd("body");
+                  setCursorPositionAdd(e.target.selectionStart || 0);
+                  setNewCreativeForm((prev) => ({
+                    ...prev,
+                    text_body: e.target.value,
+                  }));
+                }}
+                onClick={(e) => {
+                  setActiveFieldAdd("body");
+                  setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                }}
+                onFocus={(e) => {
+                  setActiveFieldAdd("body");
+                  setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                }}
+                placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                rows={8}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+              />
+
+              {/* Info bar */}
+              <div className="mt-2 flex items-center justify-between">
+                {newCreativeForm.channel === "SMS" ||
+                newCreativeForm.channel === "WhatsApp" ? (
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>
+                      {
+                        getCharacterInfoAdd(newCreativeForm.text_body || "")
+                          .charCount
+                      }{" "}
+                      characters
+                    </span>
+                    <span>
+                      {
+                        getCharacterInfoAdd(newCreativeForm.text_body || "")
+                          .segments
+                      }{" "}
+                      segment(s)
+                    </span>
+                    {getCharacterInfoAdd(newCreativeForm.text_body || "")
+                      .isUnicode && (
+                      <span className="text-amber-600">Unicode</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-xs text-gray-500">
+                    Variables like {"{{field}}"} will be replaced with customer
+                    data
+                  </span>
+                )}
+
+                {selectedVariablesAdd.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {selectedVariablesAdd.slice(0, 3).map((v) => (
+                      <span
+                        key={v.id}
+                        className="px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: `${color.primary.accent}10`,
+                          color: color.primary.accent,
+                        }}
+                      >
+                        {v.name}
+                      </span>
+                    ))}
+                    {selectedVariablesAdd.length > 3 && (
+                      <span className="text-xs text-gray-400">
+                        +{selectedVariablesAdd.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* HTML Body removed per request; message body covers content */}
           </div>
 
           <div className="flex items-center gap-2">
@@ -2546,69 +2691,6 @@ export default function OfferDetailsPage() {
               placeholder="Enter creative title..."
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
             />
-          </div>
-
-          {/* Text Body */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Text Body
-            </label>
-            <textarea
-              value={editFormData.text_body}
-              onChange={(e) =>
-                setEditFormData({ ...editFormData, text_body: e.target.value })
-              }
-              placeholder="Enter text content..."
-              rows={4}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            />
-          </div>
-
-          {/* HTML Body (for Email/Web) */}
-          {(editingCreative?.channel === "Email" ||
-            editingCreative?.channel === "Web") && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                HTML Body
-              </label>
-              <textarea
-                value={editFormData.html_body}
-                onChange={(e) =>
-                  setEditFormData({
-                    ...editFormData,
-                    html_body: e.target.value,
-                  })
-                }
-                placeholder="Enter HTML content..."
-                rows={6}
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
-              />
-            </div>
-          )}
-
-          {/* Variables */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Variables (JSON)
-            </label>
-            <textarea
-              value={variablesJson}
-              onChange={(e) => setVariablesJson(e.target.value)}
-              placeholder='{"variable_name": "value"}'
-              rows={4}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm`}
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              {(() => {
-                if (!variablesJson.trim()) return "Empty variables";
-                try {
-                  JSON.parse(variablesJson);
-                  return <span className="text-green-600">✓ Valid JSON</span>;
-                } catch {
-                  return <span className="text-red-600">⚠ Invalid JSON</span>;
-                }
-              })()}
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -2705,10 +2787,10 @@ export default function OfferDetailsPage() {
               <div className="divide-y divide-gray-200">
                 {availableProducts.map((product) => {
                   const isSelected = selectedProductsToAdd.some(
-                    (p) => p.id === product.id
+                    (p) => p.id === product.id,
                   );
                   const isAlreadyLinked = linkedProducts.some(
-                    (p) => p.id === product.id
+                    (p) => p.id === product.id,
                   );
                   const productInitial = (
                     product.name ||

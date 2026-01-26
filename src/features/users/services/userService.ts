@@ -31,21 +31,6 @@ class UserService {
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
 
-    // Log request details for create user endpoint
-    if (endpoint === "/" && options.method === "POST") {
-      console.log("🌐 FETCH REQUEST:");
-      console.log("Full URL:", url);
-      console.log("Method:", options.method);
-      console.log("Headers:", {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-        ...options.headers,
-      });
-      if (options.body) {
-        console.log("Body:", options.body);
-      }
-    }
-
     const response = await fetch(url, {
       headers: {
         ...getAuthHeaders(),
@@ -57,10 +42,6 @@ class UserService {
 
     // Log response for create user endpoint
     if (endpoint === "/" && options.method === "POST") {
-      console.log("📥 RESPONSE:");
-      console.log("Status:", response.status);
-      console.log("Status Text:", response.statusText);
-      console.log("OK:", response.ok);
     }
 
     // Get response text first to check if it's valid JSON
@@ -732,10 +713,6 @@ class UserService {
     request: CreateUserRequest
   ): Promise<ApiSuccessResponse<UserType>> {
     const url = `${BASE_URL}/`;
-    console.log("🔵 CREATE USER ENDPOINT CALL:");
-    console.log("URL:", url);
-    console.log("Method: POST");
-    console.log("Request body:", JSON.stringify(request, null, 2));
 
     return this.request<ApiSuccessResponse<UserType>>("/", {
       method: "POST",

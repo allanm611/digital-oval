@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import {
-  Plus,
   Search,
   Edit,
   Trash2,
   MessageSquare,
-  ArrowLeft,
   Grid,
   List,
   FolderOpen,
@@ -23,14 +20,12 @@ import {
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { offerCategoryService } from "../services/offerCategoryService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { offerService } from "../services/offerService";
-import { buildApiUrl, API_CONFIG } from "../../../shared/services/api";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import {
   OfferCategoryType,
@@ -40,6 +35,7 @@ import {
 import { Offer, UpdateOfferRequest } from "../types/offer";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -93,10 +89,11 @@ interface OfferCategoryWithCount extends OfferCategoryType {
 }
 
 interface BasicOffer {
-  id?: string | number;
-  name?: string;
+  id: string | number;
+  name: string;
   description?: string;
   status?: string;
+  [key: string]: unknown;
 }
 
 interface CategoryModalProps {
@@ -236,14 +233,14 @@ function CategoryModal({
                   {isLoading
                     ? t.offerCatalogs.saving
                     : category
-                    ? t.offerCatalogs.update
-                    : t.offerCatalogs.create}
+                      ? t.offerCatalogs.update
+                      : t.offerCatalogs.create}
                 </button>
               </div>
             </form>
           </div>
         </div>,
-        document.body
+        document.body,
       )
     : null;
 }
@@ -298,7 +295,7 @@ function OffersModal({
       taggedOffers = (allOffers as Offer[])
         .filter(
           (offer) =>
-            Array.isArray(offer.tags) && offer.tags.includes(catalogTag)
+            Array.isArray(offer.tags) && offer.tags.includes(catalogTag),
         )
         .map((offer) => ({
           id: offer.id,
@@ -337,8 +334,9 @@ function OffersModal({
       onRefreshCounts: onRefreshCounts,
       onRefreshCategories: onRefreshCategories,
       getEntityById: async (id) => await offerService.getOfferById(id),
-      updateEntity: async (id, updates) =>
-        await offerService.updateOffer(id, updates as UpdateOfferRequest),
+      updateEntity: async (id, updates) => {
+        await offerService.updateOffer(id, updates as UpdateOfferRequest);
+      },
     });
   };
 
@@ -373,8 +371,8 @@ function OffersModal({
             offer?.status === "active"
               ? "bg-green-100 text-green-800"
               : offer?.status === "draft"
-              ? "bg-yellow-100 text-yellow-800"
-              : "bg-gray-100 text-gray-800"
+                ? "bg-yellow-100 text-yellow-800"
+                : "bg-gray-100 text-gray-800"
           }`}
         >
           {offer?.status || "unknown"}
@@ -386,8 +384,6 @@ function OffersModal({
 
 function OfferCategoriesPage() {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-  const { confirm, setConfirmLoading, closeConfirm } = useConfirm();
   const { success, error: showError } = useToast();
 
   const [offerCategories, setOfferCategories] = useState<
@@ -421,7 +417,7 @@ function OfferCategoriesPage() {
     useState<OfferCategoryType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
-    null
+    null,
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [stats, setStats] = useState<{
@@ -481,7 +477,7 @@ function OfferCategoriesPage() {
   };
 
   const handleFilterChange = (
-    type: "all" | "unused" | "popular" | "active" | "inactive"
+    type: "all" | "unused" | "popular" | "active" | "inactive",
   ) => {
     setFilterType(type);
   };
@@ -568,13 +564,6 @@ function OfferCategoriesPage() {
 
   const loadPopularCategory = async () => {
     try {
-      const endpointUrl = `${buildApiUrl(
-        API_CONFIG.ENDPOINTS.OFFER_CATEGORIES
-      )}/popular`;
-      console.log(
-        "[OfferCategories] Fetching most popular catalog from:",
-        `${endpointUrl}?limit=1&skipCache=true`
-      );
       const response = await offerCategoryService.getPopularCategories({
         limit: 1, // Just get the top one
         skipCache: true,
@@ -590,8 +579,8 @@ function OfferCategoriesPage() {
           topCategory.total_offers !== undefined
             ? Number(topCategory.total_offers)
             : topCategory.offer_count !== undefined
-            ? Number(topCategory.offer_count)
-            : topCategory.offerCount ?? 0;
+              ? Number(topCategory.offer_count)
+              : (topCategory.offerCount ?? 0);
         setPopularCategory({
           name: topCategory.name ?? "Unknown",
           count: Number.isNaN(parsedTotalOffers) ? 0 : parsedTotalOffers,
@@ -672,7 +661,7 @@ function OfferCategoriesPage() {
         offerCountEntries.forEach((item) => {
           // Find the category by name to get its ID
           const matchingCategory = categoriesToMatch.find(
-            (cat) => cat.name === item.category_name
+            (cat) => cat.name === item.category_name,
           );
 
           if (matchingCategory) {
@@ -716,7 +705,7 @@ function OfferCategoriesPage() {
               .map((tag) => parseCatalogTag(tag))
               .filter(
                 (id): id is number =>
-                  typeof id === "number" && categoriesIndex.has(id)
+                  typeof id === "number" && categoriesIndex.has(id),
               );
 
             const uniqueCatalogIds = new Set(catalogIds);
@@ -825,7 +814,7 @@ function OfferCategoriesPage() {
       // Apply client-side filtering for inactive categories
       if (filterType === "inactive" && !debouncedSearchTerm) {
         categoriesWithCounts = categoriesWithCounts.filter(
-          (category) => !category.is_active
+          (category) => !category.is_active,
         );
       }
 
@@ -879,7 +868,7 @@ function OfferCategoriesPage() {
           : t.offerCatalogs.deactivateSuccess,
         newActiveStatus
           ? t.offerCatalogs.activateSuccess
-          : t.offerCatalogs.deactivateSuccess
+          : t.offerCatalogs.deactivateSuccess,
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
@@ -911,7 +900,7 @@ function OfferCategoriesPage() {
       // Error"Error deleting category:", err);
       showError(
         "Error",
-        err instanceof Error ? err.message : "Failed to delete category"
+        err instanceof Error ? err.message : "Failed to delete category",
       );
     } finally {
       setIsDeleting(false);
@@ -937,13 +926,13 @@ function OfferCategoriesPage() {
         // Update existing category
         await offerCategoryService.updateCategory(
           editingCategory.id,
-          categoryData as UpdateOfferCategoryRequest
+          categoryData as UpdateOfferCategoryRequest,
         );
         success(t.offerCatalogs.updateSuccess);
       } else {
         // Create new category
         await offerCategoryService.createCategory(
-          categoryData as CreateOfferCategoryRequest
+          categoryData as CreateOfferCategoryRequest,
         );
         success(t.offerCatalogs.createSuccess);
       }
@@ -965,7 +954,7 @@ function OfferCategoriesPage() {
     (category) =>
       category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (category?.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        category.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const formatNumber = (value?: number | null) =>
@@ -1022,19 +1011,7 @@ function OfferCategoriesPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={handleCreateCategory}
-            className={`px-3 sm:px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white whitespace-nowrap`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {t.offerCatalogs.createCatalog}
-            </span>
-            <span className="sm:hidden">
-              {t.offerCatalogs.createCatalogShort}
-            </span>
-          </button>
+          <CreateButton onClick={handleCreateCategory} />
         </div>
       </div>
 
@@ -1286,19 +1263,10 @@ function OfferCategoriesPage() {
           </h3>
           <p className="text-sm text-gray-500 mb-6">
             {searchTerm
-              ? t.common.tryAdjustingSearch
+              ? "Try adjusting your search terms"
               : t.offerCatalogs.createFirstCatalog}
           </p>
-          {!searchTerm && (
-            <button
-              onClick={handleCreateCategory}
-              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              {t.offerCatalogs.createFirstCatalog}
-            </button>
-          )}
+          {!searchTerm && <CreateButton onClick={handleCreateCategory} />}
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1644,7 +1612,7 @@ function OfferCategoriesPage() {
                                 | "unused"
                                 | "popular"
                                 | "active"
-                                | "inactive"
+                                | "inactive",
                             )
                           }
                           className={`mr-3 text-[${color.primary.action}] focus:ring-[${color.primary.action}]`}
@@ -1781,7 +1749,7 @@ function OfferCategoriesPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}

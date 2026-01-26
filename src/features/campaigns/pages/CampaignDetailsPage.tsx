@@ -123,7 +123,7 @@ export default function CampaignDetailsPage() {
               };
             const categories = categoriesResponse.data || [];
             const category = categories.find(
-              (cat) => String(cat.id) === String(campaignData.category_id)
+              (cat) => String(cat.id) === String(campaignData.category_id),
             );
             if (category) {
               setCategoryName(category.name);
@@ -140,7 +140,7 @@ export default function CampaignDetailsPage() {
           try {
             const creatorResponse = await userService.getUserById(
               Number(campaignData.created_by),
-              true
+              true,
             );
             const creator = creatorResponse?.data;
             if (creator) {
@@ -190,7 +190,7 @@ export default function CampaignDetailsPage() {
       setIsLoadingSegments(true);
       const response = await campaignService.getCampaignSegments(
         campaignId,
-        true
+        true,
       );
       if (response && typeof response === "object" && "data" in response) {
         // Backend returns: { success: true, data: CampaignSegmentDetail[], total: number }
@@ -204,7 +204,7 @@ export default function CampaignDetailsPage() {
           typeof response.data === "object" &&
           "data" in response.data &&
           Array.isArray(
-            (response.data as { data?: CampaignSegmentDetail[] }).data
+            (response.data as { data?: CampaignSegmentDetail[] }).data,
           )
         ) {
           // Nested: { data: { data: [...] } }
@@ -227,9 +227,8 @@ export default function CampaignDetailsPage() {
   const fetchCampaignOffers = async (campaignId: number) => {
     try {
       setIsLoadingOffers(true);
-      const response = await campaignSegmentOfferService.getMappingsByCampaign(
-        campaignId
-      );
+      const response =
+        await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
       if (response && response.success && Array.isArray(response.data)) {
         // Extract unique offer IDs from mappings
         const offerIds = new Set<number>();
@@ -244,14 +243,14 @@ export default function CampaignDetailsPage() {
           try {
             const offerResponse = await offerService.getOfferById(
               offerId,
-              true
+              true,
             );
             // Handle both direct Offer and { success: true, data: Offer } response formats
             if (offerResponse && typeof offerResponse === "object") {
               if ("data" in offerResponse && offerResponse.data) {
                 return offerResponse.data as Offer;
               } else if ("id" in offerResponse) {
-                return offerResponse as Offer;
+                return offerResponse as unknown as Offer;
               }
             }
             return null;
@@ -263,7 +262,7 @@ export default function CampaignDetailsPage() {
 
         const fetchedOffers = await Promise.all(offerPromises);
         setOffers(
-          fetchedOffers.filter((offer): offer is Offer => offer !== null)
+          fetchedOffers.filter((offer): offer is Offer => offer !== null),
         );
       } else {
         setOffers([]);
@@ -281,7 +280,7 @@ export default function CampaignDetailsPage() {
       setIsLoadingBudgetUtil(true);
       const response = await campaignService.getCampaignBudgetUtilisation(
         campaignId,
-        true
+        true,
       );
       if (response && typeof response === "object" && "data" in response) {
         const budgetData = response.data as CampaignBudgetUtilisation;
@@ -522,8 +521,7 @@ export default function CampaignDetailsPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           {/* Primary Action - Based on Status */}
-          {campaign.approval_status === "pending" &&
-            campaign.status !== "rejected" && (
+          {campaign.approval_status === "pending" && (
               <button
                 onClick={handleApproveCampaign}
                 disabled={isApproveLoading}
@@ -661,9 +659,8 @@ export default function CampaignDetailsPage() {
               <div
                 className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
               >
-                {/* Reject - Only if pending and not already rejected */}
-                {campaign.approval_status === "pending" &&
-                  campaign.status !== "rejected" && (
+                {/* Reject - Only if pending */}
+                {campaign.approval_status === "pending" && (
                     <button
                       onClick={() => {
                         setShowRejectModal(true);
@@ -866,7 +863,7 @@ export default function CampaignDetailsPage() {
                     campaign.status?.toLowerCase()) && (
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                      campaign.status
+                      campaign.status,
                     )}`}
                   >
                     {campaign.status?.charAt(0).toUpperCase() +
@@ -876,7 +873,7 @@ export default function CampaignDetailsPage() {
                 {campaign.approval_status && (
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalBadge(
-                      campaign.approval_status
+                      campaign.approval_status,
                     )}`}
                   >
                     {campaign.approval_status === "approved" && (
@@ -898,7 +895,7 @@ export default function CampaignDetailsPage() {
               {campaign.description}
             </p>
             {/* Rejection Reason Display */}
-            {campaign.status === "rejected" && campaign.rejection_reason && (
+            {campaign.approval_status === "rejected" && campaign.rejection_reason && (
               <div
                 className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}
               >
@@ -1055,7 +1052,7 @@ export default function CampaignDetailsPage() {
                       style={{
                         width: `${Math.min(
                           budgetUtilisation.utilization_percentage,
-                          100
+                          100,
                         )}%`,
                         backgroundColor: color.primary.accent,
                       }}
@@ -1082,7 +1079,7 @@ export default function CampaignDetailsPage() {
                       </span>
                       <span className={`text-sm font-medium ${tw.textPrimary}`}>
                         <CurrencyFormatter
-                          amount={parseFloat(campaign.budget_allocated)}
+                          amount={parseFloat(String(campaign.budget_allocated))}
                         />
                       </span>
                     </div>
@@ -1094,7 +1091,7 @@ export default function CampaignDetailsPage() {
                       </span>
                       <span className={`text-sm font-medium ${tw.textPrimary}`}>
                         <CurrencyFormatter
-                          amount={parseFloat(campaign.budget_spent)}
+                          amount={parseFloat(String(campaign.budget_spent))}
                         />
                       </span>
                     </div>
@@ -1187,7 +1184,7 @@ export default function CampaignDetailsPage() {
                                   pathname: `/dashboard/campaigns/${id}`,
                                 },
                               },
-                            }
+                            },
                           )
                         }
                         className={`font-semibold text-base ${tw.textPrimary} truncate`}
@@ -1362,7 +1359,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary} font-mono`}
+                      className={`px-6 py-4 text-base ${tw.textPrimary}`} /* font-mono commented out - use normal font */
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.code || "—"}
@@ -1377,10 +1374,10 @@ export default function CampaignDetailsPage() {
                             offer.status === "active"
                               ? "bg-green-100 text-green-800"
                               : offer.status === "draft"
-                              ? "bg-gray-100 text-gray-800"
-                              : offer.status === "expired"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
+                                ? "bg-gray-100 text-gray-800"
+                                : offer.status === "expired"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
                           {offer.status}

@@ -441,12 +441,7 @@ export default function CreateCampaignPage() {
           // REMOVE saved data IMMEDIATELY to prevent loops
           sessionStorage.removeItem("campaignFormData");
 
-          console.log("Restoring campaign data:", {
-            formData: campaignData.formData,
-            segmentsCount: campaignData.selectedSegments?.length || 0,
-            offersCount: campaignData.selectedOffers?.length || 0,
-            mappingsCount: campaignData.segmentOfferMappings?.length || 0,
-          });
+          
 
           // Restore all data
           if (campaignData.formData) {
@@ -458,7 +453,6 @@ export default function CreateCampaignPage() {
             campaignData.selectedSegments &&
             Array.isArray(campaignData.selectedSegments)
           ) {
-            console.log("Restoring segments:", campaignData.selectedSegments);
             setSelectedSegments(campaignData.selectedSegments);
             // Also restore to localStorage to persist the data
             localStorage.setItem("campaign_segments", JSON.stringify(campaignData.selectedSegments));

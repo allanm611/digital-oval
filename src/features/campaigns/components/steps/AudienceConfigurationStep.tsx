@@ -700,7 +700,6 @@ export default function AudienceConfigurationStep({
                           </button>
                           <button
                             onClick={() => {
-                              console.log("Edit segment:", segment.name);
                             }}
                             className="p-1.5 text-gray-400 hover:text-[#588157] hover:bg-gray-100 rounded transition-colors"
                             title="Edit Segment"

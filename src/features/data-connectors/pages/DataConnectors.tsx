@@ -10,7 +10,10 @@ import {
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
-import { getConnectorDisplayName } from "../utils/connectorIcons";
+import {
+  getConnectorDisplayName,
+  getConnectorIcon,
+} from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 
 export default function DataConnectors() {
@@ -39,12 +42,10 @@ export default function DataConnectors() {
 
   const handleCreateConnector = () => {
     // TODO: Implement create connector modal
-    console.log("Create connector clicked");
   };
 
   const handleConnectorClick = (connector: DataConnector) => {
     // Placeholder for navigation to connector detail or connections view
-    console.log("Connector clicked:", connector);
   };
 
   return (
@@ -158,7 +159,6 @@ export default function DataConnectors() {
         </div>
 
         <button
-          onClick={() => console.log("Filters clicked")}
           className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
           style={{
             backgroundColor: button.secondaryAction.background,
@@ -251,15 +251,27 @@ export default function DataConnectors() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="flex flex-col gap-1">
-                          <span
-                            className={`text-sm font-semibold ${tw.textPrimary}`}
-                          >
-                            {connector.name}
-                          </span>
-                          {/* <span className={`text-xs ${tw.textSecondary}`}>
-                            {connector.description}
-                          </span> */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {(() => {
+                              const IconComp = connector.icon;
+                              return (
+                                <IconComp
+                                  className={`h-5 w-5 ${getConnectorIcon(connector.type).color}`}
+                                />
+                              );
+                            })()}
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span
+                              className={`text-sm font-semibold ${tw.textPrimary}`}
+                            >
+                              {connector.name}
+                            </span>
+                            {/* <span className={`text-xs ${tw.textSecondary}`}>
+                              {connector.description}
+                            </span> */}
+                          </div>
                         </div>
                       </td>
                       <td

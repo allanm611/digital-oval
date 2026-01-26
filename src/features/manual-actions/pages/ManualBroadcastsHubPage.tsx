@@ -2,20 +2,22 @@ import { useNavigate } from "react-router-dom";
 import { Mail, Gift, ArrowLeft } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function ManualBroadcastsHubPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const actions = [
     {
-      title: "Manual Communications",
-      description: "Send targeted messages to your audience",
+      title: t.manualActions.manualCommunications,
+      description: t.manualActions.sendTargetedMessages,
       icon: Mail,
       onClick: () => navigate("/dashboard/manual-communications"),
     },
     {
-      title: "Manual Rewards",
-      description: "Distribute rewards to specific customers",
+      title: t.manualActions.manualRewards,
+      description: t.manualActions.distributeRewards,
       icon: Gift,
       onClick: () => navigate("/dashboard/manual-rewards"),
     },
@@ -34,10 +36,10 @@ export default function ManualBroadcastsHubPage() {
           </button>
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              Manual Broadcasts
+              {t.manualActions.manualBroadcasts}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Choose an action to execute
+              {t.manualActions.chooseAction}
             </p>
           </div>
         </div>

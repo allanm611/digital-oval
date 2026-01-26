@@ -489,7 +489,6 @@ class SegmentService {
     const endpoint = `/stats/category-distribution${
       skipCache ? "?skipCache=true" : ""
     }`;
-    console.log("[segmentService] Calling", `${BASE_URL}${endpoint}`);
     return this.request<ApiSuccessResponse<CategoryDistributionResponse[]>>(
       endpoint
     );

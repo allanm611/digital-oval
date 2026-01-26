@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  Edit,
-  Trash2,
-  X,
-  ArrowLeft,
-  LucideIcon,
-} from "lucide-react";
+import { Search, Edit, Trash2, X, ArrowLeft, LucideIcon } from "lucide-react";
 import { color, tw, zIndex } from "../utils/utils";
 import { useConfirm } from "../../contexts/ConfirmContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -20,6 +12,7 @@ import {
 } from "../services/configurationDataService";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import BackButton from "./ui/BackButton";
+import CreateButton from "./ui/CreateButton";
 
 export interface ConfigurationItem {
   id: number;
@@ -122,14 +115,14 @@ export function ConfigurationModal({
       setError(
         t.genericConfig.mustBeCharactersOrLess
           .replace("{field}", config.nameLabel)
-          .replace("{maxLength}", config.nameMaxLength.toString())
+          .replace("{maxLength}", config.nameMaxLength.toString()),
       );
       return;
     }
 
     if (config.descriptionRequired && !formData.description.trim()) {
       setError(
-        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel)
+        t.genericConfig.isRequired.replace("{field}", config.descriptionLabel),
       );
       return;
     }
@@ -141,7 +134,7 @@ export function ConfigurationModal({
       setError(
         t.genericConfig.mustBeCharactersOrLess
           .replace("{field}", config.descriptionLabel)
-          .replace("{maxLength}", config.descriptionMaxLength.toString())
+          .replace("{maxLength}", config.descriptionMaxLength.toString()),
       );
       return;
     }
@@ -193,7 +186,7 @@ export function ConfigurationModal({
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
                   "{field}",
-                  config.nameLabel.toLowerCase()
+                  config.nameLabel.toLowerCase(),
                 )}
                 maxLength={config.nameMaxLength}
                 required={config.nameRequired}
@@ -215,7 +208,7 @@ export function ConfigurationModal({
                 className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 placeholder={t.genericConfig.enter.replace(
                   "{field}",
-                  config.descriptionLabel.toLowerCase()
+                  config.descriptionLabel.toLowerCase(),
                 )}
                 rows={3}
                 maxLength={config.descriptionMaxLength}
@@ -249,20 +242,20 @@ export function ConfigurationModal({
               {isSaving
                 ? t.genericConfig.saving
                 : item
-                ? t.genericConfig.update.replace(
-                    "{entityName}",
-                    config.entityName
-                  )
-                : t.genericConfig.create.replace(
-                    "{entityName}",
-                    config.entityName
-                  )}
+                  ? t.genericConfig.update.replace(
+                      "{entityName}",
+                      config.entityName,
+                    )
+                  : t.genericConfig.create.replace(
+                      "{entityName}",
+                      config.entityName,
+                    )}
             </button>
           </div>
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -295,7 +288,7 @@ export default function GenericConfigurationPage({
       // S'abonner aux changements
       const unsubscribe = configurationDataService.subscribe(
         config.configType,
-        setItems
+        setItems,
       );
       return unsubscribe;
     }
@@ -332,13 +325,13 @@ export default function GenericConfigurationPage({
       }
       showToast(
         config.deleteConfirmTitle,
-        config.deleteSuccessMessage(item.name)
+        config.deleteSuccessMessage(item.name),
       );
     } catch (err) {
       console.error(`Error deleting ${config.entityName}:`, err);
       showError(
         t.genericConfig.error,
-        err instanceof Error ? err.message : config.deleteErrorMessage
+        err instanceof Error ? err.message : config.deleteErrorMessage,
       );
     }
   };
@@ -355,15 +348,15 @@ export default function GenericConfigurationPage({
           configurationDataService.updateItem(
             config.configType,
             editingItem.id,
-            itemData
+            itemData,
           );
         } else {
           setItems((prev) =>
             prev.map((item) =>
               item.id === editingItem.id
                 ? { ...item, ...itemData, updated_at: new Date().toISOString() }
-                : item
-            )
+                : item,
+            ),
           );
         }
         showToast(config.updateSuccessMessage);
@@ -388,7 +381,7 @@ export default function GenericConfigurationPage({
       console.error(`Failed to save ${config.entityName}:`, err);
       showError(
         t.genericConfig.failedToSave.replace("{entityName}", config.entityName),
-        config.saveErrorMessage
+        config.saveErrorMessage,
       );
     } finally {
       setIsSaving(false);
@@ -399,7 +392,7 @@ export default function GenericConfigurationPage({
     (item) =>
       item?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item?.description &&
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        item.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
   const IconComponent = config.icon;
@@ -419,14 +412,7 @@ export default function GenericConfigurationPage({
           </div>
         </div>
         <div className="flex items-center gap-3 w-auto">
-          <button
-            onClick={handleCreateItem}
-            className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            {config.createButtonText}
-          </button>
+          <CreateButton onClick={handleCreateItem} />
         </div>
       </div>
 
@@ -474,14 +460,7 @@ export default function GenericConfigurationPage({
                 : `${t.genericConfig.createFirstItem}`}
             </p>
             {!searchTerm && (
-              <button
-                onClick={handleCreateItem}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                {config.createButtonText}
-              </button>
+              <CreateButton onClick={handleCreateItem} className="mx-auto" />
             )}
           </div>
         ) : (

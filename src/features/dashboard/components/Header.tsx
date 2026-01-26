@@ -2,6 +2,7 @@ import { User, LogOut, Menu } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import logo from "../../../assets/Effortel_logo.svg";
 import { User as UserType } from "../../../features/auth/types/auth";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -22,11 +23,12 @@ export default function Header({
   sidebarMinimized = false,
 }: HeaderProps) {
   const { user, logout } = useAuth();
-  const [currentUserRole, setCurrentUserRole] = useState<string>("User");
+  const { t } = useLanguage();
+  const [currentUserRole, setCurrentUserRole] = useState<string>(t.header.defaultUser);
 
   const loadCurrentUserRole = useCallback(async () => {
     if (!user?.user_id) {
-      setCurrentUserRole("User");
+      setCurrentUserRole(t.header.defaultUser);
       return;
     }
     try {
@@ -55,22 +57,22 @@ export default function Header({
           primaryRoleId != null ? mappedRoles[primaryRoleId]?.name : undefined;
         const fallbackRoleName = fullUser.role_name;
 
-        setCurrentUserRole(resolvedRoleName ?? fallbackRoleName ?? "User");
+        setCurrentUserRole(resolvedRoleName ?? fallbackRoleName ?? t.header.defaultUser);
       } else {
         setCurrentUserRole(
           user.role
             ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-            : "User",
+            : t.header.defaultUser,
         );
       }
     } catch {
       setCurrentUserRole(
         user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-          : "User",
+          : t.header.defaultUser,
       );
     }
-  }, [user]);
+  }, [user, t.header.defaultUser]);
 
   useEffect(() => {
     loadCurrentUserRole();
@@ -122,7 +124,7 @@ export default function Header({
             <button
               onClick={logout}
               className={`p-2 text-white/90 hover:text-white hover:bg-white/10 ${tw.rounded} transition-colors`}
-              title="Sign out"
+              title={t.header.signOut}
             >
               <LogOut className="h-4 w-4" />
             </button>

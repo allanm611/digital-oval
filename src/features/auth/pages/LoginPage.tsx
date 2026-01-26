@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import {
   PlayCircle,
@@ -13,6 +14,7 @@ import {
 
 const LoginPage: React.FC = () => {
   const { login, requestPasswordReset } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -36,12 +38,12 @@ const LoginPage: React.FC = () => {
   const validateEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      setValidationErrors((prev) => ({ ...prev, email: "Email is required" }));
+      setValidationErrors((prev) => ({ ...prev, email: t.auth.login.emailRequired }));
       return false;
     } else if (!emailRegex.test(email)) {
       setValidationErrors((prev) => ({
         ...prev,
-        email: "Please enter a valid email address",
+        email: t.auth.login.emailInvalid,
       }));
       return false;
     } else {
@@ -54,13 +56,13 @@ const LoginPage: React.FC = () => {
     if (!password) {
       setValidationErrors((prev) => ({
         ...prev,
-        password: "Password is required",
+        password: t.auth.login.passwordRequired,
       }));
       return false;
     } else if (password.length < 6) {
       setValidationErrors((prev) => ({
         ...prev,
-        password: "Password must be at least 6 characters",
+        password: t.auth.login.passwordMinLength,
       }));
       return false;
     } else {
@@ -87,7 +89,7 @@ const LoginPage: React.FC = () => {
       navigate("/landingpage");
     } catch (error) {
       console.error("Login error:", error);
-      setErrorMessage("Invalid email or password. Please try again.");
+      setErrorMessage(t.auth.login.invalidCredentials);
     } finally {
       setIsLoading(false);
     }
@@ -118,7 +120,6 @@ const LoginPage: React.FC = () => {
 
   const scrollToFeatures = () => {
     // Scroll to features section if it exists, otherwise do nothing
-    console.log("Take a tour clicked");
   };
 
   return (
@@ -143,7 +144,7 @@ const LoginPage: React.FC = () => {
             onClick={scrollToFeatures}
           >
             <PlayCircle size={16} />
-            Take a tour
+            {t.auth.login.tourButton}
           </button>
         </div>
 
@@ -158,31 +159,30 @@ const LoginPage: React.FC = () => {
             </h1>
           </div>
 
-          <h2 className="headline">Engage, Predict, Grow</h2>
+          <h2 className="headline">{t.auth.login.headline}</h2>
           <p className="subhead">
-            The intelligent customer engagement platform. Create impactful
-            campaigns, understand your audience, and act in real time.
+            {t.auth.login.subheading}
           </p>
 
           <ul className="benefits">
             <li>
               <CheckCircle2 size={18} />
-              Predictive insights, beautifully visualized
+              {t.auth.login.benefits.insights}
             </li>
             <li>
               <CheckCircle2 size={18} />
-              Unified customer data platform
+              {t.auth.login.benefits.dataplatform}
             </li>
             <li>
               <CheckCircle2 size={18} />
-              Advanced campaign automation
+              {t.auth.login.benefits.automation}
             </li>
           </ul>
 
           <div className="cta-section">
             <button className="tour-btn" onClick={scrollToFeatures}>
               <PlayCircle size={16} />
-              Take a tour
+              {t.auth.login.tourButton}
             </button>
           </div>
         </section>
@@ -192,7 +192,7 @@ const LoginPage: React.FC = () => {
           <div className="login-card">
             <div className="login-header">
               <div className="logo-container">
-                <h2 className="login-title">Sign in to Sentra</h2>
+                <h2 className="login-title">{t.auth.login.title}</h2>
               </div>
             </div>
 
@@ -207,7 +207,7 @@ const LoginPage: React.FC = () => {
 
               <div className="form-group">
                 <label htmlFor="email">
-                  Email <span className="required">*</span>
+                  {t.auth.login.emailLabel} <span className="required">*</span>
                 </label>
                 <div className="input-with-icon">
                   <input
@@ -216,7 +216,7 @@ const LoginPage: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     type="email"
                     required
-                    placeholder="votre-email@example.com"
+                    placeholder={t.auth.login.emailPlaceholder}
                     className={validationErrors.email ? "error-input" : ""}
                     onBlur={validateEmail}
                   />
@@ -232,7 +232,7 @@ const LoginPage: React.FC = () => {
 
               <div className="form-group">
                 <label htmlFor="password">
-                  Password <span className="required">*</span>
+                  {t.auth.login.passwordLabel} <span className="required">*</span>
                 </label>
                 <div className="input-with-icon">
                   <input
@@ -241,7 +241,7 @@ const LoginPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     type={showPassword ? "text" : "password"}
                     required
-                    placeholder="Your password"
+                    placeholder={t.auth.login.passwordPlaceholder}
                     className={validationErrors.password ? "error-input" : ""}
                     onBlur={validatePassword}
                   />
@@ -272,7 +272,7 @@ const LoginPage: React.FC = () => {
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
-                  <span>Remember me</span>
+                  <span>{t.auth.login.rememberMe}</span>
                 </label>
                 <a
                   href="#"
@@ -282,7 +282,7 @@ const LoginPage: React.FC = () => {
                     setShowForgotPassword(true);
                   }}
                 >
-                  Forgot password?
+                  {t.auth.login.forgotPassword}
                 </a>
               </div>
 
@@ -292,14 +292,14 @@ const LoginPage: React.FC = () => {
                 disabled={isLoading || !isFormValid}
               >
                 {!isLoading ? (
-                  "Sign in"
+                  t.auth.login.signInButton
                 ) : (
                   <span className="loading-spinner"></span>
                 )}
               </button>
 
               <div className="request-account">
-                Don't have an account?
+                {t.auth.login.noAccount}
                 <a
                   href="#"
                   onClick={(e) => {
@@ -307,7 +307,7 @@ const LoginPage: React.FC = () => {
                     goToAccountRequest();
                   }}
                 >
-                  Make a request
+                  {t.auth.login.makeRequest}
                 </a>
               </div>
             </form>
@@ -325,7 +325,7 @@ const LoginPage: React.FC = () => {
         >
           <div className="modal-container">
             <div className="modal-header">
-              <h2>Password Reset</h2>
+              <h2>{t.auth.forgotPassword.title}</h2>
               <button
                 className="btn-close"
                 onClick={() => setShowForgotPassword(false)}
@@ -336,16 +336,14 @@ const LoginPage: React.FC = () => {
 
             <div className="modal-body">
               <p>
-                Enter your email address and we'll send you a link to reset your
-                password.
+                {t.auth.forgotPassword.description}
               </p>
 
               <div
                 className="form-message success"
                 style={{ display: resetEmailSent ? "flex" : "none" }}
               >
-                <CheckCircle size={18} />A reset email has been sent. Please
-                check your inbox.
+                <CheckCircle size={18} />{t.auth.forgotPassword.successMessage}
               </div>
 
               <div
@@ -358,7 +356,7 @@ const LoginPage: React.FC = () => {
 
               <div className="form-group">
                 <label htmlFor="resetEmail">
-                  Email <span className="required">*</span>
+                  {t.auth.forgotPassword.emailLabel} <span className="required">*</span>
                 </label>
                 <input
                   id="resetEmail"
@@ -366,7 +364,7 @@ const LoginPage: React.FC = () => {
                   onChange={(e) => setResetEmail(e.target.value)}
                   type="email"
                   required
-                  placeholder="your-email@example.com"
+                  placeholder={t.auth.forgotPassword.emailPlaceholder}
                 />
               </div>
             </div>
@@ -376,7 +374,7 @@ const LoginPage: React.FC = () => {
                 className="btn-cancel"
                 onClick={() => setShowForgotPassword(false)}
               >
-                Cancel
+                {t.auth.forgotPassword.cancelButton}
               </button>
               <button
                 className="btn-send"
@@ -384,7 +382,7 @@ const LoginPage: React.FC = () => {
                 disabled={isResetLoading || !resetEmail}
               >
                 {!isResetLoading ? (
-                  "Send Link"
+                  t.auth.forgotPassword.sendButton
                 ) : (
                   <span className="loading-spinner small"></span>
                 )}

@@ -25,6 +25,8 @@ export interface Translations {
     select: string;
     selectAll: string;
     deselectAll: string;
+    goToLogin: string;
+    backToLogin: string;
     actions: string;
     status: string;
     active: string;
@@ -1802,5 +1804,142 @@ export interface Translations {
     sentraConfig: string;
     sentraConfigSubtitle: string;
     sentraConfigDescription: string;
+  };
+
+  // Header
+  header: {
+    logout: string;
+    signOut: string;
+    defaultUser: string;
+  };
+
+  // Authentication
+  auth: {
+    login: {
+      title: string;
+      headline: string;
+      subheading: string;
+      benefits: {
+        insights: string;
+        dataplatform: string;
+        automation: string;
+      };
+      emailLabel: string;
+      emailRequired: string;
+      emailInvalid: string;
+      emailPlaceholder: string;
+      passwordLabel: string;
+      passwordRequired: string;
+      passwordMinLength: string;
+      passwordPlaceholder: string;
+      rememberMe: string;
+      forgotPassword: string;
+      signInButton: string;
+      invalidCredentials: string;
+      noAccount: string;
+      makeRequest: string;
+      tourButton: string;
+    };
+    forgotPassword: {
+      title: string;
+      description: string;
+      emailLabel: string;
+      emailPlaceholder: string;
+      cancelButton: string;
+      sendButton: string;
+      successMessage: string;
+    };
+    requestAccount: {
+      title: string;
+      fullNameLabel: string;
+      fullNamePlaceholder: string;
+      emailLabel: string;
+      emailPlaceholder: string;
+      departmentLabel: string;
+      departmentPlaceholder: string;
+      companyLabel: string;
+      companyPlaceholder: string;
+      reasonLabel: string;
+      reasonPlaceholder: string;
+      submitButton: string;
+      cancelButton: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+    resetPassword: {
+      title: string;
+      description: string;
+      newPasswordLabel: string;
+      newPasswordPlaceholder: string;
+      confirmPasswordLabel: string;
+      confirmPasswordPlaceholder: string;
+      passwordMismatch: string;
+      resetButton: string;
+      successMessage: string;
+      errorMessage: string;
+    };
+  };
+
+  // Sidebar
+  sidebar: {
+    logo: {
+      alt: string;
+    };
+    navigation: {
+      dashboard: string;
+      campaignManagement: string;
+      allCampaigns: string;
+      campaignObjective: string;
+      programs: string;
+      campaignCatalogs: string;
+      campaignTypes: string;
+      offerManagement: string;
+      allOffers: string;
+      offerTypes: string;
+      offerCatalogs: string;
+      productManagement: string;
+      allProducts: string;
+      productTypes: string;
+      productCatalogs: string;
+      segmentManagement: string;
+      allSegments: string;
+      segmentTypes: string;
+      segmentCatalogs: string;
+      quickLists: string;
+      customer360Profile: string;
+      customers: string;
+      customerIdentity: string;
+      userManagement: string;
+      allUsers: string;
+      accessControl: string;
+      reportsAndAnalytics: string;
+      overallDashboardPerformance: string;
+      customerProfileReports: string;
+      campaignReports: string;
+      offerReports: string;
+      deliverySmsReports: string;
+      deliveryEmailReports: string;
+      infrastructure: string;
+      servers: string;
+      connectionProfiles: string;
+      dataConnectors: string;
+      jobManagement: string;
+      scheduledJobs: string;
+      jobExecutions: string;
+      jobTypes: string;
+      jobDependencies: string;
+      jobWorkflowSteps: string;
+      jobWorkflows: string;
+      manualBroadcasts: string;
+      configuration: string;
+    };
+    secondary: {
+      myProfile: string;
+      settings: string;
+    };
+    user: {
+      signOut: string;
+      defaultRole: string;
+    };
   };
 }

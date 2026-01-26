@@ -4,8 +4,10 @@ import { AlertCircle } from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CampaignApprovalHistoryPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -29,10 +31,10 @@ export default function CampaignApprovalHistoryPage() {
             />
           </div>
           <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
-            Campaign Approval History
+            {t.historyPages.approvalHistory}
           </h1>
           <p className={`mt-2 text-sm ${tw.textSecondary}`}>
-            {campaignName || "View approval history for this campaign"}
+            {t.historyPages.approvalHistoryDesc}
           </p>
         </div>
 
@@ -47,11 +49,10 @@ export default function CampaignApprovalHistoryPage() {
             <div className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-                Approval History Not Available
+                {t.historyPages.notAvailable}
               </h3>
               <p className={`text-sm ${tw.textSecondary}`}>
-                This feature is not yet implemented. The backend endpoint is
-                still under development.
+                {t.historyPages.featureNotImplemented}
               </p>
             </div>
           </div>

@@ -88,7 +88,6 @@ export default function TeamRolesPermissionsPage() {
   const userId = user?.user_id;
 
   useEffect(() => {
-    console.log("[TeamRolesPermissionsPage] userId calculated:", userId);
   }, [userId]);
 
   // Tab state
@@ -351,7 +350,6 @@ export default function TeamRolesPermissionsPage() {
         skipCache: true,
       });
 
-      console.log("Permissions loaded:", permissionsArray);
       setPermissions(Array.isArray(permissionsArray) ? permissionsArray : []);
       setPermissionsTotal(permissionsArray?.length || 0);
     } catch (err) {

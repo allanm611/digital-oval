@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { ArrowLeft, CheckCircle2, ArrowRight, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { accountService } from "../../account/services/accountService";
 import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 export default function RequestAccountPage() {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -50,7 +52,7 @@ export default function RequestAccountPage() {
     }
 
     if (!formData.email.trim()) {
-      errors.email = "Email is required";
+      errors.email = t.auth.requestAccount.emailLabel;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = "Please enter a valid email";
     }
@@ -108,8 +110,8 @@ export default function RequestAccountPage() {
 
       setRequestSubmitted(true);
       success(
-        "Account Request Submitted",
-        "Your request has been submitted successfully. You will receive a response by email shortly."
+        t.auth.requestAccount.title,
+        t.auth.requestAccount.successMessage
       );
     } catch (error: unknown) {
       console.error("Account request failed:", error);
@@ -125,14 +127,13 @@ export default function RequestAccountPage() {
         });
       } else {
         setValidationErrors({
-          general:
-            "Failed to submit account request. Please try again or contact support.",
+          general: t.auth.requestAccount.errorMessage,
         });
         // Filter out HTTP errors
         const userMessage =
           errorMessage.includes("HTTP error") ||
           errorMessage.includes("status:")
-            ? "Failed to submit account request. Please try again or contact support."
+            ? t.auth.requestAccount.errorMessage
             : errorMessage;
         showError("Request Failed", userMessage);
       }
@@ -158,7 +159,6 @@ export default function RequestAccountPage() {
 
   const goToRequestsList = () => {
     // Navigate to requests list if it exists
-    console.log("Navigate to requests list");
   };
 
   return (
@@ -176,7 +176,7 @@ export default function RequestAccountPage() {
           </div>
           <button className="btn-back-home" onClick={goHome}>
             <ArrowLeft size={16} />
-            Back to Home
+            {t.auth.requestAccount.cancelButton}
           </button>
         </div>
       </header>
@@ -188,10 +188,9 @@ export default function RequestAccountPage() {
             {/* Left side - Info */}
             <div className="info-section">
               <div className="info-content">
-                <h1 className="page-title">Request New Account</h1>
+                <h1 className="page-title">{t.auth.requestAccount.title}</h1>
                 <p className="page-subtitle">
-                  Join the Sentra platform and unlock the power of intelligent
-                  customer engagement.
+                  {t.auth.login.subheading}
                 </p>
 
                 <div className="features-list">
@@ -199,19 +198,19 @@ export default function RequestAccountPage() {
                     <div className="feature-icon">
                       <CheckCircle2 size={20} />
                     </div>
-                    <span>Advanced campaign management</span>
+                    <span>{t.auth.login.benefits.automation}</span>
                   </div>
                   <div className="feature-item">
                     <div className="feature-icon">
                       <CheckCircle2 size={20} />
                     </div>
-                    <span>Real-time analytics & insights</span>
+                    <span>{t.auth.login.benefits.insights}</span>
                   </div>
                   <div className="feature-item">
                     <div className="feature-icon">
                       <CheckCircle2 size={20} />
                     </div>
-                    <span>Unified customer view</span>
+                    <span>{t.auth.login.benefits.dataplatform}</span>
                   </div>
                   <div className="feature-item">
                     <div className="feature-icon">
@@ -230,10 +229,9 @@ export default function RequestAccountPage() {
                 style={{ display: requestSubmitted ? "none" : "block" }}
               >
                 <div className="form-header">
-                  <h2>Account Creation Request</h2>
+                  <h2>{t.auth.requestAccount.title}</h2>
                   <p>
-                    Fill out this form to request an account. Our administrator
-                    will review your request and contact you by email.
+                    {t.auth.requestAccount.title}. Our administrator will review your request and contact you by email.
                   </p>
                 </div>
 
@@ -250,7 +248,7 @@ export default function RequestAccountPage() {
                     <div className="form-row">
                       <div className="form-group">
                         <label htmlFor="firstName">
-                          First Name <span className="required">*</span>
+                          {t.auth.requestAccount.fullNameLabel.split(" ")[0]} <span className="required">*</span>
                         </label>
                         <input
                           id="firstName"
@@ -313,7 +311,7 @@ export default function RequestAccountPage() {
 
                     <div className="form-group">
                       <label htmlFor="email">
-                        Personal Email <span className="required">*</span>
+                        {t.auth.requestAccount.emailLabel} <span className="required">*</span>
                       </label>
                       <input
                         id="email"
@@ -327,7 +325,7 @@ export default function RequestAccountPage() {
                         }}
                         type="email"
                         required
-                        placeholder="your@email.com"
+                        placeholder={t.auth.requestAccount.emailPlaceholder}
                         className={validationErrors.email ? "invalid" : ""}
                       />
                       <span
@@ -362,7 +360,7 @@ export default function RequestAccountPage() {
                         className="btn-next"
                         onClick={nextStep}
                       >
-                        Continue
+                        {t.common.next}
                         <ArrowRight size={16} />
                       </button>
                     </div>
@@ -379,7 +377,7 @@ export default function RequestAccountPage() {
 
                     <div className="form-group">
                       <label htmlFor="department">
-                        Department <span className="required">*</span>
+                        {t.auth.requestAccount.departmentLabel} <span className="required">*</span>
                       </label>
                       <HeadlessSelect
                         value={formData.department}
@@ -392,7 +390,7 @@ export default function RequestAccountPage() {
                         }}
                         options={[
                           {
-                            label: "Select your department",
+                            label: t.auth.requestAccount.departmentPlaceholder,
                             value: "",
                             disabled: true,
                           },
@@ -403,7 +401,7 @@ export default function RequestAccountPage() {
                           { label: "Finance", value: "finance" },
                           { label: "Operations", value: "operations" },
                         ]}
-                        placeholder="Select your department"
+                        placeholder={t.auth.requestAccount.departmentPlaceholder}
                         error={!!validationErrors.department}
                       />
                       <span
@@ -434,7 +432,7 @@ export default function RequestAccountPage() {
                         }}
                         type="text"
                         required
-                        placeholder="E.g.: Project Manager, Analyst, etc."
+                        placeholder={t.auth.requestAccount.reasonPlaceholder}
                         className={validationErrors.position ? "invalid" : ""}
                       />
                       <span
@@ -449,7 +447,7 @@ export default function RequestAccountPage() {
 
                     <div className="form-group">
                       <label htmlFor="reason">
-                        Reason for Request <span className="required">*</span>
+                        {t.auth.requestAccount.reasonLabel} <span className="required">*</span>
                       </label>
                       <textarea
                         id="reason"
@@ -463,7 +461,7 @@ export default function RequestAccountPage() {
                         }}
                         required
                         rows={4}
-                        placeholder="Please explain why you need an account..."
+                        placeholder={t.auth.requestAccount.reasonPlaceholder}
                         className={validationErrors.reason ? "invalid" : ""}
                       />
                       <span
@@ -483,7 +481,7 @@ export default function RequestAccountPage() {
                         onClick={prevStep}
                       >
                         <ArrowLeft size={16} />
-                        Back
+                        {t.common.previous}
                       </button>
                       <button
                         type="submit"
@@ -491,11 +489,11 @@ export default function RequestAccountPage() {
                         disabled={isSubmitting}
                       >
                         {!isSubmitting ? (
-                          "Submit Request"
+                          t.auth.requestAccount.submitButton
                         ) : (
                           <span className="loading-content">
                             <div className="loading-spinner"></div>
-                            Submitting...
+                            {t.auth.requestAccount.submitButton}...
                           </span>
                         )}
                       </button>
@@ -513,21 +511,20 @@ export default function RequestAccountPage() {
                   <div className="success-icon">
                     <CheckCircle2 size={80} />
                   </div>
-                  <h2>Request Submitted Successfully!</h2>
+                  <h2>{t.auth.requestAccount.successMessage}</h2>
                   <p>
-                    Your account creation request has been submitted to our
-                    administrator. You will receive a response by email shortly.
+                    {t.auth.requestAccount.successMessage}
                   </p>
                   <div className="success-actions">
                     <button className="btn-primary" onClick={resetForm}>
-                      Submit Another Request
+                      {t.auth.requestAccount.submitButton}
                     </button>
                     <button
                       className="btn-secondary"
                       onClick={goToRequestsList}
                     >
                       <List size={18} />
-                      View All Requests
+                      {t.common.select}
                     </button>
                   </div>
                 </div>

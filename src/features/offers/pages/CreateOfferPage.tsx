@@ -1361,14 +1361,6 @@ export default function CreateOfferPage({
         try {
           const offerData = JSON.parse(savedData);
 
-          console.log("Restoring offer data after product creation:", {
-            formData: offerData.formData,
-            selectedProducts: offerData.selectedProducts?.length || 0,
-            creatives: offerData.creatives?.length || 0,
-            trackingSources: offerData.trackingSources?.length || 0,
-            rewards: offerData.rewards?.length || 0,
-          });
-
           // Restore all data
           if (offerData.formData) {
             setFormData(offerData.formData);

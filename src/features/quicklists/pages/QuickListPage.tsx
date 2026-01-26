@@ -23,6 +23,7 @@ import {
 } from "../../quicklists/types/quicklist";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 export default function QuickListPage() {
   const { t } = useLanguage();
@@ -200,7 +201,6 @@ export default function QuickListPage() {
   };
 
   const handleViewList = (list: QuickListWithDetails) => {
-    console.log("Viewing list:", list);
     // TODO: Implement view functionality
   };
 
@@ -292,13 +292,7 @@ export default function QuickListPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={openCreateModal}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            Create QuickList
-          </button>
+          <CreateButton onClick={openCreateModal} />
         </div>
       </div>
 
@@ -367,14 +361,7 @@ export default function QuickListPage() {
                 : "No QuickLists yet. Create your first QuickList to get started."}
             </p>
             {!searchQuery && (
-              <button
-                onClick={openCreateModal}
-                className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Create QuickList
-              </button>
+              <CreateButton onClick={openCreateModal} className="mx-auto" />
             )}
           </div>
         ) : (

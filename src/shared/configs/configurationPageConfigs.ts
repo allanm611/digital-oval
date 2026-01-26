@@ -1227,7 +1227,7 @@ export const campaignObjectivesConfig: ConfigurationPageConfig = {
   initialData: hardcodedObjectives,
 
   // Labels
-  createButtonText: "Create Objective",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Campaign Objective",
     edit: "Edit Campaign Objective",
@@ -1273,7 +1273,7 @@ export const departmentsConfig: ConfigurationPageConfig = {
   initialData: hardcodedDepartments,
 
   // Labels
-  createButtonText: "Create Department",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Department",
     edit: "Edit Department",
@@ -1319,7 +1319,7 @@ export const lineOfBusinessConfig: ConfigurationPageConfig = {
   initialData: hardcodedLineOfBusiness,
 
   // Labels
-  createButtonText: "Create Business Line",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Line of Business",
     edit: "Edit Line of Business",
@@ -1357,7 +1357,7 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
   icon: Share2,
   searchPlaceholder: "Search tracking sources...",
   initialData: hardcodedTrackingSources,
-  createButtonText: "Add Tracking Source",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create Tracking Source",
     edit: "Edit Tracking Source",
@@ -1391,7 +1391,7 @@ export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   icon: Palette,
   searchPlaceholder: "Search creative templates...",
   initialData: hardcodedCreativeTemplates,
-  createButtonText: "Create Creative Template",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create Creative Template",
     edit: "Edit Creative Template",
@@ -1430,7 +1430,7 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
   icon: Gift,
   searchPlaceholder: "Search reward types...",
   initialData: hardcodedRewardTypes,
-  createButtonText: "Create Reward Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create Reward Type",
     edit: "Edit Reward Type",
@@ -2089,7 +2089,7 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   initialData: hardcodedOfferTypes,
 
   // Labels
-  createButtonText: "Create Offer Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Offer Type",
     edit: "Edit Offer Type",
@@ -2136,7 +2136,7 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   initialData: hardcodedCampaignTypes,
 
   // Labels
-  createButtonText: "Create Campaign Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Campaign Type",
     edit: "Edit Campaign Type",
@@ -2183,7 +2183,7 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   initialData: hardcodedSegmentTypes,
 
   // Labels
-  createButtonText: "Create Segment Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Segment Type",
     edit: "Edit Segment Type",
@@ -2220,7 +2220,7 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
   icon: Briefcase,
   searchPlaceholder: "Search product types by name or description...",
   initialData: hardcodedProductTypes,
-  createButtonText: "Create Product Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Product Type",
     edit: "Edit Product Type",
@@ -2259,7 +2259,7 @@ export const comboTypesConfig: TypeConfigurationPageConfig = {
   icon: Briefcase,
   searchPlaceholder: "Search combo types by name or description...",
   initialData: hardcodedComboTypes,
-  createButtonText: "Create Combo Type",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Combo Type",
     edit: "Edit Combo Type",
@@ -2299,7 +2299,7 @@ export const communicationChannelsConfig: TypeConfigurationPageConfig = {
   icon: MessageSquare,
   searchPlaceholder: "Search channels...",
   initialData: hardcodedCommunicationChannels,
-  createButtonText: "Create Channel",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create Communication Channel",
     edit: "Edit Communication Channel",
@@ -2333,7 +2333,7 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   icon: MessageSquare,
   searchPlaceholder: "Search sender IDs...",
   initialData: hardcodedSenderIds,
-  createButtonText: "Create Sender ID",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Sender ID",
     edit: "Edit Sender ID",
@@ -2368,7 +2368,7 @@ export const smsRoutesConfig: TypeConfigurationPageConfig = {
   icon: MessageSquare,
   searchPlaceholder: "Search routes...",
   initialData: hardcodedSMSRoutes,
-  createButtonText: "Create Route",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New SMS Route",
     edit: "Edit SMS Route",
@@ -2420,7 +2420,7 @@ export const routesConfig: TypeConfigurationPageConfig = {
   icon: MessageSquare,
   searchPlaceholder: "Search routes...",
   initialData: hardcodedSMSRoutes,
-  createButtonText: "Create Route",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create New Route",
     edit: "Edit Route",
@@ -2659,7 +2659,7 @@ export const languagesConfig: TypeConfigurationPageConfig = {
   icon: Globe,
   searchPlaceholder: "Search languages...",
   initialData: hardcodedLanguages,
-  createButtonText: "Create Language",
+  createButtonText: "Create",
   modalTitle: {
     create: "Add Language",
     edit: "Edit Language",
@@ -2725,7 +2725,7 @@ export const characterSetsConfig: TypeConfigurationPageConfig = {
   icon: Globe,
   searchPlaceholder: "Search character sets...",
   initialData: hardcodedCharacterSets,
-  createButtonText: "Create New Character Set",
+  createButtonText: "Create",
   modalTitle: {
     create: "Create Character Set",
     edit: "Edit Character Set",
@@ -2795,7 +2795,7 @@ export function createConfigurationPageConfig(
     icon: Flag,
     searchPlaceholder: "Search items...",
     initialData: [],
-    createButtonText: "Create Item",
+    createButtonText: "Create",
     modalTitle: {
       create: "Create New Item",
       edit: "Edit Item",

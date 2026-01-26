@@ -166,9 +166,6 @@ export default function UserModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 HANDLE SUBMIT CALLED!");
-    console.log("User object:", user);
-    console.log("Form data:", formData);
     setIsLoading(true);
 
     if (!formData.primary_role_id) {
@@ -179,7 +176,6 @@ export default function UserModal({
 
     try {
       if (user) {
-        console.log("📝 Updating existing user...");
         // Update existing user
         const updateData: UpdateUserRequest = {
           first_name: formData.first_name,
@@ -202,16 +198,8 @@ export default function UserModal({
           `${formData.first_name} ${formData.last_name} has been updated successfully`,
         );
       } else {
-        console.log("✨ Creating new user...");
-        console.log(
-          "Password provided:",
-          !!formData.password,
-          "Length:",
-          formData.password?.length,
-        );
         // Create new user - need to hash password first
         if (!formData.password || formData.password.length < 8) {
-          console.log("❌ Password validation failed");
           error(
             "Validation Error",
             "Password is required and must be at least 8 characters",
@@ -221,16 +209,13 @@ export default function UserModal({
         }
 
         // Hash password using the dev endpoint
-        console.log("🔐 Starting password hash...");
         const hashResponse = await accountService.hashPassword(
           formData.password,
         );
-        console.log("🔐 Hash response:", hashResponse);
         if (!hashResponse.success) {
           console.error("❌ Hash failed:", hashResponse);
           throw new Error("Failed to hash password");
         }
-        console.log("✅ Password hashed successfully");
 
         // Get hashed password from response (API returns data.hash)
         const hashedPassword = hashResponse.data?.hash;
@@ -239,11 +224,6 @@ export default function UserModal({
           console.error("❌ No hashed password in response:", hashResponse);
           throw new Error("Failed to get hashed password from response");
         }
-
-        console.log(
-          "✅ Using hashed password:",
-          hashedPassword.substring(0, 20) + "...",
-        );
 
         const createData: CreateUserRequest = {
           username: formData.username || formData.email_address.split("@")[0],
@@ -256,10 +236,7 @@ export default function UserModal({
           department: formData.department || undefined,
         };
 
-        console.log("Creating user with data:", createData);
-        console.log("Calling userService.createUser endpoint...");
         const createResponse = await userService.createUser(createData);
-        console.log("Create user response:", createResponse);
         success(
           "User Created",
           `${formData.first_name} ${formData.last_name} has been created successfully`,

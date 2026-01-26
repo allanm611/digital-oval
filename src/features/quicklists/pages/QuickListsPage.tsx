@@ -432,14 +432,10 @@ export default function QuickListsPage() {
                 : "No QuickLists yet. Create your first QuickList to get started."}
             </p>
             {!searchTerm && (
-              <button
+              <CreateButton
                 onClick={() => setIsCreateModalOpen(true)}
-                className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Upload className="w-4 h-4" />
-                Create QuickList
-              </button>
+                className="mx-auto"
+              />
             )}
           </div>
         ) : (

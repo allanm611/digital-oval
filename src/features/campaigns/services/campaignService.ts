@@ -44,7 +44,7 @@ const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.CAMPAIGNS);
 class CampaignService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     let url = `${BASE_URL}${endpoint}`;
 
@@ -55,7 +55,7 @@ class CampaignService {
         urlObj.searchParams.delete("id");
         url = urlObj.toString();
         console.warn(
-          `Removed 'id' parameter from campaign service URL: ${endpoint}`
+          `Removed 'id' parameter from campaign service URL: ${endpoint}`,
         );
       }
     } catch {
@@ -70,7 +70,7 @@ class CampaignService {
           const newQuery = params.toString();
           url = newQuery ? `${baseUrl}?${newQuery}` : baseUrl;
           console.warn(
-            `Removed 'id' parameter from campaign service URL: ${endpoint}`
+            `Removed 'id' parameter from campaign service URL: ${endpoint}`,
           );
         }
       }
@@ -145,14 +145,14 @@ class CampaignService {
 
   private getCollection(
     path: string,
-    params?: Record<string, unknown>
+    params?: Record<string, unknown>,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
     return this.request<CampaignCollection>(`${path}${query}`);
   }
 
   async createCampaign(
-    request: CreateCampaignRequest
+    request: CreateCampaignRequest,
   ): Promise<CreateCampaignResponse> {
     const response = await this.request<CreateCampaignResponse>("/", {
       method: "POST",
@@ -164,7 +164,7 @@ class CampaignService {
 
   async updateCampaign(
     id: number,
-    request: Partial<CreateCampaignRequest>
+    request: Partial<CreateCampaignRequest>,
   ): Promise<Campaign> {
     return this.request<Campaign>(`/${id}`, {
       method: "PUT",
@@ -183,7 +183,7 @@ class CampaignService {
 
   async getCampaignById(
     id: string | number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<Campaign> {
     const params = new URLSearchParams();
     if (skipCache) params.append("skipCache", "true");
@@ -297,99 +297,99 @@ class CampaignService {
   }
 
   async getCampaignStats(
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignStatsResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignStatsResponse>(`/stats${query}`);
   }
 
   async getCampaignsActive(
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection("/active", params);
   }
 
   async getCampaignsExpired(
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection("/expired", params);
   }
 
   async getCampaignsUpcoming(
-    params?: CampaignListQuery & { days?: number }
+    params?: CampaignListQuery & { days?: number },
   ): Promise<CampaignCollection> {
     return this.getCollection("/upcoming", params);
   }
 
   async getCampaignsByStatus(
     status: CampaignStatus,
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection(`/status/${status}`, params);
   }
 
   async getPendingApprovalCampaigns(
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection("/pending-approval", params);
   }
 
   async getApprovedCampaigns(
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection("/approved", params);
   }
 
   async getRejectedCampaigns(
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection("/rejected", params);
   }
 
   async getCampaignsByCategory(
     categoryId: number,
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection(`/category/${categoryId}`, params);
   }
 
   async getCampaignsByProgram(
     programId: number,
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection(`/program/${programId}`, params);
   }
 
   async getCampaignsByManager(
     managerId: number,
-    params?: CampaignListQuery
+    params?: CampaignListQuery,
   ): Promise<CampaignCollection> {
     return this.getCollection(`/manager/${managerId}`, params);
   }
 
   async searchCampaigns(
-    params: CampaignSearchQuery
+    params: CampaignSearchQuery,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
     return this.request<CampaignCollection>(`/search${query}`);
   }
 
   async superSearchCampaigns(
-    params: CampaignSuperSearchQuery
+    params: CampaignSuperSearchQuery,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
     return this.request<CampaignCollection>(`/super-search${query}`);
   }
 
   async getCampaignsByDateRange(
-    params: CampaignDateRangeQuery
+    params: CampaignDateRangeQuery,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
     return this.request<CampaignCollection>(`/date-range${query}`);
   }
 
   async getCampaignsByBudgetRange(
-    params: CampaignBudgetRangeQuery
+    params: CampaignBudgetRangeQuery,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
     return this.request<CampaignCollection>(`/budget-range${query}`);
@@ -397,7 +397,7 @@ class CampaignService {
 
   async getCampaignByUuid(
     uuid: string,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignDetail> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignDetail>(`/uuid/${uuid}${query}`);
@@ -405,27 +405,27 @@ class CampaignService {
 
   async getCampaignByName(
     name: string,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignDetail> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignDetail>(
-      `/name/${encodeURIComponent(name)}${query}`
+      `/name/${encodeURIComponent(name)}${query}`,
     );
   }
 
   async getCampaignByCode(
     code: string,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignDetail> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignDetail>(
-      `/code/${encodeURIComponent(code)}${query}`
+      `/code/${encodeURIComponent(code)}${query}`,
     );
   }
 
   async getCampaignSegments(
     id: number,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignSegmentsResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignSegmentsResponse>(`/${id}/segments${query}`);
@@ -433,39 +433,38 @@ class CampaignService {
 
   async getCampaignPerformance(
     id: number,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignPerformanceResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignPerformanceResponse>(
-      `/${id}/performance${query}`
+      `/${id}/performance${query}`,
     );
   }
 
   async getCampaignBudgetUtilisation(
     id: number,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignBudgetUtilResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignBudgetUtilResponse>(
-      `/${id}/budget-utilization${query}`
+      `/${id}/budget-utilization${query}`,
     );
   }
 
   async getCampaignParticipantUtilisation(
     id: number,
-    skipCache: boolean = true
+    skipCache: boolean = true,
   ): Promise<CampaignParticipantUtilResponse> {
     const query = this.buildQueryString({ skipCache });
     return this.request<CampaignParticipantUtilResponse>(
-      `/${id}/participant-utilization${query}`
+      `/${id}/participant-utilization${query}`,
     );
   }
 
   async submitForApproval(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
-    console.log("Submitting campaign for approval:", { id, updatedBy });
     return this.request<CampaignDetail>(`/${id}/submit-approval`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -476,13 +475,12 @@ class CampaignService {
 
   async approveCampaign(
     id: number,
-    payload: { approved_by?: number; comments?: string } | number = 1
+    payload: { approved_by?: number; comments?: string } | number = 1,
   ): Promise<CampaignDetail> {
     // Support both old signature (number) and new signature (object)
     const approvedBy =
-      typeof payload === "number" ? payload : payload.approved_by ?? 1;
+      typeof payload === "number" ? payload : (payload.approved_by ?? 1);
 
-    console.log("Approving campaign:", { id, approved_by: approvedBy });
     return this.request<CampaignDetail>(`/${id}/approve`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -497,7 +495,7 @@ class CampaignService {
     payload:
       | { rejected_by?: number; comments?: string; rejection_reason?: string }
       | number,
-    rejectionReason?: string
+    rejectionReason?: string,
   ): Promise<CampaignDetail> {
     // Support multiple signatures:
     // 1. rejectCampaign(id, { comments: "...", rejected_by: 1 })
@@ -519,11 +517,6 @@ class CampaignService {
       throw new Error("Rejection reason or comments is required");
     }
 
-    console.log("Rejecting campaign:", {
-      id,
-      rejected_by: rejectedBy,
-      rejection_reason: reason,
-    });
     return this.request<CampaignDetail>(`/${id}/reject`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -536,9 +529,8 @@ class CampaignService {
 
   async activateCampaign(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
-    console.log("Activating campaign:", { id, updatedBy });
     return this.request<CampaignDetail>(`/${id}/activate`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -549,14 +541,13 @@ class CampaignService {
 
   async pauseCampaign(
     id: number,
-    payloadOrUpdatedBy: number | Record<string, unknown> = 1
+    payloadOrUpdatedBy: number | Record<string, unknown> = 1,
   ): Promise<CampaignDetail> {
     const payload =
       typeof payloadOrUpdatedBy === "number"
         ? { updated_by: payloadOrUpdatedBy }
         : { updated_by: 1, ...payloadOrUpdatedBy };
 
-    console.log("Pausing campaign:", { id, payload });
     return this.request<CampaignDetail>(`/${id}/pause`, {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -565,9 +556,8 @@ class CampaignService {
 
   async completeCampaign(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
-    console.log("Completing campaign:", { id, updatedBy });
     return this.request<CampaignDetail>(`/${id}/complete`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -578,7 +568,7 @@ class CampaignService {
 
   async resumeCampaign(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
     // Resume by updating status to "active" or using activate endpoint
     return this.request<CampaignDetail>(`/${id}/activate`, {
@@ -591,9 +581,8 @@ class CampaignService {
 
   async archiveCampaign(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
-    console.log("Archiving campaign:", { id, updatedBy });
     return this.request<CampaignDetail>(`/${id}/archive`, {
       method: "PATCH",
       body: JSON.stringify({
@@ -605,7 +594,7 @@ class CampaignService {
   async updateCampaignStatus(
     id: number,
     status: CampaignStatus,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/status`, {
       method: "PATCH",
@@ -616,7 +605,7 @@ class CampaignService {
   async updateCampaignBudget(
     id: number,
     budget_allocated: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/budget`, {
       method: "PATCH",
@@ -627,7 +616,7 @@ class CampaignService {
   async updateCampaignSpentBudget(
     id: number,
     budget_spent: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/spent-budget`, {
       method: "PATCH",
@@ -638,7 +627,7 @@ class CampaignService {
   async updateCampaignParticipants(
     id: number,
     current_participants: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/participants`, {
       method: "PATCH",
@@ -652,7 +641,7 @@ class CampaignService {
       control_group_enabled: boolean;
       control_group_percentage?: number;
       updated_by?: number;
-    }
+    },
   ): Promise<CampaignDetail> {
     const body = {
       updated_by: payload.updated_by ?? 1,
@@ -672,7 +661,7 @@ class CampaignService {
       is_primary?: boolean;
       include_exclude?: "include" | "exclude";
       created_by?: number;
-    }
+    },
   ): Promise<Record<string, unknown>> {
     return this.request<Record<string, unknown>>(`/${id}/segments`, {
       method: "POST",
@@ -723,7 +712,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -755,7 +744,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -764,26 +753,14 @@ class CampaignService {
 
   async updateCampaignCategory(
     id: number,
-    request: { name?: string; description?: string; is_active?: boolean }
+    request: { name?: string; description?: string; is_active?: boolean },
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories/${id}`;
-
-    console.log("Updating campaign category:", {
-      id,
-      request,
-      url: categoriesUrl,
-    });
 
     const response = await fetch(categoriesUrl, {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(request),
-    });
-
-    console.log("Update response:", {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
     });
 
     if (!response.ok) {
@@ -806,7 +783,7 @@ class CampaignService {
         if (err instanceof Error && err.message.includes("JSON")) {
           const errorText = await response.text();
           throw new Error(
-            errorText || `Failed to update category: ${response.status}`
+            errorText || `Failed to update category: ${response.status}`,
           );
         }
         if (err instanceof Error) {
@@ -829,17 +806,9 @@ class CampaignService {
   async deleteCampaignCategory(id: number): Promise<void> {
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories/${id}`;
 
-    console.log("Deleting campaign category:", { id, url: categoriesUrl });
-
     const response = await fetch(categoriesUrl, {
       method: "DELETE",
       headers: getAuthHeaders(),
-    });
-
-    console.log("Delete response:", {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
     });
 
     if (!response.ok) {
@@ -851,7 +820,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `Failed to delete category: ${response.status} - ${errorBody}`
+        `Failed to delete category: ${response.status} - ${errorBody}`,
       );
     }
 
@@ -863,7 +832,7 @@ class CampaignService {
    */
   async getCampaignCategoryById(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories/${id}${
       skipCache ? "?skipCache=true" : ""
@@ -883,7 +852,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -894,7 +863,7 @@ class CampaignService {
    * Get campaign category tree
    */
   async getCampaignCategoryTree(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories/tree${
       skipCache ? "?skipCache=true" : ""
@@ -914,7 +883,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -926,7 +895,7 @@ class CampaignService {
    */
   async getCampaignCategoryChildren(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${
       API_CONFIG.BASE_URL
@@ -946,7 +915,7 @@ class CampaignService {
         url: categoriesUrl,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -976,7 +945,7 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -1006,7 +975,7 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -1022,7 +991,7 @@ class CampaignService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<Record<string, unknown>> {
     const queryParams = new URLSearchParams();
     queryParams.append("searchTerm", searchTerm);
@@ -1040,7 +1009,7 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -1051,7 +1020,7 @@ class CampaignService {
    * Get campaign category statistics
    */
   async getCampaignCategoryStats(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${API_CONFIG.BASE_URL}/campaign-categories/stats${
       skipCache ? "?skipCache=true" : ""
@@ -1065,7 +1034,7 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -1077,7 +1046,7 @@ class CampaignService {
    */
   async getCampaignCategoryByName(
     name: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const categoriesUrl = `${
       API_CONFIG.BASE_URL
@@ -1093,7 +1062,7 @@ class CampaignService {
     if (!response.ok) {
       const errorBody = await response.text();
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -1104,10 +1073,8 @@ class CampaignService {
    * Execute a campaign
    */
   async executeCampaign(
-    request: CampaignExecutionRequestPayload
+    request: CampaignExecutionRequestPayload,
   ): Promise<CampaignExecutionResponse> {
-    console.log("Executing campaign:", request);
-
     return this.request<CampaignExecutionResponse>("/execute", {
       method: "POST",
       body: JSON.stringify(request),

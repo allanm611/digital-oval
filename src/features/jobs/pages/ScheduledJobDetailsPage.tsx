@@ -176,7 +176,6 @@ export default function ScheduledJobDetailsPage() {
     setIsLoading(true);
     try {
       const data = await scheduledJobService.getScheduledJobById(Number(id));
-      console.log("Loaded job data:", data); // Debug log
       setJob(data);
 
       // Fetch user names for created_by and updated_by

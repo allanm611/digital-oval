@@ -8,7 +8,8 @@ export type DataConnectorType =
   | "jdbc"
   | "sms_inbox"
   | "api"
-  | "files";
+  | "files"
+  | "digital_tags";
 
 export interface DataConnector {
   id: string;

@@ -2,10 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
+  // ArrowLeft,
   Edit,
   LucideIcon,
-  Plus,
   Search,
   Trash2,
   X,
@@ -19,6 +18,7 @@ import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import BackButton from "./ui/BackButton";
+import CreateButton from "./ui/CreateButton";
 
 export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
@@ -1178,16 +1178,7 @@ export default function TypeConfigurationPage({
           </div>
         </div>
         <div className="flex items-center gap-3 w-auto">
-          {!config.disableCreate && (
-            <button
-              onClick={handleCreateItem}
-              className={`inline-flex items-center gap-2 px-4 py-2 ${tw.rounded} font-semibold text-sm text-white w-auto`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-4 h-4" />
-              {config.createButtonText}
-            </button>
-          )}
+          {!config.disableCreate && <CreateButton onClick={handleCreateItem} />}
         </div>
       </div>
 
@@ -1223,14 +1214,7 @@ export default function TypeConfigurationPage({
                 : `Create your first ${config.entityName} to get started.`}
             </p>
             {!searchTerm && !config.disableCreate && (
-              <button
-                onClick={handleCreateItem}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                {config.createButtonText}
-              </button>
+              <CreateButton onClick={handleCreateItem} className="mx-auto" />
             )}
           </div>
         ) : (

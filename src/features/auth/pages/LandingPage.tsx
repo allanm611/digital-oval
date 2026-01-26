@@ -13,9 +13,11 @@ import {
   Star,
 } from "lucide-react";
 import AnimatedButton from "../../../shared/components/ui/AnimatedButton";
-
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { tw } from '../../../shared/utils/utils';
+
 export default function LandingPage() {
+  const { t } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -25,61 +27,57 @@ export default function LandingPage() {
   const modules = [
     {
       icon: Target,
-      title: "Campaign Management",
-      description:
-        "Design, execute, and monitor sophisticated customer engagement campaigns with precision targeting and real-time optimization.",
+      title: t.landing.campaignManagement,
+      description: t.landing.campaignManagementDesc,
       features: [
-        "Multi-channel campaigns",
-        "A/B testing",
-        "Performance tracking",
-        "Campaign templates",
+        t.landing.multiChannelCampaigns,
+        t.landing.aBTesting,
+        t.landing.performanceTracking,
+        t.landing.campaignTemplates,
       ],
     },
     {
       icon: MessageSquare,
-      title: "Offer Management",
-      description:
-        "Create and manage personalized offers with dynamic eligibility rules and multi-language support for maximum customer engagement.",
+      title: t.landing.offerManagement,
+      description: t.landing.offerManagementDesc,
       features: [
-        "Dynamic offers",
-        "Eligibility rules",
-        "Multi-language support",
-        "Product integration",
+        t.landing.dynamicOffers,
+        t.landing.eligibilityRules,
+        t.landing.multiLanguageSupport,
+        t.landing.productIntegration,
       ],
     },
     {
       icon: Users,
-      title: "Segment Management",
-      description:
-        "Build dynamic customer segments using advanced behavioral data and real-time event triggers for precise targeting.",
+      title: t.landing.segmentManagement,
+      description: t.landing.segmentManagementDesc,
       features: [
-        "Dynamic segmentation",
-        "Real-time updates",
-        "Behavioral targeting",
-        "Custom audiences",
+        t.landing.dynamicSegmentation,
+        t.landing.realtimeUpdates,
+        t.landing.behavioralTargeting,
+        t.landing.customAudiences,
       ],
     },
     {
       icon: BarChart3,
-      title: "Analytics & Reporting",
-      description:
-        "Deep insights into campaign performance, customer behavior, and ROI with comprehensive dashboards and custom reports.",
+      title: t.landing.analyticsReporting,
+      description: t.landing.analyticsReportingDesc,
       features: [
-        "Real-time analytics",
-        "Custom dashboards",
-        "ROI tracking",
-        "Predictive insights",
+        t.landing.realtimeAnalytics,
+        t.landing.customDashboards,
+        t.landing.roiTracking,
+        t.landing.predictiveInsights,
       ],
     },
   ];
 
   const features = [
-    "Advanced customer segmentation and targeting",
-    "Multi-channel campaign orchestration",
-    "Real-time performance monitoring and optimization",
-    "Automated offer personalization and delivery",
-    "Comprehensive analytics and reporting suite",
-    "Enterprise-grade security and compliance",
+    t.landing.advancedCustomerSegmentation,
+    t.landing.multiChannelOrchestration,
+    t.landing.realtimePerformance,
+    t.landing.automatedOfferPersonalization,
+    t.landing.comprehensiveAnalytics,
+    t.landing.enterpriseGradeSecurity,
   ];
 
   return (
@@ -110,7 +108,7 @@ export default function LandingPage() {
                 to="/login"
                 className={`text-secondary-600 hover:text-secondary-900 px-4 py-2 text-base font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/50`}
               >
-                Sign In
+                {t.landing.signIn}
               </Link>
               <AnimatedButton
                 variant="primary"
@@ -119,7 +117,7 @@ export default function LandingPage() {
                 icon={ArrowRight}
                 onClick={() => (window.location.href = "/request-account")}
               >
-                Request Access
+                {t.landing.requestAccess}
               </AnimatedButton>
             </div>
           </div>
@@ -154,7 +152,7 @@ export default function LandingPage() {
                 to="/login"
                 className={`text-secondary-600 hover:text-secondary-900 px-3 py-2 text-sm font-semibold transition-all duration-300 ${tw.rounded} hover:bg-white/50`}
               >
-                Sign In
+                {t.landing.signIn}
               </Link>
               <AnimatedButton
                 variant="primary"
@@ -163,7 +161,7 @@ export default function LandingPage() {
                 icon={ArrowRight}
                 onClick={() => (window.location.href = "/request-account")}
               >
-                Request Access
+                {t.landing.requestAccess}
               </AnimatedButton>
             </div>
           </div>
@@ -210,30 +208,28 @@ export default function LandingPage() {
           <div className="text-center">
             <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-100 to-green-100 text-[#1a3d2e] rounded-full text-sm font-semibold mb-8 shadow-lg border border-emerald-200/50">
               <Sparkles className="w-4 h-4 mr-2 text-emerald-600 animate-pulse" />
-              Next-Generation CVM Platform
+              {t.landing.nextGenPlatform}
             </div>
             <h1
               className={`${tw.mainHeading} text-gray-900 mb-6 leading-tight`}
             >
-              Transform Your <br />
-              <span className="text-[#1a3d2e]">Customer Value Management</span>
+              {t.landing.transformCustomerValue} <br />
+              <span className="text-[#1a3d2e]">{t.landing.customerValueManagement}</span>
             </h1>
             <p className="text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Sentra empowers businesses to create, manage, and optimize
-              customer engagement campaigns with precision targeting, real-time
-              analytics, and automated personalization at scale.
+              {t.landing.heroDescription}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <Link
                 to="/request-account"
                 className={`inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-100 to-green-100 text-[#1a3d2e] font-semibold ${tw.rounded} shadow-lg border border-emerald-200/50 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:from-emerald-200 hover:to-green-200 hover:animate-slow-bounce`}
               >
-                Get Started Today
+                {t.landing.getStartedToday}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <button className={`inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold ${tw.rounded} hover:bg-gray-50 transition-all duration-200`}>
                 <Play className="mr-2 h-5 w-5" />
-                Watch Demo
+                {t.landing.watchDemo}
               </button>
             </div>
           </div>
@@ -245,12 +241,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
           <div className="text-center mb-16">
             <h2 className={`${tw.mainHeading} text-gray-900 mb-4`}>
-              Everything you need to maximize{" "}
+              {t.landing.everythingYouNeed}{" "}
               <span className="text-[#1a3d2e]">customer value</span>
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Our comprehensive platform provides all the tools and insights
-              needed to drive customer engagement and business growth.
+              {t.landing.ourComprehensive}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -271,12 +266,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
           <div className="text-center mb-16">
             <h2 className={`${tw.mainHeading} text-gray-900 mb-4`}>
-              Powerful <span className="text-[#1a3d2e]">Modules</span> for Every
+              {t.landing.powerfulModules} <span className="text-[#1a3d2e]">Modules</span> for Every
               Need
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Explore our comprehensive suite of modules designed to optimize
-              every aspect of your customer value management strategy.
+              {t.landing.exploreComprehensive}
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -328,20 +322,19 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-8">
           <div className="text-center mb-12">
             <h2 className={`${tw.mainHeading} text-white mb-4`}>
-              Trusted by{" "}
-              <span className="text-emerald-300">Leading Organizations</span>
+              {t.landing.trustedByLeaders}{" "}
+              <span className="text-emerald-300">{t.landing.leadingOrganizations}</span>
             </h2>
             <p className="text-lg text-white/90 max-w-2xl mx-auto">
-              Join thousands of businesses using Sentra to drive customer
-              engagement and growth.
+              {t.landing.joinThousands}
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { value: "500K+", label: "Campaigns Executed" },
-              { value: "2.5M+", label: "Customers Reached" },
-              { value: "98.5%", label: "Platform Uptime" },
-              { value: "45%", label: "Average ROI Increase" },
+              { value: "500K+", label: t.landing.campaignsExecuted },
+              { value: "2.5M+", label: t.landing.customersReached },
+              { value: "98.5%", label: t.landing.platformUptime },
+              { value: "45%", label: t.landing.averageROIIncrease },
             ].map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-4xl font-bold text-white mb-2">
@@ -363,20 +356,18 @@ export default function LandingPage() {
             ))}
           </div>
           <h2 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6 font-active-grotesk">
-            Ready to revolutionize your{" "}
-            <span className="text-[#1a3d2e]">customer engagement</span>?
+            {t.landing.readyToRevolutionize}{" "}
+            <span className="text-[#1a3d2e]">{t.landing.customerEngagement}</span>
           </h2>
           <p className="text-xl text-gray-600 mb-12 leading-relaxed">
-            Join leading organizations worldwide and start maximizing your
-            customer value today. Our team is ready to help you get started with
-            Sentra.
+            {t.landing.readyDescription}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/request-account"
               className={`inline-flex items-center px-4 py-2 bg-[#3b8169] hover:bg-[#2d5f4e] text-white font-semibold ${tw.rounded} shadow-lg transition-all duration-200 transform hover:scale-105 text-base`}
             >
-              Start Your Journey
+              {t.landing.startYourJourney}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
             <Link
@@ -384,7 +375,7 @@ export default function LandingPage() {
               className={`inline-flex items-center px-6 py-4 border border-gray-300 text-gray-700 font-semibold ${tw.rounded} hover:bg-gray-50 transition-all duration-200`}
             >
               <Shield className="mr-2 h-5 w-5" />
-              Existing User? Sign In
+              {t.landing.existingUser}
             </Link>
           </div>
         </div>
@@ -404,7 +395,7 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="text-gray-400">
-              <p>&copy; 2025 Sentra CVM Platform. All rights reserved.</p>
+              <p dangerouslySetInnerHTML={{ __html: t.landing.copyrightNotice }}></p>
             </div>
           </div>
         </div>

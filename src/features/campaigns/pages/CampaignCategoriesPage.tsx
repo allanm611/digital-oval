@@ -8,7 +8,6 @@ import React, {
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
-  Plus,
   Search,
   Edit,
   Trash2,
@@ -26,6 +25,7 @@ import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog
 import { campaignService } from "../services/campaignService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import { BackendCampaignType } from "../types/campaign";
 import {
   FolderOpen,
@@ -187,14 +187,14 @@ function CategoryModal({
               {isSaving
                 ? "Saving..."
                 : category
-                ? "Update Category"
-                : "Create Category"}
+                  ? "Update Category"
+                  : "Create Category"}
             </button>
           </div>
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -222,7 +222,7 @@ export default function CampaignCategoriesPage() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
-    null
+    null,
   );
   const [stats, setStats] = useState<{
     totalCategories: number;
@@ -273,9 +273,8 @@ export default function CampaignCategoriesPage() {
   const loadStats = useCallback(async (skipCache = false) => {
     try {
       // Use backend endpoint for stats instead of calculating manually
-      const statsResponse = await campaignService.getCampaignCategoryStats(
-        skipCache
-      );
+      const statsResponse =
+        await campaignService.getCampaignCategoryStats(skipCache);
 
       if (statsResponse.success && statsResponse.data) {
         const data = statsResponse.data as {
@@ -338,7 +337,7 @@ export default function CampaignCategoriesPage() {
   // Same logic as segments - supports multi-catalog assignment via tags
   const getCampaignCountForCategory = (
     categoryId: number,
-    campaigns: BackendCampaignType[]
+    campaigns: BackendCampaignType[],
   ) => {
     const catalogTag = buildCatalogTag(categoryId);
     return campaigns.filter((campaign) => {
@@ -374,7 +373,7 @@ export default function CampaignCategoriesPage() {
             debouncedSearchTerm,
             {
               skipCache: skipCache,
-            }
+            },
           );
         } else {
           response = await campaignService.getCampaignCategories({
@@ -415,13 +414,13 @@ export default function CampaignCategoriesPage() {
           (category: CampaignCategory) => {
             const count = getCampaignCountForCategory(
               category.id,
-              allCampaigns
+              allCampaigns,
             );
             return {
               ...category,
               campaign_count: count,
             };
-          }
+          },
         );
 
         setCampaignCategories(categoriesWithCounts);
@@ -432,14 +431,14 @@ export default function CampaignCategoriesPage() {
         console.error("Failed to load Campaigns catalogs:", err);
         showError(
           "Failed to load Campaigns catalogs",
-          "Please try again later."
+          "Please try again later.",
         );
         setCampaignCategories([]);
       } finally {
         setLoading(false);
       }
     },
-    [debouncedSearchTerm, showError, loadStats]
+    [debouncedSearchTerm, showError, loadStats],
   );
 
   useEffect(() => {
@@ -506,7 +505,7 @@ export default function CampaignCategoriesPage() {
       await loadCategories(true); // skipCache = true
       showToast(
         "Category Deleted",
-        `"${categoryToDelete.name}" has been deleted successfully.`
+        `"${categoryToDelete.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       setCategoryToDelete(null);
@@ -537,7 +536,7 @@ export default function CampaignCategoriesPage() {
           newActiveStatus ? "Category Activated" : "Category Deactivated",
           `"${category.name}" has been ${
             newActiveStatus ? "activated" : "deactivated"
-          } successfully.`
+          } successfully.`,
         );
       } catch (err) {
         console.error("Failed to toggle category status:", err);
@@ -549,7 +548,7 @@ export default function CampaignCategoriesPage() {
         setTogglingCategoryId(null);
       }
     },
-    [loadCategories, showToast, showError]
+    [loadCategories, showToast, showError],
   );
 
   const handleCategorySaved = useCallback(
@@ -560,7 +559,7 @@ export default function CampaignCategoriesPage() {
           // Update existing category
           await campaignService.updateCampaignCategory(
             editingCategory.id,
-            categoryData
+            categoryData,
           );
           await loadCategories(true);
           showToast("Category updated successfully");
@@ -601,7 +600,7 @@ export default function CampaignCategoriesPage() {
         setIsSaving(false);
       }
     },
-    [editingCategory, loadCategories, showToast, showError, user]
+    [editingCategory, loadCategories, showToast, showError, user],
   );
 
   const handleViewCampaigns = useCallback(
@@ -681,7 +680,7 @@ export default function CampaignCategoriesPage() {
         setCampaignsLoading(false);
       }
     },
-    [showError]
+    [showError],
   );
 
   const handleRemoveCampaign = useCallback(
@@ -703,11 +702,12 @@ export default function CampaignCategoriesPage() {
         },
         getEntityById: async (id) =>
           await campaignService.getCampaignById(id, true),
-        updateEntity: async (id, updates) =>
-          await campaignService.updateCampaign(id, updates),
+        updateEntity: async (id, updates) => {
+          await campaignService.updateCampaign(id, updates);
+        },
       });
     },
-    [selectedCategory, removeFromCatalog, handleViewCampaigns, loadCategories]
+    [selectedCategory, removeFromCatalog, handleViewCampaigns, loadCategories],
   );
 
   const filteredCampaignCategories = useMemo(() => {
@@ -715,14 +715,16 @@ export default function CampaignCategoriesPage() {
       (category) =>
         category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (category?.description &&
-          category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+          category.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())),
     );
   }, [campaignCategories, searchTerm]);
 
   const formatNumber = useCallback(
     (value?: number | null) =>
       typeof value === "number" ? value.toLocaleString() : "...",
-    []
+    [],
   );
 
   const catalogStatsCards = useMemo(
@@ -761,7 +763,7 @@ export default function CampaignCategoriesPage() {
         valueClass: "text-xl",
       },
     ],
-    [stats, unusedCount, popularCategory, formatNumber]
+    [stats, unusedCount, popularCategory, formatNumber],
   );
 
   return (
@@ -786,19 +788,7 @@ export default function CampaignCategoriesPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button
-            onClick={handleCreateCategory}
-            className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 text-sm text-white whitespace-nowrap w-auto`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">
-              {t.campaignCatalogs.createCatalog}
-            </span>
-            <span className="sm:hidden">
-              {t.campaignCatalogs.createCatalog}
-            </span>
-          </button>
+          <CreateButton onClick={handleCreateCategory} />
         </div>
       </div>
 
@@ -920,16 +910,7 @@ export default function CampaignCategoriesPage() {
               ? "Try adjusting your search terms"
               : "Create your first campaign catalog to organize your campaigns"}
           </p>
-          {!searchTerm && (
-            <button
-              onClick={handleCreateCategory}
-              className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-all`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create Your First Catalog
-            </button>
-          )}
+          {!searchTerm && <CreateButton onClick={handleCreateCategory} />}
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1122,8 +1103,8 @@ export default function CampaignCategoriesPage() {
               campaign.status === "active"
                 ? "bg-green-100 text-green-800"
                 : campaign.status === "draft"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-gray-100 text-gray-800"
             }`}
           >
             {campaign.status || "unknown"}

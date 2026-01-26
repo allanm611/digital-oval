@@ -317,12 +317,9 @@ function CreateControlGroupModal({
   };
 
   const handleNext = () => {
-    console.log("handleNext called, currentStep:", currentStep);
     if (currentStep < 3 && canProceedToNextStep()) {
       setCurrentStep(currentStep + 1);
-      console.log("Moving to step:", currentStep + 1);
     } else {
-      console.log("Cannot proceed - validation failed or at last step");
     }
   };
 

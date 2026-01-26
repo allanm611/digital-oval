@@ -58,7 +58,6 @@ export default function QuickListDetailsModal({
         quicklist.id,
         true
       );
-      console.log("QuickList details from API:", response.data);
       setCurrentQuickList(response.data);
     } catch (err) {
       console.error("Failed to load quicklist details:", err);
@@ -73,14 +72,11 @@ export default function QuickListDetailsModal({
       const response = await quicklistService.getQuickListData(quicklist.id, {
         limit: 50,
       });
-      console.log("QuickList data received:", response);
       setData(response.data || []);
 
       // Extract columns from data and update metadata
       if (response.data && response.data.length > 0) {
         const firstRow = response.data[0];
-        console.log("First row:", firstRow);
-        console.log("First row keys:", Object.keys(firstRow));
 
         // Get all keys except metadata fields
         const extractedColumns = Object.keys(firstRow).filter(
@@ -88,7 +84,6 @@ export default function QuickListDetailsModal({
             !["id", "quicklist_id", "created_at", "row_number"].includes(key)
         );
 
-        console.log("Extracted columns:", extractedColumns);
 
         // Update currentQuickList with extracted columns and row count from pagination
         setCurrentQuickList((prev) => {
@@ -98,7 +93,6 @@ export default function QuickListDetailsModal({
             column_count: extractedColumns.length,
             row_count: response.pagination?.total || response.data.length,
           };
-          console.log("Updated currentQuickList:", updated);
           return updated;
         });
       }

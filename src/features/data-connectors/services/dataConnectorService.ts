@@ -1,5 +1,9 @@
 import { DataConnector, DataConnectorType } from "../types";
-import { getConnectorIcon, getConnectorDisplayName, getConnectorDescription } from "../utils/connectorIcons";
+import {
+  getConnectorIcon,
+  getConnectorDisplayName,
+  getConnectorDescription,
+} from "../utils/connectorIcons";
 
 // Mock data for demonstration - in a real app, this would come from an API
 const mockConnectors: DataConnector[] = [
@@ -80,6 +84,17 @@ const mockConnectors: DataConnector[] = [
     lastUsed: new Date("2026-01-11"),
     connectionCount: 2,
   },
+  {
+    id: "8",
+    name: "Digital Plus Tags",
+    type: "digital_tags",
+    description: getConnectorDescription("digital_tags"),
+    icon: getConnectorIcon("digital_tags").icon,
+    color: getConnectorIcon("digital_tags").color,
+    isActive: true,
+    lastUsed: new Date("2026-01-19"),
+    connectionCount: 8,
+  },
 ];
 
 export interface FetchDataConnectorsParams {
@@ -100,24 +115,24 @@ export interface DataConnectorsResponse {
  * Fetch data connectors with optional filtering
  */
 export const fetchDataConnectors = async (
-  params: FetchDataConnectorsParams = {}
+  params: FetchDataConnectorsParams = {},
 ): Promise<DataConnectorsResponse> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   let filteredConnectors = [...mockConnectors];
 
   // Filter by type
   if (params.type) {
     filteredConnectors = filteredConnectors.filter(
-      connector => connector.type === params.type
+      (connector) => connector.type === params.type,
     );
   }
 
   // Filter by active status
   if (params.isActive !== undefined) {
     filteredConnectors = filteredConnectors.filter(
-      connector => connector.isActive === params.isActive
+      (connector) => connector.isActive === params.isActive,
     );
   }
 
@@ -125,10 +140,12 @@ export const fetchDataConnectors = async (
   if (params.search) {
     const searchLower = params.search.toLowerCase();
     filteredConnectors = filteredConnectors.filter(
-      connector =>
+      (connector) =>
         connector.name.toLowerCase().includes(searchLower) ||
         connector.description.toLowerCase().includes(searchLower) ||
-        getConnectorDisplayName(connector.type).toLowerCase().includes(searchLower)
+        getConnectorDisplayName(connector.type)
+          .toLowerCase()
+          .includes(searchLower),
     );
   }
 
@@ -148,29 +165,37 @@ export const fetchDataConnectors = async (
  * Get a single data connector by ID
  */
 export const fetchDataConnectorById = async (
-  id: string
+  id: string,
 ): Promise<DataConnector | null> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
-  return mockConnectors.find(connector => connector.id === id) || null;
+  return mockConnectors.find((connector) => connector.id === id) || null;
 };
 
 /**
  * Get available connector types
  */
 export const getAvailableConnectorTypes = (): DataConnectorType[] => {
-  return ["jdbc", "api", "kafka", "websocket", "tcp", "files", "sms_inbox"] as DataConnectorType[];
+  return [
+    "jdbc",
+    "api",
+    "kafka",
+    "websocket",
+    "tcp",
+    "files",
+    "sms_inbox",
+  ] as DataConnectorType[];
 };
 
 /**
  * Create a new data connector
  */
 export const createDataConnector = async (
-  connectorData: Omit<DataConnector, "id" | "icon" | "color">
+  connectorData: Omit<DataConnector, "id" | "icon" | "color">,
 ): Promise<DataConnector> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 800));
 
   const newConnector: DataConnector = {
     ...connectorData,
@@ -190,12 +215,12 @@ export const createDataConnector = async (
  */
 export const updateDataConnector = async (
   id: string,
-  updates: Partial<Omit<DataConnector, "id" | "icon" | "color">>
+  updates: Partial<Omit<DataConnector, "id" | "icon" | "color">>,
 ): Promise<DataConnector | null> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise((resolve) => setTimeout(resolve, 600));
 
-  const connectorIndex = mockConnectors.findIndex(c => c.id === id);
+  const connectorIndex = mockConnectors.findIndex((c) => c.id === id);
   if (connectorIndex === -1) {
     return null;
   }
@@ -215,9 +240,9 @@ export const updateDataConnector = async (
  */
 export const deleteDataConnector = async (id: string): Promise<boolean> => {
   // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
-  const connectorIndex = mockConnectors.findIndex(c => c.id === id);
+  const connectorIndex = mockConnectors.findIndex((c) => c.id === id);
   if (connectorIndex === -1) {
     return false;
   }

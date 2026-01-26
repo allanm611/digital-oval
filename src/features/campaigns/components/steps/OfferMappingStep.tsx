@@ -122,10 +122,6 @@ export default function OfferMappingStep({
       if (segmentToMap) {
         // Use a delay to ensure everything is fully mounted and data is restored
         const timer = setTimeout(() => {
-          console.log(
-            "Auto-opening offer selection modal with segment:",
-            segmentToMap
-          );
           setEditingSegmentId(segmentToMap);
           setShowOfferModal(true);
         }, 800); // Increased delay to ensure data restoration is complete
@@ -435,10 +431,7 @@ export default function OfferMappingStep({
                 controlGroup: JSON.parse(JSON.stringify(controlGroup)),
                 currentStep: 3,
               };
-              console.log(
-                "Saving campaign data before navigating:",
-                campaignData
-              );
+
               sessionStorage.setItem(
                 "campaignFormData",
                 JSON.stringify(campaignData)

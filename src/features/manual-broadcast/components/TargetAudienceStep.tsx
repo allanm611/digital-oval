@@ -111,7 +111,7 @@ export default function TargetAudienceStep({
       } else if (inputMethod === "manual" && !validateManualInput()) {
         setError("Please enter valid emails or phone numbers (one per line)");
       } else if (!listName.trim()) {
-        setError("Please enter a list name");
+        setError("Please enter a broadcast name");
       } else if (listType === "") {
         setError("Please select a list type");
       } else if (inputMethod === "") {
@@ -178,10 +178,10 @@ export default function TargetAudienceStep({
       </div>
 
       <div className="p-6 space-y-6">
-        {/* List Name */}
+        {/* Broadcast Name */}
         <div>
           <label className="text-sm font-medium text-gray-900 block mb-1">
-            List Name *
+            Broadcast Name *
           </label>
           <input
             type="text"
@@ -326,8 +326,15 @@ export default function TargetAudienceStep({
                     className="font-medium"
                     style={{ color: color.primary.accent }}
                   >
-                    {manualInput.split("\n").filter((line) => line.trim()).length}{" "}
-                    line{manualInput.split("\n").filter((line) => line.trim()).length !== 1 ? "s" : ""}
+                    {
+                      manualInput.split("\n").filter((line) => line.trim())
+                        .length
+                    }{" "}
+                    line
+                    {manualInput.split("\n").filter((line) => line.trim())
+                      .length !== 1
+                      ? "s"
+                      : ""}
                   </span>
                 </div>
               </div>

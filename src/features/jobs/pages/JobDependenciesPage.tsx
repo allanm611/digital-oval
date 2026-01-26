@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -163,10 +164,6 @@ function JobDependencyModal({
 
     setError(null);
 
-    console.log("🔵 JOB DEPENDENCY MODAL - Submitting payload:");
-    console.log("User object:", user);
-    console.log("user.user_id:", user.user_id);
-
     try {
       const payload = {
         job_id: Number(jobId),
@@ -178,8 +175,6 @@ function JobDependencyModal({
         is_active: isActive,
         userId: user.user_id, // Fixed: use user_id instead of id
       };
-
-      console.log("Payload being sent:", JSON.stringify(payload, null, 2));
 
       await onSubmit(payload);
     } catch (err) {
@@ -1504,8 +1499,6 @@ export default function JobDependenciesPage() {
         jobId,
         true,
       );
-      console.log("🔵 DEPENDENCY STATUS - Response:", response);
-      console.log("Response.data:", response.data);
 
       // Response.data is an object with summary statistics, not an array
       setStatusData(
@@ -1768,15 +1761,7 @@ export default function JobDependenciesPage() {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Analytics</span>
           </button>
-          <button
-            onClick={handleCreate}
-            className={`px-3 sm:px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Create Dependency</span>
-            <span className="sm:hidden">Create</span>
-          </button>
+          <CreateButton onClick={handleCreate} />
         </div>
       </div>
 
@@ -1995,14 +1980,7 @@ export default function JobDependenciesPage() {
                 : "Create your first job dependency to get started."}
             </p>
             {!searchTerm && (
-              <button
-                onClick={handleCreate}
-                className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Create Dependency
-              </button>
+              <CreateButton onClick={handleCreate} className="mx-auto" />
             )}
           </div>
         ) : (

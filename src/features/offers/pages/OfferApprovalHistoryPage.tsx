@@ -5,6 +5,7 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { offerService } from "../services/offerService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface ApprovalHistoryEntry {
   id: number;
@@ -20,6 +21,7 @@ interface ApprovalHistoryEntry {
 export default function OfferApprovalHistoryPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
   const [history, setHistory] = useState<ApprovalHistoryEntry[]>([]);
   const [offerName, setOfferName] = useState("");
@@ -97,7 +99,7 @@ export default function OfferApprovalHistoryPage() {
         <BackButton fallbackTo={`/dashboard/offers/${id}`} />
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Approval History
+            {t.historyPages.offerApprovalHistory}
           </h1>
           <p className={`${tw.textSecondary} mt-1 text-sm`}>{offerName}</p>
         </div>
@@ -114,7 +116,7 @@ export default function OfferApprovalHistoryPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading approval history...
+              {t.historyPages.loadingHistory}
             </p>
           </div>
         ) : history.length > 0 ? (
@@ -175,10 +177,10 @@ export default function OfferApprovalHistoryPage() {
           <div className="text-center py-12">
             <CheckCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-              No Approval History
+              {t.historyPages.noApprovalHistory}
             </p>
             <p className={`text-sm ${tw.textMuted}`}>
-              This offer has no approval history yet.
+              {t.historyPages.noApprovalHistoryDesc}
             </p>
           </div>
         )}

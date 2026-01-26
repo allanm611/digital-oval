@@ -40,14 +40,8 @@ export function useRemoveFromCatalog() {
       removeEntityTag,
       buildCatalogTagFn = buildCatalogTag,
     } = options;
-    console.log("🔄 [useRemoveFromCatalog] removeFromCatalog called", {
-      entityType,
-      entityId,
-      categoryId,
-    });
 
     // Show confirmation modal
-    console.log("🔄 [useRemoveFromCatalog] Showing confirmation modal");
     const confirmed = await confirm({
       title: `Remove ${
         entityType.charAt(0).toUpperCase() + entityType.slice(1)
@@ -59,14 +53,10 @@ export function useRemoveFromCatalog() {
     });
 
     if (!confirmed) {
-      console.log("❌ [useRemoveFromCatalog] User cancelled");
       return;
     }
 
     try {
-      console.log(
-        "🔄 [useRemoveFromCatalog] User confirmed, starting removal process"
-      );
       setConfirmLoading(true);
       setRemovingId(entityId);
 
@@ -174,44 +164,27 @@ export function useRemoveFromCatalog() {
       }
 
       // Remove the tag
-      console.log("🔄 [useRemoveFromCatalog] Removing tag", { catalogTag });
       if (removeEntityTag) {
         // Products use a specific removeTag method
-        console.log("🔄 [useRemoveFromCatalog] Using removeEntityTag");
         await removeEntityTag(Number(entityId), catalogTag);
-        console.log("✅ [useRemoveFromCatalog] removeEntityTag completed");
       } else {
         // Other entities use update with tags array
-        console.log("🔄 [useRemoveFromCatalog] Using updateEntity");
         const updatedTags = tags.filter((tag: string) => tag !== catalogTag);
         await updateEntity(Number(entityId), { tags: updatedTags });
-        console.log("✅ [useRemoveFromCatalog] updateEntity completed");
       }
 
       // Refresh data
-      console.log("🔄 [useRemoveFromCatalog] Starting refresh callbacks");
       if (onRefresh) {
-        console.log("🔄 [useRemoveFromCatalog] Calling onRefresh");
         await onRefresh();
-        console.log("✅ [useRemoveFromCatalog] onRefresh completed");
       } else {
-        console.log("⚠️ [useRemoveFromCatalog] onRefresh is not defined");
       }
       if (onRefreshCounts) {
-        console.log("🔄 [useRemoveFromCatalog] Calling onRefreshCounts");
         await Promise.resolve(onRefreshCounts());
-        console.log("✅ [useRemoveFromCatalog] onRefreshCounts completed");
       }
       if (onRefreshCategories) {
-        console.log("🔄 [useRemoveFromCatalog] Calling onRefreshCategories");
         await Promise.resolve(onRefreshCategories());
-        console.log("✅ [useRemoveFromCatalog] onRefreshCategories completed");
       }
-      console.log("✅ [useRemoveFromCatalog] All refresh callbacks completed");
 
-      console.log(
-        "🔄 [useRemoveFromCatalog] Closing confirmation modal and showing toast"
-      );
       setConfirmLoading(false);
       closeConfirm();
       showToast(
@@ -219,7 +192,6 @@ export function useRemoveFromCatalog() {
           entityType.charAt(0).toUpperCase() + entityType.slice(1)
         } removed from catalog successfully`
       );
-      console.log("✅ [useRemoveFromCatalog] Removal process complete");
 
       if (onSuccess) {
         await Promise.resolve(onSuccess());

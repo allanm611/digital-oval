@@ -40,6 +40,7 @@ export interface ManualBroadcastData {
   messageTitle?: string;
   messageBody?: string;
   isRichText?: boolean;
+  smsRoute?: string; // SMS route selection
   // New field for template variables
   selectedVariables?: TemplateVariable[]; // Variables used in the message
 
