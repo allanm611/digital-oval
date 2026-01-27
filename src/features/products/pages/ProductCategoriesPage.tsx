@@ -920,7 +920,7 @@ export default function ProductCatalogsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/products" iconSize="w-4 h-4" />
+          {/* <BackButton fallbackTo="/dashboard/products" iconSize="w-4 h-4" /> */}
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               {t.productCatalogs.title}

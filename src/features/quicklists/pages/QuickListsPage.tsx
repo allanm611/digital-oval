@@ -363,12 +363,12 @@ export default function QuickListsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateButton route="/dashboard/quicklists/create" />
+          <CreateButton onClick={() => setIsCreateModalOpen(true)} />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {quicklistStatsCards.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -513,20 +513,12 @@ export default function QuickListsPage() {
                         : "N/A"}
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <span
-                        className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm text-white"
-                        style={{ backgroundColor: color.primary.accent }}
-                      >
-                        {quicklist.processing_status
-                          ? quicklist.processing_status
-                              .charAt(0)
-                              .toUpperCase() +
-                            quicklist.processing_status.slice(1)
-                          : "N/A"}
-                      </span>
+                      {quicklist.processing_status
+                        ? quicklist.processing_status.charAt(0).toUpperCase() + quicklist.processing_status.slice(1)
+                        : "N/A"}
                     </td>
                     <td
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
@@ -548,28 +540,28 @@ export default function QuickListsPage() {
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleEdit(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
                           title={t.quickList.edit}
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleViewDetails(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
                           title={t.quickList.viewDetails}
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleExport(quicklist, "csv")}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
                           title={t.quickList.export}
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(quicklist)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200 cursor-pointer`}
                           title={t.quickList.delete}
                         >
                           <Trash2 className="w-4 h-4" />

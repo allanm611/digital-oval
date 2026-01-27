@@ -18,33 +18,14 @@ import {
 } from "recharts";
 import { jobExecutionService } from "../services/jobExecutionService";
 import {
-  AverageDurationResponse,
   TrendDataPoint,
   ErrorAnalysisItem,
   ExecutionByTrigger,
   ResourceUtilizationStats,
-  DataQualityMetrics,
-  FailurePattern,
   PerformanceSummary,
-  ExecutionDistribution,
-  DailySummary,
-  WorkerNodeStats,
-  ServerInstanceStats,
-  StepFailureAnalysis,
-  DurationOutlier,
-  RetryAnalysis,
   ExecutionByHour,
   HealthScoreResponse,
   SlowestExecution,
-  ResourceIssue,
-  ExecutionComparison,
-  CompletionForecast,
-  ExecutionHeatmap,
-  SLAPrediction,
-  AnomalyDetection,
-  ConcurrentExecutionAnalysis,
-  PartitionInfo,
-  ExecutionTimelineItem,
 } from "../types/jobExecution";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -111,13 +92,10 @@ export default function JobExecutionsAnalyticsPage() {
   const { t } = useLanguage();
 
   const [isLoading, setIsLoading] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [averageDuration, setAverageDuration] =
-    useState<AverageDurationResponse | null>(null);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
   const [errorAnalysis, setErrorAnalysis] = useState<ErrorAnalysisItem[]>([]);
   const [statusDistribution, setStatusDistribution] = useState<
-    ExecutionByTrigger[]
+    { label: string; value: number }[]
   >([]);
   const [triggerDistribution, setTriggerDistribution] = useState<
     ExecutionByTrigger[]
@@ -125,86 +103,27 @@ export default function JobExecutionsAnalyticsPage() {
   const [resourceUtilization, setResourceUtilization] =
     useState<ResourceUtilizationStats | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dataQualityMetrics, setDataQualityMetrics] =
-    useState<DataQualityMetrics | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [failurePatterns, setFailurePatterns] = useState<FailurePattern[]>([]);
-  const [performanceSummary, setPerformanceSummary] =
+  const [performanceSummary, _setPerformanceSummary] =
     useState<PerformanceSummary | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionDistribution, setExecutionDistribution] = useState<
-    ExecutionDistribution[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
-  const [workerNodeStats, setWorkerNodeStats] = useState<WorkerNodeStats[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [serverInstanceStats, setServerInstanceStats] = useState<
-    ServerInstanceStats[]
-  >([]);
-  const [stepFailureAnalysis, setStepFailureAnalysis] = useState<
-    StepFailureAnalysis[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [durationOutliers, setDurationOutliers] = useState<DurationOutlier[]>(
-    []
-  );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [retryAnalysis, setRetryAnalysis] = useState<RetryAnalysis | null>(
-    null
-  );
   const [executionsByHour, setExecutionsByHour] = useState<ExecutionByHour[]>(
     []
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [peakTimes, setPeakTimes] = useState<ExecutionByHour[]>([]);
   const [healthScore, setHealthScore] = useState<HealthScoreResponse | null>(
     null
   );
-  const [slowestExecutions, setSlowestExecutions] = useState<
-    SlowestExecution[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [resourceIssues, setResourceIssues] = useState<ResourceIssue[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionComparison, setExecutionComparison] =
-    useState<ExecutionComparison | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [completionForecast, setCompletionForecast] = useState<
-    CompletionForecast[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionHeatmap, setExecutionHeatmap] =
-    useState<ExecutionHeatmap | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [slaPrediction, setSlaPrediction] = useState<SLAPrediction | null>(
-    null
+  const [slowestExecutions, setSlowestExecutions] = useState<SlowestExecution[]>(
+    []
   );
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [executionStats, setExecutionStats] = useState<any>(null);
+  const [slaCompliance, setSlaCompliance] = useState<any>(null);
+  const [successRate, setSuccessRate] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [anomalyDetection, setAnomalyDetection] =
-    useState<AnomalyDetection | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [concurrentAnalysis, setConcurrentAnalysis] =
-    useState<ConcurrentExecutionAnalysis | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [partitionInfo, setPartitionInfo] = useState<PartitionInfo[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [pendingCleanup, setPendingCleanup] =
-    useState<JobExecutionListResponse | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [triggerDistributionAlt, setTriggerDistributionAlt] = useState<
-    ExecutionByTrigger[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [executionTimeline, setExecutionTimeline] = useState<
-    ExecutionTimelineItem[]
-  >([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dailySummaryJob, setDailySummaryJob] = useState<DailySummary[]>([]);
+  const [averageDuration, setAverageDuration] = useState<any>(null);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
-    const jobIdNum = undefined; // No job-specific filtering for global analytics
+    // No job-specific filtering for global analytics
     try {
       const [
         stats,
@@ -215,109 +134,23 @@ export default function JobExecutionsAnalyticsPage() {
         errors,
         triggers,
         resources,
-        dataQuality,
-        failurePatternsData,
-        performance,
-        distribution,
-        daily,
-        workers,
-        servers,
-        steps,
-        outliers,
-        retry,
         byHour,
-        peaks,
         health,
         slowest,
-        issues,
-        comparison,
-        forecast,
-        heatmap,
-        slaPred,
-        anomaly,
-        concurrent,
-        partitions,
-        pending,
-        triggerAlt,
-        timeline,
-        dailyForJob,
+        workerData,
       ] = await Promise.all([
         jobExecutionService.getExecutionStatistics().catch(() => null),
         jobExecutionService.getSLACompliance().catch(() => null),
         jobExecutionService.getSuccessRate().catch(() => null),
         jobExecutionService.getAverageDuration().catch(() => null),
-        jobExecutionService.getTrendData({ daysBack: 30 }).catch(() => []),
-        jobExecutionService.getErrorAnalysis({ daysBack: 30 }).catch(() => []),
+        jobExecutionService.getTrendData().catch(() => []),
+        jobExecutionService.getErrorAnalysis().catch(() => []),
         jobExecutionService.getExecutionsByTrigger().catch(() => []),
         jobExecutionService.getResourceUtilizationStats().catch(() => null),
-        jobExecutionService.getDataQualityMetrics().catch(() => null),
-        jobExecutionService.getFailurePatterns().catch(() => []),
-        jobExecutionService
-          .getPerformanceSummary({ daysBack: 30 })
-          .catch(() => null),
-        // getExecutionDistribution requires startDate - skip for now
-        Promise.resolve([]),
-        // Note: getDailySummary requires jobId, skipping for now
-        Promise.resolve([]),
-        jobExecutionService.getWorkerNodeStats().catch(() => []),
-        jobExecutionService
-          .getServerInstanceStats({ daysBack: 30 })
-          .catch(() => []),
-        jobExecutionService
-          .getStepFailureAnalysis({ daysBack: 30 })
-          .catch(() => []),
-        jobExecutionService
-          .getDurationOutliers({ daysBack: 30 })
-          .catch(() => []),
-        jobExecutionService
-          .getRetryAnalysis({ daysBack: 30 })
-          .catch(() => null),
-        jobExecutionService
-          .getExecutionsByHour({ daysBack: 30 })
-          .catch(() => []),
-        jobExecutionService.getPeakExecutionTimes().catch(() => []),
+        jobExecutionService.getExecutionsByHour().catch(() => []),
         jobExecutionService.getExecutionHealthScore().catch(() => null),
-        jobExecutionService
-          .getSlowestExecutions({ limit: 10, daysBack: 30 })
-          .catch(() => []),
-        jobExecutionService
-          .getExecutionsWithResourceIssues({ limit: 10 })
-          .catch(() => []),
-        jobIdNum
-          ? jobExecutionService
-              .getExecutionComparison(jobIdNum, { currentPeriodDays: 7 })
-              .catch(() => null)
-          : Promise.resolve(null),
-        // getCompletionForecast requires jobId - only call if we have one
-        jobIdNum
-          ? jobExecutionService.getCompletionForecast(jobIdNum).catch(() => [])
-          : Promise.resolve([]),
-        jobIdNum
-          ? jobExecutionService.getExecutionHeatmap(jobIdNum).catch(() => null)
-          : Promise.resolve(null),
-        // getSLAPrediction requires jobId - only call if we have one
-        jobIdNum
-          ? jobExecutionService.getSLAPrediction(jobIdNum).catch(() => null)
-          : Promise.resolve(null),
-        jobExecutionService.getAnomalyDetection().catch(() => null),
-        jobExecutionService.getConcurrentExecutionAnalysis().catch(() => null),
-        jobExecutionService.getPartitionInformation().catch(() => []),
-        jobExecutionService
-          .getExecutionsPendingCleanup({ retentionDays: 365 })
-          .catch(() => null),
-        jobExecutionService
-          .getTriggerDistribution({ daysBack: 30 })
-          .catch(() => []),
-        jobIdNum
-          ? jobExecutionService
-              .getExecutionTimeline(jobIdNum, { limit: 20 })
-              .catch(() => [])
-          : Promise.resolve([]),
-        jobIdNum
-          ? jobExecutionService
-              .getDailySummary(jobIdNum, { daysBack: 30 })
-              .catch(() => [])
-          : Promise.resolve([]),
+        jobExecutionService.getSlowestExecutions({ limit: 10 }).catch(() => []),
+        jobExecutionService.getWorkerNodeStats().catch(() => []),
       ]);
 
       setExecutionStats(stats);
@@ -325,57 +158,39 @@ export default function JobExecutionsAnalyticsPage() {
       setSuccessRate(success);
       setAverageDuration(duration);
       // Ensure all chart data is arrays
-      const normalizeArray = (data: unknown): unknown[] => {
+      function normalizeArray<T>(data: unknown): T[] {
         if (!data) return [];
-        if (Array.isArray(data)) return data;
+        if (Array.isArray(data)) return data as T[];
         if (
           data &&
           typeof data === "object" &&
           "data" in data &&
-          Array.isArray(data.data)
+          Array.isArray((data as any).data)
         ) {
-          return data.data;
+          return (data as any).data as T[];
         }
         return [];
-      };
+      }
 
-      setTrendData(normalizeArray(trends));
-      setErrorAnalysis(normalizeArray(errors));
+      setTrendData(normalizeArray<TrendDataPoint>(trends));
+      setErrorAnalysis(normalizeArray<ErrorAnalysisItem>(errors));
       setResourceUtilization(resources);
-      setDataQualityMetrics(dataQuality);
-      setFailurePatterns(normalizeArray(failurePatternsData));
-      setPerformanceSummary(performance);
-      setExecutionDistribution(normalizeArray(distribution));
-      setDailySummary(normalizeArray(daily));
-      setWorkerNodeStats(normalizeArray(workers));
-      setServerInstanceStats(normalizeArray(servers));
-      setStepFailureAnalysis(normalizeArray(steps));
-      setDurationOutliers(normalizeArray(outliers));
-      setRetryAnalysis(retry);
-      setExecutionsByHour(normalizeArray(byHour));
-      setPeakTimes(normalizeArray(peaks));
+      setExecutionsByHour(normalizeArray<ExecutionByHour>(byHour));
       setHealthScore(health);
-      setSlowestExecutions(normalizeArray(slowest));
-      setResourceIssues(normalizeArray(issues));
-      setExecutionComparison(comparison);
-      setCompletionForecast(normalizeArray(forecast));
-      setExecutionHeatmap(heatmap);
-      setSlaPrediction(slaPred);
-      setAnomalyDetection(anomaly);
-      setConcurrentAnalysis(concurrent);
-      setPartitionInfo(normalizeArray(partitions));
-      setPendingCleanup(pending);
-      setTriggerDistributionAlt(normalizeArray(triggerAlt));
-      setExecutionTimeline(normalizeArray(timeline));
-      setDailySummaryJob(normalizeArray(dailyForJob));
+      setSlowestExecutions(normalizeArray<SlowestExecution>(slowest));
+      setWorkers(normalizeArray<any>(workerData));
 
       // Build status distribution from stats
       if (stats) {
+        const successful = parseInt(String(stats.successful), 10) || 0;
+        const failed = parseInt(String(stats.failed), 10) || 0;
+        const timedOut = parseInt(String(stats.timed_out), 10) || 0;
+        const aborted = parseInt(String(stats.aborted), 10) || 0;
         setStatusDistribution([
-          { name: "Success", value: stats.successful_executions || 0 },
-          { name: "Failed", value: stats.failed_executions || 0 },
-          { name: "Running", value: stats.running_executions || 0 },
-          { name: "Queued", value: stats.queued_executions || 0 },
+          { label: "Successful", value: successful },
+          { label: "Failed", value: failed },
+          { label: "Timed Out", value: timedOut },
+          { label: "Aborted", value: aborted },
         ]);
       } else {
         setStatusDistribution([]);
@@ -452,7 +267,7 @@ export default function JobExecutionsAnalyticsPage() {
             <p className="text-sm font-medium text-gray-600">Successful</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {executionStats?.successful_executions || 0}
+            {parseInt(String(executionStats?.successful || 0), 10)}
           </p>
         </div>
         <div
@@ -466,7 +281,7 @@ export default function JobExecutionsAnalyticsPage() {
             <p className="text-sm font-medium text-gray-600">Failed</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {executionStats?.failed_executions || 0}
+            {parseInt(String(executionStats?.failed || 0), 10)}
           </p>
         </div>
         <div
@@ -477,10 +292,10 @@ export default function JobExecutionsAnalyticsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Running</p>
+            <p className="text-sm font-medium text-gray-600">Timed Out</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {executionStats?.running_executions || 0}
+            {parseInt(String(executionStats?.timed_out || 0), 10)}
           </p>
         </div>
         <div
@@ -491,10 +306,10 @@ export default function JobExecutionsAnalyticsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Queued</p>
+            <p className="text-sm font-medium text-gray-600">Aborted</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {executionStats?.queued_executions || 0}
+            {parseInt(String(executionStats?.aborted || 0), 10)}
           </p>
         </div>
         <div
@@ -533,8 +348,8 @@ export default function JobExecutionsAnalyticsPage() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
+                label={({ name, percent }: any) =>
+                  `${name} ${((percent || 0) * 100).toFixed(0)}%`
                 }
                 outerRadius={80}
                 fill="#8884d8"
@@ -543,7 +358,7 @@ export default function JobExecutionsAnalyticsPage() {
                 {(Array.isArray(statusDistribution)
                   ? statusDistribution
                   : []
-                ).map((entry, index) => (
+                ).map((_entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
@@ -869,7 +684,7 @@ export default function JobExecutionsAnalyticsPage() {
       )}
 
       {/* Worker Node Stats */}
-      {workerNodeStats.length > 0 && (
+      {workers.length > 0 && (
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -888,9 +703,9 @@ export default function JobExecutionsAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {workerNodeStats
+                {workers
                   .slice(0, 10)
-                  .map((worker: WorkerNodeStats, idx: number) => (
+                  .map((worker: any, idx: number) => (
                     <tr key={idx} className="border-b">
                       <td className="py-2 px-4 font-mono text-xs">
                         {worker.worker_node_id}
@@ -919,8 +734,8 @@ export default function JobExecutionsAnalyticsPage() {
         </div>
       )}
 
-      {/* Step Failure Analysis */}
-      {stepFailureAnalysis.length > 0 && (
+      {/* Step Failure Analysis - Disabled for now */}
+      {/* {stepFailureAnalysis.length > 0 && (
         <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
@@ -946,7 +761,7 @@ export default function JobExecutionsAnalyticsPage() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-      )}
+      )} */}
 
       {/* Slowest Executions */}
       {slowestExecutions.length > 0 && (

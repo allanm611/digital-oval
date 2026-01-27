@@ -723,67 +723,99 @@ export default function ScheduledJobDetailsPage() {
         {/* Execution Details */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-            Execution Details
+            How the Job Runs
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Processing Mode
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.processing_mode}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Priority
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>{job.priority}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Max Concurrent Executions
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.max_concurrent_executions}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Execution Timeout (minutes)
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.execution_timeout_minutes}
-              </p>
-            </div>
-            {job.resource_pool && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Resource Pool
+          <div className="space-y-6">
+            {/* Behavior Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Processing Mode
                 </label>
-                <p className={`text-sm ${tw.textSecondary}`}>
-                  {job.resource_pool}
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {job.processing_mode || "—"}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  How data is processed: batch, streaming, or real-time
                 </p>
               </div>
-            )}
-            {job.max_memory_mb && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max Memory (MB)
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Priority
                 </label>
-                <p className={`text-sm ${tw.textSecondary}`}>
-                  {job.max_memory_mb}
+                <div className="flex items-center gap-2">
+                  <p className={`text-sm font-medium ${tw.textPrimary}`}>{job.priority}/100</p>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500"
+                      style={{ width: `${job.priority}%` }}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  How important this job is relative to others
                 </p>
               </div>
-            )}
-            {job.max_cpu_cores && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Max CPU Cores
+            </div>
+
+            {/* Resource & Timeout Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Max Concurrent Runs
                 </label>
-                <p className={`text-sm ${tw.textSecondary}`}>
-                  {job.max_cpu_cores}
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {job.max_concurrent_executions} execution{job.max_concurrent_executions !== 1 ? 's' : ''}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  How many times the job can run at the same time
+                </p>
+              </div>
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Time Limit per Run
+                </label>
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {job.execution_timeout_minutes} minute{job.execution_timeout_minutes !== 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Job will stop if it runs longer than this
+                </p>
+              </div>
+            </div>
+
+            {/* Resource Allocation Section */}
+            {(job.resource_pool || job.max_memory_mb || job.max_cpu_cores) && (
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-3">
+                  Resource Allocation
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {job.resource_pool && (
+                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                      <p className="text-xs text-gray-600 mb-1">Resource Pool</p>
+                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                        {job.resource_pool}
+                      </p>
+                    </div>
+                  )}
+                  {job.max_memory_mb && (
+                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                      <p className="text-xs text-gray-600 mb-1">Max Memory</p>
+                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                        {job.max_memory_mb} MB
+                      </p>
+                    </div>
+                  )}
+                  {job.max_cpu_cores && (
+                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                      <p className="text-xs text-gray-600 mb-1">Max CPU Cores</p>
+                      <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                        {job.max_cpu_cores} core{job.max_cpu_cores !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -794,84 +826,96 @@ export default function ScheduledJobDetailsPage() {
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Execution History
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Run
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {formatDateTime(job.last_run_at)}
-              </p>
-              {job.last_run_status && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Status: {job.last_run_status}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Next Run
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {formatDateTime(job.next_run_at)}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Success
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {formatDateTime(job.last_success_at)}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Last Failure
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {formatDateTime(job.last_failure_at)}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Executions
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.total_executions}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Total Failures
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.total_failures}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Consecutive Failures
-              </label>
-              <p className={`text-sm ${tw.textSecondary}`}>
-                {job.consecutive_failures}
-              </p>
-            </div>
-            {job.success_rate_percent !== null && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Success Rate
+          <div className="space-y-6">
+            {/* Timeline Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`${tw.rounded} border border-green-100 bg-green-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Last Run
                 </label>
-                <p className={`text-sm ${tw.textSecondary}`}>
-                  {job.success_rate_percent}%
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {formatDateTime(job.last_run_at)}
+                </p>
+                {job.last_run_status && (
+                  <span className="inline-block mt-2 px-2 py-1 text-xs font-medium rounded bg-white text-gray-700">
+                    {job.last_run_status}
+                  </span>
+                )}
+              </div>
+              <div className={`${tw.rounded} border border-blue-100 bg-blue-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Next Run
+                </label>
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {formatDateTime(job.next_run_at)}
                 </p>
               </div>
-            )}
+            </div>
+
+            {/* Success/Failure Timeline */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Last Success
+                </label>
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {formatDateTime(job.last_success_at)}
+                </p>
+              </div>
+              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
+                  Last Failure
+                </label>
+                <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                  {formatDateTime(job.last_failure_at)}
+                </p>
+              </div>
+            </div>
+
+            {/* Statistics Section */}
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-xs font-semibold text-gray-600 uppercase mb-3">
+                Overall Performance
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
+                  <p className="text-xs text-gray-600 mb-1">Total Runs</p>
+                  <p className={`text-lg font-bold ${tw.textPrimary}`}>
+                    {job.total_executions}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
+                  <p className="text-xs text-gray-600 mb-1">Failed</p>
+                  <p className={`text-lg font-bold text-red-600`}>
+                    {job.total_failures}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
+                  <p className="text-xs text-gray-600 mb-1">Consecutive Failures</p>
+                  <p className={`text-lg font-bold ${job.consecutive_failures > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {job.consecutive_failures}
+                  </p>
+                </div>
+                {job.success_rate_percent !== null && (
+                  <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
+                    <p className="text-xs text-gray-600 mb-1">Success Rate</p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-lg font-bold ${job.success_rate_percent >= 90 ? 'text-green-600' : job.success_rate_percent >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {job.success_rate_percent}%
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action */}
             {job.consecutive_failures > 0 && (
-              <div className="md:col-span-2">
+              <div className="pt-4 border-t border-gray-200">
                 <button
                   onClick={handleResetFailureCount}
                   disabled={isActionLoading}
-                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
                 >
                   <RefreshCw className="h-4 w-4" />
                   Reset Failure Count

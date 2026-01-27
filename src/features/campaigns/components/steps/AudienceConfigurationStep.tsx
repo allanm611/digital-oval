@@ -25,6 +25,7 @@ import ABTestDisplay from "../displays/ABTestDisplay";
 import SequentialCampaignDisplay from "../displays/SequentialCampaignDisplay";
 import { tw, components, color, zIndex } from "../../../../shared/utils/utils";
 import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
+import { useLanguage } from "../../../../contexts/LanguageContext";
 
 interface AvailableControlGroup {
   id: string;
@@ -69,6 +70,8 @@ export default function AudienceConfigurationStep({
   const [isCampaignTypeDropdownOpen, setIsCampaignTypeDropdownOpen] =
     useState(false);
 
+  const { t } = useLanguage();
+
   const campaignTypeDropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(campaignTypeDropdownRef, () =>
@@ -79,25 +82,25 @@ export default function AudienceConfigurationStep({
   const campaignTypeOptions = [
     {
       value: "multiple_target_group",
-      label: "Multiple Target",
-      description: "Multiple segments with offers",
+      label: t.campaigns.campaignTypes.multipleTarget,
+      description: t.campaigns.campaignTypes.multipleTargetDesc,
       icon: Users,
     },
     {
       value: "champion_challenger",
-      label: "Champion-Challenger",
-      description: "Main segment + challengers",
+      label: t.campaigns.campaignTypes.championChallenger,
+      description: t.campaigns.campaignTypes.championChallengerDesc,
       icon: Award,
     },
     {
       value: "ab_test",
-      label: "A/B Test",
-      description: "Two segments: A and B",
+      label: t.campaigns.campaignTypes.abTest,
+      description: t.campaigns.campaignTypes.abTestDesc,
       icon: TestTube,
     },
     {
       value: "round_robin",
-      label: "Round Robin",
+      label: t.campaigns.campaignTypes.roundRobin,
       description: "Offers with intervals",
       icon: RotateCw,
     },
@@ -334,7 +337,7 @@ export default function AudienceConfigurationStep({
         <div className="flex items-center justify-between">
           <div>
             <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
-              Campaign Type
+              {t.campaigns.audienceConfiguration.campaignType}
             </h3>
           </div>
         </div>
@@ -445,10 +448,10 @@ export default function AudienceConfigurationStep({
             />
             <div>
               <div className="text-sm font-medium text-gray-900">
-                Mutually Exclusive Segments
+                {t.campaigns.audienceConfiguration.mutuallyExclusiveSegments}
               </div>
               <div className="text-xs text-gray-500">
-                Ensure customers can only belong to one segment at a time
+                {t.campaigns.audienceConfiguration.mutuallyExclusiveSegmentsDesc}
               </div>
             </div>
           </label>
@@ -461,26 +464,26 @@ export default function AudienceConfigurationStep({
           <div>
             <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
               {formData.campaign_type === "champion_challenger" &&
-                "Champion & Challengers"}
-              {formData.campaign_type === "ab_test" && "A/B Test Variants"}
-              {formData.campaign_type === "round_robin" && "Round Robin Target"}
+                t.campaigns.audienceConfiguration.championChallengers}
+              {formData.campaign_type === "ab_test" && t.campaigns.audienceConfiguration.abTestVariants}
+              {formData.campaign_type === "round_robin" && t.campaigns.audienceConfiguration.roundRobinTarget}
               {formData.campaign_type === "multiple_level" &&
-                "Multiple Level Target"}
+                t.campaigns.audienceConfiguration.multipleLevelTarget}
               {formData.campaign_type === "multiple_target_group" &&
-                "Selected Segments"}
+                t.campaigns.audienceConfiguration.selectedSegments}
             </h3>
             <p className={`${tw.caption} ${tw.textSecondary} mb-4`}>
               {formData.campaign_type === "champion_challenger" &&
-                "Define champion segment and its challengers"}
+                t.campaigns.audienceConfiguration.championChallengerDesc}
               {formData.campaign_type === "ab_test" &&
-                "Configure A and B variants for testing"}
+                t.campaigns.audienceConfiguration.abTestDesc2}
               {formData.campaign_type === "round_robin" &&
-                "Define single target segment for rotating offers"}
+                t.campaigns.audienceConfiguration.roundRobinDesc}
               {formData.campaign_type === "multiple_level" &&
-                "Define single target segment for sequential offers"}
+                t.campaigns.audienceConfiguration.multipleLevelDesc}
               {(formData.campaign_type === "round_robin" ||
                 formData.campaign_type === "multiple_level") &&
-                "Define single target segment for sequential offers"}
+                t.campaigns.audienceConfiguration.multipleLevelDesc}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -500,10 +503,10 @@ export default function AudienceConfigurationStep({
                 <Plus className="w-4 h-4" />
                 {formData.campaign_type === "champion_challenger" &&
                 selectedSegments.length === 0
-                  ? "Champion"
+                  ? t.campaigns.audienceConfiguration.champion
                   : formData.campaign_type === "champion_challenger"
-                  ? "Challenger"
-                  : "Add Segment"}
+                  ? t.campaigns.audienceConfiguration.challenger
+                  : t.campaigns.audienceConfiguration.addSegment}
               </button>
             )}
             <button
@@ -515,7 +518,7 @@ export default function AudienceConfigurationStep({
               }}
             >
               <Plus className="w-4 h-4" />
-              Create New Segment
+              {t.campaigns.audienceConfiguration.createNewSegment}
             </button>
           </div>
         </div>
@@ -580,10 +583,10 @@ export default function AudienceConfigurationStep({
                 </div>
                 <div className="text-center">
                   <h3 className={`text-sm ${tw.textPrimary} font-medium`}>
-                    No Segments Selected
+                    {t.campaigns.audienceConfiguration.noSegmentsSelected}
                   </h3>
                   <p className={`${tw.caption} ${tw.textSecondary}`}>
-                    Select target audience segments for your campaign
+                    {t.campaigns.audienceConfiguration.selectTargetSegments}
                   </p>
                 </div>
               </div>
@@ -608,19 +611,19 @@ export default function AudienceConfigurationStep({
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-                      Priority
+                      {t.campaigns.audienceConfiguration.priority}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Segment
+                      {t.campaigns.audienceConfiguration.segment}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                      Customers
+                      {t.campaigns.audienceConfiguration.customers}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                      Control Group
+                      {t.campaigns.audienceConfiguration.controlGroup}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
-                      Actions
+                      {t.campaigns.audienceConfiguration.actions}
                     </th>
                   </tr>
                 </thead>
@@ -670,7 +673,7 @@ export default function AudienceConfigurationStep({
                         <div className="text-sm text-gray-900 font-medium">
                           {segment.customer_count.toLocaleString()}
                         </div>
-                        <div className="text-xs text-gray-500">customers</div>
+                        <div className="text-xs text-gray-500">{t.campaigns.audienceConfiguration.customers}</div>
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -868,10 +871,10 @@ function ControlGroupConfigModal({
       >
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-sm font-semibold text-gray-900">
-            Configure Control Group
+            {t.campaigns.audienceConfiguration.configureControlGroup}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Configure control group settings for segment:{" "}
+            {t.campaigns.audienceConfiguration.configureControlGroupSettings}{" "}
             <span className="font-medium">{segment.name}</span>
           </p>
         </div>
@@ -880,7 +883,7 @@ function ControlGroupConfigModal({
           {/* Control Group Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Control Group Type
+              {t.campaigns.audienceConfiguration.controlGroupType}
             </label>
             <div className="space-y-3">
               <label className="flex items-start space-x-3 cursor-pointer">
@@ -894,10 +897,10 @@ function ControlGroupConfigModal({
                 />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
-                    No Control Group
+                    {t.campaigns.audienceConfiguration.noControlGroup}
                   </div>
                   <div className="text-sm text-gray-500">
-                    All customers in this segment will receive the campaign
+                    {t.campaigns.audienceConfiguration.noControlGroupDesc}
                   </div>
                 </div>
               </label>
@@ -919,10 +922,10 @@ function ControlGroupConfigModal({
                 />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
-                    With Control Group
+                    {t.campaigns.audienceConfiguration.withControlGroup}
                   </div>
                   <div className="text-sm text-gray-500">
-                    Configure control group for this segment
+                    {t.campaigns.audienceConfiguration.withControlGroupDesc}
                   </div>
                 </div>
               </label>
@@ -938,10 +941,10 @@ function ControlGroupConfigModal({
                 />
                 <div>
                   <div className="text-sm font-medium text-gray-900">
-                    Universal Control Group
+                    {t.campaigns.audienceConfiguration.universalControlGroup}
                   </div>
                   <div className="text-sm text-gray-500">
-                    Select from existing universal control group configurations
+                    {t.campaigns.audienceConfiguration.universalControlGroupDesc}
                   </div>
                 </div>
               </label>
@@ -952,7 +955,7 @@ function ControlGroupConfigModal({
           {config.type === "with_control_group" && (
             <div className={`space-y-4 p-4 ${tw.rounded}`}>
               <h4 className="text-sm font-medium text-gray-900">
-                Control Group Configuration Method
+                {t.campaigns.audienceConfiguration.controlGroupConfigMethod}
               </h4>
 
               <div className="space-y-3">
@@ -973,10 +976,10 @@ function ControlGroupConfigModal({
                   />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      Fixed percentage of Target Base
+                      {t.campaigns.audienceConfiguration.fixedPercentage}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Set a fixed percentage with optional limits
+                      {t.campaigns.audienceConfiguration.fixedPercentageDesc}
                     </div>
                   </div>
                 </label>
@@ -998,10 +1001,10 @@ function ControlGroupConfigModal({
                   />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      Fixed Number of Target Base
+                      {t.campaigns.audienceConfiguration.fixedNumber}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Set a specific number of customers for control group
+                      {t.campaigns.audienceConfiguration.fixedNumberDesc}
                     </div>
                   </div>
                 </label>
@@ -1026,10 +1029,10 @@ function ControlGroupConfigModal({
                   />
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      Advanced Parameters
+                      {t.campaigns.audienceConfiguration.advancedParameters}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Configure based on confidence level and margin of error
+                      {t.campaigns.audienceConfiguration.advancedParametersDesc}
                     </div>
                   </div>
                 </label>
@@ -1042,13 +1045,13 @@ function ControlGroupConfigModal({
             config.control_group_method === "fixed_percentage" && (
               <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
-                  Fixed Percentage Configuration
+                  {t.campaigns.audienceConfiguration.fixedPercentageConfig}
                 </h4>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Percentage
+                      {t.campaigns.audienceConfiguration.percentage}
                     </label>
                     <input
                       type="number"
@@ -1065,8 +1068,7 @@ function ControlGroupConfigModal({
                       className={`w-24 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      {calculateControlGroupSize().toLocaleString()} customers
-                      will be in control group
+                      {calculateControlGroupSize().toLocaleString()} {t.campaigns.audienceConfiguration.customersInControlGroup}
                     </p>
                   </div>
 
@@ -1084,13 +1086,13 @@ function ControlGroupConfigModal({
                       htmlFor="setLimits"
                       className="text-sm font-medium text-gray-700"
                     >
-                      Set Limits
+                      {t.campaigns.audienceConfiguration.setLimits}
                     </label>
                   </div>
 
                   {config.set_limits && (
                     <div className="text-sm text-gray-600 mb-2">
-                      Set lower and/or upper limits
+                      {t.campaigns.audienceConfiguration.setLimitsText}
                     </div>
                   )}
 
@@ -1098,7 +1100,7 @@ function ControlGroupConfigModal({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">
-                          Lower limit
+                          {t.campaigns.audienceConfiguration.lowerLimit}
                         </label>
                         <input
                           type="number"
@@ -1116,7 +1118,7 @@ function ControlGroupConfigModal({
                       </div>
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">
-                          Upper limit
+                          {t.campaigns.audienceConfiguration.upperLimit}
                         </label>
                         <input
                           type="number"
@@ -1143,12 +1145,12 @@ function ControlGroupConfigModal({
             config.control_group_method === "fixed_number" && (
               <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
-                  Fixed Number Configuration
+                  {t.campaigns.audienceConfiguration.fixedNumberConfig}
                 </h4>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of customers
+                    {t.campaigns.audienceConfiguration.numberOfCustomers}
                   </label>
                   <input
                     type="number"
@@ -1169,7 +1171,7 @@ function ControlGroupConfigModal({
                         segment.customer_count) *
                       100
                     ).toFixed(1)}
-                    % of total segment
+                    % {t.campaigns.audienceConfiguration.ofTotalSegment}
                   </p>
                 </div>
               </div>
@@ -1179,7 +1181,7 @@ function ControlGroupConfigModal({
           {config.type === "multiple_control_group" && (
             <div className="space-y-4 p-4">
               <h4 className="text-sm font-medium text-gray-900">
-                Select Universal Control Group
+                {t.campaigns.audienceConfiguration.selectUniversalControlGroup}
               </h4>
 
               <div
@@ -1187,7 +1189,7 @@ function ControlGroupConfigModal({
               >
                 <input
                   type="text"
-                  placeholder="Search universal control groups..."
+                  placeholder={t.campaigns.audienceConfiguration.searchControlGroups}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1236,13 +1238,13 @@ function ControlGroupConfigModal({
             config.control_group_method === "advanced_parameters" && (
               <div className={`space-y-4 p-4 ${tw.rounded}`}>
                 <h4 className="text-sm font-medium text-gray-900">
-                  Advanced Parameters
+                  {t.campaigns.audienceConfiguration.advancedParameters}
                 </h4>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confidence Level
+                      {t.campaigns.audienceConfiguration.confidenceLevel}
                     </label>
                     <div className="flex items-center space-x-2">
                       <input
@@ -1264,13 +1266,13 @@ function ControlGroupConfigModal({
                       </span>
                     </div>
                     <p className="text-xs text-red-500 mt-1">
-                      This field is required
+                      {t.campaigns.audienceConfiguration.fieldRequired}
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Margin of error
+                      {t.campaigns.audienceConfiguration.marginOfError}
                     </label>
                     <div className="flex items-center space-x-2">
                       <input
@@ -1292,7 +1294,7 @@ function ControlGroupConfigModal({
                       </span>
                     </div>
                     <p className="text-xs text-red-500 mt-1">
-                      This field is required
+                      {t.campaigns.audienceConfiguration.fieldRequired}
                     </p>
                   </div>
                 </div>
@@ -1302,22 +1304,22 @@ function ControlGroupConfigModal({
           {/* Summary */}
           {config.type !== "none" && (
             <div className={`${tw.rounded} p-4`}>
-              <h4 className="font-medium text-gray-900 mb-2">Summary</h4>
+              <h4 className="font-medium text-gray-900 mb-2">{t.campaigns.audienceConfiguration.summary}</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">Total Segment Size:</span>
+                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.totalSegmentSize}</span>
                   <span className="font-medium ml-2">
                     {segment.customer_count.toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Control Group Size:</span>
+                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.controlGroupSize}</span>
                   <span className="font-medium ml-2">
                     {calculateControlGroupSize().toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Target Group Size:</span>
+                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.targetGroupSize}</span>
                   <span className="font-medium ml-2">
                     {(
                       segment.customer_count - calculateControlGroupSize()
@@ -1325,7 +1327,7 @@ function ControlGroupConfigModal({
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Control Percentage:</span>
+                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.controlPercentage}</span>
                   <span className="font-medium ml-2">
                     {config.type === "with_control_group" &&
                     config.control_group_method === "fixed_percentage"
@@ -1364,10 +1366,10 @@ function ControlGroupConfigModal({
             onClick={onClose}
             className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
           >
-            Cancel
+            {t.campaigns.audienceConfiguration.cancel}
           </button>
           <button onClick={handleSave} className={`${tw.button}`}>
-            Save Configuration
+            {t.campaigns.audienceConfiguration.saveConfiguration}
           </button>
         </div>
       </div>

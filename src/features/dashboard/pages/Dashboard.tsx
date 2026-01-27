@@ -786,7 +786,7 @@ export default function Dashboard() {
             path="/manual-communications"
             element={<OtherPages.ManualBroadcastListsPage />}
           />
-          <Route path="/quick-lists" element={<OtherPages.QuickListPage />} />
+          <Route path="/quick-lists" element={<OtherPages.QuickListsPage />} />
           {/* <Route path="/quicklists" element={<OtherPages.QuickListsPage />} /> */}
           <Route
             path="/communications/analytics"
@@ -1042,10 +1042,6 @@ export default function Dashboard() {
           <Route
             path="/etl/fetch"
             element={<EtlPages.EtlFetchControlsPage />}
-          />
-          <Route
-            path="/etl/analytics"
-            element={<EtlPages.EtlStatisticsPage />}
           />
         </Routes>
       </Suspense>

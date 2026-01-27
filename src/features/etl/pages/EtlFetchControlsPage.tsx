@@ -8,6 +8,7 @@ import {
 } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
@@ -16,6 +17,7 @@ type FetchMode = "immediate" | "by-time" | "by-range";
 export default function EtlFetchControlsPage() {
   const { success, error: showError } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const [fetchMode, setFetchMode] = useState<FetchMode>("immediate");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +43,7 @@ export default function EtlFetchControlsPage() {
 
   const handleFetchImmediate = useCallback(async () => {
     if (!jobId) {
-      showError("Validation error", "Job ID is required");
+      showError(t.etl.validationError, t.etl.jobIdRequired);
       return;
     }
 
@@ -57,22 +59,22 @@ export default function EtlFetchControlsPage() {
 
       if (response.success) {
         success(
-          "Fetch triggered",
+          t.etl.fetchTriggered,
           `Job ${jobId} executed. ${response.data?.files_processed ?? 0} files processed.`,
         );
         setJobId("");
       } else {
-        showError("Fetch failed", response.message);
+        showError(t.etl.fetchFailed, response.message);
       }
     } catch (err) {
       showError(
-        "Failed to trigger fetch",
-        (err as Error).message || "Please try again.",
+        t.etl.failedToTriggerFetch,
+        (err as Error).message || t.etl.pleaseRetry,
       );
     } finally {
       setIsLoading(false);
     }
-  }, [jobId, forceReprocess, user?.user_id, success, showError]);
+  }, [jobId, forceReprocess, user?.user_id, success, showError, t.etl]);
 
   const handleFetchByTime = useCallback(async () => {
     setIsLoading(true);
@@ -89,16 +91,16 @@ export default function EtlFetchControlsPage() {
 
       if (response.success) {
         success(
-          "Historical fetch triggered",
-          `Execution ID: ${response.data?.execution_id}`,
+          t.etl.historicalFetchTriggered,
+          `${t.etl.executionIdColon} ${response.data?.execution_id}`,
         );
       } else {
-        showError("Fetch failed", response.message);
+        showError(t.etl.fetchFailed, response.message);
       }
     } catch (err) {
       showError(
-        "Failed to trigger historical fetch",
-        (err as Error).message || "Please try again.",
+        t.etl.failedToTriggerHistoricalFetch,
+        (err as Error).message || t.etl.pleaseRetry,
       );
     } finally {
       setIsLoading(false);
@@ -111,11 +113,12 @@ export default function EtlFetchControlsPage() {
     user?.user_id,
     success,
     showError,
+    t.etl,
   ]);
 
   const handleFetchByRange = useCallback(async () => {
     if (!byRangeJobId) {
-      showError("Validation error", "Job ID is required");
+      showError(t.etl.validationError, t.etl.jobIdRequired);
       return;
     }
 
@@ -140,17 +143,17 @@ export default function EtlFetchControlsPage() {
 
       if (response.success) {
         success(
-          "Range fetch triggered",
+          t.etl.rangeFetchTriggered,
           `${response.data?.triggered_executions.length ?? 0} hourly jobs scheduled`,
         );
         setByRangeJobId("");
       } else {
-        showError("Fetch failed", response.message);
+        showError(t.etl.fetchFailed, response.message);
       }
     } catch (err) {
       showError(
-        "Failed to trigger range fetch",
-        (err as Error).message || "Please try again.",
+        t.etl.failedToTriggerRangeFetch,
+        (err as Error).message || t.etl.pleaseRetry,
       );
     } finally {
       setIsLoading(false);
@@ -166,6 +169,7 @@ export default function EtlFetchControlsPage() {
     user?.user_id,
     success,
     showError,
+    t.etl,
   ]);
 
   const categoryOptions = [
@@ -193,19 +197,19 @@ export default function EtlFetchControlsPage() {
       {/* Header */}
       <div>
         <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-          ETL Fetch Controls
+          {t.etl.fetchControls}
         </h1>
         <p className={`${tw.textSecondary} mt-2 text-sm`}>
-          Trigger ETL file fetching with various options and schedules.
+          {t.etl.fetchControlsDescription}
         </p>
       </div>
 
       {/* Mode selector */}
       <div className="flex gap-3">
         {[
-          { id: "immediate", label: "Fetch Now" },
-          { id: "by-time", label: "Fetch by Time" },
-          { id: "by-range", label: "Fetch by Range" },
+          { id: "immediate", label: t.etl.fetchNow },
+          { id: "by-time", label: t.etl.fetchByTime },
+          { id: "by-range", label: t.etl.fetchByRange },
         ].map((mode) => (
           <button
             key={mode.id}
@@ -235,19 +239,19 @@ export default function EtlFetchControlsPage() {
           }}
         >
           <h2 className={`${tw.textPrimary} font-semibold`}>
-            Fetch Files Immediately
+            {t.etl.fetchFilesImmediately}
           </h2>
           <div>
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
             >
-              Job ID <span style={{ color: color.status.danger }}>*</span>
+              {t.etl.jobIdLabel} <span style={{ color: color.status.danger }}>*</span>
             </label>
             <input
               type="number"
               value={jobId}
               onChange={(e) => setJobId(e.target.value)}
-              placeholder="Enter job ID"
+              placeholder={t.etl.enterJobId}
               className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
               style={{ borderColor: color.border.default }}
             />
@@ -260,7 +264,7 @@ export default function EtlFetchControlsPage() {
               className="w-4 h-4"
             />
             <span className={`text-sm ${tw.textPrimary}`}>
-              Force reprocessing
+              {t.etl.forceReprocessing}
             </span>
           </label>
           <button
@@ -270,7 +274,7 @@ export default function EtlFetchControlsPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <Play size={16} />
-            {isLoading ? "Processing..." : "Fetch Now"}
+            {isLoading ? t.etl.processingStatus : t.etl.fetchNow}
           </button>
         </div>
       )}
@@ -285,19 +289,19 @@ export default function EtlFetchControlsPage() {
           }}
         >
           <h2 className={`${tw.textPrimary} font-semibold`}>
-            Fetch Files for Specific Time
+            {t.etl.fetchFilesForSpecificTime}
           </h2>
           <div>
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
             >
-              Category
+              {t.etl.categoryLabel}
             </label>
             <HeadlessSelect
               options={categoryOptions}
               value={byTimeCategory}
               onChange={(v) => setByTimeCategory(String(v))}
-              placeholder="Select category"
+              placeholder={t.etl.selectCategory}
             />
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -305,39 +309,39 @@ export default function EtlFetchControlsPage() {
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Month
+                {t.etl.monthLabel}
               </label>
               <HeadlessSelect
                 options={monthOptions}
                 value={byTimeMonth}
                 onChange={(v) => setByTimeMonth(String(v))}
-                placeholder="Month"
+                placeholder={t.etl.monthLabel}
               />
             </div>
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Day
+                {t.etl.dayLabel}
               </label>
               <HeadlessSelect
                 options={dayOptions}
                 value={byTimeDay}
                 onChange={(v) => setByTimeDay(String(v))}
-                placeholder="Day"
+                placeholder={t.etl.dayLabel}
               />
             </div>
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Hour
+                {t.etl.hourLabel}
               </label>
               <HeadlessSelect
                 options={hourOptions}
                 value={byTimeHour}
                 onChange={(v) => setByTimeHour(String(v))}
-                placeholder="Hour"
+                placeholder={t.etl.hourLabel}
               />
             </div>
           </div>
@@ -352,7 +356,7 @@ export default function EtlFetchControlsPage() {
               }}
             >
               <Calendar size={16} />
-              {isLoading ? "Processing..." : "Fetch by Time"}
+              {isLoading ? t.etl.processingStatus : t.etl.fetchByTime}
             </button>
           </div>
         </div>
@@ -368,19 +372,19 @@ export default function EtlFetchControlsPage() {
           }}
         >
           <h2 className={`${tw.textPrimary} font-semibold`}>
-            Fetch Files for Date/Time Range
+            {t.etl.fetchFilesForDateTimeRange}
           </h2>
           <div>
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
             >
-              Job ID <span style={{ color: color.status.danger }}>*</span>
+              {t.etl.jobIdLabel} <span style={{ color: color.status.danger }}>*</span>
             </label>
             <input
               type="number"
               value={byRangeJobId}
               onChange={(e) => setByRangeJobId(e.target.value)}
-              placeholder="Enter job ID"
+              placeholder={t.etl.enterJobId}
               className={`w-full px-4 py-2 border ${tw.rounded} text-sm`}
               style={{ borderColor: color.border.default }}
             />
@@ -388,58 +392,58 @@ export default function EtlFetchControlsPage() {
 
           <div>
             <h3 className={`${tw.textPrimary} font-medium text-sm mb-3`}>
-              Start Time
+              {t.etl.startTime}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <HeadlessSelect
                 options={monthOptions}
                 value={byRangeStartMonth}
                 onChange={(v) => setByRangeStartMonth(String(v))}
-                placeholder="Month"
+                placeholder={t.etl.monthLabel}
               />
               <HeadlessSelect
                 options={dayOptions}
                 value={byRangeStartDay}
                 onChange={(v) => setByRangeStartDay(String(v))}
-                placeholder="Day"
+                placeholder={t.etl.dayLabel}
               />
               <HeadlessSelect
                 options={hourOptions}
                 value={byRangeStartHour}
                 onChange={(v) => setByRangeStartHour(String(v))}
-                placeholder="Hour"
+                placeholder={t.etl.hourLabel}
               />
             </div>
           </div>
 
           <div>
             <h3 className={`${tw.textPrimary} font-medium text-sm mb-3`}>
-              End Time
+              {t.etl.endTime}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               <HeadlessSelect
                 options={monthOptions}
                 value={byRangeEndMonth}
                 onChange={(v) => setByRangeEndMonth(String(v))}
-                placeholder="Month"
+                placeholder={t.etl.monthLabel}
               />
               <HeadlessSelect
                 options={dayOptions}
                 value={byRangeEndDay}
                 onChange={(v) => setByRangeEndDay(String(v))}
-                placeholder="Day"
+                placeholder={t.etl.dayLabel}
               />
               <HeadlessSelect
                 options={hourOptions}
                 value={byRangeEndHour}
                 onChange={(v) => setByRangeEndHour(String(v))}
-                placeholder="Hour"
+                placeholder={t.etl.hourLabel}
               />
             </div>
           </div>
 
           <p className={`${tw.textSecondary} text-xs italic`}>
-            Note: Maximum range is 72 hours (3 days)
+            {t.etl.maxRangeNote}
           </p>
 
           <div className="flex justify-center">
@@ -453,7 +457,7 @@ export default function EtlFetchControlsPage() {
               }}
             >
               <Calendar size={16} />
-              {isLoading ? "Processing..." : "Fetch by Range"}
+              {isLoading ? t.etl.processingStatus : t.etl.fetchByRange}
             </button>
           </div>
         </div>

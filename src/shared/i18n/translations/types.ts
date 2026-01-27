@@ -84,6 +84,9 @@ export interface Translations {
     conversions: string;
     sent: string;
     delivered: string;
+    audienceConfiguration: {
+      [key: string]: unknown;
+    };
   };
 
   // Settings
@@ -1385,35 +1388,16 @@ export interface Translations {
       characterSetSizeLabel: string;
       statusLabel: string;
     };
-    teamRoles: {
-      title: string;
-      subtitle: string;
-      entityName: string;
-      entityNamePlural: string;
-      searchPlaceholder: string;
-      createButtonText: string;
-      modalTitleCreate: string;
-      modalTitleEdit: string;
-      nameLabel: string;
-      descriptionLabel: string;
-      deleteConfirmTitle: string;
-      deleteConfirmMessage: string;
-      deleteSuccessMessage: string;
-      createSuccessMessage: string;
-      updateSuccessMessage: string;
-      deleteErrorMessage: string;
-      saveErrorMessage: string;
-      items: {
-        campaignManager: string;
-        campaignManagerDesc: string;
-        contentCreator: string;
-        contentCreatorDesc: string;
-        dataAnalyst: string;
-        dataAnalystDesc: string;
-        designer: string;
-        designerDesc: string;
-      };
-    };
+  };
+
+  // Offers
+  offers: {
+    [key: string]: unknown;
+  };
+
+  // History Pages
+  historyPages: {
+    [key: string]: unknown;
   };
 
   // Communication Policy
@@ -1805,6 +1789,9 @@ export interface Translations {
     sentraConfigSubtitle: string;
     sentraConfigDescription: string;
   };
+
+  // Allow for additional translation sections
+  [key: string]: unknown;
 
   // Header
   header: {

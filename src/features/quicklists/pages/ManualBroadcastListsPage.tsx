@@ -477,28 +477,28 @@ export default function ManualBroadcastListsPage() {
                         <div className="flex items-center justify-center space-x-2">
                           <button
                             onClick={() => handleViewDetails(quicklist)}
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors`}
+                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleEdit(quicklist)}
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors`}
+                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleExport(quicklist, "csv")}
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors`}
+                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="Export CSV"
                           >
                             <Download className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(quicklist)}
-                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors`}
+                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />

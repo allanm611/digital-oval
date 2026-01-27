@@ -18,6 +18,7 @@ import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -33,6 +34,7 @@ export default function EtlFileRegistryPage() {
   const { error: showError, success } = useToast();
   const { user } = useAuth();
   const { confirm } = useConfirm();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   // Fetch controls modal
@@ -61,13 +63,13 @@ export default function EtlFileRegistryPage() {
       setStats(response);
     } catch (err) {
       showError(
-        "Failed to load ETL statistics",
-        (err as Error).message || "Please try again later.",
+        t.etl.failedToLoadStatistics,
+        (err as Error).message || t.etl.pleaseRetryLater,
       );
     } finally {
       setIsLoadingStats(false);
     }
-  }, [showError]);
+  }, [showError, t.etl]);
 
   // Load registry
   const loadRegistry = useCallback(async () => {
@@ -88,14 +90,14 @@ export default function EtlFileRegistryPage() {
       }
     } catch (err) {
       showError(
-        "Failed to load file registry",
-        (err as Error).message || "Unable to fetch files.",
+        t.etl.failedToLoadFileRegistry,
+        (err as Error).message || t.etl.unableToFetchFiles,
       );
       setFiles([]);
     } finally {
       setIsLoadingFiles(false);
     }
-  }, [page, categoryFilter, statusFilter, showError]);
+  }, [page, categoryFilter, statusFilter, showError, t.etl]);
 
   useEffect(() => {
     loadStats();
@@ -111,11 +113,11 @@ export default function EtlFileRegistryPage() {
 
   const handleReprocess = async (file: EtlFileRegistryRowType) => {
     const confirmed = await confirm({
-      title: "Reprocess File",
-      message: `Mark "${file.file_name}" for reprocessing?`,
+      title: t.etl.reprocessFile,
+      message: `${t.etl.reprocessFileConfirmation.replace("{fileName}", file.file_name)}`,
       type: "info",
-      confirmText: "Reprocess",
-      cancelText: "Cancel",
+      confirmText: t.etl.reprocess,
+      cancelText: t.common.cancel,
     });
 
     if (!confirmed) return;
@@ -128,15 +130,15 @@ export default function EtlFileRegistryPage() {
 
       if (response.success) {
         success(
-          "File reprocessed",
-          `${file.file_name} has been marked for reprocessing.`,
+          t.etl.fileReprocessed,
+          `${file.file_name} ${t.etl.fileReprocessed}.`,
         );
         await loadRegistry();
       }
     } catch (err) {
       showError(
-        "Failed to reprocess file",
-        (err as Error).message || "Please try again.",
+        t.etl.failedToReprocessFile,
+        (err as Error).message || t.etl.pleaseRetry,
       );
     }
   };
@@ -153,17 +155,17 @@ export default function EtlFileRegistryPage() {
   };
 
   const statusOptions: { label: string; value: StatusFilter }[] = [
-    { label: "All statuses", value: "all" },
-    { label: "Pending", value: "pending" },
-    { label: "Processing", value: "processing" },
-    { label: "Completed", value: "completed" },
-    { label: "Failed", value: "failed" },
+    { label: t.etl.allStatuses, value: "all" },
+    { label: t.etl.pending, value: "pending" },
+    { label: t.etl.processingFilesStatus, value: "processing" },
+    { label: t.etl.completed, value: "completed" },
+    { label: t.etl.failed, value: "failed" },
   ];
 
   const categoryOptions: { label: string; value: CategoryFilter }[] = [
-    { label: "All categories", value: "all" },
-    { label: "CDR", value: "CDR" },
-    { label: "TDR", value: "TDR" },
+    { label: t.etl.allCategories, value: "all" },
+    { label: t.etl.cdr, value: "CDR" },
+    { label: t.etl.tdr, value: "TDR" },
   ];
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -215,10 +217,10 @@ export default function EtlFileRegistryPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            ETL File Registry
+            {t.etl.fileRegistry}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Monitor and manage ETL file processing status and history.
+            {t.etl.fileRegistryDescription}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -230,7 +232,7 @@ export default function EtlFileRegistryPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <Play className="h-4 w-4" />
-              Fetch Controls
+              {t.etl.fetchControlsButton}
               <ChevronDown className="h-4 w-4" />
             </button>
 
@@ -248,21 +250,21 @@ export default function EtlFileRegistryPage() {
                   onClick={() => handleFetchModalOpen("immediate")}
                   className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
                 >
-                  Fetch Now
+                  {t.etl.fetchNow}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFetchModalOpen("by-time")}
                   className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
                 >
-                  Fetch by Time
+                  {t.etl.fetchByTime}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleFetchModalOpen("by-range")}
                   className={`w-full text-left px-4 py-2.5 hover:opacity-70 transition-opacity text-sm ${tw.textPrimary}`}
                 >
-                  Fetch by Date Range
+                  {t.etl.fetchByDateRange}
                 </button>
               </div>
             )}
@@ -275,7 +277,7 @@ export default function EtlFileRegistryPage() {
             style={{ backgroundColor: color.primary.action }}
           >
             <BarChart3 className="h-4 w-4" />
-            Analytics
+            {t.etl.analytics}
           </button>
         </div>
       </div>
@@ -284,11 +286,11 @@ export default function EtlFileRegistryPage() {
       {!isLoadingStats && stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: "Total Files", value: stats.data.total_files ?? 0 },
-            { label: "Completed", value: stats.data.completed_files ?? 0 },
-            { label: "Pending", value: stats.data.pending_files ?? 0 },
-            { label: "Failed", value: stats.data.failed_files ?? 0 },
-            { label: "Processing", value: stats.data.processing_files ?? 0 },
+            { label: t.etl.totalFiles, value: stats.data.total_files ?? 0 },
+            { label: t.etl.completed, value: stats.data.completed_files ?? 0 },
+            { label: t.etl.pending, value: stats.data.pending_files ?? 0 },
+            { label: t.etl.failed, value: stats.data.failed_files ?? 0 },
+            { label: t.etl.processingFilesStatus, value: stats.data.processing_files ?? 0 },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -316,7 +318,7 @@ export default function EtlFileRegistryPage() {
           />
           <input
             type="text"
-            placeholder="Search by file name..."
+            placeholder={t.etl.searchByFileName}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none`}
@@ -326,14 +328,14 @@ export default function EtlFileRegistryPage() {
           options={statusOptions}
           value={statusFilter}
           onChange={(v) => setStatusFilter((v as StatusFilter) || "all")}
-          placeholder="Status"
+          placeholder={t.etl.statusPlaceholder}
           className="md:w-48"
         />
         <HeadlessSelect
           options={categoryOptions}
           value={categoryFilter}
           onChange={(v) => setCategoryFilter((v as CategoryFilter) || "all")}
-          placeholder="Category"
+          placeholder={t.etl.categoryPlaceholder}
           className="md:w-48"
         />
       </div>
@@ -344,17 +346,17 @@ export default function EtlFileRegistryPage() {
           <div className="flex flex-col items-center justify-center py-20">
             <LoadingSpinner variant="modern" size="lg" color="primary" />
             <p className="mt-4 text-sm text-gray-500">
-              Loading file registry...
+              {t.etl.loadingFileRegistry}
             </p>
           </div>
         ) : isEmptyState ? (
           <div className="py-16 text-center bg-white">
             <Download size={24} className="mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900">
-              No files found
+              {t.etl.noFilesFound}
             </h3>
             <p className="mt-2 text-sm text-gray-500">
-              Adjust your filters or refresh the data.
+              {t.etl.adjustFiltersOrRefresh}
             </p>
           </div>
         ) : (
@@ -365,13 +367,13 @@ export default function EtlFileRegistryPage() {
             >
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr className="text-left text-xs uppercase tracking-wide text-black">
-                  <th className="px-6 py-4 font-medium">File Name</th>
-                  <th className="px-6 py-4 font-medium">Category</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Rows Processed</th>
-                  <th className="px-6 py-4 font-medium">Size</th>
-                  <th className="px-6 py-4 font-medium">Updated</th>
-                  <th className="px-6 py-4 text-right font-medium">Actions</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.fileNameHeader}</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.categoryHeader}</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.statusHeader}</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.rowsProcessedHeader}</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.sizeHeader}</th>
+                  <th className="px-6 py-4 font-medium">{t.etl.updatedHeader}</th>
+                  <th className="px-6 py-4 text-right font-medium">{t.etl.actionsHeader}</th>
                 </tr>
               </thead>
               <tbody>
@@ -448,7 +450,7 @@ export default function EtlFileRegistryPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"
-                          title="View details"
+                          title={t.etl.viewDetails}
                           className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
                         >
                           <Eye size={16} />
@@ -457,7 +459,7 @@ export default function EtlFileRegistryPage() {
                           <button
                             type="button"
                             onClick={() => handleReprocess(file)}
-                            title="Reprocess file"
+                            title={t.etl.reprocessFileAction}
                             className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
                           >
                             <RefreshCw size={16} />
@@ -479,8 +481,7 @@ export default function EtlFileRegistryPage() {
           className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
         >
           <p>
-            Showing {(page - 1) * PAGE_SIZE + 1}-
-            {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} files
+            {`Showing ${(page - 1) * PAGE_SIZE + 1}-${Math.min(page * PAGE_SIZE, totalCount)} of ${totalCount} files`}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -488,17 +489,17 @@ export default function EtlFileRegistryPage() {
               disabled={page === 1}
               className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
             >
-              Prev
+              {t.etl.prev}
             </button>
             <span className="text-gray-500">
-              Page {page} of {totalPages}
+              {`Page ${page} of ${totalPages}`}
             </span>
             <button
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={page === totalPages}
               className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
             >
-              Next
+              {t.etl.nextButton}
             </button>
           </div>
         </div>

@@ -100,7 +100,7 @@ export default function ConfirmModal({
   return (
     <div
       className="fixed inset-0 overflow-y-auto"
-      style={{ zIndex: zIndex.modal }}
+      style={{ zIndex: zIndex.confirm }}
     >
       {/* Backdrop */}
       <div

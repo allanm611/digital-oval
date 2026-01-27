@@ -776,6 +776,15 @@ export default function ScheduledJobsPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
+                    Code
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
                     Type
                   </th>
                   <th
@@ -839,17 +848,16 @@ export default function ScheduledJobsPage() {
                         }),
                       }}
                     >
-                      <div className="flex items-center">
-                        <div>
-                          <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
-                          >
-                            {job.name}
-                          </div>
-                          <div className="mt-1 text-xs text-gray-500">
-                            Code: {job.code}
-                          </div>
-                        </div>
+                      <div className={`text-base font-semibold ${tw.textPrimary}`}>
+                        {job.name}
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="text-sm text-gray-600">
+                        {job.code}
                       </div>
                     </td>
                     <td

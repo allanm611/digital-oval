@@ -590,6 +590,9 @@ export const zIndex = {
   // Modals and dialogs (should be above overlays)
   modal: 3000,
 
+  // Confirmation dialogs (should be above regular modals)
+  confirm: 3200,
+
   // Popovers and tooltips (contextual UI that appears above modals)
   popover: 4000,
 

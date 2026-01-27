@@ -20,12 +20,12 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 
-const SCHEDULE_TYPES: { value: ScheduleType; label: string }[] = [
-  { value: "manual", label: "Manual" },
-  { value: "cron", label: "Cron" },
-  { value: "interval", label: "Interval" },
-  { value: "event_driven", label: "Event Driven" },
-  { value: "dependency_based", label: "Dependency Based" },
+const SCHEDULE_TYPES: { value: ScheduleType; label: string; description?: string }[] = [
+  { value: "manual", label: "Manual", description: "Trigger the job manually" },
+  { value: "cron", label: "Custom Schedule", description: "Define specific times (e.g., daily, weekly)" },
+  { value: "interval", label: "Repeat Regularly", description: "Run every N seconds" },
+  { value: "event_driven", label: "Event Driven", description: "Trigger when an event occurs" },
+  { value: "dependency_based", label: "Dependency Based", description: "Trigger based on other jobs" },
 ];
 
 const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
@@ -354,7 +354,7 @@ export default function CreateScheduledJobPage() {
                 }
                 className={`w-full ${
                   tw.rounded
-                } border px-3 py-2 text-sm font-mono ${
+                } border px-3 py-2 text-sm ${
                   errors.code
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -654,7 +654,7 @@ export default function CreateScheduledJobPage() {
             {formData.schedule_type === "cron" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cron Expression <span className="text-red-500">*</span>
+                  When to Run <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -667,7 +667,7 @@ export default function CreateScheduledJobPage() {
                   }
                   className={`w-full ${
                     tw.rounded
-                  } border px-3 py-2 text-sm font-mono ${
+                  } border px-3 py-2 text-sm ${
                     errors.cron_expression
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -680,9 +680,9 @@ export default function CreateScheduledJobPage() {
                   </p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
-                  A cron expression defines the exact minute, hour, day, and
-                  month schedule for the job, e.g.{" "}
-                  <span className="font-mono">0 */3 * * * *</span> runs every 3
+                  Use cron syntax to define when the job runs. Examples:{" "}
+                  <span>0 0 * * *</span> = daily at midnight,
+                  <span className="ml-1">0 */3 * * * *</span> = every 3
                   hours.
                 </p>
               </div>
@@ -691,7 +691,7 @@ export default function CreateScheduledJobPage() {
             {formData.schedule_type === "interval" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Interval (seconds) <span className="text-red-500">*</span>
+                  Repeat Every (seconds) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -717,6 +717,11 @@ export default function CreateScheduledJobPage() {
                     {errors.interval_seconds}
                   </p>
                 )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Enter the number of seconds between each job execution. For example,
+                  <span>300</span> means the job runs every 5
+                  minutes.
+                </p>
               </div>
             )}
           </div>

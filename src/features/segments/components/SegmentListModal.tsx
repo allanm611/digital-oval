@@ -252,7 +252,7 @@ export default function SegmentListModal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 backdrop-blur-[1px] px-4 py-6"
+      className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/30 backdrop-blur-[1px] px-4 py-6"
       onClick={(e) => {
         if (e.currentTarget === e.target) {
           handleClose();

@@ -22,6 +22,7 @@ export default function ConfigurationPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [configurations, setConfigurations] = useState<ConfigurationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // All individual configurations - flat list
   useEffect(() => {
@@ -317,6 +318,7 @@ export default function ConfigurationPage() {
     ];
 
     setConfigurations(allConfigurations);
+    setIsLoading(false);
   }, []);
 
   const categories = [
@@ -488,7 +490,13 @@ export default function ConfigurationPage() {
       </div>
 
       {/* Configurations Grid/List */}
-      {viewMode === "grid" ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin">
+            <div className="h-12 w-12 rounded-full border-4 border-gray-300 border-t-[#5F6F77]"></div>
+          </div>
+        </div>
+      ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {filteredConfigurations.map((config, index) => {
             return (
@@ -574,7 +582,7 @@ export default function ConfigurationPage() {
       )}
 
       {/* Empty State */}
-      {filteredConfigurations.length === 0 && (
+      {!isLoading && filteredConfigurations.length === 0 && (
         <div className="text-center py-12">
           <div
             className={`p-4 bg-neutral-100 rounded-full w-16 h-16 mx-auto mb-4`}

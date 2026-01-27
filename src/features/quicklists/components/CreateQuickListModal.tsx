@@ -716,30 +716,30 @@ export default function CreateQuickListModal({
 
           <div className="flex flex-col gap-3 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-end">
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="text-sm font-semibold shadow-sm disabled:opacity-50"
-                style={{
-                  backgroundColor: buttonTokens.action.background,
-                  color: buttonTokens.action.color,
-                  borderRadius: buttonTokens.action.borderRadius,
-                  padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
-                }}
-              >
-                {isSubmitting
-                  ? "Creating..."
-                  : submitLabel ||
-                    (isCreateMode ? "Create quick list" : "Save Changes")}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  disabled={isSubmitting}
+                  className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 sm:order-1`}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
+                  style={{
+                    backgroundColor: buttonTokens.action.background,
+                    color: buttonTokens.action.color,
+                    borderRadius: buttonTokens.action.borderRadius,
+                    padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
+                  }}
+                >
+                  {isSubmitting
+                    ? "Creating..."
+                    : submitLabel ||
+                      (isCreateMode ? "Create quick list" : "Save Changes")}
+                </button>
             </div>
           </div>
         </form>

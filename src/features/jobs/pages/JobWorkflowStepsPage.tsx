@@ -1323,9 +1323,9 @@ export default function JobWorkflowStepsPage() {
                           >
                             {step.step_name}
                           </div>
-                          <div className="mt-1 text-xs text-gray-500">
+                          {/* <div className="mt-1 text-xs text-gray-500">
                             Code: {step.step_code}
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </td>

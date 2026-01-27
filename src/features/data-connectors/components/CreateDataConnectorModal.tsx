@@ -1,20 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
+
 interface CreateDataConnectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: 'create' | 'edit';
+  initialData?: {
+    id?: number | string;
+    name?: string;
+    description?: string;
+    isActive?: boolean;
+  };
 }
 
 export default function CreateDataConnectorModal({
   isOpen,
   onClose,
   onSuccess,
+  mode = 'create',
+  initialData,
 }: CreateDataConnectorModalProps) {
   const { success, error } = useToast();
   const { t } = useLanguage();
@@ -23,6 +33,18 @@ export default function CreateDataConnectorModal({
     description: "",
     isActive: true,
   });
+    // Prefill form in edit mode
+    useEffect(() => {
+      if (isOpen && mode === 'edit' && initialData) {
+        setFormData({
+          name: initialData.name || '',
+          description: initialData.description || '',
+          isActive: initialData.isActive ?? true,
+        });
+      } else if (isOpen && mode === 'create') {
+        setFormData({ name: '', description: '', isActive: true });
+      }
+    }, [isOpen, mode, initialData]);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,14 +59,18 @@ export default function CreateDataConnectorModal({
       setSaving(true);
 
       // TODO: Replace with actual API call
-      // await createDataConnector(formData);
+      // if (mode === 'edit') {
+      //   await updateDataConnector(initialData.id, formData);
+      // } else {
+      //   await createDataConnector(formData);
+      // }
 
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       success(
-        "Data Connector Created",
-        `${formData.name} has been created successfully`,
+        mode === 'edit' ? 'Data Connector Updated' : 'Data Connector Created',
+        `${formData.name} has been ${mode === 'edit' ? 'updated' : 'created'} successfully`,
       );
 
       setFormData({
@@ -57,7 +83,7 @@ export default function CreateDataConnectorModal({
       onClose();
     } catch (err) {
       error(
-        "Failed to create data connector",
+        `Failed to ${mode === 'edit' ? 'update' : 'create'} data connector`,
         err instanceof Error ? err.message : "Please try again later",
       );
     } finally {
@@ -120,7 +146,7 @@ export default function CreateDataConnectorModal({
           </div>
 
           {/* Status */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-2">
             <div>
               <p className="text-sm font-medium text-gray-700">Active status</p>
               <p className="text-xs text-gray-500">
@@ -140,7 +166,7 @@ export default function CreateDataConnectorModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4">
           <button
             type="button"
             onClick={handleClose}
@@ -159,7 +185,13 @@ export default function CreateDataConnectorModal({
               color: "white",
             }}
           >
-            {saving ? "Creating..." : "Create Connector"}
+            {saving
+              ? mode === 'edit'
+                ? 'Saving...'
+                : 'Creating...'
+              : mode === 'edit'
+                ? 'Save Changes'
+                : 'Create Connector'}
           </button>
         </div>
       </form>

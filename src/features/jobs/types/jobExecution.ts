@@ -164,13 +164,20 @@ export interface RecordMetricsPayload {
 
 // Analytics and Statistics Types
 export interface ExecutionStatistics {
-  total_executions: number;
-  successful_executions: number;
-  failed_executions: number;
-  running_executions: number;
-  queued_executions: number;
-  average_duration_seconds: number;
-  total_duration_seconds: number;
+  total_executions: string | number;
+  successful: string | number;
+  failed: string | number;
+  timed_out: string | number;
+  aborted: string | number;
+  sla_breaches: string | number;
+  avg_duration_seconds: number | null;
+  max_duration_seconds: number | null;
+  min_duration_seconds: number | null;
+  avg_rows_processed: number | null;
+  total_rows_processed: number | null;
+  avg_memory_mb: number | null;
+  avg_cpu_percent: number | null;
+  avg_data_quality_score: number | null;
 }
 
 export interface SuccessRateResponse {

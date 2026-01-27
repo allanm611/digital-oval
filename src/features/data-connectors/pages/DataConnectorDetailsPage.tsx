@@ -157,7 +157,7 @@ export default function DataConnectorDetailsPage() {
 
       {/* Connector Info Card */}
       <div
-        className={`${tw.rounded} border ${tw.borderDefault} bg-white shadow-sm p-6`}
+        className={`${tw.rounded} border ${tw.borderDefault} shadow-sm p-6 bg-transparent`}
       >
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -260,57 +260,62 @@ export default function DataConnectorDetailsPage() {
       {/* Connection Profiles Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
-            Connection Profiles
-          </h2>
+          <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>Connection Profiles</h2>
           <button
             className={`text-sm font-medium ${tw.textSecondary}`}
-            onClick={() =>
-              showError("Not implemented", "Create profile from here soon")
-            }
+            onClick={() => showError("Not implemented", "Create profile from here soon")}
           >
             + Add profile
           </button>
         </div>
-
         {connectionProfiles.length === 0 ? (
-          <div
-            className={`${tw.rounded} border ${tw.borderDefault} bg-white p-6 text-center`}
-          >
-            <Plug
-              className="h-10 w-10 mx-auto mb-2"
-              style={{ color: color.text.muted }}
-            />
+          <div className={`${tw.rounded} border ${tw.borderDefault} p-6 text-center bg-transparent`}>
+            <Plug className="h-10 w-10 mx-auto mb-2" style={{ color: color.text.muted }} />
             <p className={`${tw.textSecondary}`}>No connection profiles yet</p>
           </div>
         ) : (
-          <div
-            className={`${tw.rounded} border ${tw.borderDefault} bg-white overflow-hidden`}
-          >
-            <table className="w-full">
-              <thead style={{ background: color.surface.tableHeader }}>
+          <div>
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
+              <thead>
                 <tr>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopLeftRadius: "0.375rem",
+                    }}
                   >
                     Profile Name
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
                   >
                     Type
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
                   >
                     Environment
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopRightRadius: "0.375rem",
+                    }}
                   >
                     Status
                   </th>
@@ -321,32 +326,52 @@ export default function DataConnectorDetailsPage() {
                   <tr
                     key={profile.id}
                     onClick={() => handleProfileClick(profile.id)}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
-                    style={{ backgroundColor: color.surface.tablebodybg }}
+                    className="transition-colors cursor-pointer hover:opacity-75"
+                    style={{
+                      backgroundColor: "transparent",
+                    }}
                   >
-                    <td className="px-4 py-3 text-sm">
+                    <td
+                      className="px-6 py-4"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopLeftRadius: "0.375rem",
+                        borderBottomLeftRadius: "0.375rem",
+                      }}
+                    >
                       <span className={`font-medium ${tw.textPrimary}`}>
                         {profile.name}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
                       <span className={tw.textPrimary}>{profile.type}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
                       <span className={tw.textPrimary}>
                         {profile.environment || "--"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td
+                      className="px-6 py-4"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopRightRadius: "0.375rem",
+                        borderBottomRightRadius: "0.375rem",
+                      }}
+                    >
                       {profile.is_active ? (
                         <span className="inline-flex items-center gap-1 text-green-600">
-                          <CheckCircle className="h-4 w-4" />
-                          Active
+                          <CheckCircle className="h-4 w-4" /> Active
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-gray-400">
-                          <XCircle className="h-4 w-4" />
-                          Inactive
+                          <XCircle className="h-4 w-4" /> Inactive
                         </span>
                       )}
                     </td>

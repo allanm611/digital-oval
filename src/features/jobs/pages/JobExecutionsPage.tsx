@@ -78,11 +78,11 @@ export default function JobExecutionsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalExecutions: 0,
-    runningExecutions: 0,
     successfulExecutions: 0,
     failedExecutions: 0,
-    queuedExecutions: 0,
-    activeExecutions: 0,
+    timedOut: 0,
+    aborted: 0,
+    slaBreaches: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
   const [jobIdFilter, setJobIdFilter] = useState<number | "">("");
@@ -257,53 +257,54 @@ export default function JobExecutionsPage() {
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const [activeResponse, queuedResponse, failedResponse, statsResponse] =
-        await Promise.all([
-          jobExecutionService.getActiveExecutions().catch(() => ({ data: [] })),
-          jobExecutionService.getQueuedExecutions().catch(() => ({ data: [] })),
-          jobExecutionService
-            .getFailedExecutions({ daysBack: 7 })
-            .catch(() => ({
-              data: [],
-            })),
-          jobExecutionService.getExecutionStatistics().catch(() => ({
-            total_executions: 0,
-            successful_executions: 0,
-            failed_executions: 0,
-            running_executions: 0,
-            queued_executions: 0,
-            average_duration_seconds: 0,
-            total_duration_seconds: 0,
-          })),
-        ]);
-
-      const activeExecutions =
-        activeResponse && "data" in activeResponse
-          ? activeResponse.data.length
-          : 0;
-      const queuedExecutions =
-        queuedResponse && "data" in queuedResponse
-          ? queuedResponse.data.length
-          : 0;
-      const failedExecutions =
-        failedResponse && "data" in failedResponse
-          ? failedResponse.data.length
-          : 0;
-
-      setStats({
-        totalExecutions: statsResponse.total_executions || 0,
-        runningExecutions: statsResponse.running_executions || activeExecutions,
-        successfulExecutions: statsResponse.successful_executions || 0,
-        failedExecutions: statsResponse.failed_executions || failedExecutions,
-        queuedExecutions: statsResponse.queued_executions || queuedExecutions,
-        activeExecutions: activeExecutions,
+      const response = await jobExecutionService.getExecutionStatistics({ skipCache: true }).catch((err) => {
+        console.error("Failed to fetch execution statistics:", err);
+        return null;
       });
+
+      if (response) {
+        // Handle both wrapped response { success, data, source } and direct data
+        const statsData = (response as any).data || response;
+
+        console.log("Full response received:", response);
+        console.log("Stats data:", statsData);
+
+        // Parse string values to numbers
+        const totalExecutions = parseInt(String(statsData.total_executions), 10) || 0;
+        const successfulExecutions = parseInt(String(statsData.successful), 10) || 0;
+        const failedExecutions = parseInt(String(statsData.failed), 10) || 0;
+        const timedOut = parseInt(String(statsData.timed_out), 10) || 0;
+        const aborted = parseInt(String(statsData.aborted), 10) || 0;
+        const slaBreaches = parseInt(String(statsData.sla_breaches), 10) || 0;
+
+        console.log("Execution stats loaded:", {
+          totalExecutions,
+          successfulExecutions,
+          failedExecutions,
+          timedOut,
+          aborted,
+          slaBreaches,
+        });
+
+        setStats({
+          totalExecutions,
+          successfulExecutions,
+          failedExecutions,
+          timedOut,
+          aborted,
+          slaBreaches,
+        });
+      }
     } catch (err) {
       console.error("Failed to load stats:", err);
+      showError(
+        "Failed to load execution statistics",
+        err instanceof Error ? err.message : "Unknown error"
+      );
     } finally {
       setIsLoadingStats(false);
     }
-  }, []);
+  }, [showError]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -563,20 +564,6 @@ export default function JobExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Running</p>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {isLoadingStats ? "..." : stats.runningExecutions}
-          </p>
-        </div>
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-        >
-          <div className="flex items-center gap-2">
-            <CheckCircle
-              className="h-5 w-5"
-              style={{ color: color.primary.accent }}
-            />
             <p className="text-sm font-medium text-gray-600">Successful</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
@@ -587,7 +574,7 @@ export default function JobExecutionsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
-            <XCircle
+            <CheckCircle
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
@@ -601,14 +588,28 @@ export default function JobExecutionsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
+            <XCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Timed Out</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingStats ? "..." : stats.timedOut}
+          </p>
+        </div>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
             <Clock
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Queued</p>
+            <p className="text-sm font-medium text-gray-600">Aborted</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {isLoadingStats ? "..." : stats.queuedExecutions}
+            {isLoadingStats ? "..." : stats.aborted}
           </p>
         </div>
         <div
@@ -619,10 +620,10 @@ export default function JobExecutionsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Active</p>
+            <p className="text-sm font-medium text-gray-600">SLA Breaches</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
-            {isLoadingStats ? "..." : stats.activeExecutions}
+            {isLoadingStats ? "..." : stats.slaBreaches}
           </p>
         </div>
       </div>
@@ -1102,11 +1103,11 @@ export default function JobExecutionsPage() {
                           >
                             {execution.id.substring(0, 8)}...
                           </div>
-                          {execution.trace_id && (
+                          {/* {execution.trace_id && (
                             <div className="mt-1 text-xs text-gray-500">
                               Trace: {execution.trace_id.substring(0, 8)}...
                             </div>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </td>

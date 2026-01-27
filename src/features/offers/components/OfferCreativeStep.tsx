@@ -25,6 +25,7 @@ import {
 } from "../types/offerCreative";
 import { offerCreativeService } from "../services/offerCreativeService";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import {
   SMSSmartphonePreview,
@@ -65,26 +66,35 @@ interface OfferCreativeStepProps {
 
 type ActiveField = "title" | "body";
 
-// Channel configuration with icons
-const CHANNELS: Array<{
+// Channel configuration with icons - labels will be populated from translations
+const CHANNEL_CONFIG: Array<{
   value: CreativeChannel;
-  label: string;
+  translationKey: string;
   icon: typeof Smartphone;
 }> = [
-  { value: "SMS", label: "SMS", icon: Smartphone },
-  { value: "Email", label: "Email", icon: Mail },
-  { value: "Push", label: "Push Notification", icon: MessageSquare },
-  { value: "InApp", label: "In-App", icon: Monitor },
-  { value: "Web", label: "Web", icon: Monitor },
-  { value: "IVR", label: "IVR", icon: PhoneCall },
-  { value: "USSD", label: "USSD", icon: Phone },
-  { value: "WhatsApp", label: "WhatsApp", icon: MessageSquare },
+  { value: "SMS", translationKey: "offers.channels.sms", icon: Smartphone },
+  { value: "Email", translationKey: "offers.channels.email", icon: Mail },
+  {
+    value: "Push",
+    translationKey: "offers.channels.pushNotification",
+    icon: MessageSquare,
+  },
+  { value: "InApp", translationKey: "offers.channels.inApp", icon: Monitor },
+  { value: "Web", translationKey: "offers.channels.web", icon: Monitor },
+  { value: "IVR", translationKey: "offers.channels.ivr", icon: PhoneCall },
+  { value: "USSD", translationKey: "offers.channels.ussd", icon: Phone },
+  {
+    value: "WhatsApp",
+    translationKey: "offers.channels.whatsApp",
+    icon: MessageSquare,
+  },
 ];
 
 // Locale labels for display - will use languages from config
 const getLocaleLabel = (
   locale: Locale,
   languages?: TypeConfigurationItem[],
+  t?: Record<string, any>,
 ): string => {
   // If languages config is available, use it
   if (languages && languages.length > 0) {
@@ -92,7 +102,12 @@ const getLocaleLabel = (
     if (language) return language.name;
   }
 
-  // Fallback to hardcoded map
+  // Fallback to translations if available
+  if (t && t.offers && t.offers.locales && t.offers.locales[locale]) {
+    return t.offers.locales[locale];
+  }
+
+  // Final fallback to hardcoded map
   const localeMap: Record<string, string> = {
     en: "English",
     "en-US": "English (US)",
@@ -464,6 +479,7 @@ export default function OfferCreativeStep({
   onCreativesChange,
   validationError,
 }: OfferCreativeStepProps) {
+  const { t } = useLanguage();
   // Load creative templates from configuration
   const { data: templates } = useConfigurationData("creativeTemplates");
   // Load sender IDs and SMS routes from configuration
@@ -559,8 +575,29 @@ export default function OfferCreativeStep({
   };
 
   const selectedCreativeData = creatives.find((c) => c.id === selectedCreative);
-  const getChannelConfig = (channel: CreativeChannel) =>
-    CHANNELS.find((c) => c.value === channel);
+
+  // Get channel label from translation
+  const getChannelLabel = (channel: CreativeChannel): string => {
+    const config = CHANNEL_CONFIG.find((c) => c.value === channel);
+    if (!config) return channel;
+    const keys = config.translationKey.split(".");
+    let value: any = t;
+    for (const key of keys) {
+      value = value?.[key];
+      if (!value) return channel;
+    }
+    return value as string;
+  };
+
+  const getChannelConfig = (channel: CreativeChannel) => {
+    const config = CHANNEL_CONFIG.find((c) => c.value === channel);
+    if (!config) return undefined;
+    return {
+      value: config.value,
+      label: getChannelLabel(channel),
+      icon: config.icon,
+    };
+  };
 
   // Filter templates by channel and locale
   // Templates use metadataValue for channel, and locale field for language matching
@@ -839,10 +876,10 @@ export default function OfferCreativeStep({
             <MessageSquare className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No Creatives Added
+            {t.offers.creatives.noCreativesAdded}
           </h3>
           <p className="text-gray-500 text-sm mb-6">
-            Create compelling content for your offer across different channels
+            {t.offers.creatives.subheadline}
           </p>
           <button
             onClick={addCreative}
@@ -852,7 +889,7 @@ export default function OfferCreativeStep({
             }}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Creative
+            {t.offers.creatives.addCreative}
           </button>
         </div>
       ) : (
@@ -863,7 +900,9 @@ export default function OfferCreativeStep({
               className={`bg-white ${tw.rounded} border border-gray-200 p-4`}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Creatives</h3>
+                <h3 className="font-semibold text-gray-900">
+                  {t.offers.creatives.title}
+                </h3>
                 <button
                   onClick={addCreative}
                   className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
@@ -872,7 +911,7 @@ export default function OfferCreativeStep({
                   }}
                 >
                   <Plus className="w-5 h-5 mr-1.5" />
-                  Add Creative
+                  {t.offers.creatives.addCreative}
                 </button>
               </div>
 
@@ -906,7 +945,7 @@ export default function OfferCreativeStep({
                             </div>
                             <div className="text-xs text-gray-500 flex items-center">
                               <Globe className="w-3 h-3 mr-1" />
-                              {getLocaleLabel(creative.locale)}
+                              {getLocaleLabel(creative.locale, languages as TypeConfigurationItem[], t)}
                             </div>
                           </div>
                         </div>
@@ -943,7 +982,7 @@ export default function OfferCreativeStep({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Channel
+                        {t.offers.formLabels.channel}
                       </label>
                       <HeadlessSelect
                         value={selectedCreativeData.channel}
@@ -958,18 +997,18 @@ export default function OfferCreativeStep({
                             [selectedCreativeData.id]: null,
                           }));
                         }}
-                        options={CHANNELS.map((channel) => ({
+                        options={CHANNEL_CONFIG.map((channel) => ({
                           value: channel.value,
-                          label: channel.label,
+                          label: getChannelLabel(channel.value),
                         }))}
-                        placeholder="Select channel"
+                        placeholder={t.offers.formPlaceholders.selectChannel}
                         zIndex={zIndex.popover}
                       />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Locale / Language
+                        {t.offers.formLabels.localeLanguage}
                       </label>
                       <HeadlessSelect
                         value={selectedCreativeData.locale}
@@ -996,12 +1035,12 @@ export default function OfferCreativeStep({
                           ...((languages as TypeConfigurationItem[])?.length ===
                           0
                             ? COMMON_LOCALES.map((locale) => ({
-                                label: getLocaleLabel(locale),
+                                label: getLocaleLabel(locale, languages as TypeConfigurationItem[], t),
                                 value: locale,
                               }))
                             : []),
                         ]}
-                        placeholder="Select language"
+                        placeholder={t.offers.formPlaceholders.selectLanguage}
                         zIndex={zIndex.popover}
                       />
                     </div>
@@ -1082,7 +1121,7 @@ export default function OfferCreativeStep({
                     {selectedCreativeData.channel === "SMS" ? (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Sender ID
+                          {t.offers.formLabels.senderId}
                         </label>
                         <HeadlessSelect
                           value={selectedCreativeData.title || ""}
@@ -1092,7 +1131,7 @@ export default function OfferCreativeStep({
                             })
                           }
                           options={[
-                            { label: "Select Sender ID", value: "" },
+                            { label: t.offers.formPlaceholders.selectSenderId, value: "" },
                             ...((senderIds as TypeConfigurationItem[]) || [])
                               .filter(
                                 (senderId) =>
@@ -1104,7 +1143,7 @@ export default function OfferCreativeStep({
                                 value: senderId.name,
                               })),
                           ]}
-                          placeholder="Select Sender ID..."
+                          placeholder={t.offers.formPlaceholders.selectSenderId}
                           className="w-full"
                           zIndex={zIndex.popover}
                         />
@@ -1112,7 +1151,7 @@ export default function OfferCreativeStep({
                     ) : (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Subject Line
+                          {t.offers.formLabels.subjectLine}
                         </label>
                         <input
                           ref={titleInputRef}
@@ -1138,7 +1177,7 @@ export default function OfferCreativeStep({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          placeholder="Enter email subject..."
+                          placeholder={t.offers.formPlaceholders.enterEmailSubject}
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                         />
                       </div>
@@ -1148,7 +1187,7 @@ export default function OfferCreativeStep({
                     {selectedCreativeData.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          SMS Route
+                          {t.offers.formLabels.smsRoute}
                         </label>
                         <HeadlessSelect
                           value={
@@ -1164,7 +1203,7 @@ export default function OfferCreativeStep({
                             })
                           }
                           options={[
-                            { label: "Select Route", value: "" },
+                            { label: t.offers.formPlaceholders.selectSmsRoute, value: "" },
                             ...((smsRoutes as TypeConfigurationItem[]) || [])
                               .filter((route) => route.isActive)
                               .map((route) => ({
@@ -1172,7 +1211,7 @@ export default function OfferCreativeStep({
                                 value: route.name,
                               })),
                           ]}
-                          placeholder="Select SMS Route..."
+                          placeholder={t.offers.formPlaceholders.selectSmsRoute}
                           className="w-full"
                           zIndex={zIndex.popover}
                         />
@@ -1185,7 +1224,7 @@ export default function OfferCreativeStep({
                       style={{ backgroundColor: color.surface.cards }}
                     >
                       <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        Message Content
+                        {t.offers.formLabels.messageContent}
                       </span>
                       <div className="flex items-center gap-2">
                         {selectedCreativeData.channel === "Email" && (
@@ -1216,8 +1255,8 @@ export default function OfferCreativeStep({
                             }}
                           >
                             {isRichTextMap[selectedCreativeData.id]
-                              ? "Rich Text"
-                              : "Plain Text"}
+                              ? t.offers.buttons.richText
+                              : t.offers.buttons.plainText}
                           </button>
                         )}
                         <div className="relative">
@@ -1232,7 +1271,7 @@ export default function OfferCreativeStep({
                               color: "white",
                             }}
                           >
-                            Insert Variable
+                            {t.offers.buttons.insertVariable}
                           </button>
                           <div
                             className="absolute left-0 mt-1"
@@ -1251,7 +1290,7 @@ export default function OfferCreativeStep({
                     {/* Message Body */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Message Body
+                        {t.offers.formLabels.messageBody}
                       </label>
                       <textarea
                         ref={bodyTextareaRef}
@@ -1275,7 +1314,7 @@ export default function OfferCreativeStep({
                             e.currentTarget.selectionStart || 0,
                           );
                         }}
-                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        placeholder={t.offers.formPlaceholders.enterMessage}
                         rows={8}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                       />
@@ -1291,7 +1330,7 @@ export default function OfferCreativeStep({
                                   selectedCreativeData.text_body || "",
                                 ).charCount
                               }{" "}
-                              characters
+                              {t.offers.labels.characters}
                             </span>
                             <span>
                               {
@@ -1299,18 +1338,17 @@ export default function OfferCreativeStep({
                                   selectedCreativeData.text_body || "",
                                 ).segments
                               }{" "}
-                              segment(s)
+                              {t.offers.labels.segments}
                             </span>
                             {getCharacterInfo(
                               selectedCreativeData.text_body || "",
                             ).isUnicode && (
-                              <span className="text-amber-600">Unicode</span>
+                              <span className="text-amber-600">{t.offers.labels.unicode}</span>
                             )}
                           </div>
                         ) : (
                           <span className="text-xs text-gray-500">
-                            Variables like {"{{field}}"} will be replaced with
-                            customer data
+                            {t.offers.hints.variables}
                           </span>
                         )}
 
@@ -1330,7 +1368,7 @@ export default function OfferCreativeStep({
                             ))}
                             {selectedVariables.length > 3 && (
                               <span className="text-xs text-gray-400">
-                                +{selectedVariables.length - 3} more
+                                +{selectedVariables.length - 3} {t.offers.labels.moreItems}
                               </span>
                             )}
                           </div>
@@ -1349,7 +1387,7 @@ export default function OfferCreativeStep({
                       }}
                     >
                       <Eye className="w-4 h-4 mr-2" />
-                      Preview Creative
+                      {t.offers.buttons.previewCreative}
                     </button>
                   </div>
                 </div>
@@ -1362,10 +1400,10 @@ export default function OfferCreativeStep({
                   <MessageSquare className="w-8 h-8 text-gray-400" />
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No Creative Selected
+                  {t.offers.creatives.noCreativeSelected}
                 </h3>
                 <p className="text-gray-500 text-sm">
-                  Select a creative from the list above to start editing.
+                  {t.offers.creatives.selectPrompt}
                 </p>
               </div>
             )}
@@ -1381,7 +1419,7 @@ export default function OfferCreativeStep({
           setPreviewError(null);
           setPreviewResult(null);
         }}
-        title="Preview Creative"
+        title={t.offers.buttons.previewCreative}
         size="2xl"
       >
         <div className="space-y-6">
@@ -1406,7 +1444,7 @@ export default function OfferCreativeStep({
               selectedCreativeData?.channel === "SMS Flash" ? (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    SMS Preview
+                    {t.offers.preview.smsPreview}
                   </h3>
                   <SMSSmartphonePreview
                     message={
@@ -1420,7 +1458,7 @@ export default function OfferCreativeStep({
               ) : selectedCreativeData?.channel === "Email" ? (
                 <div>
                   <h3 className="text-sm font-semibold text-gray-700 mb-4">
-                    Email Preview
+                    {t.offers.preview.emailPreview}
                   </h3>
                   <EmailLaptopPreview
                     title={previewResult.rendered_title}
@@ -1434,7 +1472,7 @@ export default function OfferCreativeStep({
                   {previewResult.rendered_title && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered Title
+                        {t.offers.preview.renderedTitle}
                       </label>
                       <div
                         className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
@@ -1449,7 +1487,7 @@ export default function OfferCreativeStep({
                   {previewResult.rendered_text_body && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered Text Body
+                        {t.offers.preview.renderedTextBody}
                       </label>
                       <div
                         className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
@@ -1464,7 +1502,7 @@ export default function OfferCreativeStep({
                   {previewResult.rendered_html_body && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Rendered HTML Body
+                        {t.offers.preview.renderedHtmlBody}
                       </label>
                       <div
                         className={`bg-gray-50 border border-gray-200 ${tw.rounded} p-4`}
@@ -1484,8 +1522,7 @@ export default function OfferCreativeStep({
                     !previewResult.rendered_html_body && (
                       <div className="text-center py-8 text-gray-500">
                         <p>
-                          No content to preview. Add title, text body, or HTML
-                          body.
+                          {t.offers.messages.noContentToPreview}
                         </p>
                       </div>
                     )}
@@ -1495,7 +1532,7 @@ export default function OfferCreativeStep({
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>
-                Click "Preview Creative" to see how your creative will look.
+                {t.offers.messages.clickPreview}
               </p>
             </div>
           )}

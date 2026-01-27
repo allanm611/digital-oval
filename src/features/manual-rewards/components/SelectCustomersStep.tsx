@@ -1,11 +1,11 @@
-import { useState, useRef, useMemo, useEffect } from "react";
-import { Upload, FileText, AlertCircle } from "lucide-react";
-import * as XLSX from "xlsx";
+import { useState, useMemo } from "react";
+import { AlertCircle, Loader2, Plus, List } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import QuickListPickerModal from "../../segments/components/QuickListPickerModal";
+import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
-import { UploadType } from "../../quicklists/types/quicklist";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -15,7 +15,20 @@ interface SelectCustomersStepProps {
   onNext: () => void;
 }
 
-type InputMode = "file" | "manual";
+const listTypeOptions = [
+  { value: "Standard", label: "Standard" },
+  { value: "Premium", label: "Premium" },
+  { value: "VIP", label: "VIP" },
+];
+
+interface QuickListItem {
+  id: number;
+  name: string;
+  description?: string;
+  upload_type: string;
+  row_count: number;
+  created_at: string;
+}
 
 export default function SelectCustomersStep({
   data,
@@ -23,202 +36,81 @@ export default function SelectCustomersStep({
   onNext,
 }: SelectCustomersStepProps) {
   const { t } = useLanguage();
-  const { error: showError } = useToast();
-  const [inputMode, setInputMode] = useState<InputMode>("file");
-  const [file, setFile] = useState<File | null>(data.audienceFile || null);
-  const [uploadType, setUploadType] = useState<string>(data.uploadType || "");
-  const [name, setName] = useState(data.audienceName || "");
+  const [listName, setListName] = useState(data.audienceName || "");
+  const [listType, setListType] = useState(data.uploadType || "");
+  const [inputMethod, setInputMethod] = useState<"" | "file" | "manual">(
+    (data.inputMethod as "file" | "manual") || "",
+  );
+  const [selectedQuickList, setSelectedQuickList] =
+    useState<QuickListItem | null>(null);
+  const [isQuickListCreated, setIsQuickListCreated] = useState(false);
   const [manualInput, setManualInput] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadTypes, setUploadTypes] = useState<UploadType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showPickerModal, setShowPickerModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-  useEffect(() => {
-    loadUploadTypes();
-  }, []);
+  // Validate manual input format (emails or phone numbers)
+  const validateManualInput = () => {
+    if (!manualInput.trim()) return false;
+    const lines = manualInput.split("\n").filter((line) => line.trim());
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[\d+\-() \s]{5,}$/;
+    return lines.some((line) => emailRegex.test(line) || phoneRegex.test(line));
+  };
 
-  const loadUploadTypes = async () => {
+  const isFormValid =
+    listName.trim() &&
+    listType !== "" &&
+    inputMethod !== "" &&
+    (inputMethod === "manual"
+      ? validateManualInput()
+      : inputMethod === "file" && selectedQuickList);
+
+  const handleSelectQuickList = (quicklist: QuickListItem) => {
+    setSelectedQuickList(quicklist);
+    setError("");
+    setShowPickerModal(false);
+  };
+
+  const handleCreateQuickList = async (request: any) => {
     try {
-      setLoading(true);
-      const response = await quicklistService.getUploadTypes({
-        activeOnly: true,
-      });
-      if (response.success) {
-        const types = response.data || [];
-        setUploadTypes(types);
-        if (types.length > 0 && !uploadType) {
-          setUploadType(types[0].upload_type);
-        }
+      const response = await quicklistService.createQuickList(request);
+      if (response.success && response.data) {
+        const newQuickList: QuickListItem = {
+          id: response.data.quicklist_id,
+          name: request.name,
+          description: request.description || undefined,
+          upload_type: "multi",
+          row_count: response.data.rows_imported || 0,
+          created_at: new Date().toISOString(),
+        };
+        setSelectedQuickList(newQuickList);
+        setIsQuickListCreated(true);
+        setShowCreateModal(false);
+        setError("");
       }
     } catch (err) {
-      console.error("Failed to load upload types:", err);
-      showError(t.manualRewards.errorLoadUploadTypes);
-    } finally {
-      setLoading(false);
+      console.error("Failed to create quicklist:", err);
+      setError("Failed to create quicklist. Please try again.");
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      const validTypes = [
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "application/vnd.ms-excel",
-      ];
-      if (!validTypes.includes(selectedFile.type)) {
-        setError(t.manualRewards.errorSelectFile);
-        setFile(null);
-        return;
-      }
-
-      // File size validation (use default 10MB if no upload type selected)
-      let maxSizeMB = 10;
-      if (uploadType) {
-        const selectedUploadType = uploadTypes.find(
-          (t) => t.upload_type === uploadType
-        );
-        if (selectedUploadType) {
-          maxSizeMB = selectedUploadType.max_file_size_mb || 10;
-        }
-      }
-      const maxSizeBytes = maxSizeMB * 1024 * 1024;
-
-      if (selectedFile.size > maxSizeBytes) {
-        setError(
-          t.manualRewards.maxFileSize.replace("{size}", String(maxSizeMB))
-        );
-        setFile(null);
-        return;
-      }
-
-      setFile(selectedFile);
-      if (!name) {
-        const filename = selectedFile.name.replace(/\.[^/.]+$/, "");
-        setName(filename);
-      }
-      setError("");
-    }
-  };
-
-  const manualInputValidation = useMemo(() => {
-    if (!manualInput.trim()) {
-      return { valid: [], invalid: [], validCount: 0, invalidCount: 0 };
-    }
-
-    const lines = manualInput
-      .split("\n")
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[+]?[0-9\s()-]{8,}$/;
-
-    const valid: string[] = [];
-    const invalid: string[] = [];
-
-    lines.forEach((line) => {
-      if (emailRegex.test(line) || phoneRegex.test(line)) {
-        valid.push(line);
-      } else {
-        invalid.push(line);
-      }
-    });
-
-    return {
-      valid,
-      invalid,
-      validCount: valid.length,
-      invalidCount: invalid.length,
-    };
-  }, [manualInput]);
-
-  const createFileFromManualInput = (): File => {
-    let columns: string[] = [];
-
-    if (uploadType) {
-      const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
-      if (selectedType) {
-        if (Array.isArray(selectedType.expected_columns)) {
-          columns = selectedType.expected_columns;
-        } else if (
-          typeof selectedType.expected_columns === "object" &&
-          selectedType.expected_columns !== null
-        ) {
-          columns = Object.keys(selectedType.expected_columns);
-        }
-      }
-    }
-
-    // Default columns if no upload type selected or no columns found
-    if (columns.length === 0) {
-      columns = ["Email", "Phone"];
-    }
-
-    const worksheetData: string[][] = [columns];
-
-    const emailColumnIndex = columns.findIndex((col) =>
-      col.toLowerCase().includes("email")
-    );
-    const phoneColumnIndex = columns.findIndex(
-      (col) =>
-        col.toLowerCase().includes("phone") ||
-        col.toLowerCase().includes("mobile")
-    );
-
-    manualInputValidation.valid.forEach((contact) => {
-      const row = new Array(columns.length).fill("");
-      const isEmail = contact.includes("@");
-
-      if (isEmail && emailColumnIndex !== -1) {
-        row[emailColumnIndex] = contact;
-      } else if (!isEmail && phoneColumnIndex !== -1) {
-        row[phoneColumnIndex] = contact.replace(/\s/g, "");
-      } else {
-        row[0] = isEmail ? contact : contact.replace(/\s/g, "");
-      }
-
-      worksheetData.push(row);
-    });
-
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts");
-
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    return new File([blob], `manual_input_${Date.now()}.xlsx`, {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
   };
 
   const handleNext = async () => {
-    if (inputMode === "file") {
-      if (!file) {
-        setError(t.manualRewards.errorSelectFile);
-        return;
+    if (!isFormValid) {
+      if (inputMethod === "file" && !selectedQuickList) {
+        setError("Please select or create a quicklist");
+      } else if (inputMethod === "manual" && !validateManualInput()) {
+        setError("Please enter valid emails or phone numbers (one per line)");
+      } else if (!listName.trim()) {
+        setError("Please enter a reward name");
+      } else if (listType === "") {
+        setError("Please select a list type");
+      } else if (inputMethod === "") {
+        setError("Please select an input method");
+      } else {
+        setError("Please fill in all required fields");
       }
-    } else {
-      if (!manualInput.trim()) {
-        setError(t.manualRewards.errorEnterManual);
-        return;
-      }
-      if (manualInputValidation.validCount === 0) {
-        setError(t.manualRewards.errorNoValidContacts);
-        return;
-      }
-    }
-
-    if (!name.trim()) {
-      setError(t.manualRewards.errorEnterName);
       return;
     }
 
@@ -226,51 +118,36 @@ export default function SelectCustomersStep({
       setIsSubmitting(true);
       setError("");
 
-      const fileToUpload =
-        inputMode === "manual" ? createFileFromManualInput() : file!;
+      // Update reward data based on input method
+      const updateData: Partial<ManualRewardData> = {
+        audienceName: listName,
+        uploadType: listType,
+        inputMethod: inputMethod as "file" | "manual",
+      };
 
-      const response = await quicklistService.createQuickList({
-        file: fileToUpload,
-        upload_type: uploadType,
-        name: name.trim(),
-        description: null,
-        created_by: null,
-      });
-
-      if (!response.success) {
-        throw new Error(
-          "error" in response ? response.error : "Failed to create audience"
-        );
+      // Handle file upload method
+      if (inputMethod === "file" && selectedQuickList) {
+        updateData.quicklistId = selectedQuickList.id;
+        updateData.rowCount = selectedQuickList.row_count;
       }
 
-      onUpdate({
-        audienceFile: fileToUpload,
-        audienceName: name.trim(),
-        audienceDescription: undefined,
-        uploadType: uploadType,
-        quicklistId: response.data.quicklist_id,
-        rowCount: response.data.rows_imported,
-      });
+      // Handle manual input method
+      if (inputMethod === "manual") {
+        updateData.audienceFileText = manualInput;
+      }
 
+      onUpdate(updateData);
       onNext();
     } catch (err) {
-      console.error("Failed to create audience:", err);
+      console.error("Failed to update audience:", err);
       const errorMessage =
         err instanceof Error
           ? err.message
-          : t.manualRewards.errorCreateAudience;
+          : "Failed to update audience information";
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   return (
@@ -278,10 +155,7 @@ export default function SelectCustomersStep({
       className={`bg-white ${tw.rounded} shadow-sm border`}
       style={{ borderColor: color.border.default }}
     >
-      <div
-        className="p-6 border-b"
-        style={{ borderColor: color.border.default }}
-      >
+      <div className="p-6">
         <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
           {t.manualRewards.selectCustomersTitle}
         </h2>
@@ -291,15 +165,18 @@ export default function SelectCustomersStep({
       </div>
 
       <div className="p-6 space-y-6">
-        {/* List Name */}
+        {/* Reward Name */}
         <div>
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
             {t.manualRewards.listNameLabel}
           </label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={listName}
+            onChange={(e) => {
+              setListName(e.target.value);
+              setError("");
+            }}
             className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2`}
             style={{
               borderColor: color.border.default,
@@ -311,7 +188,25 @@ export default function SelectCustomersStep({
           />
         </div>
 
-        {/* Input Mode Toggle */}
+        {/* List Type */}
+        <div>
+          <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+            List Type *
+          </label>
+          <HeadlessSelect
+            options={listTypeOptions}
+            value={listType}
+            onChange={(value) => {
+              setListType(value as string);
+              setError("");
+            }}
+            placeholder="Select list type"
+            disabled={isSubmitting}
+            zIndex={zIndex.popover}
+          />
+        </div>
+
+        {/* Input Method */}
         <div>
           <label
             className={`block text-sm font-medium ${tw.textPrimary} mb-2.5`}
@@ -323,87 +218,83 @@ export default function SelectCustomersStep({
               { value: "file", label: t.manualRewards.inputMethodUpload },
               { value: "manual", label: t.manualRewards.inputMethodManual },
             ]}
-            value={inputMode}
-            onChange={(value) => setInputMode(value as InputMode)}
+            value={inputMethod}
+            onChange={(value) => {
+              setInputMethod(value as "" | "file" | "manual");
+              setError("");
+            }}
             placeholder={t.manualRewards.inputMethodLabel}
             disabled={isSubmitting}
             zIndex={zIndex.popover}
           />
         </div>
 
-        {/* File Upload */}
-        {inputMode === "file" && (
-          <div>
-            <label className={`block text-sm font-medium ${tw.textPrimary}`}>
-              {t.manualRewards.uploadFileLabel}
+        {/* QuickList Selection - Show only when Upload File is selected */}
+        {inputMethod === "file" && (
+          <div className="space-y-3 rounded-md">
+            <label className="text-sm font-medium text-gray-900 block">
+              Select or Create QuickList *
             </label>
-            <label
-              htmlFor="audience-file-upload"
-              className={`block border-2 border-dashed ${tw.rounded} p-6 text-center transition-colors cursor-pointer`}
-              style={{
-                borderColor: color.border.default,
-                opacity: isSubmitting ? 0.5 : 1,
-              }}
-            >
-              <input
-                id="audience-file-upload"
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="hidden"
-                disabled={isSubmitting}
-              />
-              {file ? (
-                <div className="space-y-3">
-                  <FileText
-                    className="w-12 h-12 mx-auto"
-                    style={{ color: color.status.success }}
-                  />
-                  <div>
-                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                      {file.name}
-                    </p>
-                    <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                      {formatFileSize(file.size)}
-                    </p>
-                  </div>
-                  <span
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (fileInputRef.current) {
-                        fileInputRef.current.click();
-                      }
+
+            {selectedQuickList ? (
+              <div
+                className="p-3 rounded-md bg-white border-2 border-gray-300"
+                style={{ borderColor: color.primary.accent }}
+              >
+                <p className="text-sm font-medium text-gray-900">
+                  {selectedQuickList.name}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedQuickList.row_count.toLocaleString()} rows
+                </p>
+                {isQuickListCreated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedQuickList(null);
+                      setIsQuickListCreated(false);
                     }}
-                    className="text-sm font-medium cursor-pointer"
+                    className="text-xs hover:underline mt-2"
                     style={{ color: color.primary.accent }}
                   >
-                    {t.manualRewards.changeFile}
-                  </span>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <Upload
-                    className="w-12 h-12 mx-auto"
-                    style={{ color: color.text.muted }}
-                  />
-                  <div>
-                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                      {t.manualRewards.clickToUpload}
-                    </p>
-                    <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                      {t.manualRewards.dragAndDrop}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </label>
+                    Create Different QuickList
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-600 mb-3">
+                Select an existing quicklist or create a new one
+              </p>
+            )}
+
+            {!isQuickListCreated && !selectedQuickList && (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPickerModal(true)}
+                  disabled={isSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                >
+                  <List className="w-4 h-4" />
+                  Select from Existing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={isSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md disabled:opacity-50 transition-colors text-white"
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Quicklist
+                </button>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Manual Entry */}
-        {inputMode === "manual" && (
+        {/* Manual Input - Show only when Manual Input is selected */}
+        {inputMethod === "manual" && (
           <div>
             <label
               className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -412,7 +303,10 @@ export default function SelectCustomersStep({
             </label>
             <textarea
               value={manualInput}
-              onChange={(e) => setManualInput(e.target.value)}
+              onChange={(e) => {
+                setManualInput(e.target.value);
+                setError("");
+              }}
               className={`w-full px-3 py-2 text-sm border ${tw.rounded} focus:outline-none focus:ring-2 font-mono`}
               style={{
                 borderColor: color.border.default,
@@ -422,45 +316,30 @@ export default function SelectCustomersStep({
               rows={10}
               disabled={isSubmitting}
             />
-
-            {/* Validation Summary */}
             {manualInput.trim() && (
               <div className="mt-3 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: color.status.success }}
+                    style={{ backgroundColor: color.primary.accent }}
                   ></div>
                   <span
                     className="font-medium"
-                    style={{ color: color.status.success }}
+                    style={{ color: color.primary.accent }}
                   >
-                    {t.manualRewards.validationValid.replace(
-                      "{count}",
-                      String(manualInputValidation.validCount)
-                    )}
+                    {
+                      manualInput.split("\n").filter((line) => line.trim())
+                        .length
+                    }{" "}
+                    line
+                    {manualInput.split("\n").filter((line) => line.trim())
+                      .length !== 1
+                      ? "s"
+                      : ""}
                   </span>
                 </div>
-                {manualInputValidation.invalidCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: color.status.danger }}
-                    ></div>
-                    <span
-                      className="font-medium"
-                      style={{ color: color.status.danger }}
-                    >
-                      {t.manualRewards.validationInvalid.replace(
-                        "{count}",
-                        String(manualInputValidation.invalidCount)
-                      )}
-                    </span>
-                  </div>
-                )}
               </div>
             )}
-
             <p className={`mt-2 text-xs ${tw.textSecondary}`}>
               {t.manualRewards.manualEntryHelp}
             </p>
@@ -488,26 +367,39 @@ export default function SelectCustomersStep({
       </div>
 
       {/* Footer */}
-      <div
-        className="p-6 border-t flex items-center justify-end"
-        style={{ borderColor: color.border.default }}
-      >
+      <div className="p-6 flex items-center justify-end">
         <button
+          type="button"
           onClick={handleNext}
-          disabled={
-            isSubmitting ||
-            !name.trim() ||
-            (inputMode === "file" && !file) ||
-            (inputMode === "manual" && manualInputValidation.validCount === 0)
-          }
+          disabled={isSubmitting || !isFormValid}
           className={`px-6 py-2.5 text-white ${tw.rounded} transition-all text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
           style={{ backgroundColor: color.primary.action }}
         >
-          {isSubmitting
-            ? t.manualRewards.creatingAudience
-            : t.manualRewards.nextDefineReward}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            t.manualRewards.nextDefineReward
+          )}
         </button>
       </div>
+
+      {/* QuickList Picker Modal */}
+      <QuickListPickerModal
+        isOpen={showPickerModal}
+        onClose={() => setShowPickerModal(false)}
+        onSelect={handleSelectQuickList}
+      />
+
+      {/* Create QuickList Modal */}
+      <CreateQuickListModal
+        isOpen={showCreateModal}
+        mode="create"
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateQuickList}
+      />
     </div>
   );
 }

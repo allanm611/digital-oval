@@ -564,14 +564,22 @@ export default function WorkflowsPage() {
           <p className="text-gray-500">No workflows found</p>
         </div>
       ) : (
-        <div
-          className={`${tw.rounded} border border-gray-200 bg-white shadow-sm overflow-hidden`}
-        >
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead style={{ backgroundColor: color.surface.tableHeader }}>
+        <div className="overflow-x-auto">
+          <table
+            className="w-full"
+            style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+          >
+            <thead>
               <tr>
                 {isSelectionMode && (
-                  <th className="px-6 py-3 text-left">
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                      borderTopLeftRadius: "0.375rem",
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={
@@ -584,45 +592,68 @@ export default function WorkflowsPage() {
                   </th>
                 )}
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{ color: color.surface.tableHeaderText }}
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                    ...(!isSelectionMode && {
+                      borderTopLeftRadius: "0.375rem",
+                    }),
+                  }}
                 >
                   Name
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{ color: color.surface.tableHeaderText }}
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
                 >
                   Type
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{ color: color.surface.tableHeaderText }}
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
                 >
                   Status
                 </th>
                 <th
-                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                  style={{ color: color.surface.tableHeaderText }}
+                  className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                  }}
                 >
                   Created
                 </th>
                 <th
-                  className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider"
-                  style={{ color: color.surface.tableHeaderText }}
+                  className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider"
+                  style={{
+                    color: color.surface.tableHeaderText,
+                    backgroundColor: color.surface.tableHeader,
+                    borderTopRightRadius: "0.375rem",
+                  }}
                 >
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody
-              className="divide-y divide-gray-200"
-              style={{ backgroundColor: color.surface.tablebodybg }}
-            >
+            <tbody>
               {workflows.map((workflow) => (
-                <tr key={workflow.id} className="hover:bg-gray-50">
+                <tr key={workflow.id} className="transition-colors">
                   {isSelectionMode && (
-                    <td className="px-6 py-4">
+                    <td
+                      className="px-6 py-4"
+                      style={{
+                        backgroundColor: color.surface.tablebodybg,
+                        borderTopLeftRadius: "0.375rem",
+                        borderBottomLeftRadius: "0.375rem",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={selectedWorkflows.has(workflow.id)}
@@ -631,26 +662,60 @@ export default function WorkflowsPage() {
                       />
                     </td>
                   )}
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    {workflow.name}
+                  <td
+                    className="px-6 py-4"
+                    style={{
+                      backgroundColor: color.surface.tablebodybg,
+                      ...(!isSelectionMode && {
+                        borderTopLeftRadius: "0.375rem",
+                        borderBottomLeftRadius: "0.375rem",
+                      }),
+                    }}
+                  >
+                    <div className="text-sm font-semibold text-gray-900">
+                      {workflow.name}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {workflow.workflow_type || "—"}
+                  <td
+                    className="px-6 py-4"
+                    style={{ backgroundColor: color.surface.tablebodybg }}
+                  >
+                    <div className="text-sm text-gray-600">
+                      {workflow.workflow_type || "—"}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-black">
-                    {workflow.is_active ? "Active" : "Inactive"}
+                  <td
+                    className="px-6 py-4"
+                    style={{ backgroundColor: color.surface.tablebodybg }}
+                  >
+                    <span className="text-sm text-black font-medium">
+                      {workflow.is_active ? "Active" : "Inactive"}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">
-                    {new Date(workflow.created_at).toLocaleDateString()}
+                  <td
+                    className="px-6 py-4"
+                    style={{ backgroundColor: color.surface.tablebodybg }}
+                  >
+                    <span className="text-sm text-gray-600">
+                      {new Date(workflow.created_at).toLocaleDateString()}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
+                  <td
+                    className="px-6 py-4 text-right"
+                    style={{
+                      backgroundColor: color.surface.tablebodybg,
+                      borderTopRightRadius: "0.375rem",
+                      borderBottomRightRadius: "0.375rem",
+                    }}
+                  >
+                    <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() =>
                           navigate(`/dashboard/workflows/${workflow.id}`)
                         }
-                        className="p-2 text-gray-600 rounded transition-colors"
-                        title="View details"
+                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                        aria-label="View workflow"
+                        title="View"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
@@ -658,7 +723,8 @@ export default function WorkflowsPage() {
                         onClick={() =>
                           navigate(`/dashboard/workflows/${workflow.id}/edit`)
                         }
-                        className="p-2 text-gray-600 rounded transition-colors"
+                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                        aria-label="Edit workflow"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
@@ -675,7 +741,8 @@ export default function WorkflowsPage() {
                           rowLoading?.id === workflow.id &&
                           rowLoading?.action === "clone"
                         }
-                        className="p-2 text-gray-600 rounded transition-colors disabled:opacity-50"
+                        className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors disabled:opacity-50`}
+                        aria-label="Clone workflow"
                         title="Clone"
                       >
                         {rowLoading?.id === workflow.id &&
@@ -693,7 +760,8 @@ export default function WorkflowsPage() {
                           );
                           setShowDeleteModal(true);
                         }}
-                        className="p-2 text-red-600 rounded transition-colors"
+                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                        aria-label="Delete workflow"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />

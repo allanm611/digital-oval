@@ -35,7 +35,8 @@ export default function HeadlessSelect({
   openUpward = false,
   zIndex,
 }: HeadlessSelectProps) {
-  const effectiveZIndex = zIndex ?? zIndexTokens.dropdown;
+  // Always use popover z-index by default so dropdowns appear above modals
+  const effectiveZIndex = zIndex ?? zIndexTokens.popover;
   const [searchTerm, setSearchTerm] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({

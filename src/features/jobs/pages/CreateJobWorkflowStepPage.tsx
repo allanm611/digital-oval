@@ -15,27 +15,28 @@ import {
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw, noteStyles, zIndex } from "../../../shared/utils/utils";
 
-const STEP_TYPES: { value: StepType; label: string }[] = [
-  { value: "sql", label: "SQL" },
-  { value: "stored_proc", label: "Stored Procedure" },
-  { value: "api_call", label: "API Call" },
-  { value: "python_script", label: "Python Script" },
-  { value: "node_js_script", label: "Node.js Script" },
-  { value: "shell_script", label: "Shell Script" },
-  { value: "file_transfer", label: "File Transfer" },
-  { value: "data_validation", label: "Data Validation" },
-  { value: "notification", label: "Notification" },
-  { value: "wait", label: "Wait" },
+const getStepTypes = (t: any): { value: StepType; label: string }[] => [
+  { value: "sql", label: t.jobs.jobWorkflow.sql },
+  { value: "stored_proc", label: t.jobs.jobWorkflow.storedProcedure },
+  { value: "api_call", label: t.jobs.jobWorkflow.apiCall },
+  { value: "python_script", label: t.jobs.jobWorkflow.pythonScript },
+  { value: "node_js_script", label: t.jobs.jobWorkflow.nodeScript },
+  { value: "shell_script", label: t.jobs.jobWorkflow.shellScript },
+  { value: "file_transfer", label: t.jobs.jobWorkflow.fileTransfer },
+  { value: "data_validation", label: t.jobs.jobWorkflow.dataValidation },
+  { value: "notification", label: t.jobs.jobWorkflow.notification },
+  { value: "wait", label: t.jobs.jobWorkflow.wait },
 ];
 
-const FAILURE_ACTIONS: { value: FailureAction; label: string }[] = [
-  { value: "abort", label: "Abort" },
-  { value: "continue", label: "Continue" },
-  { value: "retry", label: "Retry" },
-  { value: "skip_remaining", label: "Skip Remaining" },
+const getFailureActions = (t: any): { value: FailureAction; label: string }[] => [
+  { value: "abort", label: t.jobs.jobWorkflow.abort },
+  { value: "continue", label: t.jobs.jobWorkflow.continue },
+  { value: "retry", label: t.jobs.jobWorkflow.retry },
+  { value: "skip_remaining", label: t.jobs.jobWorkflow.skipRemaining },
 ];
 
 export default function CreateJobWorkflowStepPage() {
@@ -46,6 +47,7 @@ export default function CreateJobWorkflowStepPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isEditMode = !!id;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -431,7 +433,7 @@ export default function CreateJobWorkflowStepPage() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-          {isEditMode ? "Edit Workflow Step" : "Create Workflow Step"}
+          {isEditMode ? t.jobs.jobWorkflow.editWorkflowStep : t.jobs.jobWorkflow.createWorkflowStep}
         </h1>
       </div>
 
@@ -459,7 +461,7 @@ export default function CreateJobWorkflowStepPage() {
               style={{ backgroundColor: color.primary.action }}
             >
               <Plus className="h-4 w-4" />
-              Add Step
+              {t.jobs.jobWorkflow.addStep}
             </button>
           </div>
         </div>
@@ -476,7 +478,7 @@ export default function CreateJobWorkflowStepPage() {
           )}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
-              Batch Steps ({batchSteps.length})
+              {t.jobs.jobWorkflow.batchSteps} ({batchSteps.length})
             </h2>
             <button
               type="button"
@@ -484,7 +486,7 @@ export default function CreateJobWorkflowStepPage() {
               className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
             >
               <Plus className="h-4 w-4" />
-              Add Another
+              {t.jobs.jobWorkflow.addAnother}
             </button>
           </div>
           <div className="space-y-4">
@@ -508,7 +510,7 @@ export default function CreateJobWorkflowStepPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Name *
+                      {t.jobs.jobWorkflow.stepName} *
                     </label>
                     <input
                       type="text"
@@ -521,7 +523,7 @@ export default function CreateJobWorkflowStepPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       } px-2 py-1.5 text-sm`}
-                      placeholder="Enter step name"
+                      placeholder={t.jobs.jobWorkflow.enterStepName}
                     />
                     {errors[`batch_step_${idx}_name`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -531,7 +533,7 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Code *
+                      {t.jobs.jobWorkflow.stepCode} *
                     </label>
                     <input
                       type="text"
@@ -544,7 +546,7 @@ export default function CreateJobWorkflowStepPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       } px-2 py-1.5 text-sm`}
-                      placeholder="Enter step code"
+                      placeholder={t.jobs.jobWorkflow.enterStepCode}
                     />
                     {errors[`batch_step_${idx}_code`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -554,7 +556,7 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Description *
+                      {t.jobs.jobWorkflow.stepDescription} *
                     </label>
                     <textarea
                       value={step.step_description || ""}
@@ -567,7 +569,7 @@ export default function CreateJobWorkflowStepPage() {
                           : "border-gray-300"
                       } px-2 py-1.5 text-sm`}
                       rows={2}
-                      placeholder="Enter step description"
+                      placeholder={t.jobs.jobWorkflow.enterStepDescription}
                     />
                     {errors[`batch_step_${idx}_description`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -577,7 +579,7 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Order *
+                      {t.jobs.jobWorkflow.stepOrder} *
                     </label>
                     <input
                       type="number"
@@ -595,10 +597,10 @@ export default function CreateJobWorkflowStepPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Type *
+                      {t.jobs.jobWorkflow.stepType} *
                     </label>
                     <HeadlessSelect
-                      options={STEP_TYPES.map((type) => ({
+                      options={getStepTypes(t).map((type) => ({
                         value: type.value,
                         label: type.label,
                       }))}
@@ -606,13 +608,13 @@ export default function CreateJobWorkflowStepPage() {
                       onChange={(value) =>
                         updateBatchStep(idx, "step_type", value)
                       }
-                      placeholder="Select step type"
+                      placeholder={t.jobs.jobWorkflow.selectStepType}
                       className="w-full"
                     />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Step Action *
+                      {t.jobs.jobWorkflow.stepAction} *
                     </label>
                     <textarea
                       value={step.step_action || ""}
@@ -625,7 +627,7 @@ export default function CreateJobWorkflowStepPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       } px-2 py-1.5 text-sm font-mono`}
-                      placeholder="Enter step action"
+                      placeholder={t.jobs.jobWorkflow.enterStepAction}
                     />
                     {errors[`batch_step_${idx}_action`] && (
                       <p className="mt-1 text-xs text-red-600">
@@ -650,16 +652,16 @@ export default function CreateJobWorkflowStepPage() {
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  Basic Information
+                  {t.jobs.jobWorkflow.basicInformation}
                 </h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Job <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.job} <span className="text-red-500">*</span>
                     </label>
                     <HeadlessSelect
                       options={[
-                        { value: "", label: "Select a job" },
+                        { value: "", label: t.jobs.jobWorkflow.selectJob },
                         ...jobs.map((job) => ({
                           value: job.id,
                           label: `${job.name} (${job.code})`,
@@ -673,7 +675,7 @@ export default function CreateJobWorkflowStepPage() {
                         })
                       }
                       disabled={!!jobIdParam || isEditMode}
-                      placeholder="Select a job"
+                      placeholder={t.jobs.jobWorkflow.selectJob}
                       error={!!errors.job_id}
                       className="w-full"
                     />
@@ -686,7 +688,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Name <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepName} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -697,7 +699,7 @@ export default function CreateJobWorkflowStepPage() {
                       className={`w-full ${tw.rounded} border ${
                         errors.step_name ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="Enter step name"
+                      placeholder={t.jobs.jobWorkflow.enterStepName}
                     />
                     {errors.step_name && (
                       <p className="mt-1 text-sm text-red-600">
@@ -708,7 +710,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Code <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepCode} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -722,7 +724,7 @@ export default function CreateJobWorkflowStepPage() {
                       className={`w-full ${tw.rounded} border ${
                         errors.step_code ? "border-red-300" : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="Enter step code"
+                      placeholder={t.jobs.jobWorkflow.enterStepCode}
                     />
                     {errors.step_code && (
                       <p className="mt-1 text-sm text-red-600">
@@ -733,7 +735,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Order <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepOrder} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -758,7 +760,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Type <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepType} <span className="text-red-500">*</span>
                     </label>
                     <Listbox
                       value={formData.step_type}
@@ -771,9 +773,9 @@ export default function CreateJobWorkflowStepPage() {
                           className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                         >
                           <span className="block truncate">
-                            {STEP_TYPES.find(
-                              (t) => t.value === formData.step_type
-                            )?.label || "Select type"}
+                            {getStepTypes(t).find(
+                              (type) => type.value === formData.step_type
+                            )?.label || t.jobs.jobWorkflow.selectType}
                           </span>
                           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                             <ChevronUpDownIcon
@@ -792,7 +794,7 @@ export default function CreateJobWorkflowStepPage() {
                             className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
                             style={{ zIndex: zIndex.dropdown }}
                           >
-                            {STEP_TYPES.map((type) => (
+                            {getStepTypes(t).map((type) => (
                               <Listbox.Option
                                 key={type.value}
                                 className={({ active }) =>
@@ -833,7 +835,7 @@ export default function CreateJobWorkflowStepPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Description <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepDescription} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       value={formData.step_description ?? ""}
@@ -849,7 +851,7 @@ export default function CreateJobWorkflowStepPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       } px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="Enter step description"
+                      placeholder={t.jobs.jobWorkflow.enterStepDescription}
                     />
                     {errors.step_description && (
                       <p className="mt-1 text-sm text-red-600">
@@ -865,12 +867,12 @@ export default function CreateJobWorkflowStepPage() {
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  Execution Configuration
+                  {t.jobs.jobWorkflow.executionConfiguration}
                 </h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Step Action <span className="text-red-500">*</span>
+                      {t.jobs.jobWorkflow.stepAction} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       value={formData.step_action}
@@ -886,7 +888,7 @@ export default function CreateJobWorkflowStepPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       } px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="Enter step action (SQL query, script path, API endpoint, etc.)"
+                      placeholder={t.jobs.jobWorkflow.enterStepAction}
                     />
                     {errors.step_action && (
                       <p className="mt-1 text-sm text-red-600">
@@ -898,7 +900,7 @@ export default function CreateJobWorkflowStepPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Timeout (seconds){" "}
+                        {t.jobs.jobWorkflow.timeoutSeconds}{" "}
                         <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -927,7 +929,7 @@ export default function CreateJobWorkflowStepPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        On Failure Action
+                        {t.jobs.jobWorkflow.onFailureAction}
                       </label>
                       <Listbox
                         value={formData.on_failure_action}
@@ -940,9 +942,9 @@ export default function CreateJobWorkflowStepPage() {
                             className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
                           >
                             <span className="block truncate">
-                              {FAILURE_ACTIONS.find(
+                              {getFailureActions(t).find(
                                 (a) => a.value === formData.on_failure_action
-                              )?.label || "Select action"}
+                              )?.label || t.jobs.jobWorkflow.selectAction}
                             </span>
                             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                               <ChevronUpDownIcon
@@ -961,7 +963,7 @@ export default function CreateJobWorkflowStepPage() {
                               className={`absolute mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm`}
                               style={{ zIndex: zIndex.dropdown }}
                             >
-                              {FAILURE_ACTIONS.map((action) => (
+                              {getFailureActions(t).map((action) => (
                                 <Listbox.Option
                                   key={action.value}
                                   className={({ active }) =>
@@ -1006,7 +1008,7 @@ export default function CreateJobWorkflowStepPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Retry Count
+                        {t.jobs.jobWorkflow.retryCount}
                       </label>
                       <input
                         type="number"
@@ -1034,7 +1036,7 @@ export default function CreateJobWorkflowStepPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Retry Delay (seconds)
+                        {t.jobs.jobWorkflow.retryDelaySeconds}
                       </label>
                       <input
                         type="number"
@@ -1061,7 +1063,7 @@ export default function CreateJobWorkflowStepPage() {
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  Dependencies & Parallel Execution
+                  {t.jobs.jobWorkflow.dependenciesParallel}
                 </h2>
                 <div className="space-y-4">
                   <div>
@@ -1078,7 +1080,7 @@ export default function CreateJobWorkflowStepPage() {
                         className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                       />
                       <span className="text-sm font-medium text-gray-700">
-                        Enable Parallel Execution
+                        {t.jobs.jobWorkflow.enableParallel}
                       </span>
                     </label>
                   </div>
@@ -1086,7 +1088,7 @@ export default function CreateJobWorkflowStepPage() {
                   {formData.is_parallel && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Parallel Group ID
+                        {t.jobs.jobWorkflow.parallelGroupId}
                       </label>
                       <input
                         type="number"
@@ -1101,14 +1103,14 @@ export default function CreateJobWorkflowStepPage() {
                           })
                         }
                         className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                        placeholder="Enter parallel group ID"
+                        placeholder={t.jobs.jobWorkflow.enterParallelGroupId}
                       />
                     </div>
                   )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dependencies (Step Codes)
+                      {t.jobs.jobWorkflow.dependencies}
                     </label>
                     <div className="flex gap-2 mb-2">
                       <input
@@ -1135,7 +1137,7 @@ export default function CreateJobWorkflowStepPage() {
                         onClick={addDependency}
                         className={`${tw.rounded} border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
                       >
-                        Add
+                        {t.jobs.jobWorkflow.add}
                       </button>
                     </div>
                     <div className="space-y-2">
@@ -1170,12 +1172,12 @@ export default function CreateJobWorkflowStepPage() {
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  Validation
+                  {t.jobs.jobWorkflow.validation}
                 </h2>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Pre-Validation Query
+                      {t.jobs.jobWorkflow.preValidationQuery}
                     </label>
                     <textarea
                       value={formData.pre_validation_query || ""}
@@ -1187,13 +1189,13 @@ export default function CreateJobWorkflowStepPage() {
                       }
                       rows={3}
                       className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="SQL query to run before execution"
+                      placeholder={t.jobs.jobWorkflow.sqlBeforeExecution}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Post-Validation Query
+                      {t.jobs.jobWorkflow.postValidationQuery}
                     </label>
                     <textarea
                       value={formData.post_validation_query || ""}
@@ -1205,14 +1207,14 @@ export default function CreateJobWorkflowStepPage() {
                       }
                       rows={3}
                       className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm font-mono focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
-                      placeholder="SQL query to run after execution"
+                      placeholder={t.jobs.jobWorkflow.sqlAfterExecution}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Min Expected Rows
+                        {t.jobs.jobWorkflow.minExpectedRows}
                       </label>
                       <input
                         type="number"
@@ -1232,7 +1234,7 @@ export default function CreateJobWorkflowStepPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Max Expected Rows
+                        {t.jobs.jobWorkflow.maxExpectedRows}
                       </label>
                       <input
                         type="number"
@@ -1258,7 +1260,7 @@ export default function CreateJobWorkflowStepPage() {
                 className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
               >
                 <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  Status
+                  {t.jobs.jobWorkflow.status}
                 </h2>
                 <div className="space-y-3">
                   <label className="flex items-center gap-2">
@@ -1274,7 +1276,7 @@ export default function CreateJobWorkflowStepPage() {
                       className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                     />
                     <span className="text-sm font-medium text-gray-700">
-                      Active
+                      {t.jobs.jobWorkflow.active}
                     </span>
                   </label>
 
@@ -1291,7 +1293,7 @@ export default function CreateJobWorkflowStepPage() {
                       className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
                     />
                     <span className="text-sm font-medium text-gray-700">
-                      Critical
+                      {t.jobs.jobWorkflow.critical}
                     </span>
                   </label>
                 </div>
@@ -1313,7 +1315,7 @@ export default function CreateJobWorkflowStepPage() {
             }
             className={`${tw.rounded} border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             type="submit"
@@ -1324,16 +1326,16 @@ export default function CreateJobWorkflowStepPage() {
             {isSaving ? (
               <>
                 <LoadingSpinner />
-                {batchMode ? "Creating..." : "Saving..."}
+                {batchMode ? t.jobs.jobWorkflow.creating : t.jobs.jobWorkflow.saving}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
                 {isEditMode
-                  ? "Update Step"
+                  ? t.jobs.jobWorkflow.updateStep
                   : batchMode
-                  ? `Create ${batchSteps.length} Steps`
-                  : "Create Step"}
+                  ? `${t.jobs.jobWorkflow.createStep} ${batchSteps.length}`
+                  : t.jobs.jobWorkflow.createStep}
               </>
             )}
           </button>

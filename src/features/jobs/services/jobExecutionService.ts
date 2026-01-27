@@ -62,7 +62,7 @@ const clampLimit = (value?: number, max: number = 100) => {
 class JobExecutionService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const fullUrl = `${BASE_URL}${endpoint}`;
 
@@ -101,7 +101,7 @@ class JobExecutionService {
       | {
           success?: boolean;
           data?: JobExecution;
-        }
+        },
   ): JobExecution {
     if (
       response &&
@@ -122,7 +122,7 @@ class JobExecutionService {
           data?: JobExecution[];
           pagination?: JobExecutionListResponse["pagination"];
           source?: string;
-        }
+        },
   ): JobExecutionListResponse {
     if (
       response &&
@@ -143,7 +143,7 @@ class JobExecutionService {
   }
 
   private buildQueryString(
-    params?: Record<string, string | number | boolean | undefined | null>
+    params?: Record<string, string | number | boolean | undefined | null>,
   ) {
     if (!params) return "";
     const searchParams = new URLSearchParams();
@@ -163,7 +163,7 @@ class JobExecutionService {
    */
   async getJobExecutionById(
     id: string,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<JobExecution> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -178,7 +178,7 @@ class JobExecutionService {
    */
   async getJobExecutionByTraceId(
     traceId: string,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<JobExecution> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -193,7 +193,7 @@ class JobExecutionService {
    */
   async getLatestExecutionForJob(
     jobId: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<JobExecution> {
     const query = this.buildQueryString({ skipCache });
     const response = await this.request<
@@ -214,7 +214,7 @@ class JobExecutionService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<JobExecutionListResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
@@ -242,7 +242,7 @@ class JobExecutionService {
     params?: {
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<JobExecutionListResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
@@ -295,7 +295,7 @@ class JobExecutionService {
    * GET /job-executions/correlation/:correlationId
    */
   async getExecutionsByCorrelationId(
-    correlationId: string
+    correlationId: string,
   ): Promise<JobExecutionListResponse> {
     const response = await this.request<
       | JobExecutionListResponse
@@ -404,7 +404,7 @@ class JobExecutionService {
    * POST /job-executions/search
    */
   async searchJobExecutions(
-    params: JobExecutionSearchParams
+    params: JobExecutionSearchParams,
   ): Promise<JobExecutionListResponse> {
     const response = await this.request<
       | JobExecutionListResponse
@@ -433,7 +433,7 @@ class JobExecutionService {
     jobId: number,
     params?: {
       limit?: number;
-    }
+    },
   ): Promise<JobExecutionListResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
@@ -565,11 +565,13 @@ class JobExecutionService {
     jobId?: number;
     startDate?: string;
     endDate?: string;
+    skipCache?: boolean;
   }): Promise<ExecutionStatistics> {
     const query = this.buildQueryString({
       jobId: params?.jobId,
       startDate: params?.startDate,
       endDate: params?.endDate,
+      skipCache: params?.skipCache ?? false,
     });
     return this.request<ExecutionStatistics>(`/stats${query}`);
   }
@@ -632,7 +634,7 @@ class JobExecutionService {
       endDate: params?.endDate,
     });
     return this.request<ResourceUtilizationStats>(
-      `/resource-utilization-stats${query}`
+      `/resource-utilization-stats${query}`,
     );
   }
 
@@ -742,14 +744,26 @@ class JobExecutionService {
    * Get Execution Distribution
    * GET /job-executions/execution-distribution
    */
-  async getExecutionDistribution(params?: {
+  /**
+   * Get Execution Distribution
+   * GET /job-executions/execution-distribution
+   * Requires both startDate and endDate (YYYY-MM-DD)
+   */
+  async getExecutionDistribution(params: {
     startDate: string; // ISO format: YYYY-MM-DD
+    endDate: string; // ISO format: YYYY-MM-DD
   }): Promise<ExecutionDistribution[]> {
+    if (!params?.startDate || !params?.endDate) {
+      throw new Error(
+        "Both startDate and endDate are required for execution distribution",
+      );
+    }
     const query = this.buildQueryString({
-      startDate: params?.startDate,
+      startDate: params.startDate,
+      endDate: params.endDate,
     });
     return this.request<ExecutionDistribution[]>(
-      `/execution-distribution${query}`
+      `/execution-distribution${query}`,
     );
   }
 
@@ -757,16 +771,13 @@ class JobExecutionService {
    * Get Daily Summary
    * GET /job-executions/jobs/:jobId/daily-summary
    */
-  async getDailySummary(
-    jobId: number,
-    params?: {
-      daysBack?: number;
-    }
-  ): Promise<DailySummary[]> {
-    const query = this.buildQueryString({
-      daysBack: params?.daysBack ?? 30,
-    });
-    return this.request<DailySummary[]>(`/jobs/${jobId}/daily-summary${query}`);
+  /**
+   * Get Daily Summary
+   * GET /job-executions/jobs/:jobId/daily-summary
+   * Only jobId is required, no daysBack param
+   */
+  async getDailySummary(jobId: number): Promise<DailySummary[]> {
+    return this.request<DailySummary[]>(`/jobs/${jobId}/daily-summary`);
   }
 
   /**
@@ -803,7 +814,7 @@ class JobExecutionService {
       daysBack: params?.daysBack ?? 30,
     });
     return this.request<StepFailureAnalysis[]>(
-      `/step-failure-analysis${query}`
+      `/step-failure-analysis${query}`,
     );
   }
 
@@ -858,13 +869,13 @@ class JobExecutionService {
     jobId: number,
     params?: {
       limit?: number;
-    }
+    },
   ): Promise<ExecutionTimelineItem[]> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
     });
     return this.request<ExecutionTimelineItem[]>(
-      `/jobs/${jobId}/timeline${query}`
+      `/jobs/${jobId}/timeline${query}`,
     );
   }
 
@@ -925,13 +936,13 @@ class JobExecutionService {
     jobId: number,
     params?: {
       currentPeriodDays?: number;
-    }
+    },
   ): Promise<ExecutionComparison> {
     const query = this.buildQueryString({
       currentPeriodDays: params?.currentPeriodDays ?? 7,
     });
     return this.request<ExecutionComparison>(
-      `/jobs/${jobId}/comparison${query}`
+      `/jobs/${jobId}/comparison${query}`,
     );
   }
 
@@ -982,7 +993,7 @@ class JobExecutionService {
    * POST /job-executions
    */
   async createJobExecution(
-    payload: CreateJobExecutionPayload
+    payload: CreateJobExecutionPayload,
   ): Promise<JobExecution> {
     // Validate required fields before making the request
     if (!payload.job_id) {
@@ -1023,7 +1034,7 @@ class JobExecutionService {
    * POST /job-executions/bulk-archive
    */
   async bulkArchiveJobExecutions(
-    payload: BulkArchivePayload
+    payload: BulkArchivePayload,
   ): Promise<{ success: boolean }> {
     return this.request<{ success: boolean }>(`/bulk-archive`, {
       method: "POST",
@@ -1037,7 +1048,7 @@ class JobExecutionService {
    * POST /job-executions/archive-old
    */
   async archiveOldJobExecutions(
-    payload: ArchiveOldPayload
+    payload: ArchiveOldPayload,
   ): Promise<{ success: boolean }> {
     return this.request<{ success: boolean }>(`/archive-old`, {
       method: "POST",
@@ -1051,7 +1062,7 @@ class JobExecutionService {
    * POST /job-executions/retry-failed
    */
   async retryFailedJobExecutions(
-    payload: RetryFailedPayload
+    payload: RetryFailedPayload,
   ): Promise<{ success: boolean }> {
     return this.request<{ success: boolean }>(`/retry-failed`, {
       method: "POST",
@@ -1068,7 +1079,7 @@ class JobExecutionService {
    */
   async updateJobExecution(
     id: string,
-    payload: UpdateJobExecutionPayload
+    payload: UpdateJobExecutionPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1088,7 +1099,7 @@ class JobExecutionService {
    */
   async updateJobExecutionStatus(
     id: string,
-    payload: UpdateStatusPayload
+    payload: UpdateStatusPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1106,7 +1117,7 @@ class JobExecutionService {
    */
   async markJobExecutionStarted(
     id: string,
-    payload?: StartExecutionPayload
+    payload?: StartExecutionPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1124,7 +1135,7 @@ class JobExecutionService {
    */
   async markJobExecutionCompleted(
     id: string,
-    payload: CompleteExecutionPayload
+    payload: CompleteExecutionPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1142,7 +1153,7 @@ class JobExecutionService {
    */
   async markJobExecutionFailed(
     id: string,
-    payload: FailExecutionPayload
+    payload: FailExecutionPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1160,7 +1171,7 @@ class JobExecutionService {
    */
   async markJobExecutionAborted(
     id: string,
-    payload?: AbortExecutionPayload
+    payload?: AbortExecutionPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
@@ -1191,7 +1202,7 @@ class JobExecutionService {
    */
   async recordJobExecutionMetrics(
     id: string,
-    payload: RecordMetricsPayload
+    payload: RecordMetricsPayload,
   ): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }

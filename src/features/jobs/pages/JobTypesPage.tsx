@@ -844,9 +844,9 @@ export default function JobTypesPage() {
                           >
                             {jobType.name}
                           </div>
-                          <div className="mt-1 text-xs text-gray-500">
+                          {/* <div className="mt-1 text-xs text-gray-500">
                             ID: {jobType.id}
-                          </div>
+                          </div> */}
                         </div>
                       </div>
                     </td>

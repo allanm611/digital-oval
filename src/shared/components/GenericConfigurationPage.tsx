@@ -397,11 +397,25 @@ export default function GenericConfigurationPage({
 
   const IconComponent = config.icon;
 
+  // Pages in sidebar don't need back buttons (users navigate via sidebar)
+  const pagesInSidebar = [
+    "/dashboard/campaign-catalogs",
+    "/dashboard/campaign-objectives",
+    "/dashboard/programs",
+    "/dashboard/offer-catalogs",
+    "/dashboard/products/catalogs",
+    "/dashboard/segment-catalogs",
+  ];
+
+  const showBackButton = !pagesInSidebar.some((path) =>
+    window.location.pathname.includes(path),
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo={config.backPath} />
+          {showBackButton && <BackButton fallbackTo={config.backPath} />}
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}

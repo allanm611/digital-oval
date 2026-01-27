@@ -244,7 +244,9 @@ export default function ConnectionProfilesPage() {
       console.error("Failed to load connection profiles", err);
       showError(
         t.analytics?.["failed_to_load"] || "Failed to load connection profiles",
-        err instanceof Error ? err.message : t.common?.["try_again_later"] || "Please try again later.",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
       setProfiles([]);
     } finally {
@@ -307,7 +309,9 @@ export default function ConnectionProfilesPage() {
       console.error("Failed to load connection profile stats", err);
       showError(
         t.analytics?.["failed_to_load"] || "Failed to load stats",
-        err instanceof Error ? err.message : t.common?.["try_again_later"] || "Please try again later.",
+        err instanceof Error
+          ? err.message
+          : t.common?.["try_again_later"] || "Please try again later.",
       );
     } finally {
       setLoadingStats(false);
@@ -594,7 +598,7 @@ export default function ConnectionProfilesPage() {
           : "Create your first connection profile to get started"}
       </p>
       {!profiles.length && (
-        <CreateButton route="/dashboard/connection-profiles/create" />
+        <CreateButton route="/dashboard/connection-profiles/new" />
       )}
     </div>
   );
@@ -657,7 +661,7 @@ export default function ConnectionProfilesPage() {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </button>
-            <CreateButton route="/dashboard/connection-profiles/create" />
+            <CreateButton route="/dashboard/connection-profiles/new" />
           </div>
         </div>
 
