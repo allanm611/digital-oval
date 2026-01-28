@@ -982,10 +982,29 @@ export default function SegmentConditionsBuilder({
           setCurrentEditingCondition(null);
         }}
         onSubmit={async (request) => {
-          await quicklistService.createQuickList(request);
+          const response = await quicklistService.createQuickList(request);
+
+          // Auto-select the newly created quicklist
+          if (currentEditingCondition && response) {
+            // Extract the quicklist data from response
+            const quicklistData = response.data || response;
+            const quicklistId = quicklistData.id || (Array.isArray(quicklistData) ? quicklistData[0]?.id : undefined);
+            const quicklistName = quicklistData.name || (Array.isArray(quicklistData) ? quicklistData[0]?.name : undefined);
+
+            if (quicklistId && quicklistName) {
+              updateCondition(
+                currentEditingCondition.groupId,
+                currentEditingCondition.conditionId,
+                {
+                  list_id: quicklistId,
+                  list_name: quicklistName,
+                }
+              );
+            }
+          }
+
           setIsCreateQuickListModalOpen(false);
           setCurrentEditingCondition(null);
-          // Optionally refresh the quicklist picker or show success message
         }}
       />
 

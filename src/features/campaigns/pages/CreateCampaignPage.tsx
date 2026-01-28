@@ -847,7 +847,7 @@ export default function CreateCampaignPage() {
         };
 
         await campaignService.updateCampaign(parseInt(id), updateData);
-        showToast("success", t.campaigns.campaignDefinition.updateSuccess);
+        showToast("success", `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`);
       } else {
         // Generate unique code from campaign name for NEW campaigns
         const campaignCode = generateCampaignCode(formData.name);
@@ -964,7 +964,7 @@ export default function CreateCampaignPage() {
             );
           }
         } else {
-          showToast("success", t.campaigns.campaignDefinition.createSuccess);
+          showToast("success", `"${formData.name}" ${t.campaigns.campaignDefinition.createSuccess}`);
         }
       }
 

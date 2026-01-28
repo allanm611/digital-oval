@@ -456,32 +456,36 @@ class JobExecutionService {
    * Get Running Duration
    * GET /job-executions/:id/running-duration
    */
-  async getRunningDuration(id: string): Promise<RunningDurationResponse> {
-    return this.request<RunningDurationResponse>(`/${id}/running-duration`);
+  async getRunningDuration(id: string, skipCache?: boolean): Promise<RunningDurationResponse> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<RunningDurationResponse>(`/${id}/running-duration${query}`);
   }
 
   /**
    * Check if Execution is Timed Out
    * GET /job-executions/:id/is-timed-out
    */
-  async isExecutionTimedOut(id: string): Promise<IsTimedOutResponse> {
-    return this.request<IsTimedOutResponse>(`/${id}/is-timed-out`);
+  async isExecutionTimedOut(id: string, skipCache?: boolean): Promise<IsTimedOutResponse> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<IsTimedOutResponse>(`/${id}/is-timed-out${query}`);
   }
 
   /**
    * Get Execution Progress
    * GET /job-executions/:id/progress
    */
-  async getExecutionProgress(id: string): Promise<ExecutionProgress> {
-    return this.request<ExecutionProgress>(`/${id}/progress`);
+  async getExecutionProgress(id: string, skipCache?: boolean): Promise<ExecutionProgress> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ExecutionProgress>(`/${id}/progress${query}`);
   }
 
   /**
    * Get Resource Usage
    * GET /job-executions/:id/resource-usage
    */
-  async getResourceUsage(id: string): Promise<ResourceUsage> {
-    return this.request<ResourceUsage>(`/${id}/resource-usage`);
+  async getResourceUsage(id: string, skipCache?: boolean): Promise<ResourceUsage> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ResourceUsage>(`/${id}/resource-usage${query}`);
   }
 
   /**
@@ -776,8 +780,9 @@ class JobExecutionService {
    * GET /job-executions/jobs/:jobId/daily-summary
    * Only jobId is required, no daysBack param
    */
-  async getDailySummary(jobId: number): Promise<DailySummary[]> {
-    return this.request<DailySummary[]>(`/jobs/${jobId}/daily-summary`);
+  async getDailySummary(jobId: number, skipCache?: boolean): Promise<DailySummary[]> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<DailySummary[]>(`/jobs/${jobId}/daily-summary${query}`);
   }
 
   /**
@@ -869,10 +874,12 @@ class JobExecutionService {
     jobId: number,
     params?: {
       limit?: number;
+      skipCache?: boolean;
     },
   ): Promise<ExecutionTimelineItem[]> {
     const query = this.buildQueryString({
       limit: clampLimit(params?.limit),
+      skipCache: params?.skipCache,
     });
     return this.request<ExecutionTimelineItem[]>(
       `/jobs/${jobId}/timeline${query}`,
@@ -936,10 +943,12 @@ class JobExecutionService {
     jobId: number,
     params?: {
       currentPeriodDays?: number;
+      skipCache?: boolean;
     },
   ): Promise<ExecutionComparison> {
     const query = this.buildQueryString({
       currentPeriodDays: params?.currentPeriodDays ?? 7,
+      skipCache: params?.skipCache,
     });
     return this.request<ExecutionComparison>(
       `/jobs/${jobId}/comparison${query}`,
@@ -951,9 +960,10 @@ class JobExecutionService {
    * GET /job-executions/completion-forecast
    * Note: Requires jobId parameter
    */
-  async getCompletionForecast(jobId: number): Promise<CompletionForecast[]> {
+  async getCompletionForecast(jobId: number, skipCache?: boolean): Promise<CompletionForecast[]> {
     const query = this.buildQueryString({
       jobId,
+      skipCache,
     });
     return this.request<CompletionForecast[]>(`/completion-forecast${query}`);
   }
@@ -962,8 +972,9 @@ class JobExecutionService {
    * Get Execution Heatmap
    * GET /job-executions/jobs/:jobId/heatmap
    */
-  async getExecutionHeatmap(jobId: number): Promise<ExecutionHeatmap> {
-    return this.request<ExecutionHeatmap>(`/jobs/${jobId}/heatmap`);
+  async getExecutionHeatmap(jobId: number, skipCache?: boolean): Promise<ExecutionHeatmap> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ExecutionHeatmap>(`/jobs/${jobId}/heatmap${query}`);
   }
 
   /**
@@ -971,9 +982,10 @@ class JobExecutionService {
    * GET /job-executions/sla-prediction
    * Note: Requires jobId parameter
    */
-  async getSLAPrediction(jobId: number): Promise<SLAPrediction> {
+  async getSLAPrediction(jobId: number, skipCache?: boolean): Promise<SLAPrediction> {
     const query = this.buildQueryString({
       jobId,
+      skipCache,
     });
     return this.request<SLAPrediction>(`/sla-prediction${query}`);
   }

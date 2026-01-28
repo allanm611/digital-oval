@@ -219,13 +219,14 @@ export default function ProductForm({
   // Users can add all 3 resource types (Data, Voice, SMS), but only once each
 
   const unitOptions: { label: string; value: ProductUnit }[] = [
-    { label: "Data (MB)", value: "data_mb" },
-    { label: "SMS Count", value: "sms_count" },
+    { label: "Data", value: "data_mb" },
+    { label: "SMS Bundles", value: "sms_count" },
     { label: "Airtime", value: "airtime" },
     { label: "On-net Minutes", value: "onnet_minutes" },
     { label: "Off-net Minutes", value: "offnet_minutes" },
     { label: "All-net Minutes", value: "allnet_minutes" },
-    { label: "Roaming Data (MB)", value: "roaming_data_mb" },
+    { label: "Voice Bundles", value: "voice_bundles" },
+    { label: "Roaming Data", value: "roaming_data_mb" },
     { label: "Roaming Minutes", value: "roaming_minutes" },
     { label: "Roaming SMS Count", value: "roaming_sms_count" },
     { label: "Utility", value: "utility" },
@@ -239,18 +240,41 @@ export default function ProductForm({
     value: ProductUnit;
     category: string;
   }[] = [
-    { label: "Data (MB)", value: "data_mb", category: "Data" },
+    { label: "Data", value: "data_mb", category: "Data" },
     { label: "On-net Minutes", value: "onnet_minutes", category: "Voice" },
     { label: "Off-net Minutes", value: "offnet_minutes", category: "Voice" },
     { label: "All-net Minutes", value: "allnet_minutes", category: "Voice" },
-    { label: "SMS Count", value: "sms_count", category: "SMS" },
-    { label: "Roaming Data (MB)", value: "roaming_data_mb", category: "Roaming" },
+    { label: "Voice Bundles", value: "voice_bundles", category: "Voice" },
+    { label: "SMS Bundles", value: "sms_count", category: "SMS" },
+    { label: "Roaming Data", value: "roaming_data_mb", category: "Roaming" },
     { label: "Roaming Minutes", value: "roaming_minutes", category: "Roaming" },
     { label: "Roaming SMS Count", value: "roaming_sms_count", category: "Roaming" },
     { label: "Airtime", value: "airtime", category: "Other" },
     { label: "Utility", value: "utility", category: "Other" },
     { label: "Points", value: "points", category: "Other" },
   ];
+
+  // Check if a unit is a data type (needs size selector)
+  const isDataType = (unit: ProductUnit): boolean => {
+    return unit.includes("data");
+  };
+
+  // Get the size multiplier from unit (mb or gb)
+  const getDataTypeSize = (unit: ProductUnit): "mb" | "gb" => {
+    if (unit.includes("gb")) return "gb";
+    return "mb";
+  };
+
+  // Get the base data type (data or roaming_data)
+  const getDataTypeBase = (unit: ProductUnit): string => {
+    if (unit.includes("roaming")) return "roaming_data";
+    return "data";
+  };
+
+  // Build unit string from base and size
+  const buildDataUnit = (base: string, size: "mb" | "gb"): ProductUnit => {
+    return `${base}_${size}` as ProductUnit;
+  };
 
   // Get label for a resource type
   const getResourceTypeLabel = (resourceType: ProductUnit): string => {
@@ -970,28 +994,86 @@ export default function ProductForm({
 
                         <div
                           className={`grid gap-3 ${
-                            !comboData.shared_validity
+                            isDataType(resource.unit)
+                              ? !comboData.shared_validity
+                                ? "md:grid-cols-4"
+                                : "md:grid-cols-3"
+                              : !comboData.shared_validity
                               ? "md:grid-cols-3"
                               : "md:grid-cols-2"
                           } mb-3`}
                         >
-                          <div>
-                            <label
-                              className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                            >
-                              Unit
-                            </label>
-                            <input
-                              type="text"
-                              value={getResourceTypeLabel(resource.unit)}
-                              disabled
-                              className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
-                              style={{ 
-                                borderColor: color.border.default,
-                                color: color.text.secondary,
-                              }}
-                            />
-                          </div>
+                          {isDataType(resource.unit) ? (
+                            <>
+                              <div>
+                                <label
+                                  className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                                >
+                                  Type
+                                </label>
+                                <HeadlessSelect
+                                  options={[
+                                    { label: "Data", value: "data" },
+                                    { label: "Roaming Data", value: "roaming_data" },
+                                  ]}
+                                  value={getDataTypeBase(resource.unit)}
+                                  onChange={(value) => {
+                                    const newUnit = buildDataUnit(
+                                      value as string,
+                                      getDataTypeSize(resource.unit)
+                                    );
+                                    updateComboResource(index, "unit", newUnit);
+                                  }}
+                                  placeholder="Select type"
+                                  className="w-full"
+                                  zIndex={zIndex.dropdown}
+                                />
+                              </div>
+
+                              <div>
+                                <label
+                                  className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                                >
+                                  Size
+                                </label>
+                                <HeadlessSelect
+                                  options={[
+                                    { label: "MB", value: "mb" },
+                                    { label: "GB", value: "gb" },
+                                  ]}
+                                  value={getDataTypeSize(resource.unit)}
+                                  onChange={(value) => {
+                                    const newUnit = buildDataUnit(
+                                      getDataTypeBase(resource.unit),
+                                      value as "mb" | "gb"
+                                    );
+                                    updateComboResource(index, "unit", newUnit);
+                                  }}
+                                  placeholder="Select size"
+                                  className="w-full"
+                                  zIndex={zIndex.dropdown}
+                                />
+                              </div>
+                            </>
+                          ) : (
+                            <div>
+                              <label
+                                className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
+                              >
+                                Unit
+                              </label>
+                              <input
+                                type="text"
+                                value={getResourceTypeLabel(resource.unit)}
+                                disabled
+                                className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm bg-gray-50`}
+                                style={{
+                                  borderColor: color.border.default,
+                                  color: color.text.secondary,
+                                }}
+                              />
+                            </div>
+                          )}
 
                           <div>
                             <label
@@ -1002,15 +1084,16 @@ export default function ProductForm({
                             <input
                               type="number"
                               min="0"
-                              step="0.01"
-                              value={resource.unit_value ?? ""}
-                              onChange={(e) =>
+                              step="1"
+                              value={resource.unit_value === 0 ? "" : (resource.unit_value ?? "")}
+                              onChange={(e) => {
+                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
                                 updateComboResource(
                                   index,
                                   "unit_value",
-                                  parseFloat(e.target.value) || 0,
+                                  isNaN(val) ? 0 : val,
                                 )
-                              }
+                              }}
                               className={`w-full px-3 py-2.5 border ${tw.rounded} text-sm transition-all`}
                               style={{ borderColor: color.border.default }}
                               placeholder="Enter value"
@@ -1153,11 +1236,12 @@ export default function ProductForm({
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
-                    value={formData.unit_value ?? ""}
-                    onChange={(e) =>
-                      onInputChange("unit_value", parseFloat(e.target.value) || 0)
-                    }
+                    step="1"
+                    value={formData.unit_value === 0 ? "" : (formData.unit_value ?? "")}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                      onInputChange("unit_value", isNaN(val) ? 0 : val)
+                    }}
                     className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                     style={{ borderColor: color.border.default }}
                     placeholder="Enter unit value"

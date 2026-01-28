@@ -1354,24 +1354,10 @@ export default function JobWorkflowStepsPage() {
                       </div>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-black">
-                          {step.is_active ? "Active" : "Inactive"}
-                        </span>
-                        {step.is_critical && (
-                          <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
-                            Critical
-                          </span>
-                        )}
-                        {step.is_parallel && (
-                          <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                            Parallel
-                          </span>
-                        )}
-                      </div>
+                      {step.is_active ? "Active" : "Inactive"}
                     </td>
                     <td
                       className="px-6 py-4 text-right"

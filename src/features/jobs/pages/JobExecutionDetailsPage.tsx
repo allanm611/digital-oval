@@ -173,7 +173,7 @@ export default function JobExecutionDetailsPage() {
     const fetchExecution = async () => {
       setIsLoading(true);
       try {
-        const exec = await jobExecutionService.getJobExecutionById(id);
+        const exec = await jobExecutionService.getJobExecutionById(id, true);
         setExecution(exec);
 
         // Fetch additional data if running
@@ -181,10 +181,10 @@ export default function JobExecutionDetailsPage() {
           try {
             const [progressData, resourceData, durationData, timeoutData] =
               await Promise.all([
-                jobExecutionService.getExecutionProgress(id).catch(() => null),
-                jobExecutionService.getResourceUsage(id).catch(() => null),
-                jobExecutionService.getRunningDuration(id).catch(() => null),
-                jobExecutionService.isExecutionTimedOut(id).catch(() => null),
+                jobExecutionService.getExecutionProgress(id, true).catch(() => null),
+                jobExecutionService.getResourceUsage(id, true).catch(() => null),
+                jobExecutionService.getRunningDuration(id, true).catch(() => null),
+                jobExecutionService.isExecutionTimedOut(id, true).catch(() => null),
               ]);
             setProgress(progressData);
             setResourceUsage(resourceData);
@@ -250,16 +250,16 @@ export default function JobExecutionDetailsPage() {
             .getExecutionDistribution({ startDate: startDateStr })
             .catch(() => []),
           jobExecutionService
-            .getExecutionComparison(jobIdNum, { currentPeriodDays: 7 })
+            .getExecutionComparison(jobIdNum, { currentPeriodDays: 7, skipCache: true })
             .catch(() => null),
-          jobExecutionService.getCompletionForecast(jobIdNum).catch(() => []),
-          jobExecutionService.getExecutionHeatmap(jobIdNum).catch(() => null),
-          jobExecutionService.getSLAPrediction(jobIdNum).catch(() => null),
+          jobExecutionService.getCompletionForecast(jobIdNum, true).catch(() => []),
+          jobExecutionService.getExecutionHeatmap(jobIdNum, true).catch(() => null),
+          jobExecutionService.getSLAPrediction(jobIdNum, true).catch(() => null),
           jobExecutionService
-            .getExecutionTimeline(jobIdNum, { limit: 20 })
+            .getExecutionTimeline(jobIdNum, { limit: 20, skipCache: true })
             .catch(() => []),
           jobExecutionService
-            .getDailySummary(jobIdNum, { daysBack: 30 })
+            .getDailySummary(jobIdNum, true)
             .catch(() => []),
         ]);
 

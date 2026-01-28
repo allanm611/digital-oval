@@ -529,6 +529,7 @@ export default function JobDependenciesPage() {
 
   const [dependencies, setDependencies] = useState<JobDependency[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingJobsMap, setIsLoadingJobsMap] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1029,6 +1030,7 @@ export default function JobDependenciesPage() {
 
   // Fetch jobs to create a map of job_id -> job_name
   const fetchJobsMap = useCallback(async () => {
+    setIsLoadingJobsMap(true);
     try {
       const response = await scheduledJobService.listScheduledJobs({
         limit: 1000,
@@ -1042,6 +1044,8 @@ export default function JobDependenciesPage() {
       setJobsMap(map);
     } catch (err) {
       console.error("Failed to load jobs for mapping:", err);
+    } finally {
+      setIsLoadingJobsMap(false);
     }
   }, []);
 
@@ -1964,7 +1968,7 @@ export default function JobDependenciesPage() {
           </div>
         )}
 
-        {isLoading ? (
+        {isLoading || isLoadingJobsMap ? (
           <div className="flex justify-center py-16">
             <LoadingSpinner />
           </div>

@@ -277,8 +277,7 @@ export default function CreateQuickListModal({
     return Object.keys(validationErrors).length === 0;
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     try {
@@ -343,8 +342,7 @@ export default function CreateQuickListModal({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
+        <div
           className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
         >
           <div className="space-y-6">
@@ -725,7 +723,8 @@ export default function CreateQuickListModal({
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={isSubmitting}
                   className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
                   style={{
@@ -742,7 +741,7 @@ export default function CreateQuickListModal({
                 </button>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

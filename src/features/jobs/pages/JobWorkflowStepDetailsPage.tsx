@@ -424,6 +424,24 @@ export default function JobWorkflowStepDetailsPage() {
                   {formatDateTime(step.updated_at)}
                 </dd>
               </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Status</dt>
+                <dd className="mt-1 flex items-center gap-2">
+                  <span className="text-sm font-medium text-black">
+                    {step.is_active ? "Active" : "Inactive"}
+                  </span>
+                  {step.is_critical && (
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                      Critical
+                    </span>
+                  )}
+                  {step.is_parallel && (
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+                      Parallel
+                    </span>
+                  )}
+                </dd>
+              </div>
             </dl>
           </div>
 

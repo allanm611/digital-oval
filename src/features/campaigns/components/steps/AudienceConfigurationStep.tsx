@@ -509,17 +509,19 @@ export default function AudienceConfigurationStep({
                   : t.campaigns.audienceConfiguration.addSegment}
               </button>
             )}
-            <button
-              onClick={() => setShowCreateSegmentModal(true)}
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} flex items-center gap-2`}
-              style={{
-                backgroundColor: color.primary.action,
-                color: "white",
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              {t.campaigns.audienceConfiguration.createNewSegment}
-            </button>
+            {formData.campaign_type && (
+              <button
+                onClick={() => setShowCreateSegmentModal(true)}
+                className={`px-4 py-2 text-sm font-medium ${tw.rounded} flex items-center gap-2`}
+                style={{
+                  backgroundColor: color.primary.action,
+                  color: "white",
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                {t.campaigns.audienceConfiguration.createNewSegment}
+              </button>
+            )}
           </div>
         </div>
 

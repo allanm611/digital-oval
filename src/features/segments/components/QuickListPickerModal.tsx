@@ -164,21 +164,30 @@ export default function QuickListPickerModal({
   const handleCreateQuickList = async (request: CreateQuickListRequest) => {
     try {
       const response = await quicklistService.createQuickList(request);
-      if (response.success && response.data) {
+
+      // Extract the actual ID from response (could be id, quicklist_id, or nested in data)
+      const quicklistId = response?.id || response?.quicklist_id || response?.data?.id || response?.data?.quicklist_id;
+
+      if (quicklistId) {
+        // Reload the list first to get fresh data
+        await loadQuickLists();
+
+        // Now select the newly created quicklist
         const newQuickList: QuickListItem = {
-          id: response.data.quicklist_id,
+          id: quicklistId,
           name: request.name,
           description: request.description || undefined,
           upload_type: "multi",
-          row_count: response.data.rows_imported || 0,
+          row_count: response?.rows_imported || response?.data?.rows_imported || 0,
           created_at: new Date().toISOString(),
         };
-        // Reload the list
-        await loadQuickLists();
-        // Auto-select the newly created quicklist
+
         onSelect(newQuickList);
         setShowCreateModal(false);
         onClose();
+      } else {
+        console.error("No quicklist ID in response:", response);
+        throw new Error("Failed to extract quicklist ID from response");
       }
     } catch (err) {
       console.error("Failed to create quicklist:", err);
@@ -489,7 +498,7 @@ export default function QuickListPickerModal({
         <CreateQuickListModal
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
-          onSuccess={handleCreateQuickList}
+          onSubmit={handleCreateQuickList}
         />
       )}
     </>,

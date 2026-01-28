@@ -16,6 +16,9 @@ import {
   Pause,
   Power,
   Archive,
+  Activity,
+  AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { ScheduledJob } from "../types/scheduledJob";
@@ -612,6 +615,82 @@ export default function ScheduledJobDetailsPage() {
 
       {/* Main Content */}
       <div className="space-y-6">
+        {/* Performance Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
+            <div className="flex items-center gap-2">
+              <Activity
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Total Runs</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {job.total_executions}
+            </p>
+          </div>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Failed</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-red-600">
+              {job.total_failures}
+            </p>
+          </div>
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">
+                Consecutive Failures
+              </p>
+            </div>
+            <p
+              className={`mt-2 text-3xl font-bold ${
+                job.consecutive_failures > 0 ? "text-red-600" : "text-green-600"
+              }`}
+            >
+              {job.consecutive_failures}
+            </p>
+          </div>
+          {job.success_rate_percent !== null && (
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
+              <div className="flex items-center gap-2">
+                <TrendingUp
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">Success Rate</p>
+              </div>
+              <p
+                className={`mt-2 text-3xl font-bold ${
+                  job.success_rate_percent >= 90
+                    ? "text-green-600"
+                    : job.success_rate_percent >= 70
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                }`}
+              >
+                {job.success_rate_percent}%
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Basic Information */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
@@ -728,7 +807,7 @@ export default function ScheduledJobDetailsPage() {
           <div className="space-y-6">
             {/* Behavior Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Processing Mode
                 </label>
@@ -739,7 +818,7 @@ export default function ScheduledJobDetailsPage() {
                   How data is processed: batch, streaming, or real-time
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Priority
                 </label>
@@ -760,7 +839,7 @@ export default function ScheduledJobDetailsPage() {
 
             {/* Resource & Timeout Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Max Concurrent Runs
                 </label>
@@ -771,7 +850,7 @@ export default function ScheduledJobDetailsPage() {
                   How many times the job can run at the same time
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Time Limit per Run
                 </label>
@@ -792,7 +871,7 @@ export default function ScheduledJobDetailsPage() {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {job.resource_pool && (
-                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                       <p className="text-xs text-gray-600 mb-1">Resource Pool</p>
                       <p className={`text-sm font-medium ${tw.textPrimary}`}>
                         {job.resource_pool}
@@ -800,7 +879,7 @@ export default function ScheduledJobDetailsPage() {
                     </div>
                   )}
                   {job.max_memory_mb && (
-                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                       <p className="text-xs text-gray-600 mb-1">Max Memory</p>
                       <p className={`text-sm font-medium ${tw.textPrimary}`}>
                         {job.max_memory_mb} MB
@@ -808,7 +887,7 @@ export default function ScheduledJobDetailsPage() {
                     </div>
                   )}
                   {job.max_cpu_cores && (
-                    <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                       <p className="text-xs text-gray-600 mb-1">Max CPU Cores</p>
                       <p className={`text-sm font-medium ${tw.textPrimary}`}>
                         {job.max_cpu_cores} core{job.max_cpu_cores !== 1 ? 's' : ''}
@@ -829,7 +908,7 @@ export default function ScheduledJobDetailsPage() {
           <div className="space-y-6">
             {/* Timeline Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`${tw.rounded} border border-green-100 bg-green-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Last Run
                 </label>
@@ -842,7 +921,7 @@ export default function ScheduledJobDetailsPage() {
                   </span>
                 )}
               </div>
-              <div className={`${tw.rounded} border border-blue-100 bg-blue-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Next Run
                 </label>
@@ -853,8 +932,8 @@ export default function ScheduledJobDetailsPage() {
             </div>
 
             {/* Success/Failure Timeline */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Last Success
                 </label>
@@ -862,7 +941,7 @@ export default function ScheduledJobDetailsPage() {
                   {formatDateTime(job.last_success_at)}
                 </p>
               </div>
-              <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-4`}>
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-4`}>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">
                   Last Failure
                 </label>
@@ -872,42 +951,6 @@ export default function ScheduledJobDetailsPage() {
               </div>
             </div>
 
-            {/* Statistics Section */}
-            <div className="pt-4 border-t border-gray-200">
-              <p className="text-xs font-semibold text-gray-600 uppercase mb-3">
-                Overall Performance
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
-                  <p className="text-xs text-gray-600 mb-1">Total Runs</p>
-                  <p className={`text-lg font-bold ${tw.textPrimary}`}>
-                    {job.total_executions}
-                  </p>
-                </div>
-                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
-                  <p className="text-xs text-gray-600 mb-1">Failed</p>
-                  <p className={`text-lg font-bold text-red-600`}>
-                    {job.total_failures}
-                  </p>
-                </div>
-                <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
-                  <p className="text-xs text-gray-600 mb-1">Consecutive Failures</p>
-                  <p className={`text-lg font-bold ${job.consecutive_failures > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {job.consecutive_failures}
-                  </p>
-                </div>
-                {job.success_rate_percent !== null && (
-                  <div className={`${tw.rounded} border border-gray-100 bg-gray-50 p-3`}>
-                    <p className="text-xs text-gray-600 mb-1">Success Rate</p>
-                    <div className="flex items-center gap-2">
-                      <p className={`text-lg font-bold ${job.success_rate_percent >= 90 ? 'text-green-600' : job.success_rate_percent >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
-                        {job.success_rate_percent}%
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Action */}
             {job.consecutive_failures > 0 && (

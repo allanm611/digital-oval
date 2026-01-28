@@ -418,13 +418,6 @@ export default function CustomersPage() {
                     `Customer ${row.customerId}`,
                   );
                   const status = row.status ?? "Unknown";
-                  const statusLower = status.toLowerCase();
-                  const statusStyles =
-                    statusLower === "active"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : statusLower === "pending"
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-gray-100 text-gray-700";
 
                   return (
                     <tr key={`${row.customerId}-${row.subscriptionId}`}>
@@ -463,12 +456,8 @@ export default function CustomersPage() {
                       >
                         {row.city ?? "—"}
                       </td>
-                      <td className="px-6 py-5 text-sm" style={cellBackground}>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${statusStyles}`}
-                        >
-                          {status}
-                        </span>
+                      <td className="px-6 py-5 text-sm text-black" style={cellBackground}>
+                        {status}
                       </td>
                       <td
                         className="px-6 py-5 text-sm text-gray-900"

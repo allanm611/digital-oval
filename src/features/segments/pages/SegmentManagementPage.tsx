@@ -673,9 +673,10 @@ export default function SegmentManagementPage() {
 
     // Simplified: Just reload segments and show success message
     await loadSegments();
+    const segName = segment?.name || "(Unnamed)";
     success(
       selectedSegment ? "Segment updated" : "Segment created",
-      `Segment "${segment.name}" has been ${
+      `Segment "${segName}" has been ${
         selectedSegment ? "updated" : "created"
       } successfully`,
     );

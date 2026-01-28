@@ -1263,14 +1263,14 @@ function AssignItemsModal({
                           Type
                         </th>
                       )}
-                      {itemType === "campaigns" && (
+                      {/* {itemType === "campaigns" && (
                         <th
                           className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"
                           style={{ color: color.surface.tableHeaderText }}
                         >
                           Campaign Type
                         </th>
-                      )}
+                      )} */}
                       <th
                         className="px-3 sm:px-6 py-3 text-left text-xs font-medium uppercase tracking-wider hidden xl:table-cell"
                         style={{ color: color.surface.tableHeaderText }}
@@ -1366,13 +1366,13 @@ function AssignItemsModal({
                                 </span>
                               </td>
                             )}
-                          {itemType === "campaigns" && (
+                          {/* {itemType === "campaigns" && (
                             <td className="px-3 sm:px-6 py-4 hidden lg:table-cell">
                               <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
                                 {getTypeDisplay(item)}
                               </span>
                             </td>
-                          )}
+                          )} */}
                           <td className="px-3 sm:px-6 py-4 text-sm text-gray-600 hidden xl:table-cell">
                             {getCreatedAtDisplay(item)}
                           </td>
