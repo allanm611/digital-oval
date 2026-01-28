@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus, Upload, Users } from "lucide-react";
+import { X, Plus, Upload, Users, Download, AlertCircle, CheckCircle } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -80,6 +80,69 @@ export default function CreateCustomerModal({
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [bulkText, setBulkText] = useState("");
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [importFileDelimiter, setImportFileDelimiter] = useState(",");
+  const [importPreview, setImportPreview] = useState<{ valid: number; invalid: number; rows: any[]; headers: string[] } | null>(null);
+
+  // Real-time bulk data parsing and validation
+  const bulkValidation = useMemo(() => {
+    if (!bulkText.trim()) {
+      return { valid: 0, invalid: 0, rows: [], headers: [] };
+    }
+
+    const lines = bulkText
+      .split("\n")
+      .filter((line) => line.trim());
+
+    const rows = lines.map((line, index) => {
+      const parts = line.split(",").map((p) => p.trim());
+      const hasMinimumFields = parts.length >= 3 && parts[0] && parts[1] && parts[2];
+
+      if (!hasMinimumFields) {
+        return {
+          rowNum: index + 1,
+          valid: false,
+          error: "Missing required fields (FirstName, LastName, Phone)",
+          data: parts,
+        };
+      }
+
+      // Successfully mapped customer
+      return {
+        rowNum: index + 1,
+        valid: true,
+        data: [
+          parts[0],
+          parts[1],
+          parts[2],
+          parts[3] || "—",
+          parts[4] || "—",
+          parts[5] || "Non-member",
+          parts[6] || "Active",
+          parts[7] || "2FF",
+        ],
+        customer: {
+          firstName: parts[0],
+          lastName: parts[1],
+          msisdn: parts[2],
+          email: parts[3] || undefined,
+          city: parts[4] || undefined,
+          tariff: parts[5] || "Non-member",
+          status: parts[6] || "Active",
+          simType: parts[7] || "2FF",
+        },
+      };
+    });
+
+    const validRows = rows.filter((r) => r.valid).length;
+    const invalidRows = rows.filter((r) => !r.valid).length;
+
+    return {
+      valid: validRows,
+      invalid: invalidRows,
+      rows,
+      headers: ["FirstName", "LastName", "Phone", "Email", "City", "Tariff", "Status", "SimType"],
+    };
+  }, [bulkText]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -222,7 +285,7 @@ export default function CreateCustomerModal({
       const customers: CustomerSubscriptionRecord[] = [];
 
       for (const line of lines) {
-        const parts = line.split(",").map((p) => p.trim());
+        const parts = line.split(importFileDelimiter).map((p) => p.trim());
         if (parts.length < 3) continue;
 
         const customer: CustomerSubscriptionRecord = {
@@ -304,34 +367,34 @@ export default function CreateCustomerModal({
         </div>
 
         {/* Tabs */}
-        <div
-          className="flex border-b"
-          style={{ borderColor: color.border.default }}
-        >
-          {[
-            { id: "single", label: "Single Customer", icon: Plus },
-            { id: "bulk", label: "Bulk Addition", icon: Users },
-            { id: "import", label: "Import File", icon: Upload },
-          ].map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id as TabType)}
-              className={`flex items-center gap-2 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
-                activeTab === id
-                  ? `border-blue-500 ${tw.textPrimary}`
-                  : `border-transparent ${tw.textSecondary} hover:${tw.textPrimary}`
-              }`}
-              style={{
-                borderBottomColor:
-                  activeTab === id ? color.primary.action : "transparent",
-                color:
-                  activeTab === id ? color.text.primary : color.text.secondary,
-              }}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
+        <div className="border-b" style={{ borderColor: color.border.default }}>
+          <div className="flex gap-0">
+            {[
+              { id: "single", label: "Single Customer", icon: Plus },
+              { id: "bulk", label: "Bulk Addition", icon: Users },
+              { id: "import", label: "Import File", icon: Upload },
+            ].map(({ id, label, icon: Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id as TabType)}
+                  className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-colors relative flex-shrink-0 ${
+                    isActive ? "text-black" : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                  {isActive && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-0.5"
+                      style={{ backgroundColor: color.primary.accent }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Content */}
@@ -483,40 +546,19 @@ export default function CreateCustomerModal({
           {/* Bulk Addition Tab */}
           {activeTab === "bulk" && (
             <div>
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className={`text-xs font-semibold ${tw.textPrimary} mb-2`}>
-                  📋 CSV Format Required:
+              <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className={`text-sm font-semibold ${tw.textPrimary} mb-2`}>
+                  Required Fields
                 </p>
-                <p className={`text-xs ${tw.textSecondary} font-mono mb-2`}>
-                  FirstName, LastName, Phone, Email, City, Tariff, Status,
-                  SimType
-                </p>
-                <p className={`text-xs ${tw.textSecondary} mb-3`}>
-                  One customer per line. Required fields: FirstName, LastName,
-                  Phone
-                </p>
-                <p className={`text-xs font-semibold ${tw.textPrimary} mb-2`}>
-                  Valid Values:
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="font-semibold text-gray-700">Tariff:</span>
-                    <div className={tw.textSecondary}>
-                      Non-member, Member, Gumzo, etc.
-                    </div>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-gray-700">Status:</span>
-                    <div className={tw.textSecondary}>
-                      Active, Pending, Deactivation
-                    </div>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-gray-700">
-                      SIM Type:
+                <div className="flex flex-wrap gap-2">
+                  {["FirstName", "LastName", "Phone"].map((field) => (
+                    <span
+                      key={field}
+                      className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium"
+                    >
+                      {field}
                     </span>
-                    <div className={tw.textSecondary}>2FF, 4FF, 2/3FF, 4G</div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -528,23 +570,119 @@ export default function CreateCustomerModal({
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder="John, Doe, +254712345678, john@example.com, Nairobi, Non-member, Active, 2FF
-Jane, Smith, +254723456789, jane@example.com, Mombasa, Member, Active, 4FF
-Mike, Johnson, +254734567890, , Kisumu, Gumzo, Pending, 2/3FF"
+                placeholder=""
                 className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
-                rows={10}
+                rows={8}
               />
+
+              {/* Real-time Validation Feedback */}
+              {bulkText.trim() && (
+                <div className="mt-4 space-y-3">
+                  {/* Status Text */}
+                  <p className="text-sm font-medium text-gray-700">
+                    <span className="text-green-600">{bulkValidation.valid} valid</span>
+                    {bulkValidation.invalid > 0 && (
+                      <span className="text-red-600 ml-3">{bulkValidation.invalid} invalid</span>
+                    )}
+                  </p>
+
+                  {/* Issues */}
+                  {bulkValidation.invalid > 0 && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-xs max-h-24 overflow-y-auto">
+                      {bulkValidation.rows
+                        .filter((r) => !r.valid)
+                        .map((row, idx) => (
+                          <p key={idx} className="text-red-600 mb-1">Row {row.rowNum}: {row.error}</p>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Preview Table */}
+                  {bulkValidation.valid > 0 && (
+                    <div className="mt-3">
+                      <label className="text-sm font-medium text-black mb-2 block">
+                        Data Preview
+                      </label>
+                      <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
+                        <table className="w-full text-sm">
+                          <thead style={{ background: color.surface.tableHeader }}>
+                            <tr>
+                              {bulkValidation.headers.map((header, idx) => (
+                                <th
+                                  key={idx}
+                                  className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap border-b border-gray-200"
+                                  style={{ color: color.surface.tableHeaderText }}
+                                >
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bulkValidation.rows
+                              .filter((r) => r.valid)
+                              .map((row, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b border-gray-100 hover:bg-gray-50"
+                                  style={{ backgroundColor: color.surface.tablebodybg }}
+                                >
+                                  {row.data?.map((cell, cellIdx) => (
+                                    <td key={cellIdx} className="px-3 py-2 text-xs whitespace-nowrap">
+                                      {cell}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {bulkValidation.valid > 10 && (
+                        <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-500 text-center">
+                          Showing all {bulkValidation.valid} customer(s)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           {/* Import File Tab */}
           {activeTab === "import" && (
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Upload CSV File
-              </label>
+              <div className="mb-4 flex items-center justify-between">
+                <label
+                  className={`block text-sm font-medium ${tw.textPrimary}`}
+                >
+                  Upload CSV File
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sampleData = `FirstName,LastName,Phone,Email,City,Tariff,Status,SimType
+Samuel,Kipchoge,+254712345678,samuel@example.com,Nairobi,Non-member,Active,2FF
+Mary,Wangari,+254723456789,mary@example.com,Mombasa,Member,Active,4FF
+James,Ochieng,+254734567890,james@example.com,Kisumu,Gumzo,Pending,2/3FF`;
+                    const blob = new Blob([sampleData], { type: "text/csv" });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sample_customers.csv";
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                  }}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium ${tw.rounded} transition-colors`}
+                  style={{
+                    backgroundColor: color.primary.accent,
+                    color: "white",
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  Download Sample
+                </button>
+              </div>
               <div
                 className={`border-2 border-dashed ${tw.rounded} p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors`}
                 style={{ borderColor: color.border.default }}
@@ -565,15 +703,138 @@ Mike, Johnson, +254734567890, , Kisumu, Gumzo, Pending, 2/3FF"
                 id="fileInput"
                 type="file"
                 accept=".csv"
-                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] || null;
+                  setImportFile(file);
+
+                  // Parse file preview
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const content = event.target?.result as string;
+                      const lines = content.split("\n").filter((line) => line.trim());
+                      const headers = ["FirstName", "LastName", "Phone", "Email", "City", "Tariff", "Status", "SimType"];
+
+                      const rows = lines.slice(0).map((line, index) => {
+                        const parts = line.split(importFileDelimiter).map((p) => p.trim());
+                        const hasMinimumFields = parts.length >= 3 && parts[0] && parts[1] && parts[2];
+
+                        if (!hasMinimumFields) {
+                          return {
+                            rowNum: index + 1,
+                            valid: false,
+                            error: "Missing required fields",
+                            data: parts,
+                          };
+                        }
+
+                        return {
+                          rowNum: index + 1,
+                          valid: true,
+                          data: [
+                            parts[0],
+                            parts[1],
+                            parts[2],
+                            parts[3] || "—",
+                            parts[4] || "—",
+                            parts[5] || "Non-member",
+                            parts[6] || "Active",
+                            parts[7] || "2FF",
+                          ],
+                        };
+                      });
+
+                      const validRows = rows.filter((r) => r.valid).length;
+                      const invalidRows = rows.filter((r) => !r.valid).length;
+
+                      setImportPreview({
+                        valid: validRows,
+                        invalid: invalidRows,
+                        rows,
+                        headers,
+                      });
+                    };
+                    reader.readAsText(file);
+                  } else {
+                    setImportPreview(null);
+                  }
+                }}
                 className="hidden"
               />
+
+
+              {/* Import Preview */}
+              {importPreview && (
+                <div className="mt-4 space-y-3">
+                  {/* Status Text */}
+                  <p className="text-sm font-medium text-gray-700">
+                    <span className="text-green-600">{importPreview.valid} valid</span>
+                    {importPreview.invalid > 0 && (
+                      <span className="text-red-600 ml-3">{importPreview.invalid} invalid</span>
+                    )}
+                  </p>
+
+                  {/* Issues */}
+                  {importPreview.invalid > 0 && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded text-xs max-h-24 overflow-y-auto">
+                      {importPreview.rows
+                        .filter((r) => !r.valid)
+                        .map((row, idx) => (
+                          <p key={idx} className="text-red-600 mb-1">Row {row.rowNum}: {row.error}</p>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* Preview Table */}
+                  {importPreview.valid > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-black mb-2 block">
+                        Data Preview
+                      </label>
+                      <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
+                        <table className="w-full text-sm">
+                          <thead style={{ background: color.surface.tableHeader }}>
+                            <tr>
+                              {importPreview.headers.map((header, idx) => (
+                                <th
+                                  key={idx}
+                                  className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap border-b border-gray-200"
+                                  style={{ color: color.surface.tableHeaderText }}
+                                >
+                                  {header}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {importPreview.rows
+                              .filter((r) => r.valid)
+                              .map((row, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="border-b border-gray-100 hover:bg-gray-50"
+                                  style={{ backgroundColor: color.surface.tablebodybg }}
+                                >
+                                  {row.data?.map((cell, cellIdx) => (
+                                    <td key={cellIdx} className="px-3 py-2 text-xs whitespace-nowrap">
+                                      {cell}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </form>
 
         {/* Footer */}
-        <div className={`flex gap-3 p-6 border-t ${tw.borderDefault}`}>
+        <div className={`flex gap-3 p-6`}>
           <button
             type="button"
             onClick={onClose}

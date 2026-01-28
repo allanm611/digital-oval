@@ -9,7 +9,7 @@ import {
 const mockConnectors: DataConnector[] = [
   {
     id: "1",
-    name: "PostgreSQL(pg_partman)",
+    name: "JDBC",
     type: "jdbc",
     description: getConnectorDescription("jdbc"),
     icon: getConnectorIcon("jdbc").icon,

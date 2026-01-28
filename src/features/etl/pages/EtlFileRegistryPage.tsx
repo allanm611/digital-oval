@@ -8,6 +8,10 @@ import {
   RefreshCw,
   Search,
   ChevronDown,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
@@ -244,31 +248,97 @@ export default function EtlFileRegistryPage() {
       </div>
 
       {/* Stats Cards */}
-      {!isLoadingStats && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            { label: t.etl.totalFiles, value: stats.data.total_files ?? 0 },
-            { label: t.etl.completed, value: stats.data.completed_files ?? 0 },
-            { label: t.etl.pending, value: stats.data.pending_files ?? 0 },
-            { label: t.etl.failed, value: stats.data.failed_files ?? 0 },
-            { label: t.etl.processingFilesStatus, value: stats.data.processing_files ?? 0 },
-          ].map((stat) => (
+      {!isLoadingStats && stats && (() => {
+        const statsArray = Array.isArray(stats.data) ? stats.data : [];
+
+        const totalCdrFiles = statsArray
+          .filter((row: any) => row.file_category === "CDR")
+          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+
+        const totalTdrFiles = statsArray
+          .filter((row: any) => row.file_category === "TDR")
+          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+
+        const completedCdrFiles = statsArray
+          .filter((row: any) => row.file_category === "CDR" && row.processing_status === "completed")
+          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+
+        const completedTdrFiles = statsArray
+          .filter((row: any) => row.file_category === "TDR" && row.processing_status === "completed")
+          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div
-              key={stat.label}
-              className={`${tw.rounded} border p-4`}
-              style={{
-                borderColor: color.border.default,
-                backgroundColor: color.surface.cards,
-              }}
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
-              <p className={`${tw.textSecondary} text-sm mb-2`}>{stat.label}</p>
-              <p className={`${tw.mainHeading} text-2xl font-bold`}>
-                {stat.value}
+              <div className="flex items-center gap-2">
+                <FileText
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Total CDR Files
+                </p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {totalCdrFiles}
               </p>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
+              <div className="flex items-center gap-2">
+                <FileText
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Total TDR Files
+                </p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {totalTdrFiles}
+              </p>
+            </div>
+
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Completed CDR
+                </p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {completedCdrFiles}
+              </p>
+            </div>
+
+            <div
+              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">
+                  Completed TDR
+                </p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {completedTdrFiles}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -334,7 +404,7 @@ export default function EtlFileRegistryPage() {
                   <th className="px-6 py-4 font-medium">{t.etl.rowsProcessedHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.sizeHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.updatedHeader}</th>
-                  <th className="px-6 py-4 text-right font-medium">{t.etl.actionsHeader}</th>
+                  {/* <th className="px-6 py-4 text-right font-medium">{t.etl.actionsHeader}</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -350,7 +420,7 @@ export default function EtlFileRegistryPage() {
                     >
                       <button
                         type="button"
-                        className="font-semibold text-black hover:underline"
+                        className="font-semibold text-black hover:text-gray-700 transition-colors"
                       >
                         {file.file_name}
                       </button>
@@ -400,7 +470,7 @@ export default function EtlFileRegistryPage() {
                           : "—"}
                       </div>
                     </td>
-                    <td
+                    {/* <td
                       className="px-6 py-4 text-right"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
@@ -427,7 +497,7 @@ export default function EtlFileRegistryPage() {
                           </button>
                         )}
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>

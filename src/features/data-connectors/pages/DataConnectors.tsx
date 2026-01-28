@@ -9,7 +9,10 @@ import {
   Layers,
   MoreVertical,
   Eye,
-  Edit,
+  Trash2,
+  Copy,
+  Download,
+  Upload,
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
@@ -18,7 +21,6 @@ import {
   getConnectorIcon,
 } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
-import CreateDataConnectorModal from "../components/CreateDataConnectorModal";
 import { useToast } from "../../../contexts/ToastContext";
 
 export default function DataConnectors() {
@@ -27,7 +29,6 @@ export default function DataConnectors() {
   const [connectors, setConnectors] = useState<DataConnector[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 
   const loadConnectors = async () => {
@@ -56,10 +57,6 @@ export default function DataConnectors() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const handleCreateConnector = () => {
-    setCreateModalOpen(true);
-  };
-
   const handleConnectorClick = (connector: DataConnector) => {
     navigate(`/dashboard/data-connectors/${connector.id}`);
   };
@@ -74,7 +71,7 @@ export default function DataConnectors() {
 
   const handleMenuAction = (
     e: React.MouseEvent<HTMLButtonElement>,
-    action: "view" | "edit" | "clone" | "export" | "import" | "delete",
+    action: "view" | "clone" | "export" | "import" | "delete",
     connector: DataConnector,
   ) => {
     e.stopPropagation();
@@ -83,9 +80,6 @@ export default function DataConnectors() {
     switch (action) {
       case "view":
         handleConnectorClick(connector);
-        break;
-      case "edit":
-        showError("Not implemented", "Edit connector will be available soon");
         break;
       case "clone":
         showError("Not implemented", "Clone connector will be available soon");
@@ -117,16 +111,6 @@ export default function DataConnectors() {
             destinations
           </p>
         </div>
-        <button
-          onClick={handleCreateConnector}
-          className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
-          style={{
-            backgroundColor: color.primary.action,
-            color: "white",
-          }}
-        >
-          + Create
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -378,12 +362,12 @@ export default function DataConnectors() {
                           </button>
                           <button
                             onClick={(e) =>
-                              handleMenuAction(e, "edit", connector)
+                              handleMenuAction(e, "delete", connector)
                             }
-                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-[${color.primary.accent}]/10 transition-all duration-200`}
-                            title="Edit"
+                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-red-50 transition-all duration-200`}
+                            title="Delete"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" style={{ color: "#ef4444" }} />
                           </button>
                           <div className="relative">
                             <button
@@ -395,34 +379,26 @@ export default function DataConnectors() {
                             </button>
                             {actionMenuOpen === connector.id && (
                               <div
-                                className="absolute right-0 z-20 mt-2 w-44 rounded-md border border-gray-200 bg-white shadow-lg"
+                                className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-gray-200 bg-white shadow-lg"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {[
-                                  { key: "clone", label: "Clone" },
-                                  { key: "export", label: "Export" },
-                                  { key: "import", label: "Import" },
-                                  {
-                                    key: "delete",
-                                    label: "Delete",
-                                    danger: true,
-                                  },
+                                  { key: "clone", label: "Clone", icon: Copy },
+                                  { key: "export", label: "Export", icon: Download },
+                                  { key: "import", label: "Import", icon: Upload },
                                 ].map((item) => (
                                   <button
                                     key={item.key}
-                                    className={`w-full px-4 py-2 text-left text-sm transition-colors ${tw.textPrimary} hover:bg-gray-50 ${
-                                      item.danger
-                                        ? "text-red-600 hover:bg-red-50"
-                                        : ""
-                                    }`}
+                                    className={`w-full flex items-center px-4 py-2 text-left text-sm transition-colors ${tw.textPrimary} hover:bg-gray-50`}
                                     onClick={(e) =>
                                       handleMenuAction(
                                         e,
-                                        item.key as any,
+                                        item.key as "clone" | "export" | "import",
                                         connector,
                                       )
                                     }
                                   >
+                                    <item.icon className="h-4 w-4 mr-3" />
                                     {item.label}
                                   </button>
                                 ))}
@@ -440,12 +416,6 @@ export default function DataConnectors() {
         </div>
       )}
 
-      {/* Create Modal */}
-      <CreateDataConnectorModal
-        isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-        onSuccess={loadConnectors}
-      />
     </div>
   );
 }

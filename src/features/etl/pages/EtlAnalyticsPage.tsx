@@ -13,6 +13,10 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import {
+  FileText,
+  CheckCircle,
+} from "lucide-react";
 import { etlService } from "../services/etlService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -250,32 +254,84 @@ export default function EtlAnalyticsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <p className="text-sm font-medium text-gray-600">Total Files</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {totalMetrics.totalFiles.toLocaleString()}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <p className="text-sm font-medium text-gray-600">Completed</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {totalMetrics.completedFiles.toLocaleString()}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <p className="text-sm font-medium text-gray-600">Pending</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {totalMetrics.pendingFiles.toLocaleString()}
-          </p>
-        </div>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-          <p className="text-sm font-medium text-gray-600">Failed</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {totalMetrics.failedFiles.toLocaleString()}
-          </p>
-        </div>
-      </div>
+      {(() => {
+        const cdrMetrics = {
+          total: 0,
+          completed: 0,
+        };
+        const tdrMetrics = {
+          total: 0,
+          completed: 0,
+        };
+
+        allStats.forEach((row) => {
+          const count = parseInt(row.file_count, 10);
+          if (row.file_category === "CDR") {
+            cdrMetrics.total += count;
+            if (row.processing_status === "completed") {
+              cdrMetrics.completed += count;
+            }
+          } else if (row.file_category === "TDR") {
+            tdrMetrics.total += count;
+            if (row.processing_status === "completed") {
+              tdrMetrics.completed += count;
+            }
+          }
+        });
+
+        return (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div className="flex items-center gap-2">
+                <FileText
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">Total CDR Files</p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {cdrMetrics.total.toLocaleString()}
+              </p>
+            </div>
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div className="flex items-center gap-2">
+                <FileText
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">Total TDR Files</p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {tdrMetrics.total.toLocaleString()}
+              </p>
+            </div>
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div className="flex items-center gap-2">
+                <CheckCircle
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">Completed CDR</p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {cdrMetrics.completed.toLocaleString()}
+              </p>
+            </div>
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div className="flex items-center gap-2">
+                <CheckCircle
+                  className="h-5 w-5"
+                  style={{ color: color.primary.accent }}
+                />
+                <p className="text-sm font-medium text-gray-600">Completed TDR</p>
+              </div>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {tdrMetrics.completed.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Pie Charts */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2">

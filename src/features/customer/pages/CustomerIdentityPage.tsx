@@ -24,11 +24,13 @@ export default function CustomerIdentityPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedFieldType, setSelectedFieldType] = useState<string>("all");
 
+  // Always skip cache on load and retry
   const loadFields = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await customerIdentityService.getCustomerIdentityFields();
+      const data =
+        await customerIdentityService.getCustomerIdentityFields(true);
       setFields(data);
     } catch (err) {
       console.error("Failed to load customer identity fields", err);
@@ -48,7 +50,7 @@ export default function CustomerIdentityPage() {
 
   const availableFieldTypes = useMemo(() => {
     const uniqueTypes = Array.from(
-      new Set(fields.map((field) => field.field_type).filter(Boolean))
+      new Set(fields.map((field) => field.field_type).filter(Boolean)),
     );
     return uniqueTypes.sort((a, b) => a.localeCompare(b));
   }, [fields]);
@@ -223,7 +225,7 @@ export default function CustomerIdentityPage() {
                               `/dashboard/customer-identity/fields/${field.id}`,
                               {
                                 state: { field },
-                              }
+                              },
                             )
                           }
                           className="font-semibold hover:underline"
@@ -267,7 +269,7 @@ export default function CustomerIdentityPage() {
                               `/dashboard/customer-identity/fields/${field.id}`,
                               {
                                 state: { field },
-                              }
+                              },
                             )
                           }
                           className={`p-2 ${tw.rounded} text-black transition-colors hover:bg-gray-100`}

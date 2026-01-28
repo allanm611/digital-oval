@@ -1392,7 +1392,107 @@ export interface Translations {
 
   // Offers
   offers: {
-    [key: string]: unknown;
+    creatives: {
+      addCreative: string;
+      noCreativesAdded: string;
+      description: string;
+      creatives: string;
+      title: string;
+      noCreativeSelected: string;
+      selectCreative: string;
+      selectPrompt: string;
+      subheadline: string;
+    };
+    channel: {
+      label: string;
+      placeholder: string;
+      sms: string;
+      email: string;
+      pushNotification: string;
+      inApp: string;
+      web: string;
+      ivr: string;
+      ussd: string;
+      whatsapp: string;
+    };
+    locale: {
+      label: string;
+      placeholder: string;
+      english: string;
+      englishUS: string;
+      englishUK: string;
+      french: string;
+      frenchCanada: string;
+      frenchFrance: string;
+      spanish: string;
+      spanishSpain: string;
+      spanishMexico: string;
+      german: string;
+      germanGermany: string;
+      arabic: string;
+      arabicSaudiArabia: string;
+      portuguese: string;
+      portugueseBrazil: string;
+      portuguesePortugal: string;
+      swahili: string;
+      swahiliUganda: string;
+      swahiliKenya: string;
+    };
+    senderId: {
+      label: string;
+      placeholder: string;
+      defaultPlaceholder: string;
+    };
+    subjectLine: {
+      label: string;
+      placeholder: string;
+    };
+    smsRoute: {
+      label: string;
+      placeholder: string;
+      defaultPlaceholder: string;
+    };
+    messageContent: {
+      label: string;
+      insertVariable: string;
+      clearTemplate: string;
+    };
+    messageBody: {
+      label: string;
+      placeholder: string;
+    };
+    richText: string;
+    plainText: string;
+    template: {
+      label: string;
+      placeholder: string;
+      selected: string;
+    };
+    preview: {
+      title: string;
+      modalTitle: string;
+      failedToRender: string;
+      smsPreview: string;
+      emailPreview: string;
+      renderedTitle: string;
+      renderedTextBody: string;
+      renderedHtmlBody: string;
+      noContent: string;
+      clickToPreview: string;
+    };
+    characterCount: {
+      characters: string;
+      unicode: string;
+      segments: string;
+      more: string;
+    };
+    variableHint: string;
+    createSuccess: string;
+    updateSuccess: string;
+    createWithProductError: string;
+    updateWithProductError: string;
+    createWithCreativeError: string;
+    updateWithCreativeError: string;
   };
 
   // History Pages
@@ -1700,6 +1800,7 @@ export interface Translations {
     inactivePrograms: string;
     totalBudget: string;
     spentBudget: string;
+    budgetSpent: string;
     loading: string;
     noPrograms: string;
     programName: string;
@@ -1711,6 +1812,8 @@ export interface Translations {
     actions: string;
     edit: string;
     delete: string;
+    activate: string;
+    deactivate: string;
     active: string;
     inactive: string;
     createModalTitle: string;
@@ -1728,6 +1831,17 @@ export interface Translations {
     deleteSuccess: string;
     createSuccess: string;
     updateSuccess: string;
+    loadError: string;
+    budgetRecalculateSuccess: string;
+    budgetRecalculateError: string;
+    updateError: string;
+    deleteError: string;
+    deactivateSuccess: string;
+    activateSuccess: string;
+    statusError: string;
+    spent: string;
+    remaining: string;
+    utilization: string;
   };
   // Control Groups
   controlGroups: {

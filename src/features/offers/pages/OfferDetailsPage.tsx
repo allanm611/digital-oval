@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import {
@@ -14,7 +14,11 @@ import {
   Archive,
   MoreVertical,
   Save,
+  Plus,
+  X,
 } from "lucide-react";
+
+const CreateProductModalWrapper = lazy(() => import("../../products/components/CreateProductModalWrapper"));
 import { Offer, OfferStatusEnum, OfferProductLink } from "../types/offer";
 import { OfferCategoryType } from "../types/offerCategory";
 import { offerService } from "../services/offerService";
@@ -32,6 +36,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
+import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -320,6 +325,7 @@ export default function OfferDetailsPage() {
     Array<{ value: string; label: string }>
   >([]);
   const [isLinkingProducts, setIsLinkingProducts] = useState(false);
+  const [createProductModalOpen, setCreateProductModalOpen] = useState(false);
 
   // Close More menu when clicking outside
   useClickOutside(moreMenuRef, () => setShowMoreMenu(false));
@@ -1173,23 +1179,19 @@ export default function OfferDetailsPage() {
       // Check if this is the primary product
       const isPrimary = productToUnlink.productId === primaryProductId;
 
+      // Unlink the product completely (whether it was primary or not)
+      // The backend will automatically remove primary status if this is the primary product
+      await offerService.unlinkProductById(productToUnlink.linkId);
+
+      // Clear primary product from state if it was the primary
       if (isPrimary) {
-        // If it's the primary product, just set primary_product_id to null
-        // This removes it as primary but keeps it linked to the offer
-        await offerService.setPrimaryProduct(Number(id), null);
-        success(
-          "Primary Product Removed",
-          `"${productToUnlink.name}" is no longer the primary product, but remains linked to this offer.`,
-        );
         setPrimaryProductId(null);
-      } else {
-        // If it's not primary, unlink it completely
-        await offerService.unlinkProductById(productToUnlink.linkId);
-        success(
-          "Product Unlinked",
-          `"${productToUnlink.name}" has been unlinked from this offer.`,
-        );
       }
+
+      success(
+        "Product Unlinked",
+        `"${productToUnlink.name}" has been unlinked from this offer.`,
+      );
 
       setShowUnlinkModal(false);
       setProductToUnlink(null);
@@ -2725,219 +2727,310 @@ export default function OfferDetailsPage() {
       </RegularModal>
 
       {/* Add Product Modal - Custom Selector */}
-      <RegularModal
-        isOpen={isAddProductModalOpen}
-        onClose={() => {
-          setIsAddProductModalOpen(false);
-          setSelectedProductsToAdd([]);
-          setProductSearchTerm("");
-          setSelectedProductCategory("all");
-        }}
-        title="Add Products to Offer"
-        size="2xl"
-      >
-        <div className="space-y-4">
-          {/* Search and Filter Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={productSearchTerm}
-                onChange={(e) => setProductSearchTerm(e.target.value)}
-                placeholder="Search products..."
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-              />
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <HeadlessSelect
-                value={selectedProductCategory}
-                onChange={(value) => setSelectedProductCategory(String(value))}
-                options={productCategories}
-                placeholder="Filter by category"
-              />
-            </div>
-          </div>
-
-          {/* Selected Products Count */}
-          {selectedProductsToAdd.length > 0 && (
-            <div
-              className={`${tw.rounded} p-3`}
-              style={{ backgroundColor: color.primary.accent }}
-            >
-              <p className="text-sm text-black font-medium">
-                {selectedProductsToAdd.length} product
-                {selectedProductsToAdd.length !== 1 ? "s" : ""} selected
-              </p>
-            </div>
-          )}
-
-          {/* Products List */}
+      {isAddProductModalOpen && (
+        <div
+          className="fixed bg-black bg-opacity-50 flex items-center justify-center p-4"
+          style={{
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+            zIndex: zIndex.modal,
+          }}
+          onClick={() => {
+            setIsAddProductModalOpen(false);
+            setSelectedProductsToAdd([]);
+            setProductSearchTerm("");
+            setSelectedProductCategory("all");
+          }}
+        >
           <div
-            className={`max-h-96 overflow-y-auto border border-gray-200 ${tw.rounded}`}
+            className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}
+            onClick={(e) => e.stopPropagation()}
           >
-            {productsSearchLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <LoadingSpinner />
+            {/* Header with Create Product Button */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">Add Products to Offer</h2>
+                <p className="text-sm text-gray-500 mt-1">Select products to link to this offer</p>
               </div>
-            ) : availableProducts.length > 0 ? (
-              <div className="divide-y divide-gray-200">
-                {availableProducts.map((product) => {
-                  const isSelected = selectedProductsToAdd.some(
-                    (p) => p.id === product.id,
-                  );
-                  const isAlreadyLinked = linkedProducts.some(
-                    (p) => p.id === product.id,
-                  );
-                  const productInitial = (
-                    product.name ||
-                    product.product_code ||
-                    "P"
-                  )
-                    .toString()
-                    .charAt(0)
-                    .toUpperCase();
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setCreateProductModalOpen(true)}
+                  className={`inline-flex items-center px-3 py-2 text-sm font-medium text-white ${tw.rounded} hover:opacity-90 transition-all`}
+                  style={{ backgroundColor: color.primary.action }}
+                  title="Create a new product"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Create Product
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAddProductModalOpen(false);
+                    setSelectedProductsToAdd([]);
+                    setProductSearchTerm("");
+                    setSelectedProductCategory("all");
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
 
-                  return (
-                    <div
-                      key={product.id}
-                      onClick={() => {
-                        if (!isAlreadyLinked) {
-                          toggleProductSelection(product);
-                        }
-                      }}
-                      className={`p-4 transition-colors ${
-                        isAlreadyLinked
-                          ? "bg-gray-50 opacity-60 cursor-not-allowed"
-                          : "hover:bg-gray-50 cursor-pointer"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1">
-                          <div
-                            className={`w-10 h-10 ${
-                              tw.rounded
-                            } flex items-center justify-center ${
-                              isAlreadyLinked ? "bg-gray-200" : "bg-gray-100"
-                            }`}
-                          >
-                            <span
-                              className="text-sm font-semibold"
-                              style={{
-                                color: isAlreadyLinked
-                                  ? "#6B7280"
-                                  : color.primary.accent,
-                              }}
-                            >
-                              {productInitial}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <h5
-                              className={`font-medium ${
-                                isAlreadyLinked
-                                  ? "text-gray-500"
-                                  : "text-gray-900"
-                              }`}
-                            >
-                              {product.name}
-                            </h5>
-                            <p
-                              className={`text-sm ${
-                                isAlreadyLinked
-                                  ? "text-gray-400"
-                                  : "text-gray-600"
-                              }`}
-                            >
-                              {product.description}
-                            </p>
-                            {isAlreadyLinked && (
-                              <span className="text-xs text-gray-500 italic mt-1 block">
-                                Already linked to this offer
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        {!isAlreadyLinked && (
-                          <div
-                            className={`w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
-                              isSelected ? "" : "border-gray-300 bg-white"
-                            }`}
-                            style={
-                              isSelected
-                                ? {
-                                    borderColor: color.primary.accent,
-                                    backgroundColor: color.primary.accent,
-                                  }
-                                : {}
-                            }
-                          >
-                            {isSelected && (
-                              <Check className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-                        )}
-                        {isAlreadyLinked && (
-                          <div className="w-6 h-6 rounded border-2 border-gray-300 bg-gray-200 flex items-center justify-center">
-                            <Check className="w-4 h-4 text-gray-500" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Search and Filters */}
+            <div className="px-6 pt-4 space-y-4 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                {/* Search Bar */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={productSearchTerm}
+                    onChange={(e) => setProductSearchTerm(e.target.value)}
+                    placeholder="Search products..."
+                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded}`}
+                  />
+                </div>
+
+                {/* Category Filter */}
+                <div className="w-48">
+                  <div className="[&_button]:py-2 [&_li]:py-1.5">
+                    <HeadlessSelect
+                      value={selectedProductCategory}
+                      onChange={(value) => setSelectedProductCategory(String(value))}
+                      options={productCategories}
+                      placeholder="Filter by catalog"
+                    />
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-sm text-gray-500">
-                  {productSearchTerm
-                    ? "No products found matching your search"
-                    : "No products available"}
-                </p>
+            </div>
+
+            {/* Selection Summary */}
+            {selectedProductsToAdd.length > 0 && (
+              <div className="px-6 flex-shrink-0 my-3">
+                <div
+                  className={`${tw.rounded} p-4 border text-sm`}
+                  style={{
+                    backgroundColor: `${color.primary.accent}15`,
+                    borderColor: `${color.primary.accent}40`,
+                    color: color.primary.accent,
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>
+                      {selectedProductsToAdd.length} product
+                      {selectedProductsToAdd.length !== 1 ? "s" : ""} selected
+                    </span>
+                    <button
+                      onClick={() => setSelectedProductsToAdd([])}
+                      className="font-medium hover:opacity-80 transition-opacity"
+                      style={{ color: color.primary.accent }}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <button
-              onClick={() => {
-                setIsAddProductModalOpen(false);
-                setSelectedProductsToAdd([]);
-                setProductSearchTerm("");
-              }}
-              disabled={isLinkingProducts}
-              className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleConfirmAddProducts}
-              disabled={isLinkingProducts || selectedProductsToAdd.length === 0}
-              className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isLinkingProducts ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Linking Products...</span>
-                </>
+            {/* Products List */}
+            <div className="flex-1 overflow-y-auto">
+              {productsSearchLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading products...</p>
+                  </div>
+                </div>
+              ) : availableProducts.length > 0 ? (
+                <div className="border border-gray-200 rounded overflow-hidden m-6">
+                  <table className="w-full divide-y divide-gray-200">
+                    <thead style={{ backgroundColor: color.surface.cards }}>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                          Select
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Product
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                          Category
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                          Code
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                          Price
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {availableProducts.map((product) => {
+                        const isSelected = selectedProductsToAdd.some(
+                          (p) => p.id === product.id,
+                        );
+                        const isAlreadyLinked = linkedProducts.some(
+                          (p) => p.id === product.id,
+                        );
+
+                        return (
+                          <tr
+                            key={product.id}
+                            onClick={() => {
+                              if (!isAlreadyLinked) {
+                                toggleProductSelection(product);
+                              }
+                            }}
+                            className={`transition-colors ${
+                              isAlreadyLinked
+                                ? "opacity-60 cursor-not-allowed"
+                                : "hover:bg-gray-50 cursor-pointer"
+                            }`}
+                          >
+                            <td className="px-4 py-3">
+                              {!isAlreadyLinked && (
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleProductSelection(product)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-4 h-4 border-gray-400 rounded"
+                                  style={{ accentColor: "#111827" }}
+                                />
+                              )}
+                              {isAlreadyLinked && (
+                                <Check className="w-4 h-4 text-gray-400" />
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium text-gray-900 truncate">
+                                  {product.name}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {product.description || "No description"}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm text-gray-600">
+                                {productCategories.find(
+                                  (cat) =>
+                                    cat.value ===
+                                    product.category_id?.toString(),
+                                )?.label || "-"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-sm font-mono text-gray-600">
+                                {product.product_code || "-"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              {product.price ? (
+                                <CurrencyFormatter
+                                  amount={product.price}
+                                  className="text-sm font-medium text-gray-900"
+                                />
+                              ) : (
+                                <span className="text-sm text-gray-400">
+                                  -
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-block text-xs px-2 py-1 rounded-full ${
+                                  product.is_active
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {product.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <span>
-                  Link{" "}
-                  {selectedProductsToAdd.length > 0
-                    ? `${selectedProductsToAdd.length} `
-                    : ""}
-                  Product{selectedProductsToAdd.length !== 1 ? "s" : ""}
-                </span>
+                <div className="text-center py-12">
+                  <p className="text-sm text-gray-500">
+                    {productSearchTerm
+                      ? "No products found matching your search"
+                      : "No products available"}
+                  </p>
+                </div>
               )}
-            </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setIsAddProductModalOpen(false);
+                  setSelectedProductsToAdd([]);
+                  setProductSearchTerm("");
+                  setSelectedProductCategory("all");
+                }}
+                disabled={isLinkingProducts}
+                className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAddProducts}
+                disabled={isLinkingProducts || selectedProductsToAdd.length === 0}
+                className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {isLinkingProducts ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Linking Products...</span>
+                  </>
+                ) : (
+                  <span>
+                    Link{" "}
+                    {selectedProductsToAdd.length > 0
+                      ? `${selectedProductsToAdd.length} `
+                      : ""}
+                    Product{selectedProductsToAdd.length !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </RegularModal>
+      )}
+
+      {/* Create Product Modal - Higher z-index to appear on top */}
+      {createProductModalOpen && (
+        <div style={{ position: "relative", zIndex: zIndex.popover }}>
+          <Suspense fallback={null}>
+            <CreateProductModalWrapper
+              isOpen={createProductModalOpen}
+              onClose={() => setCreateProductModalOpen(false)}
+              onSuccess={(newProduct) => {
+                setCreateProductModalOpen(false);
+                // Add newly created product to selected products
+                setSelectedProductsToAdd((prev) => [...prev, newProduct]);
+                // Refresh the products list
+                loadAvailableProducts();
+              }}
+            />
+          </Suspense>
+        </div>
+      )}
 
       {/* Delete Offer Confirmation Modal */}
       <DeleteConfirmModal

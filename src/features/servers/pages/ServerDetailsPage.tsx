@@ -149,13 +149,13 @@ export default function ServerDetailsPage() {
         `Server ${action === "activate" ? "activated" : "deactivated"}`,
         `${server.name} is now ${
           action === "activate" ? "active" : "inactive"
-        }.`
+        }.`,
       );
       await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} server`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -187,13 +187,13 @@ export default function ServerDetailsPage() {
         `Server ${nextAction === "deprecate" ? "deprecated" : "restored"}`,
         nextAction === "deprecate"
           ? `${server.name} will no longer receive new jobs.`
-          : `${server.name} is available again.`
+          : `${server.name} is available again.`,
       );
       await loadServer();
     } catch (err) {
       showError(
         `Failed to ${nextAction} server`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -227,13 +227,13 @@ export default function ServerDetailsPage() {
         `Health checks ${action === "enable" ? "enabled" : "disabled"}`,
         action === "enable"
           ? `${server.name} will report health automatically.`
-          : `${server.name} will no longer be monitored.`
+          : `${server.name} will no longer be monitored.`,
       );
       await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} health checks`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -265,13 +265,13 @@ export default function ServerDetailsPage() {
         `Circuit breaker ${action === "enable" ? "enabled" : "disabled"}`,
         `Circuit breaker for ${server.name} is now ${
           action === "enable" ? "enabled" : "disabled"
-        }.`
+        }.`,
       );
       await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} circuit breaker`,
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -296,13 +296,13 @@ export default function ServerDetailsPage() {
       await serverService.resetHealthCheck(server.id);
       success(
         "Health check reset",
-        `Health check state for ${server.name} has been reset.`
+        `Health check state for ${server.name} has been reset.`,
       );
       await loadServer();
     } catch (err) {
       showError(
         "Failed to reset health check",
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);
@@ -330,7 +330,7 @@ export default function ServerDetailsPage() {
       });
       success(
         "Health check result pushed",
-        `${healthResultStatus} status has been recorded for ${server.name}.`
+        `${healthResultStatus} status has been recorded for ${server.name}.`,
       );
       setShowPushHealthModal(false);
       setHealthResultDetails("");
@@ -338,7 +338,7 @@ export default function ServerDetailsPage() {
     } catch (err) {
       showError(
         "Failed to push health check result",
-        err instanceof Error ? err.message : "Please try again."
+        err instanceof Error ? err.message : "Please try again.",
       );
     } finally {
       setActionState(null);

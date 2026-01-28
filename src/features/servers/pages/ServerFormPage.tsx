@@ -94,7 +94,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
   }, [mode, id, navigate, error, t]);
 
   const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, type } = event.target;
     const checked = (event.target as HTMLInputElement).checked;
@@ -153,7 +153,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         };
 
         const newServer = await serverService.createServer(payload);
-        success(t.success.serverCreated, t("success.serverCreatedMessage", { name: newServer.name }));
+        success(
+          t.success.serverCreated,
+          t("success.serverCreatedMessage", { name: newServer.name }),
+        );
         navigate("/dashboard/servers");
       } else if (mode === "edit" && id) {
         const payload: UpdateServerPayload = {
@@ -181,19 +184,24 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
         const updatedServer = await serverService.updateServer(
           Number(id),
-          payload
+          payload,
         );
-        success(t.success.serverUpdated, t("success.serverUpdatedMessage", { name: updatedServer.name }));
+        success(
+          t.success.serverUpdated,
+          t("success.serverUpdatedMessage", { name: updatedServer.name }),
+        );
         navigate(`/dashboard/servers/${id}`);
       }
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
-          : t(`errors.unableUpdate${mode === "create" ? "Create" : "Update"}Server`);
+          : t(
+              `errors.unableUpdate${mode === "create" ? "Create" : "Update"}Server`,
+            );
       error(
         t(`errors.failed${mode === "create" ? "Create" : "Update"}Server`),
-        message
+        message,
       );
     } finally {
       setIsSubmitting(false);
@@ -334,23 +342,31 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Region
               </label>
+              <p className="text-xs text-gray-500 mb-1">
+                The physical or logical location of the server (e.g. Uganda,
+                EU-West).
+              </p>
               <input
                 type="text"
                 name="region"
                 value={form.region}
                 onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700">Port</label>
+              <p className="text-xs text-gray-500 mb-1">
+                The network port used to connect (e.g. 80 for HTTP, 443 for
+                HTTPS).
+              </p>
               <input
                 type="number"
                 name="port"
                 value={form.port}
                 onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
 
@@ -358,12 +374,15 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               <label className="text-sm font-medium text-gray-700">
                 Base Path
               </label>
+              <p className="text-xs text-gray-500 mb-1">
+                The starting path for API calls (e.g. /api/v1).
+              </p>
               <input
                 type="text"
                 name="base_path"
                 value={form.base_path}
                 onChange={handleChange}
-                className={`mt-1 w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
           </div>

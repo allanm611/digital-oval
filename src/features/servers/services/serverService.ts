@@ -22,7 +22,7 @@ const BASE_URL = buildApiUrl("/servers");
 class ServerService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
     const response = await fetch(url, {
@@ -48,8 +48,8 @@ class ServerService {
       throw new Error(
         `Invalid JSON response from servers API. First 200 chars: ${responseText.substring(
           0,
-          200
-        )}`
+          200,
+        )}`,
       );
     }
 
@@ -109,8 +109,8 @@ class ServerService {
     const separator = endpoint.includes("?")
       ? "&"
       : endpoint.startsWith("/")
-      ? "?"
-      : "?";
+        ? "?"
+        : "?";
     return `${endpoint}${separator}skipCache=true`;
   }
 
@@ -165,7 +165,7 @@ class ServerService {
 
   async getEnvironmentCounts(): Promise<ServerCountByEnvironment> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/analytics/environment-count")
+      this.appendSkipCache("/analytics/environment-count"),
     );
     const data = this.unwrapSuccessPayload<ServerCountByEnvironment>(response);
     return (data || []).map((item) => ({
@@ -176,7 +176,7 @@ class ServerService {
 
   async getProtocolCounts(): Promise<ServerCountByProtocol> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/analytics/protocol-count")
+      this.appendSkipCache("/analytics/protocol-count"),
     );
     const data = this.unwrapSuccessPayload<ServerCountByProtocol>(response);
     return (data || []).map((item) => ({
@@ -187,7 +187,7 @@ class ServerService {
 
   async getHealthStats(): Promise<ServerHealthStats> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/analytics/health-stats")
+      this.appendSkipCache("/analytics/health-stats"),
     );
     const data = this.unwrapSuccessPayload<ServerHealthStats>(response);
     return {
@@ -202,7 +202,7 @@ class ServerService {
 
   async getRegionDistribution(): Promise<ServerCountByRegion> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/analytics/region-distribution")
+      this.appendSkipCache("/analytics/region-distribution"),
     );
     const data = this.unwrapSuccessPayload<ServerCountByRegion>(response);
     return (data || []).map((item) => ({
@@ -215,21 +215,21 @@ class ServerService {
 
   async listHealthCheckEnabled(): Promise<ServerType[]> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/health-check/enabled")
+      this.appendSkipCache("/health-check/enabled"),
     );
     return this.unwrapServerList(response);
   }
 
   async listHealthCheckFailing(): Promise<ServerType[]> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/health-check/failing")
+      this.appendSkipCache("/health-check/failing"),
     );
     return this.unwrapServerList(response);
   }
 
   async listHealthCheckDue(): Promise<ServerType[]> {
     const response = await this.request<unknown>(
-      this.appendSkipCache("/health-check/due")
+      this.appendSkipCache("/health-check/due"),
     );
     return this.unwrapServerList(response);
   }
@@ -237,7 +237,7 @@ class ServerService {
   // ==================== Bulk Activation ====================
 
   async bulkActivateServers(
-    payload: BulkServerStatusRequest
+    payload: BulkServerStatusRequest,
   ): Promise<BulkServerStatusResponse> {
     return this.request<BulkServerStatusResponse>("/bulk/activate", {
       method: "PATCH",
@@ -249,7 +249,7 @@ class ServerService {
   }
 
   async bulkDeactivateServers(
-    payload: BulkServerStatusRequest
+    payload: BulkServerStatusRequest,
   ): Promise<BulkServerStatusResponse> {
     return this.request<BulkServerStatusResponse>("/bulk/deactivate", {
       method: "PATCH",
@@ -270,14 +270,14 @@ class ServerService {
       ...(query.activeOnly != null ? { activeOnly: query.activeOnly } : {}),
     });
     const response = await this.request<unknown>(
-      this.appendSkipCache(`/search${queryString}`)
+      this.appendSkipCache(`/search${queryString}`),
     );
     return this.unwrapServerList(response);
   }
 
   async getDeprecatedServers(query?: ServerListQuery): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as unknown as Record<string, unknown> | undefined
+      query as unknown as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(`/deprecated${queryString}`);
     return this.unwrapServerList(response);
@@ -285,7 +285,7 @@ class ServerService {
 
   async getActiveServers(query?: ServerListQuery): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(`/active${queryString}`);
     return this.unwrapServerList(response);
@@ -293,66 +293,66 @@ class ServerService {
 
   async getServersByEnvironment(
     environment: string,
-    query?: ServerFilterQuery
+    query?: ServerFilterQuery,
   ): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(
-      `/environment/${encodeURIComponent(environment)}${queryString}`
+      `/environment/${encodeURIComponent(environment)}${queryString}`,
     );
     return this.unwrapServerList(response);
   }
 
   async getServersByType(
     serverType: string,
-    query?: ServerFilterQuery
+    query?: ServerFilterQuery,
   ): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(
-      `/type/${encodeURIComponent(serverType)}${queryString}`
+      `/type/${encodeURIComponent(serverType)}${queryString}`,
     );
     return this.unwrapServerList(response);
   }
 
   async getServersByProtocol(
     protocol: string,
-    query?: ServerFilterQuery
+    query?: ServerFilterQuery,
   ): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(
-      `/protocol/${encodeURIComponent(protocol)}${queryString}`
+      `/protocol/${encodeURIComponent(protocol)}${queryString}`,
     );
     return this.unwrapServerList(response);
   }
 
   async getServersByRegion(
     region: string,
-    query?: ServerFilterQuery
+    query?: ServerFilterQuery,
   ): Promise<ServerType[]> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const response = await this.request<unknown>(
-      `/region/${encodeURIComponent(region)}${queryString}`
+      `/region/${encodeURIComponent(region)}${queryString}`,
     );
     return this.unwrapServerList(response);
   }
 
   async getServerByName(name: string): Promise<ServerType> {
     const response = await this.request<unknown>(
-      `/name/${encodeURIComponent(name)}`
+      `/name/${encodeURIComponent(name)}`,
     );
     return this.unwrapServer(response);
   }
 
   async getServerByCode(code: string): Promise<ServerType> {
     const response = await this.request<unknown>(
-      `/code/${encodeURIComponent(code)}`
+      `/code/${encodeURIComponent(code)}`,
     );
     return this.unwrapServer(response);
   }
@@ -360,10 +360,10 @@ class ServerService {
   // ==================== CRUD ====================
 
   async listServers(
-    query?: ServerListQuery
+    query?: ServerListQuery,
   ): Promise<PaginatedServersResponse> {
     const queryString = this.buildQueryParams(
-      query as Record<string, unknown> | undefined
+      query as Record<string, unknown> | undefined,
     );
     const endpoint = this.appendSkipCache(queryString || "");
     const response = await this.request<
@@ -410,13 +410,16 @@ class ServerService {
   }
 
   async getServerById(id: number): Promise<ServerType> {
-    const response = await this.request<unknown>(`/${id}`);
+    // Always skip cache for details
+    const response = await this.request<unknown>(
+      this.appendSkipCache(`/${id}`),
+    );
     return this.unwrapServer(response);
   }
 
   async updateServer(
     id: number,
-    payload: UpdateServerPayload
+    payload: UpdateServerPayload,
   ): Promise<ServerType> {
     const response = await this.request<unknown>(`/${id}`, {
       method: "PUT",
@@ -429,7 +432,7 @@ class ServerService {
 
   async pushHealthCheckResult(
     id: number,
-    payload: ServerHealthCheckResultPayload
+    payload: ServerHealthCheckResultPayload,
   ): Promise<ServerType> {
     const response = await this.request<unknown>(`/${id}/health-check/result`, {
       method: "PATCH",
@@ -447,7 +450,7 @@ class ServerService {
 
   async enableHealthCheck(
     id: number,
-    payload?: ServerHealthCheckEnablePayload
+    payload?: ServerHealthCheckEnablePayload,
   ): Promise<ServerType> {
     const response = await this.request<unknown>(`/${id}/health-check/enable`, {
       method: "PATCH",
@@ -461,7 +464,7 @@ class ServerService {
       `/${id}/health-check/disable`,
       {
         method: "PATCH",
-      }
+      },
     );
     return this.unwrapServer(response);
   }
@@ -473,7 +476,7 @@ class ServerService {
       `/${id}/circuit-breaker/enable`,
       {
         method: "PATCH",
-      }
+      },
     );
     return this.unwrapServer(response);
   }
@@ -483,7 +486,7 @@ class ServerService {
       `/${id}/circuit-breaker/disable`,
       {
         method: "PATCH",
-      }
+      },
     );
     return this.unwrapServer(response);
   }

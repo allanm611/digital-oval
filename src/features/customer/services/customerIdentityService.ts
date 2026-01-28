@@ -19,24 +19,27 @@ class CustomerIdentityService {
     if (!response.ok) {
       const message = await response.text();
       throw new Error(
-        message || `Request failed with status ${response.status}`
+        message || `Request failed with status ${response.status}`,
       );
     }
 
     return response.json() as Promise<T>;
   }
 
-  async getProfiles(): Promise<SegmentationProfilesResponse> {
-    return this.request<SegmentationProfilesResponse>("/profile");
+  async getProfiles(skipCache = false): Promise<SegmentationProfilesResponse> {
+    const query = skipCache ? "?skipCache=true" : "";
+    return this.request<SegmentationProfilesResponse>(`/profile${query}`);
   }
 
-  async getCustomerIdentityFields(): Promise<CustomerIdentityField[]> {
-    const profiles = await this.getProfiles();
+  async getCustomerIdentityFields(
+    skipCache = false,
+  ): Promise<CustomerIdentityField[]> {
+    const profiles = await this.getProfiles(skipCache);
     const categories =
       profiles.data?.[0]?.field_selector_config ?? ([] as FieldCategory[]);
 
     const customerIdentityCategory = categories.find(
-      (category) => category.value === "customer_identity"
+      (category) => category.value === "customer_identity",
     );
 
     return customerIdentityCategory?.fields ?? [];

@@ -605,50 +605,40 @@ export default function TeamRolesPermissionsPage() {
                   {filteredRoles.map((role) => (
                     <tr key={role.id} className="transition-colors">
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {role.name}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {role.code}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {role.role_level}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="inline-block px-2.5 py-1 rounded text-sm font-medium bg-gray-100 text-gray-800">
-                          {role.data_access_level || "—"}
-                        </span>
+                        {role.data_access_level || "—"}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {role.current_user_count || 0}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
-                            role.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {role.is_active ? "Active" : "Inactive"}
-                        </span>
+                        {role.is_active ? "Active" : "Inactive"}
                       </td>
                       <td
                         className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
@@ -804,64 +794,40 @@ export default function TeamRolesPermissionsPage() {
                   {filteredPermissions.map((permission) => (
                     <tr key={permission.id} className="transition-colors">
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-900 font-medium"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {permission.name}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {permission.code}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {permission.action}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
-                            permission.is_sensitive
-                              ? "bg-red-100 text-red-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {permission.is_sensitive ? "Yes" : "No"}
-                        </span>
+                        {permission.is_sensitive ? "Yes" : "No"}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
-                            permission.requires_mfa
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {permission.requires_mfa ? "Yes" : "No"}
-                        </span>
+                        {permission.requires_mfa ? "Yes" : "No"}
                       </td>
                       <td
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
-                            permission.is_active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {permission.is_active ? "Active" : "Inactive"}
-                        </span>
+                        {permission.is_active ? "Active" : "Inactive"}
                       </td>
                       <td
                         className="px-4 sm:px-6 py-3 sm:py-4 text-sm"

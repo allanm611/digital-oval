@@ -291,9 +291,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Load Strategy *
+              <label className="block text-sm font-medium text-gray-700 ">
+                Data Load Method *
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                How new data is brought in.
+              </p>
               <HeadlessSelect
                 options={[
                   { value: "full", label: "Full" },
@@ -342,9 +345,12 @@ export default function ConnectionProfileFormPage({
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Batch Size *
+              <label className="block text-sm font-medium text-gray-700 ">
+                Records Per Batch *
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                How many records to process at a time.
+              </p>
               <input
                 type="number"
                 value={formData.batch_size}
@@ -360,9 +366,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parallel Threads *
+              <label className="block text-sm font-medium text-gray-700">
+                Number of Parallel Tasks *
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                How many tasks run at the same time for faster processing.
+              </p>
               <input
                 type="number"
                 value={formData.parallel_threads}
@@ -380,8 +389,11 @@ export default function ConnectionProfileFormPage({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Min Pool Size *
+                Minimum Connections *
               </label>
+              {/* <p className="text-xs text-gray-500 mb-1">
+                Smallest number of connections to keep open to the service. Example: 2 for always-ready SMS connections.
+              </p> */}
               <input
                 type="number"
                 value={formData.min_pool_size}
@@ -398,8 +410,11 @@ export default function ConnectionProfileFormPage({
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Max Pool Size *
+                Maximum Connections *
               </label>
+              {/* <p className="text-xs text-gray-500 mb-1">
+                Largest number of connections allowed at once. 
+              </p> */}
               <input
                 type="number"
                 value={formData.max_pool_size}
@@ -415,9 +430,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Connection Timeout (seconds) *
+              <label className="block text-sm font-medium text-gray-700 ">
+                Connection Wait Time (seconds) *
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                How long to wait for a connection before giving up.
+              </p>
               <input
                 type="number"
                 value={formData.connection_timeout_seconds}
@@ -433,9 +451,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Idle Timeout (seconds) *
+              <label className="block text-sm font-medium text-gray-700">
+                Idle Disconnect Time (seconds) *
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                How long a connection can be unused before closing.
+              </p>
               <input
                 type="number"
                 value={formData.idle_timeout_seconds}

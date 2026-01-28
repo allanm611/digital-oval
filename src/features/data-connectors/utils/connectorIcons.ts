@@ -69,7 +69,7 @@ export const getConnectorDescription = (type: DataConnectorType): string => {
     tcp: "TCP socket streams (connection)",
     websocket: "Real-time WebSocket connection",
     kafka: "Apache Kafka message streaming",
-    jdbc: "Connect to relational and NoSQL databases(PostgreSQL/pg_partman)",
+    jdbc: "Connect to databases via JDBC",
     sms_inbox: "SMS inbox integration",
     api: "Integrate with REST and GraphQL APIs",
     files: "File upload and processing",
