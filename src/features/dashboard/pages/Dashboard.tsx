@@ -808,10 +808,10 @@ export default function Dashboard() {
             path="/manual-rewards/create"
             element={<OtherPages.CreateManualRewardPage />}
           />
-          {/* <Route
+          <Route
             path="/quicklists/:id"
             element={<OtherPages.QuickListDetailsPage />}
-          /> */}
+          />
           <Route
             path="/manual-communication/:id"
             element={<OtherPages.QuickListDetailsPage />}

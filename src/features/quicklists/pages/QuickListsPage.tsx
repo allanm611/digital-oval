@@ -233,7 +233,7 @@ export default function QuickListsPage() {
   };
 
   const handleViewDetails = (quicklist: QuickList) => {
-    navigate(`/dashboard/manual-communication/${quicklist.id}`);
+    navigate(`/dashboard/quicklists/${quicklist.id}`);
   };
 
   const handleDelete = (quicklist: QuickList) => {
