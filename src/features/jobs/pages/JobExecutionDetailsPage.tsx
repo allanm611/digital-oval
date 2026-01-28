@@ -80,9 +80,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div
-      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
-    >
+    <div className="p-3">
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -166,6 +164,8 @@ export default function JobExecutionDetailsPage() {
   >([]);
   const [dailySummary, setDailySummary] = useState<DailySummary[]>([]);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [heatmapPage, setHeatmapPage] = useState(0);
+  const HEATMAP_PAGE_SIZE = 10;
 
   useEffect(() => {
     if (!id) return;
@@ -804,7 +804,7 @@ export default function JobExecutionDetailsPage() {
 
               {/* Execution Comparison */}
               {executionComparison && (
-                <div className="border-b border-gray-200 pb-4">
+                <div className="pb-4">
                   <h4 className="text-sm font-semibold text-gray-700 mb-4">
                     Period Comparison (Current vs Previous)
                   </h4>
@@ -1043,20 +1043,6 @@ export default function JobExecutionDetailsPage() {
                 </div>
               )}
 
-              {/* Execution Heatmap Info */}
-              {executionHeatmap &&
-                executionHeatmap.data &&
-                executionHeatmap.data.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                      Execution Heatmap
-                    </h4>
-                    <p className="text-xs text-gray-600">
-                      {executionHeatmap.data.length} data points showing
-                      execution patterns by date and hour
-                    </p>
-                  </div>
-                )}
 
               {/* No data message */}
               {!slaPrediction &&
@@ -1076,6 +1062,163 @@ export default function JobExecutionDetailsPage() {
           )}
         </div>
       )}
+
+      {/* Peak Execution Times - Standalone Table */}
+      {executionHeatmap &&
+        executionHeatmap.data &&
+        executionHeatmap.data.length > 0 && (
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Peak Execution Times
+            </h2>
+            <div className="overflow-x-auto">
+              <table
+                className="w-full"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
+                <thead>
+                  <tr>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap rounded-l-md"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Day
+                    </th>
+                    <th
+                      className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Time
+                    </th>
+                    <th
+                      className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Executions
+                    </th>
+                    <th
+                      className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Successful
+                    </th>
+                    <th
+                      className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Failed
+                    </th>
+                    <th
+                      className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap rounded-r-md"
+                      style={{
+                        color: color.surface.tableHeaderText,
+                        backgroundColor: color.surface.tableHeader,
+                      }}
+                    >
+                      Success %
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {executionHeatmap.data
+                    .slice()
+                    .sort((a, b) => Number(b.execution_count) - Number(a.execution_count))
+                    .slice(heatmapPage * HEATMAP_PAGE_SIZE, (heatmapPage + 1) * HEATMAP_PAGE_SIZE)
+                    .map((cell, idx) => {
+                      const successRate = Number(cell.success_rate) || 0;
+                      const successColor = successRate === 100 ? "text-green-600" : successRate >= 75 ? "text-yellow-600" : "text-red-600";
+                      const isLast = idx === Math.min(HEATMAP_PAGE_SIZE - 1, executionHeatmap.data.length - 1);
+                      return (
+                        <tr key={idx}>
+                          <td
+                            className={`px-6 py-4 text-sm text-black ${idx === 0 ? 'rounded-l-md' : ''}`}
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.day_name}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.hour_label}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-black text-center font-medium"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.execution_count}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-green-600 text-center font-medium"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.successful_count}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-red-600 text-center font-medium"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.failed_count}
+                          </td>
+                          <td
+                            className={`px-6 py-4 text-sm text-center font-medium ${successColor} ${isLast ? 'rounded-r-md' : ''}`}
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {cell.success_rate}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {executionHeatmap.data && executionHeatmap.data.length > HEATMAP_PAGE_SIZE && (
+              <div className="flex items-center justify-between gap-3 mt-4 text-sm text-gray-600">
+                <p>
+                  Showing {heatmapPage * HEATMAP_PAGE_SIZE + 1}-
+                  {Math.min((heatmapPage + 1) * HEATMAP_PAGE_SIZE, executionHeatmap.data.length)} of{" "}
+                  {executionHeatmap.data.length} execution hours
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setHeatmapPage(Math.max(0, heatmapPage - 1))}
+                    disabled={heatmapPage === 0}
+                    className="px-3 py-1 border border-gray-200 rounded text-sm font-medium disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    Page {heatmapPage + 1} of {Math.ceil(executionHeatmap.data.length / HEATMAP_PAGE_SIZE)}
+                  </span>
+                  <button
+                    onClick={() => setHeatmapPage(heatmapPage + 1)}
+                    disabled={(heatmapPage + 1) * HEATMAP_PAGE_SIZE >= executionHeatmap.data.length}
+                    className="px-3 py-1 border border-gray-200 rounded text-sm font-medium disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
     </div>
   );
 }

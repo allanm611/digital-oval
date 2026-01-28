@@ -933,6 +933,13 @@ export default function OfferDetailsPage() {
         );
       }
 
+      // Sort by created_at descending (recently created first)
+      products = products.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateB - dateA;
+      });
+
       setAvailableProducts(products);
     } catch {
       // Failed to load products
@@ -3020,12 +3027,41 @@ export default function OfferDetailsPage() {
             <CreateProductModalWrapper
               isOpen={createProductModalOpen}
               onClose={() => setCreateProductModalOpen(false)}
-              onSuccess={(newProduct) => {
-                setCreateProductModalOpen(false);
-                // Add newly created product to selected products
-                setSelectedProductsToAdd((prev) => [...prev, newProduct]);
-                // Refresh the products list
-                loadAvailableProducts();
+              onProductCreated={async (productId) => {
+                try {
+                  // Reload products immediately with fresh data
+                  const response = await productService.getAllProducts({
+                    limit: 100,
+                    skipCache: true,
+                  });
+
+                  let reloadedProducts = response.data || [];
+
+                  // Sort by created_at descending (recently created first)
+                  reloadedProducts = reloadedProducts.sort((a, b) => {
+                    const dateA = new Date(a.created_at || 0).getTime();
+                    const dateB = new Date(b.created_at || 0).getTime();
+                    return dateB - dateA;
+                  });
+
+                  setAvailableProducts(reloadedProducts);
+
+                  // Find and auto-select the newly created product
+                  const newProduct = reloadedProducts.find((p) => p.id === productId);
+                  if (newProduct) {
+                    // Add to selected products
+                    setSelectedProductsToAdd((prev) => {
+                      const isAlreadySelected = prev.some((p) => p.id === newProduct.id);
+                      if (isAlreadySelected) return prev;
+                      return [...prev, newProduct];
+                    });
+                  }
+
+                  // Close create modal
+                  setCreateProductModalOpen(false);
+                } catch (error) {
+                  console.error("Error handling product creation:", error);
+                }
               }}
             />
           </Suspense>

@@ -9,6 +9,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { productService } from "../services/productService";
 import { productCategoryService } from "../services/productCategoryService";
 import { color, tw } from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 
 const CreateProductModalWrapper = lazy(() => import("./CreateProductModalWrapper"));
@@ -96,6 +97,13 @@ export default function ProductSelector({
         );
       }
 
+      // Sort by created_at descending (recently created first)
+      filteredProducts = filteredProducts.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0).getTime();
+        const dateB = new Date(b.created_at || 0).getTime();
+        return dateB - dateA;
+      });
+
       setProducts(filteredProducts);
     } catch (error) {
       console.error("Error loading products:", error);
@@ -106,13 +114,46 @@ export default function ProductSelector({
   }, [selectedCategory, searchTerm]);
 
   const handleProductCreated = useCallback(
-    (_productId: number) => {
-      // Refresh product list to show newly created product
-      loadProducts();
-      // Close modal
-      setCreateProductModalOpen(false);
+    async (productId: number) => {
+      try {
+        // Reload products to get the newly created one
+        const response = await productService.getActiveProducts({
+          limit: 100,
+          skipCache: true,
+        });
+
+        let reloadedProducts = response.data || [];
+
+        // Sort by created_at descending (recently created first)
+        reloadedProducts = reloadedProducts.sort((a, b) => {
+          const dateA = new Date(a.created_at || 0).getTime();
+          const dateB = new Date(b.created_at || 0).getTime();
+          return dateB - dateA;
+        });
+
+        setProducts(reloadedProducts);
+
+        // Find and auto-select the newly created product
+        const newProduct = reloadedProducts.find((p) => p.id === productId);
+        if (newProduct) {
+          // Auto-select it
+          if (multiSelect) {
+            const isSelected = selectedProducts.some((p) => p.id === newProduct.id);
+            if (!isSelected) {
+              onProductsChange([...selectedProducts, newProduct]);
+            }
+          } else {
+            onProductsChange([newProduct]);
+          }
+        }
+
+        // Close create modal but keep selector modal open
+        setCreateProductModalOpen(false);
+      } catch (error) {
+        console.error("Error handling product creation:", error);
+      }
     },
-    [loadProducts],
+    [multiSelect, selectedProducts, onProductsChange],
   );
 
   useEffect(() => {
@@ -280,7 +321,7 @@ export default function ProductSelector({
       {isModalOpen &&
         createPortal(
           <div
-            className="fixed bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+            className="fixed bg-black bg-opacity-50 flex items-center justify-center p-4"
             style={{
               top: 0,
               left: 0,
@@ -288,6 +329,7 @@ export default function ProductSelector({
               bottom: 0,
               width: "100vw",
               height: "100vh",
+              zIndex: zIndex.modal - 1,
             }}
           >
             <div

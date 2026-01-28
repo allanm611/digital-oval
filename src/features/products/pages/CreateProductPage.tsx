@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import BackButton from "../../../shared/components/ui/BackButton";
+// import BackButton from "../../../shared/components/ui/BackButton";
 import { CreateProductRequest } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
@@ -233,19 +233,13 @@ export default function CreateProductPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          <BackButton
-            fallbackTo={getBackButtonFallback()}
-            style={{ color: color.text.secondary }}
-          />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.products.createNewProduct}
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              {t.products.addNewProduct}
-            </p>
+            <div>
+              <h1 className={`text-xl font-bold ${tw.textPrimary}`}>{t.products.createNewProduct}</h1>
+              <p className={`${tw.textSecondary} mt-1 text-sm`}>
+                {t.products.addNewProduct}
+              </p>
+            </div>
           </div>
-        </div>
       </div>
 
       {/* Form */}

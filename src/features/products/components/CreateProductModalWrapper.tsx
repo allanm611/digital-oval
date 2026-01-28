@@ -26,7 +26,7 @@ export default function CreateProductModalWrapper({
   return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ zIndex: zIndex.overlay }}
+      style={{ zIndex: zIndex.popover }}
     >
       {/* Backdrop */}
       <div
@@ -37,11 +37,11 @@ export default function CreateProductModalWrapper({
       {/* Modal Container */}
       <div
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden`}
-        style={{ zIndex: zIndex.modal }}
+        style={{ zIndex: zIndex.popover + 1 }}
       >
-        {/* Header with Close Button */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-2xl font-bold text-gray-900">Create Product</h2>
+        {/* Sticky Header with Close Button */}
+        <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-200 bg-white z-20">
+          <h2 className="text-lg font-semibold text-gray-900">Create Product</h2>
           <button
             onClick={onClose}
             className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}

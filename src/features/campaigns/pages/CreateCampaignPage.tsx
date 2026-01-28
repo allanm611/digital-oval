@@ -1319,7 +1319,7 @@ export default function CreateCampaignPage() {
           <div className="py-4">{renderStep()}</div>
 
           {/* Bottom Navigation */}
-          <div className="bg-white py-3 border-t border-gray-100">
+          <div className="bg-white py-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 onClick={handlePrev}

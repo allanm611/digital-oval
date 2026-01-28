@@ -69,6 +69,7 @@ export default function AudienceConfigurationStep({
   const [draggedSegment, setDraggedSegment] = useState<string | null>(null);
   const [isCampaignTypeDropdownOpen, setIsCampaignTypeDropdownOpen] =
     useState(false);
+  const [segmentRefreshTrigger, setSegmentRefreshTrigger] = useState(0);
 
   const { t } = useLanguage();
 
@@ -218,6 +219,9 @@ export default function AudienceConfigurationStep({
     } else {
       setSelectedSegments([...selectedSegments, campaignSegment]);
     }
+
+    // Trigger refresh of SegmentSelectionModal to show newly created segment
+    setSegmentRefreshTrigger((prev) => prev + 1);
     setShowCreateSegmentModal(false);
   };
 
@@ -731,12 +735,12 @@ export default function AudienceConfigurationStep({
       {/* Segment Selection Modal */}
       {isModalOpen && (
         <SegmentSelectionModal
+          key={`segment-picker-${segmentRefreshTrigger}`}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSelect={handleSegmentSelect}
           selectedSegments={selectedSegments}
           onCreateNew={() => {
-            setIsModalOpen(false);
             setShowCreateSegmentModal(true);
           }}
         />

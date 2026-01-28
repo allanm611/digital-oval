@@ -70,11 +70,11 @@ export default function RegularModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel
-                className={`relative transform overflow-visible ${tw.rounded} bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
-                style={{ zIndex: zIndex.modal + 1 }}
+                className={`relative transform overflow-hidden flex flex-col ${tw.rounded} bg-white text-left shadow-xl transition-all w-full ${sizeClasses[size]}`}
+                style={{ zIndex: zIndex.modal + 1, maxHeight: "calc(100vh - 2rem)" }}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                <div className="flex-shrink-0 flex items-center justify-between border-b border-gray-200 px-6 py-3 bg-white">
                   <h2 className="text-lg font-semibold text-gray-900">
                     {title}
                   </h2>
@@ -91,7 +91,7 @@ export default function RegularModal({
                 </div>
 
                 {/* Content */}
-                <div className="px-6 py-4 overflow-y-auto max-h-[calc(100vh-12rem)]">
+                <div className="flex-1 px-6 py-4 overflow-y-auto">
                   {children}
                 </div>
               </Dialog.Panel>

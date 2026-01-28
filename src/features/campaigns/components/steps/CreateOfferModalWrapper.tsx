@@ -46,13 +46,13 @@ export default function CreateOfferModalWrapper({
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col overflow-hidden`}
         style={{ zIndex: zIndex.modal }}
       >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        {/* Modal Header - Not Sticky */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900">
               Create New Offer
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 mt-0.5">
               Follow the steps to create a comprehensive offer
             </p>
           </div>
@@ -64,9 +64,9 @@ export default function CreateOfferModalWrapper({
           </button>
         </div>
 
-        {/* Modal Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+        {/* Modal Content - Scrollable, with sticky bottom nav support */}
+        <div className="flex-1 overflow-y-auto relative" style={{ zIndex: 1 }}>
+          <div className="p-6 relative z-10 bg-white min-h-[calc(100vh-120px)]">
             <CreateOfferPage onSuccess={handleSuccess} />
           </div>
         </div>

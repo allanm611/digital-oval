@@ -2300,12 +2300,7 @@ export default function CreateOfferPage({
 
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <button
-                onClick={() => navigate(getBackButtonFallback())}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+              {/* Back button removed for modal context */}
               <div>
                 <h1 className={`text-xl font-semibold ${tw.textPrimary}`}>
                   {isEditMode ? "Edit Offer" : "Create Offer"}
