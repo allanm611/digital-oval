@@ -1929,11 +1929,9 @@ export default function CreateOfferPage({
         } catch {
           // Failed to manage products
           showError(
-            t(
-              isEditMode
-                ? "offers.updateWithProductError"
-                : "offers.createWithProductError",
-            ),
+            isEditMode
+              ? t.offers.updateWithProductError
+              : t.offers.createWithProductError,
           );
         }
       }
@@ -1994,11 +1992,9 @@ export default function CreateOfferPage({
           const errorMessage =
             err instanceof Error ? err.message : "Unknown error occurred";
           showError(
-            t(
-              isEditMode
-                ? "offers.updateWithCreativeError"
-                : "offers.createWithCreativeError",
-            ),
+            isEditMode
+              ? t.offers.updateWithCreativeError
+              : t.offers.createWithCreativeError,
             errorMessage,
           );
           navigate("/dashboard/offers");
@@ -2008,7 +2004,7 @@ export default function CreateOfferPage({
 
       // Show success message
       showToast(
-        t(isEditMode ? "offers.updateSuccess" : "offers.createSuccess"),
+        isEditMode ? t.offers.updateSuccess : t.offers.createSuccess,
       );
 
       // Call onSuccess callback if provided (modal mode) and not in edit mode

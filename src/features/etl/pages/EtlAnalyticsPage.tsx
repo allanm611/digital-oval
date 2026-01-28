@@ -204,6 +204,20 @@ export default function EtlAnalyticsPage() {
     return metrics;
   }, [allStats]);
 
+  const categoryComparisonData = useMemo(() => {
+    const statuses = ["completed", "failed", "pending", "processing"];
+    return statuses.map((status) => {
+      const cdrRow = cdrStats.find((row) => row.processing_status === status);
+      const tdrRow = tdrStats.find((row) => row.processing_status === status);
+
+      return {
+        status,
+        CDR: parseInt(cdrRow?.file_count || "0", 10),
+        TDR: parseInt(tdrRow?.file_count || "0", 10),
+      };
+    });
+  }, [cdrStats, tdrStats]);
+
   const pieColors =
     color.charts?.campaigns?.pieColors || [
       "#3b8169",
@@ -403,7 +417,7 @@ export default function EtlAnalyticsPage() {
                 />
                 <Bar
                   dataKey="rows"
-                  fill={color.primary.action}
+                  fill={pieColors[0]}
                   radius={[4, 4, 0, 0]}
                   name="Rows Inserted"
                 />
@@ -446,7 +460,7 @@ export default function EtlAnalyticsPage() {
                 />
                 <Bar
                   dataKey="size"
-                  fill={color.primary.action}
+                  fill={pieColors[1]}
                   radius={[4, 4, 0, 0]}
                   name="Size (MB)"
                 />
@@ -456,82 +470,60 @@ export default function EtlAnalyticsPage() {
         </div>
       )}
 
-      {/* Category Detailed Breakdown */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        {cdrStats.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              CDR Detailed Breakdown
-            </h3>
-            <div className="space-y-4">
-              {cdrStats.map((row, idx) => (
-                <div key={idx} className="border-b border-gray-200 pb-4 last:border-0">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {row.processing_status}
+      {/* Category Comparison - Grouped Bar Chart */}
+      {categoryComparisonData.some((item) => item.CDR > 0 || item.TDR > 0) && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            File Count by Status - CDR vs TDR
+          </h3>
+          <div className="h-96 w-full min-h-[384px]">
+            <ResponsiveContainer width="100%" height={384}>
+              <BarChart
+                data={categoryComparisonData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="status"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  tick={{ fontSize: 11 }}
+                />
+                <YAxis
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => value.toLocaleString()}
+                />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
+                />
+                <Legend
+                  verticalAlign="top"
+                  height={36}
+                  formatter={(value) => (
+                    <span style={{ fontSize: "12px", color: "#000000" }}>
+                      {value}
                     </span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
-                      {row.file_count} file{row.file_count !== "1" ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    {row.total_rows_inserted && (
-                      <p>Rows: {Number(row.total_rows_inserted).toLocaleString()}</p>
-                    )}
-                    {row.total_data_size_mb && (
-                      <p>Size: {Number(row.total_data_size_mb).toFixed(2)} MB</p>
-                    )}
-                    {row.avg_processing_duration_ms && (
-                      <p>
-                        Avg Duration:{" "}
-                        {(parseInt(row.avg_processing_duration_ms, 10) / 1000).toFixed(1)}{" "}
-                        sec
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )}
+                />
+                <Bar
+                  dataKey="CDR"
+                  fill={pieColors[0]}
+                  radius={[4, 4, 0, 0]}
+                  name="CDR"
+                />
+                <Bar
+                  dataKey="TDR"
+                  fill={pieColors[1]}
+                  radius={[4, 4, 0, 0]}
+                  name="TDR"
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-        )}
-
-        {tdrStats.length > 0 && (
-          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              TDR Detailed Breakdown
-            </h3>
-            <div className="space-y-4">
-              {tdrStats.map((row, idx) => (
-                <div key={idx} className="border-b border-gray-200 pb-4 last:border-0">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-semibold text-gray-700 capitalize">
-                      {row.processing_status}
-                    </span>
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-700">
-                      {row.file_count} file{row.file_count !== "1" ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-600 space-y-1">
-                    {row.total_rows_inserted && (
-                      <p>Rows: {Number(row.total_rows_inserted).toLocaleString()}</p>
-                    )}
-                    {row.total_data_size_mb && (
-                      <p>Size: {Number(row.total_data_size_mb).toFixed(2)} MB</p>
-                    )}
-                    {row.avg_processing_duration_ms && (
-                      <p>
-                        Avg Duration:{" "}
-                        {(parseInt(row.avg_processing_duration_ms, 10) / 1000).toFixed(1)}{" "}
-                        sec
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -405,11 +405,11 @@ export default function ProgramsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {programStatsCards.map((stat) => {
+        {programStatsCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div
-              key={stat.name}
+              key={`stat-${index}`}
               className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
             >
               <div className="flex items-center gap-2">
