@@ -175,7 +175,7 @@ export default function QuickListsPage() {
       }
 
       // Check for validation errors even if upload was successful
-      if (response.data.has_errors || response.data.rows_failed > 0) {
+      if (response.data && (response.data.has_errors || response.data.rows_failed > 0)) {
         const errorCount =
           response.data.errors?.length || response.data.rows_failed;
         const errorDetails =
@@ -233,7 +233,7 @@ export default function QuickListsPage() {
   };
 
   const handleViewDetails = (quicklist: QuickList) => {
-    navigate(`/dashboard/quicklists/${quicklist.id}`);
+    navigate(`/dashboard/manual-communication/${quicklist.id}`);
   };
 
   const handleDelete = (quicklist: QuickList) => {
@@ -252,6 +252,8 @@ export default function QuickListsPage() {
       );
       setShowDeleteModal(false);
       setQuicklistToDelete(null);
+      // Reload both stats and quicklists
+      await loadStats();
       await loadQuickLists();
     } catch (err) {
       console.error("Failed to delete quicklist:", err);
