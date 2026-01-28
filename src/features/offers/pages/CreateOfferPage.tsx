@@ -503,7 +503,6 @@ function ProductStepWrapper({
   // Track previous products to prevent unnecessary updates
   const prevProductsRef = useRef<LinkedProduct[]>(selectedProducts);
 
-
   const handleProductsChange = useCallback(
     (products: LinkedProduct[]) => {
       // Check if products actually changed (by reference and length)
@@ -1366,23 +1365,44 @@ export default function CreateOfferPage({
           // Restore all data
           if (offerData.formData) {
             setFormData(offerData.formData);
-            localStorage.setItem("offer_form_data", JSON.stringify(offerData.formData));
+            localStorage.setItem(
+              "offer_form_data",
+              JSON.stringify(offerData.formData),
+            );
           }
-          if (offerData.selectedProducts && Array.isArray(offerData.selectedProducts)) {
+          if (
+            offerData.selectedProducts &&
+            Array.isArray(offerData.selectedProducts)
+          ) {
             setSelectedProducts(offerData.selectedProducts);
-            localStorage.setItem("offer_products", JSON.stringify(offerData.selectedProducts));
+            localStorage.setItem(
+              "offer_products",
+              JSON.stringify(offerData.selectedProducts),
+            );
           }
           if (offerData.creatives && Array.isArray(offerData.creatives)) {
             setCreatives(offerData.creatives);
-            localStorage.setItem("offer_creatives", JSON.stringify(offerData.creatives));
+            localStorage.setItem(
+              "offer_creatives",
+              JSON.stringify(offerData.creatives),
+            );
           }
-          if (offerData.trackingSources && Array.isArray(offerData.trackingSources)) {
+          if (
+            offerData.trackingSources &&
+            Array.isArray(offerData.trackingSources)
+          ) {
             setTrackingSources(offerData.trackingSources);
-            localStorage.setItem("offer_tracking_sources", JSON.stringify(offerData.trackingSources));
+            localStorage.setItem(
+              "offer_tracking_sources",
+              JSON.stringify(offerData.trackingSources),
+            );
           }
           if (offerData.rewards && Array.isArray(offerData.rewards)) {
             setRewards(offerData.rewards);
-            localStorage.setItem("offer_rewards", JSON.stringify(offerData.rewards));
+            localStorage.setItem(
+              "offer_rewards",
+              JSON.stringify(offerData.rewards),
+            );
           }
 
           // Set current step to 2 (product step)
@@ -2003,9 +2023,7 @@ export default function CreateOfferPage({
       }
 
       // Show success message
-      showToast(
-        isEditMode ? t.offers.updateSuccess : t.offers.createSuccess,
-      );
+      showToast(isEditMode ? t.offers.updateSuccess : t.offers.createSuccess);
 
       // Call onSuccess callback if provided (modal mode) and not in edit mode
       if (offerId && onSuccess && !isEditMode) {

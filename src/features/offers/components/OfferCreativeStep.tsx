@@ -974,9 +974,9 @@ export default function OfferCreativeStep({
           {/* Creative Editor */}
           <div className="lg:col-span-2">
             {selectedCreativeData ? (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                {/* Left Column - Message Editor (3/5) */}
-                <div className="lg:col-span-3">
+              <div>
+                {/* Message Editor */}
+                <div>
                   <div
                     className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
                   >
@@ -1298,6 +1298,11 @@ export default function OfferCreativeStep({
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t.offers.messageBody.label}
+                        {selectedCreativeData.channel === "SMS" && (
+                          <span className="text-xs font-normal text-gray-500 ml-2">
+                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters, {getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} segment{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments !== 1 ? 's' : ''})
+                          </span>
+                        )}
                       </label>
                       <textarea
                         ref={bodyTextareaRef}
@@ -1326,75 +1331,16 @@ export default function OfferCreativeStep({
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                       />
 
-                      {/* Info bar */}
-                      <div className="mt-2 flex items-center justify-between">
-                        {selectedCreativeData.channel === "SMS" ? (
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>
-                              {
-                                getCharacterInfo(
-                                  selectedCreativeData.text_body || "",
-                                ).charCount
-                              }/{getCharacterInfo(
-                                selectedCreativeData.text_body || "",
-                              ).segments === 1 ? 160 : getCharacterInfo(
-                                selectedCreativeData.text_body || "",
-                              ).segments * 153}{" "}
-                              {t.offers.characterCount.characters}
-                            </span>
-                            <span>
-                              {
-                                getCharacterInfo(
-                                  selectedCreativeData.text_body || "",
-                                ).remaining
-                              }{" "}
-                              remaining
-                            </span>
-                            <span>
-                              {
-                                getCharacterInfo(
-                                  selectedCreativeData.text_body || "",
-                                ).segments
-                              }{" "}
-                              {t.offers.characterCount.segments}
-                            </span>
-                            {getCharacterInfo(
-                              selectedCreativeData.text_body || "",
-                            ).isUnicode && (
-                              <span className="text-amber-600">{t.offers.characterCount.unicode}</span>
-                            )}
-                          </div>
-                        ) : selectedCreativeData.channel === "WhatsApp" ||
-                        selectedCreativeData.channel === "Push" ? (
-                          <div className="flex items-center gap-4 text-xs text-gray-500">
-                            <span>
-                              {
-                                getCharacterInfo(
-                                  selectedCreativeData.text_body || "",
-                                ).charCount
-                              }{" "}
-                              {t.offers.characterCount.characters}
-                            </span>
-                            <span>
-                              {
-                                getCharacterInfo(
-                                  selectedCreativeData.text_body || "",
-                                ).segments
-                              }{" "}
-                              {t.offers.characterCount.segments}
-                            </span>
-                            {getCharacterInfo(
-                              selectedCreativeData.text_body || "",
-                            ).isUnicode && (
-                              <span className="text-amber-600">{t.offers.characterCount.unicode}</span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-500">
-                            {t.offers.variableHint}
-                          </span>
-                        )}
-
+                      {/* Preview Button and Info bar */}
+                      <div className="mt-4 flex items-center justify-between gap-4">
+                        <button
+                          onClick={handlePreview}
+                          disabled={!selectedCreativeData.title && !selectedCreativeData.text_body && !selectedCreativeData.html_body}
+                          className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
+                        >
+                          <Eye className="w-4 h-4" />
+                          Preview
+                        </button>
                         {selectedVariables.length > 0 && (
                           <div className="flex items-center gap-1">
                             {selectedVariables.slice(0, 3).map((v) => (
@@ -1417,90 +1363,6 @@ export default function OfferCreativeStep({
                           </div>
                         )}
                       </div>
-                    </div>
-                  </div>
-
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column - Preview (2/5) */}
-                <div className="lg:col-span-2">
-                  <div className="sticky top-4">
-                    <div
-                      className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
-                    >
-                      <h3 className="font-semibold mb-4">{t.offers.preview.title || 'Preview'}</h3>
-                      {selectedCreativeData.channel === "Email" && (
-                        <div className="space-y-3 text-sm">
-                          {selectedCreativeData.title && (
-                            <div>
-                              <p className="text-gray-600 text-xs font-medium mb-1">Subject:</p>
-                              <p className="bg-gray-50 p-2 rounded">{selectedCreativeData.title}</p>
-                            </div>
-                          )}
-                          {selectedCreativeData.text_body && (
-                            <div>
-                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
-                              <p className="bg-gray-50 p-2 rounded whitespace-pre-wrap break-words">{selectedCreativeData.text_body}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {selectedCreativeData.channel === "SMS" && (
-                        <div className="space-y-3 text-sm">
-                          {selectedCreativeData.title && (
-                            <div>
-                              <p className="text-gray-600 text-xs font-medium mb-1">Sender ID:</p>
-                              <p className="bg-gray-50 p-2 rounded">{selectedCreativeData.title}</p>
-                            </div>
-                          )}
-                          {selectedCreativeData.text_body && (
-                            <div>
-                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
-                              <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                <SMSSmartphonePreview
-                                  message={selectedCreativeData.text_body}
-                                />
-                              </div>
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-xs text-gray-600">
-                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").charCount}</strong>/{getCharacterInfo(selectedCreativeData.text_body || "").segments === 1 ? 160 : getCharacterInfo(selectedCreativeData.text_body || "").segments * 153} characters
-                              • <strong>{getCharacterInfo(selectedCreativeData.text_body || "").remaining}</strong> remaining
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").segments}</strong> segment(s)
-                              {getCharacterInfo(selectedCreativeData.text_body || "").isUnicode && (
-                                <span className="text-amber-600 ml-2">Unicode</span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      {(selectedCreativeData.channel === "WhatsApp" ||
-                        selectedCreativeData.channel === "Push") && (
-                        <div className="space-y-3 text-sm">
-                          {selectedCreativeData.text_body && (
-                            <div>
-                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
-                              <p className="bg-gray-50 p-2 rounded whitespace-pre-wrap break-words">{selectedCreativeData.text_body}</p>
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-xs text-gray-500">
-                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").charCount}</strong> characters
-                              • <strong>{getCharacterInfo(selectedCreativeData.text_body || "").segments}</strong> segment(s)
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      {!selectedCreativeData.text_body && (
-                        <div className="text-center text-gray-400 py-8">
-                          <p className="text-sm">No content to preview</p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>

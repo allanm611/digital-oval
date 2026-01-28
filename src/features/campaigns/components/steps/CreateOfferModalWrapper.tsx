@@ -72,6 +72,6 @@ export default function CreateOfferModalWrapper({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

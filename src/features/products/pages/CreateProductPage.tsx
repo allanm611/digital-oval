@@ -99,10 +99,7 @@ export default function CreateProductPage({
       formData.price <= 0 ||
       !formData.da_id.trim()
     ) {
-      showError(
-        t.products.validationError,
-        t.products.productCodeNameRequired,
-      );
+      showError(t.products.validationError, t.products.productCodeNameRequired);
       return;
     }
 
@@ -233,13 +230,15 @@ export default function CreateProductPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-            <div>
-              <h1 className={`text-xl font-bold ${tw.textPrimary}`}>{t.products.createNewProduct}</h1>
-              <p className={`${tw.textSecondary} mt-1 text-sm`}>
-                {t.products.addNewProduct}
-              </p>
-            </div>
+          <div>
+            <h1 className={`text-xl font-bold ${tw.textPrimary}`}>
+              {t.products.createNewProduct}
+            </h1>
+            <p className={`${tw.textSecondary} mt-1 text-sm`}>
+              {t.products.addNewProduct}
+            </p>
           </div>
+        </div>
       </div>
 
       {/* Form */}

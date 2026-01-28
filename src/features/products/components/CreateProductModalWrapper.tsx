@@ -4,7 +4,6 @@ import CreateProductPage from "../pages/CreateProductPage";
 import { tw } from "../../../shared/utils/utils";
 import { zIndex } from "../../../shared/utils/tokens";
 
-
 interface CreateProductModalWrapperProps {
   isOpen: boolean;
   onClose: () => void;
@@ -41,7 +40,9 @@ export default function CreateProductModalWrapper({
       >
         {/* Sticky Header with Close Button */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-200 bg-white z-20">
-          <h2 className="text-lg font-semibold text-gray-900">Create Product</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Create Product
+          </h2>
           <button
             onClick={onClose}
             className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
@@ -58,6 +59,6 @@ export default function CreateProductModalWrapper({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }
