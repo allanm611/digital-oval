@@ -400,7 +400,7 @@ export default function CreateCampaignPage() {
         }
       } catch {
         if (!silent) {
-          showToast("error", t("campaigns.loadError"));
+          showToast("error", t.campaigns.failedToLoadCampaign);
           navigate("/dashboard/campaigns");
         }
       } finally {
@@ -794,13 +794,13 @@ export default function CreateCampaignPage() {
     setIsLoading(true);
     try {
       if (!formData.name.trim()) {
-        showToast("error", t("campaigns.nameRequired"));
+        showToast("error", t.campaigns.campaignDefinition.nameRequired);
         setIsLoading(false);
         return;
       }
 
       if (selectedSegments.length === 0) {
-        showToast("error", t("campaigns.segmentRequired"));
+        showToast("error", t.campaigns.audienceConfiguration.requiresSegment);
         setIsLoading(false);
         return;
       }
@@ -847,7 +847,7 @@ export default function CreateCampaignPage() {
         };
 
         await campaignService.updateCampaign(parseInt(id), updateData);
-        showToast("success", t("campaigns.updateSuccess"));
+        showToast("success", t.campaigns.campaignDefinition.updateSuccess);
       } else {
         // Generate unique code from campaign name for NEW campaigns
         const campaignCode = generateCampaignCode(formData.name);
@@ -932,7 +932,7 @@ export default function CreateCampaignPage() {
             console.error("Error saving segments:", segmentError);
             showToast(
               "warning",
-              t("campaigns.createSegmentWarning"),
+              t.messages.warning || "Warning",
             );
           }
         }
@@ -954,17 +954,17 @@ export default function CreateCampaignPage() {
 
             showToast(
               "success",
-              t("campaigns.createMappingSuccess"),
+              t.messages.success || "Success",
             );
           } catch (mappingError) {
             console.error("Error saving mappings:", mappingError);
             showToast(
               "warning",
-              t("campaigns.createMappingWarning"),
+              t.messages.warning || "Warning",
             );
           }
         } else {
-          showToast("success", t("campaigns.createSuccess"));
+          showToast("success", t.campaigns.campaignDefinition.createSuccess);
         }
       }
 
@@ -986,8 +986,8 @@ export default function CreateCampaignPage() {
 
       // Extract error message from backend response
       let errorMessage = isEditMode
-        ? t("campaigns.updateError")
-        : t("campaigns.createError");
+        ? t.campaigns.campaignDefinition.saveFailed
+        : t.campaigns.campaignDefinition.saveFailed;
 
       if (error instanceof Error) {
         // Check if the error message contains backend error details
@@ -1030,12 +1030,12 @@ export default function CreateCampaignPage() {
     try {
       setIsSavingDraft(true);
       if (!formData.name.trim()) {
-        showToast("error", t("campaigns.nameDraftRequired"));
+        showToast("error", t.campaigns.campaignDefinition.nameRequired);
         return;
       }
 
       if (selectedSegments.length === 0) {
-        showToast("error", t("campaigns.segmentDraftRequired"));
+        showToast("error", t.campaigns.audienceConfiguration.requiresSegment);
         setIsSavingDraft(false);
         return;
       }
@@ -1124,7 +1124,7 @@ export default function CreateCampaignPage() {
           console.error("Error saving segments:", segmentError);
           showToast(
             "warning",
-            t("campaigns.draftSegmentWarning"),
+            t.messages.warning || "Warning",
           );
         }
       }
@@ -1151,13 +1151,13 @@ export default function CreateCampaignPage() {
           console.error("Error saving mappings:", mappingError);
           showToast(
             "warning",
-            t("campaigns.draftMappingWarning"),
+            t.messages.warning || "Warning",
           );
         }
       }
     } catch (error) {
       console.error("Error saving draft:", error);
-      showToast("error", t("campaigns.draftError"));
+      showToast("error", t.messages.error || "Error");
     } finally {
       setIsSavingDraft(false);
     }

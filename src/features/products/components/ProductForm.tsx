@@ -13,6 +13,7 @@ import CreateCategoryModal from "../../../shared/components/CreateCategoryModal"
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { TypeConfigurationItem } from "../../../shared/components/TypeConfigurationPage";
 import { tw, color, zIndex } from "../../../shared/utils/utils";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 
 interface ProductFormProps {
@@ -49,6 +50,7 @@ export default function ProductForm({
   loadingText = "Saving...",
   onCancel,
 }: ProductFormProps) {
+  const { t } = useLanguage();
   // Get product types from configuration
   const { data: productTypes } = useConfigurationData("productTypes");
   const { data: comboTypes } = useConfigurationData("comboTypes");
@@ -325,7 +327,7 @@ export default function ProductForm({
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
-                  Product Code{" "}
+                  {t.products.form.productCode}{" "}
                   <span style={{ color: color.status.danger }}>*</span>
                 </label>
                 <input
@@ -340,7 +342,8 @@ export default function ProductForm({
                     borderColor: color.border.default,
                     outline: "none",
                   }}
-                  placeholder="e.g., VOICE_BUNDLE_001"
+                  placeholder={t.products.form.enterProductCode}
+
                   onFocus={(e) => {
                     e.target.style.borderColor = color.primary.accent;
                     e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
@@ -358,6 +361,7 @@ export default function ProductForm({
                 >
                   DA ID <span style={{ color: color.status.danger }}>*</span>
                 </label>
+                {/* Note: DA ID does not have a translation key in the requirements */}
                 <input
                   type="text"
                   required
@@ -386,7 +390,7 @@ export default function ProductForm({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Product Name{" "}
+                {t.products.form.productName}{" "}
                 <span style={{ color: color.status.danger }}>*</span>
               </label>
               <input
@@ -410,7 +414,7 @@ export default function ProductForm({
                     : color.border.default,
                   outline: "none",
                 }}
-                placeholder="e.g., Premium Voice Bundle"
+                placeholder={t.products.form.enterProductName}
                 onFocus={(e) => {
                   e.target.style.borderColor = errors.name
                     ? color.status.danger
@@ -439,7 +443,7 @@ export default function ProductForm({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Description{" "}
+                {t.products.form.productDescription}{" "}
                 <span style={{ color: color.status.danger }}>*</span>
               </label>
               <textarea
@@ -462,7 +466,7 @@ export default function ProductForm({
                     : color.border.default,
                   outline: "none",
                 }}
-                placeholder="Describe the product features and benefits..."
+                placeholder={t.products.form.enterProductDescription}
                 onFocus={(e) => {
                   e.target.style.borderColor = errors.description
                     ? color.status.danger
@@ -492,7 +496,7 @@ export default function ProductForm({
                 <label
                   className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                 >
-                  Price <span style={{ color: color.status.danger }}>*</span>
+                  {t.products.form.pricing} <span style={{ color: color.status.danger }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -621,7 +625,7 @@ export default function ProductForm({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Catalog
+                {t.products.form.productCategory}
               </label>
               <MultiCategorySelector
                 value={selectedCategoryIds}
@@ -641,7 +645,7 @@ export default function ProductForm({
               <label
                 className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
               >
-                Product Type
+                {t.products.form.productType}
               </label>
               <HeadlessSelect
                 options={productTypes
@@ -664,7 +668,7 @@ export default function ProductForm({
                     value as string,
                   )
                 }
-                placeholder="Select product type"
+                placeholder={t.products.form.selectProductType}
                 className="w-full"
                 zIndex={zIndex.dropdown}
               />

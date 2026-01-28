@@ -82,8 +82,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           });
         } catch (err) {
           const message =
-            err instanceof Error ? err.message : t("errors.unableLoadServer");
-          error(t("errors.failedLoadServer"), message);
+            err instanceof Error ? err.message : t.errors.unableLoadServer;
+          error(t.errors.failedLoadServer, message);
           navigate("/dashboard/servers");
         } finally {
           setIsLoading(false);
@@ -114,10 +114,10 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!form.name.trim()) newErrors.name = t("validation.nameRequired");
-    if (!form.code.trim()) newErrors.code = t("validation.codeRequired");
-    if (!form.host.trim()) newErrors.host = t("validation.hostRequired");
-    if (!form.protocol) newErrors.protocol = t("validation.protocolRequired");
+    if (!form.name.trim()) newErrors.name = t.validation.nameRequired;
+    if (!form.code.trim()) newErrors.code = t.validation.codeRequired;
+    if (!form.host.trim()) newErrors.host = t.validation.hostRequired;
+    if (!form.protocol) newErrors.protocol = t.validation.protocolRequired;
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -153,7 +153,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
         };
 
         const newServer = await serverService.createServer(payload);
-        success(t("success.serverCreated"), t("success.serverCreatedMessage", { name: newServer.name }));
+        success(t.success.serverCreated, t("success.serverCreatedMessage", { name: newServer.name }));
         navigate("/dashboard/servers");
       } else if (mode === "edit" && id) {
         const payload: UpdateServerPayload = {
@@ -183,7 +183,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           Number(id),
           payload
         );
-        success(t("success.serverUpdated"), t("success.serverUpdatedMessage", { name: updatedServer.name }));
+        success(t.success.serverUpdated, t("success.serverUpdatedMessage", { name: updatedServer.name }));
         navigate(`/dashboard/servers/${id}`);
       }
     } catch (err) {

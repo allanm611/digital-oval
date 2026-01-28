@@ -24,6 +24,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useLanguage } from "../../../contexts/LanguageContext";
 import { jobExecutionService } from "../services/jobExecutionService";
 import { ENABLE_JOB_EXECUTION_WRITES_FOR_ALL } from "../../../shared/utils/featureFlags";
 import type {
@@ -67,6 +68,7 @@ const formatDateTime = (value?: string | null) => {
 export default function JobExecutionsPage() {
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const canWrite =
     ENABLE_JOB_EXECUTION_WRITES_FOR_ALL || user?.role === "admin";
@@ -488,7 +490,7 @@ export default function JobExecutionsPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Job Executions
+            {t?.jobs?.executions?.executions || "Job Executions"}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Monitor and track all job execution records
@@ -962,7 +964,7 @@ export default function JobExecutionsPage() {
           <div className="py-16 text-center">
             <PlayCircle className="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <p className={`text-lg font-semibold ${tw.textPrimary}`}>
-              No job executions found
+              {t.jobs.executions.noExecutions}
             </p>
             <p className="mt-2 text-sm text-gray-500">
               Try updating your search filters or check back later.

@@ -54,6 +54,8 @@ export default function ProductDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
   const loadProduct = useCallback(async () => {
     try {
@@ -95,21 +97,15 @@ export default function ProductDetailsPage() {
     }
   }, [id, loadProduct]);
 
-  const handleToggleStatus = async () => {
+  const handleToggleStatus = () => {
+    if (!product) return;
+    setShowStatusModal(true);
+  };
+
+  const handleConfirmStatusChange = async () => {
     if (!product) return;
 
-    const confirmed = await confirm({
-      title: product.is_active ? "Deactivate Product" : "Activate Product",
-      message: `Are you sure you want to ${
-        product.is_active ? "deactivate" : "activate"
-      } "${product.name}"?`,
-      type: product.is_active ? "warning" : "success",
-      confirmText: product.is_active ? "Deactivate" : "Activate",
-      cancelText: "Cancel",
-    });
-
-    if (!confirmed) return;
-
+    setIsTogglingStatus(true);
     try {
       if (product.is_active) {
         await productService.deactivateProduct(Number(id));
@@ -128,7 +124,14 @@ export default function ProductDetailsPage() {
     } catch (err) {
       console.error("Failed to toggle product status:", err);
       showError("Failed to update product status", "Please try again later.");
+    } finally {
+      setIsTogglingStatus(false);
+      setShowStatusModal(false);
     }
+  };
+
+  const handleCancelStatusChange = () => {
+    setShowStatusModal(false);
   };
 
   const handleDelete = () => {
@@ -222,9 +225,10 @@ export default function ProductDetailsPage() {
         <div className="flex flex-col sm:flex-row xl:flex-row lg:flex-col gap-3">
           <button
             onClick={handleToggleStatus}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit text-white`}
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
             style={{
               backgroundColor: button.secondaryAction.background,
+              color: "black",
             }}
             onMouseEnter={(e) => {
               (e.target as HTMLButtonElement).style.opacity = "0.9";
@@ -607,6 +611,21 @@ export default function ProductDetailsPage() {
           )}
         </div>
       </div>
+
+      {/* Status Change Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={showStatusModal}
+        onClose={handleCancelStatusChange}
+        onConfirm={handleConfirmStatusChange}
+        title={product?.is_active ? "Deactivate Product" : "Activate Product"}
+        description={`Are you sure you want to ${
+          product?.is_active ? "deactivate" : "activate"
+        } this product? This action can be reversed at any time.`}
+        itemName={product?.name || ""}
+        isLoading={isTogglingStatus}
+        confirmText={product?.is_active ? "Deactivate" : "Activate"}
+        cancelText="Cancel"
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

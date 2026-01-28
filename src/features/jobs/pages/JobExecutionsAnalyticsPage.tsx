@@ -153,10 +153,25 @@ export default function JobExecutionsAnalyticsPage() {
         jobExecutionService.getWorkerNodeStats().catch(() => []),
       ]);
 
-      setExecutionStats(stats);
-      setSlaCompliance(sla);
-      setSuccessRate(success);
-      setAverageDuration(duration);
+      // Unwrap data from API response wrapper
+      function unwrapData(response: any) {
+        if (!response) return null;
+        if (response && typeof response === "object" && "data" in response) {
+          return response.data;
+        }
+        return response;
+      }
+
+      const unwrappedStats = unwrapData(stats);
+      const unwrappedSla = unwrapData(sla);
+      const unwrappedSuccess = unwrapData(success);
+      const unwrappedDuration = unwrapData(duration);
+
+      setExecutionStats(unwrappedStats);
+      setSlaCompliance(unwrappedSla);
+      setSuccessRate(unwrappedSuccess);
+      setAverageDuration(unwrappedDuration);
+
       // Ensure all chart data is arrays
       function normalizeArray<T>(data: unknown): T[] {
         if (!data) return [];
@@ -174,18 +189,18 @@ export default function JobExecutionsAnalyticsPage() {
 
       setTrendData(normalizeArray<TrendDataPoint>(trends));
       setErrorAnalysis(normalizeArray<ErrorAnalysisItem>(errors));
-      setResourceUtilization(resources);
+      setResourceUtilization(unwrapData(resources));
       setExecutionsByHour(normalizeArray<ExecutionByHour>(byHour));
-      setHealthScore(health);
+      setHealthScore(unwrapData(health));
       setSlowestExecutions(normalizeArray<SlowestExecution>(slowest));
       setWorkers(normalizeArray<any>(workerData));
 
       // Build status distribution from stats
-      if (stats) {
-        const successful = parseInt(String(stats.successful), 10) || 0;
-        const failed = parseInt(String(stats.failed), 10) || 0;
-        const timedOut = parseInt(String(stats.timed_out), 10) || 0;
-        const aborted = parseInt(String(stats.aborted), 10) || 0;
+      if (unwrappedStats) {
+        const successful = parseInt(String(unwrappedStats.successful), 10) || 0;
+        const failed = parseInt(String(unwrappedStats.failed), 10) || 0;
+        const timedOut = parseInt(String(unwrappedStats.timed_out), 10) || 0;
+        const aborted = parseInt(String(unwrappedStats.aborted), 10) || 0;
         setStatusDistribution([
           { label: "Successful", value: successful },
           { label: "Failed", value: failed },
@@ -324,7 +339,7 @@ export default function JobExecutionsAnalyticsPage() {
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {successRate?.success_rate
-              ? `${successRate.success_rate.toFixed(1)}%`
+              ? `${Number(successRate.success_rate).toFixed(1)}%`
               : "0%"}
           </p>
         </div>
@@ -502,7 +517,7 @@ export default function JobExecutionsAnalyticsPage() {
               </p>
               <p className="text-2xl font-bold text-gray-900">
                 {slaCompliance.compliance_rate
-                  ? `${slaCompliance.compliance_rate.toFixed(1)}%`
+                  ? `${Number(slaCompliance.compliance_rate).toFixed(1)}%`
                   : "—"}
               </p>
             </div>
@@ -531,7 +546,7 @@ export default function JobExecutionsAnalyticsPage() {
               <p className="text-sm font-medium text-gray-500">Avg Memory</p>
               <p className="text-xl font-bold text-gray-900">
                 {resourceUtilization.average_memory_mb
-                  ? `${resourceUtilization.average_memory_mb.toFixed(0)} MB`
+                  ? `${Number(resourceUtilization.average_memory_mb).toFixed(0)} MB`
                   : "—"}
               </p>
             </div>
@@ -539,7 +554,7 @@ export default function JobExecutionsAnalyticsPage() {
               <p className="text-sm font-medium text-gray-500">Peak Memory</p>
               <p className="text-xl font-bold text-gray-900">
                 {resourceUtilization.peak_memory_mb
-                  ? `${resourceUtilization.peak_memory_mb.toFixed(0)} MB`
+                  ? `${Number(resourceUtilization.peak_memory_mb).toFixed(0)} MB`
                   : "—"}
               </p>
             </div>
@@ -547,7 +562,7 @@ export default function JobExecutionsAnalyticsPage() {
               <p className="text-sm font-medium text-gray-500">Avg CPU</p>
               <p className="text-xl font-bold text-gray-900">
                 {resourceUtilization.average_cpu_percent
-                  ? `${resourceUtilization.average_cpu_percent.toFixed(1)}%`
+                  ? `${Number(resourceUtilization.average_cpu_percent).toFixed(1)}%`
                   : "—"}
               </p>
             </div>
@@ -555,7 +570,7 @@ export default function JobExecutionsAnalyticsPage() {
               <p className="text-sm font-medium text-gray-500">Peak CPU</p>
               <p className="text-xl font-bold text-gray-900">
                 {resourceUtilization.peak_cpu_percent
-                  ? `${resourceUtilization.peak_cpu_percent.toFixed(1)}%`
+                  ? `${Number(resourceUtilization.peak_cpu_percent).toFixed(1)}%`
                   : "—"}
               </p>
             </div>
@@ -575,7 +590,7 @@ export default function JobExecutionsAnalyticsPage() {
               <p className="text-sm font-medium text-gray-500">Success Rate</p>
               <p className="text-xl font-bold text-gray-900">
                 {performanceSummary.success_rate
-                  ? `${performanceSummary.success_rate.toFixed(1)}%`
+                  ? `${Number(performanceSummary.success_rate).toFixed(1)}%`
                   : "—"}
               </p>
             </div>
@@ -605,7 +620,7 @@ export default function JobExecutionsAnalyticsPage() {
               </p>
               <p className="text-xl font-bold text-gray-900">
                 {performanceSummary.sla_compliance_rate
-                  ? `${performanceSummary.sla_compliance_rate.toFixed(1)}%`
+                  ? `${Number(performanceSummary.sla_compliance_rate).toFixed(1)}%`
                   : "—"}
               </p>
             </div>
@@ -623,7 +638,7 @@ export default function JobExecutionsAnalyticsPage() {
           <div className="flex items-center gap-4">
             <div className="text-4xl font-bold text-gray-900">
               {healthScore.health_score
-                ? `${healthScore.health_score.toFixed(0)}/100`
+                ? `${Number(healthScore.health_score).toFixed(0)}/100`
                 : "—"}
             </div>
             {healthScore.factors && healthScore.factors.length > 0 && (
@@ -637,7 +652,7 @@ export default function JobExecutionsAnalyticsPage() {
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600">{factor.factor}</span>
                         <span className="font-medium">
-                          {factor.score.toFixed(0)}
+                          {Number(factor.score).toFixed(0)}
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">

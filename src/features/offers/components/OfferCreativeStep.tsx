@@ -72,20 +72,16 @@ const CHANNEL_CONFIG: Array<{
   translationKey: string;
   icon: typeof Smartphone;
 }> = [
-  { value: "SMS", translationKey: "offers.channels.sms", icon: Smartphone },
   { value: "Email", translationKey: "offers.channels.email", icon: Mail },
-  {
-    value: "Push",
-    translationKey: "offers.channels.pushNotification",
-    icon: MessageSquare,
-  },
-  { value: "InApp", translationKey: "offers.channels.inApp", icon: Monitor },
-  { value: "Web", translationKey: "offers.channels.web", icon: Monitor },
-  { value: "IVR", translationKey: "offers.channels.ivr", icon: PhoneCall },
-  { value: "USSD", translationKey: "offers.channels.ussd", icon: Phone },
+  { value: "SMS", translationKey: "offers.channels.sms", icon: Smartphone },
   {
     value: "WhatsApp",
     translationKey: "offers.channels.whatsApp",
+    icon: MessageSquare,
+  },
+  {
+    value: "Push",
+    translationKey: "offers.channels.pushNotification",
     icon: MessageSquare,
   },
 ];
@@ -756,7 +752,11 @@ export default function OfferCreativeStep({
     if (charCount > singleSegmentLimit) {
       segments = Math.ceil(charCount / multiSegmentLimit);
     }
-    return { charCount, segments, isUnicode };
+    const remainingInSegment = charCount % multiSegmentLimit;
+    const remaining = segments === 1
+      ? singleSegmentLimit - charCount
+      : multiSegmentLimit - remainingInSegment;
+    return { charCount, segments, isUnicode, remaining: Math.max(0, remaining) };
   };
 
   // Handle preview button click
@@ -974,76 +974,77 @@ export default function OfferCreativeStep({
           {/* Creative Editor */}
           <div className="lg:col-span-2">
             {selectedCreativeData ? (
-              <div
-                className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}
-              >
-                <div className="space-y-6">
-                  {/* Channel and Locale */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.formLabels.channel}
-                      </label>
-                      <HeadlessSelect
-                        value={selectedCreativeData.channel}
-                        onChange={(value) => {
-                          const newChannel = value as CreativeChannel;
-                          updateCreative(selectedCreativeData.id, {
-                            channel: newChannel,
-                          });
-                          // Clear template selection when channel changes
-                          setSelectedTemplates((prev) => ({
-                            ...prev,
-                            [selectedCreativeData.id]: null,
-                          }));
-                        }}
-                        options={CHANNEL_CONFIG.map((channel) => ({
-                          value: channel.value,
-                          label: getChannelLabel(channel.value),
-                        }))}
-                        placeholder={t.offers.formPlaceholders.selectChannel}
-                        zIndex={zIndex.popover}
-                      />
-                    </div>
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Left Column - Message Editor (3/5) */}
+                <div className="lg:col-span-3">
+                  <div
+                    className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+                  >
+                    <div className="space-y-6">
+                  {/* Channel Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t.offers.channel.label}
+                    </label>
+                    <HeadlessSelect
+                      value={selectedCreativeData.channel}
+                      onChange={(value) => {
+                        const newChannel = value as CreativeChannel;
+                        updateCreative(selectedCreativeData.id, {
+                          channel: newChannel,
+                        });
+                        setSelectedTemplates((prev) => ({
+                          ...prev,
+                          [selectedCreativeData.id]: null,
+                        }));
+                      }}
+                      options={CHANNEL_CONFIG.map((channel) => ({
+                        value: channel.value,
+                        label: getChannelLabel(channel.value),
+                      }))}
+                      placeholder={t.offers.channel.placeholder}
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.formLabels.localeLanguage}
-                      </label>
-                      <HeadlessSelect
-                        value={selectedCreativeData.locale}
-                        onChange={(value) => {
-                          updateCreative(selectedCreativeData.id, {
-                            locale: value as Locale,
-                          });
-                          // Clear template selection when locale changes
-                          // so user can select a template matching the new locale
-                          setSelectedTemplates((prev) => {
-                            const updated = { ...prev };
-                            delete updated[selectedCreativeData.id];
-                            return updated;
-                          });
-                        }}
-                        options={[
-                          ...((languages as TypeConfigurationItem[]) || [])
-                            .filter((lang) => lang.isActive)
-                            .map((lang) => ({
-                              label: lang.name,
-                              value: lang.metadataValue as string,
-                            })),
-                          // Fallback to COMMON_LOCALES if languages config is empty
-                          ...((languages as TypeConfigurationItem[])?.length ===
-                          0
-                            ? COMMON_LOCALES.map((locale) => ({
-                                label: getLocaleLabel(locale, languages as TypeConfigurationItem[], t),
-                                value: locale,
-                              }))
-                            : []),
-                        ]}
-                        placeholder={t.offers.formPlaceholders.selectLanguage}
-                        zIndex={zIndex.popover}
-                      />
-                    </div>
+                  {/* Locale Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t.offers.locale.label}
+                    </label>
+                    <HeadlessSelect
+                      value={selectedCreativeData.locale}
+                      onChange={(value) => {
+                        updateCreative(selectedCreativeData.id, {
+                          locale: value as Locale,
+                        });
+                        // Clear template selection when locale changes
+                        // so user can select a template matching the new locale
+                        setSelectedTemplates((prev) => {
+                          const updated = { ...prev };
+                          delete updated[selectedCreativeData.id];
+                          return updated;
+                        });
+                      }}
+                      options={[
+                        ...((languages as TypeConfigurationItem[]) || [])
+                          .filter((lang) => lang.isActive)
+                          .map((lang) => ({
+                            label: lang.name,
+                            value: lang.metadataValue as string,
+                          })),
+                        // Fallback to COMMON_LOCALES if languages config is empty
+                        ...((languages as TypeConfigurationItem[])?.length ===
+                        0
+                          ? COMMON_LOCALES.map((locale) => ({
+                              label: getLocaleLabel(locale, languages as TypeConfigurationItem[], t),
+                              value: locale,
+                            }))
+                          : []),
+                      ]}
+                      placeholder={t.offers.locale.placeholder}
+                      zIndex={zIndex.popover}
+                    />
                   </div>
 
                   {/* Template Selector - Temporarily Disabled
@@ -1115,13 +1116,13 @@ export default function OfferCreativeStep({
                     </div>
                   )} */}
 
-                  {/* Sender / Subject / Variable toolbar */}
+                  {/* Sender ID (SMS) or Subject (Email) */}
                   <div className="space-y-4">
-                    {/* Sender ID (SMS) or Subject (Email/Web) */}
-                    {selectedCreativeData.channel === "SMS" ? (
+                    {/* Sender ID for SMS */}
+                    {selectedCreativeData.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.formLabels.senderId}
+                          {t.offers.senderId.label}
                         </label>
                         <HeadlessSelect
                           value={selectedCreativeData.title || ""}
@@ -1131,7 +1132,7 @@ export default function OfferCreativeStep({
                             })
                           }
                           options={[
-                            { label: t.offers.formPlaceholders.selectSenderId, value: "" },
+                            { label: t.offers.senderId.defaultPlaceholder, value: "" },
                             ...((senderIds as TypeConfigurationItem[]) || [])
                               .filter(
                                 (senderId) =>
@@ -1143,15 +1144,18 @@ export default function OfferCreativeStep({
                                 value: senderId.name,
                               })),
                           ]}
-                          placeholder={t.offers.formPlaceholders.selectSenderId}
+                          placeholder={t.offers.senderId.defaultPlaceholder}
                           className="w-full"
                           zIndex={zIndex.popover}
                         />
                       </div>
-                    ) : (
+                    )}
+
+                    {/* Subject Line for Email */}
+                    {selectedCreativeData.channel === "Email" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.formLabels.subjectLine}
+                          {t.offers.subjectLine.label} <span className="text-red-500">*</span>
                         </label>
                         <input
                           ref={titleInputRef}
@@ -1177,7 +1181,7 @@ export default function OfferCreativeStep({
                               e.currentTarget.selectionStart || 0,
                             );
                           }}
-                          placeholder={t.offers.formPlaceholders.enterEmailSubject}
+                          placeholder={t.offers.subjectLine.placeholder}
                           className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
                         />
                       </div>
@@ -1187,7 +1191,7 @@ export default function OfferCreativeStep({
                     {selectedCreativeData.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.formLabels.smsRoute}
+                          {t.offers.smsRoute.label} <span className="text-red-500">*</span>
                         </label>
                         <HeadlessSelect
                           value={
@@ -1203,7 +1207,7 @@ export default function OfferCreativeStep({
                             })
                           }
                           options={[
-                            { label: t.offers.formPlaceholders.selectSmsRoute, value: "" },
+                            { label: t.offers.smsRoute.defaultPlaceholder, value: "" },
                             ...((smsRoutes as TypeConfigurationItem[]) || [])
                               .filter((route) => route.isActive)
                               .map((route) => ({
@@ -1211,7 +1215,7 @@ export default function OfferCreativeStep({
                                 value: route.name,
                               })),
                           ]}
-                          placeholder={t.offers.formPlaceholders.selectSmsRoute}
+                          placeholder={t.offers.smsRoute.defaultPlaceholder}
                           className="w-full"
                           zIndex={zIndex.popover}
                         />
@@ -1224,10 +1228,13 @@ export default function OfferCreativeStep({
                       style={{ backgroundColor: color.surface.cards }}
                     >
                       <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {t.offers.formLabels.messageContent}
+                        {t.offers.messageContent.label}
                       </span>
                       <div className="flex items-center gap-2">
-                        {selectedCreativeData.channel === "Email" && (
+                        {(selectedCreativeData.channel === "Email" ||
+                          selectedCreativeData.channel === "SMS" ||
+                          selectedCreativeData.channel === "WhatsApp" ||
+                          selectedCreativeData.channel === "Push") && (
                           <button
                             type="button"
                             onClick={() =>
@@ -1255,8 +1262,8 @@ export default function OfferCreativeStep({
                             }}
                           >
                             {isRichTextMap[selectedCreativeData.id]
-                              ? t.offers.buttons.richText
-                              : t.offers.buttons.plainText}
+                              ? t.offers.richText
+                              : t.offers.plainText}
                           </button>
                         )}
                         <div className="relative">
@@ -1271,7 +1278,7 @@ export default function OfferCreativeStep({
                               color: "white",
                             }}
                           >
-                            {t.offers.buttons.insertVariable}
+                            {t.offers.messageContent.insertVariable}
                           </button>
                           <div
                             className="absolute left-0 mt-1"
@@ -1290,7 +1297,7 @@ export default function OfferCreativeStep({
                     {/* Message Body */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        {t.offers.formLabels.messageBody}
+                        {t.offers.messageBody.label}
                       </label>
                       <textarea
                         ref={bodyTextareaRef}
@@ -1314,23 +1321,34 @@ export default function OfferCreativeStep({
                             e.currentTarget.selectionStart || 0,
                           );
                         }}
-                        placeholder={t.offers.formPlaceholders.enterMessage}
+                        placeholder={t.offers.messageBody.placeholder}
                         rows={8}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                       />
 
                       {/* Info bar */}
                       <div className="mt-2 flex items-center justify-between">
-                        {selectedCreativeData.channel === "SMS" ||
-                        selectedCreativeData.channel === "WhatsApp" ? (
+                        {selectedCreativeData.channel === "SMS" ? (
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>
                               {
                                 getCharacterInfo(
                                   selectedCreativeData.text_body || "",
                                 ).charCount
+                              }/{getCharacterInfo(
+                                selectedCreativeData.text_body || "",
+                              ).segments === 1 ? 160 : getCharacterInfo(
+                                selectedCreativeData.text_body || "",
+                              ).segments * 153}{" "}
+                              {t.offers.characterCount.characters}
+                            </span>
+                            <span>
+                              {
+                                getCharacterInfo(
+                                  selectedCreativeData.text_body || "",
+                                ).remaining
                               }{" "}
-                              {t.offers.labels.characters}
+                              remaining
                             </span>
                             <span>
                               {
@@ -1338,17 +1356,42 @@ export default function OfferCreativeStep({
                                   selectedCreativeData.text_body || "",
                                 ).segments
                               }{" "}
-                              {t.offers.labels.segments}
+                              {t.offers.characterCount.segments}
                             </span>
                             {getCharacterInfo(
                               selectedCreativeData.text_body || "",
                             ).isUnicode && (
-                              <span className="text-amber-600">{t.offers.labels.unicode}</span>
+                              <span className="text-amber-600">{t.offers.characterCount.unicode}</span>
+                            )}
+                          </div>
+                        ) : selectedCreativeData.channel === "WhatsApp" ||
+                        selectedCreativeData.channel === "Push" ? (
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <span>
+                              {
+                                getCharacterInfo(
+                                  selectedCreativeData.text_body || "",
+                                ).charCount
+                              }{" "}
+                              {t.offers.characterCount.characters}
+                            </span>
+                            <span>
+                              {
+                                getCharacterInfo(
+                                  selectedCreativeData.text_body || "",
+                                ).segments
+                              }{" "}
+                              {t.offers.characterCount.segments}
+                            </span>
+                            {getCharacterInfo(
+                              selectedCreativeData.text_body || "",
+                            ).isUnicode && (
+                              <span className="text-amber-600">{t.offers.characterCount.unicode}</span>
                             )}
                           </div>
                         ) : (
                           <span className="text-xs text-gray-500">
-                            {t.offers.hints.variables}
+                            {t.offers.variableHint}
                           </span>
                         )}
 
@@ -1368,7 +1411,7 @@ export default function OfferCreativeStep({
                             ))}
                             {selectedVariables.length > 3 && (
                               <span className="text-xs text-gray-400">
-                                +{selectedVariables.length - 3} {t.offers.labels.moreItems}
+                                +{selectedVariables.length - 3} {t.offers.characterCount.more}
                               </span>
                             )}
                           </div>
@@ -1377,18 +1420,88 @@ export default function OfferCreativeStep({
                     </div>
                   </div>
 
-                  {/* Preview Button */}
-                  <div className="flex justify-end pt-4">
-                    <button
-                      onClick={handlePreview}
-                      className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white ${tw.rounded}`}
-                      style={{
-                        backgroundColor: color.primary.action,
-                      }}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Preview (2/5) */}
+                <div className="lg:col-span-2">
+                  <div className="sticky top-4">
+                    <div
+                      className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      {t.offers.buttons.previewCreative}
-                    </button>
+                      <h3 className="font-semibold mb-4">{t.offers.preview.title || 'Preview'}</h3>
+                      {selectedCreativeData.channel === "Email" && (
+                        <div className="space-y-3 text-sm">
+                          {selectedCreativeData.title && (
+                            <div>
+                              <p className="text-gray-600 text-xs font-medium mb-1">Subject:</p>
+                              <p className="bg-gray-50 p-2 rounded">{selectedCreativeData.title}</p>
+                            </div>
+                          )}
+                          {selectedCreativeData.text_body && (
+                            <div>
+                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
+                              <p className="bg-gray-50 p-2 rounded whitespace-pre-wrap break-words">{selectedCreativeData.text_body}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {selectedCreativeData.channel === "SMS" && (
+                        <div className="space-y-3 text-sm">
+                          {selectedCreativeData.title && (
+                            <div>
+                              <p className="text-gray-600 text-xs font-medium mb-1">Sender ID:</p>
+                              <p className="bg-gray-50 p-2 rounded">{selectedCreativeData.title}</p>
+                            </div>
+                          )}
+                          {selectedCreativeData.text_body && (
+                            <div>
+                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
+                              <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                                <SMSSmartphonePreview
+                                  message={selectedCreativeData.text_body}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-xs text-gray-600">
+                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").charCount}</strong>/{getCharacterInfo(selectedCreativeData.text_body || "").segments === 1 ? 160 : getCharacterInfo(selectedCreativeData.text_body || "").segments * 153} characters
+                              • <strong>{getCharacterInfo(selectedCreativeData.text_body || "").remaining}</strong> remaining
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").segments}</strong> segment(s)
+                              {getCharacterInfo(selectedCreativeData.text_body || "").isUnicode && (
+                                <span className="text-amber-600 ml-2">Unicode</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {(selectedCreativeData.channel === "WhatsApp" ||
+                        selectedCreativeData.channel === "Push") && (
+                        <div className="space-y-3 text-sm">
+                          {selectedCreativeData.text_body && (
+                            <div>
+                              <p className="text-gray-600 text-xs font-medium mb-1">Message:</p>
+                              <p className="bg-gray-50 p-2 rounded whitespace-pre-wrap break-words">{selectedCreativeData.text_body}</p>
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-xs text-gray-500">
+                              <strong>{getCharacterInfo(selectedCreativeData.text_body || "").charCount}</strong> characters
+                              • <strong>{getCharacterInfo(selectedCreativeData.text_body || "").segments}</strong> segment(s)
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {!selectedCreativeData.text_body && (
+                        <div className="text-center text-gray-400 py-8">
+                          <p className="text-sm">No content to preview</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1419,7 +1532,7 @@ export default function OfferCreativeStep({
           setPreviewError(null);
           setPreviewResult(null);
         }}
-        title={t.offers.buttons.previewCreative}
+        title={t.offers.preview.title}
         size="2xl"
       >
         <div className="space-y-6">
@@ -1522,7 +1635,7 @@ export default function OfferCreativeStep({
                     !previewResult.rendered_html_body && (
                       <div className="text-center py-8 text-gray-500">
                         <p>
-                          {t.offers.messages.noContentToPreview}
+                          {t.offers.preview.noContent}
                         </p>
                       </div>
                     )}
@@ -1532,7 +1645,7 @@ export default function OfferCreativeStep({
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>
-                {t.offers.messages.clickPreview}
+                {t.offers.preview.clickToPreview}
               </p>
             </div>
           )}

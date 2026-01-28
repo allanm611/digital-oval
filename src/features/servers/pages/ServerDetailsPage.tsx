@@ -73,7 +73,7 @@ export default function ServerDetailsPage() {
 
   const loadServer = useCallback(async () => {
     if (!id) {
-      setErrorMessage(t("errors.serverIdMissing"));
+      setErrorMessage(t.errors.serverIdMissing);
       setIsLoading(false);
       return;
     }
@@ -85,9 +85,9 @@ export default function ServerDetailsPage() {
       setServer(response);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : t("errors.failedLoadServer");
+        err instanceof Error ? err.message : t.errors.failedLoadServer;
       setErrorMessage(message);
-      showError(t("errors.unableLoadServer"), message);
+      showError(t.errors.unableLoadServer, message);
     } finally {
       setIsLoading(false);
     }
@@ -375,10 +375,10 @@ export default function ServerDetailsPage() {
           <AlertTriangle size={20} />
         </div>
         <h2 className="text-lg font-semibold text-black">
-          {t("errors.unableLoadServer")}
+          {t.errors.unableLoadServer}
         </h2>
         <p className="mt-2 text-sm text-black">
-          {errorMessage || t("errors.serverNotFound")}
+          {errorMessage || t.errors.serverNotFound}
         </p>
         <button
           onClick={() => navigateBackOrFallback(navigate, "/dashboard/servers")}

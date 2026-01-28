@@ -12,6 +12,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { scheduledJobService } from "../../jobs/services/scheduledJobService";
 import { ScheduledJob } from "../../jobs/types/scheduledJob";
+import FetchSummaryModal from "./FetchSummaryModal";
 
 type FetchMode = "immediate" | "by-time" | "by-range";
 
@@ -37,6 +38,17 @@ export default function FetchControlsModal({
   const [isLoading, setIsLoading] = useState(false);
   const [scheduledJobs, setScheduledJobs] = useState<ScheduledJob[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+
+  // Summary modal state
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<{
+    executionId?: string;
+    jobId?: number;
+    filesProcessed?: number;
+    triggeredCount?: number;
+    failedSlots?: number;
+    timeRange?: string;
+  }>({});
 
   // Immediate fetch
   const [jobId, setJobId] = useState("");
@@ -74,14 +86,14 @@ export default function FetchControlsModal({
       const response = await etlService.fetchFiles(payload);
 
       if (response.success) {
-        success(
-          "Fetch triggered",
-          `Job ${jobId} executed. ${response.data?.files_processed ?? 0} files processed.`,
-        );
+        setSummaryData({
+          executionId: response.data?.execution_id,
+          jobId: response.data?.job_id,
+          filesProcessed: response.data?.files_processed,
+        });
+        setShowSummary(true);
         setJobId("");
         setForceReprocess(false);
-        onSuccess(response.data?.execution_id || "");
-        onClose();
       } else {
         showError("Fetch failed", response.message);
       }
@@ -97,10 +109,7 @@ export default function FetchControlsModal({
     jobId,
     forceReprocess,
     user?.user_id,
-    success,
     showError,
-    onSuccess,
-    onClose,
   ]);
 
   const handleFetchByTime = useCallback(async () => {
@@ -117,17 +126,11 @@ export default function FetchControlsModal({
       const response = await etlService.fetchByTime(payload);
 
       if (response.success) {
-        success(
-          "Historical fetch triggered",
-          `Execution ID: ${response.data?.execution_id}`,
-        );
-        onSuccess(response.data?.execution_id || "", {
-          category: byTimeCategory,
-          month: byTimeMonth,
-          day: byTimeDay,
-          hour: byTimeHour,
+        setSummaryData({
+          executionId: response.data?.execution_id,
+          timeRange: `${byTimeMonth}/${byTimeDay} ${String(byTimeHour).padStart(2, "0")}:00 (${byTimeCategory})`,
         });
-        onClose();
+        setShowSummary(true);
       } else {
         showError("Fetch failed", response.message);
       }
@@ -145,10 +148,7 @@ export default function FetchControlsModal({
     byTimeDay,
     byTimeHour,
     user?.user_id,
-    success,
     showError,
-    onSuccess,
-    onClose,
   ]);
 
   const handleFetchByRange = useCallback(async () => {
@@ -177,13 +177,12 @@ export default function FetchControlsModal({
       const response = await etlService.fetchByRange(payload);
 
       if (response.success) {
-        success(
-          "Range fetch triggered",
-          `${response.data?.triggered_executions.length ?? 0} hourly jobs scheduled`,
-        );
+        setSummaryData({
+          triggeredCount: response.data?.triggered_executions?.length ?? 0,
+          failedSlots: response.data?.failed_slots?.length ?? 0,
+        });
+        setShowSummary(true);
         setByRangeJobId("");
-        onSuccess(response.data?.triggered_executions?.[0] || "");
-        onClose();
       } else {
         showError("Fetch failed", response.message);
       }
@@ -204,10 +203,7 @@ export default function FetchControlsModal({
     byRangeEndDay,
     byRangeEndHour,
     user?.user_id,
-    success,
     showError,
-    onSuccess,
-    onClose,
   ]);
 
   const categoryOptions = [
@@ -251,6 +247,17 @@ export default function FetchControlsModal({
     }
   }, [isOpen, mode, showError]);
 
+  const handleSummaryClose = () => {
+    setShowSummary(false);
+    onClose();
+  };
+
+  const handleViewExecutions = () => {
+    onSuccess(summaryData.executionId || "");
+    setShowSummary(false);
+    onClose();
+  };
+
   if (!isOpen || !mode) return null;
 
   const getModalTitle = () => {
@@ -265,6 +272,18 @@ export default function FetchControlsModal({
         return "Fetch Controls";
     }
   };
+
+  if (showSummary) {
+    return (
+      <FetchSummaryModal
+        isOpen={showSummary}
+        onClose={handleSummaryClose}
+        onViewExecutions={handleViewExecutions}
+        mode={mode}
+        data={summaryData}
+      />
+    );
+  }
 
   return (
     <div

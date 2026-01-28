@@ -483,6 +483,10 @@ const EtlPages = {
         /* webpackPrefetch: true */ "../../etl/pages/EtlFetchControlsPage"
       ),
   ),
+  EtlAnalyticsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../etl/pages/EtlAnalyticsPage"),
+  ),
 };
 
 // Analytics & Reports Pages - All routes preloaded for instant access
@@ -1042,6 +1046,10 @@ export default function Dashboard() {
           <Route
             path="/etl/fetch"
             element={<EtlPages.EtlFetchControlsPage />}
+          />
+          <Route
+            path="/etl/analytics"
+            element={<EtlPages.EtlAnalyticsPage />}
           />
         </Routes>
       </Suspense>

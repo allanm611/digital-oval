@@ -175,7 +175,7 @@ export default function DNDChannelPage() {
     showToast(
       `success`,
       t("dnd.customerAdded", { name: customer.name || customer.phone, type: customer.dndType }),
-      t("dnd.customerAddedDesc"),
+      t.dnd.customerAddedDesc,
     );
     setShowAddModal(false);
   };
@@ -220,7 +220,7 @@ export default function DNDChannelPage() {
     showToast(
       `success`,
       t("dnd.customerRemoved", { name: customerName, type: dndType }),
-      t("dnd.customerRemovedDesc"),
+      t.dnd.customerRemovedDesc,
     );
     setShowRemoveModal(false);
   };
@@ -229,7 +229,7 @@ export default function DNDChannelPage() {
     // TODO: Implement delete functionality
     showToast(
       `success`,
-      t("dnd.recordDeleted"),
+      t.dnd.recordDeleted,
       t("dnd.recordDeletedDesc", { name }),
     );
   };

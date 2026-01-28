@@ -16,7 +16,7 @@ import { communicationPolicyService } from "../../services/communicationPolicySe
 import CommunicationPolicyModal from "../CommunicationPolicyModal";
 import PolicyNameModal from "../PolicyNameModal";
 import { useToast } from "../../../../contexts/ToastContext";
-import { useTranslation } from "../../../../contexts/LanguageContext";
+import { useTranslation, useLanguage } from "../../../../contexts/LanguageContext";
 import { getCurrencySymbol } from "../../../../shared/services/currencyService";
 
 interface CampaignDefinitionStepProps {
@@ -71,6 +71,7 @@ export default function CampaignDefinitionStep({
   clearValidationErrors,
 }: CampaignDefinitionStepProps) {
   const t = useTranslation();
+  const { t: tLanguage } = useLanguage();
   const { success: showToast, error: showError } = useToast();
   const [programSearchTerm, setProgramSearchTerm] = useState("");
   const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false);
@@ -309,7 +310,7 @@ export default function CampaignDefinitionStep({
     <div className=" space-y-6">
       <div className="mt-8 mb-8">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Campaign Definition & Objectives
+          {tLanguage.campaigns.campaignDefinition.campaignDefinition}
         </h2>
         <p className="text-sm text-gray-600">
           Define your campaign goals and choose how you want to create your
@@ -320,13 +321,13 @@ export default function CampaignDefinitionStep({
         className={`bg-white border border-gray-200 ${tw.rounded} p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6`}
       >
         <h3 className="text-base font-medium text-gray-900 mb-4 md:mb-6 px-0">
-          Campaign Information
+          {tLanguage.campaigns.campaignDefinition.basicDetails}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 px-0">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Campaign Name *
+              {tLanguage.campaigns.campaignDefinition.campaignName}
             </label>
             <input
               type="text"
@@ -344,7 +345,7 @@ export default function CampaignDefinitionStep({
                   ? "border-red-300 focus:ring-red-500 focus:border-red-500"
                   : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
               }`}
-              placeholder="Enter campaign name"
+              placeholder={tLanguage.campaigns.campaignDefinition.enterCampaignName}
               required
             />
             {validationErrors.name && (
@@ -1111,7 +1112,7 @@ export default function CampaignDefinitionStep({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Campaign Description
+            {tLanguage.campaigns.campaignDefinition.campaignDescription}
           </label>
           <textarea
             value={formData.description}
@@ -1173,7 +1174,7 @@ export default function CampaignDefinitionStep({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Start Date
+              {tLanguage.campaigns.campaignDefinition.startDate}
             </label>
             <input
               type="datetime-local"
@@ -1205,7 +1206,7 @@ export default function CampaignDefinitionStep({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              End Date
+              {tLanguage.campaigns.campaignDefinition.endDate}
             </label>
             <input
               type="datetime-local"

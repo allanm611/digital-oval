@@ -13,13 +13,24 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationSettingsProvider } from "./contexts/NotificationSettingsContext";
+import { GlobalLoadingProvider, useGlobalLoading } from "./contexts/GlobalLoadingContext";
 import { color } from "./shared/utils/utils";
+import GlobalLoader from "./shared/components/GlobalLoader";
 
-// ScrollToTop component to scroll to top on route change
-function ScrollToTop() {
+// RouteChangeHandler component to show loader and scroll on route change
+function RouteChangeHandler() {
   const { pathname } = useLocation();
+  const { startLoading, stopLoading } = useGlobalLoading();
 
   useEffect(() => {
+    // Show loader on route change
+    startLoading();
+
+    // Hide loader after a short delay (gives time for page to render)
+    const hideLoaderId = setTimeout(() => {
+      stopLoading();
+    }, 300);
+
     // Function to perform scroll
     const performScroll = () => {
       // Scroll window
@@ -55,10 +66,11 @@ function ScrollToTop() {
     const timeoutId2 = setTimeout(performScroll, 150);
 
     return () => {
+      clearTimeout(hideLoaderId);
       clearTimeout(timeoutId1);
       clearTimeout(timeoutId2);
     };
-  }, [pathname]);
+  }, [pathname, startLoading, stopLoading]);
 
   return null;
 }
@@ -99,7 +111,7 @@ function AppRoutes() {
 
   return (
     <>
-      <ScrollToTop />
+      {/* <RouteChangeHandler /> */}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
@@ -134,28 +146,31 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <ToastProvider>
-            <ConfirmProvider>
-              <NotificationProvider>
-                <NotificationSettingsProvider>
-                  <Router>
-                    <div
-                      className="min-h-screen"
-                      style={{ backgroundColor: color.primary.background }}
-                    >
-                      <AppRoutes />
-                    </div>
-                  </Router>
-                </NotificationSettingsProvider>
-              </NotificationProvider>
-            </ConfirmProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+    <GlobalLoadingProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <ConfirmProvider>
+                <NotificationProvider>
+                  <NotificationSettingsProvider>
+                    <Router>
+                      <div
+                        className="min-h-screen"
+                        style={{ backgroundColor: color.primary.background }}
+                      >
+                        <GlobalLoader />
+                        <AppRoutes />
+                      </div>
+                    </Router>
+                  </NotificationSettingsProvider>
+                </NotificationProvider>
+              </ConfirmProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </GlobalLoadingProvider>
   );
 }
 

@@ -1,16 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
   Download,
   Eye,
   BarChart3,
   Play,
   RefreshCw,
   Search,
-  Loader2,
   ChevronDown,
 } from "lucide-react";
 import { etlService } from "../services/etlService";
@@ -171,42 +167,7 @@ export default function EtlFileRegistryPage() {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<
-      string,
-      { bg: string; text: string; icon: React.ReactNode }
-    > = {
-      pending: {
-        bg: "rgba(251,191,36,0.12)",
-        text: "#000",
-        icon: <Clock size={14} />,
-      },
-      processing: {
-        bg: "rgba(59,129,105,0.12)",
-        text: "#000",
-        icon: <Loader2 size={14} className="animate-spin" />,
-      },
-      completed: {
-        bg: "rgba(16,185,129,0.12)",
-        text: "#000",
-        icon: <CheckCircle size={14} />,
-      },
-      failed: {
-        bg: "rgba(251,113,133,0.12)",
-        text: "#000",
-        icon: <AlertTriangle size={14} />,
-      },
-    };
-
-    const config = statusMap[status] || statusMap.pending;
-    return (
-      <span
-        className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-        style={{ backgroundColor: config.bg, color: config.text }}
-      >
-        {config.icon}
-        {status}
-      </span>
-    );
+    return <span className="text-black text-sm">{status}</span>;
   };
 
   const isEmptyState = !isLoadingFiles && files.length === 0;

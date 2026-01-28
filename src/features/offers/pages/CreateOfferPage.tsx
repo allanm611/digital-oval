@@ -2161,7 +2161,7 @@ export default function CreateOfferPage({
     try {
       setIsSavingDraft(true);
       if (!formData.name.trim()) {
-        showError(t("offers.nameRequired"));
+        showError(t.offers.nameRequired);
         return;
       }
 
@@ -2187,9 +2187,9 @@ export default function CreateOfferPage({
       };
 
       await offerService.createOffer(draftData);
-      showToast(t("offers.draftSaveSuccess"));
+      showToast(t.offers.draftSaveSuccess);
     } catch {
-      showError(t("offers.draftSaveError"));
+      showError(t.offers.draftSaveError);
     } finally {
       setIsSavingDraft(false);
     }

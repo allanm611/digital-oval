@@ -131,7 +131,7 @@ export default function ProgramDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to load program:", error);
-      showToast("error", t("programs.loadError"));
+      showToast("error", t.programs.loadError);
     } finally {
       setIsLoading(false);
     }
@@ -180,12 +180,12 @@ export default function ProgramDetailsPage() {
       // TODO: Get actual user ID from auth context
       const userId = 1;
       await programService.recalculateProgramBudget(Number(id), userId);
-      showToast("success", t("programs.budgetRecalculateSuccess"));
+      showToast("success", t.programs.budgetRecalculateSuccess);
       await loadProgramDetails();
       await loadPerformance();
     } catch (error) {
       console.error("Failed to recalculate budget:", error);
-      showToast("error", t("programs.budgetRecalculateError"));
+      showToast("error", t.programs.budgetRecalculateError);
     } finally {
       setIsActionLoading(false);
     }
@@ -261,13 +261,13 @@ export default function ProgramDetailsPage() {
         });
       }
 
-      showToast("success", t("programs.updateSuccess"));
+      showToast("success", t.programs.updateSuccess);
       setIsModalOpen(false);
       await loadProgramDetails();
       await loadPerformance(); // Reload performance data
     } catch (error) {
       console.error("Failed to update program:", error);
-      showToast("error", t("programs.updateError"));
+      showToast("error", t.programs.updateError);
     } finally {
       setIsSaving(false);
     }
@@ -291,7 +291,7 @@ export default function ProgramDetailsPage() {
       navigate("/dashboard/programs");
     } catch (error) {
       console.error("Failed to delete program:", error);
-      showToast("error", t("programs.deleteError"));
+      showToast("error", t.programs.deleteError);
     } finally {
       setIsActionLoading(false);
       setShowDeleteModal(false);
@@ -307,16 +307,16 @@ export default function ProgramDetailsPage() {
 
       if (program.is_active) {
         await programService.deactivateProgram(Number(id), userId);
-        showToast("success", t("programs.deactivateSuccess"));
+        showToast("success", t.programs.deactivateSuccess);
       } else {
         await programService.activateProgram(Number(id), userId);
-        showToast("success", t("programs.activateSuccess"));
+        showToast("success", t.programs.activateSuccess);
       }
 
       await loadProgramDetails();
     } catch (error) {
       console.error("Failed to toggle program status:", error);
-      showToast("error", t("programs.statusError"));
+      showToast("error", t.programs.statusError);
     } finally {
       setIsActionLoading(false);
     }
