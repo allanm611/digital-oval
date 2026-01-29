@@ -1162,7 +1162,7 @@ export default function Sidebar({
                                                   isGrandchildActive,
                                                 )}`}
                                               />
-                                              <span className={`${isMinimized ? "block" : "hidden xl:block"}`}>
+                                              <span className="hidden xl:block">
                                                 {grandchild.name}
                                               </span>
                                             </Link>
@@ -1208,7 +1208,7 @@ export default function Sidebar({
                                       isChildActive,
                                     )}`}
                                   />
-                                  <span className={`${isMinimized ? "block" : "hidden xl:block"}`}>
+                                  <span className="hidden xl:block">
                                     {child.name}
                                   </span>
                                 </Link>
