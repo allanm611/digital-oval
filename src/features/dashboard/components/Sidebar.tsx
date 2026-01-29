@@ -1074,13 +1074,13 @@ export default function Sidebar({
                       </div>
 
                       <div
-                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        className={`${isMinimized ? "absolute left-full ml-2 top-0 bg-gray-900 rounded-lg shadow-xl p-2 z-50 min-w-max" : "overflow-hidden transition-all duration-300 ease-in-out"} ${
                           !isMinimized && isExpanded
                             ? "max-h-[1000px] opacity-100"
-                            : "max-h-0 opacity-0"
-                        }`}
+                            : !isMinimized ? "max-h-0 opacity-0" : ""
+                        } ${isMinimized && isExpanded ? "opacity-100" : isMinimized ? "opacity-0 pointer-events-none" : ""}`}
                       >
-                        <ul className="mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2">
+                        <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
                             const isChildActive =
@@ -1136,7 +1136,7 @@ export default function Sidebar({
                                   </div>
 
                                   {isChildExpanded && (
-                                    <ul className="mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2">
+                                    <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
                                       {child.children?.map((grandchild) => {
                                         const GrandchildIcon = grandchild.icon;
                                         const isGrandchildActive =
@@ -1149,19 +1149,19 @@ export default function Sidebar({
                                             <Link
                                               to={grandchild.href}
                                               onClick={handleLinkClick}
-                                              className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                              className={`group flex items-center ${isMinimized ? "gap-x-2 px-3 py-2" : "md:justify-center xl:justify-start gap-x-3 md:p-2.5 xl:p-2.5"} ${
                                                 tw.rounded
-                                              } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                              } text-sm transition-all duration-200 ${getItemClasses(
                                                 isGrandchildActive,
                                               )}`}
                                               title={grandchild.name}
                                             >
                                               <GrandchildIcon
-                                                className={`md:h-5 md:w-5 xl:h-4 xl:w-4 shrink-0 ${getIconClasses(
+                                                className={`${isMinimized ? "h-4 w-4" : "md:h-5 md:w-5 xl:h-4 xl:w-4"} shrink-0 ${getIconClasses(
                                                   isGrandchildActive,
                                                 )}`}
                                               />
-                                              <span className="hidden xl:block">
+                                              <span className={`${isMinimized ? "block" : "hidden xl:block"}`}>
                                                 {grandchild.name}
                                               </span>
                                             </Link>
@@ -1193,9 +1193,9 @@ export default function Sidebar({
                                 <Link
                                   to={child.href}
                                   onClick={handleLinkClick}
-                                  className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                  className={`group flex items-center ${isMinimized ? "gap-x-2 px-3 py-2" : "md:justify-center xl:justify-start gap-x-3 md:p-2.5 xl:p-2.5"} ${
                                     tw.rounded
-                                  } md:p-2.5 xl:p-2.5 text-sm transition-all duration-200 ${
+                                  } text-sm transition-all duration-200 ${
                                     isChildActive
                                       ? getItemClasses(isChildActive)
                                       : getItemClasses(false)
@@ -1203,11 +1203,11 @@ export default function Sidebar({
                                   title={child.name}
                                 >
                                   <ChildIcon
-                                    className={`md:h-5 md:w-5 xl:h-4 xl:w-4 shrink-0 ${getIconClasses(
+                                    className={`${isMinimized ? "h-4 w-4" : "md:h-5 md:w-5 xl:h-4 xl:w-4"} shrink-0 ${getIconClasses(
                                       isChildActive,
                                     )}`}
                                   />
-                                  <span className="hidden xl:block">
+                                  <span className={`${isMinimized ? "block" : "hidden xl:block"}`}>
                                     {child.name}
                                   </span>
                                 </Link>
