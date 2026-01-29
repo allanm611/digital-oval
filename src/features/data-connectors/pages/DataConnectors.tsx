@@ -12,6 +12,7 @@ import {
   Copy,
   Download,
   Upload,
+  Trash2,
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
@@ -342,6 +343,15 @@ export default function DataConnectors() {
                             title="View details"
                           >
                             <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) =>
+                              handleMenuAction(e, "delete", connector)
+                            }
+                            className={`group p-3 ${tw.rounded} text-red-600 hover:bg-red-50 transition-all duration-200`}
+                            title="Delete connector"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                           <div className="relative">
                             <button
