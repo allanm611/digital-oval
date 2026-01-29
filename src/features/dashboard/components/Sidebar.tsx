@@ -1097,8 +1097,10 @@ export default function Sidebar({
                       >
                         {console.log("Submenu container for", item.name, "isExpanded:", isExpanded, "isMinimized:", isMinimized)}
                         <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
+                          {console.log("Rendering children for", item.name, "count:", item.children?.length)}
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
+                            console.log("Rendering child:", child.name);
                             const isChildActive =
                               location.pathname === child.href;
                             // Check if child has its own children (nested dropdown)
