@@ -1166,7 +1166,7 @@ export default function OfferReportsPage() {
               type="text"
               value={tableQuery}
               onChange={(event) => setTableQuery(event.target.value)}
-              placeholder="Search offer or campaign"
+              placeholder="Search offer"
               className={`w-full ${tw.rounded} border border-gray-200 px-3 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:border-gray-400 focus:outline-none md:w-80`}
             />
             <HeadlessSelect

@@ -55,6 +55,7 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "../components/CreativePreviewComponents";
+import PreviewPanel from "../../communications/components/PreviewPanel";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
@@ -87,7 +88,7 @@ const localeLabelMap: Record<string, string> = {
 const getLocaleLabel = (locale: string): string =>
   localeLabelMap[locale] || locale;
 
-const creativeChannelOptions = VALID_CHANNELS.map((channel) => ({
+const creativeChannelOptions = ["SMS", "Email", "Push", "WhatsApp"].map((channel) => ({
   value: channel,
   label: channel,
 }));
@@ -2247,9 +2248,11 @@ export default function OfferDetailsPage() {
           resetNewCreativeForm();
         }}
         title="Add Creative"
-        size="xl"
+        size="2xl"
       >
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Form Fields (1/2) */}
+          <div className="lg:col-span-1 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2478,7 +2481,10 @@ export default function OfferDetailsPage() {
                 Message Content
               </span>
               <div className="flex items-center gap-2">
-                {newCreativeForm.channel === "Email" && (
+                {(newCreativeForm.channel === "Email" ||
+                  newCreativeForm.channel === "SMS" ||
+                  newCreativeForm.channel === "Push" ||
+                  newCreativeForm.channel === "WhatsApp") && (
                   <button
                     type="button"
                     onClick={() => setIsRichTextAdd((prev) => !prev)}
@@ -2567,13 +2573,15 @@ export default function OfferDetailsPage() {
                       }{" "}
                       characters
                     </span>
-                    <span>
-                      {
-                        getCharacterInfoAdd(newCreativeForm.text_body || "")
-                          .segments
-                      }{" "}
-                      segment(s)
-                    </span>
+                    {getCharacterInfoAdd(newCreativeForm.text_body || "").segments > 1 && (
+                      <span>
+                        {
+                          getCharacterInfoAdd(newCreativeForm.text_body || "")
+                            .segments
+                        }{" "}
+                        segments
+                      </span>
+                    )}
                     {getCharacterInfoAdd(newCreativeForm.text_body || "")
                       .isUnicode && (
                       <span className="text-amber-600">Unicode</span>
@@ -2635,7 +2643,8 @@ export default function OfferDetailsPage() {
             </label>
           </div>
 
-          <div className="flex justify-between items-center pt-4 border-t">
+          {/* Button Bar */}
+          <div className="flex items-center justify-between gap-4 pt-4">
             <button
               onClick={handlePreview}
               disabled={
@@ -2674,6 +2683,18 @@ export default function OfferDetailsPage() {
                   <span>Create Creative</span>
                 )}
               </button>
+            </div>
+          </div>
+          </div>
+
+          {/* Right Column - Preview Panel (1/2) */}
+          <div className="lg:col-span-1">
+            <div>
+              <PreviewPanel
+                channel={newCreativeForm.channel === "SMS" ? "SMS" : newCreativeForm.channel === "Email" ? "EMAIL" : newCreativeForm.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
+                title={newCreativeForm.title}
+                body={newCreativeForm.text_body || ""}
+              />
             </div>
           </div>
         </div>

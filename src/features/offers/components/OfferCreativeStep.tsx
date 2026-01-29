@@ -31,6 +31,7 @@ import {
   SMSSmartphonePreview,
   EmailLaptopPreview,
 } from "./CreativePreviewComponents";
+import PreviewPanel from "../../communications/components/PreviewPanel";
 import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
 import {
   insertVariableAtCursor,
@@ -894,7 +895,7 @@ export default function OfferCreativeStep({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Creative List */}
+          {/* Creative List - Left Column (1/3) */}
           <div className="lg:col-span-1">
             <div
               className={`bg-white ${tw.rounded} border border-gray-200 p-4`}
@@ -971,15 +972,12 @@ export default function OfferCreativeStep({
             </div>
           </div>
 
-          {/* Creative Editor */}
-          <div className="lg:col-span-2">
+          {/* Creative Editor - Center Column (1/3) */}
+          <div className="lg:col-span-1">
             {selectedCreativeData ? (
-              <div>
-                {/* Message Editor */}
-                <div>
-                  <div
-                    className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
-                  >
+              <div
+                className={`bg-white ${tw.rounded} border border-gray-200 p-6`}
+              >
                     <div className="space-y-6">
                   {/* Channel Selection */}
                   <div>
@@ -1300,7 +1298,7 @@ export default function OfferCreativeStep({
                         {t.offers.messageBody.label}
                         {selectedCreativeData.channel === "SMS" && (
                           <span className="text-xs font-normal text-gray-500 ml-2">
-                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters, {getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} segment{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments !== 1 ? 's' : ''})
+                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments > 1 ? `, ${getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} segments` : ''})
                           </span>
                         )}
                       </label>
@@ -1383,6 +1381,19 @@ export default function OfferCreativeStep({
               </div>
             )}
           </div>
+
+          {/* Preview Panel - Right Column (1/3) */}
+          {selectedCreativeData && (
+            <div className="lg:col-span-1">
+              <div className="sticky top-4">
+                <PreviewPanel
+                  channel={selectedCreativeData.channel === "SMS" ? "SMS" : selectedCreativeData.channel === "Email" ? "EMAIL" : selectedCreativeData.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
+                  title={selectedCreativeData.title}
+                  body={selectedCreativeData.text_body || ""}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
