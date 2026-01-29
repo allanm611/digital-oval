@@ -594,11 +594,8 @@ export default function Sidebar({
     .map((item) => item.name.toLowerCase());
 
   const toggleExpanded = (itemName: string, exclusiveItems?: string[]) => {
-    console.log("toggleExpanded called:", { itemName, isMinimized, exclusiveItems });
     setExpandedItems((prev) => {
-      console.log("Current expandedItems:", prev);
       if (prev.includes(itemName)) {
-        console.log("Removing item:", itemName);
         return prev.filter((item) => item !== itemName);
       }
 
@@ -606,9 +603,7 @@ export default function Sidebar({
         ? prev.filter((item) => !exclusiveItems.includes(item))
         : prev;
 
-      const newItems = [...filtered, itemName];
-      console.log("New expandedItems:", newItems);
-      return newItems;
+      return [...filtered, itemName];
     });
   };
 
@@ -1016,7 +1011,6 @@ export default function Sidebar({
                 if (item.type === "parent") {
                   const itemLowerName = item.name.toLowerCase();
                   const isExpanded = expandedItems.includes(itemLowerName);
-                  console.log("Parent item render:", { itemName: item.name, itemLowerName, isExpanded, isMinimized, expandedItems });
 
                   return (
                     <li
@@ -1029,13 +1023,12 @@ export default function Sidebar({
                       }}
                     >
                       <button
-                        onClick={() => {
-                          console.log("Parent button clicked:", item.name);
+                        onClick={() =>
                           toggleExpanded(
                             item.name.toLowerCase(),
                             parentItemNames,
-                          );
-                        }}
+                          )
+                        }
                         className={`group w-full flex items-center ${
                           isMinimized
                             ? "md:justify-center xl:justify-center"
@@ -1084,27 +1077,13 @@ export default function Sidebar({
                       </div>
 
                       <div
-                        className={`${
-                          isMinimized
-                            ? `fixed bg-gray-900 rounded-lg shadow-2xl p-3 z-[9998] min-w-fit transition-opacity duration-200 ${
-                                isExpanded ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
-                              }`
-                            : `overflow-hidden transition-all duration-300 ease-in-out ${
-                                isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-                              }`
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
                         }`}
-                        style={isMinimized && isExpanded ? {
-                          top: '150px',
-                          left: '120px',
-                          border: '2px solid rgba(255,255,255,0.1)'
-                        } : {}}
                       >
-                        {console.log("Submenu container for", item.name, "isExpanded:", isExpanded, "isMinimized:", isMinimized)}
                         <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
-                          {console.log("Rendering children for", item.name, "count:", item.children?.length)}
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
-                            console.log("Rendering child:", child.name);
                             const isChildActive =
                               location.pathname === child.href;
                             // Check if child has its own children (nested dropdown)
