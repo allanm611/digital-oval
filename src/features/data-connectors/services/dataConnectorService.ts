@@ -29,13 +29,13 @@ const mockConnectors: DataConnector[] = [
     connectionCount: 15,
     config: {
       type: "jdbc",
-      hostname: "db.example.com",
+      hostname: "db.effortel.internal",
       port: 5432,
       database: "customer_db",
       username: "db_user",
       password: "********",
       driver: "postgresql",
-      connectionString: "jdbc:postgresql://db.example.com:5432/customer_db",
+      connectionString: "jdbc:postgresql://db.effortel.internal:5432/customer_db",
     } as JDBCConfig,
   },
   {
@@ -50,11 +50,11 @@ const mockConnectors: DataConnector[] = [
     connectionCount: 3,
     config: {
       type: "api",
-      url: "https://api.example.com/v1",
+      url: "https://api.effortel.io/v1",
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "Sentra/1.0",
+        "User-Agent": "Effortel/1.0",
       },
       authentication: {
         type: "bearer",
@@ -115,13 +115,13 @@ const mockConnectors: DataConnector[] = [
     config: {
       type: "kafka",
       brokers: [
-        "kafka-1.example.com:9092",
-        "kafka-2.example.com:9092",
-        "kafka-3.example.com:9092",
+        "kafka-1.effortel.internal:9092",
+        "kafka-2.effortel.internal:9092",
+        "kafka-3.effortel.internal:9092",
       ],
       topics: ["customer_events", "orders"],
-      groupId: "sentra-consumer-group",
-      clientId: "sentra-client-1",
+      groupId: "effortel-consumer-group",
+      clientId: "effortel-client-1",
     } as KafkaConfig,
   },
   {
@@ -136,7 +136,7 @@ const mockConnectors: DataConnector[] = [
     connectionCount: 4,
     config: {
       type: "websocket",
-      url: "wss://events.example.com/stream",
+      url: "wss://events.effortel.io/stream",
       protocols: ["chat", "superchat"],
       reconnect: true,
       reconnectInterval: 5000,
