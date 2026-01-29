@@ -1138,10 +1138,11 @@ export default function Sidebar({
 
                                   {isChildExpanded && (
                                     <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
-                                      {child.children?.map((grandchild) => {
+                                      {child.children?.map((grandchild, gcIndex) => {
                                         const GrandchildIcon = grandchild.icon;
                                         const isGrandchildActive =
                                           location.pathname === grandchild.href;
+                                        const isLastGrandchild = gcIndex === child.children!.length - 1;
                                         return (
                                           <li
                                             key={grandchild.name}
@@ -1154,7 +1155,7 @@ export default function Sidebar({
                                                 tw.rounded
                                               } text-sm transition-all duration-200 ${getItemClasses(
                                                 isGrandchildActive,
-                                              )}`}
+                                              )} ${isMinimized && isLastGrandchild ? "border-b border-white/20" : ""}`}
                                               title={grandchild.name}
                                             >
                                               <GrandchildIcon
@@ -1162,7 +1163,7 @@ export default function Sidebar({
                                                   isGrandchildActive,
                                                 )}`}
                                               />
-                                              <span className="hidden xl:block">
+                                              <span className={`${isMinimized ? "hidden" : "hidden xl:block"}`}>
                                                 {grandchild.name}
                                               </span>
                                             </Link>
@@ -1189,6 +1190,7 @@ export default function Sidebar({
                             }
 
                             // Regular child item (no nested children)
+                            const isLastChild = item.children && index === item.children.length - 1;
                             return (
                               <li key={child.name} className="relative group">
                                 <Link
@@ -1200,7 +1202,7 @@ export default function Sidebar({
                                     isChildActive
                                       ? getItemClasses(isChildActive)
                                       : getItemClasses(false)
-                                  }`}
+                                  } ${isMinimized && isLastChild ? "border-b border-white/20" : ""}`}
                                   title={child.name}
                                 >
                                   <ChildIcon
@@ -1208,7 +1210,7 @@ export default function Sidebar({
                                       isChildActive,
                                     )}`}
                                   />
-                                  <span className="hidden xl:block">
+                                  <span className={`${isMinimized ? "hidden" : "hidden xl:block"}`}>
                                     {child.name}
                                   </span>
                                 </Link>
