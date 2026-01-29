@@ -1081,7 +1081,7 @@ export default function Sidebar({
                           isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
-                        <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
+                        <ul className={`${isMinimized ? "flex flex-col md:space-y-4 xl:space-y-2" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
                             const isChildActive =
@@ -1137,7 +1137,7 @@ export default function Sidebar({
                                   </div>
 
                                   {isChildExpanded && (
-                                    <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
+                                    <ul className={`${isMinimized ? "flex flex-col md:space-y-4 xl:space-y-2" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
                                       {child.children?.map((grandchild, gcIndex) => {
                                         const GrandchildIcon = grandchild.icon;
                                         const isGrandchildActive =
