@@ -1086,14 +1086,18 @@ export default function Sidebar({
                       <div
                         className={`${
                           isMinimized
-                            ? `absolute left-full ml-2 top-0 bg-gray-900 rounded-lg shadow-xl p-2 z-50 min-w-max transition-opacity duration-200 ${
-                                isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                            ? `fixed bg-gray-900 rounded-lg shadow-2xl p-3 z-[9998] min-w-fit transition-opacity duration-200 ${
+                                isExpanded ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
                               }`
                             : `overflow-hidden transition-all duration-300 ease-in-out ${
                                 isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
                               }`
                         }`}
-                        style={{ visibility: isExpanded ? 'visible' : 'hidden' }}
+                        style={isMinimized && isExpanded ? {
+                          top: '150px',
+                          left: '120px',
+                          border: '2px solid rgba(255,255,255,0.1)'
+                        } : {}}
                       >
                         {console.log("Submenu container for", item.name, "isExpanded:", isExpanded, "isMinimized:", isMinimized)}
                         <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
