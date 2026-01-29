@@ -10,38 +10,36 @@ import {
 } from "lucide-react";
 import { ConnectorIconMapping, DataConnectorType } from "../types";
 
+const ACCENT_COLOR = "#00BBCC";
+
 export const connectorIcons: ConnectorIconMapping = {
   tcp: {
     icon: Network,
-    color: "text-blue-600",
+    color: ACCENT_COLOR,
   },
   websocket: {
     icon: Radio,
-    color: "text-purple-600",
+    color: ACCENT_COLOR,
   },
   kafka: {
     icon: Zap,
-    color: "text-yellow-600",
+    color: ACCENT_COLOR,
   },
   jdbc: {
     icon: Database,
-    color: "text-green-600",
+    color: ACCENT_COLOR,
   },
   sms_inbox: {
     icon: MessageSquare,
-    color: "text-orange-600",
+    color: ACCENT_COLOR,
   },
   api: {
     icon: Globe,
-    color: "text-cyan-600",
+    color: ACCENT_COLOR,
   },
   files: {
     icon: FileText,
-    color: "text-indigo-600",
-  },
-  digital_tags: {
-    icon: Tag,
-    color: "text-rose-600",
+    color: ACCENT_COLOR,
   },
 };
 
@@ -58,7 +56,6 @@ export const getConnectorDisplayName = (type: DataConnectorType): string => {
     sms_inbox: "SMS Inbox",
     api: "API",
     files: "Files",
-    digital_tags: "Digital Plus Tags",
   };
 
   return displayNames[type] || type;
@@ -73,7 +70,6 @@ export const getConnectorDescription = (type: DataConnectorType): string => {
     sms_inbox: "SMS inbox integration",
     api: "Integrate with REST and GraphQL APIs",
     files: "File upload and processing",
-    digital_tags: "Web and tag-based event collection",
   };
 
   return descriptions[type] || "Data connector";

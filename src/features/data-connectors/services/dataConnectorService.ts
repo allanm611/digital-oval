@@ -20,7 +20,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "2",
-    name: "REST API Integration",
+    name: "API",
     type: "api",
     description: getConnectorDescription("api"),
     icon: getConnectorIcon("api").icon,
@@ -31,7 +31,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "3",
-    name: "SMS inbox integration",
+    name: "Sms inbox",
     type: "sms_inbox",
     description: getConnectorDescription("sms_inbox"),
     icon: getConnectorIcon("sms_inbox").icon,
@@ -42,7 +42,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "4",
-    name: "TCP Connections",
+    name: "TCP",
     type: "tcp",
     description: getConnectorDescription("tcp"),
     icon: getConnectorIcon("tcp").icon,
@@ -53,7 +53,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "5",
-    name: "Kafka Message Stream",
+    name: "Kafka",
     type: "kafka",
     description: getConnectorDescription("kafka"),
     icon: getConnectorIcon("kafka").icon,
@@ -64,7 +64,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "6",
-    name: "websocket Endpoint",
+    name: "Websocket",
     type: "websocket",
     description: getConnectorDescription("websocket"),
     icon: getConnectorIcon("websocket").icon,
@@ -75,7 +75,7 @@ const mockConnectors: DataConnector[] = [
   },
   {
     id: "7",
-    name: "Local file system",
+    name: "File",
     type: "files",
     description: getConnectorDescription("files"),
     icon: getConnectorIcon("files").icon,
@@ -83,17 +83,6 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2026-01-11"),
     connectionCount: 2,
-  },
-  {
-    id: "8",
-    name: "Digital Plus Tags",
-    type: "digital_tags",
-    description: getConnectorDescription("digital_tags"),
-    icon: getConnectorIcon("digital_tags").icon,
-    color: getConnectorIcon("digital_tags").color,
-    isActive: true,
-    lastUsed: new Date("2026-01-19"),
-    connectionCount: 8,
   },
 ];
 

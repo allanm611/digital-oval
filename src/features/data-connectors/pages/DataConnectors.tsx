@@ -9,17 +9,13 @@ import {
   Layers,
   MoreVertical,
   Eye,
-  Trash2,
   Copy,
   Download,
   Upload,
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
-import {
-  getConnectorDisplayName,
-  getConnectorIcon,
-} from "../utils/connectorIcons";
+import { getConnectorIcon } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 
@@ -244,12 +240,6 @@ export default function DataConnectors() {
                     className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Type
-                  </th>
-                  <th
-                    className="px-6 py-4 text-left text-xs sm:text-sm font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
                     Status
                   </th>
                   <th
@@ -277,7 +267,7 @@ export default function DataConnectors() {
                   <tr>
                     <td
                       className={`px-6 py-6 text-sm ${tw.textSecondary}`}
-                      colSpan={6}
+                      colSpan={5}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       No data connectors found. Get started by creating your
@@ -297,7 +287,8 @@ export default function DataConnectors() {
                               const IconComp = connector.icon;
                               return (
                                 <IconComp
-                                  className={`h-5 w-5 ${getConnectorIcon(connector.type).color}`}
+                                  className="h-5 w-5"
+                                  style={{ color: getConnectorIcon(connector.type).color }}
                                 />
                               );
                             })()}
@@ -313,14 +304,6 @@ export default function DataConnectors() {
                             </span> */}
                           </div>
                         </div>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className={tw.textPrimary}>
-                          {getConnectorDisplayName(connector.type)}
-                        </span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm"
@@ -359,15 +342,6 @@ export default function DataConnectors() {
                             title="View details"
                           >
                             <Eye className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) =>
-                              handleMenuAction(e, "delete", connector)
-                            }
-                            className={`group p-3 ${tw.rounded} ${tw.textSecondary} hover:bg-red-50 transition-all duration-200`}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" style={{ color: "#ef4444" }} />
                           </button>
                           <div className="relative">
                             <button
