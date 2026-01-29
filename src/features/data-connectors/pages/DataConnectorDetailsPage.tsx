@@ -156,7 +156,7 @@ export default function DataConnectorDetailsPage() {
         className={`${tw.rounded} border border-gray-200 shadow-sm p-6 bg-white`}
       >
         {/* Header with Back Button and Name */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between ">
           <div className="flex items-center gap-4">
             <BackButton fallbackTo="/dashboard/data-connectors" />
             <h1 className="text-2xl font-bold text-black">{connector.name}</h1>
