@@ -1,4 +1,4 @@
-import { Plug } from "lucide-react";
+import { Plug, Edit, Trash2 } from "lucide-react";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { DataConnectorType } from "../types";
 
@@ -15,6 +15,8 @@ interface ConnectionProfilesSectionProps {
   profiles: ConnectionProfile[];
   onAddProfile: () => void;
   onProfileClick: (profileId: number) => void;
+  onEditProfile?: (profileId: number) => void;
+  onDeleteProfile?: (profileId: number) => void;
 }
 
 export default function ConnectionProfilesSection({
@@ -23,6 +25,8 @@ export default function ConnectionProfilesSection({
   profiles,
   onAddProfile,
   onProfileClick,
+  onEditProfile,
+  onDeleteProfile,
 }: ConnectionProfilesSectionProps) {
   return (
     <div className="space-y-4">
@@ -68,31 +72,42 @@ export default function ConnectionProfilesSection({
                   <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
                     Status
                   </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {profiles.map((profile) => (
                   <tr
                     key={profile.id}
-                    onClick={() => onProfileClick(profile.id)}
-                    className="transition-colors cursor-pointer hover:opacity-80"
+                    className="transition-colors hover:opacity-80"
                     style={{ backgroundColor: "transparent" }}
                   >
                     <td
-                      className="px-6 py-4 font-medium text-sm text-black"
+                      className="px-6 py-4 font-medium text-sm text-black cursor-pointer"
                       style={{
                         backgroundColor: color.surface.tablebodybg,
                         borderTopLeftRadius: "0.375rem",
                         borderBottomLeftRadius: "0.375rem",
                       }}
+                      onClick={() => onProfileClick(profile.id)}
                     >
                       {profile.name}
                     </td>
                     <td
-                      className="px-6 py-4 text-sm text-black"
+                      className="px-6 py-4 text-sm text-black cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => onProfileClick(profile.id)}
                     >
                       {profile.type}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-black cursor-pointer"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => onProfileClick(profile.id)}
+                    >
+                      {profile.is_active ? "Active" : "Inactive"}
                     </td>
                     <td
                       className="px-6 py-4 text-sm text-black"
@@ -102,7 +117,26 @@ export default function ConnectionProfilesSection({
                         borderBottomRightRadius: "0.375rem",
                       }}
                     >
-                      {profile.is_active ? "Active" : "Inactive"}
+                      <div className="flex gap-2">
+                        {onEditProfile && (
+                          <button
+                            onClick={() => onEditProfile(profile.id)}
+                            className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title="Edit profile"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        )}
+                        {onDeleteProfile && (
+                          <button
+                            onClick={() => onDeleteProfile(profile.id)}
+                            className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                            title="Delete profile"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -147,13 +147,11 @@ export default function ConnectorConfigDisplay({
             <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
               Headers
             </label>
-            <div className={`${tw.rounded} bg-gray-50 p-3 text-sm`}>
-              {Object.entries(config.headers).map(([key, val]) => (
-                <div key={key} className="text-gray-700">
-                  <span className="font-medium">{key}:</span> {val}
-                </div>
-              ))}
-            </div>
+            {Object.entries(config.headers).map(([key, val]) => (
+              <div key={key} className="text-sm text-gray-700 mb-1">
+                <span className="font-medium">{key}:</span> {val}
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -350,13 +348,11 @@ export default function ConnectorConfigDisplay({
             <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
               Credentials
             </label>
-            <div className={`${tw.rounded} bg-gray-50 p-3 text-sm space-y-1`}>
-              {Object.entries(config.credentials).map(([key, val]) => (
-                <div key={key} className="text-gray-700">
-                  <span className="font-medium">{key}:</span> ••••••••
-                </div>
-              ))}
-            </div>
+            {Object.entries(config.credentials).map(([key, val]) => (
+              <div key={key} className="text-sm text-gray-700 mb-1">
+                <span className="font-medium">{key}:</span> ••••••••
+              </div>
+            ))}
           </div>
         )}
       </div>

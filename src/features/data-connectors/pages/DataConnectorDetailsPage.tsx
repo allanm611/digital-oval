@@ -124,6 +124,15 @@ export default function DataConnectorDetailsPage() {
     }
   };
 
+  const handleEditProfile = (profileId: number) => {
+    navigate(`/dashboard/connection-profiles/${profileId}/edit`);
+  };
+
+  const handleDeleteProfile = (profileId: number) => {
+    // TODO: Implement delete confirmation and API call
+    showError("Not Implemented", "Delete functionality coming soon");
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -207,7 +216,7 @@ export default function DataConnectorDetailsPage() {
         </div>
 
         {/* Basic Information Section */}
-        <div className="pt-4 border-t border-gray-200 space-y-4">
+        <div className="pt-4 space-y-4">
           <div>
             <p className="text-sm text-gray-600 mb-2">Description</p>
             {isEditMode && editFormData ? (
@@ -290,6 +299,8 @@ export default function DataConnectorDetailsPage() {
           profiles={connectionProfiles}
           onAddProfile={handleAddConnection}
           onProfileClick={handleProfileClick}
+          onEditProfile={handleEditProfile}
+          onDeleteProfile={handleDeleteProfile}
         />
       )}
 
