@@ -1074,11 +1074,15 @@ export default function Sidebar({
                       </div>
 
                       <div
-                        className={`${isMinimized ? "absolute left-full ml-2 top-0 bg-gray-900 rounded-lg shadow-xl p-2 z-50 min-w-max" : "overflow-hidden transition-all duration-300 ease-in-out"} ${
-                          !isMinimized && isExpanded
-                            ? "max-h-[1000px] opacity-100"
-                            : !isMinimized ? "max-h-0 opacity-0" : ""
-                        } ${isMinimized && isExpanded ? "opacity-100" : isMinimized ? "opacity-0 pointer-events-none" : ""}`}
+                        className={`${
+                          isMinimized
+                            ? `absolute left-full ml-2 top-0 bg-gray-900 rounded-lg shadow-xl p-2 z-50 min-w-max transition-opacity duration-200 ${
+                                isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
+                              }`
+                            : `overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+                              }`
+                        }`}
                       >
                         <ul className={`${isMinimized ? "flex flex-col space-y-1" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
                           {item.children?.map((child) => {
