@@ -11,6 +11,82 @@ export type DataConnectorType =
   | "files"
   | "digital_tags";
 
+// Type-specific configurations
+export interface JDBCConfig {
+  type: "jdbc";
+  hostname: string;
+  port: number;
+  database: string;
+  username: string;
+  password: string;
+  driver?: string;
+  connectionString?: string;
+}
+
+export interface APIConfig {
+  type: "api";
+  url: string;
+  method: "GET" | "POST" | "PUT" | "DELETE";
+  headers?: Record<string, string>;
+  authentication: {
+    type: "none" | "basic" | "bearer" | "api_key";
+    credentials?: Record<string, string>;
+  };
+}
+
+export interface TCPConfig {
+  type: "tcp";
+  host: string;
+  port: number;
+  protocol?: string;
+}
+
+export interface WebSocketConfig {
+  type: "websocket";
+  url: string;
+  protocols?: string[];
+  reconnect?: boolean;
+  reconnectInterval?: number;
+}
+
+export interface KafkaConfig {
+  type: "kafka";
+  brokers: string[];
+  topics: string[];
+  groupId?: string;
+  clientId?: string;
+}
+
+export interface FileConfig {
+  type: "files";
+  path: string;
+  fileType: "SFTP" | "FTP" | "S3" | "Azure Blob" | "Local";
+  credentials?: {
+    username?: string;
+    password?: string;
+    accessKey?: string;
+    secretKey?: string;
+  };
+}
+
+export interface SMSInboxConfig {
+  type: "sms_inbox";
+  provider: string;
+  credentials: Record<string, string>;
+  phoneNumber?: string;
+  apiEndpoint?: string;
+}
+
+// Discriminated union
+export type DataConnectorConfig =
+  | JDBCConfig
+  | APIConfig
+  | TCPConfig
+  | WebSocketConfig
+  | KafkaConfig
+  | FileConfig
+  | SMSInboxConfig;
+
 export interface DataConnector {
   id: string;
   name: string;
@@ -21,6 +97,7 @@ export interface DataConnector {
   isActive: boolean;
   lastUsed?: Date;
   connectionCount?: number;
+  config?: DataConnectorConfig;
 }
 
 export interface ConnectorIconMapping {

@@ -23,10 +23,16 @@ import { CONNECTION_TYPE_OPTIONS } from "../constants/connectionTypes";
 
 interface ConnectionProfileFormPageProps {
   mode: "create" | "edit";
+  defaultConnectionType?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
 export default function ConnectionProfileFormPage({
   mode,
+  defaultConnectionType,
+  onSuccess,
+  onCancel,
 }: ConnectionProfileFormPageProps) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -41,7 +47,7 @@ export default function ConnectionProfileFormPage({
   const [formData, setFormData] = useState<CreateConnectionProfilePayload>({
     profile_name: "",
     profile_code: "",
-    connection_type: "database",
+    connection_type: (defaultConnectionType || "database") as ConnectionTypeEnum,
     load_strategy: "full",
     environment: "development",
     batch_size: 1000,
@@ -166,7 +172,13 @@ export default function ConnectionProfileFormPage({
         success("Connection profile updated successfully");
       }
 
-      navigate("/dashboard/connection-profiles");
+      // Call onSuccess callback if provided (for modal use)
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        // Otherwise navigate to connection profiles list
+        navigate("/dashboard/connection-profiles");
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -574,9 +586,13 @@ export default function ConnectionProfileFormPage({
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
-            onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/connection-profiles")
-            }
+            onClick={() => {
+              if (onCancel) {
+                onCancel();
+              } else {
+                navigateBackOrFallback(navigate, "/dashboard/connection-profiles");
+              }
+            }}
             className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}
           >
             Cancel

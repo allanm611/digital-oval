@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Trash2, Plug } from "lucide-react";
+import { Edit, Trash2, X } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { DataConnector } from "../types";
@@ -8,6 +8,9 @@ import { fetchDataConnectorById } from "../services";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
+import ConnectionProfilesSection from "../components/ConnectionProfilesSection";
+import AddConnectionModal from "../components/AddConnectionModal";
 
 export default function DataConnectorDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +28,9 @@ export default function DataConnectorDetailsPage() {
     }>
   >([]);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editFormData, setEditFormData] = useState<DataConnector | null>(null);
+  const [isAddConnectionModalOpen, setIsAddConnectionModalOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -80,8 +86,22 @@ export default function DataConnectorDetailsPage() {
   };
 
   const handleEdit = () => {
-    // TODO: Implement edit functionality
-    showError("Not Implemented", "Edit functionality coming soon");
+    setIsEditMode(true);
+    setEditFormData(connector);
+  };
+
+  const handleSaveEdit = () => {
+    // TODO: Implement actual save to API
+    // For now, just update local state
+    if (editFormData) {
+      setConnector(editFormData);
+      setIsEditMode(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditFormData(null);
   };
 
   const handleDelete = () => {
@@ -91,6 +111,17 @@ export default function DataConnectorDetailsPage() {
 
   const handleProfileClick = (profileId: number) => {
     navigate(`/dashboard/connection-profiles/${profileId}`);
+  };
+
+  const handleAddConnection = () => {
+    setIsAddConnectionModalOpen(true);
+  };
+
+  const handleConnectionModalSuccess = () => {
+    // Refresh connection profiles list
+    if (id) {
+      loadConnector();
+    }
   };
 
   if (loading) {
@@ -121,133 +152,154 @@ export default function DataConnectorDetailsPage() {
             <BackButton fallbackTo="/dashboard/data-connectors" />
             <h1 className="text-2xl font-bold text-black">{connector.name}</h1>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleEdit}
-              className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white`}
-              style={{
-                backgroundColor: color.primary.action,
-                padding: `${button.action.paddingY} ${button.action.paddingX}`,
-              }}
-            >
-              <Edit className="h-4 w-4" />
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white hover:opacity-90`}
-              style={{
-                backgroundColor: "#ef4444",
-                padding: `${button.action.paddingY} ${button.action.paddingX}`,
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-          </div>
+          {!isEditMode && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleEdit}
+                className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white`}
+                style={{
+                  backgroundColor: color.primary.action,
+                  padding: `${button.action.paddingY} ${button.action.paddingX}`,
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white hover:opacity-90`}
+                style={{
+                  backgroundColor: "#ef4444",
+                  padding: `${button.action.paddingY} ${button.action.paddingX}`,
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
+            </div>
+          )}
+          {isEditMode && (
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveEdit}
+                className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white`}
+                style={{
+                  backgroundColor: color.primary.action,
+                  padding: `${button.action.paddingY} ${button.action.paddingX}`,
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                Save
+              </button>
+              <button
+                onClick={handleCancelEdit}
+                className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white`}
+                style={{
+                  backgroundColor: "#6b7280",
+                  padding: `${button.action.paddingY} ${button.action.paddingX}`,
+                }}
+              >
+                <X className="h-4 w-4" />
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Description */}
-        {connector.description && (
-          <div className="pt-4 border-t border-gray-200">
+        {/* Basic Information Section */}
+        <div className="pt-4 border-t border-gray-200 space-y-4">
+          <div>
             <p className="text-sm text-gray-600 mb-2">Description</p>
-            <p className="text-black">{connector.description}</p>
+            {isEditMode && editFormData ? (
+              <textarea
+                value={editFormData.description}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    description: e.target.value,
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                rows={3}
+              />
+            ) : (
+              <p className="text-black">{connector.description}</p>
+            )}
           </div>
+
+          {connector.lastUsed && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Last Used</p>
+                <p className="text-sm font-medium text-black">
+                  {new Date(connector.lastUsed).toLocaleDateString()}
+                </p>
+              </div>
+              {connector.connectionCount !== undefined && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Connection Profiles
+                  </p>
+                  <p className="text-sm font-medium text-black">
+                    {connector.connectionCount}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Configuration Section */}
+      <div
+        className={`${tw.rounded} border border-gray-200 shadow-sm p-6 bg-white`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-black">Configuration</h2>
+          {isEditMode && (
+            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded">
+              Editing Mode
+            </span>
+          )}
+        </div>
+        {editFormData ? (
+          <ConnectorConfigDisplay
+            connector={editFormData}
+            isEditMode={isEditMode}
+            onConfigChange={(field, value) => {
+              if (!editFormData.config) return;
+              setEditFormData({
+                ...editFormData,
+                config: {
+                  ...editFormData.config,
+                  [field]: value,
+                },
+              });
+            }}
+          />
+        ) : (
+          <ConnectorConfigDisplay connector={connector} isEditMode={false} />
         )}
       </div>
 
       {/* Connection Profiles Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-black">
-            Connection Profiles
-          </h2>
-          <button
-            className={`inline-flex items-center gap-2 ${tw.rounded} transition-colors text-white`}
-            style={{
-              backgroundColor: color.primary.action,
-              padding: `${button.action.paddingY} ${button.action.paddingX}`,
-              fontSize: button.action.fontSize,
-            }}
-            onClick={() =>
-              showError(
-                "Not implemented",
-                "Add connection functionality coming soon",
-              )
-            }
-          >
-            + Add Profile
-          </button>
-        </div>
-        {connectionProfiles.length === 0 ? (
-          <div
-            className={`${tw.rounded} border border-gray-200 p-6 text-center `}
-          >
-            <Plug className="h-10 w-10 mx-auto mb-2 text-gray-400" />
-            <p className="text-gray-600">No connection profiles yet</p>
-          </div>
-        ) : (
-          <div className={`${tw.rounded}  overflow-hidden `}>
-            <div className="overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ backgroundColor: color.surface.tableHeader }}>
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                      Name
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                      Type
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-black">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {connectionProfiles.map((profile) => (
-                    <tr
-                      key={profile.id}
-                      onClick={() => handleProfileClick(profile.id)}
-                      className="transition-colors cursor-pointer hover:opacity-80"
-                      style={{ backgroundColor: "transparent" }}
-                    >
-                      <td
-                        className="px-6 py-4 font-medium text-sm text-black"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopLeftRadius: "0.375rem",
-                          borderBottomLeftRadius: "0.375rem",
-                        }}
-                      >
-                        {profile.name}
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        Database
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm text-black"
-                        style={{
-                          backgroundColor: color.surface.tablebodybg,
-                          borderTopRightRadius: "0.375rem",
-                          borderBottomRightRadius: "0.375rem",
-                        }}
-                      >
-                        {profile.is_active ? "Active" : "Inactive"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+      {!isEditMode && (
+        <ConnectionProfilesSection
+          connectorId={connector.id}
+          connectorType={connector.type}
+          profiles={connectionProfiles}
+          onAddProfile={handleAddConnection}
+          onProfileClick={handleProfileClick}
+        />
+      )}
+
+      {/* Add Connection Modal */}
+      <AddConnectionModal
+        isOpen={isAddConnectionModalOpen}
+        onClose={() => setIsAddConnectionModalOpen(false)}
+        connectorType={connector.type}
+        onSuccess={handleConnectionModalSuccess}
+      />
     </div>
   );
 }

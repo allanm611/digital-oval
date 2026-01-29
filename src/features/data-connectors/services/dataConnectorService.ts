@@ -1,4 +1,14 @@
-import { DataConnector, DataConnectorType } from "../types";
+import {
+  DataConnector,
+  DataConnectorType,
+  JDBCConfig,
+  APIConfig,
+  TCPConfig,
+  WebSocketConfig,
+  KafkaConfig,
+  FileConfig,
+  SMSInboxConfig,
+} from "../types";
 import {
   getConnectorIcon,
   getConnectorDisplayName,
@@ -17,6 +27,16 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2026-01-20"),
     connectionCount: 15,
+    config: {
+      type: "jdbc",
+      hostname: "db.example.com",
+      port: 5432,
+      database: "customer_db",
+      username: "db_user",
+      password: "********",
+      driver: "postgresql",
+      connectionString: "jdbc:postgresql://db.example.com:5432/customer_db",
+    } as JDBCConfig,
   },
   {
     id: "2",
@@ -28,6 +48,21 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2026-01-14"),
     connectionCount: 3,
+    config: {
+      type: "api",
+      url: "https://api.example.com/v1",
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Sentra/1.0",
+      },
+      authentication: {
+        type: "bearer",
+        credentials: {
+          token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        },
+      },
+    } as APIConfig,
   },
   {
     id: "3",
@@ -39,6 +74,16 @@ const mockConnectors: DataConnector[] = [
     isActive: false,
     lastUsed: new Date("2026-01-10"),
     connectionCount: 1,
+    config: {
+      type: "sms_inbox",
+      provider: "Twilio",
+      credentials: {
+        accountSid: "AC****",
+        authToken: "********",
+      },
+      phoneNumber: "+1234567890",
+      apiEndpoint: "https://api.twilio.com",
+    } as SMSInboxConfig,
   },
   {
     id: "4",
@@ -50,6 +95,12 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2024-01-13"),
     connectionCount: 7,
+    config: {
+      type: "tcp",
+      host: "10.0.0.5",
+      port: 9000,
+      protocol: "tcp/ip",
+    } as TCPConfig,
   },
   {
     id: "5",
@@ -61,6 +112,17 @@ const mockConnectors: DataConnector[] = [
     isActive: false,
     lastUsed: new Date("2026-01-17"),
     connectionCount: 250,
+    config: {
+      type: "kafka",
+      brokers: [
+        "kafka-1.example.com:9092",
+        "kafka-2.example.com:9092",
+        "kafka-3.example.com:9092",
+      ],
+      topics: ["customer_events", "orders"],
+      groupId: "sentra-consumer-group",
+      clientId: "sentra-client-1",
+    } as KafkaConfig,
   },
   {
     id: "6",
@@ -72,6 +134,13 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2024-01-16"),
     connectionCount: 4,
+    config: {
+      type: "websocket",
+      url: "wss://events.example.com/stream",
+      protocols: ["chat", "superchat"],
+      reconnect: true,
+      reconnectInterval: 5000,
+    } as WebSocketConfig,
   },
   {
     id: "7",
@@ -83,6 +152,15 @@ const mockConnectors: DataConnector[] = [
     isActive: true,
     lastUsed: new Date("2026-01-11"),
     connectionCount: 2,
+    config: {
+      type: "files",
+      path: "/data/uploads/customer_data",
+      fileType: "SFTP",
+      credentials: {
+        username: "sftp_user",
+        password: "********",
+      },
+    } as FileConfig,
   },
 ];
 

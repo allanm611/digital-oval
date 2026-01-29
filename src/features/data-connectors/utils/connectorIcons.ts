@@ -6,7 +6,6 @@ import {
   MessageSquare,
   Globe,
   FileText,
-  Tag,
 } from "lucide-react";
 import { ConnectorIconMapping, DataConnectorType } from "../types";
 
@@ -56,6 +55,7 @@ export const getConnectorDisplayName = (type: DataConnectorType): string => {
     sms_inbox: "SMS Inbox",
     api: "API",
     files: "Files",
+    digital_tags: "Digital Tags",
   };
 
   return displayNames[type] || type;
@@ -70,6 +70,7 @@ export const getConnectorDescription = (type: DataConnectorType): string => {
     sms_inbox: "SMS inbox integration",
     api: "Integrate with REST and GraphQL APIs",
     files: "File upload and processing",
+    digital_tags: "Digital tags integration",
   };
 
   return descriptions[type] || "Data connector";
