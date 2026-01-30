@@ -35,8 +35,8 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import type {
   CustomerRow,
   CustomerSearchResultsResponse,
-} from "../types/ReportsAPI";
-import type { CustomerWithContact } from "../types/ReportsAPI";
+} from "../../reports-analytics/types/ReportsAPI";
+import type { CustomerWithContact } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import {
   convertSubscriptionToCustomerRow,

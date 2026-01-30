@@ -479,6 +479,13 @@ export default function Sidebar({
             type: "single",
             entity: "servers",
           },
+          {
+            name: t.sidebar.navigation.kpis,
+            href: "/dashboard/kpis",
+            icon: TrendingUp,
+            type: "single",
+            entity: "servers",
+          },
         ],
       },
 

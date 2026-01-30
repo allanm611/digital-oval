@@ -68,10 +68,7 @@ export default function SystemEventPickerModal({
         className={`bg-white ${tw.rounded} shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col`}
       >
         {/* Header */}
-        <div
-          className="px-6 py-4 border-b flex items-center justify-between"
-          style={{ borderColor: color.border.default }}
-        >
+        <div className="px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
               Select Communication Event
@@ -89,10 +86,7 @@ export default function SystemEventPickerModal({
         </div>
 
         {/* Filters */}
-        <div
-          className="px-6 py-4 border-b space-y-4"
-          style={{ borderColor: color.border.default }}
-        >
+        <div className="px-6 py-4 space-y-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -202,14 +196,7 @@ export default function SystemEventPickerModal({
         </div>
 
         {/* Footer */}
-        <div
-          className="px-6 py-4 border-t flex items-center justify-between"
-          style={{ borderColor: color.border.default }}
-        >
-          <p className={`text-sm ${tw.textSecondary}`}>
-            {filteredEvents.length} event
-            {filteredEvents.length !== 1 ? "s" : ""} available
-          </p>
+        <div className="px-6 py-4 flex items-center justify-end">
           <button
             onClick={onClose}
             className={`px-4 py-2 ${tw.rounded} border font-medium transition-all`}

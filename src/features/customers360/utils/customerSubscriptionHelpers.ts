@@ -1,4 +1,4 @@
-import type { CustomerRow } from "../types/ReportsAPI";
+import type { CustomerRow } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 
 export const getSubscriptionDisplayName = (

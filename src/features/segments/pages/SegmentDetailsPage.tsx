@@ -34,12 +34,12 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import {
   customerSubscriptions,
   searchCustomers as searchCustomersUtil,
-} from "../../dashboard/utils/customerDataService";
+} from "../../customers360/utils/customerDataService";
 import {
   getSubscriptionDisplayName,
   formatMsisdn,
-} from "../../dashboard/utils/customerSubscriptionHelpers";
-import type { CustomerSubscriptionRecord } from "../../dashboard/types/customerSubscription";
+} from "../../customers360/utils/customerSubscriptionHelpers";
+import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
 
 export default function SegmentDetailsPage() {
   const { id } = useParams<{ id: string }>();

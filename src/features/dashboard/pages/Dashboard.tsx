@@ -376,7 +376,7 @@ const JobPages = {
 const UserPages = {
   UserManagementPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../components/UserManagementPage"),
+      import(/* webpackPrefetch: true */ "../../users/pages/UserManagementPage"),
   ),
   UserDetailsPage: lazy(
     () =>
@@ -391,12 +391,12 @@ const UserPages = {
 // Settings & Configuration Pages - All routes preloaded for instant access
 const SettingsPages = {
   ConfigurationPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../components/ConfigurationPage"),
+    () => import(/* webpackPrefetch: true */ "../../configurations/pages/ConfigurationPage"),
   ),
   ConfigurationDetailsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../components/ConfigurationDetailsPage"
+        /* webpackPrefetch: true */ "../../configurations/pages/ConfigurationDetailsPage"
       ),
   ),
   SettingsPage: lazy(
@@ -469,6 +469,10 @@ const ServerPages = {
         /* webpackPrefetch: true */ "../../connection-profiles/pages/ConnectionProfilesAnalyticsPage"
       ),
   ),
+  KPIsPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsPage"),
+  ),
 };
 
 // ETL Pages - All routes preloaded for instant access
@@ -491,7 +495,7 @@ const EtlPages = {
 
 // Analytics & Reports Pages - All routes preloaded for instant access
 // Using Suspense wrapper for faster perceived loading
-import CustomersPageWrapper from "./CustomersPageWrapper";
+import CustomersPageWrapper from "../../customers360/pages/CustomersPageWrapper";
 
 const AnalyticsPages = {
   OverallDashboardPerformancePage: lazy(
@@ -499,23 +503,23 @@ const AnalyticsPages = {
       import(/* webpackPrefetch: true */ "./OverallDashboardPerformancePage"),
   ),
   CustomerProfileReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CustomerProfileReportsPage"),
+    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/CustomerProfileReportsPage"),
   ),
   CustomersPage: CustomersPageWrapper,
   CustomerSearchResultsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CustomerSearchResultsPage"),
+    () => import(/* webpackPrefetch: true */ "../../customers360/pages/CustomerSearchResultsPage"),
   ),
   CampaignReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./CampaignReportsPage"),
+    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/CampaignReportsPage"),
   ),
   DeliverySMSReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./DeliverySMSReportsPage"),
+    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/DeliverySMSReportsPage"),
   ),
   DeliveryEmailReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./DeliveryEmailReportsPage"),
+    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/DeliveryEmailReportsPage"),
   ),
   OfferReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "./OfferReportsPage"),
+    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"),
   ),
 };
 
@@ -578,13 +582,13 @@ const OtherPages = {
   CustomerIdentityPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../customer/pages/CustomerIdentityPage"
+        /* webpackPrefetch: true */ "../../customerIdentity/pages/CustomerIdentityPage"
       ),
   ),
   CustomerIdentityFieldDetailsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../customer/pages/CustomerIdentityFieldDetailsPage"
+        /* webpackPrefetch: true */ "../../customerIdentity/pages/CustomerIdentityFieldDetailsPage"
       ),
   ),
   SearchResultsPage: lazy(
@@ -931,6 +935,7 @@ export default function Dashboard() {
             path="/data-connectors/:id"
             element={<ServerPages.DataConnectorDetailsPage />}
           />
+          <Route path="/kpis" element={<ServerPages.KPIsPage />} />
           <Route path="/jobs" element={<JobPages.ScheduledJobsPage />} />
           <Route
             path="/scheduled-jobs"

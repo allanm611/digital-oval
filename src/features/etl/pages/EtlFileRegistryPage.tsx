@@ -12,6 +12,8 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
+  Upload,
+  X,
 } from "lucide-react";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
@@ -19,7 +21,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import FetchControlsModal from "../components/FetchControlsModal";
@@ -41,6 +43,16 @@ export default function EtlFileRegistryPage() {
   const [fetchModalMode, setFetchModalMode] = useState<FetchMode | null>(null);
   const [isFetchModalOpen, setIsFetchModalOpen] = useState(false);
   const [showFetchDropdown, setShowFetchDropdown] = useState(false);
+
+  // Upload modal
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadCategory, setUploadCategory] = useState<"CDR" | "TDR">("CDR");
+  const [uploadFormat, setUploadFormat] = useState<"CSV" | "Excel">("CSV");
+  const [uploadPreview, setUploadPreview] = useState<{
+    headers: string[];
+    rows: Record<string, string>[];
+  } | null>(null);
 
   // Stats
   const [stats, setStats] = useState<FileStatsResponse | null>(null);
@@ -193,8 +205,8 @@ export default function EtlFileRegistryPage() {
             <button
               type="button"
               onClick={() => setShowFetchDropdown(!showFetchDropdown)}
-              className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-              style={{ backgroundColor: color.primary.action }}
+              className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+              style={{ backgroundColor: color.primary.action, padding: `${button.action.paddingY} ${button.action.paddingX}` }}
             >
               <Play className="h-4 w-4" />
               {t.etl.fetchControlsButton}
@@ -237,9 +249,22 @@ export default function EtlFileRegistryPage() {
 
           <button
             type="button"
+            onClick={() => setIsUploadModalOpen(true)}
+            className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+            style={{ backgroundColor: color.primary.action, padding: `${button.action.paddingY} ${button.action.paddingX}` }}
+          >
+            <Upload className="h-4 w-4" />
+            Upload
+          </button>
+
+          <button
+            type="button"
             onClick={() => navigate("/dashboard/etl/analytics")}
-            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white ${tw.rounded}`}
-            style={{ backgroundColor: color.primary.action }}
+            className={`inline-flex items-center gap-2 ${tw.borderedButton}`}
+            style={{
+              borderColor: color.primary.action,
+              color: color.primary.action,
+            }}
           >
             <BarChart3 className="h-4 w-4" />
             {t.etl.analytics}
@@ -551,6 +576,212 @@ export default function EtlFileRegistryPage() {
           loadStats();
         }}
       />
+
+      {/* Upload Modal */}
+      {isUploadModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div
+            className={`bg-white ${tw.rounded} shadow-lg w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                Upload CDR/TDR File
+              </h2>
+              <button
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setUploadFile(null);
+                  setUploadPreview(null);
+                }}
+                className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* File Input */}
+            <div>
+              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+                Select File
+              </label>
+              <div
+                className={`border-2 border-dashed ${tw.rounded} p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors`}
+                style={{ borderColor: color.border.default }}
+                onClick={() => document.getElementById("file-input")?.click()}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {uploadFile ? uploadFile.name : "Click to select or drag file"}
+                </p>
+                <p className={`text-xs ${tw.textMuted} mt-1`}>
+                  CSV or Excel file
+                </p>
+              </div>
+              <input
+                id="file-input"
+                type="file"
+                accept=".csv,.xlsx,.xls"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  setUploadFile(file || null);
+
+                  // Parse file for preview
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const content = event.target?.result as string;
+                        const lines = content.split('\n').filter(line => line.trim());
+
+                        if (lines.length > 0) {
+                          // Parse headers from first line
+                          const delimiter = uploadFormat === 'CSV' ? ',' : ',';
+                          const headers = lines[0].split(delimiter).map(h => h.trim());
+
+                          // Parse up to 5 rows for preview
+                          const rows = lines.slice(1, 6).map(line => {
+                            const values = line.split(delimiter).map(v => v.trim());
+                            const row: Record<string, string> = {};
+                            headers.forEach((header, idx) => {
+                              row[header] = values[idx] || '';
+                            });
+                            return row;
+                          });
+
+                          setUploadPreview({ headers, rows });
+                        }
+                      } catch (err) {
+                        console.error('Failed to parse file:', err);
+                        setUploadPreview(null);
+                      }
+                    };
+                    reader.readAsText(file);
+                  } else {
+                    setUploadPreview(null);
+                  }
+                }}
+                className="hidden"
+              />
+            </div>
+
+            {/* File Category */}
+            <div>
+              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+                File Category
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "CDR", label: "CDR" },
+                  { value: "TDR", label: "TDR" },
+                ]}
+                value={uploadCategory}
+                onChange={(val) => setUploadCategory((val as "CDR" | "TDR") || "CDR")}
+                placeholder="Select category"
+                className="w-full"
+              />
+            </div>
+
+            {/* File Format */}
+            <div>
+              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+                File Format
+              </label>
+              <HeadlessSelect
+                options={[
+                  { value: "CSV", label: "CSV" },
+                  { value: "Excel", label: "Excel (.xlsx)" },
+                ]}
+                value={uploadFormat}
+                onChange={(val) => setUploadFormat((val as "CSV" | "Excel") || "CSV")}
+                placeholder="Select format"
+                className="w-full"
+              />
+            </div>
+
+            {/* File Preview */}
+            {uploadPreview && uploadPreview.rows.length > 0 && (
+              <div>
+                <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+                  Preview ({uploadPreview.rows.length} row{uploadPreview.rows.length !== 1 ? 's' : ''})
+                </label>
+                <div className="overflow-x-auto border rounded" style={{ borderColor: color.border.default }}>
+                  <table className="w-full text-xs" style={{ borderCollapse: "collapse" }}>
+                    <thead style={{ backgroundColor: color.surface.tableHeader }}>
+                      <tr>
+                        {uploadPreview.headers.map((header) => (
+                          <th
+                            key={header}
+                            className="px-3 py-2 text-left font-semibold uppercase tracking-wider"
+                            style={{ color: color.surface.tableHeaderText, borderRight: `1px solid ${color.border.default}` }}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uploadPreview.rows.map((row, idx) => (
+                        <tr
+                          key={idx}
+                          className="hover:bg-gray-50 transition-colors"
+                          style={{ borderBottom: `1px solid ${color.border.default}` }}
+                        >
+                          {uploadPreview.headers.map((header) => (
+                            <td
+                              key={`${idx}-${header}`}
+                              className="px-3 py-2 whitespace-nowrap"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                                color: color.text.primary,
+                                borderRight: `1px solid ${color.border.default}`,
+                              }}
+                            >
+                              {row[header] || '—'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => {
+                  setIsUploadModalOpen(false);
+                  setUploadFile(null);
+                  setUploadPreview(null);
+                }}
+                className={`flex-1 px-4 py-2 ${tw.rounded} border font-medium transition-colors`}
+                style={{ borderColor: color.border.default, color: tw.textPrimary }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!uploadFile) {
+                    showError("Error", "Please select a file");
+                    return;
+                  }
+                  // TODO: Handle upload
+                  success("Success", `File ${uploadFile.name} uploaded (${uploadCategory}, ${uploadFormat})`);
+                  setIsUploadModalOpen(false);
+                  setUploadFile(null);
+                  setUploadPreview(null);
+                }}
+                className={`flex-1 px-4 py-2 text-white ${tw.rounded} transition-colors`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

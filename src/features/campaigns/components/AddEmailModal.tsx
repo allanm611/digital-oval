@@ -6,12 +6,12 @@ import { color, tw } from "../../../shared/utils/utils";
 import {
   customerSubscriptions,
   searchCustomers as searchCustomersUtil,
-} from "../../dashboard/utils/customerDataService";
-import type { CustomerSubscriptionRecord } from "../../dashboard/types/customerSubscription";
+} from "../../customers360/utils/customerDataService";
+import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
 import {
   getSubscriptionDisplayName,
   formatMsisdn,
-} from "../../dashboard/utils/customerSubscriptionHelpers";
+} from "../../customers360/utils/customerSubscriptionHelpers";
 
 interface AddEmailModalProps {
   isOpen: boolean;

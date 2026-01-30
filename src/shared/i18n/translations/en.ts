@@ -2429,6 +2429,7 @@ export const en: Translations = {
       servers: "Servers",
       connectionProfiles: "Connection Profiles",
       dataConnectors: "Data Connectors",
+      kpis: "KPIs",
       jobManagement: "Job Management",
       scheduledJobs: "Scheduled Jobs",
       jobExecutions: "Job Executions",

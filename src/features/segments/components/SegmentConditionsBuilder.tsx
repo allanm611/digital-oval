@@ -8,6 +8,9 @@ import {
   Users,
   List,
   Zap,
+  DollarSign,
+  Activity,
+  Smartphone,
 } from "lucide-react";
 import {
   SegmentCondition,
@@ -24,6 +27,13 @@ import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { SYSTEM_EVENTS, type SystemEvent } from "../types/systemEvent";
+import KPIPickerModal from "../../kpis/components/KPIPickerModal";
+import {
+  KPI_CONDITION_CONFIG,
+  getKPICategoryForConditionType,
+  type KPIConditionType,
+} from "../../kpis/types/kpiConditionMapping";
+import { type DummyKPI } from "../../kpis/types/dummyData";
 
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
@@ -40,6 +50,9 @@ export default function SegmentConditionsBuilder({
   const [isSystemEventModalOpen, setIsSystemEventModalOpen] = useState(false);
   const [isCreateQuickListModalOpen, setIsCreateQuickListModalOpen] =
     useState(false);
+  const [isKPIModalOpen, setIsKPIModalOpen] = useState(false);
+  const [currentKPIModalType, setCurrentKPIModalType] =
+    useState<KPIConditionType | null>(null);
   const [currentEditingCondition, setCurrentEditingCondition] = useState<{
     groupId: string;
     conditionId: string;
@@ -56,6 +69,14 @@ export default function SegmentConditionsBuilder({
         return List;
       case "system_event":
         return Zap;
+      case "customer_profile_kpi":
+        return User;
+      case "revenue_metric_kpi":
+        return DollarSign;
+      case "usage_metric_kpi":
+        return Activity;
+      case "device_info_kpi":
+        return Smartphone;
       default:
         return User;
     }
@@ -230,6 +251,11 @@ export default function SegmentConditionsBuilder({
         return renderListFields(groupId, condition);
       case "system_event":
         return renderSystemEventFields(groupId, condition);
+      case "customer_profile_kpi":
+      case "revenue_metric_kpi":
+      case "usage_metric_kpi":
+      case "device_info_kpi":
+        return renderKPIFields(groupId, condition);
       default:
         return null;
     }
@@ -611,6 +637,69 @@ export default function SegmentConditionsBuilder({
     );
   };
 
+  // Render KPI condition fields
+  const renderKPIFields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
+    const handleOpenKPIModal = () => {
+      setCurrentEditingCondition({
+        groupId,
+        conditionId: condition.id,
+      });
+      setCurrentKPIModalType(condition.conditionType as KPIConditionType);
+      setIsKPIModalOpen(true);
+    };
+
+    const categoryName = getKPICategoryForConditionType(
+      condition.conditionType,
+    );
+    const categoryLabel = categoryName
+      ? `Select a ${categoryName.toLowerCase()}...`
+      : "Select a KPI...";
+
+    return (
+      <>
+        {/* KPI Selection */}
+        <div className="min-w-[200px] flex-1 max-w-[500px]">
+          <button
+            type="button"
+            onClick={handleOpenKPIModal}
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
+          >
+            <span
+              className={
+                condition.kpi_name ? "text-gray-900" : "text-gray-500"
+              }
+            >
+              {condition.kpi_name || categoryLabel}
+            </span>
+            <Search className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Operator for KPI */}
+        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+          <HeadlessSelect
+            options={[
+              { value: "equals", label: "Equals" },
+              { value: "not_equals", label: "Not Equals" },
+            ]}
+            value={condition.operator}
+            onChange={(value) => {
+              updateCondition(groupId, condition.id, {
+                operator: value as "equals" | "not_equals",
+              });
+            }}
+            placeholder="Select operator"
+            className="text-sm"
+            zIndex={zIndex.popover}
+          />
+        </div>
+      </>
+    );
+  };
+
   // Show loading state
   if (isLoadingFields) {
     return (
@@ -754,7 +843,7 @@ export default function SegmentConditionsBuilder({
 
                   {/* Condition Type Badge - Selectable appearance */}
                   <div
-                    className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[160px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
+                    className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[200px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
                     style={{
                       backgroundColor: color.surface.background,
                       border: `1px solid ${color.border.default}`,
@@ -785,6 +874,10 @@ export default function SegmentConditionsBuilder({
                           { value: "segment", label: "Segment" },
                           { value: "list", label: "QuickList" },
                           { value: "system_event", label: "System Event" },
+                          { value: "customer_profile_kpi", label: "Customer Profile" },
+                          { value: "revenue_metric_kpi", label: "Revenue Metric" },
+                          { value: "usage_metric_kpi", label: "Usage Metric" },
+                          { value: "device_info_kpi", label: "Device Info" },
                         ]}
                         value={condition.conditionType}
                         onChange={(value) => {
@@ -792,7 +885,11 @@ export default function SegmentConditionsBuilder({
                             | "360_profile"
                             | "segment"
                             | "list"
-                            | "system_event";
+                            | "system_event"
+                            | "customer_profile_kpi"
+                            | "revenue_metric_kpi"
+                            | "usage_metric_kpi"
+                            | "device_info_kpi";
                           // Reset condition based on type
                           if (condType === "360_profile") {
                             const firstField =
@@ -815,6 +912,9 @@ export default function SegmentConditionsBuilder({
                               system_event_id: undefined,
                               system_event_code: undefined,
                               system_event_name: undefined,
+                              kpi_id: undefined,
+                              kpi_name: undefined,
+                              kpi_category: undefined,
                             });
                           } else if (condType === "segment") {
                             updateCondition(group.id, condition.id, {
@@ -829,6 +929,9 @@ export default function SegmentConditionsBuilder({
                               system_event_id: undefined,
                               system_event_code: undefined,
                               system_event_name: undefined,
+                              kpi_id: undefined,
+                              kpi_name: undefined,
+                              kpi_category: undefined,
                             });
                           } else if (condType === "list") {
                             updateCondition(group.id, condition.id, {
@@ -843,6 +946,9 @@ export default function SegmentConditionsBuilder({
                               system_event_id: undefined,
                               system_event_code: undefined,
                               system_event_name: undefined,
+                              kpi_id: undefined,
+                              kpi_name: undefined,
+                              kpi_category: undefined,
                             });
                           } else if (condType === "system_event") {
                             updateCondition(group.id, condition.id, {
@@ -856,6 +962,33 @@ export default function SegmentConditionsBuilder({
                               segment_name: undefined,
                               list_id: undefined,
                               list_name: undefined,
+                              kpi_id: undefined,
+                              kpi_name: undefined,
+                              kpi_category: undefined,
+                            });
+                          } else if (
+                            condType === "customer_profile_kpi" ||
+                            condType === "revenue_metric_kpi" ||
+                            condType === "usage_metric_kpi" ||
+                            condType === "device_info_kpi"
+                          ) {
+                            updateCondition(group.id, condition.id, {
+                              conditionType: condType,
+                              operator: "equals",
+                              value: "",
+                              category: undefined,
+                              field: undefined,
+                              field_id: undefined,
+                              segment_id: undefined,
+                              segment_name: undefined,
+                              list_id: undefined,
+                              list_name: undefined,
+                              system_event_id: undefined,
+                              system_event_code: undefined,
+                              system_event_name: undefined,
+                              kpi_id: undefined,
+                              kpi_name: undefined,
+                              kpi_category: getKPICategoryForConditionType(condType),
                             });
                           }
                         }}
@@ -1031,6 +1164,39 @@ export default function SegmentConditionsBuilder({
           setCurrentEditingCondition(null);
         }}
       />
+
+      {/* KPI Picker Modal */}
+      {currentKPIModalType && (
+        <KPIPickerModal
+          isOpen={isKPIModalOpen}
+          onClose={() => {
+            setIsKPIModalOpen(false);
+            setCurrentKPIModalType(null);
+            setCurrentEditingCondition(null);
+          }}
+          onSelect={(kpi: DummyKPI) => {
+            if (currentEditingCondition && currentKPIModalType) {
+              updateCondition(
+                currentEditingCondition.groupId,
+                currentEditingCondition.conditionId,
+                {
+                  kpi_id: kpi.id,
+                  kpi_name: kpi.name,
+                  kpi_category: kpi.category,
+                },
+              );
+            }
+            setIsKPIModalOpen(false);
+            setCurrentKPIModalType(null);
+            setCurrentEditingCondition(null);
+          }}
+          category={getKPICategoryForConditionType(
+            currentKPIModalType,
+          ) as DummyKPI["category"]}
+          title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
+          searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
+        />
+      )}
     </div>
   );
 }

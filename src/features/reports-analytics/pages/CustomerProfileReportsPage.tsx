@@ -35,14 +35,14 @@ import type {
   CustomerProfileReportsResponse,
   CustomerRow,
 } from "../types/ReportsAPI";
-import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
+import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
 import {
   getSubscriptionDisplayName,
   formatMsisdn,
   formatDateTime,
   convertSubscriptionToCustomerRow,
-} from "../utils/customerSubscriptionHelpers";
-import { customerSubscriptions } from "../utils/customerDataService";
+} from "../../customers360/utils/customerSubscriptionHelpers";
+import { customerSubscriptions } from "../../customers360/utils/customerDataService";
 
 // Extract types from API response type
 type ValueMatrixPoint = CustomerProfileReportsResponse["valueMatrix"][number];

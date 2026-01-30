@@ -213,23 +213,25 @@ export default function ConnectionProfileFormPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/connection-profiles" />
-          <div className="ml-2 sm:ml-4">
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              {mode === "create"
-                ? "Create Connection Profile"
-                : "Edit Connection Profile"}
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              {mode === "create"
-                ? "Configure a new connection profile"
-                : `Editing: ${profile?.profile_name || ""}`}
-            </p>
+      {!onSuccess && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <BackButton fallbackTo="/dashboard/connection-profiles" />
+            <div className="ml-2 sm:ml-4">
+              <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+                {mode === "create"
+                  ? "Create Connection Profile"
+                  : "Edit Connection Profile"}
+              </h1>
+              <p className={`${tw.textSecondary} mt-1 text-sm`}>
+                {mode === "create"
+                  ? "Configure a new connection profile"
+                  : `Editing: ${profile?.profile_name || ""}`}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div
@@ -329,9 +331,12 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 ">
                 Server ID
               </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Identifier for the server hosting the data source.
+              </p>
               <input
                 type="number"
                 value={formData.server_id || ""}
@@ -343,7 +348,7 @@ export default function ConnectionProfileFormPage({
                       : undefined,
                   })
                 }
-                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                className={`w-full px-3 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
               />
             </div>
           </div>
