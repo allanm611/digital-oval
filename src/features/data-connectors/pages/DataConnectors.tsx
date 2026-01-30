@@ -19,6 +19,7 @@ import { fetchDataConnectors } from "../services";
 import { getConnectorIcon } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 
 export default function DataConnectors() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export default function DataConnectors() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const loadConnectors = async () => {
     try {
@@ -98,7 +100,7 @@ export default function DataConnectors() {
   return (
     <div className="">
       {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
             Data Connectors
@@ -108,6 +110,7 @@ export default function DataConnectors() {
             destinations
           </p>
         </div>
+        <CreateButton onClick={() => setShowCreateModal(true)} />
       </div>
 
       {/* Stats Cards */}

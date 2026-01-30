@@ -615,15 +615,26 @@ export default function EtlFileRegistryPage() {
                   {uploadFile ? uploadFile.name : "Click to select or drag file"}
                 </p>
                 <p className={`text-xs ${tw.textMuted} mt-1`}>
-                  CSV or Excel file
+                  .cdr or .tdr file
                 </p>
               </div>
               <input
                 id="file-input"
                 type="file"
-                accept=".csv,.xlsx,.xls"
+                accept=".cdr,.tdr"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
+
+                  // Validate file extension
+                  if (file) {
+                    const extension = file.name.split('.').pop()?.toLowerCase();
+                    if (!['cdr', 'tdr'].includes(extension || '')) {
+                      error("Invalid File", "Please select a .cdr or .tdr file");
+                      e.target.value = '';
+                      return;
+                    }
+                  }
+
                   setUploadFile(file || null);
 
                   // Parse file for preview
