@@ -587,6 +587,7 @@ export interface SegmentCondition {
   system_event_id?: number; // System event ID
   system_event_code?: string; // Event code (e.g., "email_opened")
   system_event_name?: string; // Event name (for display)
+  time_unit?: string; // Time unit for "occurred_in_last" (days/weeks/months)
 
   // For KPI conditions
   kpi_id?: string; // KPI ID
@@ -602,7 +603,15 @@ export interface SegmentCondition {
     | "greater_than"
     | "less_than"
     | "in"
-    | "not_in";
+    | "not_in"
+    // System Event time operators
+    | "occurred"
+    | "occurred_in_last_days"
+    | "occurred_in_last_months"
+    | "count_greater_than"
+    | "count_less_than"
+    | "count_equals"
+    | "never_occurred";
   operator_id?: number; // Backend operator ID - used for API calls
   value: string | number | string[];
   type: "string" | "number" | "boolean" | "array";

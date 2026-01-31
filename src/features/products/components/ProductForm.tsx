@@ -1020,7 +1020,7 @@ export default function ProductForm({
                                   onChange={(value) => {
                                     const newUnit = buildDataUnit(
                                       value as string,
-                                      getDataTypeSize(resource.unit)
+                                      "mb"
                                     );
                                     updateComboResource(index, "unit", newUnit);
                                   }}
@@ -1030,30 +1030,6 @@ export default function ProductForm({
                                 />
                               </div>
 
-                              <div>
-                                <label
-                                  className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
-                                >
-                                  Size
-                                </label>
-                                <HeadlessSelect
-                                  options={[
-                                    { label: "MB", value: "mb" },
-                                    { label: "GB", value: "gb" },
-                                  ]}
-                                  value={getDataTypeSize(resource.unit)}
-                                  onChange={(value) => {
-                                    const newUnit = buildDataUnit(
-                                      getDataTypeBase(resource.unit),
-                                      value as "mb" | "gb"
-                                    );
-                                    updateComboResource(index, "unit", newUnit);
-                                  }}
-                                  placeholder="Select size"
-                                  className="w-full"
-                                  zIndex={zIndex.dropdown}
-                                />
-                              </div>
                             </>
                           ) : (
                             <div>
@@ -1079,7 +1055,7 @@ export default function ProductForm({
                             <label
                               className={`block text-xs font-medium ${tw.textPrimary} mb-2`}
                             >
-                              Value
+                              Value {isDataType(resource.unit) && "(MB)"}
                             </label>
                             <input
                               type="number"

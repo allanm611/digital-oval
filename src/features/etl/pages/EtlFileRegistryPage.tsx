@@ -48,7 +48,6 @@ export default function EtlFileRegistryPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadCategory, setUploadCategory] = useState<"CDR" | "TDR">("CDR");
-  const [uploadFormat, setUploadFormat] = useState<"CSV" | "Excel">("CSV");
   const [uploadPreview, setUploadPreview] = useState<{
     headers: string[];
     rows: Record<string, string>[];
@@ -647,7 +646,7 @@ export default function EtlFileRegistryPage() {
 
                         if (lines.length > 0) {
                           // Parse headers from first line
-                          const delimiter = uploadFormat === 'CSV' ? ',' : ',';
+                          const delimiter = ',';
                           const headers = lines[0].split(delimiter).map(h => h.trim());
 
                           // Parse up to 5 rows for preview
@@ -689,23 +688,6 @@ export default function EtlFileRegistryPage() {
                 value={uploadCategory}
                 onChange={(val) => setUploadCategory((val as "CDR" | "TDR") || "CDR")}
                 placeholder="Select category"
-                className="w-full"
-              />
-            </div>
-
-            {/* File Format */}
-            <div>
-              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
-                File Format
-              </label>
-              <HeadlessSelect
-                options={[
-                  { value: "CSV", label: "CSV" },
-                  { value: "Excel", label: "Excel (.xlsx)" },
-                ]}
-                value={uploadFormat}
-                onChange={(val) => setUploadFormat((val as "CSV" | "Excel") || "CSV")}
-                placeholder="Select format"
                 className="w-full"
               />
             </div>
@@ -779,7 +761,7 @@ export default function EtlFileRegistryPage() {
                     return;
                   }
                   // TODO: Handle upload
-                  success("Success", `File ${uploadFile.name} uploaded (${uploadCategory}, ${uploadFormat})`);
+                  success("Success", `File ${uploadFile.name} uploaded (${uploadCategory})`);
                   setIsUploadModalOpen(false);
                   setUploadFile(null);
                   setUploadPreview(null);

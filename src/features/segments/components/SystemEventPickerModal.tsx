@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Search } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import {
   SYSTEM_EVENTS,
-  SYSTEM_EVENT_CHANNELS,
+  SYSTEM_EVENT_CATEGORIES,
   type SystemEvent,
 } from "../types/systemEvent";
 
@@ -19,40 +21,19 @@ export default function SystemEventPickerModal({
   onSelect,
 }: SystemEventPickerModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedChannel, setSelectedChannel] = useState<string>("all");
-  const modalRef = useRef<HTMLDivElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Filter events based on search and channel
+  // Filter events based on search and category
   const filteredEvents = SYSTEM_EVENTS.filter((event) => {
     const matchesSearch =
       event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       event.event_description.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesChannel =
-      selectedChannel === "all" || event.channel === selectedChannel;
+    const matchesCategory =
+      selectedCategory === "all" || event.category === selectedCategory;
 
-    return matchesSearch && matchesChannel;
+    return matchesSearch && matchesCategory;
   });
-
-  // Handle click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -61,20 +42,31 @@ export default function SystemEventPickerModal({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      style={{
+        zIndex: zIndex.modal,
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+      }}
+    >
       <div
-        ref={modalRef}
         className={`bg-white ${tw.rounded} shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col`}
       >
         {/* Header */}
         <div className="px-6 py-4 flex items-center justify-between">
           <div>
             <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Select Communication Event
+              Select System Event
             </h2>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Choose an event to add to your segment condition
+              Choose a business/system event to add to your segment condition
             </p>
           </div>
           <button
@@ -86,73 +78,40 @@ export default function SystemEventPickerModal({
         </div>
 
         {/* Filters */}
-        <div className="px-6 py-4 space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full pl-10 pr-4 py-2 border ${tw.rounded} focus:outline-none focus:ring-2`}
-              style={{
-                borderColor: color.border.default,
-              }}
-            />
-          </div>
-
-          {/* Channel Filter */}
-          <div>
-            <label
-              className={`text-sm font-medium ${tw.textPrimary} mb-2 block`}
-            >
-              Filter by Channel
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => setSelectedChannel("all")}
-                className={`px-3 py-2 ${tw.rounded} text-sm font-medium transition-all ${
-                  selectedChannel === "all"
-                    ? `text-white`
-                    : `${tw.textSecondary} border`
-                }`}
+        <div className="px-6 py-3 space-y-3">
+          {/* Search and Category Filter - Side by side */}
+          <div className="flex gap-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={`w-full pl-10 pr-4 py-3 border text-sm ${tw.rounded} focus:outline-none focus:ring-2`}
                 style={{
-                  backgroundColor:
-                    selectedChannel === "all"
-                      ? color.primary.action
-                      : "transparent",
-                  borderColor:
-                    selectedChannel === "all"
-                      ? "transparent"
-                      : color.border.default,
+                  borderColor: color.border.default,
                 }}
-              >
-                All Events
-              </button>
-              {SYSTEM_EVENT_CHANNELS.map((channel) => (
-                <button
-                  key={channel.value}
-                  onClick={() => setSelectedChannel(channel.value)}
-                  className={`px-3 py-2 ${tw.rounded} text-sm font-medium transition-all ${
-                    selectedChannel === channel.value
-                      ? `text-white`
-                      : `${tw.textSecondary} border`
-                  }`}
-                  style={{
-                    backgroundColor:
-                      selectedChannel === channel.value
-                        ? color.primary.action
-                        : "transparent",
-                    borderColor:
-                      selectedChannel === channel.value
-                        ? "transparent"
-                        : color.border.default,
-                  }}
-                >
-                  {channel.label}
-                </button>
-              ))}
+              />
+            </div>
+
+            {/* Category Filter - HeadlessSelect */}
+            <div className="min-w-[160px]">
+              <HeadlessSelect
+                options={[
+                  { value: "all", label: "All Events" },
+                  ...SYSTEM_EVENT_CATEGORIES.map((cat) => ({
+                    value: cat.value,
+                    label: cat.label,
+                  })),
+                ]}
+                value={selectedCategory}
+                onChange={(value) => setSelectedCategory(value as string)}
+                placeholder="Filter by..."
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
             </div>
           </div>
         </div>
@@ -172,7 +131,7 @@ export default function SystemEventPickerModal({
                   <button
                     key={event.id}
                     onClick={() => handleSelectEvent(event)}
-                    className={`w-full p-3 ${tw.rounded} border transition-all text-left`}
+                    className={`w-full p-3 ${tw.rounded} border transition-all text-left hover:border-gray-400`}
                     style={{
                       backgroundColor: color.surface.background,
                       borderColor: color.border.default,
@@ -180,10 +139,10 @@ export default function SystemEventPickerModal({
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
-                        <h3 className={`font-medium ${tw.textPrimary}`}>
+                        <h3 className={`text-sm font-medium ${tw.textPrimary}`}>
                           {event.event_name}
                         </h3>
-                        <p className={`text-sm ${tw.textSecondary} mt-1`}>
+                        <p className={`text-xs ${tw.textSecondary} mt-1.5`}>
                           {event.event_description}
                         </p>
                       </div>
@@ -199,13 +158,14 @@ export default function SystemEventPickerModal({
         <div className="px-6 py-4 flex items-center justify-end">
           <button
             onClick={onClose}
-            className={`px-4 py-2 ${tw.rounded} border font-medium transition-all`}
+            className={`px-4 py-2 text-sm ${tw.rounded} border font-medium transition-all`}
             style={{ borderColor: color.border.default, color: tw.textPrimary }}
           >
             Close
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

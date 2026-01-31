@@ -26,7 +26,7 @@ import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
-import { SYSTEM_EVENTS, type SystemEvent } from "../types/systemEvent";
+import { SYSTEM_EVENTS, TIME_OPERATOR_OPTIONS, type SystemEvent, type SystemEventTimeOperator } from "../types/systemEvent";
 import KPIPickerModal from "../../kpis/components/KPIPickerModal";
 import {
   KPI_CONDITION_CONFIG,
@@ -595,10 +595,27 @@ export default function SegmentConditionsBuilder({
       setIsSystemEventModalOpen(true);
     };
 
+    // Get the selected event to determine available operators
+    const selectedEvent = SYSTEM_EVENTS.find(
+      (e) => e.event_name === condition.system_event_name
+    );
+
+    // Get available time operators for this event
+    const availableOperators = selectedEvent
+      ? selectedEvent.time_operators.map((op) => ({
+          value: op,
+          label: TIME_OPERATOR_OPTIONS[op].label,
+        }))
+      : [];
+
+    const currentOperatorOption = condition.operator
+      ? TIME_OPERATOR_OPTIONS[condition.operator as SystemEventTimeOperator]
+      : null;
+
     return (
       <>
         {/* System Event Selection */}
-        <div className="min-w-[200px] flex-1 max-w-[500px]">
+        <div className="min-w-[200px] flex-1 max-w-[400px]">
           <button
             type="button"
             onClick={handleOpenSystemEventModal}
@@ -609,30 +626,72 @@ export default function SegmentConditionsBuilder({
                 condition.system_event_name ? "text-gray-900" : "text-gray-500"
               }
             >
-              {condition.system_event_name || "Select an event..."}
+              {condition.system_event_name || "Select event..."}
             </span>
             <Search className="w-4 h-4 text-gray-400" />
           </button>
         </div>
 
-        {/* Operator for System Event */}
-        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
-          <HeadlessSelect
-            options={[
-              { value: "equals", label: "Occurs" },
-              { value: "not_equals", label: "Does Not Occur" },
-            ]}
-            value={condition.operator}
-            onChange={(value) => {
-              updateCondition(groupId, condition.id, {
-                operator: value as "equals" | "not_equals",
-              });
-            }}
-            placeholder="Select operator"
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
+        {/* Time Operator for System Event - Only show if event selected */}
+        {selectedEvent && availableOperators.length > 0 && (
+          <>
+            <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
+              <HeadlessSelect
+                options={availableOperators}
+                value={condition.operator || ""}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    operator: value as SystemEventTimeOperator,
+                    value: "",
+                  });
+                }}
+                placeholder="Select time condition"
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
+          </>
+        )}
+
+        {/* Value Input - Only show if event selected and operator requires value */}
+        {selectedEvent && currentOperatorOption && currentOperatorOption.requiresValue && (
+          <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
+            <input
+              type="number"
+              value={condition.value || ""}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  value: e.target.value ? parseInt(e.target.value) : "",
+                });
+              }}
+              placeholder={currentOperatorOption.placeholder || "Enter value"}
+              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+              style={{ borderColor: color.border.default }}
+            />
+          </div>
+        )}
+
+        {/* Unit Selector (for "Occurred in Last" operator) - Only show if event selected */}
+        {selectedEvent && condition.operator === "occurred_in_last" && (
+          <div className="min-w-[90px] max-w-[110px] flex-shrink-0">
+            <HeadlessSelect
+              options={[
+                { value: "days", label: "Days" },
+                { value: "weeks", label: "Weeks" },
+                { value: "months", label: "Months" },
+              ]}
+              value={condition.time_unit || "days"}
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  time_unit: value as string,
+                });
+              }}
+              placeholder="Select unit"
+              className="text-sm"
+              zIndex={zIndex.popover}
+            />
+          </div>
+        )}
       </>
     );
   };
@@ -678,24 +737,49 @@ export default function SegmentConditionsBuilder({
           </button>
         </div>
 
-        {/* Operator for KPI */}
-        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
-          <HeadlessSelect
-            options={[
-              { value: "equals", label: "Equals" },
-              { value: "not_equals", label: "Not Equals" },
-            ]}
-            value={condition.operator}
-            onChange={(value) => {
-              updateCondition(groupId, condition.id, {
-                operator: value as "equals" | "not_equals",
-              });
-            }}
-            placeholder="Select operator"
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
+        {/* Operator for KPI - Only show if KPI selected */}
+        {condition.kpi_name && (
+          <>
+            <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+              <HeadlessSelect
+                options={[
+                  { value: "equals", label: "Equals" },
+                  { value: "not_equals", label: "Not Equals" },
+                  { value: "greater_than", label: "Greater Than" },
+                  { value: "less_than", label: "Less Than" },
+                  { value: "contains", label: "Contains" },
+                  { value: "not_contains", label: "Not Contains" },
+                  { value: "in", label: "In" },
+                  { value: "not_in", label: "Not In" },
+                ]}
+                value={condition.operator}
+                onChange={(value) => {
+                  updateCondition(groupId, condition.id, {
+                    operator: value as SegmentCondition["operator"],
+                    value: "",
+                  });
+                }}
+                placeholder="Select operator"
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
+
+            {/* Value Input - Only show if operator selected */}
+            <input
+              type="text"
+              value={condition.value as string}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  value: e.target.value,
+                });
+              }}
+              placeholder="Enter value"
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
+              style={{ borderColor: color.border.default }}
+            />
+          </>
+        )}
       </>
     );
   };
@@ -1195,6 +1279,35 @@ export default function SegmentConditionsBuilder({
           ) as DummyKPI["category"]}
           title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
           searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
+          hasSubcategories={currentKPIModalType !== "customer_profile_kpi"}
+          subcategoryOptions={
+            currentKPIModalType === "revenue_metric_kpi"
+              ? [
+                  { value: "all", label: "All Revenue Metrics" },
+                  { value: "data_revenue", label: "Data Revenue" },
+                  { value: "voice_revenue", label: "Voice Revenue" },
+                  { value: "sms_revenue", label: "SMS Revenue" },
+                  { value: "bundle_revenue", label: "Bundle Revenue" },
+                  { value: "other_revenue", label: "Other Revenue" },
+                ]
+              : currentKPIModalType === "usage_metric_kpi"
+              ? [
+                  { value: "all", label: "All Usage Metrics" },
+                  { value: "data_usage", label: "Data Usage" },
+                  { value: "voice_usage", label: "Voice Usage" },
+                  { value: "sms_usage", label: "SMS Usage" },
+                  { value: "bundle_usage", label: "Bundle Usage" },
+                  { value: "dou_metrics", label: "DOU Metrics" },
+                ]
+              : currentKPIModalType === "device_info_kpi"
+              ? [
+                  { value: "all", label: "All Device Info" },
+                  { value: "device_profile", label: "Device Profile" },
+                  { value: "sim_info", label: "SIM Info" },
+                  { value: "network_type", label: "Network Type" },
+                ]
+              : undefined
+          }
         />
       )}
     </div>

@@ -1,157 +1,215 @@
-/**
- * System Event Types for Segment Conditions
- * Communication events that customers can trigger
- */
+export type SystemEventCategory = "transaction" | "usage" | "engagement" | "account";
+export type SystemEventTimeOperator =
+  | "occurred"
+  | "occurred_in_last"
+  | "greater_than"
+  | "equals"
+  | "less_than"
+  | "never_occurred";
+
+export interface SystemEventTimeOperatorOption {
+  value: SystemEventTimeOperator;
+  label: string;
+  requiresValue: boolean;
+  valueType?: "number" | "days" | "months";
+  placeholder?: string;
+}
 
 export interface SystemEvent {
   id: number;
   event_code: string;
   event_name: string;
   event_description: string;
-  channel?: "email" | "sms" | "push" | "in_app" | "all";
+  category: SystemEventCategory;
+  source_table: string;
+  data_source: "Live" | "DB";
+  frequency: "Per Min" | "Daily" | "Monthly";
+
+  time_operators: SystemEventTimeOperator[];
+
   created_at?: string;
   updated_at?: string;
 }
 
 export type SystemEventCode =
-  | "email_opened"
-  | "email_clicked"
-  | "email_bounced"
-  | "email_unsubscribed"
-  | "sms_delivered"
-  | "sms_failed"
-  | "sms_clicked"
-  | "push_notification_received"
-  | "push_notification_clicked"
-  | "push_notification_dismissed"
-  | "in_app_message_viewed"
-  | "in_app_message_clicked"
-  | "unsubscribe_requested"
-  | "preference_updated"
-  | "communication_failed";
+  | "customer_recharge"
+  | "data_bundle_purchase"
+  | "voice_bundle_purchase"
+  | "call_made"
+  | "sms_sent"
+  | "data_session"
+  | "customer_login"
+  | "app_opened"
+  | "profile_update"
+  | "password_reset";
 
-// Predefined system events
+export const TIME_OPERATOR_OPTIONS: Record<SystemEventTimeOperator, SystemEventTimeOperatorOption> = {
+  occurred: {
+    value: "occurred",
+    label: "Ever Occurred",
+    requiresValue: false,
+  },
+  occurred_in_last: {
+    value: "occurred_in_last",
+    label: "Occurred in Last",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "e.g., 7",
+  },
+  greater_than: {
+    value: "greater_than",
+    label: "Greater Than",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "e.g., 5",
+  },
+  less_than: {
+    value: "less_than",
+    label: "Less Than",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "e.g., 10",
+  },
+  equals: {
+    value: "equals",
+    label: "Equals",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "e.g., 3",
+  },
+  never_occurred: {
+    value: "never_occurred",
+    label: "Never Occurred",
+    requiresValue: false,
+  },
+};
+
 export const SYSTEM_EVENTS: SystemEvent[] = [
   {
     id: 1,
-    event_code: "email_opened",
-    event_name: "Email Opened",
-    event_description: "Customer opened an email message",
-    channel: "email",
+    event_code: "customer_recharge",
+    event_name: "Recharge",
+    event_description: "Customer added airtime/credit to account",
+    category: "transaction",
+    source_table: "OCS_VOU",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "equals", "never_occurred"],
   },
   {
     id: 2,
-    event_code: "email_clicked",
-    event_name: "Email Clicked",
-    event_description: "Customer clicked a link in an email",
-    channel: "email",
+    event_code: "data_bundle_purchase",
+    event_name: "Data Bundle Purchase",
+    event_description: "Customer purchased a data bundle",
+    category: "transaction",
+    source_table: "OCS_MON",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 3,
-    event_code: "email_bounced",
-    event_name: "Email Bounced",
-    event_description: "Email delivery failed/bounced",
-    channel: "email",
+    event_code: "voice_bundle_purchase",
+    event_name: "Voice Bundle Purchase",
+    event_description: "Customer purchased a voice/call bundle",
+    category: "transaction",
+    source_table: "OCS_MGR",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
+
   {
     id: 4,
-    event_code: "email_unsubscribed",
-    event_name: "Email Unsubscribed",
-    event_description: "Customer unsubscribed from email communications",
-    channel: "email",
+    event_code: "call_made",
+    event_name: "Call Made",
+    event_description: "Customer made a phone call",
+    category: "usage",
+    source_table: "OCS_REC",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 5,
-    event_code: "sms_delivered",
-    event_name: "SMS Delivered",
-    event_description: "SMS message successfully delivered",
-    channel: "sms",
+    event_code: "sms_sent",
+    event_name: "SMS Sent",
+    event_description: "Customer sent an SMS message",
+    category: "usage",
+    source_table: "OCS_SMS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 6,
-    event_code: "sms_failed",
-    event_name: "SMS Failed",
-    event_description: "SMS delivery failed",
-    channel: "sms",
+    event_code: "data_session",
+    event_name: "Data Session",
+    event_description: "Customer used data/internet",
+    category: "usage",
+    source_table: "OCS_DATA",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
+
   {
     id: 7,
-    event_code: "sms_clicked",
-    event_name: "SMS Clicked",
-    event_description: "Customer clicked a link in SMS message",
-    channel: "sms",
+    event_code: "app_opened",
+    event_name: "App Opened",
+    event_description: "Customer opened the mobile app",
+    category: "engagement",
+    source_table: "APP_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 8,
-    event_code: "push_notification_received",
-    event_name: "Push Notification Received",
-    event_description: "Push notification delivered to device",
-    channel: "push",
+    event_code: "customer_login",
+    event_name: "Customer Login",
+    event_description: "Customer logged into their account",
+    category: "engagement",
+    source_table: "APP_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
+
   {
     id: 9,
-    event_code: "push_notification_clicked",
-    event_name: "Push Notification Clicked",
-    event_description: "Customer clicked a push notification",
-    channel: "push",
+    event_code: "profile_update",
+    event_name: "Profile Updated",
+    event_description: "Customer updated their profile information",
+    category: "account",
+    source_table: "APP_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "never_occurred"],
   },
   {
     id: 10,
-    event_code: "push_notification_dismissed",
-    event_name: "Push Notification Dismissed",
-    event_description: "Customer dismissed a push notification",
-    channel: "push",
-  },
-  {
-    id: 11,
-    event_code: "in_app_message_viewed",
-    event_name: "In-App Message Viewed",
-    event_description: "Customer viewed an in-app message",
-    channel: "in_app",
-  },
-  {
-    id: 12,
-    event_code: "in_app_message_clicked",
-    event_name: "In-App Message Clicked",
-    event_description: "Customer interacted with in-app message",
-    channel: "in_app",
-  },
-  {
-    id: 13,
-    event_code: "unsubscribe_requested",
-    event_name: "Unsubscribe Requested",
-    event_description: "Customer requested to unsubscribe from communications",
-    channel: "all",
-  },
-  {
-    id: 14,
-    event_code: "preference_updated",
-    event_name: "Communication Preference Updated",
-    event_description: "Customer updated communication preferences",
-    channel: "all",
-  },
-  {
-    id: 15,
-    event_code: "communication_failed",
-    event_name: "Communication Failed",
-    event_description: "Any communication attempt failed",
-    channel: "all",
+    event_code: "password_reset",
+    event_name: "Password Reset",
+    event_description: "Customer reset their account password",
+    category: "account",
+    source_table: "APP_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "never_occurred"],
   },
 ];
 
-// Group events by channel for UI display
-export const SYSTEM_EVENTS_BY_CHANNEL = {
-  email: SYSTEM_EVENTS.filter((e) => e.channel === "email"),
-  sms: SYSTEM_EVENTS.filter((e) => e.channel === "sms"),
-  push: SYSTEM_EVENTS.filter((e) => e.channel === "push"),
-  in_app: SYSTEM_EVENTS.filter((e) => e.channel === "in_app"),
-  other: SYSTEM_EVENTS.filter((e) => e.channel === "all"),
+export const SYSTEM_EVENTS_BY_CATEGORY = {
+  transaction: SYSTEM_EVENTS.filter((e) => e.category === "transaction"),
+  usage: SYSTEM_EVENTS.filter((e) => e.category === "usage"),
+  engagement: SYSTEM_EVENTS.filter((e) => e.category === "engagement"),
+  account: SYSTEM_EVENTS.filter((e) => e.category === "account"),
 };
 
-export const SYSTEM_EVENT_CHANNELS = [
-  { value: "email", label: "Email Events" },
-  { value: "sms", label: "SMS Events" },
-  { value: "push", label: "Push Events" },
-  { value: "in_app", label: "In-App Events" },
-  { value: "other", label: "Other Events" },
+export const SYSTEM_EVENT_CATEGORIES = [
+  { value: "transaction", label: "Transaction Events" },
+  { value: "usage", label: "Usage Events" },
+  { value: "engagement", label: "Engagement Events" },
+  { value: "account", label: "Account Events" },
 ] as const;
