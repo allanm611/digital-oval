@@ -1,14 +1,17 @@
 import { useState } from "react";
 import KPIPickerModal from "../components/KPIPickerModal";
-import { DummyKPI } from "../types/dummyData";
+import { type KPI } from "../types/kpi";
+import { generateAllKPIs } from "../utils/kpiGenerator";
+
+const allKPIs = generateAllKPIs();
 
 export default function KPIModalDemoPage() {
   const [modalCategory, setModalCategory] = useState<
-    null | DummyKPI["category"]
+    null | KPI["category"]
   >(null);
-  const [selectedKPI, setSelectedKPI] = useState<DummyKPI | null>(null);
+  const [selectedKPI, setSelectedKPI] = useState<KPI | null>(null);
 
-  const openModal = (category: DummyKPI["category"]) =>
+  const openModal = (category: KPI["category"]) =>
     setModalCategory(category);
   const closeModal = () => setModalCategory(null);
 
@@ -48,10 +51,13 @@ export default function KPIModalDemoPage() {
             <b>Name:</b> {selectedKPI.name}
           </div>
           <div>
+            <b>Category:</b> {selectedKPI.category}
+          </div>
+          <div>
             <b>Description:</b> {selectedKPI.description}
           </div>
           <div>
-            <b>Example Value:</b> {String(selectedKPI.exampleValue)}
+            <b>Source:</b> {selectedKPI.source}
           </div>
         </div>
       )}
@@ -61,6 +67,7 @@ export default function KPIModalDemoPage() {
           isOpen={!!modalCategory}
           onClose={closeModal}
           onSelect={setSelectedKPI}
+          kpis={allKPIs}
           category={modalCategory}
           title={`Select ${modalCategory} KPI`}
         />

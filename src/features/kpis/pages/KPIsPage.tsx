@@ -1,19 +1,22 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone } from "lucide-react";
-import { dummyKPIs } from "../types/dummyData";
+import { Search, Filter, MoreHorizontal, Eye, Edit, Trash2, ListChecks, Activity, DollarSign, Smartphone, ChevronLeft, ChevronRight } from "lucide-react";
+import { generateAllKPIs } from "../utils/kpiGenerator";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+
+const allKPIs = generateAllKPIs();
+
+const ITEMS_PER_PAGE = 10;
 
 export default function KPIsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Get unique categories
-  const categories = Array.from(new Set(dummyKPIs.map((kpi) => kpi.category)));
+  const categories = Array.from(new Set(allKPIs.map((kpi) => kpi.category)));
 
-  // Filter KPIs based on search and category
   const filteredKPIs = useMemo(() => {
-    return dummyKPIs.filter((kpi) => {
+    return allKPIs.filter((kpi) => {
       const matchesSearch =
         kpi.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         kpi.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -24,12 +27,21 @@ export default function KPIsPage() {
     });
   }, [searchTerm, categoryFilter]);
 
+  const totalPages = Math.ceil(filteredKPIs.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedKPIs = filteredKPIs.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+  const handleCategoryChange = (value: string) => {
+    setCategoryFilter(value || "all");
+    setCurrentPage(1);
+  };
+
   // Calculate statistics
   const stats = {
-    totalKPIs: dummyKPIs.length,
-    systemEvents: dummyKPIs.filter((k) => k.category === "System Event").length,
-    usageMetrics: dummyKPIs.filter((k) => k.category === "Usage Metric").length,
-    revenueMetrics: dummyKPIs.filter((k) => k.category === "Revenue Metric").length,
+    totalKPIs: allKPIs.length,
+    systemEvents: allKPIs.filter((k) => k.category === "System Event").length,
+    usageMetrics: allKPIs.filter((k) => k.category === "Usage Metric").length,
+    revenueMetrics: allKPIs.filter((k) => k.category === "Revenue Metric").length,
   };
 
   const statCards = [
@@ -88,8 +100,8 @@ export default function KPIsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
+        <div className="relative flex-1 min-w-[250px]">
           <Search
             className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
             aria-hidden
@@ -98,7 +110,10 @@ export default function KPIsPage() {
             type="text"
             placeholder="Search KPIs..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className={`w-full ${tw.rounded} border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
           />
         </div>
@@ -109,7 +124,7 @@ export default function KPIsPage() {
             ...categories.map((cat) => ({ value: cat, label: cat })),
           ]}
           value={categoryFilter}
-          onChange={(value) => setCategoryFilter(value || "all")}
+          onChange={(value) => handleCategoryChange(value || "all")}
           placeholder="Filter by category"
           className="min-w-[180px]"
         />
@@ -157,6 +172,12 @@ export default function KPIsPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
+                      Type
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
                       Description
                     </th>
                     <th
@@ -174,7 +195,7 @@ export default function KPIsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredKPIs.map((kpi) => (
+                  {paginatedKPIs.map((kpi) => (
                     <tr key={kpi.id} className="transition-colors">
                       <td
                         className="px-6 py-4 text-sm"
@@ -196,6 +217,14 @@ export default function KPIsPage() {
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
                           {kpi.category}
                         </span>
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <p className="text-sm text-gray-700">
+                          {kpi.subcategory ? kpi.subcategory.replace(/_/g, " ") : "-"}
+                        </p>
                       </td>
                       <td
                         className="px-6 py-4 text-sm max-w-xs"
@@ -244,7 +273,7 @@ export default function KPIsPage() {
 
             {/* Mobile Cards View */}
             <div className="lg:hidden space-y-3 p-4">
-              {filteredKPIs.map((kpi) => (
+              {paginatedKPIs.map((kpi) => (
                 <div
                   key={kpi.id}
                   className={`${tw.rounded} border p-4`}
@@ -264,6 +293,14 @@ export default function KPIsPage() {
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
                         {kpi.category}
                       </span>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs">
+                      <div>
+                        <span className="text-gray-600">Type:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {kpi.subcategory ? kpi.subcategory.replace(/_/g, " ") : "-"}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs">
                       <div>
@@ -296,6 +333,42 @@ export default function KPIsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: color.border.default, backgroundColor: color.surface.tablebodybg }}>
+              <div className="text-sm text-gray-600">
+                Showing <span className="font-medium">{startIdx + 1}</span> to <span className="font-medium">{Math.min(startIdx + ITEMS_PER_PAGE, filteredKPIs.length)}</span> of <span className="font-medium">{filteredKPIs.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className={`p-2 ${tw.rounded} transition-colors ${
+                    currentPage === 1
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  title="Previous page"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="text-sm text-gray-600">
+                  Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
+                </div>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`p-2 ${tw.rounded} transition-colors ${
+                    currentPage === totalPages
+                      ? "text-gray-300 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                  title="Next page"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </>
         )}

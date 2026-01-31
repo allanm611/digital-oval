@@ -7,7 +7,7 @@ import {
   SYSTEM_EVENTS,
   SYSTEM_EVENT_CATEGORIES,
   type SystemEvent,
-} from "../types/systemEvent";
+} from "../../kpis/types/systemEvent";
 
 interface SystemEventPickerModalProps {
   isOpen: boolean;

@@ -3,13 +3,14 @@ import { createPortal } from "react-dom";
 import { X, Search } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
-import { dummyKPIs, DummyKPI } from "../types/dummyData";
+import { type KPI } from "../types/kpi";
 
 interface KPIPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (kpi: DummyKPI) => void;
-  category: DummyKPI["category"];
+  onSelect: (kpi: KPI) => void;
+  kpis: KPI[];
+  category: KPI["category"];
   title: string;
   searchPlaceholder?: string;
   hasSubcategories?: boolean;  // Only show category filter if true
@@ -20,6 +21,7 @@ export default function KPIPickerModal({
   isOpen,
   onClose,
   onSelect,
+  kpis,
   category,
   title,
   searchPlaceholder,
@@ -38,7 +40,7 @@ export default function KPIPickerModal({
   const finalSubcategoryOptions = subcategoryOptions || defaultSubcategoryOptions;
 
   // Filter KPIs by category, subcategory, and search
-  const filteredKPIs = dummyKPIs.filter(
+  const filteredKPIs = kpis.filter(
     (kpi) =>
       kpi.category === selectedCategory &&
       (selectedSubcategory === "all" || kpi.subcategory === selectedSubcategory) &&

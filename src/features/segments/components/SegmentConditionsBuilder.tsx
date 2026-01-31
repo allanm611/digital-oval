@@ -26,14 +26,17 @@ import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
-import { SYSTEM_EVENTS, TIME_OPERATOR_OPTIONS, type SystemEvent, type SystemEventTimeOperator } from "../types/systemEvent";
+import { SYSTEM_EVENTS, TIME_OPERATOR_OPTIONS, type SystemEvent, type SystemEventTimeOperator } from "../../kpis/types/systemEvent";
 import KPIPickerModal from "../../kpis/components/KPIPickerModal";
 import {
   KPI_CONDITION_CONFIG,
   getKPICategoryForConditionType,
   type KPIConditionType,
 } from "../../kpis/types/kpiConditionMapping";
-import { type DummyKPI } from "../../kpis/types/dummyData";
+import { type KPI } from "../../kpis/types/kpi";
+import { generateAllKPIs } from "../../kpis/utils/kpiGenerator";
+
+const allKPIs = generateAllKPIs();
 
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
@@ -1258,7 +1261,7 @@ export default function SegmentConditionsBuilder({
             setCurrentKPIModalType(null);
             setCurrentEditingCondition(null);
           }}
-          onSelect={(kpi: DummyKPI) => {
+          onSelect={(kpi: KPI) => {
             if (currentEditingCondition && currentKPIModalType) {
               updateCondition(
                 currentEditingCondition.groupId,
@@ -1274,9 +1277,10 @@ export default function SegmentConditionsBuilder({
             setCurrentKPIModalType(null);
             setCurrentEditingCondition(null);
           }}
+          kpis={allKPIs}
           category={getKPICategoryForConditionType(
             currentKPIModalType,
-          ) as DummyKPI["category"]}
+          ) as KPI["category"]}
           title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
           searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
           hasSubcategories={currentKPIModalType !== "customer_profile_kpi"}
