@@ -46,7 +46,6 @@ export interface QuickListWithDetails extends Partial<QuickListType> {
   created_by: string | null;
   created_at: string;
   column_mappings?: Record<string, string>;
-  // Optional fields that may not be in list responses
   file_hash?: string;
   file_size_bytes?: number;
   processing_error?: string | null;
@@ -54,15 +53,13 @@ export interface QuickListWithDetails extends Partial<QuickListType> {
   updated_at?: string;
 }
 
-// For backward compatibility, use QuickListWithDetails as QuickList
 export type QuickList = QuickListWithDetails;
 
-// Table Mapping
 export interface QuickListTableMapping {
   id: number;
   table_name: string;
   schema_name: string;
-  column_mappings: Record<string, string>; // { "Display Name": "column_name" }
+  column_mappings: Record<string, string>; 
   table_created_at: string;
   last_used_at: string;
   total_rows: number;

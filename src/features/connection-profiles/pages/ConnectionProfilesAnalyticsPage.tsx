@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Database, Activity, Shield, AlertTriangle } from "lucide-react";
+import { Database, Activity, Shield, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
@@ -119,6 +119,10 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
   const [healthEnabledProfiles, setHealthEnabledProfiles] = useState<
     ConnectionProfileType[]
   >([]);
+  const [mostUsedPageSize] = useState(20);
+  const [mostUsedCurrentPage, setMostUsedCurrentPage] = useState(1);
+  const [expiredPageSize] = useState(20);
+  const [expiredCurrentPage, setExpiredCurrentPage] = useState(1);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -620,7 +624,12 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {mostUsedProfiles.slice(0, 10).map((profile) => (
+                    {mostUsedProfiles
+                      .slice(
+                        (mostUsedCurrentPage - 1) * mostUsedPageSize,
+                        mostUsedCurrentPage * mostUsedPageSize
+                      )
+                      .map((profile) => (
                       <tr
                         key={profile.id}
                         className="hover:bg-gray-50 transition-colors"
@@ -647,6 +656,42 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                   </tbody>
                 </table>
               </div>
+              {/* Pagination Controls for Most Used Profiles */}
+              {mostUsedProfiles.length > mostUsedPageSize && (
+                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
+                  <span className="text-sm text-gray-600">
+                    Showing{" "}
+                    <strong>
+                      {(mostUsedCurrentPage - 1) * mostUsedPageSize + 1}-
+                      {Math.min(mostUsedCurrentPage * mostUsedPageSize, mostUsedProfiles.length)}
+                    </strong>{" "}
+                    of <strong>{mostUsedProfiles.length}</strong>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setMostUsedCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={mostUsedCurrentPage === 1}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: color.surface.border }}
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                      Page {mostUsedCurrentPage}
+                    </span>
+                    <button
+                      onClick={() => setMostUsedCurrentPage((p) => p + 1)}
+                      disabled={mostUsedCurrentPage * mostUsedPageSize >= mostUsedProfiles.length}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: color.surface.border }}
+                      title="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -706,7 +751,12 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {expiredProfiles.slice(0, 10).map((profile) => (
+                    {expiredProfiles
+                      .slice(
+                        (expiredCurrentPage - 1) * expiredPageSize,
+                        expiredCurrentPage * expiredPageSize
+                      )
+                      .map((profile) => (
                       <tr
                         key={profile.id}
                         className="hover:bg-gray-50 transition-colors"
@@ -733,6 +783,42 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                   </tbody>
                 </table>
               </div>
+              {/* Pagination Controls for Expired Profiles */}
+              {expiredProfiles.length > expiredPageSize && (
+                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
+                  <span className="text-sm text-gray-600">
+                    Showing{" "}
+                    <strong>
+                      {(expiredCurrentPage - 1) * expiredPageSize + 1}-
+                      {Math.min(expiredCurrentPage * expiredPageSize, expiredProfiles.length)}
+                    </strong>{" "}
+                    of <strong>{expiredProfiles.length}</strong>
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setExpiredCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={expiredCurrentPage === 1}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: color.surface.border }}
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                      Page {expiredCurrentPage}
+                    </span>
+                    <button
+                      onClick={() => setExpiredCurrentPage((p) => p + 1)}
+                      disabled={expiredCurrentPage * expiredPageSize >= expiredProfiles.length}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: color.surface.border }}
+                      title="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

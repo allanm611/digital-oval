@@ -133,7 +133,6 @@ class QuickListService {
   async createQuickList(
     request: CreateQuickListRequest,
   ): Promise<CreateQuickListResponseUnion> {
-    // Convert file_text back to a File object for multipart upload
     const fileContent = request.file_text || "";
     const blob = new Blob([fileContent], { type: "text/csv" });
     const fileName = request.file_name || "quicklist.csv";

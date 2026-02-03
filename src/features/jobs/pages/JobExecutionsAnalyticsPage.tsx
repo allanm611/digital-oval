@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, TrendingUp, CheckCircle, BarChart3 } from "lucide-react";
+import { ArrowLeft, TrendingUp, CheckCircle, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -120,6 +120,8 @@ export default function JobExecutionsAnalyticsPage() {
   const [successRate, setSuccessRate] = useState<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [averageDuration, setAverageDuration] = useState<any>(null);
+  const [workerPageSize] = useState(20);
+  const [workerCurrentPage, setWorkerCurrentPage] = useState(1);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -719,7 +721,10 @@ export default function JobExecutionsAnalyticsPage() {
               </thead>
               <tbody>
                 {workers
-                  .slice(0, 10)
+                  .slice(
+                    (workerCurrentPage - 1) * workerPageSize,
+                    workerCurrentPage * workerPageSize
+                  )
                   .map((worker: any, idx: number) => (
                     <tr key={idx} className="border-b">
                       <td className="py-2 px-4 font-mono text-xs">
@@ -746,6 +751,42 @@ export default function JobExecutionsAnalyticsPage() {
               </tbody>
             </table>
           </div>
+          {/* Pagination Controls for Worker Node Statistics */}
+          {workers.length > workerPageSize && (
+            <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
+              <span className="text-sm text-gray-600">
+                Showing{" "}
+                <strong>
+                  {(workerCurrentPage - 1) * workerPageSize + 1}-
+                  {Math.min(workerCurrentPage * workerPageSize, workers.length)}
+                </strong>{" "}
+                of <strong>{workers.length}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setWorkerCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={workerCurrentPage === 1}
+                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderColor: color.surface.border }}
+                  title="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                  Page {workerCurrentPage}
+                </span>
+                <button
+                  onClick={() => setWorkerCurrentPage((p) => p + 1)}
+                  disabled={workerCurrentPage * workerPageSize >= workers.length}
+                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderColor: color.surface.border }}
+                  title="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

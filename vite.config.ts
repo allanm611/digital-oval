@@ -26,8 +26,8 @@ export default defineConfig({
             './src/features/offers/pages/OfferDetailsPage',
           ],
           'feature-analytics': [
-            './src/features/dashboard/pages/CampaignReportsPage',
-            './src/features/dashboard/pages/OfferReportsPage',
+            './src/features/reports-analytics/pages/CampaignReportsPage',
+            './src/features/reports-analytics/pages/OfferReportsPage',
             './src/features/dashboard/pages/OverallDashboardPerformancePage',
           ],
 
