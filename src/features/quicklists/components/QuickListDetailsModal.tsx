@@ -8,6 +8,8 @@ import {
   Calendar,
   User,
   Send,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { tw, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -33,6 +35,8 @@ export default function QuickListDetailsModal({
   const [loadingData, setLoadingData] = useState(false);
   const [currentQuickList, setCurrentQuickList] =
     useState<QuickList>(quicklist);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // Update local state when quicklist prop changes
   useEffect(() => {
@@ -263,7 +267,12 @@ export default function QuickListDetailsModal({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
-                    {data.map((row, index) => (
+                    {data
+                      .slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize
+                      )
+                      .map((row, index) => (
                       <tr
                         key={row.id}
                         className={`hover:bg-gray-50 transition-colors ${
@@ -298,6 +307,42 @@ export default function QuickListDetailsModal({
                     Showing first 10 columns of{" "}
                     {currentQuickList.columns?.length || 0} total columns
                   </p>
+                )}
+                {/* Pagination Controls */}
+                {data.length > pageSize && (
+                  <div className="flex items-center justify-between gap-4 mt-4 px-6 py-3 border-t border-gray-200">
+                    <span className="text-xs text-gray-600">
+                      Showing{" "}
+                      <strong>
+                        {(currentPage - 1) * pageSize + 1}-
+                        {Math.min(currentPage * pageSize, data.length)}
+                      </strong>{" "}
+                      of <strong>{data.length}</strong> rows
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        style={{ borderColor: "#d1d5db" }}
+                        title="Previous page"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <span className="text-xs text-gray-600 min-w-[40px] text-center">
+                        Page {currentPage}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                        disabled={currentPage * pageSize >= data.length}
+                        className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        style={{ borderColor: "#d1d5db" }}
+                        title="Next page"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search, Users } from "lucide-react";
+import { X, Search, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
@@ -25,6 +25,8 @@ export default function SegmentPickerModal({
   const [segments, setSegments] = useState<SegmentType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
   const filterOptions = [
     { value: "all", label: "All Segments" },
@@ -55,6 +57,11 @@ export default function SegmentPickerModal({
 
     loadSegments();
   }, [isOpen]);
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFilter]);
 
   if (!isOpen) return null;
 
@@ -179,7 +186,12 @@ export default function SegmentPickerModal({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredSegments.map((segment) => {
+                  {filteredSegments
+                    .slice(
+                      (currentPage - 1) * pageSize,
+                      currentPage * pageSize
+                    )
+                    .map((segment) => {
                     const isSelected = selectedSegmentId === segment.id;
                     const isHovered = hoveredSegmentId === segment.id;
 
@@ -256,6 +268,42 @@ export default function SegmentPickerModal({
                   })}
                 </tbody>
               </table>
+              {/* Pagination Controls */}
+              {filteredSegments.length > pageSize && (
+                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-3 border-t border-gray-200">
+                <span className="text-xs text-gray-600">
+                  Showing{" "}
+                  <strong>
+                    {(currentPage - 1) * pageSize + 1}-
+                    {Math.min(currentPage * pageSize, filteredSegments.length)}
+                  </strong>{" "}
+                  of <strong>{filteredSegments.length}</strong>
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderColor: "#d1d5db" }}
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs text-gray-600 min-w-[40px] text-center">
+                    Page {currentPage}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    disabled={currentPage * pageSize >= filteredSegments.length}
+                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderColor: "#d1d5db" }}
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              )}
             </div>
           )}
         </div>
