@@ -294,11 +294,34 @@ class ConnectionProfileService {
   }
 
   async getMostUsedProfiles(
-    skipCache?: boolean
-  ): Promise<ConnectionProfileType[]> {
-    const endpoint = this.withSkipCache("/most-used", skipCache);
+    query?: ConnectionProfileListQuery
+  ): Promise<ConnectionProfileListResponse> {
+    const queryString = this.buildQueryParams({
+      limit: query?.limit,
+      offset: query?.offset,
+      skipCache: query?.skipCache,
+    });
+    const endpoint = this.withSkipCache(
+      `/most-used${queryString}`,
+      query?.skipCache
+    );
     const response = await this.request<unknown>(endpoint);
-    return this.unwrapData<ConnectionProfileType[]>(response);
+
+    if (Array.isArray(response)) {
+      return { data: response };
+    }
+
+    if (response && typeof response === "object" && "data" in response) {
+      return {
+        data: (response as { data: ConnectionProfileType[] }).data ?? [],
+        count: (response as { count?: number }).count,
+        pagination: (response as ConnectionProfileListResponse).pagination,
+      };
+    }
+
+    return {
+      data: this.unwrapData<ConnectionProfileType[]>(response),
+    };
   }
 
   async getActiveProfiles(
@@ -326,11 +349,34 @@ class ConnectionProfileService {
   }
 
   async getExpiredProfiles(
-    skipCache?: boolean
-  ): Promise<ConnectionProfileType[]> {
-    const endpoint = this.withSkipCache("/expired", skipCache);
+    query?: ConnectionProfileListQuery
+  ): Promise<ConnectionProfileListResponse> {
+    const queryString = this.buildQueryParams({
+      limit: query?.limit,
+      offset: query?.offset,
+      skipCache: query?.skipCache,
+    });
+    const endpoint = this.withSkipCache(
+      `/expired${queryString}`,
+      query?.skipCache
+    );
     const response = await this.request<unknown>(endpoint);
-    return this.unwrapData<ConnectionProfileType[]>(response);
+
+    if (Array.isArray(response)) {
+      return { data: response };
+    }
+
+    if (response && typeof response === "object" && "data" in response) {
+      return {
+        data: (response as { data: ConnectionProfileType[] }).data ?? [],
+        count: (response as { count?: number }).count,
+        pagination: (response as ConnectionProfileListResponse).pagination,
+      };
+    }
+
+    return {
+      data: this.unwrapData<ConnectionProfileType[]>(response),
+    };
   }
 
   // ========= Search & Filters =========

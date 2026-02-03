@@ -122,6 +122,7 @@ export default function JobExecutionsAnalyticsPage() {
   const [averageDuration, setAverageDuration] = useState<any>(null);
   const [workerPageSize] = useState(20);
   const [workerCurrentPage, setWorkerCurrentPage] = useState(1);
+  const [workerTotalCount, setWorkerTotalCount] = useState(0);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -139,7 +140,6 @@ export default function JobExecutionsAnalyticsPage() {
         byHour,
         health,
         slowest,
-        workerData,
       ] = await Promise.all([
         jobExecutionService.getExecutionStatistics().catch(() => null),
         jobExecutionService.getSLACompliance().catch(() => null),
@@ -152,7 +152,6 @@ export default function JobExecutionsAnalyticsPage() {
         jobExecutionService.getExecutionsByHour().catch(() => []),
         jobExecutionService.getExecutionHealthScore().catch(() => null),
         jobExecutionService.getSlowestExecutions({ limit: 10 }).catch(() => []),
-        jobExecutionService.getWorkerNodeStats().catch(() => []),
       ]);
 
       // Unwrap data from API response wrapper
@@ -195,7 +194,6 @@ export default function JobExecutionsAnalyticsPage() {
       setExecutionsByHour(normalizeArray<ExecutionByHour>(byHour));
       setHealthScore(unwrapData(health));
       setSlowestExecutions(normalizeArray<SlowestExecution>(slowest));
-      setWorkers(normalizeArray<any>(workerData));
 
       // Build status distribution from stats
       if (unwrappedStats) {
@@ -223,6 +221,34 @@ export default function JobExecutionsAnalyticsPage() {
       setIsLoading(false);
     }
   }, [showError, t]);
+
+  // Load Worker Node Stats with pagination
+  useEffect(() => {
+    const loadWorkerStats = async () => {
+      try {
+        const response = await jobExecutionService.getWorkerNodeStats({
+          limit: workerPageSize,
+          offset: (workerCurrentPage - 1) * workerPageSize,
+          skipCache: true,
+        });
+
+        // Handle paginated response
+        if (response && typeof response === "object" && "data" in response) {
+          setWorkers(response.data || []);
+          setWorkerTotalCount(
+            response.pagination?.total || (response as any).count || 0
+          );
+        } else if (Array.isArray(response)) {
+          // Legacy response
+          setWorkers(response);
+          setWorkerTotalCount(response.length);
+        }
+      } catch (err) {
+        console.error("Failed to load worker stats:", err);
+      }
+    };
+    loadWorkerStats();
+  }, [workerCurrentPage, workerPageSize]);
 
   useEffect(() => {
     loadAnalytics();
@@ -720,47 +746,42 @@ export default function JobExecutionsAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {workers
-                  .slice(
-                    (workerCurrentPage - 1) * workerPageSize,
-                    workerCurrentPage * workerPageSize
-                  )
-                  .map((worker: any, idx: number) => (
-                    <tr key={idx} className="border-b">
-                      <td className="py-2 px-4 font-mono text-xs">
-                        {worker.worker_node_id}
-                      </td>
-                      <td className="text-right py-2 px-4">
-                        {worker.total_executions}
-                      </td>
-                      <td className="text-right py-2 px-4 text-green-600">
-                        {worker.successful_executions}
-                      </td>
-                      <td className="text-right py-2 px-4 text-red-600">
-                        {worker.failed_executions}
-                      </td>
-                      <td className="text-right py-2 px-4">
-                        {worker.average_duration_seconds
-                          ? `${Math.round(
-                              worker.average_duration_seconds / 60
-                            )}m`
-                          : "—"}
-                      </td>
-                    </tr>
-                  ))}
+                {workers.map((worker: any, idx: number) => (
+                  <tr key={idx} className="border-b">
+                    <td className="py-2 px-4 font-mono text-xs">
+                      {worker.worker_node_id}
+                    </td>
+                    <td className="text-right py-2 px-4">
+                      {worker.total_executions}
+                    </td>
+                    <td className="text-right py-2 px-4 text-green-600">
+                      {worker.successful_executions}
+                    </td>
+                    <td className="text-right py-2 px-4 text-red-600">
+                      {worker.failed_executions}
+                    </td>
+                    <td className="text-right py-2 px-4">
+                      {worker.average_duration_seconds
+                        ? `${Math.round(
+                            worker.average_duration_seconds / 60
+                          )}m`
+                        : "—"}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
           {/* Pagination Controls for Worker Node Statistics */}
-          {workers.length > workerPageSize && (
+          {workerTotalCount > workerPageSize && (
             <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
               <span className="text-sm text-gray-600">
                 Showing{" "}
                 <strong>
                   {(workerCurrentPage - 1) * workerPageSize + 1}-
-                  {Math.min(workerCurrentPage * workerPageSize, workers.length)}
+                  {Math.min(workerCurrentPage * workerPageSize, workerTotalCount)}
                 </strong>{" "}
-                of <strong>{workers.length}</strong>
+                of <strong>{workerTotalCount}</strong>
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -777,7 +798,7 @@ export default function JobExecutionsAnalyticsPage() {
                 </span>
                 <button
                   onClick={() => setWorkerCurrentPage((p) => p + 1)}
-                  disabled={workerCurrentPage * workerPageSize >= workers.length}
+                  disabled={workerCurrentPage * workerPageSize >= workerTotalCount}
                   className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   style={{ borderColor: color.surface.border }}
                   title="Next page"

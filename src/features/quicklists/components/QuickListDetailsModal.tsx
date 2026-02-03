@@ -37,6 +37,7 @@ export default function QuickListDetailsModal({
     useState<QuickList>(quicklist);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
+  const [totalDataCount, setTotalDataCount] = useState(0);
 
   // Update local state when quicklist prop changes
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function QuickListDetailsModal({
     if (isOpen) {
       loadData();
     }
-  }, [isOpen, quicklist.id]);
+  }, [isOpen, quicklist.id, currentPage, pageSize]);
 
   const loadQuickListDetails = async () => {
     try {
@@ -74,12 +75,18 @@ export default function QuickListDetailsModal({
     try {
       setLoadingData(true);
       const response = await quicklistService.getQuickListData(quicklist.id, {
-        limit: 50,
+        limit: pageSize,
+        offset: (currentPage - 1) * pageSize,
       });
       setData(response.data || []);
+      setTotalDataCount(response.pagination?.total || 0);
 
-      // Extract columns from data and update metadata
-      if (response.data && response.data.length > 0) {
+      // Extract columns from data and update metadata on first load
+      if (
+        response.data &&
+        response.data.length > 0 &&
+        !currentQuickList.columns
+      ) {
         const firstRow = response.data[0];
 
         // Get all keys except metadata fields
@@ -88,14 +95,13 @@ export default function QuickListDetailsModal({
             !["id", "quicklist_id", "created_at", "row_number"].includes(key)
         );
 
-
         // Update currentQuickList with extracted columns and row count from pagination
         setCurrentQuickList((prev) => {
           const updated = {
             ...prev,
             columns: extractedColumns,
             column_count: extractedColumns.length,
-            row_count: response.pagination?.total || response.data.length,
+            row_count: response.pagination?.total || 0,
           };
           return updated;
         });
@@ -267,12 +273,7 @@ export default function QuickListDetailsModal({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
-                    {data
-                      .slice(
-                        (currentPage - 1) * pageSize,
-                        currentPage * pageSize
-                      )
-                      .map((row, index) => (
+                    {data.map((row, index) => (
                       <tr
                         key={row.id}
                         className={`hover:bg-gray-50 transition-colors ${
@@ -280,7 +281,7 @@ export default function QuickListDetailsModal({
                         }`}
                       >
                         <td className="px-4 py-3 text-gray-900 font-medium">
-                          {index + 1}
+                          {(currentPage - 1) * pageSize + index + 1}
                         </td>
                         {(currentQuickList.columns || [])
                           .slice(0, 10)
@@ -309,15 +310,15 @@ export default function QuickListDetailsModal({
                   </p>
                 )}
                 {/* Pagination Controls */}
-                {data.length > pageSize && (
+                {totalDataCount > pageSize && (
                   <div className="flex items-center justify-between gap-4 mt-4 px-6 py-3 border-t border-gray-200">
                     <span className="text-xs text-gray-600">
                       Showing{" "}
                       <strong>
                         {(currentPage - 1) * pageSize + 1}-
-                        {Math.min(currentPage * pageSize, data.length)}
+                        {Math.min(currentPage * pageSize, totalDataCount)}
                       </strong>{" "}
-                      of <strong>{data.length}</strong> rows
+                      of <strong>{totalDataCount}</strong> rows
                     </span>
                     <div className="flex items-center gap-2">
                       <button
@@ -334,7 +335,7 @@ export default function QuickListDetailsModal({
                       </span>
                       <button
                         onClick={() => setCurrentPage((p) => p + 1)}
-                        disabled={currentPage * pageSize >= data.length}
+                        disabled={currentPage * pageSize >= totalDataCount}
                         className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         style={{ borderColor: "#d1d5db" }}
                         title="Next page"

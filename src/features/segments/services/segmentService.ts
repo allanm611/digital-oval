@@ -344,6 +344,10 @@ class SegmentService {
       search: filters?.search,
       categoryId: filters?.categoryId,
       type: filters?.type,
+      page: filters?.page,
+      pageSize: filters?.pageSize,
+      sortBy: filters?.sortBy,
+      sortDirection: filters?.sortDirection,
       skipCache: filters?.skipCache,
     });
 

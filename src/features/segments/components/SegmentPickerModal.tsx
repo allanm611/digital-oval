@@ -27,6 +27,7 @@ export default function SegmentPickerModal({
   const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [totalSegments, setTotalSegments] = useState(0);
 
   const filterOptions = [
     { value: "all", label: "All Segments" },
@@ -35,20 +36,25 @@ export default function SegmentPickerModal({
     { value: "trigger", label: "Trigger" },
   ];
 
-  // Load segments from backend
+  // Load segments from backend with pagination
   useEffect(() => {
     const loadSegments = async () => {
       if (isOpen) {
         setIsLoading(true);
         try {
           const response = await segmentService.getSegments({
+            search: searchTerm || undefined,
+            type: selectedFilter !== "all" ? (selectedFilter as any) : undefined,
+            page: currentPage,
+            pageSize: pageSize,
             skipCache: false,
           });
-          const backendSegments = response.data || [];
-          setSegments(backendSegments);
+          setSegments(response.data || []);
+          setTotalSegments(response.pagination?.total || 0);
         } catch (error) {
           console.error("Failed to load segments:", error);
           setSegments([]);
+          setTotalSegments(0);
         } finally {
           setIsLoading(false);
         }
@@ -56,7 +62,7 @@ export default function SegmentPickerModal({
     };
 
     loadSegments();
-  }, [isOpen]);
+  }, [isOpen, currentPage, pageSize, searchTerm, selectedFilter]);
 
   // Reset page when search or filter changes
   useEffect(() => {
@@ -64,19 +70,6 @@ export default function SegmentPickerModal({
   }, [searchTerm, selectedFilter]);
 
   if (!isOpen) return null;
-
-  const filteredSegments = segments.filter((segment) => {
-    const matchesSearch =
-      segment.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (segment.description?.toLowerCase() || "").includes(
-        searchTerm.toLowerCase()
-      );
-
-    if (selectedFilter === "all") return matchesSearch;
-
-    // Filter by segment type
-    return matchesSearch && segment.type === selectedFilter;
-  });
 
   const handleSegmentSelect = (segment: SegmentType) => {
     onSelect(segment);
@@ -153,7 +146,7 @@ export default function SegmentPickerModal({
               <LoadingSpinner variant="modern" size="lg" color="primary" />
               <p className="text-gray-500 mt-4">Loading segments...</p>
             </div>
-          ) : filteredSegments.length === 0 ? (
+          ) : segments.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -186,12 +179,7 @@ export default function SegmentPickerModal({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredSegments
-                    .slice(
-                      (currentPage - 1) * pageSize,
-                      currentPage * pageSize
-                    )
-                    .map((segment) => {
+                  {segments.map((segment) => {
                     const isSelected = selectedSegmentId === segment.id;
                     const isHovered = hoveredSegmentId === segment.id;
 
@@ -269,40 +257,40 @@ export default function SegmentPickerModal({
                 </tbody>
               </table>
               {/* Pagination Controls */}
-              {filteredSegments.length > pageSize && (
+              {totalSegments > pageSize && (
                 <div className="flex items-center justify-between gap-4 mt-4 px-6 py-3 border-t border-gray-200">
-                <span className="text-xs text-gray-600">
-                  Showing{" "}
-                  <strong>
-                    {(currentPage - 1) * pageSize + 1}-
-                    {Math.min(currentPage * pageSize, filteredSegments.length)}
-                  </strong>{" "}
-                  of <strong>{filteredSegments.length}</strong>
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderColor: "#d1d5db" }}
-                    title="Previous page"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <span className="text-xs text-gray-600 min-w-[40px] text-center">
-                    Page {currentPage}
+                  <span className="text-xs text-gray-600">
+                    Showing{" "}
+                    <strong>
+                      {(currentPage - 1) * pageSize + 1}-
+                      {Math.min(currentPage * pageSize, totalSegments)}
+                    </strong>{" "}
+                    of <strong>{totalSegments}</strong>
                   </span>
-                  <button
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={currentPage * pageSize >= filteredSegments.length}
-                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderColor: "#d1d5db" }}
-                    title="Next page"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: "#d1d5db" }}
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-xs text-gray-600 min-w-[40px] text-center">
+                      Page {currentPage}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                      disabled={currentPage * pageSize >= totalSegments}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: "#d1d5db" }}
+                      title="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
               )}
             </div>
           )}

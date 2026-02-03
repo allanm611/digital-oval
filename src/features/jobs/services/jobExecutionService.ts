@@ -789,8 +789,43 @@ class JobExecutionService {
    * Get Worker Node Stats
    * GET /job-executions/worker-stats
    */
-  async getWorkerNodeStats(): Promise<WorkerNodeStats[]> {
-    return this.request<WorkerNodeStats[]>(`/worker-stats`);
+  async getWorkerNodeStats(params?: {
+    limit?: number;
+    offset?: number;
+    skipCache?: boolean;
+  }): Promise<JobExecutionListResponse | WorkerNodeStats[]> {
+    const query = this.buildQueryString({
+      limit: clampLimit(params?.limit),
+      offset: params?.offset ?? 0,
+      skipCache: params?.skipCache ?? false,
+    });
+    const response = await this.request<
+      | JobExecutionListResponse
+      | WorkerNodeStats[]
+      | {
+          success?: boolean;
+          data?: WorkerNodeStats[];
+          pagination?: JobExecutionListResponse["pagination"];
+          source?: string;
+        }
+    >(`/worker-stats${query}`);
+
+    // Handle paginated response
+    if (response && typeof response === "object" && "data" in response) {
+      return {
+        data: (response as { data: WorkerNodeStats[] }).data || [],
+        pagination: (
+          response as { pagination?: JobExecutionListResponse["pagination"] }
+        ).pagination,
+      } as JobExecutionListResponse;
+    }
+
+    // Handle legacy array response
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    return response as JobExecutionListResponse;
   }
 
   /**

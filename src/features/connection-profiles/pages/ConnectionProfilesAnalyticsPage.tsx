@@ -121,8 +121,10 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
   >([]);
   const [mostUsedPageSize] = useState(20);
   const [mostUsedCurrentPage, setMostUsedCurrentPage] = useState(1);
+  const [mostUsedTotalCount, setMostUsedTotalCount] = useState(0);
   const [expiredPageSize] = useState(20);
   const [expiredCurrentPage, setExpiredCurrentPage] = useState(1);
+  const [expiredTotalCount, setExpiredTotalCount] = useState(0);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -131,8 +133,6 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
         connectionTypes,
         environments,
         governance,
-        mostUsed,
-        expired,
         active,
         pii,
         healthEnabled,
@@ -140,8 +140,6 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
         connectionProfileService.getConnectionTypeStats(true).catch(() => []),
         connectionProfileService.getEnvironmentStats(true).catch(() => []),
         connectionProfileService.getDataGovernanceStats(true).catch(() => null),
-        connectionProfileService.getMostUsedProfiles(true).catch(() => []),
-        connectionProfileService.getExpiredProfiles(true).catch(() => []),
         connectionProfileService.getActiveProfiles(true).catch(() => []),
         connectionProfileService.getProfilesWithPii(true).catch(() => []),
         connectionProfileService
@@ -152,8 +150,6 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
       setConnectionTypeStats(connectionTypes || []);
       setEnvironmentStats(environments || []);
       setDataGovernanceStats(governance);
-      setMostUsedProfiles(mostUsed || []);
-      setExpiredProfiles(expired || []);
       setActiveProfiles(active || []);
       setPiiProfiles(pii || []);
       setHealthEnabledProfiles(healthEnabled || []);
@@ -164,6 +160,42 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
       setIsLoading(false);
     }
   }, [showError, t]);
+
+  // Load Most Used Profiles with pagination
+  useEffect(() => {
+    const loadMostUsedProfiles = async () => {
+      try {
+        const response = await connectionProfileService.getMostUsedProfiles({
+          limit: mostUsedPageSize,
+          offset: (mostUsedCurrentPage - 1) * mostUsedPageSize,
+          skipCache: true,
+        });
+        setMostUsedProfiles(response.data || []);
+        setMostUsedTotalCount(response.pagination?.total || response.count || 0);
+      } catch (err) {
+        console.error("Failed to load most used profiles:", err);
+      }
+    };
+    loadMostUsedProfiles();
+  }, [mostUsedCurrentPage, mostUsedPageSize]);
+
+  // Load Expired Profiles with pagination
+  useEffect(() => {
+    const loadExpiredProfiles = async () => {
+      try {
+        const response = await connectionProfileService.getExpiredProfiles({
+          limit: expiredPageSize,
+          offset: (expiredCurrentPage - 1) * expiredPageSize,
+          skipCache: true,
+        });
+        setExpiredProfiles(response.data || []);
+        setExpiredTotalCount(response.pagination?.total || response.count || 0);
+      } catch (err) {
+        console.error("Failed to load expired profiles:", err);
+      }
+    };
+    loadExpiredProfiles();
+  }, [expiredCurrentPage, expiredPageSize]);
 
   useEffect(() => {
     loadAnalytics();
@@ -624,12 +656,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {mostUsedProfiles
-                      .slice(
-                        (mostUsedCurrentPage - 1) * mostUsedPageSize,
-                        mostUsedCurrentPage * mostUsedPageSize
-                      )
-                      .map((profile) => (
+                    {mostUsedProfiles.map((profile) => (
                       <tr
                         key={profile.id}
                         className="hover:bg-gray-50 transition-colors"
@@ -657,15 +684,15 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                 </table>
               </div>
               {/* Pagination Controls for Most Used Profiles */}
-              {mostUsedProfiles.length > mostUsedPageSize && (
+              {mostUsedTotalCount > mostUsedPageSize && (
                 <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
                   <span className="text-sm text-gray-600">
                     Showing{" "}
                     <strong>
                       {(mostUsedCurrentPage - 1) * mostUsedPageSize + 1}-
-                      {Math.min(mostUsedCurrentPage * mostUsedPageSize, mostUsedProfiles.length)}
+                      {Math.min(mostUsedCurrentPage * mostUsedPageSize, mostUsedTotalCount)}
                     </strong>{" "}
-                    of <strong>{mostUsedProfiles.length}</strong>
+                    of <strong>{mostUsedTotalCount}</strong>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -682,7 +709,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </span>
                     <button
                       onClick={() => setMostUsedCurrentPage((p) => p + 1)}
-                      disabled={mostUsedCurrentPage * mostUsedPageSize >= mostUsedProfiles.length}
+                      disabled={mostUsedCurrentPage * mostUsedPageSize >= mostUsedTotalCount}
                       className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       style={{ borderColor: color.surface.border }}
                       title="Next page"
@@ -751,12 +778,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </tr>
                   </thead>
                   <tbody>
-                    {expiredProfiles
-                      .slice(
-                        (expiredCurrentPage - 1) * expiredPageSize,
-                        expiredCurrentPage * expiredPageSize
-                      )
-                      .map((profile) => (
+                    {expiredProfiles.map((profile) => (
                       <tr
                         key={profile.id}
                         className="hover:bg-gray-50 transition-colors"
@@ -784,15 +806,15 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                 </table>
               </div>
               {/* Pagination Controls for Expired Profiles */}
-              {expiredProfiles.length > expiredPageSize && (
+              {expiredTotalCount > expiredPageSize && (
                 <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
                   <span className="text-sm text-gray-600">
                     Showing{" "}
                     <strong>
                       {(expiredCurrentPage - 1) * expiredPageSize + 1}-
-                      {Math.min(expiredCurrentPage * expiredPageSize, expiredProfiles.length)}
+                      {Math.min(expiredCurrentPage * expiredPageSize, expiredTotalCount)}
                     </strong>{" "}
-                    of <strong>{expiredProfiles.length}</strong>
+                    of <strong>{expiredTotalCount}</strong>
                   </span>
                   <div className="flex items-center gap-2">
                     <button
@@ -809,7 +831,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
                     </span>
                     <button
                       onClick={() => setExpiredCurrentPage((p) => p + 1)}
-                      disabled={expiredCurrentPage * expiredPageSize >= expiredProfiles.length}
+                      disabled={expiredCurrentPage * expiredPageSize >= expiredTotalCount}
                       className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       style={{ borderColor: color.surface.border }}
                       title="Next page"
