@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -13,6 +13,8 @@ import {
   Download,
   Upload,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { DataConnector } from "../types";
 import { fetchDataConnectors } from "../services";
@@ -29,25 +31,38 @@ export default function DataConnectors() {
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalConnectors, setTotalConnectors] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
-  const loadConnectors = async () => {
+  const loadConnectors = useCallback(async () => {
     try {
       setLoading(true);
+      const offset = (currentPage - 1) * pageSize;
       const response = await fetchDataConnectors({
         search: searchTerm || undefined,
+        limit: pageSize,
+        offset,
       });
       setConnectors(response.data);
+      setTotalConnectors(response.total);
+      setHasMore(response.hasMore);
     } catch (error) {
       console.error("Failed to load data connectors:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, searchTerm]);
 
   useEffect(() => {
     loadConnectors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadConnectors]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   // Close action menu on outside click
   useEffect(() => {
@@ -129,7 +144,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.length}
+              {totalConnectors}
             </p>
           </div>
           <div
@@ -192,8 +207,7 @@ export default function DataConnectors() {
             type="text"
             placeholder="Search connectors..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
+            onChange={(e) => handleSearch(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
           />
         </div>
@@ -400,6 +414,71 @@ export default function DataConnectors() {
               </tbody>
             </table>
           </div>
+          {/* Pagination Controls */}
+          {connectors.length > 0 && (
+            <div
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
+              style={{ borderColor: color.surface.border }}
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="pageSize"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Items per page:
+                  </label>
+                  <select
+                    id="pageSize"
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(parseInt(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className={`px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none`}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+                <span className="text-sm text-gray-600">
+                  Showing{" "}
+                  <strong>
+                    {(currentPage - 1) * pageSize + 1}
+                    {connectors.length > 0 ? "-" : ""}{" "}
+                    {Math.min(currentPage * pageSize, totalConnectors)}
+                  </strong>{" "}
+                  of <strong>{totalConnectors}</strong>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderColor: color.surface.border }}
+                  title="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                  Page {currentPage}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  disabled={!hasMore}
+                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{ borderColor: color.surface.border }}
+                  title="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -18,6 +18,8 @@ import {
   Ban,
   CheckSquare,
   Square,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -109,6 +111,10 @@ export default function JobExecutionsPage() {
     new Set()
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalExecutions, setTotalExecutions] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const filtersModalRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(filtersModalRef, () => {
@@ -124,6 +130,7 @@ export default function JobExecutionsPage() {
 
       try {
         let response;
+        const offset = (currentPage - 1) * pageSize;
 
         // Quick filters
         if (quickFilter === "sla-breached") {
@@ -145,12 +152,12 @@ export default function JobExecutionsPage() {
             );
             response = {
               data: [exec],
-              pagination: { total: 1, limit: 50, offset: 0, hasMore: false },
+              pagination: { total: 1, limit: pageSize, offset: 0, hasMore: false },
             };
           } catch {
             response = {
               data: [],
-              pagination: { total: 0, limit: 50, offset: 0, hasMore: false },
+              pagination: { total: 0, limit: pageSize, offset: 0, hasMore: false },
             };
           }
         } else if (correlationIdFilter.trim()) {
@@ -162,8 +169,8 @@ export default function JobExecutionsPage() {
             startDate: startDateFilter,
             endDate: endDateFilter,
             jobId: jobIdFilter || undefined,
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset,
           });
         } else if (statusFilter === "running") {
           response = await jobExecutionService.getActiveExecutions();
@@ -178,24 +185,24 @@ export default function JobExecutionsPage() {
           response = await jobExecutionService.getExecutionsByStatus(
             statusFilter,
             {
-              limit: 50,
-              offset: 0,
+              limit: pageSize,
+              offset,
             }
           );
         } else if (jobIdFilter) {
           response = await jobExecutionService.getExecutionsByJobId(
             Number(jobIdFilter),
             {
-              limit: 50,
-              offset: 0,
+              limit: pageSize,
+              offset,
             }
           );
         } else {
           // Use search endpoint for general queries
           const params: JobExecutionSearchParams = {
             filters: {},
-            limit: 50,
-            offset: 0,
+            limit: pageSize,
+            offset,
             ...overrideParams,
           };
           if (statusFilter) {
@@ -227,6 +234,12 @@ export default function JobExecutionsPage() {
           }
         }
 
+        // Extract pagination metadata
+        if (response && "pagination" in response && response.pagination) {
+          setTotalExecutions(response.pagination.total || 0);
+          setHasMore(response.pagination.hasMore || false);
+        }
+
         const sortedExecutions = [...executionList].sort((a, b) => {
           const startedB = b.started_at ? new Date(b.started_at).getTime() : 0;
           const startedA = a.started_at ? new Date(a.started_at).getTime() : 0;
@@ -253,6 +266,8 @@ export default function JobExecutionsPage() {
       endDateFilter,
       longRunningThreshold,
       showError,
+      currentPage,
+      pageSize,
     ]
   );
 
@@ -307,6 +322,21 @@ export default function JobExecutionsPage() {
       setIsLoadingStats(false);
     }
   }, [showError]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    statusFilter,
+    jobIdFilter,
+    daysBackFilter,
+    quickFilter,
+    traceIdFilter,
+    correlationIdFilter,
+    startDateFilter,
+    endDateFilter,
+    longRunningThreshold,
+  ]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -1214,6 +1244,71 @@ export default function JobExecutionsPage() {
                 ))}
               </tbody>
             </table>
+            {/* Pagination Controls */}
+            {filteredExecutions.length > 0 && (
+              <div
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
+                style={{ borderColor: color.surface.border }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="pageSize"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Items per page:
+                    </label>
+                    <select
+                      id="pageSize"
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(parseInt(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none`}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+                  <span className="text-sm text-gray-600">
+                    Showing{" "}
+                    <strong>
+                      {(currentPage - 1) * pageSize + 1}
+                      {filteredExecutions.length > 0 ? "-" : ""}{" "}
+                      {Math.min(currentPage * pageSize, totalExecutions)}
+                    </strong>{" "}
+                    of <strong>{totalExecutions}</strong>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderColor: color.surface.border }}
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                    Page {currentPage}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    disabled={!hasMore}
+                    className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ borderColor: color.surface.border }}
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
