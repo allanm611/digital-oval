@@ -425,6 +425,7 @@ export default function EtlFileRegistryPage() {
                   <th className="px-6 py-4 font-medium">{t.etl.fileNameHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.categoryHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.statusHeader}</th>
+                  <th className="px-6 py-4 font-medium">Total Rows</th>
                   <th className="px-6 py-4 font-medium">{t.etl.rowsProcessedHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.sizeHeader}</th>
                   <th className="px-6 py-4 font-medium">{t.etl.updatedHeader}</th>
@@ -462,6 +463,14 @@ export default function EtlFileRegistryPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {getStatusBadge(file.processing_status || "pending")}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-black"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="text-sm font-medium">
+                        {file.rows_parsed ? file.rows_parsed.toLocaleString() : "—"}
+                      </div>
                     </td>
                     <td
                       className="px-6 py-4 text-black"

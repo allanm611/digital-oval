@@ -31,6 +31,7 @@ const defaultFormValues = {
   region: "",
   port: "",
   base_path: "",
+  server_type: "",
   timeout_seconds: 30,
   max_retries: 3,
   health_check_enabled: true,
@@ -40,6 +41,7 @@ const defaultFormValues = {
   circuit_breaker_threshold: 5,
   tls_enabled: false,
   authentication_type: "",
+  metadata: "",
 };
 
 export default function ServerFormPage({ mode }: ServerFormPageProps) {
@@ -69,6 +71,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             region: server.region || "",
             port: server.port ? String(server.port) : "",
             base_path: server.base_path || "",
+            server_type: server.server_type || "",
             timeout_seconds: server.timeout_seconds || 30,
             max_retries: server.max_retries || 3,
             health_check_enabled: server.health_check_enabled || false,
@@ -79,6 +82,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             circuit_breaker_threshold: server.circuit_breaker_threshold || 5,
             tls_enabled: server.tls_enabled || false,
             authentication_type: server.authentication_type || "",
+            metadata: server.metadata ? JSON.stringify(server.metadata) : "",
           });
         } catch (err) {
           const message =
@@ -138,6 +142,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           region: form.region || undefined,
           port: form.port ? Number(form.port) : undefined,
           base_path: form.base_path || undefined,
+          server_type: form.server_type || undefined,
           timeout_seconds: Number(form.timeout_seconds) || undefined,
           max_retries: Number(form.max_retries) || undefined,
           health_check_enabled: form.health_check_enabled,
@@ -149,6 +154,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             Number(form.circuit_breaker_threshold) || undefined,
           tls_enabled: form.tls_enabled,
           authentication_type: form.authentication_type || undefined,
+          metadata: form.metadata ? JSON.parse(form.metadata) : undefined,
           user_id: user?.user_id,
         };
 
@@ -168,6 +174,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           region: form.region || undefined,
           port: form.port ? Number(form.port) : undefined,
           base_path: form.base_path || undefined,
+          server_type: form.server_type || undefined,
           timeout_seconds: Number(form.timeout_seconds) || undefined,
           max_retries: Number(form.max_retries) || undefined,
           health_check_enabled: form.health_check_enabled,
@@ -179,6 +186,7 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
             Number(form.circuit_breaker_threshold) || undefined,
           tls_enabled: form.tls_enabled,
           authentication_type: form.authentication_type || undefined,
+          metadata: form.metadata ? JSON.parse(form.metadata) : undefined,
           user_id: user?.user_id ? String(user.user_id) : undefined,
         };
 
@@ -385,6 +393,22 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
               />
             </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Server Type
+              </label>
+              <p className="text-xs text-gray-500 mb-1">
+                Classification of server type (e.g. database, api, file-storage).
+              </p>
+              <input
+                type="text"
+                name="server_type"
+                value={form.server_type}
+                onChange={handleChange}
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none`}
+              />
+            </div>
           </div>
         </div>
 
@@ -516,6 +540,32 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
               />
             </div>
           )}
+        </div>
+
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Advanced Settings
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Metadata
+              </label>
+              <p className="text-xs text-gray-500 mb-1">
+                Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;: &quot;value&quot;&#x7D;).
+              </p>
+              <textarea
+                name="metadata"
+                value={form.metadata}
+                onChange={handleChange}
+                className={`w-full ${tw.rounded} border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none font-mono`}
+                rows={3}
+                placeholder='{"key": "value"}'
+              />
+            </div>
+          </div>
         </div>
 
         <div

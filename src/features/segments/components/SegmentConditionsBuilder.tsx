@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Plus,
   Trash2,
@@ -10,7 +10,6 @@ import {
   Zap,
   DollarSign,
   Activity,
-  Smartphone,
 } from "lucide-react";
 import {
   SegmentCondition,
@@ -72,14 +71,10 @@ export default function SegmentConditionsBuilder({
         return List;
       case "system_event":
         return Zap;
-      case "customer_profile_kpi":
-        return User;
       case "revenue_metric_kpi":
         return DollarSign;
       case "usage_metric_kpi":
         return Activity;
-      case "device_info_kpi":
-        return Smartphone;
       default:
         return User;
     }
@@ -254,10 +249,8 @@ export default function SegmentConditionsBuilder({
         return renderListFields(groupId, condition);
       case "system_event":
         return renderSystemEventFields(groupId, condition);
-      case "customer_profile_kpi":
       case "revenue_metric_kpi":
       case "usage_metric_kpi":
-      case "device_info_kpi":
         return renderKPIFields(groupId, condition);
       default:
         return null;
@@ -961,10 +954,8 @@ export default function SegmentConditionsBuilder({
                           { value: "segment", label: "Segment" },
                           { value: "list", label: "QuickList" },
                           { value: "system_event", label: "System Event" },
-                          { value: "customer_profile_kpi", label: "Customer Profile" },
                           { value: "revenue_metric_kpi", label: "Revenue Metric" },
                           { value: "usage_metric_kpi", label: "Usage Metric" },
-                          { value: "device_info_kpi", label: "Device Info" },
                         ]}
                         value={condition.conditionType}
                         onChange={(value) => {
@@ -973,10 +964,8 @@ export default function SegmentConditionsBuilder({
                             | "segment"
                             | "list"
                             | "system_event"
-                            | "customer_profile_kpi"
                             | "revenue_metric_kpi"
-                            | "usage_metric_kpi"
-                            | "device_info_kpi";
+                            | "usage_metric_kpi";
                           // Reset condition based on type
                           if (condType === "360_profile") {
                             const firstField =
@@ -1054,10 +1043,8 @@ export default function SegmentConditionsBuilder({
                               kpi_category: undefined,
                             });
                           } else if (
-                            condType === "customer_profile_kpi" ||
                             condType === "revenue_metric_kpi" ||
-                            condType === "usage_metric_kpi" ||
-                            condType === "device_info_kpi"
+                            condType === "usage_metric_kpi"
                           ) {
                             updateCondition(group.id, condition.id, {
                               conditionType: condType,
@@ -1252,7 +1239,7 @@ export default function SegmentConditionsBuilder({
         }}
       />
 
-      {/* KPI Picker Modal */}
+      {/* KPI Picker Modal - Only for Revenue and Usage Metrics */}
       {currentKPIModalType && (
         <KPIPickerModal
           isOpen={isKPIModalOpen}
@@ -1283,7 +1270,7 @@ export default function SegmentConditionsBuilder({
           ) as KPI["category"]}
           title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
           searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
-          hasSubcategories={currentKPIModalType !== "customer_profile_kpi"}
+          hasSubcategories={true}
           subcategoryOptions={
             currentKPIModalType === "revenue_metric_kpi"
               ? [
@@ -1302,13 +1289,6 @@ export default function SegmentConditionsBuilder({
                   { value: "sms_usage", label: "SMS Usage" },
                   { value: "bundle_usage", label: "Bundle Usage" },
                   { value: "dou_metrics", label: "DOU Metrics" },
-                ]
-              : currentKPIModalType === "device_info_kpi"
-              ? [
-                  { value: "all", label: "All Device Info" },
-                  { value: "device_profile", label: "Device Profile" },
-                  { value: "sim_info", label: "SIM Info" },
-                  { value: "network_type", label: "Network Type" },
                 ]
               : undefined
           }

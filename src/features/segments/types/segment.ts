@@ -568,7 +568,7 @@ export enum ComputationStatusEnum {
 
 export interface SegmentCondition {
   id: string;
-  conditionType: "360_profile" | "segment" | "list" | "system_event" | "customer_profile_kpi" | "revenue_metric_kpi" | "usage_metric_kpi" | "device_info_kpi"; // Type of condition
+  conditionType: "360_profile" | "segment" | "list" | "system_event" | "revenue_metric_kpi" | "usage_metric_kpi"; // Type of condition
 
   // For 360 Profile conditions
   category?: number; // Category ID for filtering fields

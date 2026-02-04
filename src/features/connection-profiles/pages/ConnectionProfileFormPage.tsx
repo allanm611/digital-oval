@@ -44,7 +44,7 @@ export default function ConnectionProfileFormPage({
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ConnectionProfileType | null>(null);
 
-  const [formData, setFormData] = useState<CreateConnectionProfilePayload>({
+  const [formData, setFormData] = useState<CreateConnectionProfilePayload & { metadata?: string | Record<string, unknown> }>({
     profile_name: "",
     profile_code: "",
     connection_type: (defaultConnectionType || "database") as ConnectionTypeEnum,
@@ -63,6 +63,15 @@ export default function ConnectionProfileFormPage({
     contains_pii: false,
     gdpr_applicable: false,
     valid_from: new Date().toISOString().split("T")[0],
+    server_id: undefined,
+    database_name: "",
+    database_type: "",
+    sync_column_name: "",
+    sync_column_type: "",
+    health_check_enabled: false,
+    health_check_query: "",
+    encryption_key_version: undefined,
+    metadata: "",
   });
 
   const ensureUniqueIdentifiers = async () => {
@@ -106,7 +115,7 @@ export default function ConnectionProfileFormPage({
         health_check_enabled: data.health_check_enabled,
         health_check_query: data.health_check_query || undefined,
         encryption_key_version: data.encryption_key_version,
-        metadata: data.metadata || undefined,
+        metadata: data.metadata ? JSON.stringify(data.metadata) : "",
       });
     } catch (err) {
       console.error("Failed to load connection profile:", err);
@@ -144,6 +153,15 @@ export default function ConnectionProfileFormPage({
           cleanedPayload.valid_to = new Date(formData.valid_to).toISOString();
         }
 
+        // Parse metadata if it's a string
+        if (formData.metadata && typeof formData.metadata === "string") {
+          try {
+            cleanedPayload.metadata = JSON.parse(formData.metadata);
+          } catch {
+            cleanedPayload.metadata = undefined;
+          }
+        }
+
         // Add created_by if user is available
         if (user?.user_id) {
           cleanedPayload.created_by = user.user_id;
@@ -151,7 +169,7 @@ export default function ConnectionProfileFormPage({
 
         // Remove only undefined values (null is valid and should be sent)
         Object.keys(cleanedPayload).forEach((key) => {
-          if (cleanedPayload[key] === undefined) {
+          if (cleanedPayload[key] === undefined || cleanedPayload[key] === "") {
             delete cleanedPayload[key];
           }
         });
@@ -168,6 +186,16 @@ export default function ConnectionProfileFormPage({
             ? new Date(formData.valid_to).toISOString()
             : null,
         };
+
+        // Parse metadata if it's a string
+        if (payload.metadata && typeof payload.metadata === "string") {
+          try {
+            payload.metadata = JSON.parse(payload.metadata);
+          } catch {
+            payload.metadata = undefined;
+          }
+        }
+
         await connectionProfileService.updateProfile(Number(id), payload);
         success("Connection profile updated successfully");
       }
@@ -351,6 +379,48 @@ export default function ConnectionProfileFormPage({
                 className={`w-full px-3 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
               />
             </div>
+            {formData.connection_type === "database" && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Database Name
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Name of the database to connect to.
+                  </p>
+                  <input
+                    type="text"
+                    value={formData.database_name || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        database_name: e.target.value || undefined,
+                      })
+                    }
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Database Type
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Type of database (e.g. MySQL, PostgreSQL, Oracle).
+                  </p>
+                  <input
+                    type="text"
+                    value={formData.database_type || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        database_type: e.target.value || undefined,
+                      })
+                    }
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -488,6 +558,70 @@ export default function ConnectionProfileFormPage({
                 min={1}
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Max Retries *
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Maximum number of retry attempts on failure.
+              </p>
+              <input
+                type="number"
+                value={formData.max_retries}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    max_retries: Number(e.target.value),
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                required
+                min={0}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Retry Backoff Multiplier *
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Exponential backoff multiplier for retries.
+              </p>
+              <input
+                type="number"
+                value={formData.retry_backoff_multiplier}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    retry_backoff_multiplier: Number(e.target.value),
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                required
+                min={1}
+                step={0.1}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Circuit Breaker Threshold *
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Number of failures before circuit opens.
+              </p>
+              <input
+                type="number"
+                value={formData.circuit_breaker_threshold}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    circuit_breaker_threshold: Number(e.target.value),
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                required
+                min={1}
+              />
+            </div>
           </div>
         </div>
 
@@ -585,6 +719,167 @@ export default function ConnectionProfileFormPage({
                 onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
               />
             </div>
+          </div>
+        </div>
+
+        {(formData.load_strategy === "incremental" ||
+          formData.load_strategy === "delta" ||
+          formData.load_strategy === "cdc") && (
+          <div
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          >
+            <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+              Sync Settings
+            </h2>
+            <p className="text-xs text-gray-500 mb-4">
+              Configure incremental sync settings for detecting changes.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sync Column Name
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Column used for tracking changes (e.g. modified_at, id).
+                </p>
+                <input
+                  type="text"
+                  value={formData.sync_column_name || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      sync_column_name: e.target.value || undefined,
+                    })
+                  }
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sync Column Type
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Data type of the sync column.
+                </p>
+                <input
+                  type="text"
+                  value={formData.sync_column_type || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      sync_column_type: e.target.value || undefined,
+                    })
+                  }
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className={`${tw.cardHeading} text-gray-900`}>
+                Health Checks
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">
+                Monitor connection health with periodic checks.
+              </p>
+            </div>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.health_check_enabled || false}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    health_check_enabled: e.target.checked,
+                  })
+                }
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Enabled
+              </span>
+            </label>
+          </div>
+
+          {formData.health_check_enabled && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Health Check Query
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Query to run for health checks (e.g. SELECT 1).
+              </p>
+              <textarea
+                value={formData.health_check_query || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    health_check_query: e.target.value || undefined,
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none font-mono`}
+                rows={2}
+                placeholder="SELECT 1"
+              />
+            </div>
+          )}
+        </div>
+
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <h2 className={`${tw.cardHeading} text-gray-900 mb-4`}>
+            Advanced Settings
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Encryption Key Version
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Version of encryption key to use for sensitive data.
+              </p>
+              <input
+                type="number"
+                value={formData.encryption_key_version || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    encryption_key_version: e.target.value
+                      ? Number(e.target.value)
+                      : undefined,
+                  })
+                }
+                className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
+                min={1}
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Metadata
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;: &quot;value&quot;&#x7D;).
+            </p>
+            <textarea
+              value={formData.metadata || ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  metadata: e.target.value || "",
+                })
+              }
+              className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none font-mono`}
+              rows={3}
+              placeholder='{"key": "value"}'
+            />
           </div>
         </div>
 
