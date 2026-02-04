@@ -4,6 +4,8 @@ import { Save } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { connectionProfileService } from "../services/connectionProfileService";
+import { serverService } from "../../servers/services/serverService";
+import { ServerType } from "../../servers/types/server";
 import {
   ConnectionProfileType,
   CreateConnectionProfilePayload,
@@ -43,11 +45,19 @@ export default function ConnectionProfileFormPage({
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ConnectionProfileType | null>(null);
+  const [servers, setServers] = useState<ServerType[]>([]);
+  const [loadingServers, setLoadingServers] = useState(false);
+  const [serversError, setServersError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateConnectionProfilePayload & { metadata?: string | Record<string, unknown> }>({
+  const [formData, setFormData] = useState<
+    CreateConnectionProfilePayload & {
+      metadata?: string | Record<string, unknown>;
+    }
+  >({
     profile_name: "",
     profile_code: "",
-    connection_type: (defaultConnectionType || "database") as ConnectionTypeEnum,
+    connection_type: (defaultConnectionType ||
+      "database") as ConnectionTypeEnum,
     load_strategy: "full",
     environment: "development",
     batch_size: 1000,
@@ -135,6 +145,32 @@ export default function ConnectionProfileFormPage({
       loadProfile();
     }
   }, [mode, id, loadProfile]);
+
+  useEffect(() => {
+    const loadServers = async () => {
+      try {
+        setLoadingServers(true);
+        setServersError(null);
+        const response = await serverService.listServers({
+          limit: 100,
+          offset: 0,
+        });
+
+        const serverList = response.data || [];
+        setServers(Array.isArray(serverList) ? serverList : []);
+      } catch (err) {
+        console.error("Failed to load servers:", err);
+        setServersError(
+          err instanceof Error ? err.message : "Failed to load servers",
+        );
+        setServers([]);
+      } finally {
+        setLoadingServers(false);
+      }
+    };
+
+    loadServers();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,25 +395,50 @@ export default function ConnectionProfileFormPage({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 ">
-                Server ID
+              <label className="block text-sm font-medium text-gray-700">
+                Server
               </label>
               <p className="text-xs text-gray-500 mb-2">
-                Identifier for the server hosting the data source.
+                Select the server endpoint for this connection.
               </p>
-              <input
-                type="number"
-                value={formData.server_id || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    server_id: e.target.value
-                      ? Number(e.target.value)
-                      : undefined,
-                  })
-                }
-                className={`w-full px-3 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
-              />
+
+              {loadingServers && (
+                <div className="text-sm text-gray-500 py-2">
+                  Loading servers...
+                </div>
+              )}
+
+              {serversError && (
+                <div className="text-sm text-red-500 py-2">
+                  Error loading servers: {serversError}
+                </div>
+              )}
+
+              {!loadingServers && !serversError && servers.length === 0 && (
+                <div className="text-sm text-yellow-600 py-2">
+                  No servers available. Please create a server first.
+                </div>
+              )}
+
+              {!loadingServers && !serversError && servers.length > 0 && (
+                <HeadlessSelect
+                  options={servers.map((server) => ({
+                    value: String(server.id),
+                    label: `${server.name} (${server.host}${
+                      server.port ? `:${server.port}` : ""
+                    })`,
+                  }))}
+                  value={String(formData.server_id || "")}
+                  onChange={(value) =>
+                    setFormData({
+                      ...formData,
+                      server_id: value ? Number(value) : undefined,
+                    })
+                  }
+                  placeholder="Select a server..."
+                  className="mt-1"
+                />
+              )}
             </div>
             {formData.connection_type === "database" && (
               <>
@@ -801,9 +862,7 @@ export default function ConnectionProfileFormPage({
                 }
                 className="w-4 h-4"
               />
-              <span className="text-sm font-medium text-gray-700">
-                Enabled
-              </span>
+              <span className="text-sm font-medium text-gray-700">Enabled</span>
             </label>
           </div>
 
@@ -866,7 +925,8 @@ export default function ConnectionProfileFormPage({
               Metadata
             </label>
             <p className="text-xs text-gray-500 mb-2">
-              Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;: &quot;value&quot;&#x7D;).
+              Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
+              &quot;value&quot;&#x7D;).
             </p>
             <textarea
               value={formData.metadata || ""}
@@ -890,7 +950,10 @@ export default function ConnectionProfileFormPage({
               if (onCancel) {
                 onCancel();
               } else {
-                navigateBackOrFallback(navigate, "/dashboard/connection-profiles");
+                navigateBackOrFallback(
+                  navigate,
+                  "/dashboard/connection-profiles",
+                );
               }
             }}
             className={`px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors`}

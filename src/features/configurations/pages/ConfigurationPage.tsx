@@ -243,16 +243,6 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/segment-types",
       },
-      {
-        id: "segment-lists",
-        name: "Segment Lists",
-        description:
-          "Manage segment lists that feed campaigns, offers, and customer journeys",
-        type: "segment",
-        category: "Segment Configuration",
-        status: "active",
-        navigationPath: "/dashboard/segment-list",
-      },
       // User-related configs
       {
         id: "user-management",
