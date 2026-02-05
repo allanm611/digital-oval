@@ -44,6 +44,8 @@ import {
   campaignSegmentOfferService,
   CampaignSegmentOfferMapping,
 } from "../services/campaignSegmentOfferService";
+import { campaignFlowService } from "../services/campaignFlowService";
+import { CampaignFlowConfig } from "../types/campaignFlow";
 import { segmentService } from "../../segments/services/segmentService";
 import { offerService } from "../../offers/services/offerService";
 import { departmentsConfig } from "../../../shared/configs/configurationPageConfigs";
@@ -59,8 +61,10 @@ const objectiveOptions = [
 import CampaignDefinitionStep from "../components/steps/CampaignDefinitionStep";
 import AudienceConfigurationStep from "../components/steps/AudienceConfigurationStep";
 import OfferMappingStep from "../components/steps/OfferMappingStep";
+import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
 import SchedulingStep from "../components/steps/SchedulingStep";
 import CampaignPreviewStep from "../components/steps/CampaignPreviewStep";
+import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 
 interface StepProps {
   currentStep: number;
@@ -76,6 +80,8 @@ interface StepProps {
   setSelectedOffers: (offers: CampaignOffer[]) => void;
   segmentOfferMappings?: SegmentOfferMapping[];
   setSegmentOfferMappings?: (mappings: SegmentOfferMapping[]) => void;
+  campaignFlows?: CampaignFlowConfig[];
+  setCampaignFlows?: (flows: CampaignFlowConfig[]) => void;
   controlGroup: ControlGroup;
   setControlGroup: (group: ControlGroup) => void;
   isLoading?: boolean;
@@ -101,8 +107,8 @@ const steps: Step[] = [
   },
   {
     id: 3,
-    name: "Offers",
-    description: "Offer selection & mapping",
+    name: "Delivery Flows",
+    description: "Delivery flow configuration",
     icon: Gift,
   },
   {
@@ -130,9 +136,16 @@ export default function CreateCampaignPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(() => {
+    // Detect edit mode immediately from URL param
+    // This ensures isEditMode is true BEFORE useFormDataPersistence runs
+    return Boolean(id);
+  });
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
+  const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(null);
+  const [createdCampaignName, setCreatedCampaignName] = useState<string>("");
   const hasRestoredDataRef = useRef(false);
 
   // Scroll to top when step changes
@@ -200,6 +213,7 @@ export default function CreateCampaignPage() {
   const [segmentOfferMappings, setSegmentOfferMappings] = useState<
     SegmentOfferMapping[]
   >([]);
+  const [campaignFlows, setCampaignFlows] = useState<CampaignFlowConfig[]>([]);
   const [controlGroup, setControlGroup] = useState<ControlGroup>({
     enabled: false,
     percentage: 5,
@@ -234,6 +248,12 @@ export default function CreateCampaignPage() {
     "campaign_mappings",
     segmentOfferMappings,
     setSegmentOfferMappings,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "campaign_flows",
+    campaignFlows,
+    setCampaignFlows,
     isEditMode,
   );
 
@@ -398,6 +418,36 @@ export default function CreateCampaignPage() {
         } catch (mappingError) {
           console.error("Failed to load segment-offer mappings:", mappingError);
         }
+
+        // Load campaign flows if they exist
+        try {
+          const flowsResponse = await campaignFlowService.getCampaignFlows(
+            parseInt(campaignId)
+          );
+
+          if (flowsResponse.success && flowsResponse.data.length > 0) {
+            // Convert API response to CampaignFlowConfig format
+            const flows: CampaignFlowConfig[] = flowsResponse.data.map((flow) => ({
+              campaign_id: flow.campaign_id,
+              segment_id: typeof flow.segment_id === "string" ? parseInt(flow.segment_id) : flow.segment_id,
+              offer_id: flow.offer_id,
+              offer_creative_id: flow.offer_creative_id || undefined,
+              template_id: flow.template_id || undefined,
+              flow_type: flow.flow_type,
+              step_order: flow.step_order,
+              wait_interval_hours: flow.wait_interval_hours,
+              bucket_allocation: flow.bucket_allocation || undefined,
+              condition_rule: flow.condition_rule || undefined,
+              is_active: flow.is_active,
+              created_by: flow.created_by,
+            }));
+
+            setCampaignFlows(flows);
+          }
+        } catch (flowError) {
+          console.error("Failed to load campaign flows:", flowError);
+          // Non-critical error - continue anyway
+        }
       } catch {
         if (!silent) {
           showToast("error", t.campaigns.failedToLoadCampaign);
@@ -517,7 +567,7 @@ export default function CreateCampaignPage() {
     // Then handle edit/duplicate mode (only if not returning from offer creation)
     if (id && !hasRestoredDataRef.current) {
       // Edit mode - modifying existing campaign
-      setIsEditMode(true);
+      // isEditMode already set in state initialization
       setIsDuplicateMode(false);
 
       // Check if campaign data is passed via location.state (from details page)
@@ -559,7 +609,7 @@ export default function CreateCampaignPage() {
       }
     } else if (duplicateIdParam && !hasRestoredDataRef.current) {
       // Duplicate mode - creating new campaign from existing one
-      setIsEditMode(false);
+      // No need to set isEditMode - state init handles it
       setIsDuplicateMode(true);
       loadCampaignData(duplicateIdParam, true);
     }
@@ -627,32 +677,22 @@ export default function CreateCampaignPage() {
         }
         return { isValid: Object.keys(errors).length === 0, errors };
 
-      case 3: // Offers step
-        if (formData.campaign_type === "multiple_target_group") {
-          // For multiple_target_group, verify all segments have at least one offer mapped
-          if (selectedSegments.length === 0) {
-            errors.offers = "Segments must be configured first";
-          } else {
-            const segmentsWithoutOffers = selectedSegments.filter(
-              (segment) =>
-                !segmentOfferMappings.some(
-                  (mapping) => mapping.segment_id === segment.id,
-                ),
-            );
-            if (segmentsWithoutOffers.length > 0) {
-              errors.offers = `All segments must have at least one offer mapped. Missing offers for: ${segmentsWithoutOffers
-                .map((s) => s.name)
-                .join(", ")}`;
-            }
-          }
-        } else if (selectedOffers.length === 0) {
-          errors.offers = "At least one offer must be selected";
+      case 3: // Campaign Flows step
+        // Validate that at least one flow is configured
+        if (campaignFlows.length === 0) {
+          errors.flows = "At least one delivery flow must be configured";
         }
 
-        // Check for offer status validation errors (set by OfferMappingStep component)
-        // This prevents proceeding if any offers are not Active or Approved
-        if (validationErrors.offers) {
-          errors.offers = validationErrors.offers;
+        // Validate each flow has required fields
+        for (const flow of campaignFlows) {
+          if (!flow.segment_id) {
+            errors.flows = "All flows must have a segment selected";
+            break;
+          }
+          if (!flow.offer_id) {
+            errors.flows = "All flows must have an offer selected";
+            break;
+          }
         }
 
         return { isValid: Object.keys(errors).length === 0, errors };
@@ -713,6 +753,7 @@ export default function CreateCampaignPage() {
         selectedSegments: JSON.parse(JSON.stringify(selectedSegments)),
         selectedOffers: JSON.parse(JSON.stringify(selectedOffers)),
         segmentOfferMappings: JSON.parse(JSON.stringify(segmentOfferMappings)),
+        campaignFlows: JSON.parse(JSON.stringify(campaignFlows)),
         controlGroup: JSON.parse(JSON.stringify(controlGroup)),
         currentStep: currentStep,
       };
@@ -725,6 +766,7 @@ export default function CreateCampaignPage() {
     selectedSegments,
     selectedOffers,
     segmentOfferMappings,
+    campaignFlows,
     controlGroup,
     currentStep,
     id,
@@ -746,6 +788,7 @@ export default function CreateCampaignPage() {
     selectedSegments,
     selectedOffers,
     segmentOfferMappings,
+    campaignFlows,
     controlGroup,
     currentStep,
     id,
@@ -910,18 +953,22 @@ export default function CreateCampaignPage() {
         }
 
         // Extract campaign ID from response
-        const createdCampaignId = createResponse?.data?.id;
+        const createdCampaignIdValue = createResponse?.data?.id;
 
-        if (!createdCampaignId) {
+        if (!createdCampaignIdValue) {
           throw new Error("Campaign created but ID not returned");
         }
+
+        // Store for execution modal
+        setCreatedCampaignId(createdCampaignIdValue);
+        setCreatedCampaignName(formData.name);
 
         // Save segments (Step 2) for all campaign types
         if (selectedSegments.length > 0) {
           try {
             // Add each segment to the campaign
             for (const segment of selectedSegments) {
-              await campaignService.addCampaignSegment(createdCampaignId, {
+              await campaignService.addCampaignSegment(createdCampaignIdValue, {
                 segment_id: parseInt(segment.id),
                 is_primary: segment.priority === 1,
                 include_exclude: segment.include_exclude || "include",
@@ -942,7 +989,7 @@ export default function CreateCampaignPage() {
           try {
             const mappingsToCreate: CampaignSegmentOfferMapping[] =
               segmentOfferMappings.map((mapping) => ({
-                campaign_id: createdCampaignId,
+                campaign_id: createdCampaignIdValue,
                 segment_id: mapping.segment_id,
                 offer_id: mapping.offer_id,
                 created_by: user?.user_id || 1,
@@ -958,6 +1005,33 @@ export default function CreateCampaignPage() {
             );
           } catch (mappingError) {
             console.error("Error saving mappings:", mappingError);
+            showToast(
+              "warning",
+              t.messages.warning || "Warning",
+            );
+          }
+        }
+
+        // Create campaign flows (new approach) if flows exist
+        if (campaignFlows && campaignFlows.length > 0) {
+          try {
+            const flowsToCreate: CampaignFlowConfig[] = campaignFlows.map(
+              (flow, index) => ({
+                ...flow,
+                campaign_id: createdCampaignIdValue,
+                step_order: index + 1,
+                created_by: user?.user_id || 1,
+              }),
+            );
+
+            await campaignFlowService.createBatchCampaignFlows(flowsToCreate);
+
+            showToast(
+              "success",
+              t.messages.success || "Success",
+            );
+          } catch (flowError) {
+            console.error("Error saving campaign flows:", flowError);
             showToast(
               "warning",
               t.messages.warning || "Warning",
@@ -980,7 +1054,13 @@ export default function CreateCampaignPage() {
       clearPersistedFormData("campaign_offers");
       clearPersistedFormData("campaign_mappings");
 
-      navigate("/dashboard/campaigns");
+      // If creating a new campaign (not edit mode), show execution modal
+      if (!isEditMode && createdCampaignId) {
+        setShowExecuteModal(true);
+      } else {
+        // If editing, just navigate back
+        navigate("/dashboard/campaigns");
+      }
     } catch (error) {
       console.error("Failed to create/update campaign:", error);
 
@@ -1221,6 +1301,8 @@ export default function CreateCampaignPage() {
     setSelectedOffers,
     segmentOfferMappings,
     setSegmentOfferMappings,
+    campaignFlows,
+    setCampaignFlows,
     controlGroup,
     setControlGroup,
     isLoading,
@@ -1238,7 +1320,8 @@ export default function CreateCampaignPage() {
       case 2:
         return <AudienceConfigurationStep {...stepProps} />;
       case 3:
-        return <OfferMappingStep {...stepProps} />;
+        // Use new CampaignFlowsStep for flows-first approach
+        return <CampaignFlowsStep {...stepProps} />;
       case 4:
         return <SchedulingStep {...stepProps} />;
       case 5:
@@ -1357,6 +1440,22 @@ export default function CreateCampaignPage() {
           </div>
         </div>
       </div>
+
+      {/* Execute Campaign Modal */}
+      {createdCampaignId && createdCampaignName && (
+        <ExecuteCampaignModal
+          isOpen={showExecuteModal}
+          onClose={() => {
+            setShowExecuteModal(false);
+            navigate("/dashboard/campaigns");
+          }}
+          campaignId={createdCampaignId}
+          campaignName={createdCampaignName}
+          onSuccess={() => {
+            navigate("/dashboard/campaigns");
+          }}
+        />
+      )}
     </div>
   );
 }
