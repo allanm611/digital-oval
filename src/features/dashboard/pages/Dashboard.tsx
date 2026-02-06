@@ -166,10 +166,6 @@ const OfferPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/SenderIdsPage"),
   ),
-  SMSRoutesPage: lazy(
-    () =>
-      import(/* webpackPrefetch: true */ "../../offers/pages/SMSRoutesPage"),
-  ),
   LanguagesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/LanguagesPage"),
@@ -417,6 +413,10 @@ const SettingsPages = {
   SettingsSMSRoutesPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../settings/pages/SMSRoutesPage"),
+  ),
+  SMSRoutesPage: lazy(
+    () =>
+      import(/* webpackPrefetch: true */ "../../routes/pages/RoutesContainer"),
   ),
   RoutesPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage"),
@@ -874,8 +874,8 @@ export default function Dashboard() {
             element={<SettingsPages.CommunicationChannelsPage />}
           />
           <Route
-            path="/sms-routes"
-            element={<SettingsPages.SettingsSMSRoutesPage />}
+            path="/sms-routes/*"
+            element={<SettingsPages.SMSRoutesPage />}
           />
           <Route path="/routes" element={<SettingsPages.RoutesPage />} />
           <Route
