@@ -5,10 +5,14 @@ import {
   Edit2,
   Copy,
   Power,
+  PowerOff,
+  Play,
   Shield,
   Key,
   Lock,
   Search,
+  Square,
+  CheckSquare,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -132,6 +136,7 @@ export default function TeamRolesPermissionsPage() {
   const [selectedRoleForAssign, setSelectedRoleForAssign] = useState<
     Role | undefined
   >();
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -145,6 +150,7 @@ export default function TeamRolesPermissionsPage() {
   const [deactivateRoleModalOpen, setDeactivateRoleModalOpen] = useState(false);
   const [roleToDeactivate, setRoleToDeactivate] = useState<Role | null>(null);
   const [roleDeactivationReason, setRoleDeactivationReason] = useState("");
+  const [cascadeToChildren, setCascadeToChildren] = useState(false);
   const [deactivatingRoleId, setDeactivatingRoleId] = useState<number | null>(
     null,
   );
@@ -262,7 +268,8 @@ export default function TeamRolesPermissionsPage() {
     try {
       setDeactivatingRoleId(roleToDeactivate.id);
       await roleService.deactivateRole(roleToDeactivate.id, userId, {
-        reason: roleDeactivationReason.trim(),
+        deactivationReason: roleDeactivationReason.trim(),
+        cascadeToChildren,
       });
       success(
         "Success",
@@ -271,6 +278,7 @@ export default function TeamRolesPermissionsPage() {
       setDeactivateRoleModalOpen(false);
       setRoleToDeactivate(null);
       setRoleDeactivationReason("");
+      setCascadeToChildren(false);
       // Update the specific role in the list instead of reloading
       setRoles(
         roles.map((r) =>
@@ -290,7 +298,7 @@ export default function TeamRolesPermissionsPage() {
   const confirmReactivateRole = async (role: Role) => {
     try {
       setTogglingRoleId(role.id);
-      await roleService.reactivateRole(role.id, { reactivated_by: userId });
+      await roleService.reactivateRole(role.id, { userId });
       success("Success", `Role "${role.name}" has been reactivated`);
       // Update the specific role in the list instead of reloading
       setRoles(
@@ -314,10 +322,17 @@ export default function TeamRolesPermissionsPage() {
   const confirmDeleteRole = async () => {
     if (!deleteTarget || deleteTarget.type !== "role") return;
 
+    if (!userId) {
+      showError(t.common.error, "User ID is required to delete a role");
+      return;
+    }
+
     try {
       setIsDeleting(true);
       const role = roles.find((r) => r.id === deleteTarget.id);
-      await roleService.deleteRole(deleteTarget.id);
+      await roleService.deleteRole(deleteTarget.id, {
+        userId: userId,
+      });
       success("Deleted", `Role "${role?.name}" has been deleted`);
       setDeleteConfirmOpen(false);
       setDeleteTarget(null);
@@ -456,6 +471,40 @@ export default function TeamRolesPermissionsPage() {
             Manage roles, permissions, and access control
           </p>
         </div>
+        {activeTab === "assign" && selectedRoleForAssign && (
+          <button
+            onClick={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+              } else {
+                setIsSelectionMode(false);
+              }
+            }}
+            disabled={!selectedRoleForAssign}
+            className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+              isSelectionMode
+                ? "text-white"
+                : "border text-gray-700 bg-transparent hover:border-gray-400"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            style={{
+              backgroundColor: isSelectionMode ? color.primary.action : "transparent",
+              borderColor: isSelectionMode ? "transparent" : color.primary.action + "40",
+              color: isSelectionMode ? "white" : color.primary.action,
+            }}
+          >
+            {isSelectionMode ? (
+              <>
+                <CheckSquare className="w-4 h-4" />
+                Exit Selection
+              </>
+            ) : (
+              <>
+                <Square className="w-4 h-4" />
+                Select Multiple
+              </>
+            )}
+          </button>
+        )}
         {activeTab !== "assign" && (
           <button
             onClick={
@@ -647,8 +696,17 @@ export default function TeamRolesPermissionsPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleEditRole(role)}
-                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            title="Edit"
+                            disabled={role.is_system_role}
+                            className={`p-1.5 rounded transition-colors ${
+                              role.is_system_role
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                            }`}
+                            title={
+                              role.is_system_role
+                                ? "Cannot modify system roles"
+                                : "Edit"
+                            }
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -661,26 +719,49 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleToggleRoleActive(role)}
-                            disabled={togglingRoleId === role.id}
+                            disabled={
+                              togglingRoleId === role.id ||
+                              (role.is_active && (role.is_system_role || role.is_default))
+                            }
                             className={`p-1.5 rounded transition-colors ${
-                              togglingRoleId === role.id
+                              togglingRoleId === role.id ||
+                              (role.is_active && (role.is_system_role || role.is_default))
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
                                 : role.is_active
                                   ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
                                   : "text-gray-600 hover:text-green-600 hover:bg-green-50"
                             }`}
-                            title={role.is_active ? "Deactivate" : "Reactivate"}
+                            title={
+                              role.is_active
+                                ? role.is_system_role
+                                  ? "Cannot deactivate system roles"
+                                  : role.is_default
+                                    ? "Cannot deactivate default roles"
+                                    : "Deactivate"
+                                : "Reactivate"
+                            }
                           >
                             {togglingRoleId === role.id ? (
                               <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            ) : role.is_active ? (
+                              <PowerOff className="w-4 h-4" />
                             ) : (
-                              <Power className="w-4 h-4" />
+                              <Play className="w-4 h-4" />
                             )}
                           </button>
                           <button
                             onClick={() => handleDeleteRole(role)}
-                            className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-                            title="Delete"
+                            disabled={role.is_system_role}
+                            className={`p-1.5 rounded transition-colors ${
+                              role.is_system_role
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                            }`}
+                            title={
+                              role.is_system_role
+                                ? "Cannot modify system roles"
+                                : "Delete"
+                            }
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -857,7 +938,11 @@ export default function TeamRolesPermissionsPage() {
                               permission.is_active ? "Deactivate" : "Reactivate"
                             }
                           >
-                            <Power className="w-4 h-4" />
+                            {permission.is_active ? (
+                              <PowerOff className="w-4 h-4" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                       </td>
@@ -876,9 +961,15 @@ export default function TeamRolesPermissionsPage() {
           isOpen={true}
           rolesList={roles}
           selectedRole={selectedRoleForAssign}
-          onRoleSelect={setSelectedRoleForAssign}
+          onRoleSelect={(role) => {
+            setSelectedRoleForAssign(role);
+            // Clear selection mode when changing roles
+            setIsSelectionMode(false);
+          }}
           onPermissionsChanged={fetchPermissions}
           userId={userId}
+          isSelectionMode={isSelectionMode}
+          onSelectionModeChange={setIsSelectionMode}
         />
       )}
 
@@ -979,6 +1070,22 @@ export default function TeamRolesPermissionsPage() {
                   disabled={deactivatingRoleId !== null}
                 />
               </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="cascadeToChildren"
+                  checked={cascadeToChildren}
+                  onChange={(e) => setCascadeToChildren(e.target.checked)}
+                  disabled={deactivatingRoleId !== null}
+                  className="w-4 h-4 text-blue-600 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <label
+                  htmlFor="cascadeToChildren"
+                  className="text-sm text-gray-700 cursor-pointer"
+                >
+                  Deactivate child roles too
+                </label>
+              </div>
             </div>
             <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
               <button
@@ -986,6 +1093,7 @@ export default function TeamRolesPermissionsPage() {
                   setDeactivateRoleModalOpen(false);
                   setRoleToDeactivate(null);
                   setRoleDeactivationReason("");
+                  setCascadeToChildren(false);
                 }}
                 disabled={deactivatingRoleId !== null}
                 className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50"

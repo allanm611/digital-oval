@@ -291,7 +291,7 @@ class RoleService {
 
   async reactivateRole(
     id: number,
-    body?: { reactivated_by?: number },
+    body?: { userId?: number },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(`/${id}/reactivate`, {
       method: "PATCH",
@@ -303,13 +303,13 @@ class RoleService {
   async deactivateRole(
     id: number,
     userId: number,
-    body?: { reason?: string },
+    body?: { deactivationReason?: string; cascadeToChildren?: boolean },
   ): Promise<Role | null> {
     const response = await this.request<unknown>(
-      `/${id}/users/${userId}/deactivate`,
+      `/${id}/deactivate`,
       {
         method: "PATCH",
-        body: body ? JSON.stringify(body) : undefined,
+        body: body ? JSON.stringify({ ...body, userId }) : JSON.stringify({ userId }),
       },
     );
     return this.extractRole(response);
@@ -348,7 +348,7 @@ class RoleService {
     return this.extractRole(response);
   }
 
-  async deleteRole(id: number, body?: { deleted_by?: number }): Promise<void> {
+  async deleteRole(id: number, body?: { userId?: number }): Promise<void> {
     await this.request<void>(`/${id}`, {
       method: "DELETE",
       body: body ? JSON.stringify(body) : undefined,

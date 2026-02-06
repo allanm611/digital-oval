@@ -24,6 +24,7 @@ import {
   customerSubscriptions,
   searchCustomers as searchCustomersUtil,
 } from "../utils/customerDataService";
+import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import CreateCustomerModal from "../components/CreateCustomerModal";
@@ -51,6 +52,103 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>(
     customerSubscriptions,
   );
+
+  // Load customers from API and localStorage on mount
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        // Fetch from API
+        let apiCustomers: CustomerSubscriptionRecord[] = [];
+        try {
+          const apiResponse = await customerService.getAllCustomers();
+          if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
+            // Convert API customers to local format
+            apiCustomers = apiResponse.data.map((apiCustomer) => {
+              const subscriberId = typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id;
+              return {
+                customerId: subscriberId,
+                subscriptionId: subscriberId,
+                firstName: apiCustomer.attributes?.first_name || "Unknown",
+                lastName: apiCustomer.attributes?.last_name || "Customer",
+                msisdn: apiCustomer.msisdn,
+                email: apiCustomer.attributes?.email,
+                city: undefined,
+                customerType: "Non-member",
+                tariff: "Non-member",
+                status: "Active",
+                simType: "2FF",
+                activationDate: apiCustomer.created_at,
+              };
+            });
+          }
+        } catch (apiError) {
+          console.warn("Could not load customers from API:", apiError);
+        }
+
+        // Load persisted customers from localStorage
+        let persistedCustomers: CustomerSubscriptionRecord[] = [];
+        try {
+          const saved = localStorage.getItem("customers_360_data");
+          if (saved) {
+            const parsed = JSON.parse(saved) as CustomerSubscriptionRecord[];
+            if (Array.isArray(parsed)) {
+              persistedCustomers = parsed.filter(
+                (record) =>
+                  record.customerId !== undefined &&
+                  record.subscriptionId !== undefined
+              );
+            }
+          }
+        } catch (storageError) {
+          console.error("Failed to load customer data from localStorage:", storageError);
+        }
+
+        // Merge API and persisted customers (deduplicate by customerId)
+        const allCustomers = [...customerSubscriptions]; // Start with base JSON data
+        const seenIds = new Set(allCustomers.map(c => c.customerId));
+
+        // Add API customers
+        for (const apiCustomer of apiCustomers) {
+          if (!seenIds.has(apiCustomer.customerId)) {
+            allCustomers.push(apiCustomer);
+            seenIds.add(apiCustomer.customerId);
+          }
+        }
+
+        // Add persisted customers (bulk/import)
+        for (const persistedCustomer of persistedCustomers) {
+          if (!seenIds.has(persistedCustomer.customerId)) {
+            allCustomers.push(persistedCustomer);
+            seenIds.add(persistedCustomer.customerId);
+          }
+        }
+
+        setCustomers(allCustomers);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to load customers:", error);
+        setError("Failed to load customers");
+        setIsLoading(false);
+      }
+    };
+
+    loadCustomers();
+  }, []);
+
+  // Auto-save customers to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem("customers_360_data", JSON.stringify(customers));
+    } catch (error) {
+      console.error("Failed to save customer data to localStorage:", error);
+    }
+  }, [customers]);
+
 
   const dataset = customers;
 
@@ -254,9 +352,31 @@ export default function CustomersPage() {
   };
 
   const handleCustomersAdded = (newCustomers: CustomerSubscriptionRecord[]) => {
-    setCustomers((prevCustomers) => [...prevCustomers, ...newCustomers]);
+    setCustomers((prevCustomers) => {
+      // Create set of existing customer+subscription combinations
+      const existingKeys = new Set(
+        prevCustomers.map((c) => `${c.customerId}-${c.subscriptionId}`)
+      );
+
+      // Filter out duplicates
+      const uniqueNewCustomers = newCustomers.filter((customer) => {
+        const key = `${customer.customerId}-${customer.subscriptionId}`;
+        return !existingKeys.has(key);
+      });
+
+      // Log duplicates if any were filtered
+      if (uniqueNewCustomers.length < newCustomers.length) {
+        const duplicateCount = newCustomers.length - uniqueNewCustomers.length;
+        console.warn(`Skipped ${duplicateCount} duplicate customer(s)`);
+      }
+
+      // Prepend new customers to show at top of first page
+      return [...uniqueNewCustomers, ...prevCustomers];
+    });
+    setPage(1); // Reset to first page to show newly added customers
     setIsCreateCustomerModalOpen(false);
   };
+
 
   const handleOpenSearchModal = () => {
     setModalSearchTerm(searchTerm); // Pre-fill with current search if exists
@@ -666,7 +786,9 @@ export default function CustomersPage() {
         isOpen={isCreateCustomerModalOpen}
         onClose={() => setIsCreateCustomerModalOpen(false)}
         onCustomersAdded={handleCustomersAdded}
+        existingCustomers={customers}
       />
+
 
       {/* Advanced filters modal */}
     </div>

@@ -4,6 +4,7 @@ import {
   CampaignSegment,
   CampaignOffer,
 } from "../../types/campaign";
+import { CampaignFlowConfig } from "../../types/campaignFlow";
 import { color, tw, components } from "../../../../shared/utils/utils";
 import DateFormatter from "../../../../shared/components/DateFormatter";
 
@@ -11,12 +12,14 @@ interface CampaignPreviewStepProps {
   formData: CreateCampaignRequest;
   selectedSegments: CampaignSegment[];
   selectedOffers: CampaignOffer[];
+  campaignFlows?: CampaignFlowConfig[];
 }
 
 export default function CampaignPreviewStep({
   formData,
   selectedSegments,
   selectedOffers,
+  campaignFlows = [],
 }: CampaignPreviewStepProps) {
   const totalAudienceSize = selectedSegments.reduce(
     (total, segment) => total + (segment.customer_count || 0),
@@ -46,8 +49,8 @@ export default function CampaignPreviewStep({
       complete: selectedSegments.length > 0,
     },
     {
-      label: "Offers mapped",
-      complete: selectedOffers.length > 0,
+      label: "Delivery flows defined",
+      complete: campaignFlows.length > 0,
     },
     {
       label: "Campaign details completed",
@@ -276,6 +279,65 @@ export default function CampaignPreviewStep({
             ) : (
               <div className="text-sm text-gray-500">
                 No offers have been mapped to this campaign yet.
+              </div>
+            )}
+          </div>
+
+          {/* Campaign Flows Overview */}
+          <div className={components.card.surface}>
+            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+              Execution Plan ({campaignFlows.length} flows)
+            </h3>
+            {campaignFlows.length ? (
+              <div className="space-y-3">
+                {campaignFlows.map((flow, idx) => {
+                  const segment = selectedSegments.find(
+                    (s) => parseInt(s.id) === flow.segment_id
+                  );
+                  const offer = selectedOffers.find(
+                    (o) => parseInt(o.id) === flow.offer_id
+                  );
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-3 ${tw.rounded} border border-gray-100 bg-white`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+                          style={{ backgroundColor: color.primary.accent }}
+                        >
+                          {flow.step_order}
+                        </div>
+                        <div className="flex-1">
+                          <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                            {segment?.name || "Unknown Segment"} →{" "}
+                            {offer?.name || "Unknown Offer"}
+                          </p>
+                          <div className="flex gap-2 mt-1 flex-wrap">
+                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              {flow.flow_type}
+                            </span>
+                            {flow.wait_interval_hours > 0 && (
+                              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded">
+                                Wait: {flow.wait_interval_hours}h
+                              </span>
+                            )}
+                            {flow.bucket_allocation && (
+                              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
+                                Allocation: {flow.bucket_allocation}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                No delivery flows configured yet.
               </div>
             )}
           </div>

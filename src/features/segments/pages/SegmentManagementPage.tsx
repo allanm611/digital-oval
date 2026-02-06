@@ -23,6 +23,7 @@ import {
   Pause,
   CheckSquare,
   Square,
+  Plus,
 } from "lucide-react";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
@@ -486,7 +487,8 @@ export default function SegmentManagementPage() {
     pageSize,
     sortBy,
     sortDirection,
-    showError,
+    // Note: showError not included to avoid infinite re-renders
+    // (it's a callback that changes on every render)
   ]);
 
   useEffect(() => {

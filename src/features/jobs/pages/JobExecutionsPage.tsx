@@ -283,9 +283,6 @@ export default function JobExecutionsPage() {
         // Handle both wrapped response { success, data, source } and direct data
         const statsData = (response as any).data || response;
 
-        console.log("Full response received:", response);
-        console.log("Stats data:", statsData);
-
         // Parse string values to numbers
         const totalExecutions = parseInt(String(statsData.total_executions), 10) || 0;
         const successfulExecutions = parseInt(String(statsData.successful), 10) || 0;
@@ -293,15 +290,6 @@ export default function JobExecutionsPage() {
         const timedOut = parseInt(String(statsData.timed_out), 10) || 0;
         const aborted = parseInt(String(statsData.aborted), 10) || 0;
         const slaBreaches = parseInt(String(statsData.sla_breaches), 10) || 0;
-
-        console.log("Execution stats loaded:", {
-          totalExecutions,
-          successfulExecutions,
-          failedExecutions,
-          timedOut,
-          aborted,
-          slaBreaches,
-        });
 
         setStats({
           totalExecutions,
@@ -994,7 +982,7 @@ export default function JobExecutionsPage() {
           <div className="py-16 text-center">
             <PlayCircle className="mx-auto mb-4 h-12 w-12 text-gray-300" />
             <p className={`text-lg font-semibold ${tw.textPrimary}`}>
-              {t.jobs.executions.noExecutions}
+              No Job Executions Found
             </p>
             <p className="mt-2 text-sm text-gray-500">
               Try updating your search filters or check back later.

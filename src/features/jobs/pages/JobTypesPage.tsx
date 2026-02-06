@@ -252,9 +252,9 @@ function JobTypeModal({
                 </div>
               )}
             </div>
-            <p className="mt-1 text-xs text-gray-500">
+            {/* <p className="mt-1 text-xs text-gray-500">
               Lowercase snake_case, unique identifier used by job scheduler.
-            </p>
+            </p> */}
             {codeValidationError && (
               <p className="mt-1 text-xs text-red-600">{codeValidationError}</p>
             )}

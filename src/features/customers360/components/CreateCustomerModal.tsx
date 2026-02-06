@@ -5,12 +5,51 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { customerService } from "../services/customerServices";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 
 interface CreateCustomerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCustomersAdded: (customers: CustomerSubscriptionRecord[]) => void;
+  existingCustomers?: CustomerSubscriptionRecord[];
+}
+
+/**
+ * Format phone number with country code
+ * Detects Uganda (75x) or Kenya (74x) and adds appropriate prefix
+ */
+function formatPhoneNumber(msisdn: string): string {
+  if (!msisdn) return msisdn;
+
+  const cleaned = msisdn.replace(/\D/g, ""); // Remove non-digits
+
+  // Already has country code
+  if (cleaned.startsWith("254") || cleaned.startsWith("256")) {
+    return `+${cleaned}`;
+  }
+
+  // Starts with 0 - detect country from next digits
+  if (cleaned.startsWith("0")) {
+    const nextTwoDigits = cleaned.substring(1, 3);
+
+    // Uganda: 75x, 76x, 77x, 78x, 70x (starting with 075, 076, 077, 078, 070)
+    if (nextTwoDigits.startsWith("7") && ["5", "6", "7", "8", "0"].includes(nextTwoDigits.charAt(1))) {
+      return `+256${cleaned.substring(1)}`;
+    }
+
+    // Kenya: 74x, 73x, 71x, 72x, etc.
+    if (nextTwoDigits.charAt(0) === "7" || nextTwoDigits.startsWith("1")) {
+      return `+254${cleaned.substring(1)}`;
+    }
+  }
+
+  // No leading 0, assume Kenya by default if starts with 7
+  if (cleaned.length === 9 && cleaned.startsWith("7")) {
+    return `+254${cleaned}`;
+  }
+
+  return `+254${cleaned}`; // Default to Kenya
 }
 
 type TabType = "single" | "bulk" | "import";
@@ -21,12 +60,19 @@ interface FormData {
   msisdn: string;
   email: string;
   city: string;
+  customerType: string;
   tariff: string;
   status: string;
   simType: string;
 }
 
 // Options from actual dummy data
+const CUSTOMER_TYPE_OPTIONS = [
+  { value: "Non-member", label: "Non-member" },
+  { value: "Equity Member", label: "Equity Member" },
+  { value: "Equity Corporate/Business", label: "Equity Corporate/Business" },
+];
+
 const TARIFF_OPTIONS = [
   { value: "Businesses & Corporate", label: "Businesses & Corporate" },
   { value: "Data SIMs", label: "Data SIMs" },
@@ -64,17 +110,32 @@ const initialFormData: FormData = {
   msisdn: "",
   email: "",
   city: "",
+  customerType: "Non-member",
   tariff: "Non-member",
   status: "Active",
   simType: "2FF",
 };
 
+/**
+ * Get the next sequential subscription ID based on existing customers
+ */
+function getNextSubscriptionId(existingCustomers: CustomerSubscriptionRecord[] = []): number {
+  if (existingCustomers.length === 0) return 1;
+  const maxId = Math.max(...existingCustomers.map(c => c.subscriptionId));
+  return maxId + 1;
+}
+
 export default function CreateCustomerModal({
   isOpen,
   onClose,
   onCustomersAdded,
+  existingCustomers = [],
 }: CreateCustomerModalProps) {
   const { success, error } = useToast();
+  const nextSubscriptionId = useMemo(
+    () => getNextSubscriptionId(existingCustomers),
+    [existingCustomers]
+  );
   const [activeTab, setActiveTab] = useState<TabType>("single");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -117,8 +178,9 @@ export default function CreateCustomerModal({
           parts[3] || "—",
           parts[4] || "—",
           parts[5] || "Non-member",
-          parts[6] || "Active",
-          parts[7] || "2FF",
+          parts[6] || "Non-member",
+          parts[7] || "Active",
+          parts[8] || "2FF",
         ],
         customer: {
           firstName: parts[0],
@@ -126,9 +188,10 @@ export default function CreateCustomerModal({
           msisdn: parts[2],
           email: parts[3] || undefined,
           city: parts[4] || undefined,
-          tariff: parts[5] || "Non-member",
-          status: parts[6] || "Active",
-          simType: parts[7] || "2FF",
+          customerType: parts[5] || "Non-member",
+          tariff: parts[6] || "Non-member",
+          status: parts[7] || "Active",
+          simType: parts[8] || "2FF",
         },
       };
     });
@@ -140,7 +203,7 @@ export default function CreateCustomerModal({
       valid: validRows,
       invalid: invalidRows,
       rows,
-      headers: ["FirstName", "LastName", "Phone", "Email", "City", "Tariff", "Status", "SimType"],
+      headers: ["FirstName", "LastName", "Phone", "Email", "City", "CustomerType", "Tariff", "Status", "SimType"],
     };
   }, [bulkText]);
 
@@ -175,25 +238,58 @@ export default function CreateCustomerModal({
 
     setIsLoading(true);
     try {
-      // Create new customer record
+      // Format phone number with country code
+      const formattedMsisdn = formatPhoneNumber(formData.msisdn);
+
+      // API expects MSISDN without the '+' prefix (digits only)
+      const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
+
+      // Generate subscriber ID (using random for now, can be sequential if needed)
+      const subscriberId = Math.floor(Math.random() * 100000);
+
+      // Call API to create customer
+      const apiResponse = await customerService.createCustomer({
+        subscriber_id: subscriberId,
+        msisdn: msisdnForApi,
+        attributes: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email || undefined,
+          // Provide defaults for API fields not in form
+          age: undefined,
+          device_type: "unknown",
+          premium_user: false,
+        },
+      });
+
+      // Create local customer record for display (includes form-specific fields)
+      // API returns subscriber_id as string, convert to number for consistency
+      const apiSubscriberId = typeof apiResponse.data.subscriber_id === "string"
+        ? parseInt(apiResponse.data.subscriber_id, 10)
+        : apiResponse.data.subscriber_id;
+
       const newCustomer: CustomerSubscriptionRecord = {
-        customerId: Math.floor(Math.random() * 100000),
-        subscriptionId: Math.floor(Math.random() * 100000),
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        msisdn: formData.msisdn,
-        email: formData.email || undefined,
+        customerId: apiSubscriberId,
+        subscriptionId: nextSubscriptionId,
+        // Use API response attributes where available
+        firstName: apiResponse.data.attributes?.first_name || formData.firstName,
+        lastName: apiResponse.data.attributes?.last_name || formData.lastName,
+        msisdn: formattedMsisdn,
+        email: apiResponse.data.attributes?.email || formData.email || undefined,
+        // Frontend-only fields (not in API)
         city: formData.city || undefined,
+        customerType: formData.customerType,
         tariff: formData.tariff,
         status: formData.status,
         simType: formData.simType,
-        activationDate: new Date().toISOString(),
+        activationDate: apiResponse.data.created_at || new Date().toISOString(),
       };
 
+      // Add to local storage and state
       onCustomersAdded([newCustomer]);
       success(
         "Success",
-        `Customer ${formData.firstName} ${formData.lastName} added successfully`,
+        `Customer ${formData.firstName} ${formData.lastName} created on backend and added to list`,
       );
 
       // Reset form
@@ -202,7 +298,7 @@ export default function CreateCustomerModal({
     } catch (err) {
       error(
         "Error",
-        err instanceof Error ? err.message : "Failed to add customer",
+        err instanceof Error ? err.message : "Failed to create customer",
       );
     } finally {
       setIsLoading(false);
@@ -223,6 +319,7 @@ export default function CreateCustomerModal({
         .slice(1); // Skip header if present
 
       const customers: CustomerSubscriptionRecord[] = [];
+      let subscriptionIdCounter = nextSubscriptionId;
 
       for (const line of lines) {
         const parts = line.split(",").map((p) => p.trim());
@@ -230,18 +327,20 @@ export default function CreateCustomerModal({
 
         const customer: CustomerSubscriptionRecord = {
           customerId: Math.floor(Math.random() * 100000),
-          subscriptionId: Math.floor(Math.random() * 100000),
+          subscriptionId: subscriptionIdCounter,
           firstName: parts[0] || "Unknown",
           lastName: parts[1] || "Customer",
-          msisdn: parts[2],
+          msisdn: formatPhoneNumber(parts[2]),
           email: parts[3] || undefined,
           city: parts[4] || undefined,
-          tariff: parts[5] || "Non-member",
-          status: parts[6] || "Active",
-          simType: parts[7] || "2FF",
+          customerType: parts[5] || "Non-member",
+          tariff: parts[6] || "Non-member",
+          status: parts[7] || "Active",
+          simType: parts[8] || "2FF",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
+        subscriptionIdCounter++;
       }
 
       if (customers.length === 0) {
@@ -283,6 +382,7 @@ export default function CreateCustomerModal({
         .slice(1);
 
       const customers: CustomerSubscriptionRecord[] = [];
+      let subscriptionIdCounter = nextSubscriptionId;
 
       for (const line of lines) {
         const parts = line.split(importFileDelimiter).map((p) => p.trim());
@@ -290,18 +390,20 @@ export default function CreateCustomerModal({
 
         const customer: CustomerSubscriptionRecord = {
           customerId: Math.floor(Math.random() * 100000),
-          subscriptionId: Math.floor(Math.random() * 100000),
+          subscriptionId: subscriptionIdCounter,
           firstName: parts[0] || "Unknown",
           lastName: parts[1] || "Customer",
-          msisdn: parts[2],
+          msisdn: formatPhoneNumber(parts[2]),
           email: parts[3] || undefined,
           city: parts[4] || undefined,
-          tariff: parts[5] || "Non-member",
-          status: parts[6] || "Active",
-          simType: parts[7] || "2FF",
+          customerType: parts[5] || "Non-member",
+          tariff: parts[6] || "Non-member",
+          status: parts[7] || "Active",
+          simType: parts[8] || "2FF",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
+        subscriptionIdCounter++;
       }
 
       if (customers.length === 0) {
@@ -488,6 +590,24 @@ export default function CreateCustomerModal({
                   <label
                     className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
+                    Customer Type
+                  </label>
+                  <HeadlessSelect
+                    options={CUSTOMER_TYPE_OPTIONS}
+                    value={formData.customerType}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        customerType: String(value),
+                      }))
+                    }
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
                     Tariff
                   </label>
                   <HeadlessSelect
@@ -502,6 +622,9 @@ export default function CreateCustomerModal({
                     zIndex={zIndex.popover}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
                     className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -520,25 +643,24 @@ export default function CreateCustomerModal({
                     zIndex={zIndex.popover}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Status
-                </label>
-                <HeadlessSelect
-                  options={STATUS_OPTIONS}
-                  value={formData.status}
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      status: String(value),
-                    }))
-                  }
-                  zIndex={zIndex.popover}
-                />
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Status
+                  </label>
+                  <HeadlessSelect
+                    options={STATUS_OPTIONS}
+                    value={formData.status}
+                    onChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        status: String(value),
+                      }))
+                    }
+                    zIndex={zIndex.popover}
+                  />
+                </div>
               </div>
             </>
           )}
@@ -661,10 +783,10 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `FirstName,LastName,Phone,Email,City,Tariff,Status,SimType
-Samuel,Kipchoge,+254712345678,samuel@example.com,Nairobi,Non-member,Active,2FF
-Mary,Wangari,+254723456789,mary@example.com,Mombasa,Member,Active,4FF
-James,Ochieng,+254734567890,james@example.com,Kisumu,Gumzo,Pending,2/3FF`;
+                    const sampleData = `FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType
+Samuel,Kipchoge,0750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
+Mary,Wangari,0712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
+James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -696,7 +818,7 @@ James,Ochieng,+254734567890,james@example.com,Kisumu,Gumzo,Pending,2/3FF`;
                 </p>
                 <p className={`text-xs ${tw.textSecondary} mt-1`}>
                   CSV file with columns: FirstName, LastName, Phone, Email,
-                  City, Tariff, Status, SimType
+                  City, CustomerType, Tariff, Status, SimType
                 </p>
               </div>
               <input
@@ -713,7 +835,7 @@ James,Ochieng,+254734567890,james@example.com,Kisumu,Gumzo,Pending,2/3FF`;
                     reader.onload = (event) => {
                       const content = event.target?.result as string;
                       const lines = content.split("\n").filter((line) => line.trim());
-                      const headers = ["FirstName", "LastName", "Phone", "Email", "City", "Tariff", "Status", "SimType"];
+                      const headers = ["FirstName", "LastName", "Phone", "Email", "City", "CustomerType", "Tariff", "Status", "SimType"];
 
                       const rows = lines.slice(0).map((line, index) => {
                         const parts = line.split(importFileDelimiter).map((p) => p.trim());
@@ -738,8 +860,9 @@ James,Ochieng,+254734567890,james@example.com,Kisumu,Gumzo,Pending,2/3FF`;
                             parts[3] || "—",
                             parts[4] || "—",
                             parts[5] || "Non-member",
-                            parts[6] || "Active",
-                            parts[7] || "2FF",
+                            parts[6] || "Non-member",
+                            parts[7] || "Active",
+                            parts[8] || "2FF",
                           ],
                         };
                       });

@@ -131,13 +131,18 @@ class CampaignSegmentOfferService {
    * Get all mappings for a specific campaign
    */
   async getMappingsByCampaign(
-    campaignId: string | number
+    campaignId: string | number,
+    skipCache: boolean = false
   ): Promise<GetSegmentMappingsResponse> {
     const url = `${BASE_URL}/campaign/${campaignId}`;
 
     const response = await fetch(url, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: {
+        ...getAuthHeaders(),
+        ...(skipCache && { "Cache-Control": "no-cache, no-store, must-revalidate" }),
+      },
+      ...(skipCache && { cache: "no-store" }),
     });
 
     if (!response.ok) {

@@ -376,7 +376,9 @@ const JobPages = {
 const UserPages = {
   UserManagementPage: lazy(
     () =>
-      import(/* webpackPrefetch: true */ "../../users/pages/UserManagementPage"),
+      import(
+        /* webpackPrefetch: true */ "../../users/pages/UserManagementPage"
+      ),
   ),
   UserDetailsPage: lazy(
     () =>
@@ -391,7 +393,10 @@ const UserPages = {
 // Settings & Configuration Pages - All routes preloaded for instant access
 const SettingsPages = {
   ConfigurationPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../configurations/pages/ConfigurationPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../configurations/pages/ConfigurationPage"
+      ),
   ),
   ConfigurationDetailsPage: lazy(
     () =>
@@ -470,8 +475,7 @@ const ServerPages = {
       ),
   ),
   KPIsPage: lazy(
-    () =>
-      import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsPage"),
+    () => import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsPage"),
   ),
 };
 
@@ -503,23 +507,41 @@ const AnalyticsPages = {
       import(/* webpackPrefetch: true */ "./OverallDashboardPerformancePage"),
   ),
   CustomerProfileReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/CustomerProfileReportsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/CustomerProfileReportsPage"
+      ),
   ),
   CustomersPage: CustomersPageWrapper,
   CustomerSearchResultsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../customers360/pages/CustomerSearchResultsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../customers360/pages/CustomerSearchResultsPage"
+      ),
   ),
   CampaignReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/CampaignReportsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/CampaignReportsPage"
+      ),
   ),
   DeliverySMSReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/DeliverySMSReportsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/DeliverySMSReportsPage"
+      ),
   ),
   DeliveryEmailReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/DeliveryEmailReportsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/DeliveryEmailReportsPage"
+      ),
   ),
   OfferReportsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../reports-analytics/pages/OfferReportsPage"
+      ),
   ),
 };
 

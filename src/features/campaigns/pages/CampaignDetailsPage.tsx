@@ -28,6 +28,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
+import { campaignFlowService } from "../services/campaignFlowService";
 import { offerService } from "../../offers/services/offerService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -38,6 +39,7 @@ import {
   CampaignSegmentDetail,
   CampaignBudgetUtilisation,
 } from "../types/campaign";
+import { CampaignFlowConfig } from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 
 export default function CampaignDetailsPage() {
@@ -87,6 +89,8 @@ export default function CampaignDetailsPage() {
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
+  const [flows, setFlows] = useState<CampaignFlowConfig[]>([]);
+  const [isLoadingFlows, setIsLoadingFlows] = useState(false);
   const [budgetUtilisation, setBudgetUtilisation] =
     useState<CampaignBudgetUtilisation | null>(null);
   const [isLoadingBudgetUtil, setIsLoadingBudgetUtil] = useState(false);
@@ -98,6 +102,40 @@ export default function CampaignDetailsPage() {
       .split("_")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  // Flow type mapping - matches backend naming (UPPERCASE) to frontend display (matching campaign type labels)
+  const flowTypeOptions = [
+    {
+      value: "STANDARD",
+      label: "Multiple Target Group",
+      backendType: "STANDARD",
+    },
+    {
+      value: "AB_TEST",
+      label: "A/B Test",
+      backendType: "AB_TEST",
+    },
+    {
+      value: "CHAMPION_CHALLENGER",
+      label: "Champion-Challenger",
+      backendType: "CHAMPION_CHALLENGER",
+    },
+    {
+      value: "ROUND_ROBIN",
+      label: "Round Robin",
+      backendType: "ROUND_ROBIN",
+    },
+    {
+      value: "MULTIPLE_LEVEL",
+      label: "Multiple Level",
+      backendType: "MULTIPLE_LEVEL",
+    },
+  ];
+
+  const getFlowTypeLabel = (flowType: string): string => {
+    const option = flowTypeOptions.find((opt) => opt.backendType === flowType);
+    return option?.label || flowType;
   };
 
   useEffect(() => {
@@ -162,12 +200,16 @@ export default function CampaignDetailsPage() {
           setCreatedByName("");
         }
 
-        // Fetch campaign segments, offers, and budget utilisation
+        // Fetch campaign segments and offers FIRST (they're needed for flows matching)
         if (campaignData.id) {
           const campaignId = parseInt(campaignData.id);
+          // Load segments first
+          await fetchCampaignSegments(campaignId);
+          // Then load flows to get offer IDs
+          const flowsData = await fetchCampaignFlows(campaignId);
+          // Then load offers based on flow offer IDs and budget in parallel
           await Promise.all([
-            fetchCampaignSegments(campaignId),
-            fetchCampaignOffers(campaignId),
+            fetchOffersFromFlows(flowsData),
             fetchBudgetUtilisation(campaignId),
           ]);
         }
@@ -228,7 +270,7 @@ export default function CampaignDetailsPage() {
     try {
       setIsLoadingOffers(true);
       const response =
-        await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
+        await campaignSegmentOfferService.getMappingsByCampaign(campaignId, true);
       if (response && response.success && Array.isArray(response.data)) {
         // Extract unique offer IDs from mappings
         const offerIds = new Set<number>();
@@ -261,14 +303,89 @@ export default function CampaignDetailsPage() {
         });
 
         const fetchedOffers = await Promise.all(offerPromises);
-        setOffers(
-          fetchedOffers.filter((offer): offer is Offer => offer !== null),
-        );
+        const validOffers = fetchedOffers.filter((offer): offer is Offer => offer !== null);
+        setOffers(validOffers);
       } else {
         setOffers([]);
       }
     } catch (error) {
       console.error("Failed to fetch campaign offers:", error);
+      setOffers([]);
+    } finally {
+      setIsLoadingOffers(false);
+    }
+  };
+
+  const fetchCampaignFlows = async (campaignId: number): Promise<CampaignFlowConfig[]> => {
+    try {
+      setIsLoadingFlows(true);
+      const response = await campaignFlowService.getCampaignFlows(campaignId);
+      if (response && response.success && Array.isArray(response.data)) {
+        // Convert API response to CampaignFlowConfig format
+        const flowsData: CampaignFlowConfig[] = response.data.map((flow) => ({
+          campaign_id: flow.campaign_id,
+          segment_id: typeof flow.segment_id === "string" ? parseInt(flow.segment_id) : flow.segment_id,
+          offer_id: flow.offer_id,
+          offer_creative_id: flow.offer_creative_id || undefined,
+          template_id: flow.template_id || undefined,
+          flow_type: flow.flow_type,
+          step_order: flow.step_order,
+          wait_interval_hours: flow.wait_interval_hours,
+          bucket_allocation: flow.bucket_allocation || undefined,
+          condition_rule: flow.condition_rule || undefined,
+          is_active: flow.is_active,
+          created_by: flow.created_by,
+        }));
+        setFlows(flowsData);
+        return flowsData;
+      } else {
+        setFlows([]);
+        return [];
+      }
+    } catch (error) {
+      console.error("Failed to fetch campaign flows:", error);
+      setFlows([]);
+      return [];
+    } finally {
+      setIsLoadingFlows(false);
+    }
+  };
+
+  const fetchOffersFromFlows = async (flowsData: CampaignFlowConfig[]) => {
+    try {
+      setIsLoadingOffers(true);
+      // Extract unique offer IDs from flows data
+      const offerIds = new Set(flowsData.map((flow) => flow.offer_id));
+
+      if (offerIds.size === 0) {
+        setOffers([]);
+        return;
+      }
+
+      // Fetch each offer by ID
+      const offerPromises = Array.from(offerIds).map(async (offerId) => {
+        try {
+          const offerResponse = await offerService.getOfferById(offerId, true);
+          // Handle both direct Offer and { success: true, data: Offer } response formats
+          if (offerResponse && typeof offerResponse === "object") {
+            if ("data" in offerResponse && offerResponse.data) {
+              return offerResponse.data as Offer;
+            } else if ("id" in offerResponse) {
+              return offerResponse as unknown as Offer;
+            }
+          }
+          return null;
+        } catch (error) {
+          console.error(`Failed to fetch offer ${offerId}:`, error);
+          return null;
+        }
+      });
+
+      const fetchedOffers = await Promise.all(offerPromises);
+      const validOffers = fetchedOffers.filter((offer): offer is Offer => offer !== null);
+      setOffers(validOffers);
+    } catch (error) {
+      console.error("Failed to fetch offers from flows:", error);
       setOffers([]);
     } finally {
       setIsLoadingOffers(false);
@@ -1253,8 +1370,8 @@ export default function CampaignDetailsPage() {
         )}
       </div>
 
-      {/* Campaign Offers Table */}
-      <div className="mb-6">
+      {/* Campaign Offers Table - Commented out: using Campaign Flows instead */}
+      {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
             className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
@@ -1359,7 +1476,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary}`} /* font-mono commented out - use normal font */
+                      className={`px-6 py-4 text-base ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.code || "—"}
@@ -1398,7 +1515,7 @@ export default function CampaignDetailsPage() {
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Reject Campaign Modal */}
       {showRejectModal && (
@@ -1467,6 +1584,159 @@ export default function CampaignDetailsPage() {
           </div>
         </div>
       )}
+
+      {/* Campaign Flows Table */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3
+            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+          >
+            <Zap className="w-5 h-5" />
+            Campaign Flows ({flows.length})
+          </h3>
+        </div>
+        {isLoadingFlows ? (
+          <div className="flex items-center justify-center py-8">
+            <LoadingSpinner variant="modern" size="md" color="primary" />
+          </div>
+        ) : flows.length === 0 ? (
+          <div className="text-center py-8">
+            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className={`text-sm ${tw.textSecondary}`}>
+              No delivery flows configured for this campaign
+            </p>
+          </div>
+        ) : (
+          <div
+            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
+          >
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
+              <thead style={{ background: color.surface.tableHeader }}>
+                <tr>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Step
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Segment
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Offer
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Flow Type
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Wait (hours)
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Allocation
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {flows.map((flow) => {
+                  // Match on segment_id (not id which is the association ID)
+                  // Name is in segment_name (not name)
+                  const segment = segments.find(
+                    (s) => parseInt((s as any).segment_id || s.id) === flow.segment_id
+                  );
+                  const offer = offers.find(
+                    (o) => parseInt(o.id) === flow.offer_id
+                  );
+                  return (
+                    <tr key={`${flow.segment_id}-${flow.offer_id}-${flow.step_order}`} className="transition-colors">
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
+                          style={{ color: "#000000" }}
+                        >
+                          {flow.step_order}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <button
+                          onClick={() =>
+                            navigate(`/dashboard/segments/${(segment as any)?.segment_id || flow.segment_id}`)
+                          }
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {(segment as any)?.segment_name || segment?.name || `Segment #${flow.segment_id}`}
+                        </button>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <button
+                          onClick={() =>
+                            navigate(`/dashboard/offers/${offer?.id || flow.offer_id}`)
+                          }
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {offer?.name || `Offer #${flow.offer_id}`}
+                        </button>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span className={`text-xs font-medium ${tw.textPrimary}`}>
+                          {getFlowTypeLabel(flow.flow_type)}
+                        </span>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <div className={`text-sm ${tw.textPrimary}`}>
+                          {flow.wait_interval_hours}h
+                        </div>
+                      </td>
+                      <td
+                        className="px-6 py-4 hidden md:table-cell"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <div className={`text-sm ${tw.textMuted}`}>
+                          {flow.bucket_allocation || "—"}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Mail,
   MessageSquare,
@@ -7,8 +7,9 @@ import {
   AlertCircle,
   Variable,
   ChevronDown,
+  Settings,
 } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, components } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -20,6 +21,12 @@ import {
 } from "../utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
+import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
+import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
+import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
+import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { useToast } from "../../../contexts/ToastContext";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
@@ -76,6 +83,55 @@ export default function DefineCommunicationStep({
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Communication Policy states
+  const [communicationPolicies, setCommunicationPolicies] = useState<
+    CommunicationPolicyConfiguration[]
+  >([]);
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<CommunicationPolicyConfiguration | null>(null);
+  const [isPolicyDropdownOpen, setIsPolicyDropdownOpen] = useState(false);
+  const [isCustomizationModalOpen, setIsCustomizationModalOpen] =
+    useState(false);
+  const [policyToCustomize, setPolicyToCustomize] =
+    useState<CommunicationPolicyConfiguration | null>(null);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [pendingPolicyData, setPendingPolicyData] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+
+  const policyDropdownRef = useRef<HTMLDivElement>(null);
+  const { success: showToast, error: showError } = useToast();
+
+  useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Load Communication Policies from service
+  useEffect(() => {
+    // Load initial policies
+    setCommunicationPolicies(communicationPolicyService.getAllPolicies());
+
+    // Subscribe to policy changes
+    const unsubscribe = communicationPolicyService.subscribe(
+      (updatedPolicies) => {
+        setCommunicationPolicies(updatedPolicies);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  // Sync selectedPolicy with parent data
+  useEffect(() => {
+    if (data.selectedCommunicationPolicyId) {
+      const policy = communicationPolicyService.getPolicyById(
+        data.selectedCommunicationPolicyId
+      );
+      if (policy) {
+        setSelectedPolicy(policy);
+      }
+    }
+  }, [data.selectedCommunicationPolicyId]);
+
   const handleVariableSelect = (variable: TemplateVariable) => {
     if (!selectedVariables.find((v) => v.id === variable.id)) {
       setSelectedVariables((prev) => [...prev, variable]);
@@ -120,6 +176,75 @@ export default function DefineCommunicationStep({
       }
     }
     setShowVariableSelector(false);
+  };
+
+  // Handle opening customization modal
+  const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
+    // Create a copy of the policy with a temporary name for the modal
+    const policyWithTempName = {
+      ...policy,
+      name: `${policy.name} - Customizing...`,
+    };
+    setPolicyToCustomize(policyWithTempName);
+    setIsCustomizationModalOpen(true);
+  };
+
+  // Handle saving customized policy
+  const handleSaveCustomizedPolicy = async (
+    policyData: Record<string, unknown>
+  ) => {
+    // Store the policy data and open name modal
+    // First close the customization modal
+    setIsCustomizationModalOpen(false);
+
+    // Then store data and open name modal
+    setPendingPolicyData(policyData);
+    setIsNameModalOpen(true);
+  };
+
+  // Handle confirming policy name
+  const handleConfirmPolicyName = async (policyName: string) => {
+    if (!pendingPolicyData || !policyToCustomize) return;
+
+    try {
+      // Get the original policy name (remove the temporary suffix)
+      const originalPolicyName = policyToCustomize.name.replace(
+        " - Customizing...",
+        ""
+      );
+
+      // Create new policy with customized configuration
+      const newPolicy = communicationPolicyService.createPolicy({
+        name: policyName,
+        description:
+          pendingPolicyData.description ||
+          `Custom policy based on ${originalPolicyName}`,
+        channels: pendingPolicyData.channels || ["EMAIL"],
+        type: pendingPolicyData.type,
+        config: pendingPolicyData.config,
+        isActive: pendingPolicyData.isActive ?? true,
+      });
+
+      // Apply the new policy to the broadcast
+      setSelectedPolicy(newPolicy);
+
+      // Update parent component data
+      onUpdate({
+        selectedCommunicationPolicy: newPolicy,
+        selectedCommunicationPolicyId: newPolicy.id,
+      });
+
+      // Close modals and cleanup
+      setIsCustomizationModalOpen(false);
+      setIsNameModalOpen(false);
+      setPolicyToCustomize(null);
+      setPendingPolicyData(null);
+
+      showToast("Custom policy created and applied to broadcast!");
+    } catch (error) {
+      console.error("Failed to save custom policy:", error);
+      showError("Failed to save custom policy. Please try again.");
+    }
   };
 
   const getCharacterInfo = () => {
@@ -189,6 +314,9 @@ export default function DefineCommunicationStep({
       isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
       selectedVariables,
+      // Add communication policy data
+      selectedCommunicationPolicy: selectedPolicy || undefined,
+      selectedCommunicationPolicyId: selectedPolicy?.id || undefined,
     });
     onNext();
   };
@@ -249,6 +377,135 @@ export default function DefineCommunicationStep({
               );
             })}
           </div>
+        </div>
+
+        {/* Communication Policy */}
+        <div className="mb-6">
+          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+            Communication Policy
+          </label>
+          <div className="relative" ref={policyDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
+              className={`${
+                components.input.default
+              } w-full px-3 py-2 text-left flex items-center justify-between ${
+                selectedPolicy ? "" : "text-gray-500"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {selectedPolicy && (
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      selectedPolicy.isActive ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  ></div>
+                )}
+                <span className="text-sm">
+                  {selectedPolicy
+                    ? selectedPolicy.name
+                    : "Choose a communication policy (optional)"}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  isPolicyDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isPolicyDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
+                style={{ borderColor: color.border.default }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPolicy(null);
+                    setIsPolicyDropdownOpen(false);
+                    onUpdate({
+                      selectedCommunicationPolicy: undefined,
+                      selectedCommunicationPolicyId: undefined,
+                    });
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                    No Policy
+                  </div>
+                  <div className={`text-xs ${tw.textSecondary}`}>
+                    Broadcast will use default communication settings
+                  </div>
+                </button>
+
+                <div className="max-h-48 overflow-y-auto">
+                  {communicationPolicies.map((policy) => (
+                    <button
+                      key={policy.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPolicy(policy);
+                        setIsPolicyDropdownOpen(false);
+                        onUpdate({
+                          selectedCommunicationPolicy: policy,
+                          selectedCommunicationPolicyId: policy.id,
+                        });
+                      }}
+                      className={`w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                        selectedPolicy?.id === policy.id ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            policy.isActive ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                        ></div>
+                        <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                          {policy.name}
+                        </div>
+                      </div>
+                      {policy.description && (
+                        <div className={`text-xs ${tw.textSecondary} ml-4`}>
+                          {policy.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Customization Toggle */}
+          {selectedPolicy && (
+            <div
+              className={`flex items-center justify-between px-3 py-2 mt-2 rounded-lg border`}
+              style={{
+                backgroundColor: color.surface.cards,
+                borderColor: color.border.default,
+              }}
+            >
+              <span
+                className={`text-xs ${tw.textSecondary} flex items-center gap-2`}
+              >
+                <Settings className="w-3 h-3" />
+                Want to modify this policy?
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCustomizePolicy(selectedPolicy)}
+                className={`px-3 py-1 text-xs flex items-center gap-1 ${tw.rounded} text-white hover:opacity-90`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Settings className="w-3 h-3" />
+                Customize
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -499,6 +756,28 @@ export default function DefineCommunicationStep({
           {t.manualBroadcast.nextTest}
         </button>
       </div>
+
+      {/* Communication Policy Modals */}
+      <CommunicationPolicyModal
+        isOpen={isCustomizationModalOpen}
+        onClose={() => {
+          setIsCustomizationModalOpen(false);
+          setPolicyToCustomize(null);
+        }}
+        onSave={handleSaveCustomizedPolicy}
+        initialData={policyToCustomize || undefined}
+        mode="create"
+      />
+
+      <PolicyNameModal
+        isOpen={isNameModalOpen}
+        onClose={() => {
+          setIsNameModalOpen(false);
+          setPendingPolicyData(null);
+        }}
+        onConfirm={handleConfirmPolicyName}
+        defaultName={policyToCustomize?.name.replace(" - Customizing...", "") || ""}
+      />
     </div>
   );
 }

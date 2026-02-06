@@ -55,7 +55,7 @@ export default function PolicyNameModal({
       {/* Modal */}
       <div
         className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md mx-4`}
-        style={{ zIndex: zIndexTokens.modal }}
+        style={{ zIndex: zIndex.modal }}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}

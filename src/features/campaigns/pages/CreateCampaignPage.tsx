@@ -1040,6 +1040,58 @@ export default function CreateCampaignPage() {
         } else {
           showToast("success", `"${formData.name}" ${t.campaigns.campaignDefinition.createSuccess}`);
         }
+
+        // If creating a new campaign (not edit mode), automatically execute it
+        if (!isEditMode && createdCampaignId) {
+          try {
+            // Prepare execution request with all segments and EMAIL channel by default
+            const executionRequest = {
+              campaign_id: createdCampaignId,
+              segments: selectedSegments.map((segment) => ({
+                segment_id: parseInt(segment.id),
+                channel_codes: ["EMAIL"], // Default to EMAIL channel
+              })),
+              mode: "immediate" as const,
+            };
+
+            // Execute the campaign
+            await campaignService.executeCampaign(executionRequest);
+
+            // Show success toast
+            showToast(
+              "success",
+              `Campaign "${formData.name}" created and executed successfully!`
+            );
+
+            // Clear campaign flow tracking and saved data
+            sessionStorage.removeItem("campaignFlowCreatedOffers");
+            sessionStorage.removeItem("campaignFormData");
+            sessionStorage.removeItem("offerModalAutoOpened");
+            sessionStorage.removeItem("campaignDataRestored");
+
+            // Clear localStorage form data
+            clearPersistedFormData("campaign_form_data");
+            clearPersistedFormData("campaign_segments");
+            clearPersistedFormData("campaign_offers");
+            clearPersistedFormData("campaign_mappings");
+
+            // Navigate to campaigns list
+            navigate("/dashboard/campaigns");
+            return;
+          } catch (executeError) {
+            console.error("Failed to execute campaign:", executeError);
+
+            // Execution failed - show error but campaign was created
+            let errorMessage = "Campaign created successfully, but execution failed.";
+            if (executeError instanceof Error) {
+              errorMessage = executeError.message;
+            }
+
+            showToast("error", errorMessage);
+            setIsLoading(false);
+            return;
+          }
+        }
       }
 
       // Clear campaign flow tracking and saved data when campaign is created/updated
@@ -1054,13 +1106,8 @@ export default function CreateCampaignPage() {
       clearPersistedFormData("campaign_offers");
       clearPersistedFormData("campaign_mappings");
 
-      // If creating a new campaign (not edit mode), show execution modal
-      if (!isEditMode && createdCampaignId) {
-        setShowExecuteModal(true);
-      } else {
-        // If editing, just navigate back
-        navigate("/dashboard/campaigns");
-      }
+      // If editing, just navigate back
+      navigate("/dashboard/campaigns");
     } catch (error) {
       console.error("Failed to create/update campaign:", error);
 

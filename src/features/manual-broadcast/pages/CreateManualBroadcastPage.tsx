@@ -18,6 +18,7 @@ import ScheduleStep from "../components/ScheduleStep";
 import { communicationService } from "../../communications/services/communicationService";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
+import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 
 export interface ManualBroadcastData {
   // Step 1: Audience
@@ -43,6 +44,9 @@ export interface ManualBroadcastData {
   smsRoute?: string; // SMS route selection
   // New field for template variables
   selectedVariables?: TemplateVariable[]; // Variables used in the message
+  // Communication Policy
+  selectedCommunicationPolicy?: CommunicationPolicyConfiguration;
+  selectedCommunicationPolicyId?: number;
 
   // Step 3: Test
   testContacts?: string[];
