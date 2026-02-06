@@ -7,14 +7,13 @@ import {
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { ConnectionTestResult, DataConnector, UpdateDataConnectorRequest } from "../types";
-import { fetchDataConnectorById } from "../services";
+import { ConnectionTestResult, DataConnector, UpdateDataConnectorRequest } from "../types/dataConnector";
+import { dataConnectorService } from "../services/dataConnectorService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
 import ConnectionProfilesSection from "../components/ConnectionProfilesSection";
 import AddConnectionModal from "../components/AddConnectionModal";
-import { updateDataConnector, deleteDataConnector, testDataConnectorConnection } from "../services";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 export default function DataConnectorDetailsPage() {
@@ -55,7 +54,7 @@ export default function DataConnectorDetailsPage() {
 
     try {
       setLoading(true);
-      const data = await fetchDataConnectorById(id);
+      const data = await dataConnectorService.fetchDataConnectorById(id);
 
       if (!data) {
         showError("Not Found", "Data connector not found");
@@ -129,7 +128,7 @@ export default function DataConnectorDetailsPage() {
         configuration: editFormData.configuration ?? undefined,
       };
 
-      const updated = await updateDataConnector(connector.id, payload);
+      const updated = await dataConnectorService.updateDataConnector(connector.id, payload);
 
       if (updated) {
         setConnector(updated);
@@ -156,7 +155,7 @@ export default function DataConnectorDetailsPage() {
 
   const confirmDelete = async () => {
     try {
-      await deleteDataConnector(connector!.id);
+      await dataConnectorService.deleteDataConnector(connector!.id);
       success("Deleted", "Connector removed");
       navigate("/dashboard/data-connectors");
     } catch (err: any) {
@@ -171,7 +170,7 @@ export default function DataConnectorDetailsPage() {
       setIsTesting(true);
       setTestResult(null);
 
-      const result = await testDataConnectorConnection(connector.id);
+      const result = await dataConnectorService.testDataConnectorConnection(connector.id);
       setTestResult(result);
 
       if (result.success) {
@@ -728,7 +727,7 @@ export default function DataConnectorDetailsPage() {
 
 //     try {
 //       setLoading(true);
-//       const data = await fetchDataConnectorById(id);
+//       const data = await dataConnectorService.fetchDataConnectorById(id);
 
 //       if (!data) {
 //         showError("Not Found", "Data connector not found");
@@ -798,7 +797,7 @@ export default function DataConnectorDetailsPage() {
 //         // metadata: add if supported 
 //       };
 
-//       const updated = await updateDataConnector(connector.id, payload);
+//       const updated = await dataConnectorService.updateDataConnector(connector.id, payload);
 
 //       if (updated) {
 //         setConnector(updated);
@@ -825,7 +824,7 @@ export default function DataConnectorDetailsPage() {
 
 //   const confirmDelete = async () => {
 //     try {
-//       await deleteDataConnector(connector!.id);
+//       await dataConnectorService.deleteDataConnector(connector!.id);
 //       success("Deleted", "Connector removed");
 //       navigate("/dashboard/data-connectors");
 //     } catch (err: any) {
@@ -840,7 +839,7 @@ export default function DataConnectorDetailsPage() {
 //       setIsTesting(true);
 //       setTestResult(null);
 
-//       const result = await testDataConnectorConnection(connector.id);
+//       const result = await dataConnectorService.testDataConnectorConnection(connector.id);
 //       setTestResult(result);
 
 //       if (result.success) {

@@ -11,334 +11,250 @@ import {
   ConnectorTypesResponse,
   ApiError,
   DataConnectorConfiguration
-} from "../types";
+} from "../types/dataConnector";
 import { processDataConnectors } from "../utils/connectorIcons";
-import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
+import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 
-// API Configuration
-const BASE_URL = `${API_CONFIG.BASE_URL}`;
+const BASE_URL = buildApiUrl("/dataconnectors");
 
-// Helper function to handle API responses
-const handleApiResponse = async <T>(response: Response): Promise<T> => {
-  if (!response.ok) {
-    const errorData: ApiError = await response.json().catch(() => ({
-      error: 'Network Error',
-      message: `HTTP ${response.status}: ${response.statusText}`
-    }));
-    throw new Error(errorData.message || errorData.error || 'API request failed');
-  }
-
-  return response.json();
-};
-
-// Helper function to build query parameters
-const buildQueryParams = (params: Record<string, any>): string => {
-  const searchParams = new URLSearchParams();
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      if (Array.isArray(value)) {
-        value.forEach(v => searchParams.append(key, v.toString()));
-      } else {
-        searchParams.append(key, value.toString());
-      }
-    }
-  });
-
-  return searchParams.toString();
-};
-
-/**
- * Fetch data connectors with optional filtering
- */
-export const fetchDataConnectors = async (
-  params: DataConnectorFilterParams = {}
-): Promise<{ data: ProcessedDataConnector[]; total: number; hasMore: boolean }> => {
-  try {
-    // Convert frontend params to backend format
-    const apiParams = {
-      ...params,
-      is_active: params.is_active,
-    };
-
-    const queryString = buildQueryParams(apiParams);
-    const url = `${BASE_URL}/data-connectors${queryString ? `?${queryString}` : ''}`;
-
+class DataConnectorService {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const url = `${BASE_URL}${endpoint}`;
     const response = await fetch(url, {
-      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+        ...options.headers,
       },
+      ...options,
     });
 
-    const result: DataConnectorListResponse = await handleApiResponse(response);
+    const text = await response.text();
+    const isJson = text.trim().startsWith("{") || text.trim().startsWith("[");
 
-    // Process the data for frontend consumption
-    const processedData = processDataConnectors(result.data);
-
-    return {
-      data: processedData,
-      total: result.total,
-      hasMore: result.has_more,
-    };
-  } catch (error) {
-    console.error('Failed to fetch data connectors:', error);
-    throw new Error(`Failed to fetch data connectors: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
-
-/**
- * Get a single data connector by ID
- */
-export const fetchDataConnectorById = async (
-  id: string
-): Promise<ProcessedDataConnector | null> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.status === 404) {
-      return null;
+    if (!text) {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+      return undefined as T;
     }
 
-    const connector: DataConnector = await handleApiResponse(response);
-    return processDataConnectors([connector])[0];
-  } catch (error) {
-    console.error('Failed to fetch data connector by ID:', error);
-    throw new Error(`Failed to fetch data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
-
-/**
- * Get available connector types
- */
-export const getAvailableConnectorTypes = async (): Promise<DataConnectorType[]> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/types`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const result: ConnectorTypesResponse = await handleApiResponse(response);
-    return result.types;
-  } catch (error) {
-    console.error('Failed to fetch available connector types:', error);
-    // Fallback to hardcoded types if API fails
-    return ["jdbc", "api", "kafka", "websocket", "tcp", "files", "sms_inbox"];
-  }
-};
-
-/**
- * Create a new data connector
- */
-export const createDataConnector = async (
-  connectorData: CreateDataConnectorRequest
-): Promise<ProcessedDataConnector> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(connectorData),
-    });
-
-    const connector: DataConnector = await handleApiResponse(response);
-    return processDataConnectors([connector])[0];
-  } catch (error) {
-    console.error('Failed to create data connector:', error);
-    throw new Error(`Failed to create data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
-
-/**
- * Update an existing data connector
- */
-export const updateDataConnector = async (
-  id: string,
-  updates: UpdateDataConnectorRequest
-): Promise<ProcessedDataConnector | null> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/update/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-
-    if (response.status === 404) {
-      return null;
+    let parsed: unknown;
+    try {
+      parsed = isJson ? JSON.parse(text) : (text as unknown);
+    } catch {
+      throw new Error(
+        `Invalid JSON response from DataConnector API. First 200 chars: ${text.substring(0, 200)}`,
+      );
     }
 
-    const connector: DataConnector = await handleApiResponse(response);
-    return processDataConnectors([connector])[0];
-  } catch (error) {
-    console.error('Failed to update data connector:', error);
-    throw new Error(`Failed to update data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
-
-/**
- * Delete a data connector
- */
-export const deleteDataConnector = async (id: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/delete/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (response.status === 204 || response.status === 200) {
-      return true;
-    }
-
-    if (response.status === 404) {
-      return false;
-    }
-
-    // Only try to parse JSON if we expect an error body
     if (!response.ok) {
-      const errorData: ApiError = await response.json().catch(() => ({
-        error: 'Unknown error',
-        message: `HTTP ${response.status}`
-      }));
-      throw new Error(errorData.message || errorData.error || 'Delete failed');
+      const errorMessage =
+        (parsed as { error?: string; message?: string })?.error ||
+        (parsed as { message?: string })?.message ||
+        response.statusText ||
+        "Unknown error";
+      throw new Error(errorMessage);
     }
 
-    return true;
-  } catch (error) {
-    console.error('Failed to delete data connector:', error);
-    throw error; 
+    return parsed as T;
   }
-};
 
-/**
- * Test connection for a data connector
- */
-
-export const testDataConnectorConnection = async (id: string): Promise<ConnectionTestResult> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/${id}/test-connection`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  private buildQueryParams(params?: Record<string, unknown>): string {
+    if (!params) return "";
+    const sp = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === "") return;
+      if (Array.isArray(value)) {
+        value.forEach((v) => sp.append(key, String(v)));
+      } else {
+        sp.append(key, String(value));
+      }
     });
-
-    const result: ConnectionTestResult = await handleApiResponse(response);
-    return result;
-  } catch (error) {
-    console.error('Failed to test data connector connection:', error);
-    return {
-      success: false,
-      message: 'Connection test failed',
-      error_details: error instanceof Error ? error.message : 'Unknown error'
-    };
+    const qs = sp.toString();
+    return qs ? `?${qs}` : "";
   }
-};
 
-/**
- * Test connection using configuration (before saving)
- */
-export const testDataConnectorConfig = async (
-  config: {
+  async fetchDataConnectors(
+    params: DataConnectorFilterParams = {}
+  ): Promise<{ data: ProcessedDataConnector[]; total: number; hasMore: boolean }> {
+    try {
+      const apiParams = {
+        ...params,
+        is_active: params.is_active,
+      };
+
+      const queryString = this.buildQueryParams(apiParams as Record<string, unknown>);
+      const result: DataConnectorListResponse = await this.request<DataConnectorListResponse>(
+        `${queryString ? `?${queryString}` : ''}`
+      );
+
+      const processedData = processDataConnectors(result.data);
+
+      return {
+        data: processedData,
+        total: result.total,
+        hasMore: result.has_more,
+      };
+    } catch (error) {
+      console.error('Failed to fetch data connectors:', error);
+      throw new Error(`Failed to fetch data connectors: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async fetchDataConnectorById(id: string): Promise<ProcessedDataConnector | null> {
+    try {
+      const connector: DataConnector = await this.request<DataConnector>(`/${id}`);
+      return processDataConnectors([connector])[0];
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      console.error('Failed to fetch data connector by ID:', error);
+      throw new Error(`Failed to fetch data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getAvailableConnectorTypes(): Promise<DataConnectorType[]> {
+    try {
+      const result: ConnectorTypesResponse = await this.request<ConnectorTypesResponse>("/types");
+      return result.types;
+    } catch (error) {
+      console.error('Failed to fetch available connector types:', error);
+      return ["jdbc", "api", "kafka", "websocket", "tcp", "files", "sms_inbox"];
+    }
+  }
+
+  async createDataConnector(connectorData: CreateDataConnectorRequest): Promise<ProcessedDataConnector> {
+    try {
+      const connector: DataConnector = await this.request<DataConnector>("/create", {
+        method: "POST",
+        body: JSON.stringify(connectorData),
+      });
+      return processDataConnectors([connector])[0];
+    } catch (error) {
+      console.error('Failed to create data connector:', error);
+      throw new Error(`Failed to create data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async updateDataConnector(
+    id: string,
+    updates: UpdateDataConnectorRequest
+  ): Promise<ProcessedDataConnector | null> {
+    try {
+      const connector: DataConnector = await this.request<DataConnector>(`/update/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      });
+      return processDataConnectors([connector])[0];
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      console.error('Failed to update data connector:', error);
+      throw new Error(`Failed to update data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async deleteDataConnector(id: string): Promise<boolean> {
+    try {
+      await this.request<void>(`/delete/${id}`, { method: "DELETE" });
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('404')) {
+        return false;
+      }
+      console.error('Failed to delete data connector:', error);
+      throw error;
+    }
+  }
+
+  async testDataConnectorConnection(id: string): Promise<ConnectionTestResult> {
+    try {
+      const result: ConnectionTestResult = await this.request<ConnectionTestResult>(
+        `/${id}/test-connection`,
+        { method: "POST" }
+      );
+      return result;
+    } catch (error) {
+      console.error('Failed to test data connector connection:', error);
+      return {
+        success: false,
+        message: 'Connection test failed',
+        error_details: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  async testDataConnectorConfig(config: {
     type: DataConnectorType;
     configuration: DataConnectorConfiguration;
+  }): Promise<ConnectionTestResult> {
+    try {
+      const result: ConnectionTestResult = await this.request<ConnectionTestResult>(
+        "/test-connection-config",
+        {
+          method: "POST",
+          body: JSON.stringify(config),
+        }
+      );
+      return result;
+    } catch (error) {
+      console.error('Config connection test failed:', error);
+      return {
+        success: false,
+        message: 'Connection test failed',
+        error_details: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
-): Promise<ConnectionTestResult> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/test-connection-config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(config),
-    });
 
-    const result: ConnectionTestResult = await handleApiResponse(response);
-    return result;
-  } catch (error) {
-    console.error('Config connection test failed:', error);
-    return {
-      success: false,
-      message: 'Connection test failed',
-      error_details: error instanceof Error ? error.message : 'Unknown error'
-    };
+  async getDataConnectorStatistics(): Promise<DataConnectorStatistics> {
+    try {
+      const statistics: DataConnectorStatistics = await this.request<DataConnectorStatistics>("/statistics");
+      return statistics;
+    } catch (error) {
+      console.error('Failed to fetch data connector statistics:', error);
+      throw new Error(`Failed to fetch statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
-};
 
-/**
- * Get data connector statistics
- */
-export const getDataConnectorStatistics = async (): Promise<DataConnectorStatistics> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/statistics`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const statistics: DataConnectorStatistics = await handleApiResponse(response);
-    return statistics;
-  } catch (error) {
-    console.error('Failed to fetch data connector statistics:', error);
-    throw new Error(`Failed to fetch statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  async testConnectionConfig(
+    type: DataConnectorType,
+    configuration: DataConnectorConfiguration
+  ): Promise<ConnectionTestResult> {
+    try {
+      const result: ConnectionTestResult = await this.request<ConnectionTestResult>(
+        "/test-connection-config",
+        {
+          method: "POST",
+          body: JSON.stringify({ type, configuration }),
+        }
+      );
+      return result;
+    } catch (error) {
+      console.error('Failed to test connection configuration:', error);
+      return {
+        success: false,
+        message: 'Connection test failed',
+        error_details: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
-};
 
-/**
- * Test connection configuration without saving
- */
-export const testConnectionConfig = async (
-  type: DataConnectorType,
-  configuration: DataConnectorConfiguration
-): Promise<ConnectionTestResult> => {
-  try {
-    const response = await fetch(`${BASE_URL}/data-connectors/test-connection-config`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ type, configuration }),
-    });
-
-    const result: ConnectionTestResult = await handleApiResponse(response);
-    return result;
-  } catch (error) {
-    console.error('Failed to test connection configuration:', error);
-    return {
-      success: false,
-      message: 'Connection test failed',
-      error_details: error instanceof Error ? error.message : 'Unknown error'
-    };
+  async fetchConnectionProfiles(params: { dataConnectorId?: string } = {}): Promise<any[]> {
+    try {
+      const query = params.dataConnectorId ? `?dataConnectorId=${params.dataConnectorId}` : '';
+      const result = await this.request<any>(`/connection-profiles${query}`);
+      return result?.data || result || [];
+    } catch (err) {
+      console.error('Fetch profiles error:', err);
+      return [];
+    }
   }
-};
+}
 
-export const fetchConnectionProfiles = async (params: { dataConnectorId?: string } = {}): Promise<ConnectionProfile[]> => {
-  try {
-    const query = params.dataConnectorId ? `?dataConnectorId=${params.dataConnectorId}` : '';
-    const response = await fetch(`${BASE_URL}/connection-profiles${query}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (!response.ok) throw new Error('Failed to fetch profiles');
-
-    const result = await response.json();
-    // Adjust based on real response shape (probably { data: [...] })
-    return result.data || result || [];
-  } catch (err) {
-    console.error('Fetch profiles error:', err);
-    return [];
-  }
-};
+export const dataConnectorService = new DataConnectorService();

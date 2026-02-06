@@ -12,9 +12,9 @@ import {
   DatabaseType,
   TransactionalMode,
   FileProtocol,
-} from "../types";
+} from "../types/dataConnector";
 import { getConnectorDisplayName } from "../utils/connectorIcons";
-import { testConnectionConfig } from "../services";
+import { dataConnectorService } from "../services/dataConnectorService";
 import { color, zIndex } from "../../../shared/utils/utils";
 
 interface DataConnectorFormProps {
@@ -1425,7 +1425,7 @@ const DataConnectorForm: React.FC<DataConnectorFormProps> = ({
     setTestResult(null);
 
     try {
-      const result = await testConnectionConfig(formData.type, formData.configuration || {});
+      const result = await dataConnectorService.testConnectionConfig(formData.type, formData.configuration || {});
       setTestResult(result);
     } catch (err) {
       setTestResult({

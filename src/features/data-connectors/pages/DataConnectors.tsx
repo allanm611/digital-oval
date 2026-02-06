@@ -15,14 +15,14 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
-import { DataConnectorType, ProcessedDataConnector } from "../types";
-import { fetchDataConnectors, updateDataConnector, createDataConnector } from "../services";
+import { DataConnectorType, ProcessedDataConnector } from "../types/dataConnector";
+import { dataConnectorService } from "../services/dataConnectorService";
 import { getConnectorDisplayName, getConnectorIcon } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import DataConnectorForm from "../components/DataConnectorForm";
-import { CreateDataConnectorRequest, UpdateDataConnectorRequest, DataConnectorFormData, DataConnectorFilterParams } from "../types";
+import { CreateDataConnectorRequest, UpdateDataConnectorRequest, DataConnectorFormData, DataConnectorFilterParams } from "../types/dataConnector";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 
@@ -65,7 +65,7 @@ export default function DataConnectors() {
         params.is_active = false;
       }
 
-      const { data } = await fetchDataConnectors(params);
+      const { data } = await dataConnectorService.fetchDataConnectors(params);
       setConnectors(data);
     } catch (error) {
       console.error("Failed to load data connectors:", error);
@@ -144,7 +144,7 @@ export default function DataConnectors() {
           configuration: formData.configuration,
         };
 
-        const updated = await updateDataConnector(editingConnector.id, updatePayload);
+        const updated = await dataConnectorService.updateDataConnector(editingConnector.id, updatePayload);
 
         if (!updated) throw new Error("Connector not found");
 
@@ -159,7 +159,7 @@ export default function DataConnectors() {
           configuration: formData.configuration ?? {},
         };
 
-        savedConnector = await createDataConnector(createPayload);
+        savedConnector = await dataConnectorService.createDataConnector(createPayload);
         success("Created", `${formData.name} was created successfully.`);
       }
 
