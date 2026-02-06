@@ -25,6 +25,7 @@ export const DATA_CONNECTOR_TO_CONNECTION_PROFILE_TYPE_MAP: Record<
   tcp: [], // TCP doesn't have a direct connection profile type
   files: ["sftp", "ftp", "s3", "azure_blob"], // Files can use various storage types
   sms_inbox: [], // SMS inbox doesn't have a direct connection profile type
+  digital_tags: [], // Digital tags doesn't have a direct connection profile type
 };
 
 /**

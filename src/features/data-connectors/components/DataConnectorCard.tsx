@@ -29,17 +29,20 @@ const DataConnectorCard: React.FC<DataConnectorCardProps> = ({
       `}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 ${tw.rounded} bg-gray-50 ${color}`}>
+        <div
+          className={`p-3 ${tw.rounded} bg-gray-50`}
+          style={{ color }}
+        >
           <IconComponent size={24} />
         </div>
         <div className="flex items-center space-x-2">
           <div
             className={`w-2 h-2 rounded-full ${
-              connector.isActive ? "bg-green-500" : "bg-gray-400"
+              connector.is_active ? "bg-green-500" : "bg-gray-400"
             }`}
           />
           <span className="text-xs text-gray-500">
-            {connector.isActive ? "Active" : "Inactive"}
+            {connector.is_active ? "Active" : "Inactive"}
           </span>
         </div>
       </div>

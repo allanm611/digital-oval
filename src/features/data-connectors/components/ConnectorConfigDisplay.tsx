@@ -1,373 +1,255 @@
-import { DataConnector } from "../types";
+import { DataConnector, DataConnectorType, DataConnectorConfiguration } from "../types";
 import { tw, color } from "../../../shared/utils/utils";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { getConnectorDisplayName } from "../utils/connectorIcons";
 
 interface ConnectorConfigDisplayProps {
   connector: DataConnector;
   isEditMode?: boolean;
-  onConfigChange?: (field: string, value: unknown) => void;
+  onConfigChange?: (updatedConfig: DataConnectorConfiguration) => void;
 }
-
-interface DetailFieldProps {
-  label: string;
-  value: unknown;
-  fullWidth?: boolean;
-  isEditMode?: boolean;
-  onChange?: (value: unknown) => void;
-  type?: "text" | "number" | "password" | "email";
-}
-
-const DetailField: React.FC<DetailFieldProps> = ({
-  label,
-  value,
-  fullWidth = false,
-  isEditMode = false,
-  onChange,
-  type = "text",
-}) => {
-  // Mask sensitive credentials
-  const displayValue =
-    type === "password" && typeof value === "string"
-      ? "••••••••"
-      : value ?? "";
-
-  return (
-    <div className={fullWidth ? "col-span-2" : ""}>
-      <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">
-        {label}
-      </label>
-      {isEditMode && onChange ? (
-        <input
-          type={type}
-          value={displayValue}
-          onChange={(e) => onChange(e.target.value)}
-          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-400`}
-        />
-      ) : (
-        <p className={`text-sm font-medium ${tw.textPrimary}`}>{displayValue}</p>
-      )}
-    </div>
-  );
-};
 
 export default function ConnectorConfigDisplay({
   connector,
   isEditMode = false,
   onConfigChange,
 }: ConnectorConfigDisplayProps) {
-  if (!connector.config) {
+  const config = connector.configuration ?? {};
+  const type = connector.type;
+
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
+  if (!config || Object.keys(config).length === 0) {
     return (
-      <p className={tw.textSecondary}>No configuration available</p>
+      <div className="text-center py-8 text-gray-500">
+        No configuration defined for this connector yet.
+      </div>
     );
   }
 
-  const renderJDBCConfig = () => {
-    const config = connector.config;
-    if (config.type !== "jdbc") return null;
+  // Helper to update nested config and call parent callback
+  const handleChange = (key: keyof DataConnectorConfiguration, value: unknown) => {
+    if (!onConfigChange) return;
+    const newConfig = { ...config, [key]: value };
+    onConfigChange(newConfig);
+  };
+
+  const PasswordField = ({ field }: { field: keyof DataConnectorConfiguration }) => {
+    const value = config[field] as string | undefined;
+    const id = field as string;
+    const visible = showPasswords[id] ?? false;
 
     return (
-      <div className="grid grid-cols-2 gap-4">
-        <DetailField
-          label="Hostname"
-          value={config.hostname}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("hostname", val)}
+      <div className="relative">
+        <input
+          type={visible ? "text" : "password"}
+          value={value ?? ""}
+          onChange={(e) => handleChange(field, e.target.value)}
+          className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} pr-10 focus:outline-none focus:ring-2 focus:ring-blue-400`}
+          disabled={!isEditMode}
         />
-        <DetailField
-          label="Port"
-          value={config.port}
-          type="number"
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("port", val)}
-        />
-        <DetailField
-          label="Database"
-          value={config.database}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("database", val)}
-        />
-        <DetailField
-          label="Username"
-          value={config.username}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("username", val)}
-        />
-        <DetailField
-          label="Password"
-          value={config.password}
-          type="password"
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("password", val)}
-        />
-        <DetailField
-          label="Driver"
-          value={config.driver || "N/A"}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("driver", val)}
-        />
-        <DetailField
-          label="Connection String"
-          value={config.connectionString || "N/A"}
-          fullWidth
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("connectionString", val)}
-        />
+        <button
+          type="button"
+          onClick={() => setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }))}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          disabled={!isEditMode}
+        >
+          {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
       </div>
     );
   };
 
-  const renderAPIConfig = () => {
-    const config = connector.config;
-    if (config.type !== "api") return null;
+  const renderCommonFields = () => (
+    <>
+      {config.scalability_factor !== undefined && (
+        <DetailField label="Scalability Factor" value={config.scalability_factor} type="number" />
+      )}
+      {config.timeout !== undefined && (
+        <DetailField label="Timeout (ms)" value={config.timeout} type="number" />
+      )}
+      {config.retry_count !== undefined && (
+        <DetailField label="Retry Count" value={config.retry_count} type="number" />
+      )}
+      {config.ssl_enabled !== undefined && (
+        <DetailField label="SSL Enabled" value={config.ssl_enabled ? "Yes" : "No"} />
+      )}
+    </>
+  );
+
+  const DetailField = ({
+    label,
+    value,
+    type = "text",
+    fullWidth = false,
+  }: {
+    label: string;
+    value: unknown;
+    type?: "text" | "number" | "password";
+    fullWidth?: boolean;
+  }) => {
+    let displayValue: React.ReactNode = typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value : (value ? String(value) : "—");
+
+    if (type === "password" && typeof value === "string" && value.length > 0) {
+      displayValue = isEditMode ? <PasswordField field={label.toLowerCase() as any} /> : "••••••••";
+    }
 
     return (
-      <div className="space-y-4">
-        <DetailField
-          label="URL"
-          value={config.url}
-          fullWidth
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("url", val)}
-        />
-        <DetailField
-          label="Method"
-          value={config.method}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("method", val)}
-        />
-        <DetailField
-          label="Authentication Type"
-          value={config.authentication.type}
-          isEditMode={isEditMode}
-          onChange={(val) =>
-            onConfigChange?.("authType", val)
-          }
-        />
-        {config.headers && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-              Headers
-            </label>
-            {Object.entries(config.headers).map(([key, val]) => (
-              <div key={key} className="text-sm text-gray-700 mb-1">
-                <span className="font-medium">{key}:</span> {val}
-              </div>
-            ))}
-          </div>
+      <div className={fullWidth ? "col-span-2" : ""}>
+        <label className="block text-xs font-medium text-gray-600 mb-1 uppercase tracking-wide">
+          {label}
+        </label>
+        {isEditMode && type !== "password" ? (
+          <input
+            type={type}
+            value={typeof value === "string" || typeof value === "number" ? value : ""}
+            onChange={(e) => handleChange(label.toLowerCase() as any, e.target.value)}
+            className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-400`}
+          />
+        ) : (
+          <div className={`text-sm font-medium ${tw.textPrimary}`}>{displayValue}</div>
         )}
       </div>
     );
   };
 
-  const renderTCPConfig = () => {
-    const config = connector.config;
-    if (config.type !== "tcp") return null;
+  const renderTypeSpecific = () => {
+    switch (type) {
+      case "jdbc":
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <DetailField label="Database Type" value={config.database_type} />
+            <DetailField label="Host" value={config.host} />
+            <DetailField label="Port" value={config.port} type="number" />
+            <DetailField label="Database" value={config.database} />
+            <DetailField label="Username" value={config.username} />
+            <DetailField label="Password" value={config.password} type="password" />
+            <DetailField label="Connection String" value={config.connection_string} fullWidth />
+            <DetailField label="Select Query" value={config.select_query} fullWidth />
+            {renderCommonFields()}
+          </div>
+        );
 
-    return (
-      <div className="grid grid-cols-2 gap-4">
-        <DetailField
-          label="Host"
-          value={config.host}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("host", val)}
-        />
-        <DetailField
-          label="Port"
-          value={config.port}
-          type="number"
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("port", val)}
-        />
-        <DetailField
-          label="Protocol"
-          value={config.protocol || "tcp/ip"}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("protocol", val)}
-        />
-      </div>
-    );
-  };
+      case "api":
+        return (
+          <div className="space-y-5">
+            <DetailField label="URL" value={config.url} fullWidth />
+            <DetailField label="Method" value={config.method} />
+            <DetailField label="Content Type" value={config.content_type} />
+            <DetailField label="Response Timeout (s)" value={config.response_timeout_seconds} type="number" />
+            <DetailField label="Thread Count" value={config.thread_count} type="number" />
+            <DetailField label="Messages/sec" value={config.messages_per_second} type="number" />
+            <DetailField label="Proxy Enabled" value={config.proxy_enabled ? "Yes" : "No"} />
+            {config.proxy_enabled && (
+              <>
+                <DetailField label="Proxy URL" value={config.proxy_url} fullWidth />
+                <DetailField label="Proxy Username" value={config.proxy_username} />
+                <DetailField label="Proxy Password" value={config.proxy_password} type="password" />
+              </>
+            )}
+            {renderCommonFields()}
+          </div>
+        );
 
-  const renderWebSocketConfig = () => {
-    const config = connector.config;
-    if (config.type !== "websocket") return null;
+      case "tcp":
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <DetailField label="Host" value={config.host} />
+            <DetailField label="Port" value={config.port} type="number" />
+            <DetailField label="Queue Name" value={config.queue_name} />
+            <DetailField label="Socket Timeout (ms)" value={config.socket_timeout} type="number" />
+            <DetailField label="Non-blocking I/O" value={config.non_blocking_io ? "Yes" : "No"} />
+            <DetailField label="Reverse Lookup" value={config.reverse_lookup ? "Yes" : "No"} />
+            <DetailField label="Direct Buffers" value={config.direct_buffers ? "Yes" : "No"} />
+            {renderCommonFields()}
+          </div>
+        );
 
-    return (
-      <div className="space-y-4">
-        <DetailField
-          label="URL"
-          value={config.url}
-          fullWidth
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("url", val)}
-        />
-        {config.protocols && config.protocols.length > 0 && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-              Protocols
-            </label>
-            <p className={`text-sm font-medium ${tw.textPrimary}`}>
-              {config.protocols.join(", ")}
+      case "websocket":
+        return (
+          <div className="space-y-5">
+            <DetailField label="URL" value={config.url} fullWidth />
+            <DetailField label="HTTP Path" value={config.http_path} />
+            <DetailField label="Username" value={config.username} />
+            <DetailField label="Password" value={config.password} type="password" />
+            {renderCommonFields()}
+          </div>
+        );
+
+      case "kafka":
+        return (
+          <div className="space-y-5">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1 uppercase">Brokers</label>
+              <div className="bg-gray-50 p-3 rounded border border-gray-200 text-sm">
+                {config.brokers?.join(", ") || "—"}
+              </div>
+            </div>
+            <DetailField label="Topic Name" value={config.topic_name} />
+            <DetailField label="Group Identifier" value={config.group_identifier} />
+            <DetailField label="Transactional Mode" value={config.transactional_mode} />
+            {renderCommonFields()}
+          </div>
+        );
+
+      case "files":
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <DetailField label="Protocol" value={config.protocol} />
+            <DetailField label="Host" value={config.host} />
+            <DetailField label="Port" value={config.port} type="number" />
+            <DetailField label="Username" value={config.username} />
+            <DetailField label="Password" value={config.password} type="password" />
+            <DetailField label="Input Path" value={config.input_path} fullWidth />
+            <DetailField label="Output Path" value={config.output_path} fullWidth />
+            <DetailField label="Regex Pattern" value={config.regex_pattern} fullWidth />
+            {renderCommonFields()}
+          </div>
+        );
+
+      case "sms_inbox":
+        return (
+          <div className="space-y-5">
+            <DetailField label="Provider" value={config.provider} />
+            <DetailField label="Inbox ID" value={config.inbox_id} />
+            <DetailField label="Filter by Keyword" value={config.filter_by_keyword ? "Yes" : "No"} />
+            {config.filter_by_keyword && (
+              <>
+                <DetailField label="Keyword Identifier" value={config.keyword_identifier} />
+                <DetailField label="Keyword Condition" value={config.keyword_condition} />
+                <DetailField label="Keyword Value" value={config.keyword_value} />
+              </>
+            )}
+            {renderCommonFields()}
+          </div>
+        );
+
+      default:
+        return (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <p className="text-yellow-800 font-medium">
+              Configuration viewer not implemented for type: <strong>{type}</strong>
             </p>
+            <p className="text-sm text-yellow-700 mt-2">
+              Raw configuration:
+            </p>
+            <pre className="mt-3 bg-white p-4 rounded text-left text-xs overflow-auto max-h-80">
+              {JSON.stringify(config, null, 2)}
+            </pre>
           </div>
-        )}
-        <div className="grid grid-cols-2 gap-4">
-          <DetailField
-            label="Auto Reconnect"
-            value={config.reconnect ? "Yes" : "No"}
-          />
-          {config.reconnectInterval && (
-            <DetailField
-              label="Reconnect Interval (ms)"
-              value={config.reconnectInterval}
-            />
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderKafkaConfig = () => {
-    const config = connector.config;
-    if (config.type !== "kafka") return null;
-
-    return (
-      <div className="space-y-4">
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-            Brokers
-          </label>
-          <div className={`${tw.rounded} bg-gray-50 p-3 text-sm`}>
-            {config.brokers.map((broker, idx) => (
-              <div key={idx} className="text-gray-700">
-                {broker}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-            Topics
-          </label>
-          <div className={`${tw.rounded} bg-gray-50 p-3 text-sm`}>
-            {config.topics.map((topic, idx) => (
-              <div key={idx} className="text-gray-700">
-                {topic}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <DetailField
-            label="Consumer Group ID"
-            value={config.groupId || "N/A"}
-          />
-          <DetailField
-            label="Client ID"
-            value={config.clientId || "N/A"}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const renderFileConfig = () => {
-    const config = connector.config;
-    if (config.type !== "files") return null;
-
-    return (
-      <div className="space-y-4">
-        <DetailField
-          label="Path"
-          value={config.path}
-          fullWidth
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("path", val)}
-        />
-        <DetailField
-          label="File Type"
-          value={config.fileType}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("fileType", val)}
-        />
-        {config.credentials && (
-          <div className="grid grid-cols-2 gap-4">
-            {config.credentials.username && (
-              <DetailField
-                label="Username"
-                value={config.credentials.username}
-                isEditMode={isEditMode}
-                onChange={(val) =>
-                  onConfigChange?.("credUsername", val)
-                }
-              />
-            )}
-            {config.credentials.password && (
-              <DetailField
-                label="Password"
-                value={config.credentials.password}
-                type="password"
-                isEditMode={isEditMode}
-                onChange={(val) =>
-                  onConfigChange?.("credPassword", val)
-                }
-              />
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderSMSInboxConfig = () => {
-    const config = connector.config;
-    if (config.type !== "sms_inbox") return null;
-
-    return (
-      <div className="space-y-4">
-        <DetailField
-          label="Provider"
-          value={config.provider}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("provider", val)}
-        />
-        <DetailField
-          label="Phone Number"
-          value={config.phoneNumber || "N/A"}
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("phoneNumber", val)}
-        />
-        <DetailField
-          label="API Endpoint"
-          value={config.apiEndpoint || "N/A"}
-          fullWidth
-          isEditMode={isEditMode}
-          onChange={(val) => onConfigChange?.("apiEndpoint", val)}
-        />
-        {config.credentials && Object.keys(config.credentials).length > 0 && (
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 uppercase tracking-wide">
-              Credentials
-            </label>
-            {Object.entries(config.credentials).map(([key, val]) => (
-              <div key={key} className="text-sm text-gray-700 mb-1">
-                <span className="font-medium">{key}:</span> ••••••••
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+        );
+    }
   };
 
   return (
-    <div className="space-y-4">
-      {connector.config.type === "jdbc" && renderJDBCConfig()}
-      {connector.config.type === "api" && renderAPIConfig()}
-      {connector.config.type === "tcp" && renderTCPConfig()}
-      {connector.config.type === "websocket" && renderWebSocketConfig()}
-      {connector.config.type === "kafka" && renderKafkaConfig()}
-      {connector.config.type === "files" && renderFileConfig()}
-      {connector.config.type === "sms_inbox" && renderSMSInboxConfig()}
+    <div className="space-y-6">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-5">
+        <h3 className="text-base font-semibold text-gray-800 mb-4">
+          {connector.name} Configuration ({getConnectorDisplayName(type)})
+        </h3>
+        {renderTypeSpecific()}
+      </div>
     </div>
   );
 }

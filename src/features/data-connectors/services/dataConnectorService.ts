@@ -1,280 +1,160 @@
 import {
   DataConnector,
   DataConnectorType,
-  JDBCConfig,
-  APIConfig,
-  TCPConfig,
-  WebSocketConfig,
-  KafkaConfig,
-  FileConfig,
-  SMSInboxConfig,
+  ProcessedDataConnector,
+  DataConnectorFilterParams,
+  DataConnectorListResponse,
+  CreateDataConnectorRequest,
+  UpdateDataConnectorRequest,
+  DataConnectorStatistics,
+  ConnectionTestResult,
+  ConnectorTypesResponse,
+  ApiError,
+  DataConnectorConfiguration
 } from "../types";
-import {
-  getConnectorIcon,
-  getConnectorDisplayName,
-  getConnectorDescription,
-} from "../utils/connectorIcons";
+import { processDataConnectors } from "../utils/connectorIcons";
+import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
 
-// Mock data for demonstration - in a real app, this would come from an API
-const mockConnectors: DataConnector[] = [
-  {
-    id: "1",
-    name: "JDBC",
-    type: "jdbc",
-    description: getConnectorDescription("jdbc"),
-    icon: getConnectorIcon("jdbc").icon,
-    color: getConnectorIcon("jdbc").color,
-    isActive: true,
-    lastUsed: new Date("2026-01-20"),
-    connectionCount: 15,
-    config: {
-      type: "jdbc",
-      hostname: "db.effortel.internal",
-      port: 5432,
-      database: "customer_db",
-      username: "db_user",
-      password: "********",
-      driver: "postgresql",
-      connectionString: "jdbc:postgresql://db.effortel.internal:5432/customer_db",
-    } as JDBCConfig,
-  },
-  {
-    id: "2",
-    name: "API",
-    type: "api",
-    description: getConnectorDescription("api"),
-    icon: getConnectorIcon("api").icon,
-    color: getConnectorIcon("api").color,
-    isActive: true,
-    lastUsed: new Date("2026-01-14"),
-    connectionCount: 3,
-    config: {
-      type: "api",
-      url: "https://api.effortel.io/v1",
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Effortel/1.0",
-      },
-      authentication: {
-        type: "bearer",
-        credentials: {
-          token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        },
-      },
-    } as APIConfig,
-  },
-  {
-    id: "3",
-    name: "Sms inbox",
-    type: "sms_inbox",
-    description: getConnectorDescription("sms_inbox"),
-    icon: getConnectorIcon("sms_inbox").icon,
-    color: getConnectorIcon("sms_inbox").color,
-    isActive: false,
-    lastUsed: new Date("2026-01-10"),
-    connectionCount: 1,
-    config: {
-      type: "sms_inbox",
-      provider: "Twilio",
-      credentials: {
-        accountSid: "AC****",
-        authToken: "********",
-      },
-      phoneNumber: "+1234567890",
-      apiEndpoint: "https://api.twilio.com",
-    } as SMSInboxConfig,
-  },
-  {
-    id: "4",
-    name: "TCP",
-    type: "tcp",
-    description: getConnectorDescription("tcp"),
-    icon: getConnectorIcon("tcp").icon,
-    color: getConnectorIcon("tcp").color,
-    isActive: true,
-    lastUsed: new Date("2024-01-13"),
-    connectionCount: 7,
-    config: {
-      type: "tcp",
-      host: "10.0.0.5",
-      port: 9000,
-      protocol: "tcp/ip",
-    } as TCPConfig,
-  },
-  {
-    id: "5",
-    name: "Kafka",
-    type: "kafka",
-    description: getConnectorDescription("kafka"),
-    icon: getConnectorIcon("kafka").icon,
-    color: getConnectorIcon("kafka").color,
-    isActive: false,
-    lastUsed: new Date("2026-01-17"),
-    connectionCount: 250,
-    config: {
-      type: "kafka",
-      brokers: [
-        "kafka-1.effortel.internal:9092",
-        "kafka-2.effortel.internal:9092",
-        "kafka-3.effortel.internal:9092",
-      ],
-      topics: ["customer_events", "orders"],
-      groupId: "effortel-consumer-group",
-      clientId: "effortel-client-1",
-    } as KafkaConfig,
-  },
-  {
-    id: "6",
-    name: "Websocket",
-    type: "websocket",
-    description: getConnectorDescription("websocket"),
-    icon: getConnectorIcon("websocket").icon,
-    color: getConnectorIcon("websocket").color,
-    isActive: true,
-    lastUsed: new Date("2024-01-16"),
-    connectionCount: 4,
-    config: {
-      type: "websocket",
-      url: "wss://events.effortel.io/stream",
-      protocols: ["chat", "superchat"],
-      reconnect: true,
-      reconnectInterval: 5000,
-    } as WebSocketConfig,
-  },
-  {
-    id: "7",
-    name: "File",
-    type: "files",
-    description: getConnectorDescription("files"),
-    icon: getConnectorIcon("files").icon,
-    color: getConnectorIcon("files").color,
-    isActive: true,
-    lastUsed: new Date("2026-01-11"),
-    connectionCount: 2,
-    config: {
-      type: "files",
-      path: "/data/uploads/customer_data",
-      fileType: "SFTP",
-      credentials: {
-        username: "sftp_user",
-        password: "********",
-      },
-    } as FileConfig,
-  },
-];
+// API Configuration
+const BASE_URL = `${API_CONFIG.BASE_URL}`;
 
-export interface FetchDataConnectorsParams {
-  type?: DataConnectorType;
-  isActive?: boolean;
-  search?: string;
-  limit?: number;
-  offset?: number;
-}
+// Helper function to handle API responses
+const handleApiResponse = async <T>(response: Response): Promise<T> => {
+  if (!response.ok) {
+    const errorData: ApiError = await response.json().catch(() => ({
+      error: 'Network Error',
+      message: `HTTP ${response.status}: ${response.statusText}`
+    }));
+    throw new Error(errorData.message || errorData.error || 'API request failed');
+  }
 
-export interface DataConnectorsResponse {
-  data: DataConnector[];
-  total: number;
-  hasMore: boolean;
-}
+  return response.json();
+};
+
+// Helper function to build query parameters
+const buildQueryParams = (params: Record<string, any>): string => {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (Array.isArray(value)) {
+        value.forEach(v => searchParams.append(key, v.toString()));
+      } else {
+        searchParams.append(key, value.toString());
+      }
+    }
+  });
+
+  return searchParams.toString();
+};
 
 /**
  * Fetch data connectors with optional filtering
  */
 export const fetchDataConnectors = async (
-  params: FetchDataConnectorsParams = {},
-): Promise<DataConnectorsResponse> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  params: DataConnectorFilterParams = {}
+): Promise<{ data: ProcessedDataConnector[]; total: number; hasMore: boolean }> => {
+  try {
+    // Convert frontend params to backend format
+    const apiParams = {
+      ...params,
+      is_active: params.is_active,
+    };
 
-  let filteredConnectors = [...mockConnectors];
+    const queryString = buildQueryParams(apiParams);
+    const url = `${BASE_URL}/data-connectors${queryString ? `?${queryString}` : ''}`;
 
-  // Filter by type
-  if (params.type) {
-    filteredConnectors = filteredConnectors.filter(
-      (connector) => connector.type === params.type,
-    );
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result: DataConnectorListResponse = await handleApiResponse(response);
+
+    // Process the data for frontend consumption
+    const processedData = processDataConnectors(result.data);
+
+    return {
+      data: processedData,
+      total: result.total,
+      hasMore: result.has_more,
+    };
+  } catch (error) {
+    console.error('Failed to fetch data connectors:', error);
+    throw new Error(`Failed to fetch data connectors: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  // Filter by active status
-  if (params.isActive !== undefined) {
-    filteredConnectors = filteredConnectors.filter(
-      (connector) => connector.isActive === params.isActive,
-    );
-  }
-
-  // Filter by search term
-  if (params.search) {
-    const searchLower = params.search.toLowerCase();
-    filteredConnectors = filteredConnectors.filter(
-      (connector) =>
-        connector.name.toLowerCase().includes(searchLower) ||
-        connector.description.toLowerCase().includes(searchLower) ||
-        getConnectorDisplayName(connector.type)
-          .toLowerCase()
-          .includes(searchLower),
-    );
-  }
-
-  // Apply pagination
-  const limit = params.limit || 20;
-  const offset = params.offset || 0;
-  const paginatedConnectors = filteredConnectors.slice(offset, offset + limit);
-
-  return {
-    data: paginatedConnectors,
-    total: filteredConnectors.length,
-    hasMore: offset + limit < filteredConnectors.length,
-  };
 };
 
 /**
  * Get a single data connector by ID
  */
 export const fetchDataConnectorById = async (
-  id: string,
-): Promise<DataConnector | null> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  id: string
+): Promise<ProcessedDataConnector | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  return mockConnectors.find((connector) => connector.id === id) || null;
+    if (response.status === 404) {
+      return null;
+    }
+
+    const connector: DataConnector = await handleApiResponse(response);
+    return processDataConnectors([connector])[0];
+  } catch (error) {
+    console.error('Failed to fetch data connector by ID:', error);
+    throw new Error(`Failed to fetch data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 /**
  * Get available connector types
  */
-export const getAvailableConnectorTypes = (): DataConnectorType[] => {
-  return [
-    "jdbc",
-    "api",
-    "kafka",
-    "websocket",
-    "tcp",
-    "files",
-    "sms_inbox",
-  ] as DataConnectorType[];
+export const getAvailableConnectorTypes = async (): Promise<DataConnectorType[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/types`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result: ConnectorTypesResponse = await handleApiResponse(response);
+    return result.types;
+  } catch (error) {
+    console.error('Failed to fetch available connector types:', error);
+    // Fallback to hardcoded types if API fails
+    return ["jdbc", "api", "kafka", "websocket", "tcp", "files", "sms_inbox"];
+  }
 };
 
 /**
  * Create a new data connector
  */
 export const createDataConnector = async (
-  connectorData: Omit<DataConnector, "id" | "icon" | "color">,
-): Promise<DataConnector> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 800));
+  connectorData: CreateDataConnectorRequest
+): Promise<ProcessedDataConnector> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/create`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(connectorData),
+    });
 
-  const newConnector: DataConnector = {
-    ...connectorData,
-    id: Date.now().toString(),
-    icon: getConnectorIcon(connectorData.type).icon,
-    color: getConnectorIcon(connectorData.type).color,
-  };
-
-  // In a real app, this would be sent to the API
-  mockConnectors.push(newConnector);
-
-  return newConnector;
+    const connector: DataConnector = await handleApiResponse(response);
+    return processDataConnectors([connector])[0];
+  } catch (error) {
+    console.error('Failed to create data connector:', error);
+    throw new Error(`Failed to create data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 /**
@@ -282,38 +162,183 @@ export const createDataConnector = async (
  */
 export const updateDataConnector = async (
   id: string,
-  updates: Partial<Omit<DataConnector, "id" | "icon" | "color">>,
-): Promise<DataConnector | null> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 600));
+  updates: UpdateDataConnectorRequest
+): Promise<ProcessedDataConnector | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/update/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updates),
+    });
 
-  const connectorIndex = mockConnectors.findIndex((c) => c.id === id);
-  if (connectorIndex === -1) {
-    return null;
+    if (response.status === 404) {
+      return null;
+    }
+
+    const connector: DataConnector = await handleApiResponse(response);
+    return processDataConnectors([connector])[0];
+  } catch (error) {
+    console.error('Failed to update data connector:', error);
+    throw new Error(`Failed to update data connector: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  const updatedConnector = {
-    ...mockConnectors[connectorIndex],
-    ...updates,
-  };
-
-  mockConnectors[connectorIndex] = updatedConnector;
-
-  return updatedConnector;
 };
 
 /**
  * Delete a data connector
  */
 export const deleteDataConnector = async (id: string): Promise<boolean> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/delete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  const connectorIndex = mockConnectors.findIndex((c) => c.id === id);
-  if (connectorIndex === -1) {
-    return false;
+    if (response.status === 204 || response.status === 200) {
+      return true;
+    }
+
+    if (response.status === 404) {
+      return false;
+    }
+
+    // Only try to parse JSON if we expect an error body
+    if (!response.ok) {
+      const errorData: ApiError = await response.json().catch(() => ({
+        error: 'Unknown error',
+        message: `HTTP ${response.status}`
+      }));
+      throw new Error(errorData.message || errorData.error || 'Delete failed');
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Failed to delete data connector:', error);
+    throw error; 
   }
+};
 
-  mockConnectors.splice(connectorIndex, 1);
-  return true;
+/**
+ * Test connection for a data connector
+ */
+
+export const testDataConnectorConnection = async (id: string): Promise<ConnectionTestResult> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/${id}/test-connection`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result: ConnectionTestResult = await handleApiResponse(response);
+    return result;
+  } catch (error) {
+    console.error('Failed to test data connector connection:', error);
+    return {
+      success: false,
+      message: 'Connection test failed',
+      error_details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};
+
+/**
+ * Test connection using configuration (before saving)
+ */
+export const testDataConnectorConfig = async (
+  config: {
+    type: DataConnectorType;
+    configuration: DataConnectorConfiguration;
+  }
+): Promise<ConnectionTestResult> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/test-connection-config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config),
+    });
+
+    const result: ConnectionTestResult = await handleApiResponse(response);
+    return result;
+  } catch (error) {
+    console.error('Config connection test failed:', error);
+    return {
+      success: false,
+      message: 'Connection test failed',
+      error_details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};
+
+/**
+ * Get data connector statistics
+ */
+export const getDataConnectorStatistics = async (): Promise<DataConnectorStatistics> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/statistics`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const statistics: DataConnectorStatistics = await handleApiResponse(response);
+    return statistics;
+  } catch (error) {
+    console.error('Failed to fetch data connector statistics:', error);
+    throw new Error(`Failed to fetch statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+/**
+ * Test connection configuration without saving
+ */
+export const testConnectionConfig = async (
+  type: DataConnectorType,
+  configuration: DataConnectorConfiguration
+): Promise<ConnectionTestResult> => {
+  try {
+    const response = await fetch(`${BASE_URL}/data-connectors/test-connection-config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type, configuration }),
+    });
+
+    const result: ConnectionTestResult = await handleApiResponse(response);
+    return result;
+  } catch (error) {
+    console.error('Failed to test connection configuration:', error);
+    return {
+      success: false,
+      message: 'Connection test failed',
+      error_details: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};
+
+export const fetchConnectionProfiles = async (params: { dataConnectorId?: string } = {}): Promise<ConnectionProfile[]> => {
+  try {
+    const query = params.dataConnectorId ? `?dataConnectorId=${params.dataConnectorId}` : '';
+    const response = await fetch(`${BASE_URL}/connection-profiles${query}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch profiles');
+
+    const result = await response.json();
+    // Adjust based on real response shape (probably { data: [...] })
+    return result.data || result || [];
+  } catch (err) {
+    console.error('Fetch profiles error:', err);
+    return [];
+  }
 };

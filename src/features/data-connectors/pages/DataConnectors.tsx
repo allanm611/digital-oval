@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 import {
   Search,
   Filter,
@@ -13,56 +14,70 @@ import {
   Download,
   Upload,
   Trash2,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
-import { DataConnector } from "../types";
-import { fetchDataConnectors } from "../services";
-import { getConnectorIcon } from "../utils/connectorIcons";
+import { DataConnectorType, ProcessedDataConnector } from "../types";
+import { fetchDataConnectors, updateDataConnector, createDataConnector } from "../services";
+import { getConnectorDisplayName, getConnectorIcon } from "../utils/connectorIcons";
 import { tw, color, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import DataConnectorForm from "../components/DataConnectorForm";
+import { CreateDataConnectorRequest, UpdateDataConnectorRequest, DataConnectorFormData, DataConnectorFilterParams } from "../types";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+
+
 
 export default function DataConnectors() {
   const navigate = useNavigate();
-  const { error: showError } = useToast();
-  const [connectors, setConnectors] = useState<DataConnector[]>([]);
+  const { error: showError, success } = useToast();
+  // const [connectors, setConnectors] = useState<DataConnector[]>([]);
+  const [connectors, setConnectors] = useState<ProcessedDataConnector[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [totalConnectors, setTotalConnectors] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [editingConnector, setEditingConnector] = useState<ProcessedDataConnector | null>(null);
+  const [filterType, setFilterType] = useState<DataConnectorType | "all">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const activeFilterCount = 
+  (filterType !== "all" ? 1 : 0) + 
+  (filterStatus !== "all" ? 1 : 0);
 
-  const loadConnectors = useCallback(async () => {
+  
+  const loadConnectors = async () => {
     try {
       setLoading(true);
-      const offset = (currentPage - 1) * pageSize;
-      const response = await fetchDataConnectors({
-        search: searchTerm || undefined,
-        limit: pageSize,
-        offset,
-      });
-      setConnectors(response.data);
-      setTotalConnectors(response.total);
-      setHasMore(response.hasMore);
+
+      const params: DataConnectorFilterParams = {
+        search: searchTerm.trim() || undefined,
+      };
+
+      // Type filter – single value
+      if (filterType !== "all") {
+        params.type = filterType;
+      }
+
+      // Status filter
+      if (filterStatus === "active") {
+        params.is_active = true;
+      } else if (filterStatus === "inactive") {
+        params.is_active = false;
+      }
+
+      const { data } = await fetchDataConnectors(params);
+      setConnectors(data);
     } catch (error) {
       console.error("Failed to load data connectors:", error);
+      showError("Error", "Failed to load connectors");
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize, searchTerm]);
+  };
 
   useEffect(() => {
     loadConnectors();
-  }, [loadConnectors]);
-
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  };
+  }, [searchTerm, filterType, filterStatus]);
 
   // Close action menu on outside click
   useEffect(() => {
@@ -71,7 +86,7 @@ export default function DataConnectors() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const handleConnectorClick = (connector: DataConnector) => {
+  const handleConnectorClick = (connector: ProcessedDataConnector) => {
     navigate(`/dashboard/data-connectors/${connector.id}`);
   };
 
@@ -85,8 +100,8 @@ export default function DataConnectors() {
 
   const handleMenuAction = (
     e: React.MouseEvent<HTMLButtonElement>,
-    action: "view" | "clone" | "export" | "import" | "delete",
-    connector: DataConnector,
+    action: "view" | "edit" | "clone" | "export" | "import" | "delete",
+    connector: ProcessedDataConnector,
   ) => {
     e.stopPropagation();
     setActionMenuOpen(null);
@@ -94,6 +109,10 @@ export default function DataConnectors() {
     switch (action) {
       case "view":
         handleConnectorClick(connector);
+        break;
+      case "edit":
+        setEditingConnector(connector as ProcessedDataConnector);
+        setShowCreateModal(true);
         break;
       case "clone":
         showError("Not implemented", "Clone connector will be available soon");
@@ -112,6 +131,50 @@ export default function DataConnectors() {
     }
   };
 
+  const handleSaveConnector = async (formData: DataConnectorFormData) => {
+    try {
+      let savedConnector: ProcessedDataConnector;
+
+      if (editingConnector) {
+        // ─── Edit ─────────────────────────────────────
+        const updatePayload: UpdateDataConnectorRequest = {
+          name: formData.name.trim(),
+          description: formData.description?.trim() || undefined,
+          is_active: editingConnector.is_active,          // keep unless you add toggle
+          configuration: formData.configuration,
+        };
+
+        const updated = await updateDataConnector(editingConnector.id, updatePayload);
+
+        if (!updated) throw new Error("Connector not found");
+
+        savedConnector = updated;
+        success("Updated", `${formData.name} was updated successfully.`);
+      } else {
+        // ─── Create ───────────────────────────────────
+        const createPayload: CreateDataConnectorRequest = {
+          name: formData.name.trim(),
+          type: formData.type,
+          description: formData.description?.trim(),
+          configuration: formData.configuration ?? {},
+        };
+
+        savedConnector = await createDataConnector(createPayload);
+        success("Created", `${formData.name} was created successfully.`);
+      }
+
+      await loadConnectors();   // refresh list
+    } catch (err: any) {
+      console.error(err);
+      showError("Save failed", err.message || "Could not save connector");
+    }
+  };
+
+  const handleCloseForm = () => {
+    setShowCreateModal(false);
+    setEditingConnector(null);
+  };
+
   return (
     <div className="">
       {/* Header */}
@@ -125,7 +188,7 @@ export default function DataConnectors() {
             destinations
           </p>
         </div>
-        <CreateButton onClick={() => setShowCreateModal(true)} />
+        <CreateButton onClick={() => { setEditingConnector(null); setShowCreateModal(true); }} />
       </div>
 
       {/* Stats Cards */}
@@ -144,7 +207,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {totalConnectors}
+              {connectors.length}
             </p>
           </div>
           <div
@@ -158,7 +221,7 @@ export default function DataConnectors() {
               <p className="text-sm font-medium text-gray-600">Active</p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.filter((c) => c.isActive).length}
+              {connectors.filter((c) => c.is_active).length}
             </p>
           </div>
           <div
@@ -174,7 +237,7 @@ export default function DataConnectors() {
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {connectors.reduce((sum, c) => sum + (c.connectionCount || 0), 0)}
+              {connectors.reduce((sum, c) => sum + (c.connection_count || 0), 0)}
             </p>
           </div>
           <div
@@ -196,6 +259,80 @@ export default function DataConnectors() {
         </div>
       )}
 
+      {/* Search & Filters */}
+      {showFilterPanel && (
+        <div 
+          className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-2xl z-30 p-5"
+          style={{ maxHeight: '80vh', overflowY: 'auto' }}
+        >
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-lg font-semibold text-gray-900">Filter Connectors</h3>
+            <button 
+              onClick={() => setShowFilterPanel(false)}
+              className="text-gray-500 hover:text-gray-800"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Status */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          {/* Type – single select */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Connector Type
+            </label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as DataConnectorType | "all")}
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="all">All Types</option>
+              {(["tcp", "websocket", "kafka", "jdbc", "sms_inbox", "api", "files", "digital_tags"] as DataConnectorType[]).map(t => (
+                <option key={t} value={t}>
+                  {getConnectorDisplayName(t)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Footer buttons */}
+          <div className="flex justify-between pt-4 border-t border-gray-200">
+            <button
+              onClick={() => {
+                setFilterType("all");
+                setFilterStatus("all");
+                setShowFilterPanel(false);
+              }}
+              className="text-sm text-gray-600 hover:text-gray-900 underline"
+            >
+              Reset Filters
+            </button>
+
+            <button
+              onClick={() => setShowFilterPanel(false)}
+              className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Controls */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -207,24 +344,28 @@ export default function DataConnectors() {
             type="text"
             placeholder="Search connectors..."
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
             className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
           />
         </div>
 
         <button
-          className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
+          onClick={() => setShowFilterPanel(prev => !prev)}
+          className={`relative flex items-center gap-2 px-4 py-2.5 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 transition font-medium text-sm`}
           style={{
             backgroundColor: button.secondaryAction.background,
             color: button.secondaryAction.color,
-            border: button.secondaryAction.border,
-            padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-            borderRadius: button.secondaryAction.borderRadius,
-            fontSize: button.secondaryAction.fontSize,
           }}
         >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
+
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
       </div>
 
@@ -239,7 +380,7 @@ export default function DataConnectors() {
         </div>
       ) : (
         <div
-          className={` ${tw.rounded} border ${tw.borderDefault} shadow-sm overflow-hidden`}
+          className="overflow-hidden"
         >
           <div className="overflow-x-auto">
             <table
@@ -302,11 +443,12 @@ export default function DataConnectors() {
                         <div className="flex items-center gap-3">
                           <div className="flex-shrink-0">
                             {(() => {
-                              const IconComp = connector.icon;
+                              const { icon: IconComp, color: iconColor } =
+                                getConnectorIcon(connector.type);
                               return (
                                 <IconComp
-                                  className="h-5 w-5"
-                                  style={{ color: getConnectorIcon(connector.type).color }}
+                                  className="h-5 w-5 flex-shrink-0"
+                                  style={{ color: iconColor }}
                                 />
                               );
                             })()}
@@ -328,7 +470,7 @@ export default function DataConnectors() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className="inline-flex items-center font-medium text-gray-900">
-                          {connector.isActive ? "Active" : "Inactive"}
+                          {connector.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td
@@ -336,7 +478,7 @@ export default function DataConnectors() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className={`font-medium ${tw.textPrimary}`}>
-                          {connector.connectionCount ?? "--"}
+                          {connector.connection_count ?? "--"}
                         </span>
                       </td>
                       <td
@@ -344,8 +486,8 @@ export default function DataConnectors() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className={tw.textPrimary}>
-                          {connector.lastUsed
-                            ? connector.lastUsed.toLocaleDateString()
+                          {connector.last_used
+                            ? new Date(connector.last_used).toLocaleDateString()
                             : "--"}
                         </span>
                       </td>
@@ -384,6 +526,7 @@ export default function DataConnectors() {
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 {[
+                                  { key: "edit", label: "Edit", icon: Eye },
                                   { key: "clone", label: "Clone", icon: Copy },
                                   { key: "export", label: "Export", icon: Download },
                                   { key: "import", label: "Import", icon: Upload },
@@ -414,74 +557,17 @@ export default function DataConnectors() {
               </tbody>
             </table>
           </div>
-          {/* Pagination Controls */}
-          {connectors.length > 0 && (
-            <div
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
-              style={{ borderColor: color.surface.border }}
-            >
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="pageSize"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Items per page:
-                  </label>
-                  <select
-                    id="pageSize"
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(parseInt(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className={`px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none`}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                <span className="text-sm text-gray-600">
-                  Showing{" "}
-                  <strong>
-                    {(currentPage - 1) * pageSize + 1}
-                    {connectors.length > 0 ? "-" : ""}{" "}
-                    {Math.min(currentPage * pageSize, totalConnectors)}
-                  </strong>{" "}
-                  of <strong>{totalConnectors}</strong>
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ borderColor: color.surface.border }}
-                  title="Previous page"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="text-sm text-gray-600 min-w-[50px] text-center">
-                  Page {currentPage}
-                </span>
-                <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={!hasMore}
-                  className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  style={{ borderColor: color.surface.border }}
-                  title="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
+      {/* Create Data Connector Modal */}
+      <DataConnectorForm
+        connector={editingConnector ?? undefined}   
+        isOpen={showCreateModal}
+        onClose={handleCloseForm}
+        onSave={handleSaveConnector}
+        // loading={someGlobalSavingState}           // optional – you can add if needed
+      />
     </div>
   );
 }
