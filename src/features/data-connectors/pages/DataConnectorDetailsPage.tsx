@@ -12,8 +12,8 @@ import { dataConnectorService } from "../services/dataConnectorService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
-import ConnectionProfilesSection from "../components/ConnectionProfilesSection";
-import AddConnectionModal from "../components/AddConnectionModal";
+// import ConnectionProfilesSection from "../components/ConnectionProfilesSection";
+// import AddConnectionModal from "../components/AddConnectionModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 
 export default function DataConnectorDetailsPage() {
@@ -634,20 +634,23 @@ export default function DataConnectorDetailsPage() {
         )}
 
         {activeTab === 'profiles' && (
-          <ConnectionProfilesSection
-            profiles={connectionProfiles.map(p => ({
-              id: p.id,
-              name: p.name,
-              type: p.type,
-              is_active: p.status === 'active',
-            }))}
-            connectorId={connector.id}
-            connectorType={connector.type}
-            onProfileClick={handleProfileClick}
-            onAddProfile={handleAddConnection}
-            onEditProfile={handleEditProfile}
-            onDeleteProfile={handleDeleteProfile}
-          />
+          <div className="text-center text-gray-500 py-8">
+            <p>Connection Profiles</p>
+          </div>
+          // <ConnectionProfilesSection
+          //   profiles={connectionProfiles.map(p => ({
+          //     id: p.id,
+          //     name: p.name,
+          //     type: p.type,
+          //     is_active: p.status === 'active',
+          //   }))}
+          //   connectorId={connector.id}
+          //   connectorType={connector.type}
+          //   onProfileClick={handleProfileClick}
+          //   onAddProfile={handleAddConnection}
+          //   onEditProfile={handleEditProfile}
+          //   onDeleteProfile={handleDeleteProfile}
+          // />
         )}
       </div>
 
