@@ -829,6 +829,26 @@ export default function CustomerProfileReportsPage() {
     });
   }, [cohortSeries]);
 
+  // Customers for table: Show ALL customers regardless of date filter (date filter only applies to charts)
+  const tableCustomers = useMemo(() => {
+    return baseCustomerRows.filter((row) => {
+      const subscription = subscriptionLookup[row.id];
+      const segmentValue = subscription?.customerType ?? row.segment;
+      const matchesSegment =
+        tableSegment === "All" ? true : segmentValue === tableSegment;
+      const matchesRisk =
+        tableRiskFilter === "All"
+          ? true
+          : tableRiskFilter === "High"
+          ? row.churnRisk >= 60
+          : tableRiskFilter === "Medium"
+          ? row.churnRisk >= 30 && row.churnRisk < 60
+          : row.churnRisk < 30;
+      return matchesSegment && matchesRisk;
+    });
+  }, [tableSegment, tableRiskFilter, baseCustomerRows]);
+
+  // Customers for charts: Apply date range filter
   const filteredCustomers = useMemo(() => {
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
@@ -876,26 +896,26 @@ export default function CustomerProfileReportsPage() {
     setTablePage((prev) => {
       const maxPage = Math.max(
         1,
-        Math.ceil(filteredCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
+        Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
       );
       return Math.min(prev, maxPage);
     });
-  }, [filteredCustomers.length]);
+  }, [tableCustomers.length]);
 
   const tableOffset = Math.max(0, (tablePage - 1) * CUSTOMER_TABLE_PAGE_SIZE);
   const paginatedCustomers = useMemo(() => {
-    return filteredCustomers.slice(
+    return tableCustomers.slice(
       tableOffset,
       tableOffset + CUSTOMER_TABLE_PAGE_SIZE
     );
-  }, [filteredCustomers, tableOffset]);
+  }, [tableCustomers, tableOffset]);
   const totalPages = Math.max(
     1,
-    Math.ceil(filteredCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
+    Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
   );
 
   const handleDownloadCsv = () => {
-    if (!filteredCustomers.length) return;
+    if (!tableCustomers.length) return;
 
     const headers = [
       "Customer",
@@ -909,7 +929,7 @@ export default function CustomerProfileReportsPage() {
       "City",
     ];
 
-    const rows = filteredCustomers.map((row) => {
+    const rows = tableCustomers.map((row) => {
       const subscription = subscriptionLookup[row.id];
       return [
         row.name,
@@ -1725,14 +1745,14 @@ export default function CustomerProfileReportsPage() {
                           <p className="font-semibold text-gray-900 hover:underline">
                             {customer.name}
                           </p>
-                          <p className="mt-1 text-xs text-gray-500">
+                          {/* <p className="mt-1 text-xs text-gray-500">
                             Customer #{subscription?.customerId ?? customer.id}
                           </p>
                           {(subscription?.email || customer.email) && (
                             <p className="mt-0.5 text-xs text-gray-500 truncate">
                               {subscription?.email ?? customer.email}
                             </p>
-                          )}
+                          )} */}
                         </button>
                       </td>
                       <td
@@ -1802,13 +1822,13 @@ export default function CustomerProfileReportsPage() {
               </tbody>
             </table>
           </div>
-          {!filteredCustomers.length && (
+          {!tableCustomers.length && (
             <div className="px-6 py-10 text-center text-sm text-gray-500">
               {t.customerProfileReports.noCustomersMatchFilters}
             </div>
           )}
         </div>
-        {filteredCustomers.length > 0 && (
+        {tableCustomers.length > 0 && (
           <div className="px-4 py-3 sm:flex sm:items-center sm:justify-between">
             <p className="text-sm text-gray-600">
               {t.customerProfileReports.page
