@@ -475,7 +475,7 @@ const ServerPages = {
       ),
   ),
   KPIsPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsPage"),
+    () => import(/* webpackPrefetch: true */ "../../kpis/pages/KPIsContainer"),
   ),
 };
 
@@ -957,7 +957,7 @@ export default function Dashboard() {
             path="/data-connectors/:id"
             element={<ServerPages.DataConnectorDetailsPage />}
           />
-          <Route path="/kpis" element={<ServerPages.KPIsPage />} />
+          <Route path="/kpis/*" element={<ServerPages.KPIsPage />} />
           <Route path="/jobs" element={<JobPages.ScheduledJobsPage />} />
           <Route
             path="/scheduled-jobs"
