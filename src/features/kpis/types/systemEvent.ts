@@ -1,4 +1,4 @@
-export type SystemEventCategory = "transaction" | "usage" | "engagement" | "account";
+export type SystemEventCategory = "email" | "sms" | "campaign" | "customer_journey" | "customer_care";
 export type SystemEventTimeOperator =
   | "occurred"
   | "occurred_in_last"
@@ -32,16 +32,31 @@ export interface SystemEvent {
 }
 
 export type SystemEventCode =
-  | "customer_recharge"
-  | "data_bundle_purchase"
-  | "voice_bundle_purchase"
-  | "call_made"
+  // Email
+  | "email_sent"
+  | "email_delivered"
+  | "email_opened"
+  | "email_clicked"
+  | "email_bounced"
+  | "email_unsubscribed"
+  // SMS
   | "sms_sent"
-  | "data_session"
-  | "customer_login"
-  | "app_opened"
-  | "profile_update"
-  | "password_reset";
+  | "sms_delivered"
+  | "sms_failed"
+  | "sms_clicked"
+  // Campaign
+  | "campaign_executed"
+  | "campaign_conversion"
+  | "offer_accepted"
+  | "offer_rejected"
+  // Customer Journey
+  | "customer_subscribed"
+  | "customer_unsubscribed"
+  | "profile_updated_cvm"
+  // Customer Care
+  | "customer_care_contact"
+  | "complaint_logged"
+  | "support_ticket_created";
 
 export const TIME_OPERATOR_OPTIONS: Record<SystemEventTimeOperator, SystemEventTimeOperatorOption> = {
   occurred: {
@@ -85,131 +100,249 @@ export const TIME_OPERATOR_OPTIONS: Record<SystemEventTimeOperator, SystemEventT
 };
 
 export const SYSTEM_EVENTS: SystemEvent[] = [
+  // ==================== EMAIL EVENTS ====================
   {
     id: 1,
-    event_code: "customer_recharge",
-    event_name: "Recharge",
-    event_description: "Customer added airtime/credit to account",
-    category: "transaction",
-    source_table: "OCS_VOU",
+    event_code: "email_sent",
+    event_name: "Email Sent",
+    event_description: "Email campaign message sent to customer",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "equals", "never_occurred"],
   },
   {
     id: 2,
-    event_code: "data_bundle_purchase",
-    event_name: "Data Bundle Purchase",
-    event_description: "Customer purchased a data bundle",
-    category: "transaction",
-    source_table: "OCS_MON",
+    event_code: "email_delivered",
+    event_name: "Email Delivered",
+    event_description: "Email successfully delivered to customer inbox",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 3,
-    event_code: "voice_bundle_purchase",
-    event_name: "Voice Bundle Purchase",
-    event_description: "Customer purchased a voice/call bundle",
-    category: "transaction",
-    source_table: "OCS_MGR",
+    event_code: "email_opened",
+    event_name: "Email Opened",
+    event_description: "Customer opened the email message",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
-
   {
     id: 4,
-    event_code: "call_made",
-    event_name: "Call Made",
-    event_description: "Customer made a phone call",
-    category: "usage",
-    source_table: "OCS_REC",
+    event_code: "email_clicked",
+    event_name: "Email Link Clicked",
+    event_description: "Customer clicked a link in the email",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 5,
-    event_code: "sms_sent",
-    event_name: "SMS Sent",
-    event_description: "Customer sent an SMS message",
-    category: "usage",
-    source_table: "OCS_SMS",
+    event_code: "email_bounced",
+    event_name: "Email Bounced",
+    event_description: "Email delivery failed (hard or soft bounce)",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
   {
     id: 6,
-    event_code: "data_session",
-    event_name: "Data Session",
-    event_description: "Customer used data/internet",
-    category: "usage",
-    source_table: "OCS_DATA",
+    event_code: "email_unsubscribed",
+    event_name: "Email Unsubscribed",
+    event_description: "Customer unsubscribed from email campaigns",
+    category: "email",
+    source_table: "CAMPAIGN_EMAIL_LOGS",
     data_source: "Live",
     frequency: "Per Min",
-    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+    time_operators: ["occurred", "occurred_in_last", "never_occurred"],
   },
 
+  // ==================== SMS EVENTS ====================
   {
     id: 7,
-    event_code: "app_opened",
-    event_name: "App Opened",
-    event_description: "Customer opened the mobile app",
-    category: "engagement",
-    source_table: "APP_LOGS",
+    event_code: "sms_sent",
+    event_name: "SMS Sent",
+    event_description: "SMS campaign message sent to customer",
+    category: "sms",
+    source_table: "CAMPAIGN_SMS_LOGS",
     data_source: "Live",
     frequency: "Per Min",
-    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "equals", "never_occurred"],
   },
   {
     id: 8,
-    event_code: "customer_login",
-    event_name: "Customer Login",
-    event_description: "Customer logged into their account",
-    category: "engagement",
-    source_table: "APP_LOGS",
+    event_code: "sms_delivered",
+    event_name: "SMS Delivered",
+    event_description: "SMS successfully delivered to customer",
+    category: "sms",
+    source_table: "CAMPAIGN_SMS_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 9,
+    event_code: "sms_failed",
+    event_name: "SMS Failed",
+    event_description: "SMS delivery failed",
+    category: "sms",
+    source_table: "CAMPAIGN_SMS_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 10,
+    event_code: "sms_clicked",
+    event_name: "SMS Link Clicked",
+    event_description: "Customer clicked a link in SMS message",
+    category: "sms",
+    source_table: "CAMPAIGN_SMS_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
 
+  // ==================== CAMPAIGN EVENTS ====================
   {
-    id: 9,
-    event_code: "profile_update",
-    event_name: "Profile Updated",
-    event_description: "Customer updated their profile information",
-    category: "account",
-    source_table: "APP_LOGS",
+    id: 11,
+    event_code: "campaign_executed",
+    event_name: "Campaign Executed",
+    event_description: "Customer was targeted by a campaign",
+    category: "campaign",
+    source_table: "CAMPAIGN_EXECUTION_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "equals", "never_occurred"],
+  },
+  {
+    id: 12,
+    event_code: "campaign_conversion",
+    event_name: "Campaign Conversion",
+    event_description: "Customer converted after campaign (achieved goal)",
+    category: "campaign",
+    source_table: "CAMPAIGN_EXECUTION_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 13,
+    event_code: "offer_accepted",
+    event_name: "Offer Accepted",
+    event_description: "Customer accepted a campaign offer",
+    category: "campaign",
+    source_table: "CAMPAIGN_EXECUTION_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 14,
+    event_code: "offer_rejected",
+    event_name: "Offer Rejected",
+    event_description: "Customer rejected or ignored campaign offer",
+    category: "campaign",
+    source_table: "CAMPAIGN_EXECUTION_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+
+  // ==================== CUSTOMER JOURNEY EVENTS ====================
+  {
+    id: 15,
+    event_code: "customer_subscribed",
+    event_name: "Customer Subscribed",
+    event_description: "Customer subscribed to CVM communications",
+    category: "customer_journey",
+    source_table: "CUSTOMER_PROFILE_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "never_occurred"],
   },
   {
-    id: 10,
-    event_code: "password_reset",
-    event_name: "Password Reset",
-    event_description: "Customer reset their account password",
-    category: "account",
-    source_table: "APP_LOGS",
+    id: 16,
+    event_code: "customer_unsubscribed",
+    event_name: "Customer Unsubscribed",
+    event_description: "Customer unsubscribed from CVM communications",
+    category: "customer_journey",
+    source_table: "CUSTOMER_PROFILE_LOGS",
     data_source: "Live",
     frequency: "Per Min",
     time_operators: ["occurred", "occurred_in_last", "never_occurred"],
+  },
+  {
+    id: 17,
+    event_code: "profile_updated_cvm",
+    event_name: "Profile Updated (CVM)",
+    event_description: "Customer profile updated via CVM system",
+    category: "customer_journey",
+    source_table: "CUSTOMER_PROFILE_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+
+  // ==================== CUSTOMER CARE EVENTS ====================
+  {
+    id: 18,
+    event_code: "customer_care_contact",
+    event_name: "Customer Care Contact",
+    event_description: "Customer contacted customer care/support",
+    category: "customer_care",
+    source_table: "CUSTOMER_CARE_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 19,
+    event_code: "complaint_logged",
+    event_name: "Complaint Logged",
+    event_description: "Customer complaint was logged in the system",
+    category: "customer_care",
+    source_table: "CUSTOMER_CARE_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
+  },
+  {
+    id: 20,
+    event_code: "support_ticket_created",
+    event_name: "Support Ticket Created",
+    event_description: "Support ticket created for customer issue",
+    category: "customer_care",
+    source_table: "CUSTOMER_CARE_LOGS",
+    data_source: "Live",
+    frequency: "Per Min",
+    time_operators: ["occurred", "occurred_in_last", "greater_than", "never_occurred"],
   },
 ];
 
 export const SYSTEM_EVENTS_BY_CATEGORY = {
-  transaction: SYSTEM_EVENTS.filter((e) => e.category === "transaction"),
-  usage: SYSTEM_EVENTS.filter((e) => e.category === "usage"),
-  engagement: SYSTEM_EVENTS.filter((e) => e.category === "engagement"),
-  account: SYSTEM_EVENTS.filter((e) => e.category === "account"),
+  email: SYSTEM_EVENTS.filter((e) => e.category === "email"),
+  sms: SYSTEM_EVENTS.filter((e) => e.category === "sms"),
+  campaign: SYSTEM_EVENTS.filter((e) => e.category === "campaign"),
+  customer_journey: SYSTEM_EVENTS.filter((e) => e.category === "customer_journey"),
+  customer_care: SYSTEM_EVENTS.filter((e) => e.category === "customer_care"),
 };
 
 export const SYSTEM_EVENT_CATEGORIES = [
-  { value: "transaction", label: "Transaction Events" },
-  { value: "usage", label: "Usage Events" },
-  { value: "engagement", label: "Engagement Events" },
-  { value: "account", label: "Account Events" },
+  { value: "email", label: "Email Events" },
+  { value: "sms", label: "SMS Events" },
+  { value: "campaign", label: "Campaign Events" },
+  { value: "customer_journey", label: "Customer Journey Events" },
+  { value: "customer_care", label: "Customer Care Events" },
 ] as const;
