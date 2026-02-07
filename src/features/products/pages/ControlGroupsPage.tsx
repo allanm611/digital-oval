@@ -329,6 +329,12 @@ export default function ControlGroupsPage() {
                   >
                     Name
                   </th>
+                  {/* <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Description
+                  </th> */}
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
@@ -380,21 +386,18 @@ export default function ControlGroupsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div className="flex flex-col">
-                        <div
-                          className={`font-semibold text-sm sm:text-base ${tw.textPrimary}`}
-                        >
-                          {group.name}
-                        </div>
-                        {group.description && (
-                          <div
-                            className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                          >
-                            {group.description}
-                          </div>
-                        )}
+                      <div
+                        className={`font-semibold text-sm sm:text-base ${tw.textPrimary}`}
+                      >
+                        {group.name}
                       </div>
                     </td>
+                    {/* <td
+                      className={`px-6 py-4 text-sm ${tw.textMuted}`}
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {group.description || "-"}
+                    </td> */}
                     <td
                       className={`px-6 py-4 text-sm font-medium ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
