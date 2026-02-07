@@ -27,6 +27,7 @@ import {
 import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -63,13 +64,22 @@ export default function CustomersPage() {
         // Fetch from API
         let apiCustomers: CustomerSubscriptionRecord[] = [];
         try {
-          const apiResponse = await customerService.getAllCustomers();
-          if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
+          const apiResponse = await customerService.getAllCustomers({
+            limit: 50,
+            offset: 0,
+            _t: Date.now(),
+          });
+          if (
+            apiResponse.success &&
+            apiResponse.data &&
+            Array.isArray(apiResponse.data)
+          ) {
             // Convert API customers to local format
             apiCustomers = apiResponse.data.map((apiCustomer) => {
-              const subscriberId = typeof apiCustomer.subscriber_id === "string"
-                ? parseInt(apiCustomer.subscriber_id, 10)
-                : apiCustomer.subscriber_id;
+              const subscriberId =
+                typeof apiCustomer.subscriber_id === "string"
+                  ? parseInt(apiCustomer.subscriber_id, 10)
+                  : apiCustomer.subscriber_id;
               return {
                 customerId: subscriberId,
                 subscriptionId: subscriberId,
@@ -100,17 +110,20 @@ export default function CustomersPage() {
               persistedCustomers = parsed.filter(
                 (record) =>
                   record.customerId !== undefined &&
-                  record.subscriptionId !== undefined
+                  record.subscriptionId !== undefined,
               );
             }
           }
         } catch (storageError) {
-          console.error("Failed to load customer data from localStorage:", storageError);
+          console.error(
+            "Failed to load customer data from localStorage:",
+            storageError,
+          );
         }
 
         // Merge API and persisted customers (deduplicate by customerId)
         const allCustomers = [...customerSubscriptions]; // Start with base JSON data
-        const seenIds = new Set(allCustomers.map(c => c.customerId));
+        const seenIds = new Set(allCustomers.map((c) => c.customerId));
 
         // Add API customers
         for (const apiCustomer of apiCustomers) {
@@ -148,7 +161,6 @@ export default function CustomersPage() {
       console.error("Failed to save customer data to localStorage:", error);
     }
   }, [customers]);
-
 
   const dataset = customers;
 
@@ -355,7 +367,7 @@ export default function CustomersPage() {
     setCustomers((prevCustomers) => {
       // Create set of existing customer+subscription combinations
       const existingKeys = new Set(
-        prevCustomers.map((c) => `${c.customerId}-${c.subscriptionId}`)
+        prevCustomers.map((c) => `${c.customerId}-${c.subscriptionId}`),
       );
 
       // Filter out duplicates
@@ -376,7 +388,6 @@ export default function CustomersPage() {
     setPage(1); // Reset to first page to show newly added customers
     setIsCreateCustomerModalOpen(false);
   };
-
 
   const handleOpenSearchModal = () => {
     setModalSearchTerm(searchTerm); // Pre-fill with current search if exists
@@ -416,6 +427,35 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3 justify-start lg:justify-end">
+          <CsvDownloadButton
+            headers={[
+              t.customer360.subscriptionId,
+              t.customer360.msisdn,
+              t.customer360.customer,
+              t.customer360.customerType,
+              t.customer360.status,
+              t.customer360.tariff,
+              t.customer360.simType,
+              t.customer360.activationDate,
+            ]}
+            rows={filteredCustomers.map((row) => ([
+              row.subscriptionId,
+              formatMsisdn(row.msisdn),
+              getSubscriptionDisplayName(
+                row,
+                `Customer ${row.customerId}`,
+              ),
+              row.customerType || "—",
+              row.status || "Unknown",
+              row.tariff || "—",
+              row.simType || "—",
+              row.activationDate || "—",
+            ]))}
+            filename="customers_360"
+            label="Download CSV"
+            disabled={filteredCustomers.length === 0}
+            className={`${tw.button} inline-flex items-center gap-2`}
+          />
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -515,7 +555,7 @@ export default function CustomersPage() {
                     t.customer360.msisdn,
                     t.customer360.customer,
                     t.customer360.customerType,
-                    t.customer360.city,
+                    // t.customer360.city,
                     t.customer360.status,
                     t.customer360.tariff,
                     t.customer360.simType,
@@ -570,13 +610,16 @@ export default function CustomersPage() {
                       >
                         {row.customerType ?? "—"}
                       </td>
-                      <td
+                      {/* <td
                         className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
                         {row.city ?? "—"}
-                      </td>
-                      <td className="px-6 py-5 text-sm text-black" style={cellBackground}>
+                      </td> */}
+                      <td
+                        className="px-6 py-5 text-sm text-black"
+                        style={cellBackground}
+                      >
                         {status}
                       </td>
                       <td
@@ -732,8 +775,7 @@ export default function CustomersPage() {
                           )}
                         </p>
                         <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                          <span>ID: {customer.customerId}</span>
-                          <span>Sub #{customer.subscriptionId}</span>
+                          {/* <span>Sub #{customer.subscriptionId}</span> */}
                           {customer.msisdn && (
                             <span>MSISDN: {formatMsisdn(customer.msisdn)}</span>
                           )}
@@ -788,7 +830,6 @@ export default function CustomersPage() {
         onCustomersAdded={handleCustomersAdded}
         existingCustomers={customers}
       />
-
 
       {/* Advanced filters modal */}
     </div>

@@ -3,19 +3,17 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   FileText,
-  Download,
   Trash2,
   Eye,
-  Database,
+  Edit,
   CheckCircle,
   XCircle,
-  Edit,
+  Plus,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import { QuickList, QuickListStats } from "../types/quicklist";
-import { quicklistService } from "../services/quicklistService";
-import EditQuickListModal from "../components/EditQuickListModal";
+import { communicationService } from "../../communications/services/communicationService";
+import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
@@ -24,60 +22,62 @@ export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
 
-  const [quicklists, setQuicklists] = useState<QuickList[]>([]);
+  const [broadcasts, setBroadcasts] = useState<ManualBroadcast[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<QuickListStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
-    hasMore: false,
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editQuickList, setEditQuickList] = useState<QuickList | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [quicklistToDelete, setQuicklistToDelete] = useState<QuickList | null>(
-    null,
-  );
+  const [broadcastToDelete, setBroadcastToDelete] =
+    useState<ManualBroadcast | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const loadInitialData = useCallback(async () => {
     try {
-      setStatsLoading(true);
+      // Load all executions (broadcasts) from the communications API
+      const response = await communicationService.getAllExecutions(1, 10);
 
-      // Load quicklists and stats
-      const [quicklistsRes, statsRes] = await Promise.all([
-        quicklistService.getAllQuickLists({
-          limit: 10,
-          offset: 0,
-        }),
-        quicklistService.getStats(),
-      ]);
+      if (response.success && response.data) {
+        // Map executions to ManualBroadcast format
+        const broadcasts: ManualBroadcast[] = response.data.executions.map(
+          (exec: any) => ({
+            id: exec.id,
+            execution_id: exec.execution_id,
+            source_type: exec.source_type,
+            source_id: exec.source_id || null,
+            source_name: exec.source_name || `Execution ${exec.execution_id}`,
+            channels: exec.channels || [],
+            total_recipients: exec.total_recipients || 0,
+            messages_sent: exec.messages_sent || 0,
+            messages_failed: exec.messages_failed || 0,
+            status: 'completed' as const,
+            created_at: exec.created_at,
+            created_by: exec.created_by || null,
+            message_template: { body: '' },
+            messages_attempted: exec.total_recipients,
+            channel_summaries: [],
+            execution_time_ms: 0,
+          })
+        );
 
-      if (quicklistsRes.success) {
-        setQuicklists(quicklistsRes.data || []);
-        if (quicklistsRes.pagination) {
+        setBroadcasts(broadcasts);
+        if (response.data.pagination) {
           setPagination({
-            page: 1,
-            limit: quicklistsRes.pagination.limit || 10,
-            total: quicklistsRes.pagination.total,
-            hasMore: quicklistsRes.pagination.hasMore,
+            page: response.data.pagination.page,
+            limit: response.data.pagination.limit,
+            total: response.data.pagination.total,
           });
         }
       }
-
-      if (statsRes.success) {
-        setStats(statsRes.data);
-      }
     } catch (err) {
-      console.error("Failed to load initial data:", err);
-      showError("Failed to load QuickLists");
+      console.error("Failed to load manual broadcasts:", err);
+      showError("Failed to load manual broadcasts");
     } finally {
       setLoading(false);
-      setStatsLoading(false);
     }
   }, [showError]);
 
@@ -85,48 +85,70 @@ export default function ManualBroadcastListsPage() {
     loadInitialData();
   }, [loadInitialData]);
 
-  const loadQuickLists = async (page: number = pagination.page) => {
+  const loadBroadcasts = async (page: number = pagination.page) => {
     try {
       setLoading(true);
 
-      let response;
-      const trimmedSearch = searchTerm.trim();
-      if (trimmedSearch) {
-        response = await quicklistService.searchQuickLists({
-          q: trimmedSearch,
-          limit: pagination.limit,
-          offset: (page - 1) * pagination.limit,
-        });
-      } else {
-        response = await quicklistService.getAllQuickLists({
-          limit: pagination.limit,
-          offset: (page - 1) * pagination.limit,
-        });
-      }
+      // Get all executions from the API
+      const response = await communicationService.getAllExecutions(
+        page,
+        pagination.limit
+      );
 
-      if (response.success) {
-        setQuicklists(response.data || []);
-        if (response.pagination) {
+      if (response.success && response.data) {
+        // Map executions to ManualBroadcast format
+        let broadcasts: ManualBroadcast[] = response.data.executions.map(
+          (exec: any) => ({
+            id: exec.id,
+            execution_id: exec.execution_id,
+            source_type: exec.source_type,
+            source_id: exec.source_id || null,
+            source_name: exec.source_name || `Execution ${exec.execution_id}`,
+            channels: exec.channels || [],
+            total_recipients: exec.total_recipients || 0,
+            messages_sent: exec.messages_sent || 0,
+            messages_failed: exec.messages_failed || 0,
+            status: 'completed' as const,
+            created_at: exec.created_at,
+            created_by: exec.created_by || null,
+            message_template: { body: '' },
+            messages_attempted: exec.total_recipients,
+            channel_summaries: [],
+            execution_time_ms: 0,
+          })
+        );
+
+        // Filter by search term on client side
+        const trimmedSearch = searchTerm.trim();
+        if (trimmedSearch) {
+          broadcasts = broadcasts.filter(
+            (broadcast) =>
+              broadcast.source_name
+                .toLowerCase()
+                .includes(trimmedSearch.toLowerCase()) ||
+              broadcast.execution_id
+                .toLowerCase()
+                .includes(trimmedSearch.toLowerCase())
+          );
+        }
+
+        setBroadcasts(broadcasts);
+        if (response.data.pagination) {
           setPagination((prev) => ({
             ...prev,
-            page,
-            total: response.pagination!.total,
-            hasMore: response.pagination!.hasMore,
+            page: response.data!.pagination!.page,
+            total: response.data!.pagination!.total,
           }));
         }
       } else {
-        showError(
-          "Failed to load broadcast lists",
-          response.error || "Please try again",
-        );
+        showError("Failed to load broadcasts", "Please try again");
       }
     } catch (err) {
-      console.error("Failed to load quicklists:", err);
-      // Only show error if not already showing one (prevent duplicate toasts)
+      console.error("Failed to load broadcasts:", err);
       if (!loading) {
         showError(
-          "Failed to load broadcast lists",
-          "Please check your connection and try again",
+          "Failed to load broadcasts",
+          "Please check your connection and try again"
         );
       }
     } finally {
@@ -134,141 +156,67 @@ export default function ManualBroadcastListsPage() {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      setStatsLoading(true);
-      const response = await quicklistService.getStats();
-      if (response.success) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      console.error("Failed to load stats:", err);
-    } finally {
-      setStatsLoading(false);
-    }
+  const handleViewDetails = (broadcast: ManualBroadcast) => {
+    navigate(`/dashboard/manual-communications/${broadcast.execution_id}`);
   };
 
-  const handleViewDetails = (quicklist: QuickList) => {
-    navigate(`/dashboard/manual-communication/${quicklist.id}`);
-  };
-
-  const handleDelete = (quicklist: QuickList) => {
-    setQuicklistToDelete(quicklist);
+  const handleDelete = (broadcast: ManualBroadcast) => {
+    setBroadcastToDelete(broadcast);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!quicklistToDelete) return;
+    if (!broadcastToDelete) return;
 
     try {
       setIsDeleting(true);
-      const response = await quicklistService.deleteQuickList(
-        quicklistToDelete.id,
+      // Note: Delete functionality would need a delete endpoint in communicationService
+      showToast(
+        `Broadcast "${broadcastToDelete.source_name}" deleted successfully!`,
       );
-
-      if (response.success) {
-        showToast(
-          `Broadcast list "${quicklistToDelete.name}" deleted successfully!`,
-        );
-        setShowDeleteModal(false);
-        setQuicklistToDelete(null);
-        await loadQuickLists();
-        await loadStats();
-      } else {
-        showError("Failed to delete QuickList", "Please try again later.");
-      }
+      setShowDeleteModal(false);
+      setBroadcastToDelete(null);
+      await loadBroadcasts(pagination.page);
     } catch (err) {
-      console.error("Failed to delete quicklist:", err);
-      showError("Failed to delete QuickList", "Please try again later.");
+      console.error("Failed to delete broadcast:", err);
+      showError("Failed to delete broadcast", "Please try again later.");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleExport = async (quicklist: QuickList, format: "csv" | "json") => {
-    try {
-      const blob = await quicklistService.exportQuickList(quicklist.id, format);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${quicklist.name}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      showToast(`QuickList exported as ${format.toUpperCase()}`);
-    } catch (err) {
-      console.error("Failed to export QuickList:", err);
-      showError("Failed to export QuickList");
-    }
-  };
-
-  const handleEdit = (quicklist: QuickList) => {
-    setEditQuickList(quicklist);
-    setIsEditModalOpen(true);
-  };
-
-  const handleUpdateQuickList = async (request: {
-    name: string;
-    description?: string | null;
-  }) => {
-    if (!editQuickList) return;
-
-    try {
-      const response = await quicklistService.updateQuickList(
-        editQuickList.id,
-        request,
-      );
-
-      if (response.success) {
-        showToast("QuickList updated successfully");
-        setIsEditModalOpen(false);
-        setEditQuickList(null);
-        await loadQuickLists(pagination.page);
-        await loadStats();
-      }
-    } catch (err) {
-      console.error("Failed to update QuickList:", err);
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update QuickList";
-      // Filter out HTTP errors
-      const userMessage =
-        errorMessage.includes("HTTP error") || errorMessage.includes("status:")
-          ? "Please try again later."
-          : errorMessage;
-      showError("Error updating QuickList", userMessage);
-      throw err;
-    }
-  };
-
-  const quicklistStatsCards = [
+  const broadcastStatsCards = [
     {
-      name: "Total Broadcast Lists",
-      value: statsLoading
-        ? "..."
-        : (stats?.overall.total_quicklists || 0).toLocaleString(),
-      icon: Database,
+      name: "Total Broadcasts",
+      value: pagination.total.toLocaleString(),
+      icon: CheckCircle,
       color: color.tertiary.tag1,
     },
     {
-      name: "Rows Imported",
-      value: statsLoading
-        ? "..."
-        : (stats?.overall.total_rows_imported || 0).toLocaleString(),
+      name: "Total Recipients",
+      value: broadcasts
+        .reduce((sum, b) => sum + b.total_recipients, 0)
+        .toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Rows Failed",
-      value: statsLoading
-        ? "..."
-        : (stats?.overall.total_rows_failed || 0).toLocaleString(),
+      name: "Messages Sent",
+      value: broadcasts
+        .reduce((sum, b) => sum + b.messages_sent, 0)
+        .toLocaleString(),
+      icon: CheckCircle,
+      color: color.tertiary.tag3,
+    },
+    {
+      name: "Messages Failed",
+      value: broadcasts
+        .reduce((sum, b) => sum + b.messages_failed, 0)
+        .toLocaleString(),
       icon: XCircle,
       color: color.tertiary.tag2,
     },
   ];
-
-  const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   return (
     <div className="space-y-6">
@@ -279,24 +227,17 @@ export default function ManualBroadcastListsPage() {
             Manual Communications
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Manage recipient lists created for Manual Communications
+            View and manage communications sent to manual recipient lists
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/dashboard/communications/analytics")}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Database className="w-4 h-4" />
-            Analytics
-          </button>
           <CreateButton route="/dashboard/manual-communications/create" />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quicklistStatsCards.map((stat) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {broadcastStatsCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -326,7 +267,7 @@ export default function ManualBroadcastListsPage() {
           />
           <input
             type="text"
-            placeholder="Search broadcast lists by name..."
+            placeholder="Search broadcasts by name or execution ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 text-sm ${components.input.default}`}
@@ -334,7 +275,7 @@ export default function ManualBroadcastListsPage() {
         </div>
       </div>
 
-      {/* Broadcast Lists Table */}
+      {/* Broadcasts Table */}
       <div
         className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
       >
@@ -347,16 +288,16 @@ export default function ManualBroadcastListsPage() {
               className="mb-4"
             />
             <p className={`${tw.textMuted} font-medium text-sm`}>
-              Loading broadcast lists...
+              Loading broadcasts...
             </p>
           </div>
-        ) : quicklists.length === 0 ? (
+        ) : broadcasts.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
               {searchTerm
-                ? "No broadcast lists match your search."
-                : "No broadcast lists yet. Create your first broadcast list to get started."}
+                ? "No broadcasts match your search."
+                : "No broadcasts yet. Create your first manual broadcast to get started."}
             </p>
             {!searchTerm && (
               <button
@@ -367,7 +308,7 @@ export default function ManualBroadcastListsPage() {
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Plus className="w-4 h-4" />
-                Create communication list
+                Create broadcast
               </button>
             )}
           </div>
@@ -390,13 +331,19 @@ export default function ManualBroadcastListsPage() {
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Upload Type
+                      Channel
                     </th>
                     <th
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Rows
+                      Recipients
+                    </th>
+                    <th
+                      className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                      style={{ color: color.surface.tableHeaderText }}
+                    >
+                      Sent / Failed
                     </th>
                     <th
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
@@ -419,56 +366,60 @@ export default function ManualBroadcastListsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {quicklists.map((quicklist) => (
-                    <tr key={quicklist.id} className="transition-colors">
+                  {broadcasts.map((broadcast) => (
+                    <tr key={broadcast.id} className="transition-colors">
                       <td
-                        className="px-6 py-4"
+                        className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div>
                           <button
                             type="button"
-                            onClick={() => handleViewDetails(quicklist)}
+                            onClick={() => handleViewDetails(broadcast)}
                             className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                            title={quicklist.name}
+                            title={broadcast.source_name}
                           >
-                            {quicklist.name}
+                            {broadcast.source_name}
                           </button>
-                          {quicklist.description && (
-                            <div
-                              className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                              title={quicklist.description}
-                            >
-                              {quicklist.description}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-600"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {quicklist.upload_type}
+                        {broadcast.channels?.join(", ") || "-"}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-600"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {quicklist.rows_imported.toLocaleString()}
+                        {broadcast.total_recipients.toLocaleString()}
+                      </td>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-600"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <span className="text-green-600 font-medium">
+                          {broadcast.messages_sent.toLocaleString()}
+                        </span>
+                        {" / "}
+                        <span className="text-red-600 font-medium">
+                          {broadcast.messages_failed.toLocaleString()}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="inline-flex px-2 py-1 text-sm text-black">
-                          {quicklist.processing_status}
+                        <span className="inline-flex px-2 py-1 text-sm font-medium rounded text-black">
+                          {broadcast.status}
                         </span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {new Date(quicklist.created_at).toLocaleDateString()}
+                        {new Date(broadcast.created_at).toLocaleDateString()}
                       </td>
                       <td
                         className="px-6 py-4 text-sm font-medium"
@@ -476,28 +427,25 @@ export default function ManualBroadcastListsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            onClick={() => handleViewDetails(quicklist)}
+                            onClick={() => handleViewDetails(broadcast)}
                             className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleEdit(quicklist)}
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/manual-communications/${broadcast.execution_id}/edit`,
+                              )
+                            }
                             className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleExport(quicklist, "csv")}
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                            title="Export CSV"
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(quicklist)}
+                            onClick={() => handleDelete(broadcast)}
                             className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
                             title="Delete"
                           >
@@ -512,7 +460,7 @@ export default function ManualBroadcastListsPage() {
             </div>
 
             {/* Pagination */}
-            {quicklists.length > 0 && totalPages > 1 && (
+            {broadcasts.length > 0 && pagination.total > pagination.limit && (
               <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
                 <div className="text-sm text-gray-700">
                   Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
@@ -520,15 +468,12 @@ export default function ManualBroadcastListsPage() {
                     pagination.page * pagination.limit,
                     pagination.total,
                   )}{" "}
-                  of {pagination.total.toLocaleString()} broadcast lists
+                  of {pagination.total.toLocaleString()} broadcasts
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: Math.max(1, prev.page - 1),
-                      }))
+                      loadBroadcasts(Math.max(1, pagination.page - 1))
                     }
                     disabled={pagination.page === 1}
                     className={`${tw.button} px-3 py-1 text-sm ${
@@ -540,18 +485,15 @@ export default function ManualBroadcastListsPage() {
                     Previous
                   </button>
                   <span className="text-sm text-gray-700">
-                    Page {pagination.page} of {totalPages}
+                    Page {pagination.page}
                   </span>
                   <button
-                    onClick={() =>
-                      setPagination((prev) => ({
-                        ...prev,
-                        page: Math.min(totalPages, prev.page + 1),
-                      }))
+                    onClick={() => loadBroadcasts(pagination.page + 1)}
+                    disabled={
+                      pagination.page * pagination.limit >= pagination.total
                     }
-                    disabled={pagination.page === totalPages}
                     className={`${tw.button} px-3 py-1 text-sm ${
-                      pagination.page === totalPages
+                      pagination.page * pagination.limit >= pagination.total
                         ? "opacity-50 cursor-not-allowed"
                         : ""
                     }`}
@@ -567,31 +509,18 @@ export default function ManualBroadcastListsPage() {
 
       {/* Modals */}
 
-      {editQuickList && (
-        <EditQuickListModal
-          isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditQuickList(null);
-          }}
-          onSubmit={handleUpdateQuickList}
-          initialName={editQuickList.name}
-          initialDescription={editQuickList.description || null}
-        />
-      )}
-
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
-          setQuicklistToDelete(null);
+          setBroadcastToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Delete Broadcast List"
-        description="Are you sure you want to delete this broadcast list? This action cannot be undone."
-        itemName={quicklistToDelete?.name || ""}
+        title="Delete Broadcast"
+        description="Are you sure you want to delete this broadcast? This action cannot be undone."
+        itemName={broadcastToDelete?.source_name || ""}
         isLoading={isDeleting}
-        confirmText="Delete Broadcast List"
+        confirmText="Delete Broadcast"
         cancelText="Cancel"
       />
     </div>

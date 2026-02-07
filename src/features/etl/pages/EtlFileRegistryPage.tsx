@@ -52,6 +52,7 @@ export default function EtlFileRegistryPage() {
     headers: string[];
     rows: Record<string, string>[];
   } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Stats
   const [stats, setStats] = useState<FileStatsResponse | null>(null);
@@ -764,21 +765,49 @@ export default function EtlFileRegistryPage() {
                 Cancel
               </button>
               <button
-                onClick={() => {
+                disabled={isUploading || !uploadFile}
+                onClick={async () => {
                   if (!uploadFile) {
                     showError("Error", "Please select a file");
                     return;
                   }
-                  // TODO: Handle upload
-                  success("Success", `File ${uploadFile.name} uploaded (${uploadCategory})`);
-                  setIsUploadModalOpen(false);
-                  setUploadFile(null);
-                  setUploadPreview(null);
+
+                  setIsUploading(true);
+                  try {
+                    const response = await etlService.uploadFile(uploadFile);
+
+                    if (response.success) {
+                      success(
+                        t.etl.fileUploaded || "Success",
+                        `File ${uploadFile.name} uploaded successfully (${uploadCategory})`,
+                      );
+                      setIsUploadModalOpen(false);
+                      setUploadFile(null);
+                      setUploadPreview(null);
+                      setUploadCategory("CDR");
+
+                      // Reload registry and stats to show the new file
+                      await loadRegistry();
+                      await loadStats();
+                    } else {
+                      showError(
+                        t.etl.uploadFailed || "Upload Failed",
+                        response.message || "An error occurred during upload",
+                      );
+                    }
+                  } catch (err) {
+                    showError(
+                      t.etl.uploadError || "Upload Error",
+                      (err as Error).message || "Failed to upload file",
+                    );
+                  } finally {
+                    setIsUploading(false);
+                  }
                 }}
-                className={`flex-1 px-4 py-2 text-white ${tw.rounded} transition-colors`}
+                className={`flex-1 px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                Upload
+                {isUploading ? "Uploading..." : "Upload"}
               </button>
             </div>
           </div>

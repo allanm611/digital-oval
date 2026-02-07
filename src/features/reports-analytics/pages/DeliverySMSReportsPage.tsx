@@ -23,6 +23,7 @@ import {
 import { colors } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import type {
   RangeOption,
   DeliverySMSReportsResponse,
@@ -179,7 +180,7 @@ const getRangeLabel = (option: RangeOption): string => {
 // Scale data based on actual number of days vs base range
 const getScaleFactor = (
   customDays: number | null,
-  baseRange: RangeOption
+  baseRange: RangeOption,
 ): number => {
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
@@ -238,7 +239,7 @@ const generateSMSMessageLogs = (): MessageLogEntry[] => {
         9 + Math.floor(Math.random() * 12),
         Math.floor(Math.random() * 60),
         0,
-        0
+        0,
       );
 
       const status = statuses[Math.floor(Math.random() * statuses.length)];
@@ -337,7 +338,7 @@ export default function DeliverySMSReportsPage() {
     end: "",
   });
   const [statusFilter, setStatusFilter] = useState<MessageStatus | "All">(
-    "All"
+    "All",
   );
   const [campaignQuery, setCampaignQuery] = useState("");
   const [useDummyData, setUseDummyData] = useState(true);
@@ -348,7 +349,7 @@ export default function DeliverySMSReportsPage() {
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
-    appliedCustomRange.end
+    appliedCustomRange.end,
   );
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
@@ -436,7 +437,7 @@ export default function DeliverySMSReportsPage() {
     const now = Date.now();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
-        ? customDays ?? rangeDays[deliveryRange]
+        ? (customDays ?? rangeDays[deliveryRange])
         : rangeDays[deliveryRange];
 
     const startMs = appliedCustomRange.start
@@ -472,43 +473,25 @@ export default function DeliverySMSReportsPage() {
     appliedCustomRange.end,
   ]);
 
-  const handleDownloadCsv = () => {
-    if (!filteredLogs.length) return;
+  const csvHeaders = [
+    "Campaign ID",
+    "Campaign Name",
+    "Status",
+    "Sent",
+    "Delivered",
+    "Conversions",
+    "Conversion Rate",
+  ];
 
-    const headers = [
-      "Campaign ID",
-      "Campaign Name",
-      "Status",
-      "Sent",
-      "Delivered",
-      "Conversions",
-      "Conversion Rate",
-    ];
-
-    const rows = filteredLogs.map((row, index) => [
-      index + 1,
-      row.campaignName,
-      row.status,
-      row.sent,
-      row.delivered,
-      row.conversions,
-      `${row.conversionRate}%`,
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map((line) => line.map((value) => `"${value}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "sms_delivery_logs.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const csvRows = filteredLogs.map((row, index) => [
+    index + 1,
+    row.campaignName,
+    row.status,
+    row.sent,
+    row.delivered,
+    row.conversions,
+    `${row.conversionRate}%`,
+  ]);
 
   const summaryStats = [
     {
@@ -827,15 +810,12 @@ export default function DeliverySMSReportsPage() {
               placeholder="All Statuses"
               className="w-full md:w-40"
             />
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white transition-colors`}
+            <CsvDownloadButton
+              headers={csvHeaders}
+              rows={csvRows}
+              filename="sms_delivery_logs.csv"
               style={{ backgroundColor: colors.primary.action }}
-            >
-              <Download className="h-4 w-4" />
-              Download CSV
-            </button>
+            />
           </div>
         </div>
         <div

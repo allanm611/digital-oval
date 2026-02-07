@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -76,7 +77,7 @@ const getRangeLabel = (option: RangeOption): string => {
 // Scale data based on actual number of days vs base range
 const getScaleFactor = (
   customDays: number | null,
-  baseRange: RangeOption
+  baseRange: RangeOption,
 ): number => {
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
@@ -421,7 +422,7 @@ export default function CampaignReportsPage() {
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
-    appliedCustomRange.end
+    appliedCustomRange.end,
   );
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
@@ -488,7 +489,7 @@ export default function CampaignReportsPage() {
           label: "Audience Reached",
           value: summary.reach.toLocaleString("en-US"),
           subtext: `${Math.round(
-            (summary.reach / summary.eligibleAudience) * 100
+            (summary.reach / summary.eligibleAudience) * 100,
           )}% of ${summary.eligibleAudience.toLocaleString("en-US")} eligible`,
           icon: statIcons.audience,
           trend: { value: "+8.4%", direction: "up" as const },
@@ -511,7 +512,7 @@ export default function CampaignReportsPage() {
           label: "Revenue Generated",
           value: formatCurrency(summary.revenue),
           subtext: `Avg ${formatCurrency(
-            Math.round(summary.revenue / summary.conversions)
+            Math.round(summary.revenue / summary.conversions),
           )} per conversion`,
           icon: statIcons.outcome,
           trend: { value: "+84K", direction: "up" as const },
@@ -583,7 +584,7 @@ export default function CampaignReportsPage() {
     const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
-        ? customDays ?? rangeDays[selectedRange]
+        ? (customDays ?? rangeDays[selectedRange])
         : rangeDays[selectedRange];
     const startMs = appliedCustomRange.start
       ? new Date(appliedCustomRange.start).getTime()
@@ -696,49 +697,31 @@ export default function CampaignReportsPage() {
     }));
   }, [activeRangeKey, scaleFactor, useDummyData]);
 
-  const handleDownloadCsv = () => {
-    if (!filteredRows.length) return;
+  const csvHeaders = [
+    "Campaign Name",
+    "Segment",
+    "Offer",
+    "Target Group",
+    "Control Group",
+    "Messages Generated",
+    "Sent",
+    "Delivered",
+    "Conversions",
+    "Last Run",
+  ];
 
-    const headers = [
-      "Campaign Name",
-      "Segment",
-      "Offer",
-      "Target Group",
-      "Control Group",
-      "Messages Generated",
-      "Sent",
-      "Delivered",
-      "Conversions",
-      "Last Run",
-    ];
-
-    const rows = filteredRows.map((row) => [
-      row.name,
-      row.segment,
-      row.offer,
-      row.targetGroup,
-      row.controlGroup,
-      row.messagesGenerated,
-      row.sent,
-      row.delivered,
-      row.conversions,
-      row.lastRunDate,
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map((line) => line.map((value) => `"${value}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "campaign_reports.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const csvRows = filteredRows.map((row) => [
+    row.name,
+    row.segment,
+    row.offer,
+    row.targetGroup,
+    row.controlGroup,
+    row.messagesGenerated,
+    row.sent,
+    row.delivered,
+    row.conversions,
+    row.lastRunDate,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -877,8 +860,8 @@ export default function CampaignReportsPage() {
               card.trend.direction === "up"
                 ? "text-emerald-600"
                 : card.trend.direction === "down"
-                ? "text-red-600"
-                : "text-gray-500";
+                  ? "text-red-600"
+                  : "text-gray-500";
             return (
               <div
                 key={card.label}
@@ -898,8 +881,8 @@ export default function CampaignReportsPage() {
                     {card.trend.direction === "up"
                       ? "↑"
                       : card.trend.direction === "down"
-                      ? "↓"
-                      : "•"}{" "}
+                        ? "↓"
+                        : "•"}{" "}
                     {card.trend.value}
                   </span>
                 </div>
@@ -1128,15 +1111,12 @@ export default function CampaignReportsPage() {
               placeholder="All Segments"
               className="w-full md:w-48"
             />
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-3 text-sm font-semibold text-white`}
+            <CsvDownloadButton
+              headers={csvHeaders}
+              rows={csvRows}
+              filename="campaign_reports.csv"
               style={{ backgroundColor: colors.primary.action }}
-            >
-              <Download className="h-4 w-4" />
-              Download CSV
-            </button>
+            />
           </div>
         </div>
         <div className="hidden lg:block">

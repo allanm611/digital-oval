@@ -31,6 +31,7 @@ import { Role } from "../../roles/types/role";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { formatDate } from "../../../shared/services/dateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import {
   PieChart,
   Pie,
@@ -59,7 +60,8 @@ const extractErrorMessage = (error: unknown): string => {
     // Check for network errors
     if (
       errorObj.message === "Failed to fetch" ||
-      (typeof errorObj.message === "string" && errorObj.message.includes("network"))
+      (typeof errorObj.message === "string" &&
+        errorObj.message.includes("network"))
     ) {
       return "Network connection error. Please check your internet connection and try again.";
     }
@@ -1319,6 +1321,29 @@ export default function UserManagementPage() {
               }
               placeholder={t.userManagement.selectStatus}
               className="w-full sm:min-w-[140px] sm:w-auto"
+            />
+
+            <CsvDownloadButton
+              headers={[
+                "Name",
+                "Email",
+                "Department",
+                "Role",
+                "Status",
+                "Created",
+              ]}
+              rows={filteredUsers.map((u) => [
+                `${u.first_name} ${u.last_name}`,
+                u.email_address || u.email || "N/A",
+                u.department || "N/A",
+                getUserRoleName(u),
+                normalizeStatus(u),
+                u.created_at
+                  ? new Date(u.created_at).toLocaleDateString()
+                  : "N/A",
+              ])}
+              filename={`users-${new Date().toISOString().split("T")[0]}.csv`}
+              style={{ backgroundColor: color.primary.action }}
             />
           </div>
         </div>

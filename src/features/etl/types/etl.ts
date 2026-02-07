@@ -191,6 +191,24 @@ export interface CategoryFileStatsResponse {
   timestamp?: string;
 }
 
+// 9. POST /files/upload/etl
+export interface FileUploadRequest {
+  file: File;
+}
+
+export interface FileUploadResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    file_id: number;
+    file_name: string;
+    file_category: string;
+    file_size_bytes: number;
+    processing_status: string;
+  };
+  timestamp?: string;
+}
+
 // Common error format
 export interface EtlErrorResponse {
   success: false;

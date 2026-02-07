@@ -25,66 +25,6 @@ interface QuickListPickerModalProps {
   selectedQuickListId?: number;
 }
 
-// Données mockées pour les QuickLists (backup en cas de problème backend)
-export const MOCK_QUICKLISTS: QuickListItem[] = [
-  {
-    id: 1,
-    name: "Campaign Oct 2024 - Email List",
-    description: "Email addresses for October campaign",
-    upload_type: "email",
-    row_count: 15230,
-    created_at: "2024-10-15T10:30:00Z",
-  },
-  {
-    id: 2,
-    name: "VIP Customers - Mobile",
-    description: "Mobile numbers of VIP customers",
-    upload_type: "phone",
-    row_count: 8542,
-    created_at: "2024-10-20T14:15:00Z",
-  },
-  {
-    id: 3,
-    name: "Promo Subscribers Q4",
-    description: "Subscribers who opted in for Q4 promotions",
-    upload_type: "email",
-    row_count: 22104,
-    created_at: "2024-11-01T09:00:00Z",
-  },
-  {
-    id: 4,
-    name: "New Year Campaign - SMS",
-    description: "Phone numbers for New Year SMS campaign",
-    upload_type: "phone",
-    row_count: 12876,
-    created_at: "2024-11-10T16:45:00Z",
-  },
-  {
-    id: 5,
-    name: "Black Friday - All Channels",
-    description: "Combined list for Black Friday campaign",
-    upload_type: "multi",
-    row_count: 31450,
-    created_at: "2024-11-15T08:20:00Z",
-  },
-  {
-    id: 6,
-    name: "Abandoned Cart Recovery",
-    description: "Customers with abandoned carts",
-    upload_type: "email",
-    row_count: 5628,
-    created_at: "2024-11-18T11:30:00Z",
-  },
-  {
-    id: 7,
-    name: "Loyalty Program Members",
-    description: "All active loyalty program members",
-    upload_type: "multi",
-    row_count: 18934,
-    created_at: "2024-11-19T13:00:00Z",
-  },
-];
-
 export default function QuickListPickerModal({
   isOpen,
   onClose,
@@ -96,8 +36,7 @@ export default function QuickListPickerModal({
   const [hoveredQuickListId, setHoveredQuickListId] = useState<number | null>(
     null,
   );
-  const [quickLists, setQuickLists] =
-    useState<QuickListItem[]>(MOCK_QUICKLISTS);
+  const [quickLists, setQuickLists] = useState<QuickListItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -128,8 +67,7 @@ export default function QuickListPickerModal({
       }
     } catch (err) {
       console.error("Failed to load quicklists:", err);
-      // Fall back to mock data on error
-      setQuickLists(MOCK_QUICKLISTS);
+      setQuickLists([]);
     } finally {
       setIsLoading(false);
     }

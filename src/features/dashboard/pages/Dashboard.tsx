@@ -559,6 +559,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../quicklists/pages/ManualBroadcastListsPage"
       ),
   ),
+  BroadcastDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../quicklists/pages/BroadcastDetailsPage"
+      ),
+  ),
   QuickListsPage: lazy(
     () =>
       import(
@@ -813,6 +819,14 @@ export default function Dashboard() {
             element={<OtherPages.ManualBroadcastsHubPage />}
           />
           <Route
+            path="/manual-communications/create"
+            element={<OtherPages.CreateManualBroadcastPage />}
+          />
+          <Route
+            path="/manual-communications/:id"
+            element={<OtherPages.BroadcastDetailsPage />}
+          />
+          <Route
             path="/manual-communications"
             element={<OtherPages.ManualBroadcastListsPage />}
           />
@@ -821,10 +835,6 @@ export default function Dashboard() {
           <Route
             path="/communications/analytics"
             element={<OtherPages.CommunicationAnalyticsPage />}
-          />
-          <Route
-            path="/manual-communications/create"
-            element={<OtherPages.CreateManualBroadcastPage />}
           />
           <Route
             path="/manual-rewards"

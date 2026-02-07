@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { color , tw} from "../../../shared/utils/utils";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import { color, tw } from "../../../shared/utils/utils";
 import type {
   RangeOption,
   DeliveryEmailReportsResponse,
@@ -169,17 +170,17 @@ const generateEmailMessageLogs = (): EmailLogEntry[] => {
         status === "Delivered"
           ? 0.92 + Math.random() * 0.06
           : status === "Bounced"
-          ? 0.85 + Math.random() * 0.05
-          : status === "Spam"
-          ? 0.8 + Math.random() * 0.08
-          : 0.9 + Math.random() * 0.05;
+            ? 0.85 + Math.random() * 0.05
+            : status === "Spam"
+              ? 0.8 + Math.random() * 0.08
+              : 0.9 + Math.random() * 0.05;
       const delivered = Math.floor(sent * deliveryRate);
       const conversionRate =
         status === "Delivered"
           ? 2.0 + Math.random() * 5.0
           : status === "Spam"
-          ? 0.5 + Math.random() * 1.5
-          : 1.0 + Math.random() * 3.0;
+            ? 0.5 + Math.random() * 1.5
+            : 1.0 + Math.random() * 3.0;
       const conversions = Math.floor(delivered * (conversionRate / 100));
 
       rows.push({
@@ -224,7 +225,9 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -289,7 +292,7 @@ const getRangeLabel = (option: RangeOption): string => {
 // Scale data based on actual number of days vs base range
 const getScaleFactor = (
   customDays: number | null,
-  baseRange: RangeOption
+  baseRange: RangeOption,
 ): number => {
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
@@ -333,7 +336,7 @@ export default function DeliveryEmailReportsPage() {
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
-    appliedCustomRange.end
+    appliedCustomRange.end,
   );
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
@@ -419,7 +422,7 @@ export default function DeliveryEmailReportsPage() {
     const now = Date.now();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
-        ? customDays ?? rangeDays[deliveryRange]
+        ? (customDays ?? rangeDays[deliveryRange])
         : rangeDays[deliveryRange];
 
     const startMs = appliedCustomRange.start
@@ -453,43 +456,25 @@ export default function DeliveryEmailReportsPage() {
     useDummyData,
   ]);
 
-  const handleDownloadCsv = () => {
-    if (!filteredLogs.length) return;
+  const csvHeaders = [
+    "Campaign ID",
+    "Campaign Name",
+    "Status",
+    "Sent",
+    "Delivered",
+    "Conversions",
+    "Conversion Rate",
+  ];
 
-    const headers = [
-      "Campaign ID",
-      "Campaign Name",
-      "Status",
-      "Sent",
-      "Delivered",
-      "Conversions",
-      "Conversion Rate",
-    ];
-
-    const rows = filteredLogs.map((row, index) => [
-      index + 1,
-      row.campaignName,
-      row.status,
-      row.sent,
-      row.delivered,
-      row.conversions,
-      `${row.conversionRate}%`,
-    ]);
-
-    const csvContent = [headers, ...rows]
-      .map((line) => line.map((value) => `"${value}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "email_delivery_logs.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  const csvRows = filteredLogs.map((row, index) => [
+    index + 1,
+    row.campaignName,
+    row.status,
+    row.sent,
+    row.delivered,
+    row.conversions,
+    `${row.conversionRate}%`,
+  ]);
 
   const summaryStats = [
     {
@@ -583,7 +568,9 @@ export default function DeliveryEmailReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
+            <div
+              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
+            >
               <label
                 htmlFor="email-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -703,7 +690,9 @@ export default function DeliveryEmailReportsPage() {
         </div>
       </section>
 
-      <section className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+      <section
+        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+      >
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -803,15 +792,12 @@ export default function DeliveryEmailReportsPage() {
               placeholder="All Statuses"
               className="w-full md:w-40"
             />
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-semibold text-white transition-colors`}
+            <CsvDownloadButton
+              headers={csvHeaders}
+              rows={csvRows}
+              filename="email_delivery_logs.csv"
               style={{ backgroundColor: colors.primary.action }}
-            >
-              <Download className="h-4 w-4" />
-              Download CSV
-            </button>
+            />
           </div>
         </div>
         <div

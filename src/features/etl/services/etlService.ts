@@ -12,6 +12,7 @@ import {
   FileRegistryListResponse,
   FileRegistryQuery,
   FileStatsResponse,
+  FileUploadResponse,
   PendingFilesQuery,
   PendingFilesResponse,
   ReprocessFileRequest,
@@ -175,6 +176,91 @@ class EtlService {
       `/file-stats/${encodeURIComponent(category)}`,
     );
     return res;
+  }
+
+  // Validate file is CDR or TDR
+  private validateFileType(file: File): { valid: boolean; error?: string } {
+    const fileName = file.name.toLowerCase();
+    const validExtensions = ['.cdr', '.tdr'];
+
+    // Check file extension
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!hasValidExtension) {
+      return {
+        valid: false,
+        error: `Invalid file type. Only .cdr and .tdr files are allowed. Got: ${file.name.split('.').pop() || 'unknown'}`,
+      };
+    }
+
+    // Check file size (optional - max 100MB)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: `File size exceeds maximum limit of 100MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+      };
+    }
+
+    return { valid: true };
+  }
+
+  // 9. POST /files/upload/etl (file upload endpoint)
+  async uploadFile(file: File): Promise<FileUploadResponse> {
+    // Validate file
+    const validation = this.validateFileType(file);
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const url = buildApiUrl("/files/upload/etl");
+
+    // Get auth headers but exclude Content-Type for FormData
+    const authHeaders = getAuthHeaders();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { 'Content-Type': _, ...headersWithoutContentType } = authHeaders as Record<string, string>;
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headersWithoutContentType,
+      body: formData,
+    });
+
+    const text = await response.text();
+    const isJson = text.trim().startsWith("{") || text.trim().startsWith("[");
+
+    if (!text) {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+      return {
+        success: true,
+        message: "File uploaded successfully",
+      };
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = isJson ? JSON.parse(text) : (text as unknown);
+    } catch {
+      throw new Error(
+        `Invalid JSON response from upload API. First 200 chars: ${text.substring(0, 200)}`,
+      );
+    }
+
+    if (!response.ok) {
+      const errorMessage =
+        (parsed as { error?: string; message?: string })?.error ||
+        (parsed as { message?: string })?.message ||
+        response.statusText ||
+        "Upload failed";
+      throw new Error(errorMessage);
+    }
+
+    return parsed as FileUploadResponse;
   }
 }
 

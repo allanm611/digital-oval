@@ -323,7 +323,7 @@ export default function DefineCommunicationStep({
 
   return (
     <div
-      className="bg-white rounded-lg shadow-sm border"
+      className="bg-white rounded-md shadow-sm border"
       style={{ borderColor: color.border.default }}
     >
       {/* Header */}
@@ -346,7 +346,7 @@ export default function DefineCommunicationStep({
             {t.manualBroadcast.channelLabel}
           </label>
           <div
-            className="inline-flex rounded-lg border p-1"
+            className="inline-flex rounded-md border p-1"
             style={{
               borderColor: color.border.default,
               backgroundColor: color.surface.cards,
@@ -483,7 +483,7 @@ export default function DefineCommunicationStep({
           {/* Customization Toggle */}
           {selectedPolicy && (
             <div
-              className={`flex items-center justify-between px-3 py-2 mt-2 rounded-lg border`}
+              className={`flex items-center justify-between px-3 py-2 mt-2 rounded-md border`}
               style={{
                 backgroundColor: color.surface.cards,
                 borderColor: color.border.default,
@@ -540,7 +540,7 @@ export default function DefineCommunicationStep({
 
             {/* Toolbar */}
             <div
-              className="flex items-center justify-between p-3 rounded-lg"
+              className="flex items-center justify-between p-3 rounded-md"
               style={{ backgroundColor: color.surface.cards }}
             >
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
@@ -619,7 +619,7 @@ export default function DefineCommunicationStep({
                     setCursorPosition(e.currentTarget.selectionStart || 0);
                   }}
                   placeholder="Enter email subject..."
-                  className="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 transition-all"
+                  className="w-full px-4 py-2.5 border rounded-md text-sm  focus:outline-none focus:ring-2 transition-all"
                   style={{ borderColor: color.border.default }}
                 />
               </div>
@@ -649,7 +649,7 @@ export default function DefineCommunicationStep({
                 }}
                 placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
                 rows={10}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
                 style={{ borderColor: color.border.default }}
               />
 
@@ -711,7 +711,7 @@ export default function DefineCommunicationStep({
         {/* Error Message */}
         {error && (
           <div
-            className="mt-6 p-3 rounded-lg flex items-start gap-2"
+            className="mt-6 p-3 rounded-md flex items-start gap-2"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -730,12 +730,12 @@ export default function DefineCommunicationStep({
 
       {/* Footer */}
       <div
-        className="p-5 border-t flex items-center justify-between"
+        className="p-5 flex items-center justify-between"
         style={{ borderColor: color.border.default }}
       >
         <button
           onClick={onPrevious}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium transition-all"
+          className="px-6 py-2.5 rounded-md text-sm font-medium transition-all"
           style={{
             backgroundColor: color.surface.cards,
             border: `1px solid ${color.border.default}`,
@@ -750,7 +750,7 @@ export default function DefineCommunicationStep({
             !messageBody.trim() ||
             (selectedChannel === "EMAIL" && !messageTitle.trim())
           }
-          className="px-6 py-2.5 text-white rounded-lg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="px-6 py-2.5 text-white rounded-md text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           style={{ backgroundColor: color.primary.action }}
         >
           {t.manualBroadcast.nextTest}

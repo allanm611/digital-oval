@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { formatCurrency } from "../../../shared/services/currencyService";
@@ -294,7 +295,7 @@ const generateCustomerRows = (): CustomerRow[] => {
       // Calculate engagement score inversely related to churn risk
       const engagementScore = Math.max(
         30,
-        100 - churnRisk + Math.floor(Math.random() * 20)
+        100 - churnRisk + Math.floor(Math.random() * 20),
       );
 
       // Calculate values based on segment
@@ -319,8 +320,8 @@ const generateCustomerRows = (): CustomerRow[] => {
         daysAgo === 0
           ? "Today"
           : daysAgo === 1
-          ? "1 day ago"
-          : `${daysAgo} days ago`;
+            ? "1 day ago"
+            : `${daysAgo} days ago`;
 
       const normalizedName = names[baseIdx % names.length]
         .toLowerCase()
@@ -359,14 +360,14 @@ const fallbackCustomerRows: CustomerRow[] = generateCustomerRows();
 // Using shared customer data from customerDataService
 const activationTimestamps = customerSubscriptions
   .map((record) =>
-    record.activationDate ? new Date(record.activationDate).getTime() : NaN
+    record.activationDate ? new Date(record.activationDate).getTime() : NaN,
   )
   .filter((value) => !Number.isNaN(value));
 const datasetReferenceTime = activationTimestamps.length
   ? Math.max(...activationTimestamps)
   : Date.now();
 const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
-  convertSubscriptionToCustomerRow
+  convertSubscriptionToCustomerRow,
 );
 const offsetBuckets = [2, 6, 14, 38, 75];
 excelCustomerRows.forEach((row, index) => {
@@ -389,8 +390,8 @@ const customerTypeOptions = [
     new Set(
       customerSubscriptions
         .map((record) => record.customerType)
-        .filter((value): value is string => Boolean(value))
-    )
+        .filter((value): value is string => Boolean(value)),
+    ),
   ).sort(),
 ];
 const CUSTOMER_TABLE_PAGE_SIZE = 10;
@@ -477,7 +478,7 @@ const mapDaysToRange = (days: number | null): RangeOption => {
 // Calculate scale factor based on actual custom days vs base range
 const getCustomScaleFactor = (
   customDays: number | null,
-  baseRange: RangeOption
+  baseRange: RangeOption,
 ): number => {
   if (!customDays) return rangeMultipliers[baseRange];
   const baseDays = rangeDays[baseRange];
@@ -533,7 +534,7 @@ export default function CustomerProfileReportsPage() {
       return customerSubscriptions.find(
         (record) =>
           record.subscriptionId?.toString() === subscriptionIdParam ||
-          record.customerId?.toString() === subscriptionIdParam
+          record.customerId?.toString() === subscriptionIdParam,
       );
     }
     return undefined;
@@ -642,7 +643,7 @@ export default function CustomerProfileReportsPage() {
             searchTerm: customerSearchTerm,
             source: "reports" as const,
           },
-        }
+        },
       );
     } catch (err) {
       const errorMessage =
@@ -672,13 +673,13 @@ export default function CustomerProfileReportsPage() {
           subscription,
           source: "reports" as const,
         },
-      }
+      },
     );
   };
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
-    appliedCustomRange.end
+    appliedCustomRange.end,
   );
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
@@ -736,7 +737,7 @@ export default function CustomerProfileReportsPage() {
       customers: Math.max(200, Math.round(point.customers * multiplier)),
       recency: Math.round(
         point.recency *
-          (activeRangeKey === "7d" ? 0.6 : activeRangeKey === "30d" ? 0.85 : 1)
+          (activeRangeKey === "7d" ? 0.6 : activeRangeKey === "30d" ? 0.85 : 1),
       ),
       valueScore: Math.min(
         100,
@@ -745,9 +746,9 @@ export default function CustomerProfileReportsPage() {
             (activeRangeKey === "7d"
               ? 0.95
               : activeRangeKey === "30d"
-              ? 0.98
-              : 1)
-        )
+                ? 0.98
+                : 1),
+        ),
       ),
     }));
   }, [actualMultiplier, activeRangeKey, useDummyData]);
@@ -808,7 +809,7 @@ export default function CustomerProfileReportsPage() {
 
   const cohortComparisonSeries = useMemo(() => {
     const months = Array.from(
-      new Set(cohortSeries.map((entry) => entry.month))
+      new Set(cohortSeries.map((entry) => entry.month)),
     ).sort((a, b) => a - b);
 
     const cohorts = ["Jan", "Apr", "Jul"];
@@ -820,7 +821,7 @@ export default function CustomerProfileReportsPage() {
 
       cohorts.forEach((cohort) => {
         const dataPoint = cohortSeries.find(
-          (entry) => entry.month === month && entry.cohort === cohort
+          (entry) => entry.month === month && entry.cohort === cohort,
         );
         row[cohort] = dataPoint?.retention ?? 0;
       });
@@ -840,10 +841,10 @@ export default function CustomerProfileReportsPage() {
         tableRiskFilter === "All"
           ? true
           : tableRiskFilter === "High"
-          ? row.churnRisk >= 60
-          : tableRiskFilter === "Medium"
-          ? row.churnRisk >= 30 && row.churnRisk < 60
-          : row.churnRisk < 30;
+            ? row.churnRisk >= 60
+            : tableRiskFilter === "Medium"
+              ? row.churnRisk >= 30 && row.churnRisk < 60
+              : row.churnRisk < 30;
       return matchesSegment && matchesRisk;
     });
   }, [tableSegment, tableRiskFilter, baseCustomerRows]);
@@ -852,7 +853,7 @@ export default function CustomerProfileReportsPage() {
   const filteredCustomers = useMemo(() => {
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
-        ? customDays ?? rangeDays[activeRangeKey]
+        ? (customDays ?? rangeDays[activeRangeKey])
         : rangeDays[activeRangeKey];
     const startMs = appliedCustomRange.start
       ? new Date(appliedCustomRange.start).getTime()
@@ -870,10 +871,10 @@ export default function CustomerProfileReportsPage() {
         tableRiskFilter === "All"
           ? true
           : tableRiskFilter === "High"
-          ? row.churnRisk >= 60
-          : tableRiskFilter === "Medium"
-          ? row.churnRisk >= 30 && row.churnRisk < 60
-          : row.churnRisk < 30;
+            ? row.churnRisk >= 60
+            : tableRiskFilter === "Medium"
+              ? row.churnRisk >= 30 && row.churnRisk < 60
+              : row.churnRisk < 30;
       const rowDate = new Date(row.lastInteractionDate).getTime();
       const now = referenceTime;
       const matchesRange =
@@ -896,7 +897,7 @@ export default function CustomerProfileReportsPage() {
     setTablePage((prev) => {
       const maxPage = Math.max(
         1,
-        Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
+        Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE),
       );
       return Math.min(prev, maxPage);
     });
@@ -906,58 +907,40 @@ export default function CustomerProfileReportsPage() {
   const paginatedCustomers = useMemo(() => {
     return tableCustomers.slice(
       tableOffset,
-      tableOffset + CUSTOMER_TABLE_PAGE_SIZE
+      tableOffset + CUSTOMER_TABLE_PAGE_SIZE,
     );
   }, [tableCustomers, tableOffset]);
   const totalPages = Math.max(
     1,
-    Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE)
+    Math.ceil(tableCustomers.length / CUSTOMER_TABLE_PAGE_SIZE),
   );
 
-  const handleDownloadCsv = () => {
-    if (!tableCustomers.length) return;
+  const csvHeaders = [
+    "Customer",
+    "MSISDN",
+    "Subscription ID",
+    "Customer Type",
+    "Tariff",
+    "SIM Type",
+    "Status",
+    "Activation Date",
+    "City",
+  ];
 
-    const headers = [
-      "Customer",
-      "MSISDN",
-      "Subscription ID",
-      "Customer Type",
-      "Tariff",
-      "SIM Type",
-      "Status",
-      "Activation Date",
-      "City",
+  const csvRows = tableCustomers.map((row) => {
+    const subscription = subscriptionLookup[row.id];
+    return [
+      row.name,
+      formatMsisdn(subscription?.msisdn),
+      subscription?.subscriptionId ?? "",
+      subscription?.customerType ?? "",
+      subscription?.tariff ?? "",
+      subscription?.simType ?? "",
+      subscription?.status ?? "",
+      subscription ? formatDateTime(subscription.activationDate) : "",
+      subscription?.city ?? "",
     ];
-
-    const rows = tableCustomers.map((row) => {
-      const subscription = subscriptionLookup[row.id];
-      return [
-        row.name,
-        formatMsisdn(subscription?.msisdn),
-        subscription?.subscriptionId ?? "",
-        subscription?.customerType ?? "",
-        subscription?.tariff ?? "",
-        subscription?.simType ?? "",
-        subscription?.status ?? "",
-        subscription ? formatDateTime(subscription.activationDate) : "",
-        subscription?.city ?? "",
-      ];
-    });
-
-    const csvContent = [headers, ...rows]
-      .map((line) => line.map((value) => `"${value}"`).join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "customer_profile_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
+  });
 
   return (
     <div className="space-y-6">
@@ -1026,8 +1009,8 @@ export default function CustomerProfileReportsPage() {
                 {option === "7d"
                   ? t.customerProfileReports.daily
                   : option === "30d"
-                  ? t.customerProfileReports.weekly
-                  : t.customerProfileReports.monthly}
+                    ? t.customerProfileReports.weekly
+                    : t.customerProfileReports.monthly}
               </button>
             ))}
           </div>
@@ -1180,23 +1163,23 @@ export default function CustomerProfileReportsPage() {
             activeRangeKey === "7d"
               ? 0.96
               : activeRangeKey === "30d"
-              ? 0.99
-              : 1;
+                ? 0.99
+                : 1;
           const engagementAdjust =
             activeRangeKey === "7d" ? -3 : activeRangeKey === "30d" ? -1 : 0;
           const churnAdjust =
             activeRangeKey === "7d"
               ? -0.4
               : activeRangeKey === "30d"
-              ? -0.2
-              : 0;
+                ? -0.2
+                : 0;
 
           const heroMetrics: HeroMetric[] = useDummyData
             ? [
                 {
                   label: t.customerProfileReports.activeCustomers,
                   value: formatNumber(
-                    Math.round(heroBase.activeCustomers * valueScale)
+                    Math.round(heroBase.activeCustomers * valueScale),
                   ),
                   trend: "+4.2% vs last 90d",
                   trendDirection: "up",
@@ -1206,7 +1189,7 @@ export default function CustomerProfileReportsPage() {
                 {
                   label: t.customerProfileReports.avgCustomerLifetimeValue,
                   value: formatCurrency(
-                    Math.round(heroBase.avgClv * clvAdjust)
+                    Math.round(heroBase.avgClv * clvAdjust),
                   ),
                   trend: "+3.1% vs last quarter",
                   trendDirection: "up",
@@ -1217,7 +1200,7 @@ export default function CustomerProfileReportsPage() {
                 {
                   label: t.customerProfileReports.avgTransactionValue,
                   value: formatCurrency(
-                    Math.round(heroBase.avgOrderValue * clvAdjust)
+                    Math.round(heroBase.avgOrderValue * clvAdjust),
                   ),
                   trend: "+1.6% vs prior period",
                   trendDirection: "up",
@@ -1227,7 +1210,7 @@ export default function CustomerProfileReportsPage() {
                 {
                   label: t.customerProfileReports.purchaseFrequency,
                   value: `${(heroBase.purchaseFrequency * clvAdjust).toFixed(
-                    1
+                    1,
                   )} / yr`,
                   trend: "+0.2 YoY",
                   trendDirection: "up",
@@ -1239,7 +1222,7 @@ export default function CustomerProfileReportsPage() {
                   label: t.customerProfileReports.engagementScore,
                   value: `${Math.max(
                     0,
-                    heroBase.engagementScore + engagementAdjust
+                    heroBase.engagementScore + engagementAdjust,
                   ).toFixed(0)} / 100`,
                   trend: "-2 pts vs last 30d",
                   trendDirection: engagementAdjust < 0 ? "down" : "up",
@@ -1251,7 +1234,7 @@ export default function CustomerProfileReportsPage() {
                   label: t.customerProfileReports.churnRate,
                   value: `${Math.max(
                     0,
-                    heroBase.churnRate + churnAdjust
+                    heroBase.churnRate + churnAdjust,
                   ).toFixed(1)}%`,
                   trend: "-0.6 pts vs last quarter",
                   trendDirection: "down",
@@ -1675,15 +1658,13 @@ export default function CustomerProfileReportsPage() {
               placeholder={t.customerProfileReports.allRiskLevels}
               className="w-full md:w-48"
             />
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-3 text-sm font-semibold text-white`}
+            <CsvDownloadButton
+              headers={csvHeaders}
+              rows={csvRows}
+              filename="customer_profile_report.csv"
+              label={t.customerProfileReports.downloadCsv}
               style={{ backgroundColor: colors.primary.action }}
-            >
-              <Download className="h-4 w-4" />
-              {t.customerProfileReports.downloadCsv}
-            </button>
+            />
           </div>
         </div>
 
@@ -1728,8 +1709,8 @@ export default function CustomerProfileReportsPage() {
                     statusLower === "active"
                       ? "bg-emerald-50 text-emerald-700"
                       : statusLower === "pending"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-gray-100 text-gray-700";
+                        ? "bg-amber-50 text-amber-700"
+                        : "bg-gray-100 text-gray-700";
 
                   return (
                     <tr key={customer.id}>

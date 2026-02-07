@@ -19,6 +19,7 @@ import { communicationService } from "../../communications/services/communicatio
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
+import type { ManualCommunicationRecipient } from "../../communications/types/communication";
 
 export interface ManualBroadcastData {
   // Step 1: Audience
@@ -122,79 +123,180 @@ export default function CreateManualBroadcastPage() {
     }
   };
 
+  const isStepValid = (stepId: number): boolean => {
+    // Validate each step's required fields
+    switch (stepId) {
+      case 1: // Target Audience
+        return !!(broadcastData.audienceFile || broadcastData.quicklistId);
+      case 2: // Define Communication
+        return !!(
+          broadcastData.channel &&
+          broadcastData.messageBody &&
+          (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
+        );
+      case 3: // Test Broadcast
+        return (
+          !!broadcastData.testContacts && broadcastData.testContacts.length > 0
+        );
+      case 4: // Schedule
+        return !!(broadcastData.scheduleType && broadcastData.scheduleDate);
+      default:
+        return true;
+    }
+  };
+
   const canNavigateToStep = (stepId: number) => {
-    // Can navigate to current step or previous steps
-    return stepId <= currentStep;
+    // Can always go to previous steps
+    if (stepId < currentStep) {
+      return true;
+    }
+    // Can go to next step only if current step is valid
+    if (stepId === currentStep + 1) {
+      return isStepValid(currentStep);
+    }
+    // Can't skip ahead
+    return false;
+  };
+
+  // Parse audience data into recipient list for manual input
+  const parseRecipientList = (): ManualCommunicationRecipient[] => {
+    const recipients: ManualCommunicationRecipient[] = [];
+
+    // If file-based audience with headers
+    if (broadcastData.audienceFileText && broadcastData.fileHeaders) {
+      const lines = broadcastData.audienceFileText
+        .split("\n")
+        .filter((line) => line.trim());
+      const delimiter = broadcastData.fileDelimiter || ",";
+      const headers = broadcastData.fileHeaders
+        .split(delimiter)
+        .map((h) => h.trim());
+
+      // Skip header row if present
+      const dataLines = lines.slice(1);
+
+      dataLines.forEach((line) => {
+        const values = line.split(delimiter).map((v) => v.trim());
+        const recipient: ManualCommunicationRecipient = {};
+
+        headers.forEach((header, idx) => {
+          recipient[header] = values[idx] || "";
+        });
+
+        // Ensure at least email or phone is present
+        if (recipient.email || recipient.phone || recipient.name) {
+          recipients.push(recipient);
+        }
+      });
+    }
+    // If manual input (from TargetAudienceStep)
+    else if (
+      broadcastData.audienceFileText &&
+      broadcastData.inputMethod === "manual"
+    ) {
+      // Manual input is stored as raw text in audienceFileText
+      const lines = broadcastData.audienceFileText
+        .split(/[\n,]/) // Split by newline or comma
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+      lines.forEach((line) => {
+        const recipient: ManualCommunicationRecipient = {};
+
+        // Try to determine if it's an email or phone
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const phoneRegex = /^[\d+\-\s()]+$/;
+
+        if (emailRegex.test(line)) {
+          recipient.email = line;
+        } else if (phoneRegex.test(line)) {
+          recipient.phone = line;
+        } else {
+          // Treat as name if it doesn't match email or phone pattern
+          recipient.name = line;
+        }
+
+        // Only add if we have at least an email or phone
+        if (recipient.email || recipient.phone) {
+          recipients.push(recipient);
+        }
+      });
+    }
+
+    return recipients;
   };
 
   const handleSubmit = async () => {
     try {
-      let quicklistId: number;
-
-      // If quicklistId is already set (from step 1 selection), use it directly
-      // Otherwise, create a new quicklist from the uploaded file
+      // Case 1: QuickList-based submission (selected or created quicklist)
       if (broadcastData.quicklistId) {
-        quicklistId = broadcastData.quicklistId;
-        showToast("Using selected QuickList");
-      } else if (broadcastData.audienceFileText) {
-        // Create the QuickList from the stored audience data
-        const quicklistResponse = await quicklistService.createQuickList({
-          file_text: broadcastData.audienceFileText!,
-          file_name: broadcastData.audienceName!,
-          name: broadcastData.audienceName!,
-          description: null,
-          created_by: null,
-          file_delimiter: broadcastData.fileDelimiter || ",",
-          subscriber_id_col_name: broadcastData.subscriptionIdColumn || "",
-          list_headers: broadcastData.fileHeaders || "",
+        const response = await communicationService.sendCommunication({
+          source_type: "quicklist",
+          source_id: broadcastData.quicklistId,
+          broadcast_name: broadcastData.audienceName,
+          list_type: broadcastData.uploadType,
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          filters: {
+            column_conditions: [],
+            limit: 1000,
+          },
+          batch_size: 500,
+          created_by: 1, // TODO: Get from auth context
         });
 
-        if (!quicklistResponse.success) {
-          throw new Error(
-            "error" in quicklistResponse
-              ? quicklistResponse.error
-              : "Failed to create audience QuickList",
-          );
+        if (response.success) {
+          showToast(t.manualBroadcast.createdSuccess);
+          clearPersistedFormData("broadcast_form_data");
+          navigate("/dashboard/manual-communications");
+        } else {
+          throw new Error("Communication sending failed");
+        }
+      }
+      // Case 2: Manual input submission (file upload or manual text entry)
+      else if (broadcastData.audienceFileText) {
+        const recipientList = parseRecipientList();
+
+        if (recipientList.length === 0) {
+          throw new Error("No valid recipients found in audience data");
         }
 
-        quicklistId = quicklistResponse.data.quicklist_id;
-        showToast("QuickList uploaded successfully");
+        // Send manual communication using new endpoint
+        const response = await communicationService.sendManualCommunication({
+          source_type: "manual",
+          broadcast_name: broadcastData.audienceName,
+          list_type: broadcastData.uploadType,
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          recipient_list: recipientList,
+        });
+
+        if (response.success) {
+          showToast(t.manualBroadcast.createdSuccess);
+          clearPersistedFormData("broadcast_form_data");
+          navigate("/dashboard/manual-communications");
+        } else {
+          throw new Error("Communication sending failed");
+        }
       } else {
-        throw new Error("No quicklist selected or file provided");
+        throw new Error("No audience selected or provided");
       }
-
-      const response = await communicationService.sendCommunication({
-        source_type: "quicklist",
-        source_id: quicklistId,
-        channels: broadcastData.channel ? [broadcastData.channel] : [],
-        message_template: {
-          ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
-            ? { title: broadcastData.messageTitle }
-            : {}),
-          body: broadcastData.messageBody || "",
-        },
-        filters: {
-          column_conditions: [],
-          limit: 1000,
-        },
-        batch_size: 500,
-        created_by: 1, // TODO: Get from auth context
-      });
-
-      if (response.success) {
-        showToast(t.manualBroadcast.createdSuccess);
-      } else {
-        throw new Error("Communication sending failed");
-      }
-
-      // Clear localStorage form data after successful creation
-      clearPersistedFormData("broadcast_form_data");
-
-      // Navigate to manual communications page
-      navigate("/dashboard/manual-communications");
     } catch (err) {
       console.error("Failed to create manual broadcast:", err);
-      showError(t.manualBroadcast.createFailed);
+      showError(
+        t.manualBroadcast.createFailed,
+        (err as Error).message || "An error occurred",
+      );
     }
   };
 

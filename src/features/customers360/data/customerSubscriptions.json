@@ -1,9 +1,18 @@
 [
   {
     "customerId": 1,
-    "subscriptionId": 1,
+    "subscriptionId": 15278,
+    "subscription_id": "54994",
+    "msisdn": "254763056860",
+    "attributes": {
+      "first_name": "NELLY",
+      "last_name": "MWAURA",
+      "email": null,
+      "device_type": "iPhone",
+      "premium_user": false,
+      "city": "NAIROBI"
+    },
     "amdocsSubsId": null,
-    "msisdn": 254763056860,
     "iccid": "89254031620034768668",
     "imsi": 639031623476866,
     "activationDate": "2024-07-05 16:20:15.853",
@@ -17,14 +26,10 @@
     "limitOutOfBundleData": "Inactive",
     "limitOutOfBundleVoice": "Inactive",
     "limitOutOfBundleSms": "Inactive",
-    "firstName": "NELLY",
-    "lastName": "MWAURA",
     "birthDate": "1987-07-21 00:00:00.000",
     "gender": 0,
-    "email": null,
     "birthPlaceOther": "TAITA TAVETA DISTRICT TAITA TAVETA",
     "preferredLanguage": "Swahili",
-    "city": "NAIROBI",
     "branchCode": null,
     "customerCountyId": 34,
     "building": 20,
@@ -34,9 +39,18 @@
   },
   {
     "customerId": 1,
-    "subscriptionId": 2,
+    "subscriptionId": 49248,
+    "subscription_id": "54995",
+    "msisdn": "254764555314",
+    "attributes": {
+      "first_name": "NELLY",
+      "last_name": "MWAURA",
+      "email": null,
+      "device_type": "Android",
+      "premium_user": false,
+      "city": "NAIROBI"
+    },
     "amdocsSubsId": null,
-    "msisdn": 254764555314,
     "iccid": "89254031620034768684",
     "imsi": 639031623476868,
     "activationDate": "2024-07-08 10:11:36.657",
@@ -50,14 +64,10 @@
     "limitOutOfBundleData": "Inactive",
     "limitOutOfBundleVoice": "Inactive",
     "limitOutOfBundleSms": "Inactive",
-    "firstName": "NELLY",
-    "lastName": "MWAURA",
     "birthDate": "1987-07-21 00:00:00.000",
     "gender": 0,
-    "email": null,
     "birthPlaceOther": "TAITA TAVETA DISTRICT TAITA TAVETA",
     "preferredLanguage": "Swahili",
-    "city": "NAIROBI",
     "branchCode": null,
     "customerCountyId": 34,
     "building": 20,
@@ -67,9 +77,18 @@
   },
   {
     "customerId": 2,
-    "subscriptionId": 3,
+    "subscriptionId": 58295,
+    "subscription_id": "54996",
+    "msisdn": "254763056254",
+    "attributes": {
+      "first_name": "WILSON",
+      "last_name": "GITHAIGA",
+      "email": "testdb@testdb.com",
+      "device_type": "iPhone",
+      "premium_user": true,
+      "city": "NYAHURURU"
+    },
     "amdocsSubsId": null,
-    "msisdn": 254763056254,
     "iccid": "89254031620034768759",
     "imsi": 639031623476875,
     "activationDate": "2024-07-08 10:26:54.250",
@@ -83,14 +102,10 @@
     "limitOutOfBundleData": "Inactive",
     "limitOutOfBundleVoice": "Inactive",
     "limitOutOfBundleSms": "Inactive",
-    "firstName": "WILSON",
-    "lastName": "GITHAIGA",
     "birthDate": "1991-01-01 00:00:00.000",
     "gender": 1,
-    "email": "testdb@testdb.com",
     "birthPlaceOther": "NYAHURURU",
     "preferredLanguage": "English",
-    "city": "NYAHURURU",
     "branchCode": null,
     "customerCountyId": 5,
     "building": "NYAHURURU",
@@ -100,7 +115,7 @@
   },
   {
     "customerId": 2,
-    "subscriptionId": 4,
+    "subscriptionId": 70788,
     "amdocsSubsId": null,
     "msisdn": 254765555048,
     "iccid": "89254031620034768700",
@@ -129,11 +144,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50003"
   },
   {
     "customerId": 2,
-    "subscriptionId": 5,
+    "subscriptionId": 11515,
     "amdocsSubsId": null,
     "msisdn": 254763555039,
     "iccid": "89254031620034768718",
@@ -162,11 +178,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50004"
   },
   {
     "customerId": 2,
-    "subscriptionId": 6,
+    "subscriptionId": 84229,
     "amdocsSubsId": null,
     "msisdn": 254763056141,
     "iccid": "89254031620034768734",
@@ -195,11 +212,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50005"
   },
   {
     "customerId": 2,
-    "subscriptionId": 7,
+    "subscriptionId": 85591,
     "amdocsSubsId": null,
     "msisdn": 254763056147,
     "iccid": "89254031620034768767",
@@ -228,11 +246,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50006"
   },
   {
     "customerId": 2,
-    "subscriptionId": 8,
+    "subscriptionId": 82810,
     "amdocsSubsId": null,
     "msisdn": 254765555127,
     "iccid": "89254031620034768684",
@@ -261,11 +280,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50007"
   },
   {
     "customerId": 2,
-    "subscriptionId": 9,
+    "subscriptionId": 93153,
     "amdocsSubsId": null,
     "msisdn": 254764555314,
     "iccid": "89254031620034768791",
@@ -294,11 +314,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50008"
   },
   {
     "customerId": 2,
-    "subscriptionId": 10,
+    "subscriptionId": 17887,
     "amdocsSubsId": null,
     "msisdn": 254763056235,
     "iccid": "89254031620034768775",
@@ -327,11 +348,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50009"
   },
   {
     "customerId": 2,
-    "subscriptionId": 11,
+    "subscriptionId": 82930,
     "amdocsSubsId": null,
     "msisdn": 254765555055,
     "iccid": "89254031620034768809",
@@ -360,12 +382,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50010"
   },
   {
     "customerId": 2,
-    "subscriptionId": 12,
-    "amdocsSubsId": -2051240.0,
+    "subscriptionId": 13143,
+    "amdocsSubsId": -2051240,
     "msisdn": 254763555548,
     "iccid": "89254031620034768841",
     "imsi": 639031623476884,
@@ -393,11 +416,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50011"
   },
   {
     "customerId": 2,
-    "subscriptionId": 13,
+    "subscriptionId": 43246,
     "amdocsSubsId": null,
     "msisdn": 254765555019,
     "iccid": "89254031620034768825",
@@ -426,12 +450,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50012"
   },
   {
     "customerId": 2,
-    "subscriptionId": 14,
-    "amdocsSubsId": -2051259.0,
+    "subscriptionId": 67841,
+    "amdocsSubsId": -2051259,
     "msisdn": 254763555828,
     "iccid": "89254031620034768833",
     "imsi": 639031623476883,
@@ -459,11 +484,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50013"
   },
   {
     "customerId": 3,
-    "subscriptionId": 15,
+    "subscriptionId": 17920,
     "amdocsSubsId": null,
     "msisdn": 254765555196,
     "iccid": "89254031620034768890",
@@ -492,11 +518,12 @@
     "building": "NAIROBI",
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50014"
   },
   {
     "customerId": 3,
-    "subscriptionId": 16,
+    "subscriptionId": 92424,
     "amdocsSubsId": null,
     "msisdn": 254763555610,
     "iccid": "89254031620034768957",
@@ -525,11 +552,12 @@
     "building": "NAIROBI",
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50015"
   },
   {
     "customerId": 3,
-    "subscriptionId": 17,
+    "subscriptionId": 88231,
     "amdocsSubsId": null,
     "msisdn": 254765555155,
     "iccid": "89254031620034768965",
@@ -558,11 +586,12 @@
     "building": "NAIROBI",
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50016"
   },
   {
     "customerId": 3,
-    "subscriptionId": 18,
+    "subscriptionId": 17249,
     "amdocsSubsId": null,
     "msisdn": 254763056497,
     "iccid": "89254031620034768973",
@@ -591,11 +620,12 @@
     "building": "NAIROBI",
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50017"
   },
   {
     "customerId": 2,
-    "subscriptionId": 19,
+    "subscriptionId": 72549,
     "amdocsSubsId": null,
     "msisdn": 254765555161,
     "iccid": "89254031620034769013",
@@ -624,11 +654,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50018"
   },
   {
     "customerId": 2,
-    "subscriptionId": 20,
+    "subscriptionId": 84973,
     "amdocsSubsId": null,
     "msisdn": 254763056237,
     "iccid": "89254031620034769153",
@@ -657,11 +688,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50019"
   },
   {
     "customerId": 2,
-    "subscriptionId": 21,
+    "subscriptionId": 79634,
     "amdocsSubsId": null,
     "msisdn": 254765555138,
     "iccid": "89254031620034769179",
@@ -690,11 +722,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50020"
   },
   {
     "customerId": 2,
-    "subscriptionId": 22,
+    "subscriptionId": 19747,
     "amdocsSubsId": null,
     "msisdn": 254763056160,
     "iccid": "89254031620034769294",
@@ -723,11 +756,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50021"
   },
   {
     "customerId": 2,
-    "subscriptionId": 23,
+    "subscriptionId": 36911,
     "amdocsSubsId": null,
     "msisdn": 254765555113,
     "iccid": "89254031620034769302",
@@ -756,11 +790,12 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50022"
   },
   {
     "customerId": 1,
-    "subscriptionId": 24,
+    "subscriptionId": 63632,
     "amdocsSubsId": null,
     "msisdn": 254763056214,
     "iccid": "89254031620000020052",
@@ -789,11 +824,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50023"
   },
   {
     "customerId": 1,
-    "subscriptionId": 25,
+    "subscriptionId": 58998,
     "amdocsSubsId": null,
     "msisdn": 254763056210,
     "iccid": "89254031620000020847",
@@ -822,12 +858,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50024"
   },
   {
     "customerId": 28,
-    "subscriptionId": 26,
-    "amdocsSubsId": -2051270.0,
+    "subscriptionId": 49575,
+    "amdocsSubsId": -2051270,
     "msisdn": 254763056212,
     "iccid": "89254031620000020987",
     "imsi": 639031620002098,
@@ -855,11 +892,12 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50025"
   },
   {
     "customerId": 1,
-    "subscriptionId": 27,
+    "subscriptionId": 71789,
     "amdocsSubsId": null,
     "msisdn": 254763056215,
     "iccid": "89254031620000020094",
@@ -888,11 +926,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50026"
   },
   {
     "customerId": 1,
-    "subscriptionId": 28,
+    "subscriptionId": 84316,
     "amdocsSubsId": null,
     "msisdn": 254763056217,
     "iccid": "89254031620000020128",
@@ -921,11 +960,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50027"
   },
   {
     "customerId": 1,
-    "subscriptionId": 29,
+    "subscriptionId": 93953,
     "amdocsSubsId": null,
     "msisdn": 254763056194,
     "iccid": "89254031620000020144",
@@ -954,11 +994,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50028"
   },
   {
     "customerId": 1,
-    "subscriptionId": 30,
+    "subscriptionId": 17256,
     "amdocsSubsId": null,
     "msisdn": 254765555169,
     "iccid": "89254031620000020185",
@@ -987,12 +1028,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50029"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1029,
-    "amdocsSubsId": -2052304.0,
+    "subscriptionId": 36072,
+    "amdocsSubsId": -2052304,
     "msisdn": 254763056753,
     "iccid": "89254031620013783837",
     "imsi": 639031621378383,
@@ -1020,11 +1062,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50030"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1030,
+    "subscriptionId": 55066,
     "amdocsSubsId": null,
     "msisdn": 254763555225,
     "iccid": "89254031620013784884",
@@ -1053,11 +1096,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50031"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1031,
+    "subscriptionId": 86759,
     "amdocsSubsId": null,
     "msisdn": 254765555159,
     "iccid": "89254031620013785501",
@@ -1086,12 +1130,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50032"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1032,
-    "amdocsSubsId": -2052318.0,
+    "subscriptionId": 27979,
+    "amdocsSubsId": -2052318,
     "msisdn": 254763056280,
     "iccid": "89254031620013785519",
     "imsi": 639031621378551,
@@ -1119,12 +1164,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50033"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1033,
-    "amdocsSubsId": -2076277.0,
+    "subscriptionId": 99692,
+    "amdocsSubsId": -2076277,
     "msisdn": 254765555171,
     "iccid": "89254031620000020078",
     "imsi": 639031620002007,
@@ -1152,12 +1198,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50034"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1034,
-    "amdocsSubsId": -2052690.0,
+    "subscriptionId": 66921,
+    "amdocsSubsId": -2052690,
     "msisdn": 254763056417,
     "iccid": "89254031620064725083",
     "imsi": 639031626472508,
@@ -1185,12 +1232,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50035"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1035,
-    "amdocsSubsId": -2076278.0,
+    "subscriptionId": 68509,
+    "amdocsSubsId": -2076278,
     "msisdn": 254763056624,
     "iccid": "89254031620000020375",
     "imsi": 639031620002037,
@@ -1218,12 +1266,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50036"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1036,
-    "amdocsSubsId": -2052692.0,
+    "subscriptionId": 39591,
+    "amdocsSubsId": -2052692,
     "msisdn": 254763056917,
     "iccid": "89254031620013782748",
     "imsi": 639031621378274,
@@ -1251,11 +1300,12 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50037"
   },
   {
     "customerId": 2,
-    "subscriptionId": 1037,
+    "subscriptionId": 71675,
     "amdocsSubsId": null,
     "msisdn": 254763056178,
     "iccid": "89254031620013785303",
@@ -1284,12 +1334,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50038"
   },
   {
     "customerId": 27,
-    "subscriptionId": 1038,
-    "amdocsSubsId": -2055656.0,
+    "subscriptionId": 54058,
+    "amdocsSubsId": -2055656,
     "msisdn": 254763056293,
     "iccid": "89254031620013785329",
     "imsi": 639031621378532,
@@ -1317,12 +1368,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "TestTest",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50039"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1039,
-    "amdocsSubsId": -2055663.0,
+    "subscriptionId": 97170,
+    "amdocsSubsId": -2055663,
     "msisdn": 254763056514,
     "iccid": "89254031620013785626",
     "imsi": 639031621378562,
@@ -1350,12 +1402,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50040"
   },
   {
     "customerId": 27,
-    "subscriptionId": 1040,
-    "amdocsSubsId": -2055664.0,
+    "subscriptionId": 42279,
+    "amdocsSubsId": -2055664,
     "msisdn": 254763556052,
     "iccid": "89254031620013785642",
     "imsi": 639031621378564,
@@ -1383,12 +1436,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "TestTest",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50041"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1041,
-    "amdocsSubsId": -2055698.0,
+    "subscriptionId": 73303,
+    "amdocsSubsId": -2055698,
     "msisdn": 254763056862,
     "iccid": "89254031620034768114",
     "imsi": 639031623476811,
@@ -1416,12 +1470,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50042"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1042,
-    "amdocsSubsId": -2055697.0,
+    "subscriptionId": 37632,
+    "amdocsSubsId": -2055697,
     "msisdn": 254763056838,
     "iccid": "89254031620013785758",
     "imsi": 639031621378575,
@@ -1449,12 +1504,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50043"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1043,
-    "amdocsSubsId": -2055703.0,
+    "subscriptionId": 30435,
+    "amdocsSubsId": -2055703,
     "msisdn": 254763056610,
     "iccid": "89254031620013785774",
     "imsi": 639031621378577,
@@ -1482,12 +1538,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50044"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1044,
-    "amdocsSubsId": -2055702.0,
+    "subscriptionId": 25358,
+    "amdocsSubsId": -2055702,
     "msisdn": 254763056625,
     "iccid": "89254031620034768064",
     "imsi": 639031623476806,
@@ -1515,12 +1572,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50045"
   },
   {
     "customerId": 30,
-    "subscriptionId": 1045,
-    "amdocsSubsId": -2055845.0,
+    "subscriptionId": 90891,
+    "amdocsSubsId": -2055845,
     "msisdn": 254763056813,
     "iccid": "89254031620034768098",
     "imsi": 639031623476809,
@@ -1548,12 +1606,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50046"
   },
   {
     "customerId": 30,
-    "subscriptionId": 1046,
-    "amdocsSubsId": -2055846.0,
+    "subscriptionId": 55603,
+    "amdocsSubsId": -2055846,
     "msisdn": 254763056342,
     "iccid": "89254031620034768080",
     "imsi": 639031623476808,
@@ -1581,12 +1640,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50047"
   },
   {
     "customerId": 33,
-    "subscriptionId": 1047,
-    "amdocsSubsId": -2055913.0,
+    "subscriptionId": 85436,
+    "amdocsSubsId": -2055913,
     "msisdn": 254763056492,
     "iccid": "89254031620034768239",
     "imsi": 639031623476823,
@@ -1614,12 +1674,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50048"
   },
   {
     "customerId": 33,
-    "subscriptionId": 1048,
-    "amdocsSubsId": -2055914.0,
+    "subscriptionId": 50182,
+    "amdocsSubsId": -2055914,
     "msisdn": 254763056757,
     "iccid": "89254031620034768247",
     "imsi": 639031623476824,
@@ -1647,12 +1708,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50049"
   },
   {
     "customerId": 35,
-    "subscriptionId": 1049,
-    "amdocsSubsId": -2055915.0,
+    "subscriptionId": 19202,
+    "amdocsSubsId": -2055915,
     "msisdn": 254763056277,
     "iccid": "89254031620034768130",
     "imsi": 639031623476813,
@@ -1675,17 +1737,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": null,
-    "branchCode": 2.0,
+    "branchCode": 2,
     "customerCountyId": 17,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50050"
   },
   {
     "customerId": 35,
-    "subscriptionId": 1050,
-    "amdocsSubsId": -2055916.0,
+    "subscriptionId": 21730,
+    "amdocsSubsId": -2055916,
     "msisdn": 254763056351,
     "iccid": "89254031620034768197",
     "imsi": 639031623476819,
@@ -1708,17 +1771,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": null,
-    "branchCode": 2.0,
+    "branchCode": 2,
     "customerCountyId": 17,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50051"
   },
   {
     "customerId": 2,
-    "subscriptionId": 1051,
-    "amdocsSubsId": -2056149.0,
+    "subscriptionId": 36533,
+    "amdocsSubsId": -2056149,
     "msisdn": 254765555081,
     "iccid": "89254031620034769757",
     "imsi": 639031623476975,
@@ -1746,12 +1810,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50052"
   },
   {
     "customerId": 36,
-    "subscriptionId": 1052,
-    "amdocsSubsId": -2056150.0,
+    "subscriptionId": 84624,
+    "amdocsSubsId": -2056150,
     "msisdn": 254763556088,
     "iccid": "89254031620034769906",
     "imsi": 639031623476990,
@@ -1779,11 +1844,12 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50053"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1053,
+    "subscriptionId": 87135,
     "amdocsSubsId": null,
     "msisdn": 254763555033,
     "iccid": "89254031620034768288",
@@ -1812,11 +1878,12 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50054"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1054,
+    "subscriptionId": 97430,
     "amdocsSubsId": null,
     "msisdn": 254763555199,
     "iccid": "89254031620013787093",
@@ -1845,12 +1912,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50055"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1055,
-    "amdocsSubsId": -2056156.0,
+    "subscriptionId": 77817,
+    "amdocsSubsId": -2056156,
     "msisdn": 254763555290,
     "iccid": "89254031620013787259",
     "imsi": 639031621378725,
@@ -1878,12 +1946,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50056"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1056,
-    "amdocsSubsId": -2056155.0,
+    "subscriptionId": 48574,
+    "amdocsSubsId": -2056155,
     "msisdn": 254763555464,
     "iccid": "89254031620013787275",
     "imsi": 639031621378727,
@@ -1911,11 +1980,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50057"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1057,
+    "subscriptionId": 31558,
     "amdocsSubsId": null,
     "msisdn": 254763555143,
     "iccid": "89254031620013784710",
@@ -1944,12 +2014,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50058"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1058,
-    "amdocsSubsId": -2056166.0,
+    "subscriptionId": 37719,
+    "amdocsSubsId": -2056166,
     "msisdn": 254763555252,
     "iccid": "89254031620013785378",
     "imsi": 639031621378537,
@@ -1977,12 +2048,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50059"
   },
   {
     "customerId": 35,
-    "subscriptionId": 1059,
-    "amdocsSubsId": -2056167.0,
+    "subscriptionId": 76264,
+    "amdocsSubsId": -2056167,
     "msisdn": 254765555164,
     "iccid": "89254031620013785410",
     "imsi": 639031621378541,
@@ -2005,17 +2077,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": null,
-    "branchCode": 2.0,
+    "branchCode": 2,
     "customerCountyId": 17,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50060"
   },
   {
     "customerId": 35,
-    "subscriptionId": 1060,
-    "amdocsSubsId": -2056168.0,
+    "subscriptionId": 39587,
+    "amdocsSubsId": -2056168,
     "msisdn": 254763555541,
     "iccid": "89254031620013785535",
     "imsi": 639031621378553,
@@ -2038,17 +2111,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": null,
-    "branchCode": 2.0,
+    "branchCode": 2,
     "customerCountyId": 17,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50061"
   },
   {
     "customerId": 36,
-    "subscriptionId": 1061,
-    "amdocsSubsId": -2056247.0,
+    "subscriptionId": 86105,
+    "amdocsSubsId": -2056247,
     "msisdn": 254763555109,
     "iccid": "89254031620013785964",
     "imsi": 639031621378596,
@@ -2076,12 +2150,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50062"
   },
   {
     "customerId": 2,
-    "subscriptionId": 1062,
-    "amdocsSubsId": -2056248.0,
+    "subscriptionId": 19180,
+    "amdocsSubsId": -2056248,
     "msisdn": 254763555490,
     "iccid": "89254031620013785857",
     "imsi": 639031621378585,
@@ -2109,12 +2184,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50063"
   },
   {
     "customerId": 37,
-    "subscriptionId": 1063,
-    "amdocsSubsId": -2057349.0,
+    "subscriptionId": 79724,
+    "amdocsSubsId": -2057349,
     "msisdn": 254763555827,
     "iccid": "89254031610028825558",
     "imsi": 639031612882555,
@@ -2142,12 +2218,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50064"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1064,
-    "amdocsSubsId": -2059454.0,
+    "subscriptionId": 35849,
+    "amdocsSubsId": -2059454,
     "msisdn": 254765555122,
     "iccid": "89254031620034765201",
     "imsi": 639031623476520,
@@ -2175,12 +2252,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50065"
   },
   {
     "customerId": 2,
-    "subscriptionId": 1065,
-    "amdocsSubsId": -2059455.0,
+    "subscriptionId": 32813,
+    "amdocsSubsId": -2059455,
     "msisdn": 254763555637,
     "iccid": "89254031620034765110",
     "imsi": 639031623476511,
@@ -2208,12 +2286,13 @@
     "building": "NYAHURURU",
     "road": "NYAHURURU",
     "estate": "NYAHURURU",
-    "ward": "NYAHURURU"
+    "ward": "NYAHURURU",
+    "subscription_id": "50066"
   },
   {
     "customerId": 35,
-    "subscriptionId": 1066,
-    "amdocsSubsId": -2059456.0,
+    "subscriptionId": 52784,
+    "amdocsSubsId": -2059456,
     "msisdn": 254765555152,
     "iccid": "89254031620034765326",
     "imsi": 639031623476532,
@@ -2236,17 +2315,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": null,
-    "branchCode": 2.0,
+    "branchCode": 2,
     "customerCountyId": 17,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50067"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1067,
-    "amdocsSubsId": -2059584.0,
+    "subscriptionId": 28105,
+    "amdocsSubsId": -2059584,
     "msisdn": 254763555817,
     "iccid": "89254031620034765524",
     "imsi": 639031623476552,
@@ -2274,12 +2354,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50068"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1068,
-    "amdocsSubsId": -2059461.0,
+    "subscriptionId": 66568,
+    "amdocsSubsId": -2059461,
     "msisdn": 254765555185,
     "iccid": "89254031620034765532",
     "imsi": 639031623476553,
@@ -2307,12 +2388,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50069"
   },
   {
     "customerId": 27,
-    "subscriptionId": 1069,
-    "amdocsSubsId": -2059582.0,
+    "subscriptionId": 69236,
+    "amdocsSubsId": -2059582,
     "msisdn": 254763555517,
     "iccid": "89254031620034765557",
     "imsi": 639031623476555,
@@ -2340,12 +2422,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "TestTest",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50070"
   },
   {
     "customerId": 27,
-    "subscriptionId": 1070,
-    "amdocsSubsId": -2059575.0,
+    "subscriptionId": 63586,
+    "amdocsSubsId": -2059575,
     "msisdn": 254763555547,
     "iccid": "89254031620013495762",
     "imsi": 639031621349576,
@@ -2373,12 +2456,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "TestTest",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50071"
   },
   {
     "customerId": 27,
-    "subscriptionId": 1071,
-    "amdocsSubsId": -2059581.0,
+    "subscriptionId": 66340,
+    "amdocsSubsId": -2059581,
     "msisdn": 254763555624,
     "iccid": "89254031620013782714",
     "imsi": 639031621378271,
@@ -2406,12 +2490,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "TestTest",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50072"
   },
   {
     "customerId": 31,
-    "subscriptionId": 1072,
-    "amdocsSubsId": -2059852.0,
+    "subscriptionId": 84259,
+    "amdocsSubsId": -2059852,
     "msisdn": 254763555134,
     "iccid": "89254031620013782722",
     "imsi": 639031621378272,
@@ -2439,12 +2524,13 @@
     "building": "kodhek",
     "road": "garrisa road",
     "estate": "nairobi",
-    "ward": "kasarani"
+    "ward": "kasarani",
+    "subscription_id": "50073"
   },
   {
     "customerId": 31,
-    "subscriptionId": 1073,
-    "amdocsSubsId": -2059851.0,
+    "subscriptionId": 98165,
+    "amdocsSubsId": -2059851,
     "msisdn": 254763555247,
     "iccid": "89254031620013782730",
     "imsi": 639031621378273,
@@ -2472,12 +2558,13 @@
     "building": "kodhek",
     "road": "garrisa road",
     "estate": "nairobi",
-    "ward": "kasarani"
+    "ward": "kasarani",
+    "subscription_id": "50074"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1074,
-    "amdocsSubsId": -2076275.0,
+    "subscriptionId": 80130,
+    "amdocsSubsId": -2076275,
     "msisdn": 254763555830,
     "iccid": "89254031620013782755",
     "imsi": 639031621378275,
@@ -2505,12 +2592,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50075"
   },
   {
     "customerId": 4,
-    "subscriptionId": 1075,
-    "amdocsSubsId": -2076276.0,
+    "subscriptionId": 11465,
+    "amdocsSubsId": -2076276,
     "msisdn": 254763555837,
     "iccid": "89254031620013782789",
     "imsi": 639031621378278,
@@ -2538,12 +2626,13 @@
     "building": "aaaaaaaaaaa",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50076"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1076,
-    "amdocsSubsId": -2060420.0,
+    "subscriptionId": 40235,
+    "amdocsSubsId": -2060420,
     "msisdn": 254763555671,
     "iccid": "89254031620064724946",
     "imsi": 639031626472494,
@@ -2571,12 +2660,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50077"
   },
   {
     "customerId": 39,
-    "subscriptionId": 1077,
-    "amdocsSubsId": -2060421.0,
+    "subscriptionId": 72370,
+    "amdocsSubsId": -2060421,
     "msisdn": 254764555333,
     "iccid": "89254031620034769807",
     "imsi": 639031623476980,
@@ -2604,12 +2694,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50078"
   },
   {
     "customerId": 30,
-    "subscriptionId": 1078,
-    "amdocsSubsId": -2060422.0,
+    "subscriptionId": 74599,
+    "amdocsSubsId": -2060422,
     "msisdn": 254765555123,
     "iccid": "89254031620064722676",
     "imsi": 639031626472267,
@@ -2637,12 +2728,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50079"
   },
   {
     "customerId": 31,
-    "subscriptionId": 1079,
-    "amdocsSubsId": -2060423.0,
+    "subscriptionId": 17361,
+    "amdocsSubsId": -2060423,
     "msisdn": 254763555047,
     "iccid": "89254031620013783183",
     "imsi": 639031621378318,
@@ -2670,12 +2762,13 @@
     "building": "kodhek",
     "road": "garrisa road",
     "estate": "nairobi",
-    "ward": "kasarani"
+    "ward": "kasarani",
+    "subscription_id": "50080"
   },
   {
     "customerId": 37,
-    "subscriptionId": 1080,
-    "amdocsSubsId": -2060662.0,
+    "subscriptionId": 17527,
+    "amdocsSubsId": -2060662,
     "msisdn": 254764555247,
     "iccid": "89254031610026804266",
     "imsi": 639031612680426,
@@ -2703,12 +2796,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50081"
   },
   {
     "customerId": 39,
-    "subscriptionId": 1081,
-    "amdocsSubsId": -2061303.0,
+    "subscriptionId": 55986,
+    "amdocsSubsId": -2061303,
     "msisdn": 254765555106,
     "iccid": "89254031620064720324",
     "imsi": 639031626472032,
@@ -2736,12 +2830,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50082"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1082,
-    "amdocsSubsId": -2061439.0,
+    "subscriptionId": 63192,
+    "amdocsSubsId": -2061439,
     "msisdn": 254765555117,
     "iccid": "89254031620060725046",
     "imsi": 639031626072504,
@@ -2769,12 +2864,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50083"
   },
   {
     "customerId": 39,
-    "subscriptionId": 1083,
-    "amdocsSubsId": -2061687.0,
+    "subscriptionId": 69068,
+    "amdocsSubsId": -2061687,
     "msisdn": 254763555684,
     "iccid": "89254031620013786392",
     "imsi": 639031621378639,
@@ -2802,12 +2898,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50084"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1084,
-    "amdocsSubsId": -2061693.0,
+    "subscriptionId": 65961,
+    "amdocsSubsId": -2061693,
     "msisdn": 254764555240,
     "iccid": "89254031620013783126",
     "imsi": 639031621378312,
@@ -2835,12 +2932,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50085"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1085,
-    "amdocsSubsId": -2076279.0,
+    "subscriptionId": 70876,
+    "amdocsSubsId": -2076279,
     "msisdn": 254765555180,
     "iccid": "89254031620034773015",
     "imsi": 639031623477301,
@@ -2868,12 +2966,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50086"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1086,
-    "amdocsSubsId": -2076294.0,
+    "subscriptionId": 74184,
+    "amdocsSubsId": -2076294,
     "msisdn": 254763556168,
     "iccid": "89254031620013785972",
     "imsi": 639031621378597,
@@ -2901,12 +3000,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50087"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1087,
-    "amdocsSubsId": -2076293.0,
+    "subscriptionId": 78088,
+    "amdocsSubsId": -2076293,
     "msisdn": 254764555244,
     "iccid": "89254031620013786004",
     "imsi": 639031621378600,
@@ -2934,12 +3034,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50088"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1088,
-    "amdocsSubsId": -2076303.0,
+    "subscriptionId": 66582,
+    "amdocsSubsId": -2076303,
     "msisdn": 254763555856,
     "iccid": "89254031620013786400",
     "imsi": 639031621378640,
@@ -2967,12 +3068,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50089"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1089,
-    "amdocsSubsId": -2076304.0,
+    "subscriptionId": 88315,
+    "amdocsSubsId": -2076304,
     "msisdn": 254765555157,
     "iccid": "89254031620013786442",
     "imsi": 639031621378644,
@@ -3000,12 +3102,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50090"
   },
   {
     "customerId": 36,
-    "subscriptionId": 1090,
-    "amdocsSubsId": -2076315.0,
+    "subscriptionId": 30530,
+    "amdocsSubsId": -2076315,
     "msisdn": 254765555098,
     "iccid": "89254031620034769997",
     "imsi": 639031623476999,
@@ -3033,12 +3136,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50091"
   },
   {
     "customerId": 36,
-    "subscriptionId": 1091,
-    "amdocsSubsId": -2076314.0,
+    "subscriptionId": 83485,
+    "amdocsSubsId": -2076314,
     "msisdn": 254765555142,
     "iccid": "89254031620034768452",
     "imsi": 639031623476845,
@@ -3066,12 +3170,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50092"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1092,
-    "amdocsSubsId": -2076317.0,
+    "subscriptionId": 47178,
+    "amdocsSubsId": -2076317,
     "msisdn": 254763555289,
     "iccid": "89254031620013786939",
     "imsi": 639031621378693,
@@ -3099,11 +3204,12 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50093"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1093,
+    "subscriptionId": 27831,
     "amdocsSubsId": null,
     "msisdn": 254763555014,
     "iccid": "89254031620064722502",
@@ -3132,12 +3238,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50094"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1094,
-    "amdocsSubsId": -2083532.0,
+    "subscriptionId": 59472,
+    "amdocsSubsId": -2083532,
     "msisdn": 254763056853,
     "iccid": "89254031620064722429",
     "imsi": 639031626472242,
@@ -3165,12 +3272,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50095"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1095,
-    "amdocsSubsId": -2083531.0,
+    "subscriptionId": 23259,
+    "amdocsSubsId": -2083531,
     "msisdn": 254763056662,
     "iccid": "89254031620064722445",
     "imsi": 639031626472244,
@@ -3198,12 +3306,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50096"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1096,
-    "amdocsSubsId": -2083533.0,
+    "subscriptionId": 82468,
+    "amdocsSubsId": -2083533,
     "msisdn": 254763056383,
     "iccid": "89254031620064722452",
     "imsi": 639031626472245,
@@ -3231,12 +3340,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50097"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1097,
-    "amdocsSubsId": -2083534.0,
+    "subscriptionId": 19206,
+    "amdocsSubsId": -2083534,
     "msisdn": 254763056552,
     "iccid": "89254031620064722478",
     "imsi": 639031626472247,
@@ -3264,12 +3374,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50098"
   },
   {
     "customerId": 37,
-    "subscriptionId": 1098,
-    "amdocsSubsId": -2083544.0,
+    "subscriptionId": 83244,
+    "amdocsSubsId": -2083544,
     "msisdn": 254763056594,
     "iccid": "89254031620064722486",
     "imsi": 639031626472248,
@@ -3297,12 +3408,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50099"
   },
   {
     "customerId": 37,
-    "subscriptionId": 1099,
-    "amdocsSubsId": -2083548.0,
+    "subscriptionId": 85007,
+    "amdocsSubsId": -2083548,
     "msisdn": 254763056641,
     "iccid": "89254031620064722528",
     "imsi": 639031626472252,
@@ -3330,12 +3442,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50100"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1100,
-    "amdocsSubsId": -2083570.0,
+    "subscriptionId": 73185,
+    "amdocsSubsId": -2083570,
     "msisdn": 254763056174,
     "iccid": "89254031620034767587",
     "imsi": 639031623476758,
@@ -3363,12 +3476,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50101"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1101,
-    "amdocsSubsId": -2083571.0,
+    "subscriptionId": 53690,
+    "amdocsSubsId": -2083571,
     "msisdn": 254763056828,
     "iccid": "89254031620034767629",
     "imsi": 639031623476762,
@@ -3396,12 +3510,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50102"
   },
   {
     "customerId": 3,
-    "subscriptionId": 1102,
-    "amdocsSubsId": -2083582.0,
+    "subscriptionId": 51849,
+    "amdocsSubsId": -2083582,
     "msisdn": 254763056683,
     "iccid": "89254031620034767835",
     "imsi": 639031623476783,
@@ -3429,12 +3544,13 @@
     "building": "NAIROBI",
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50103"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1103,
-    "amdocsSubsId": -2083584.0,
+    "subscriptionId": 34949,
+    "amdocsSubsId": -2083584,
     "msisdn": 254763056512,
     "iccid": "89254031620013782805",
     "imsi": 639031621378280,
@@ -3462,12 +3578,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50104"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1104,
-    "amdocsSubsId": -2083583.0,
+    "subscriptionId": 92823,
+    "amdocsSubsId": -2083583,
     "msisdn": 254763056177,
     "iccid": "89254031620034767868",
     "imsi": 639031623476786,
@@ -3495,12 +3612,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50105"
   },
   {
     "customerId": 29,
-    "subscriptionId": 1105,
-    "amdocsSubsId": -2083585.0,
+    "subscriptionId": 42436,
+    "amdocsSubsId": -2083585,
     "msisdn": 254763056259,
     "iccid": "89254031620034767876",
     "imsi": 639031623476787,
@@ -3528,11 +3646,12 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50106"
   },
   {
     "customerId": 30,
-    "subscriptionId": 1106,
+    "subscriptionId": 70766,
     "amdocsSubsId": null,
     "msisdn": 254763056189,
     "iccid": "89254031620034767884",
@@ -3561,12 +3680,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50107"
   },
   {
     "customerId": 30,
-    "subscriptionId": 1107,
-    "amdocsSubsId": -2083587.0,
+    "subscriptionId": 63616,
+    "amdocsSubsId": -2083587,
     "msisdn": 254763056533,
     "iccid": "89254031620034767892",
     "imsi": 639031623476789,
@@ -3594,12 +3714,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50108"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1108,
-    "amdocsSubsId": -2083589.0,
+    "subscriptionId": 53735,
+    "amdocsSubsId": -2083589,
     "msisdn": 254763056843,
     "iccid": "89254031620064722411",
     "imsi": 639031626472241,
@@ -3627,12 +3748,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50109"
   },
   {
     "customerId": 38,
-    "subscriptionId": 1109,
-    "amdocsSubsId": -2083590.0,
+    "subscriptionId": 26825,
+    "amdocsSubsId": -2083590,
     "msisdn": 254763056670,
     "iccid": "89254031620064722577",
     "imsi": 639031626472257,
@@ -3655,17 +3777,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": "Plovdiv",
-    "branchCode": 61.0,
+    "branchCode": 61,
     "customerCountyId": 4,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50110"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1110,
-    "amdocsSubsId": -2083671.0,
+    "subscriptionId": 83595,
+    "amdocsSubsId": -2083671,
     "msisdn": 254763056866,
     "iccid": "89254031620064722544",
     "imsi": 639031626472254,
@@ -3693,12 +3816,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50111"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1111,
-    "amdocsSubsId": -2083760.0,
+    "subscriptionId": 93134,
+    "amdocsSubsId": -2083760,
     "msisdn": 254763056874,
     "iccid": "89254031620034767900",
     "imsi": 639031623476790,
@@ -3726,12 +3850,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50112"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1112,
-    "amdocsSubsId": -2083759.0,
+    "subscriptionId": 97764,
+    "amdocsSubsId": -2083759,
     "msisdn": 254763056841,
     "iccid": "89254031620034768056",
     "imsi": 639031623476805,
@@ -3759,12 +3884,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50113"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1113,
-    "amdocsSubsId": -2083761.0,
+    "subscriptionId": 40183,
+    "amdocsSubsId": -2083761,
     "msisdn": 254763056290,
     "iccid": "89254031620064724987",
     "imsi": 639031626472498,
@@ -3792,12 +3918,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50114"
   },
   {
     "customerId": 39,
-    "subscriptionId": 1114,
-    "amdocsSubsId": -2083767.0,
+    "subscriptionId": 72994,
+    "amdocsSubsId": -2083767,
     "msisdn": 254763056847,
     "iccid": "89254031620064722551",
     "imsi": 639031626472255,
@@ -3825,12 +3952,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50115"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1115,
-    "amdocsSubsId": -2083776.0,
+    "subscriptionId": 39214,
+    "amdocsSubsId": -2083776,
     "msisdn": 254763056459,
     "iccid": "89254031620064722536",
     "imsi": 639031626472253,
@@ -3858,12 +3986,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50116"
   },
   {
     "customerId": 34,
-    "subscriptionId": 1116,
-    "amdocsSubsId": -2083777.0,
+    "subscriptionId": 80324,
+    "amdocsSubsId": -2083777,
     "msisdn": 254763056483,
     "iccid": "89254031620064722569",
     "imsi": 639031626472256,
@@ -3891,12 +4020,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50117"
   },
   {
     "customerId": 28,
-    "subscriptionId": 1117,
-    "amdocsSubsId": -2083792.0,
+    "subscriptionId": 98466,
+    "amdocsSubsId": -2083792,
     "msisdn": 254763056378,
     "iccid": "89254031620064722593",
     "imsi": 639031626472259,
@@ -3924,12 +4054,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50118"
   },
   {
     "customerId": 36,
-    "subscriptionId": 1118,
-    "amdocsSubsId": -2084039.0,
+    "subscriptionId": 92287,
+    "amdocsSubsId": -2084039,
     "msisdn": 254765555097,
     "iccid": "89254031620064722627",
     "imsi": 639031626472262,
@@ -3957,12 +4088,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50119"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1119,
-    "amdocsSubsId": -2085547.0,
+    "subscriptionId": 40791,
+    "amdocsSubsId": -2085547,
     "msisdn": 254763056823,
     "iccid": "89254031620034768296",
     "imsi": 639031623476829,
@@ -3990,12 +4122,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50120"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1120,
-    "amdocsSubsId": -2085546.0,
+    "subscriptionId": 39276,
+    "amdocsSubsId": -2085546,
     "msisdn": 254763056607,
     "iccid": "89254031620034768585",
     "imsi": 639031623476858,
@@ -4023,12 +4156,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50121"
   },
   {
     "customerId": 1,
-    "subscriptionId": 1121,
-    "amdocsSubsId": -2086501.0,
+    "subscriptionId": 81055,
+    "amdocsSubsId": -2086501,
     "msisdn": 254763555471,
     "iccid": "89254031620034773601",
     "imsi": 639031623477360,
@@ -4056,12 +4190,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50122"
   },
   {
     "customerId": 40,
-    "subscriptionId": 1122,
-    "amdocsSubsId": -2098279.0,
+    "subscriptionId": 64352,
+    "amdocsSubsId": -2098279,
     "msisdn": 254765555048,
     "iccid": "89254031620034768593",
     "imsi": 639031623476859,
@@ -4089,12 +4224,13 @@
     "building": "kilimani",
     "road": "ring road",
     "estate": "nai",
-    "ward": "b"
+    "ward": "b",
+    "subscription_id": "50123"
   },
   {
     "customerId": 28,
-    "subscriptionId": 2122,
-    "amdocsSubsId": -2102867.0,
+    "subscriptionId": 88910,
+    "amdocsSubsId": -2102867,
     "msisdn": 254763056417,
     "iccid": "89254031620034769740",
     "imsi": 639031623476974,
@@ -4122,12 +4258,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50124"
   },
   {
     "customerId": 38,
-    "subscriptionId": 2123,
-    "amdocsSubsId": -2102868.0,
+    "subscriptionId": 42069,
+    "amdocsSubsId": -2102868,
     "msisdn": 254763555464,
     "iccid": "89254031620034773072",
     "imsi": 639031623477307,
@@ -4150,17 +4287,18 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": "Plovdiv",
-    "branchCode": 61.0,
+    "branchCode": 61,
     "customerCountyId": 4,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50125"
   },
   {
     "customerId": 1040,
-    "subscriptionId": 2124,
-    "amdocsSubsId": -2102871.0,
+    "subscriptionId": 84638,
+    "amdocsSubsId": -2102871,
     "msisdn": 254763056451,
     "iccid": "89254031620034773403",
     "imsi": 639031623477340,
@@ -4188,12 +4326,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50126"
   },
   {
     "customerId": 1,
-    "subscriptionId": 2125,
-    "amdocsSubsId": -2102876.0,
+    "subscriptionId": 13186,
+    "amdocsSubsId": -2102876,
     "msisdn": 254763056524,
     "iccid": "89254031620034769716",
     "imsi": 639031623476971,
@@ -4221,12 +4360,13 @@
     "building": 20,
     "road": "NAIROBI",
     "estate": "NAIROBI",
-    "ward": "NAIROBI"
+    "ward": "NAIROBI",
+    "subscription_id": "50127"
   },
   {
     "customerId": 28,
-    "subscriptionId": 2126,
-    "amdocsSubsId": -2102877.0,
+    "subscriptionId": 33259,
+    "amdocsSubsId": -2102877,
     "msisdn": 254765555106,
     "iccid": "89254031620034769930",
     "imsi": 639031623476993,
@@ -4254,12 +4394,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50128"
   },
   {
     "customerId": 38,
-    "subscriptionId": 2127,
-    "amdocsSubsId": -2102878.0,
+    "subscriptionId": 97274,
+    "amdocsSubsId": -2102878,
     "msisdn": 254763555827,
     "iccid": "89254031620034773726",
     "imsi": 639031623477372,
@@ -4282,16 +4423,17 @@
     "birthPlaceOther": null,
     "preferredLanguage": "Swahili",
     "city": "Plovdiv",
-    "branchCode": 61.0,
+    "branchCode": 61,
     "customerCountyId": 4,
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50129"
   },
   {
     "customerId": 1041,
-    "subscriptionId": 2128,
+    "subscriptionId": 90103,
     "amdocsSubsId": null,
     "msisdn": 254763056597,
     "iccid": "89254031620034769989",
@@ -4320,12 +4462,13 @@
     "building": "equity",
     "road": "upperhill",
     "estate": "upperhil",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50130"
   },
   {
     "customerId": 1042,
-    "subscriptionId": 2129,
-    "amdocsSubsId": -2126107.0,
+    "subscriptionId": 95133,
+    "amdocsSubsId": -2126107,
     "msisdn": 254763056620,
     "iccid": "89254031620064720217",
     "imsi": 639031626472021,
@@ -4353,12 +4496,13 @@
     "building": "ongata Rongai",
     "road": "nairobi rd",
     "estate": "nairobi",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50131"
   },
   {
     "customerId": 1041,
-    "subscriptionId": 2130,
-    "amdocsSubsId": -2126717.0,
+    "subscriptionId": 30796,
+    "amdocsSubsId": -2126717,
     "msisdn": 254763555541,
     "iccid": "89254031620064722320",
     "imsi": 639031626472232,
@@ -4386,12 +4530,13 @@
     "building": "equity",
     "road": "upperhill",
     "estate": "upperhil",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50132"
   },
   {
     "customerId": 1042,
-    "subscriptionId": 2131,
-    "amdocsSubsId": -2129885.0,
+    "subscriptionId": 21066,
+    "amdocsSubsId": -2129885,
     "msisdn": 254763056850,
     "iccid": "89254031620034773783",
     "imsi": 639031623477378,
@@ -4419,12 +4564,13 @@
     "building": "ongata Rongai",
     "road": "nairobi rd",
     "estate": "nairobi",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50133"
   },
   {
     "customerId": 30,
-    "subscriptionId": 2132,
-    "amdocsSubsId": -2129887.0,
+    "subscriptionId": 99835,
+    "amdocsSubsId": -2129887,
     "msisdn": 254763555047,
     "iccid": "89254031620034773718",
     "imsi": 639031623477371,
@@ -4452,12 +4598,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50134"
   },
   {
     "customerId": 30,
-    "subscriptionId": 2133,
-    "amdocsSubsId": -2129886.0,
+    "subscriptionId": 36657,
+    "amdocsSubsId": -2129886,
     "msisdn": 254763555830,
     "iccid": "89254031620034774971",
     "imsi": 639031623477497,
@@ -4485,12 +4632,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50135"
   },
   {
     "customerId": 30,
-    "subscriptionId": 2134,
-    "amdocsSubsId": -2129888.0,
+    "subscriptionId": 91731,
+    "amdocsSubsId": -2129888,
     "msisdn": 254763555684,
     "iccid": "89254031620064722338",
     "imsi": 639031626472233,
@@ -4518,12 +4666,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50136"
   },
   {
     "customerId": 30,
-    "subscriptionId": 2135,
-    "amdocsSubsId": -2129889.0,
+    "subscriptionId": 30502,
+    "amdocsSubsId": -2129889,
     "msisdn": 254763056459,
     "iccid": "89254031620064722353",
     "imsi": 639031626472235,
@@ -4551,11 +4700,12 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50137"
   },
   {
     "customerId": 34,
-    "subscriptionId": 2136,
+    "subscriptionId": 26483,
     "amdocsSubsId": null,
     "msisdn": 254763056163,
     "iccid": "89254031620064725000",
@@ -4584,12 +4734,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50138"
   },
   {
     "customerId": 34,
-    "subscriptionId": 2137,
-    "amdocsSubsId": -2133368.0,
+    "subscriptionId": 90976,
+    "amdocsSubsId": -2133368,
     "msisdn": 254763555247,
     "iccid": "89254031620064722361",
     "imsi": 639031626472236,
@@ -4617,12 +4768,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50139"
   },
   {
     "customerId": 28,
-    "subscriptionId": 2138,
-    "amdocsSubsId": -2224007.0,
+    "subscriptionId": 37527,
+    "amdocsSubsId": -2224007,
     "msisdn": 254763056994,
     "iccid": "89254031620000021399",
     "imsi": 639031620002139,
@@ -4650,12 +4802,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50140"
   },
   {
     "customerId": 34,
-    "subscriptionId": 2139,
-    "amdocsSubsId": -2224009.0,
+    "subscriptionId": 32265,
+    "amdocsSubsId": -2224009,
     "msisdn": 254763056815,
     "iccid": "89254031620000925086",
     "imsi": 639031620092508,
@@ -4683,12 +4836,13 @@
     "building": "test",
     "road": "test",
     "estate": "test",
-    "ward": "test"
+    "ward": "test",
+    "subscription_id": "50141"
   },
   {
     "customerId": 39,
-    "subscriptionId": 2140,
-    "amdocsSubsId": -2230971.0,
+    "subscriptionId": 26622,
+    "amdocsSubsId": -2230971,
     "msisdn": 254763056874,
     "iccid": "89254031620000925276",
     "imsi": 639031620092527,
@@ -4716,12 +4870,13 @@
     "building": "Test",
     "road": "Test",
     "estate": "Test",
-    "ward": "Test"
+    "ward": "Test",
+    "subscription_id": "50142"
   },
   {
     "customerId": 1044,
-    "subscriptionId": 2141,
-    "amdocsSubsId": -2245255.0,
+    "subscriptionId": 67058,
+    "amdocsSubsId": -2245255,
     "msisdn": 254763056280,
     "iccid": "89254031620064724995",
     "imsi": 639031626472499,
@@ -4749,11 +4904,12 @@
     "building": "Equitycentre",
     "road": "Hospital rd",
     "estate": "Equitycentre",
-    "ward": "Dagoretti"
+    "ward": "Dagoretti",
+    "subscription_id": "50143"
   },
   {
     "customerId": 1042,
-    "subscriptionId": 2142,
+    "subscriptionId": 46444,
     "amdocsSubsId": null,
     "msisdn": 254765555117,
     "iccid": "89254031620013785477",
@@ -4782,11 +4938,12 @@
     "building": "ongata Rongai",
     "road": "nairobi rd",
     "estate": "nairobi",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50144"
   },
   {
     "customerId": 1042,
-    "subscriptionId": 2143,
+    "subscriptionId": 77487,
     "amdocsSubsId": null,
     "msisdn": 254763056391,
     "iccid": "89254031620000925706",
@@ -4815,12 +4972,13 @@
     "building": "ongata Rongai",
     "road": "nairobi rd",
     "estate": "nairobi",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50145"
   },
   {
     "customerId": 1041,
-    "subscriptionId": 2144,
-    "amdocsSubsId": -2389206.0,
+    "subscriptionId": 65238,
+    "amdocsSubsId": -2389206,
     "msisdn": 254764555244,
     "iccid": "89254031620013782532",
     "imsi": 639031621378253,
@@ -4848,12 +5006,13 @@
     "building": "equity",
     "road": "upperhill",
     "estate": "upperhil",
-    "ward": "NANYUKI"
+    "ward": "NANYUKI",
+    "subscription_id": "50146"
   },
   {
     "customerId": 1044,
-    "subscriptionId": 2145,
-    "amdocsSubsId": -2389207.0,
+    "subscriptionId": 76321,
+    "amdocsSubsId": -2389207,
     "msisdn": 254763056972,
     "iccid": "89254031620013782821",
     "imsi": 639031621378282,
@@ -4881,12 +5040,13 @@
     "building": "Equitycentre",
     "road": "Hospital rd",
     "estate": "Equitycentre",
-    "ward": "Dagoretti"
+    "ward": "Dagoretti",
+    "subscription_id": "50147"
   },
   {
     "customerId": 1046,
-    "subscriptionId": 2146,
-    "amdocsSubsId": -2389214.0,
+    "subscriptionId": 55012,
+    "amdocsSubsId": -2389214,
     "msisdn": 254763555252,
     "iccid": "89254031620013782920",
     "imsi": 639031621378292,
@@ -4914,6 +5074,7 @@
     "building": "equity centre",
     "road": "equity centre",
     "estate": "equity centre",
-    "ward": "equity centre"
+    "ward": "equity centre",
+    "subscription_id": "50148"
   }
 ]

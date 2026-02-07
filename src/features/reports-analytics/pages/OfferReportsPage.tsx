@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -31,7 +32,7 @@ import type {
   OfferRow,
 } from "../types/ReportsAPI";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 // Extract types from API response type
 type CombinedSummary = OfferReportsResponse["summary"];
 type FunnelStage = OfferReportsResponse["redemptionFunnel"][number];
@@ -79,7 +80,7 @@ const getRangeLabel = (option: RangeOption): string => {
 // Scale data based on actual number of days vs base range
 const getScaleFactor = (
   customDays: number | null,
-  baseRange: RangeOption
+  baseRange: RangeOption,
 ): number => {
   if (!customDays) return 1;
   const baseDays = rangeDays[baseRange];
@@ -473,7 +474,9 @@ const formatNumber = (value: number): string => {
 const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -527,7 +530,7 @@ export default function OfferReportsPage() {
 
   const customDays = getDaysBetween(
     appliedCustomRange.start,
-    appliedCustomRange.end
+    appliedCustomRange.end,
   );
   const activeRangeKey: RangeOption =
     appliedCustomRange.start && appliedCustomRange.end
@@ -566,7 +569,7 @@ export default function OfferReportsPage() {
       totalRedemptions: Math.round(baseSummary.totalRedemptions * scaleFactor),
       revenueGenerated: Math.round(baseSummary.revenueGenerated * scaleFactor),
       incrementalRevenue: Math.round(
-        baseSummary.incrementalRevenue * scaleFactor
+        baseSummary.incrementalRevenue * scaleFactor,
       ),
       totalCost: Math.round(baseSummary.totalCost * scaleFactor),
       // Rates stay the same (percentages don't scale)
@@ -695,7 +698,7 @@ export default function OfferReportsPage() {
       ...point,
       redemptions: Math.round(point.redemptions * scaleFactor),
       cumulativeRedemptions: Math.round(
-        point.cumulativeRedemptions * scaleFactor
+        point.cumulativeRedemptions * scaleFactor,
       ),
     }));
   }, [activeRangeKey, scaleFactor, useDummyData]);
@@ -730,7 +733,7 @@ export default function OfferReportsPage() {
     const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
-        ? customDays ?? rangeDays[selectedRange]
+        ? (customDays ?? rangeDays[selectedRange])
         : rangeDays[selectedRange];
     const startMs = appliedCustomRange.start
       ? new Date(appliedCustomRange.start).getTime()
@@ -767,56 +770,33 @@ export default function OfferReportsPage() {
     useDummyData,
   ]);
 
-  const handleDownloadCsv = () => {
-    if (!filteredRows.length) return;
+  const csvHeaders = [
+    "Offer Name",
+    "Campaign Name",
+    "Segment",
+    "Status",
+    "Target Group",
+    "Control Group",
+    "Messages Generated",
+    "Sent",
+    "Delivered",
+    "Conversions",
+    "Last Updated",
+  ];
 
-    const headers = [
-      "Offer Name",
-      "Campaign Name",
-      "Segment",
-      "Status",
-      "Target Group",
-      "Control Group",
-      "Messages Generated",
-      "Sent",
-      "Delivered",
-      "Conversions",
-      "Last Updated",
-    ];
-
-    const csvRows = [
-      headers.join(","),
-      ...filteredRows.map((row) =>
-        [
-          `"${row.offerName}"`,
-          `"${row.campaignName}"`,
-          `"${row.segment}"`,
-          row.status,
-          row.targetGroup,
-          row.controlGroup,
-          row.messagesGenerated,
-          row.sent,
-          row.delivered,
-          row.conversions,
-          row.lastUpdated,
-        ].join(",")
-      ),
-    ];
-
-    const csvContent = csvRows.join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `offer-reports-${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const csvRows = filteredRows.map((row) => [
+    row.offerName,
+    row.campaignName,
+    row.segment,
+    row.status,
+    row.targetGroup,
+    row.controlGroup,
+    row.messagesGenerated,
+    row.sent,
+    row.delivered,
+    row.conversions,
+    row.lastUpdated,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -851,7 +831,9 @@ export default function OfferReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}>
+            <div
+              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
+            >
               <label
                 htmlFor="offer-data-toggle"
                 className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
@@ -988,7 +970,9 @@ export default function OfferReportsPage() {
       {/* Visualizations Grid */}
       <section className="grid gap-6 lg:grid-cols-2">
         {/* Offer Performance Stages */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1025,7 +1009,9 @@ export default function OfferReportsPage() {
         </div>
 
         {/* Redemption Timeline */}
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1074,7 +1060,9 @@ export default function OfferReportsPage() {
 
       {/* Offer Type Comparison */}
       <section>
-        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
@@ -1189,15 +1177,12 @@ export default function OfferReportsPage() {
               placeholder="All Segments"
               className="w-full md:w-48"
             />
-            <button
-              type="button"
-              onClick={handleDownloadCsv}
-              className={`inline-flex items-center justify-center gap-2 ${tw.rounded} px-4 py-3 text-sm font-semibold text-white`}
+            <CsvDownloadButton
+              headers={csvHeaders}
+              rows={csvRows}
+              filename={`offer-reports-${new Date().toISOString().split("T")[0]}.csv`}
               style={{ backgroundColor: colors.primary.action }}
-            >
-              <Download className="h-4 w-4" />
-              Download CSV
-            </button>
+            />
           </div>
         </div>
 

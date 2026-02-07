@@ -2,14 +2,26 @@ import { API_CONFIG, getAuthHeaders } from '../../../shared/services/api';
 import {
   SendCommunicationRequest,
   SendCommunicationResponse,
-  CommunicationExecution,
+  CommunicationExecutionDetail,
   CommunicationStats,
   CommunicationLog,
   GetExecutionsRequest,
   GetLogsRequest,
+  GetStatsRequest,
   CommunicationExecutionsResponse,
+  CommunicationExecutionDetailResponse,
   CommunicationStatsResponse,
   CommunicationLogsResponse,
+  ManualBroadcastsResponse,
+  CreateCommunicationRequest,
+  CreateCommunicationResponse,
+  GetCommunicationsResponse,
+  SendManualCommunicationRequest,
+  SendManualCommunicationResponse,
+  TemplateVariablesResponse,
+  RecipientData,
+  MessageTemplate,
+  CommunicationChannel,
 } from '../types/communication';
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/communications`;
@@ -24,6 +36,7 @@ class CommunicationService {
     const response = await fetch(url, {
       ...options,
       headers: {
+        'Content-Type': 'application/json',
         ...getAuthHeaders(),
         ...options.headers,
       },
@@ -43,8 +56,12 @@ class CommunicationService {
     return response.json();
   }
 
+  // ========================
+  // SEND COMMUNICATIONS
+  // ========================
+
   /**
-   * Send a communication to QuickList recipients
+   * Send a communication to recipients from quicklist, segment, or manual list
    */
   async sendCommunication(
     request: SendCommunicationRequest
@@ -56,19 +73,104 @@ class CommunicationService {
   }
 
   /**
-   * Get communication statistics
+   * Send communication to a quicklist
    */
-  async getStats(): Promise<CommunicationStatsResponse> {
-    return this.request<CommunicationStatsResponse>('/stats');
+  async sendToQuicklist(
+    quicklistId: number,
+    channels: CommunicationChannel[],
+    messageTemplate: MessageTemplate,
+    options?: {
+      filters?: any;
+      batchSize?: number;
+      createdBy?: number;
+    }
+  ): Promise<SendCommunicationResponse> {
+    return this.sendCommunication({
+      source_type: 'quicklist',
+      source_id: quicklistId,
+      channels,
+      message_template: messageTemplate,
+      filters: options?.filters,
+      batch_size: options?.batchSize,
+      created_by: options?.createdBy,
+    });
   }
 
   /**
-   * Get communication executions
+   * Send communication to a segment
+   */
+  async sendToSegment(
+    segmentId: number,
+    channels: CommunicationChannel[],
+    messageTemplate: MessageTemplate,
+    options?: {
+      batchSize?: number;
+      createdBy?: number;
+    }
+  ): Promise<SendCommunicationResponse> {
+    return this.sendCommunication({
+      source_type: 'segment',
+      source_id: segmentId,
+      channels,
+      message_template: messageTemplate,
+      batch_size: options?.batchSize,
+      created_by: options?.createdBy,
+    });
+  }
+
+  /**
+   * Send communication to manual recipient list
+   */
+  async sendToManualList(
+    recipientList: RecipientData[],
+    channels: CommunicationChannel[],
+    messageTemplate: MessageTemplate,
+    options?: {
+      createdBy?: number;
+    }
+  ): Promise<SendCommunicationResponse> {
+    return this.sendCommunication({
+      source_type: 'manual',
+      recipient_list: recipientList,
+      channels,
+      message_template: messageTemplate,
+      created_by: options?.createdBy,
+    });
+  }
+
+  /**
+   * Send manual communication (legacy method - use sendToManualList instead)
+   */
+  async sendManualCommunication(request: SendManualCommunicationRequest): Promise<SendManualCommunicationResponse> {
+    return this.request<SendManualCommunicationResponse>('/send', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // ========================
+  // VIEW BROADCASTS
+  // ========================
+
+  /**
+   * Get list of all communication executions (broadcasts)
+   */
+  async getAllExecutions(page: number = 1, limit: number = 20): Promise<CommunicationExecutionsResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page.toString());
+    queryParams.append('limit', limit.toString());
+
+    return this.request<CommunicationExecutionsResponse>(`/executions?${queryParams.toString()}`);
+  }
+
+  /**
+   * Get communication executions with filtering (legacy - use getAllExecutions)
    */
   async getExecutions(
     params?: GetExecutionsRequest
   ): Promise<CommunicationExecutionsResponse> {
     const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     if (params?.start_date) queryParams.append('start_date', params.start_date);
@@ -83,19 +185,29 @@ class CommunicationService {
   }
 
   /**
-   * Get detailed execution information
+   * Get details of a specific broadcast execution including recent logs
    */
-  async getExecutionById(executionId: string): Promise<{ success: boolean; data: CommunicationExecution }> {
-    return this.request<{ success: boolean; data: CommunicationExecution }>(`/executions/${executionId}`);
+  async getExecutionDetails(executionId: string): Promise<CommunicationExecutionDetailResponse> {
+    return this.request<CommunicationExecutionDetailResponse>(`/executions/${executionId}`);
   }
 
   /**
-   * Get communication logs
+   * Get detailed execution information (legacy - use getExecutionDetails)
    */
-  async getLogs(
-    params?: GetLogsRequest
-  ): Promise<CommunicationLogsResponse> {
+  async getExecutionById(executionId: string): Promise<{ success: boolean; data: CommunicationExecutionDetail }> {
+    const response = await this.getExecutionDetails(executionId);
+    return {
+      success: response.success,
+      data: response.data.execution,
+    };
+  }
+
+  /**
+   * Get communication logs with filtering and pagination
+   */
+  async getLogs(params?: GetLogsRequest): Promise<CommunicationLogsResponse> {
     const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     if (params?.execution_id) queryParams.append('execution_id', params.execution_id);
@@ -108,6 +220,61 @@ class CommunicationService {
     const endpoint = `/logs${queryString ? `?${queryString}` : ''}`;
 
     return this.request<CommunicationLogsResponse>(endpoint);
+  }
+
+  /**
+   * Get communication statistics for a period
+   */
+  async getStats(params?: GetStatsRequest): Promise<CommunicationStatsResponse> {
+    const queryParams = new URLSearchParams();
+    if (params?.days) queryParams.append('days', params.days.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = `/stats${queryString ? `?${queryString}` : ''}`;
+
+    return this.request<CommunicationStatsResponse>(endpoint);
+  }
+
+  /**
+   * Get manual broadcasts list
+   */
+  async getManualBroadcasts(page?: number, limit?: number): Promise<ManualBroadcastsResponse> {
+    const queryParams = new URLSearchParams();
+    if (page) queryParams.append('page', page.toString());
+    if (limit) queryParams.append('limit', limit.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = `/manual-broadcasts${queryString ? `?${queryString}` : ''}`;
+
+    return this.request<ManualBroadcastsResponse>(endpoint);
+  }
+
+  // ========================
+  // UTILITIES
+  // ========================
+
+  /**
+   * Get available template variables for a quicklist
+   */
+  async getTemplateVariables(quicklistId: number): Promise<TemplateVariablesResponse> {
+    return this.request<TemplateVariablesResponse>(`/template-variables/${quicklistId}`);
+  }
+
+  /**
+   * Create a communication definition
+   */
+  async createCommunication(request: CreateCommunicationRequest): Promise<CreateCommunicationResponse> {
+    return this.request<CreateCommunicationResponse>('', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Get all communications
+   */
+  async getCommunications(): Promise<GetCommunicationsResponse> {
+    return this.request<GetCommunicationsResponse>('');
   }
 }
 

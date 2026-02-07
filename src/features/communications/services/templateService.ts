@@ -1,6 +1,6 @@
-import { MessageTemplate } from '../types/template';
+import { MessageTemplate } from "../types/template";
 
-const STORAGE_KEY = 'sentra_message_templates';
+const STORAGE_KEY = "sentra_message_templates";
 
 class TemplateService {
   /**
@@ -11,7 +11,7 @@ class TemplateService {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : this.getDefaultTemplates();
     } catch (error) {
-      console.error('Error loading templates:', error);
+      console.error("Error loading templates:", error);
       return this.getDefaultTemplates();
     }
   }
@@ -19,7 +19,9 @@ class TemplateService {
   /**
    * Save a new template
    */
-  saveTemplate(template: Omit<MessageTemplate, 'id' | 'createdAt' | 'updatedAt'>): MessageTemplate {
+  saveTemplate(
+    template: Omit<MessageTemplate, "id" | "createdAt" | "updatedAt">,
+  ): MessageTemplate {
     const templates = this.getTemplates();
     const newTemplate: MessageTemplate = {
       ...template,
@@ -27,7 +29,7 @@ class TemplateService {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    
+
     templates.push(newTemplate);
     this.saveToStorage(templates);
     return newTemplate;
@@ -36,18 +38,21 @@ class TemplateService {
   /**
    * Update an existing template
    */
-  updateTemplate(id: string, updates: Partial<Omit<MessageTemplate, 'id' | 'createdAt'>>): MessageTemplate | null {
+  updateTemplate(
+    id: string,
+    updates: Partial<Omit<MessageTemplate, "id" | "createdAt">>,
+  ): MessageTemplate | null {
     const templates = this.getTemplates();
-    const index = templates.findIndex(t => t.id === id);
-    
+    const index = templates.findIndex((t) => t.id === id);
+
     if (index === -1) return null;
-    
+
     templates[index] = {
       ...templates[index],
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    
+
     this.saveToStorage(templates);
     return templates[index];
   }
@@ -57,10 +62,10 @@ class TemplateService {
    */
   deleteTemplate(id: string): boolean {
     const templates = this.getTemplates();
-    const filtered = templates.filter(t => t.id !== id);
-    
+    const filtered = templates.filter((t) => t.id !== id);
+
     if (filtered.length === templates.length) return false;
-    
+
     this.saveToStorage(filtered);
     return true;
   }
@@ -69,7 +74,7 @@ class TemplateService {
    * Get templates by channel
    */
   getTemplatesByChannel(channel: string): MessageTemplate[] {
-    return this.getTemplates().filter(t => t.channel === channel);
+    return this.getTemplates().filter((t) => t.channel === channel);
   }
 
   /**
@@ -79,7 +84,7 @@ class TemplateService {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
     } catch (error) {
-      console.error('Error saving templates:', error);
+      console.error("Error saving templates:", error);
     }
   }
 
@@ -89,11 +94,11 @@ class TemplateService {
   private getDefaultTemplates(): MessageTemplate[] {
     return [
       {
-        id: 'default_welcome_email',
-        name: 'Welcome Email',
-        description: 'Welcome message for new customers',
-        channel: 'EMAIL',
-        subject: 'Welcome to Sentra, {{first_name}}!',
+        id: "default_welcome_email",
+        name: "Welcome Email",
+        description: "Welcome message for new customers",
+        channel: "EMAIL",
+        subject: "Welcome to Sentra, {{first_name}}!",
         body: `<p>Dear <strong>{{first_name}} {{last_name}}</strong>,</p>
 <p>Welcome to <strong style="color: #00BBCC;">Sentra</strong>! We're excited to have you on board.</p>
 <p>Your account details:</p>
@@ -104,27 +109,27 @@ class TemplateService {
 <p>Thank you for choosing us!</p>
 <p><em>The Sentra Team</em></p>`,
         isRichText: true,
-        variables: ['first_name', 'last_name', 'customer_id', 'msisdn'],
+        variables: ["first_name", "last_name", "customer_id", "msisdn"],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
       {
-        id: 'default_promo_sms',
-        name: 'Promotional SMS',
-        description: 'Simple promotional message',
-        channel: 'SMS',
-        body: 'Hi {{first_name}}! 🎉 Special offer: Get 50% OFF on your next purchase. Use code: SAVE50. Valid until {{offer_end_date}}. Reply STOP to unsubscribe.',
+        id: "default_promo_sms",
+        name: "Promotional SMS",
+        description: "Simple promotional message",
+        channel: "SMS",
+        body: "Hi {{first_name}}! 🎉 Special offer: Get 50% OFF on your next purchase. Use code: SAVE50. Valid until {{offer_end_date}}. Reply STOP to unsubscribe.",
         isRichText: false,
-        variables: ['first_name', 'offer_end_date'],
+        variables: ["first_name", "offer_end_date"],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
       {
-        id: 'default_data_bundle',
-        name: 'Data Bundle Offer',
-        description: 'Data bundle promotional email',
-        channel: 'EMAIL',
-        subject: '📱 Exclusive Data Bundle Offer for {{first_name}}',
+        id: "default_data_bundle",
+        name: "Data Bundle Offer",
+        description: "Data bundle promotional email",
+        channel: "EMAIL",
+        subject: "📱 Exclusive Data Bundle Offer for {{first_name}}",
         body: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #00BBCC;">Special Data Bundle Offer!</h2>
   <p>Hello <strong>{{first_name}}</strong>,</p>
@@ -138,7 +143,7 @@ class TemplateService {
   <p style="color: #666; font-size: 12px;">Offer expires in 48 hours</p>
 </div>`,
         isRichText: true,
-        variables: ['first_name'],
+        variables: ["first_name"],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },
