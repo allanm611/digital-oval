@@ -143,9 +143,7 @@ export default function RevenueMetricDetailsPage() {
       </div>
 
       {/* Metric Information */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Metric Info */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
           {/* Metric Overview */}
           <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <div className="flex items-start space-x-4 mb-6">
@@ -257,43 +255,6 @@ export default function RevenueMetricDetailsPage() {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Description Card */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Description
-            </h3>
-            <p className={`${tw.textSecondary} text-sm leading-relaxed`}>
-              {metric.description || "No description available"}
-            </p>
-          </div>
-
-          {/* Summary Card */}
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Summary
-            </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-                <span className={tw.textMuted}>Operators Count</span>
-                <span className="font-semibold text-gray-900">{metric.operators.length}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-gray-200">
-                <span className={tw.textMuted}>Field Type</span>
-                <span className="font-semibold text-gray-900">
-                  {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className={tw.textMuted}>Data Source</span>
-                <span className="font-semibold text-gray-900">{metric.data_source}</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

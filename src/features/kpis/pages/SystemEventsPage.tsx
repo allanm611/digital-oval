@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, Eye, ChevronLeft, ChevronRight, ArrowLeft, ListChecks, Zap } from "lucide-react";
+import { Search, Filter, Eye, ChevronLeft, ChevronRight, ListChecks, Zap } from "lucide-react";
 import { SYSTEM_EVENTS, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 
 const ITEMS_PER_PAGE = 10;
@@ -76,12 +76,7 @@ export default function SystemEventsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigateBackOrFallback(navigate, "/dashboard/kpis")}
-          className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <BackButton fallbackTo="/dashboard/kpis" />
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>System Events</h1>
           <p className={`text-sm ${tw.textSecondary} mt-1`}>
@@ -127,7 +122,7 @@ export default function SystemEventsPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className={`w-full ${tw.rounded} border border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
+            className={`w-full ${tw.rounded} border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm focus:border-gray-300 focus:outline-none focus:ring-0`}
           />
         </div>
 
@@ -249,6 +244,7 @@ export default function SystemEventsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
+                            onClick={() => navigate(`/dashboard/kpis/system-events/${event.id}`)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="View Details"
                           >
