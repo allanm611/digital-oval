@@ -5,7 +5,6 @@ import {
   Link2,
   Edit,
   Eye,
-  Plus,
   Search,
   Trash2,
   CheckCircle,
@@ -23,6 +22,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -1720,39 +1720,41 @@ export default function JobDependenciesPage() {
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedDependencyIds(
-                  new Set(filteredDependencies.map((dep) => dep.id)),
-                );
-              } else {
-                setIsSelectionMode(false);
-                setSelectedDependencyIds(new Set());
-              }
-            }}
-            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">
-              {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
-            </span>
-            <span className="sm:hidden">
-              {isSelectionMode ? "Exit" : "Select"}
-            </span>
-          </button>
+          <PermissionGate permission="job-dependencies.update">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedDependencyIds(
+                    new Set(filteredDependencies.map((dep) => dep.id)),
+                  );
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedDependencyIds(new Set());
+                }
+              }}
+              className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 text-sm transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              {isSelectionMode ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {isSelectionMode ? "Exit Selection" : "Select Dependencies"}
+              </span>
+              <span className="sm:hidden">
+                {isSelectionMode ? "Exit" : "Select"}
+              </span>
+            </button>
+          </PermissionGate>
           <button
             onClick={() => navigate("/dashboard/job-dependencies/analytics")}
             className={`inline-flex items-center gap-2 ${tw.rounded} px-3 sm:px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
@@ -1765,7 +1767,9 @@ export default function JobDependenciesPage() {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Analytics</span>
           </button>
-          <CreateButton onClick={handleCreate} />
+          <PermissionGate permission="job-dependencies.create">
+            <CreateButton onClick={handleCreate} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -1921,43 +1925,45 @@ export default function JobDependenciesPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedDependencyIds.size > 0 && (
-        <div
-          className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">
-              {selectedDependencyIds.size} dependency(ies) selected
-            </span>
-            <button
-              onClick={() => setSelectedDependencyIds(new Set())}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
+        <PermissionGate permission="job-dependencies.update">
+          <div
+            className={`flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                {selectedDependencyIds.size} dependency(ies) selected
+              </span>
+              <button
+                onClick={() => setSelectedDependencyIds(new Set())}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBatchActivate}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <CheckCircle className="h-4 w-4" />
+                Activate
+              </button>
+              <button
+                onClick={handleBatchDeactivate}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                <XCircle className="h-4 w-4" />
+                Deactivate
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleBatchActivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <CheckCircle className="h-4 w-4" />
-              Activate
-            </button>
-            <button
-              onClick={handleBatchDeactivate}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium`}
-              style={{
-                backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              <XCircle className="h-4 w-4" />
-              Deactivate
-            </button>
-          </div>
-        </div>
+        </PermissionGate>
       )}
 
       <div className={`${tw.rounded}`}>
@@ -1984,7 +1990,9 @@ export default function JobDependenciesPage() {
                 : "Create your first job dependency to get started."}
             </p>
             {!searchTerm && (
-              <CreateButton onClick={handleCreate} className="mx-auto" />
+              <PermissionGate permission="job-dependencies.create">
+                <CreateButton onClick={handleCreate} className="mx-auto" />
+              </PermissionGate>
             )}
           </div>
         ) : (
@@ -2221,22 +2229,26 @@ export default function JobDependenciesPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleEdit(dependency)}
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="Edit dependency"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(dependency)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          aria-label="Delete dependency"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="job-dependencies.update">
+                          <button
+                            onClick={() => handleEdit(dependency)}
+                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                            aria-label="Edit dependency"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
+                        <PermissionGate permission="job-dependencies.delete">
+                          <button
+                            onClick={() => handleDeleteClick(dependency)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            aria-label="Delete dependency"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                         <div
                           className="relative"
                           ref={(el) => {

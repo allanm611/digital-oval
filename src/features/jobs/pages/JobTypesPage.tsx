@@ -4,7 +4,6 @@ import {
   Briefcase,
   Edit,
   Eye,
-  Plus,
   Search,
   Trash2,
 } from "lucide-react";
@@ -15,6 +14,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { jobTypeService } from "../services/jobTypeService";
 import { CreateJobTypePayload, JobType } from "../types/job";
 
@@ -669,7 +669,9 @@ export default function JobTypesPage() {
           </p>
         </div>
         <div className="flex justify-end">
-          <CreateButton onClick={handleCreate} />
+          <PermissionGate permission="job-types.create">
+            <CreateButton onClick={handleCreate} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -765,7 +767,9 @@ export default function JobTypesPage() {
                 : "Create your first job type to get started."}
             </p>
             {!searchTerm && (
-              <CreateButton onClick={handleCreate} className="mx-auto" />
+              <PermissionGate permission="job-types.create">
+                <CreateButton onClick={handleCreate} className="mx-auto" />
+              </PermissionGate>
             )}
           </div>
         ) : (
@@ -899,14 +903,16 @@ export default function JobTypesPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteClick(jobType)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          aria-label="Delete job type"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="job-types.delete">
+                          <button
+                            onClick={() => handleDeleteClick(jobType)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            aria-label="Delete job type"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>

@@ -20,6 +20,7 @@ import {
 import { ScheduledJob } from "../types/scheduledJob";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../shared/utils/utils";
@@ -67,7 +68,7 @@ export default function JobWorkflowStepDetailsPage() {
       try {
         const stepData = await jobWorkflowStepService.getJobWorkflowStepById(
           Number(id),
-          true
+          true,
         );
         setStep(stepData);
 
@@ -75,7 +76,7 @@ export default function JobWorkflowStepDetailsPage() {
         if (stepData.job_id) {
           try {
             const jobData = await scheduledJobService.getScheduledJobById(
-              stepData.job_id
+              stepData.job_id,
             );
             setJob(jobData);
           } catch (err) {
@@ -114,7 +115,7 @@ export default function JobWorkflowStepDetailsPage() {
             const next = await jobWorkflowStepService.getNextStep(
               stepData.job_id,
               stepData.step_order,
-              true
+              true,
             );
             setNextStep(next);
           } catch {
@@ -142,12 +143,12 @@ export default function JobWorkflowStepDetailsPage() {
       await jobWorkflowStepService.deleteJobWorkflowStep(step.id);
       showToast(
         "Step deleted",
-        `"${step.step_name}" has been deleted successfully.`
+        `"${step.step_name}" has been deleted successfully.`,
       );
       navigate(
         `/dashboard/job-workflow-steps${
           jobIdParam ? `?job_id=${jobIdParam}` : ""
-        }`
+        }`,
       );
     } catch (err) {
       const message =
@@ -166,12 +167,12 @@ export default function JobWorkflowStepDetailsPage() {
       await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         "Step duplicated",
-        `"${step.step_name}" has been duplicated successfully.`
+        `"${step.step_name}" has been duplicated successfully.`,
       );
       navigate(
         `/dashboard/job-workflow-steps${
           jobIdParam ? `?job_id=${jobIdParam}` : ""
-        }`
+        }`,
       );
     } catch (err) {
       const message =
@@ -191,7 +192,7 @@ export default function JobWorkflowStepDetailsPage() {
       // Reload step
       const updated = await jobWorkflowStepService.getJobWorkflowStepById(
         step.id,
-        true
+        true,
       );
       setStep(updated);
     } catch (err) {
@@ -210,12 +211,12 @@ export default function JobWorkflowStepDetailsPage() {
       await jobWorkflowStepService.deactivateStep(step.id, user?.user_id || 0);
       showToast(
         "Step deactivated",
-        `"${step.step_name}" has been deactivated.`
+        `"${step.step_name}" has been deactivated.`,
       );
       // Reload step
       const updated = await jobWorkflowStepService.getJobWorkflowStepById(
         step.id,
-        true
+        true,
       );
       setStep(updated);
     } catch (err) {
@@ -316,7 +317,7 @@ export default function JobWorkflowStepDetailsPage() {
           <button
             onClick={() =>
               navigate(
-                `/dashboard/job-workflow-steps/${step.id}/edit?job_id=${step.job_id}`
+                `/dashboard/job-workflow-steps/${step.id}/edit?job_id=${step.job_id}`,
               )
             }
             className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
@@ -324,21 +325,29 @@ export default function JobWorkflowStepDetailsPage() {
             <Edit className="h-4 w-4" />
             Edit
           </button>
-          <button
-            onClick={handleDuplicate}
-            disabled={isDuplicating}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
-          >
-            {isDuplicating ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
-            Duplicate
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+          <PermissionGate permission="job-workflow-steps.create">
+            <button
+              onClick={handleDuplicate}
+              disabled={isDuplicating}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50`}
+            >
+              {isDuplicating ? (
+                <LoadingSpinner />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              Duplicate
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="job-workflow-steps.delete">
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -545,7 +554,7 @@ export default function JobWorkflowStepDetailsPage() {
                     <div className="space-y-1">
                       {parallelSteps
                         .filter(
-                          (s) => s.parallel_group_id === step.parallel_group_id
+                          (s) => s.parallel_group_id === step.parallel_group_id,
                         )
                         .map((s) => (
                           <div
@@ -615,7 +624,7 @@ export default function JobWorkflowStepDetailsPage() {
                 <button
                   onClick={() =>
                     navigate(
-                      `/dashboard/job-workflow-steps/${nextStep.id}?job_id=${nextStep.job_id}`
+                      `/dashboard/job-workflow-steps/${nextStep.id}?job_id=${nextStep.job_id}`,
                     )
                   }
                   className="hover:underline text-left w-full text-sm font-medium transition-colors"

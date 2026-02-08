@@ -18,6 +18,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { workflowService } from "../services/workflowService";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -129,12 +130,22 @@ export default function WorkflowsPage() {
     } catch (err) {
       showError(
         t("common.error", "Error"),
-        err instanceof Error ? err.message : t("workflows.loadFailed", "Failed to load workflows"),
+        err instanceof Error
+          ? err.message
+          : t("workflows.loadFailed", "Failed to load workflows"),
       );
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, statusFilter, workflowTypeFilter, page, pageSize, showError, t]);
+  }, [
+    searchTerm,
+    statusFilter,
+    workflowTypeFilter,
+    page,
+    pageSize,
+    showError,
+    t,
+  ]);
 
   // Reset pagination when filters/search change
   useEffect(() => {
@@ -227,7 +238,10 @@ export default function WorkflowsPage() {
     setIsDeleting(true);
     try {
       await workflowService.deleteWorkflow(deletingWorkflow.id);
-      showToast(t.workflows.deleteSuccess, "Workflow has been deleted successfully.");
+      showToast(
+        t.workflows.deleteSuccess,
+        "Workflow has been deleted successfully.",
+      );
       setShowDeleteModal(false);
       setDeletingWorkflow(null);
       setRowLoading(null);
@@ -320,7 +334,10 @@ export default function WorkflowsPage() {
         newName: `${workflow.name} (Copy)`,
         created_by: user?.user_id || null,
       });
-      showToast(t.workflows.cloneSuccess || "Workflow cloned", "Workflow has been cloned successfully.");
+      showToast(
+        t.workflows.cloneSuccess || "Workflow cloned",
+        "Workflow has been cloned successfully.",
+      );
       fetchWorkflows();
       fetchStats();
     } catch (err) {
@@ -381,7 +398,9 @@ export default function WorkflowsPage() {
           >
             {isSelectionMode ? "Cancel" : "Select"}
           </button>
-          <CreateButton route="/dashboard/workflows/create" />
+          <PermissionGate permission="job-workflows.create">
+            <CreateButton route="/dashboard/workflows/create" />
+          </PermissionGate>
         </div>
       </div>
 

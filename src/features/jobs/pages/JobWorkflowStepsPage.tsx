@@ -30,6 +30,7 @@ import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
@@ -385,7 +386,10 @@ export default function JobWorkflowStepsPage() {
         const message =
           err instanceof Error
             ? err.message
-            : t("jobWorkflowSteps.loadFailed", "Failed to load job workflow steps");
+            : t(
+                "jobWorkflowSteps.loadFailed",
+                "Failed to load job workflow steps",
+              );
         setErrorMessage(message);
         showError(t("common.jobWorkflowSteps", "Job Workflow Steps"), message);
       } finally {
@@ -602,9 +606,12 @@ export default function JobWorkflowStepsPage() {
       if (result) {
         showToast(
           t("jobWorkflowSteps.batchCompleted", `Batch ${action} completed`),
-          t("jobWorkflowSteps.batchSuccess", `${result.success} step(s) ${action}d successfully${
-            result.failed > 0 ? `, ${result.failed} failed` : ""
-          }`),
+          t(
+            "jobWorkflowSteps.batchSuccess",
+            `${result.success} step(s) ${action}d successfully${
+              result.failed > 0 ? `, ${result.failed} failed` : ""
+            }`,
+          ),
         );
       }
 
@@ -625,7 +632,10 @@ export default function JobWorkflowStepsPage() {
     if (!jobIdFilter) {
       showError(
         t("jobWorkflowSteps.jobIdRequired", "Job ID required"),
-        t("jobWorkflowSteps.filterByJobToReorder", "Please filter by a specific job to reorder steps."),
+        t(
+          "jobWorkflowSteps.filterByJobToReorder",
+          "Please filter by a specific job to reorder steps.",
+        ),
       );
       return;
     }
@@ -707,12 +717,18 @@ export default function JobWorkflowStepsPage() {
       if (result.data?.updated && result.data.updated > 0) {
         showToast(
           t("jobWorkflowSteps.reordered", "Steps reordered"),
-          t("jobWorkflowSteps.reorderedSuccess", `${result.data.updated} step(s) reordered successfully.`),
+          t(
+            "jobWorkflowSteps.reorderedSuccess",
+            `${result.data.updated} step(s) reordered successfully.`,
+          ),
         );
       } else {
         showToast(
           t("jobWorkflowSteps.reordered", "Steps reordered"),
-          t("jobWorkflowSteps.orderUpdated", "Step order has been updated successfully."),
+          t(
+            "jobWorkflowSteps.orderUpdated",
+            "Step order has been updated successfully.",
+          ),
         );
       }
 
@@ -738,7 +754,10 @@ export default function JobWorkflowStepsPage() {
         await jobWorkflowStepService.deleteAllStepsForJob(deleteAllJobId);
       showToast(
         t("jobWorkflowSteps.allDeleted", "All steps deleted"),
-        t("jobWorkflowSteps.deleteSuccess", `${result.deleted_count} step(s) deleted successfully.`),
+        t(
+          "jobWorkflowSteps.deleteSuccess",
+          `${result.deleted_count} step(s) deleted successfully.`,
+        ),
       );
       setShowDeleteAllModal(false);
       setDeleteAllJobId(null);
@@ -772,9 +791,12 @@ export default function JobWorkflowStepsPage() {
 
       showToast(
         t("jobWorkflowSteps.updateCompleted", "Batch update completed"),
-        t("jobWorkflowSteps.updateSuccess", `${result.success} step(s) updated successfully${
-          result.failed > 0 ? `, ${result.failed} failed` : ""
-        }`),
+        t(
+          "jobWorkflowSteps.updateSuccess",
+          `${result.success} step(s) updated successfully${
+            result.failed > 0 ? `, ${result.failed} failed` : ""
+          }`,
+        ),
       );
 
       setShowBatchUpdateModal(false);
@@ -797,7 +819,10 @@ export default function JobWorkflowStepsPage() {
       await jobWorkflowStepService.duplicateStep(step.id, {});
       showToast(
         t("jobWorkflowSteps.duplicated", "Step duplicated"),
-        t("jobWorkflowSteps.duplicateSuccess", `"${step.step_name}" has been duplicated successfully.`),
+        t(
+          "jobWorkflowSteps.duplicateSuccess",
+          `"${step.step_name}" has been duplicated successfully.`,
+        ),
       );
       fetchSteps();
     } catch (err) {
@@ -905,39 +930,43 @@ export default function JobWorkflowStepsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedSteps(new Set(filteredSteps.map((step) => step.id)));
-              } else {
-                setIsSelectionMode(false);
-                setSelectedSteps(new Set());
+          <PermissionGate permission="job-workflow-steps.update">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedSteps(new Set(filteredSteps.map((step) => step.id)));
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedSteps(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              {isSelectionMode ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              {isSelectionMode ? "Exit Selection" : "Select Steps"}
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="job-workflow-steps.create">
+            <CreateButton
+              route={
+                jobIdFilter
+                  ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
+                  : "/dashboard/job-workflow-steps/create"
               }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-            {isSelectionMode ? "Exit Selection" : "Select Steps"}
-          </button>
-          <CreateButton
-            route={
-              jobIdFilter
-                ? `/dashboard/job-workflow-steps/create?job_id=${jobIdFilter}`
-                : "/dashboard/job-workflow-steps/create"
-            }
-          />
+            />
+          </PermissionGate>
           {jobIdFilter && (
             <button
               onClick={() => {
@@ -1102,77 +1131,81 @@ export default function JobWorkflowStepsPage() {
 
       {/* Batch Actions Toolbar */}
       {isSelectionMode && selectedSteps.size > 0 && (
-        <div
-          className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">
-              {selectedSteps.size} step(s) selected
-            </span>
-            <button
-              onClick={() => {
-                setSelectedSteps(new Set());
-                setIsSelectionMode(false);
-              }}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              <X className="h-4 w-4" />
-            </button>
+        <PermissionGate permission="job-workflow-steps.update">
+          <div
+            className={`flex items-center justify-between ${tw.rounded} border border-gray-200 bg-white px-4 py-3`}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">
+                {selectedSteps.size} step(s) selected
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedSteps(new Set());
+                  setIsSelectionMode(false);
+                }}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleBatchAction("activate")}
+                disabled={isBatchProcessing}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Play className="h-4 w-4" />
+                Activate
+              </button>
+              <button
+                onClick={() => handleBatchAction("deactivate")}
+                disabled={isBatchProcessing}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                <Pause className="h-4 w-4" />
+                Deactivate
+              </button>
+              <PermissionGate permission="job-workflow-steps.delete">
+                <button
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        `Are you sure you want to delete ${selectedSteps.size} step(s)? This action cannot be undone.`,
+                      )
+                    ) {
+                      handleBatchAction("delete");
+                    }
+                  }}
+                  disabled={isBatchProcessing}
+                  className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
+              </PermissionGate>
+              <button
+                onClick={() => handleBatchAction("update")}
+                disabled={isBatchProcessing}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                <Edit className="h-4 w-4" />
+                Batch Update
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleBatchAction("activate")}
-              disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              <Play className="h-4 w-4" />
-              Activate
-            </button>
-            <button
-              onClick={() => handleBatchAction("deactivate")}
-              disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
-              style={{
-                backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              <Pause className="h-4 w-4" />
-              Deactivate
-            </button>
-            <button
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Are you sure you want to delete ${selectedSteps.size} step(s)? This action cannot be undone.`,
-                  )
-                ) {
-                  handleBatchAction("delete");
-                }
-              }}
-              disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50`}
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
-            <button
-              onClick={() => handleBatchAction("update")}
-              disabled={isBatchProcessing}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none`}
-              style={{
-                backgroundColor: "transparent",
-                color: color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              <Edit className="h-4 w-4" />
-              Batch Update
-            </button>
-          </div>
-        </div>
+        </PermissionGate>
       )}
 
       <div>
@@ -1442,17 +1475,19 @@ export default function JobWorkflowStepsPage() {
                             )}
                           </button>
                         )}
-                        <button
-                          onClick={() => {
-                            setDeletingStep(step);
-                            setShowDeleteModal(true);
-                          }}
-                          className={`p-2 text-red-600 ${tw.rounded} transition-colors`}
-                          aria-label="Delete step"
-                          title="Delete step"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="job-workflow-steps.delete">
+                          <button
+                            onClick={() => {
+                              setDeletingStep(step);
+                              setShowDeleteModal(true);
+                            }}
+                            className={`p-2 text-red-600 ${tw.rounded} transition-colors`}
+                            aria-label="Delete step"
+                            title="Delete step"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>
@@ -1516,7 +1551,10 @@ export default function JobWorkflowStepsPage() {
               );
               showToast(
                 t("jobWorkflowSteps.stepDeleted", "Workflow step deleted"),
-                t("jobWorkflowSteps.stepDeleteSuccess", `"${deletingStep.step_name}" has been deleted successfully.`),
+                t(
+                  "jobWorkflowSteps.stepDeleteSuccess",
+                  `"${deletingStep.step_name}" has been deleted successfully.`,
+                ),
               );
               setShowDeleteModal(false);
               setDeletingStep(null);
@@ -1525,8 +1563,17 @@ export default function JobWorkflowStepsPage() {
               const message =
                 err instanceof Error
                   ? err.message
-                  : t("jobWorkflowSteps.stepDeleteFailed", "Failed to delete workflow step");
-              showError(t("jobWorkflowSteps.unableToDelete", "Unable to delete workflow step"), message);
+                  : t(
+                      "jobWorkflowSteps.stepDeleteFailed",
+                      "Failed to delete workflow step",
+                    );
+              showError(
+                t(
+                  "jobWorkflowSteps.unableToDelete",
+                  "Unable to delete workflow step",
+                ),
+                message,
+              );
             } finally {
               setIsDeleting(false);
             }

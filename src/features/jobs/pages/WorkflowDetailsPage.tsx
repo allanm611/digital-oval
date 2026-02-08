@@ -5,17 +5,16 @@ import { workflowService } from "../services/workflowService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { tw, button } from "../../../shared/utils/utils";
 import type { Workflow } from "../types/workflow";
 import { useAuth } from "../../../contexts/AuthContext";
-import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function WorkflowDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { error: showError, success: showToast } = useToast();
   const { user } = useAuth();
-  const { t } = useLanguage();
 
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,13 +36,13 @@ export default function WorkflowDetailsPage() {
 
         // Also check active status
         const activeCheck = await workflowService.checkWorkflowActive(
-          Number(id)
+          Number(id),
         );
         setIsActive(activeCheck.is_active);
       } catch (err) {
         showError(
-          t.common.error,
-          err instanceof Error ? err.message : t.workflows.failedToLoadWorkflow
+          "Error",
+          err instanceof Error ? err.message : "Failed to load workflow",
         );
       } finally {
         setIsLoading(false);
@@ -60,10 +59,10 @@ export default function WorkflowDetailsPage() {
     try {
       if (isActive) {
         await workflowService.deactivateWorkflow(Number(id));
-        showToast(t.workflows.workflowDeactivated, t.workflows.workflowDeactivatedSuccess);
+        showToast("Deactivated", "Workflow has been deactivated");
       } else {
         await workflowService.activateWorkflow(Number(id));
-        showToast(t.workflows.workflowActivated, t.workflows.workflowActivatedSuccess);
+        showToast("Activated", "Workflow has been activated");
       }
       setIsActive(!isActive);
       if (workflow) {
@@ -71,8 +70,8 @@ export default function WorkflowDetailsPage() {
       }
     } catch (err) {
       showError(
-        t.workflows.toggleFailed,
-        err instanceof Error ? err.message : t.common.error
+        "Toggle Failed",
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsToggling(false);
@@ -88,12 +87,12 @@ export default function WorkflowDetailsPage() {
         newName: `${workflow.name} (Copy)`,
         created_by: user?.user_id || null,
       });
-      showToast(t.workflows.cloneSuccess, t.workflows.workflowClonedSuccess);
+      showToast("Success", "Workflow has been cloned successfully");
       navigate("/dashboard/workflows");
     } catch (err) {
       showError(
-        t.workflows.cloneFailed,
-        err instanceof Error ? err.message : t.common.error
+        "Clone Failed",
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsCloning(false);
@@ -111,7 +110,7 @@ export default function WorkflowDetailsPage() {
     } catch (err) {
       showError(
         "Delete failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsDeleting(false);
@@ -200,52 +199,61 @@ export default function WorkflowDetailsPage() {
               Deactivate
             </button>
           )}
-          <button
-            onClick={handleClone}
-            disabled={isCloning}
-            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
-            style={{
-              paddingTop: button.bordered.paddingY,
-              paddingBottom: button.bordered.paddingY,
-              paddingLeft: button.bordered.paddingX,
-              paddingRight: button.bordered.paddingX,
-              borderRadius: button.bordered.borderRadius,
-              fontSize: button.bordered.fontSize,
-            }}
-          >
-            {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
-            Clone
-          </button>
-          <button
-            onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
-            style={{
-              paddingTop: button.bordered.paddingY,
-              paddingBottom: button.bordered.paddingY,
-              paddingLeft: button.bordered.paddingX,
-              paddingRight: button.bordered.paddingX,
-              borderRadius: button.bordered.borderRadius,
-              fontSize: button.bordered.fontSize,
-            }}
-          >
-            <Edit className="h-4 w-4" />
-            Edit
-          </button>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
-            style={{
-              paddingTop: button.bordered.paddingY,
-              paddingBottom: button.bordered.paddingY,
-              paddingLeft: button.bordered.paddingX,
-              paddingRight: button.bordered.paddingX,
-              borderRadius: button.bordered.borderRadius,
-              fontSize: button.bordered.fontSize,
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+          <PermissionGate permission="job-workflows.create">
+            <button
+              onClick={handleClone}
+              disabled={isCloning}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+              style={{
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
+              title="Clone"
+            >
+              {isCloning ? <LoadingSpinner /> : <Copy className="h-4 w-4" />}
+              Clone
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="job-workflows.update">
+            <button
+              onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
+              style={{
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
+              title="Edit"
+            >
+              <Edit className="h-4 w-4" />
+              Edit
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="job-workflows.delete">
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-red-700 bg-white border border-red-300 hover:bg-red-50`}
+              style={{
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
+              title="Delete"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -319,8 +327,9 @@ export default function WorkflowDetailsPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
         title="Delete Workflow"
-        message={`Are you sure you want to delete "${workflow.name}"? This action cannot be undone.`}
-        isDeleting={isDeleting}
+        description={`Are you sure you want to delete "${workflow.name}"? This action cannot be undone.`}
+        itemName={workflow.name}
+        isLoading={isDeleting}
       />
     </div>
   );

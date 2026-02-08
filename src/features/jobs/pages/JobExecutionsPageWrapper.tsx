@@ -1,32 +1,22 @@
-/**
- * JobExecutionsPageWrapper - Suspense-enabled wrapper for JobExecutionsPage
- *
- * This wrapper adds Suspense support to JobExecutionsPage without modifying the original component.
- * The page now renders immediately with a skeleton, then loads data in the background.
- */
+
 
 import JobExecutionsPage from "./JobExecutionsPage";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
-import { PermissionGate } from "../../auth/components/PermissionGate";
-import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
+// import { PermissionGate } from "../../auth/components/PermissionGate";
+// import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
 
-/**
- * Suspense-enabled wrapper
- * Shows table skeleton while JobExecutionsPage mounts and loads its data
- */
+
 export default function JobExecutionsPageWrapper() {
   return (
-    <PermissionGate permission="jobs.read" fallback={<UnauthorizedPage />}>
+    // <PermissionGate permission="jobs.read" fallback={<UnauthorizedPage />}>
       <SuspenseBoundary type="table">
         <JobExecutionsPage />
       </SuspenseBoundary>
-    </PermissionGate>
+    // </PermissionGate>
   );
 }
 
-/**
- * Alternative: Use this if you want custom error handling
- */
+
 export function JobExecutionsPageWithErrorHandling() {
   return (
     <SuspenseBoundary

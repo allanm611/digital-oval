@@ -1,32 +1,22 @@
-/**
- * ScheduledJobsPageWrapper - Suspense-enabled wrapper for ScheduledJobsPage
- *
- * This wrapper adds Suspense support to ScheduledJobsPage without modifying the original component.
- * The page now renders immediately with a skeleton, then loads data in the background.
- */
+
 
 import ScheduledJobsPage from "./ScheduledJobsPage";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
-import { PermissionGate } from "../../auth/components/PermissionGate";
-import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
+// import { PermissionGate } from "../../auth/components/PermissionGate";
+// import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
 
-/**
- * Suspense-enabled wrapper
- * Shows table skeleton while ScheduledJobsPage mounts and loads its data
- */
+
 export default function ScheduledJobsPageWrapper() {
   return (
-    <PermissionGate permission="jobs.read" fallback={<UnauthorizedPage />}>
+    // <PermissionGate permission="jobs.read" fallback={<UnauthorizedPage />}>
       <SuspenseBoundary type="table">
         <ScheduledJobsPage />
       </SuspenseBoundary>
-    </PermissionGate>
+    // </PermissionGate>
   );
 }
 
-/**
- * Alternative: Use this if you want custom error handling
- */
+
 export function ScheduledJobsPageWithErrorHandling() {
   return (
     <SuspenseBoundary
