@@ -23,7 +23,7 @@ export default function UnauthorizedPage() {
         </p>
         <button
           onClick={() => navigate("/dashboard")}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-white transition-all duration-200 hover:opacity-90"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-md text-sm  font-medium text-white transition-all duration-200 hover:opacity-90"
           style={{ backgroundColor: color.primary.action }}
         >
           <ArrowLeft className="w-4 h-4" />
