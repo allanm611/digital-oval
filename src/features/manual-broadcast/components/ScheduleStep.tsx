@@ -3,7 +3,6 @@ import { Calendar, Clock, Send, AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
-import { PermissionGate } from "../../auth/components/PermissionGate";
 
 interface ScheduleStepProps {
   data: ManualBroadcastData;
@@ -399,7 +398,6 @@ export default function ScheduleStep({
         >
           {t.manualBroadcast.previous}
         </button>
-        <PermissionGate permission="manual-communications.create">
           <button
             onClick={handleSubmit}
             disabled={
@@ -421,7 +419,6 @@ export default function ScheduleStep({
               </>
             )}
           </button>
-        </PermissionGate>
       </div>
     </div>
   );

@@ -43,6 +43,7 @@ import {
   Send,
   Box,
   Download,
+  Zap,
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -110,7 +111,8 @@ interface NavigationItem {
     | "customers"
     | "servers"
     | "jobs"
-    | "settings";
+    | "settings"
+    | "manual-actions";
 }
 
 export default function Sidebar({
@@ -546,6 +548,13 @@ export default function Sidebar({
         type: "single",
         entity: "campaigns",
       },
+      {
+        name: "Manual Actions",
+        href: "/dashboard/manual-broadcasts",
+        icon: Zap,
+        type: "single",
+        entity: "manual-actions",
+      },
 
       {
         name: t.sidebar.navigation.configuration,
@@ -744,7 +753,6 @@ export default function Sidebar({
                     item.name.toLowerCase(),
                   );
 
-                  // Wrap items with permission gates
                   if (item.entity === "users") {
                     return (
                       <PermissionGate key={item.name} permission="users.read">
@@ -979,7 +987,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Add permission gates for other entities - Offers
                   if (item.entity === "offers") {
                     return (
                       <PermissionGate key={item.name} permission="offers.read">
@@ -1073,7 +1080,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Products
                   if (item.entity === "products") {
                     return (
                       <PermissionGate
@@ -1170,7 +1176,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Customers
                   if (item.entity === "customers") {
                     return (
                       <PermissionGate
@@ -1267,7 +1272,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Servers
                   if (item.entity === "servers") {
                     return (
                       <PermissionGate key={item.name} permission="servers.read">
@@ -1361,7 +1365,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Quicklists
                   if (item.entity === "quicklists") {
                     return (
                       <PermissionGate
@@ -1458,10 +1461,10 @@ export default function Sidebar({
                     );
                   }
 
-                  // Jobs
                   if (item.entity === "jobs") {
                     return (
                       <PermissionGate key={item.name} permission="jobs.read">
+
                         {item.type === "parent" ? (
                           <div>
                             <button
@@ -1552,7 +1555,6 @@ export default function Sidebar({
                     );
                   }
 
-                  // Configuration
                   if (item.entity === "configuration") {
                     return (
                       <PermissionGate key={item.name} permission="system.admin">
@@ -1646,7 +1648,34 @@ export default function Sidebar({
                     );
                   }
 
-                  // Analytics / Reports (commented out as requested)
+                  if (item.entity === "manual-actions") {
+                    return (
+                      <PermissionGate
+                        key={item.name}
+                        permission="manual-actions.read"
+                      >
+                        {item.type === "single" ? (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        ) : null}
+                      </PermissionGate>
+                    );
+                  }
+
                   // if (item.entity === "analytics") {
                   //   return (
                   //     <PermissionGate key={item.name} permission="analytics.read">
@@ -1800,7 +1829,6 @@ export default function Sidebar({
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
 
-                  // Settings with system.settings.manage permission
                   if (item.entity === "settings") {
                     return (
                       <PermissionGate
@@ -1922,7 +1950,6 @@ export default function Sidebar({
                   item.name.toLowerCase(),
                 );
 
-                // Wrap items with permission gates for desktop
                 if (item.entity === "users") {
                   return (
                     <PermissionGate key={item.name} permission="users.read">
@@ -2208,7 +2235,6 @@ export default function Sidebar({
                   );
                 }
 
-                // Offers
                 if (item.entity === "offers") {
                   return (
                     <PermissionGate key={item.name} permission="offers.read">
@@ -2335,7 +2361,6 @@ export default function Sidebar({
                   );
                 }
 
-                // Products
                 if (item.entity === "products") {
                   return (
                     <PermissionGate key={item.name} permission="products.read">
@@ -3100,7 +3125,6 @@ export default function Sidebar({
                   );
                 }
 
-                // Analytics / Reports (commented out as requested)
                 // if (item.entity === "analytics") {
                 //   return (
                 //     <PermissionGate key={item.name} permission="analytics.read">

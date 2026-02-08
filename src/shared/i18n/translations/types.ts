@@ -2082,6 +2082,7 @@ export interface Translations {
       alt: string;
     };
     navigation: {
+      kpis: any;
       dashboard: string;
       campaignManagement: string;
       allCampaigns: string;

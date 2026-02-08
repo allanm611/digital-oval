@@ -17,7 +17,7 @@ import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-
+import {PermissionGate} from "../../auth/components/PermissionGate";
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
@@ -54,14 +54,14 @@ export default function ManualBroadcastListsPage() {
             total_recipients: exec.total_recipients || 0,
             messages_sent: exec.messages_sent || 0,
             messages_failed: exec.messages_failed || 0,
-            status: 'completed' as const,
+            status: "completed" as const,
             created_at: exec.created_at,
             created_by: exec.created_by || null,
-            message_template: { body: '' },
+            message_template: { body: "" },
             messages_attempted: exec.total_recipients,
             channel_summaries: [],
             execution_time_ms: 0,
-          })
+          }),
         );
 
         setBroadcasts(broadcasts);
@@ -92,7 +92,7 @@ export default function ManualBroadcastListsPage() {
       // Get all executions from the API
       const response = await communicationService.getAllExecutions(
         page,
-        pagination.limit
+        pagination.limit,
       );
 
       if (response.success && response.data) {
@@ -108,14 +108,14 @@ export default function ManualBroadcastListsPage() {
             total_recipients: exec.total_recipients || 0,
             messages_sent: exec.messages_sent || 0,
             messages_failed: exec.messages_failed || 0,
-            status: 'completed' as const,
+            status: "completed" as const,
             created_at: exec.created_at,
             created_by: exec.created_by || null,
-            message_template: { body: '' },
+            message_template: { body: "" },
             messages_attempted: exec.total_recipients,
             channel_summaries: [],
             execution_time_ms: 0,
-          })
+          }),
         );
 
         // Filter by search term on client side
@@ -128,7 +128,7 @@ export default function ManualBroadcastListsPage() {
                 .includes(trimmedSearch.toLowerCase()) ||
               broadcast.execution_id
                 .toLowerCase()
-                .includes(trimmedSearch.toLowerCase())
+                .includes(trimmedSearch.toLowerCase()),
           );
         }
 
@@ -148,7 +148,7 @@ export default function ManualBroadcastListsPage() {
       if (!loading) {
         showError(
           "Failed to load broadcasts",
-          "Please check your connection and try again"
+          "Please check your connection and try again",
         );
       }
     } finally {
@@ -230,9 +230,11 @@ export default function ManualBroadcastListsPage() {
             View and manage communications sent to manual recipient lists
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <CreateButton route="/dashboard/manual-communications/create" />
-        </div>
+        <PermissionGate permission="manual-communications.create">
+          <div className="flex items-center gap-3">
+            <CreateButton route="/dashboard/manual-communications/create" />
+          </div>
+        </PermissionGate>
       </div>
 
       {/* Stats Cards */}
@@ -300,6 +302,8 @@ export default function ManualBroadcastListsPage() {
                 : "No broadcasts yet. Create your first manual broadcast to get started."}
             </p>
             {!searchTerm && (
+                      <PermissionGate permission="manual-communications.create">
+
               <button
                 onClick={() =>
                   navigate("/dashboard/manual-communications/create")
@@ -310,6 +314,7 @@ export default function ManualBroadcastListsPage() {
                 <Plus className="w-4 h-4" />
                 Create broadcast
               </button>
+              </PermissionGate>
             )}
           </div>
         ) : (

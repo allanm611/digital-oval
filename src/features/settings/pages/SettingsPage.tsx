@@ -11,6 +11,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 // import DateFormatter from "../../../shared/components/DateFormatter";
 import countries from "world-countries";
 import currencyCodes from "currency-codes";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 // Get all countries from world-countries library, sorted alphabetically
 const countriesList = countries
@@ -423,31 +424,34 @@ export default function SettingsPage() {
         </div>
 
         {/* Save and Cancel Buttons */}
-        <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
-          <button
-            onClick={handleReset}
-            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
-          >
-            {t.common.cancel}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
-          >
-            {isSaving ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                {t.common.loading}
-              </>
-            ) : (
-              <>
-                <Save className="w-4 h-4" />
-                {t.settings.saveChanges}
-              </>
-            )}
-          </button>
-        </div>
+        <PermissionGate permission="system.settings.manage">
+          <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto overflow-x-auto whitespace-nowrap">
+            <button
+              onClick={handleReset}
+              className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200 flex-shrink-0 whitespace-nowrap`}
+            >
+              {t.common.cancel}
+            </button>
+
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`px-5 py-2.5 text-sm font-medium ${tw.rounded} text-white flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 whitespace-nowrap bg-[#252829]`}
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {t.common.loading}
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  {t.settings.saveChanges}
+                </>
+              )}
+            </button>
+          </div>
+        </PermissionGate>
       </div>
 
       {/* Settings Cards Grid */}
