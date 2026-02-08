@@ -34,6 +34,7 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
 import RejectCampaignModal from "../components/RejectCampaignModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
   CampaignCollection,
@@ -1380,20 +1381,22 @@ export default function CampaignsPage() {
                             <Pause className="w-4 h-4" />
                           </button>
                         ) : null}
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/campaigns/${campaign.id}/edit`,
-                              {
-                                state: { campaign: campaign },
-                              },
-                            )
-                          }
-                          className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="campaigns.update">
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/campaigns/${campaign.id}/edit`,
+                                {
+                                  state: { campaign: campaign },
+                                },
+                              )
+                            }
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                         <div
                           className="relative"
                           ref={(el) => {
@@ -1723,16 +1726,18 @@ export default function CampaignsPage() {
                           Duplicate Campaign
                         </button> */}
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCampaign(campaign.id, campaign.name);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-4 text-red-600" />
-                          Delete Campaign
-                        </button>
+                        <PermissionGate permission="campaigns.delete">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCampaign(campaign.id, campaign.name);
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-sm text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                            Delete Campaign
+                          </button>
+                        </PermissionGate>
                       </div>,
                       document.body,
                     );

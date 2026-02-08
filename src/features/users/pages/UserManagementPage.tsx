@@ -32,6 +32,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { formatDate } from "../../../shared/services/dateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   PieChart,
   Pie,
@@ -1125,16 +1126,18 @@ export default function UserManagementPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <button
-            onClick={() => {
-              setSelectedUser(null);
-              setIsModalOpen(true);
-            }}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="w-4 h-4" />
-            {t.userManagement.addUser}
-          </button>
+          <PermissionGate permission="users.create">
+            <button
+              onClick={() => {
+                setSelectedUser(null);
+                setIsModalOpen(true);
+              }}
+              className={`${tw.button} flex items-center gap-2`}
+            >
+              <Plus className="w-4 h-4" />
+              {t.userManagement.addUser}
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -1596,40 +1599,44 @@ export default function UserManagementPage() {
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setIsModalOpen(true);
-                                }}
-                                className={`p-2 ${tw.rounded} transition-colors`}
-                                style={{
-                                  color: color.primary.action,
-                                  backgroundColor: "transparent",
-                                }}
-                                title={t.userManagement.editUser}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteUser(user)}
-                                disabled={loadingActions.deleting.has(user.id)}
-                                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                                title={
-                                  loadingActions.deleting.has(user.id)
-                                    ? t.profile.saving
-                                    : t.userManagement.deleteUser
-                                }
-                              >
-                                {loadingActions.deleting.has(user.id) ? (
-                                  <LoadingSpinner
-                                    variant="modern"
-                                    size="sm"
-                                    color="primary"
-                                  />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
-                              </button>
+                              <PermissionGate permission="users.update">
+                                <button
+                                  onClick={() => {
+                                    setSelectedUser(user);
+                                    setIsModalOpen(true);
+                                  }}
+                                  className={`p-2 ${tw.rounded} transition-colors`}
+                                  style={{
+                                    color: color.primary.action,
+                                    backgroundColor: "transparent",
+                                  }}
+                                  title={t.userManagement.editUser}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              </PermissionGate>
+                              <PermissionGate permission="users.delete">
+                                <button
+                                  onClick={() => handleDeleteUser(user)}
+                                  disabled={loadingActions.deleting.has(user.id)}
+                                  className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title={
+                                    loadingActions.deleting.has(user.id)
+                                      ? t.profile.saving
+                                      : t.userManagement.deleteUser
+                                  }
+                                >
+                                  {loadingActions.deleting.has(user.id) ? (
+                                    <LoadingSpinner
+                                      variant="modern"
+                                      size="sm"
+                                      color="primary"
+                                    />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </PermissionGate>
                             </div>
                           </td>
                         </tr>

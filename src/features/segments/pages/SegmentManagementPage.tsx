@@ -37,6 +37,7 @@ import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -997,6 +998,7 @@ export default function SegmentManagementPage() {
               )}
               {isSelectionMode ? "Exit Selection" : "Select Segments"}
             </button>
+            <PermissionGate permission="segments.create">
             <button
               onClick={handleCreateSegment}
               className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
@@ -1007,6 +1009,7 @@ export default function SegmentManagementPage() {
             >
               + Create
             </button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -1512,13 +1515,15 @@ export default function SegmentManagementPage() {
                               <Play className="w-4 h-4" />
                             )}
                           </button> */}
-                          <button
-                            onClick={() => handleEditSegment(segment.id)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4 " />
-                          </button>
+                          <PermissionGate permission="segments.update">
+                            <button
+                              onClick={() => handleEditSegment(segment.id)}
+                              className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4 " />
+                            </button>
+                          </PermissionGate>
                           <div
                             className="relative"
                             ref={(el) => {
@@ -1612,20 +1617,22 @@ export default function SegmentManagementPage() {
 
                     <div className="border-t border-gray-200 my-1"></div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteSegment(segment);
-                        setShowActionMenu(null);
-                      }}
-                      className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
-                    >
-                      <Trash2
-                        className="w-4 h-4 mr-4"
-                        style={{ color: color.status.danger }}
-                      />
-                      Delete Segment
-                    </button>
+                    <PermissionGate permission="segments.delete">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSegment(segment);
+                          setShowActionMenu(null);
+                        }}
+                        className="w-full flex items-center px-4 py-3 text-sm text-black hover:bg-gray-50 transition-colors"
+                      >
+                        <Trash2
+                          className="w-4 h-4 mr-4"
+                          style={{ color: color.status.danger }}
+                        />
+                        Delete Segment
+                      </button>
+                    </PermissionGate>
                   </div>,
                   document.body,
                 );

@@ -34,6 +34,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   Campaign,
   CampaignSegmentDetail,
@@ -727,18 +728,20 @@ export default function CampaignDetailsPage() {
           )}
 
           {/* Edit Button - Always Visible */}
-          <button
-            onClick={() =>
-              navigate(`/dashboard/campaigns/${id}/edit`, {
-                state: { campaign: campaign },
-              })
-            }
-            className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </button>
+          <PermissionGate permission="campaigns.update">
+            <button
+              onClick={() =>
+                navigate(`/dashboard/campaigns/${id}/edit`, {
+                  state: { campaign: campaign },
+                })
+              }
+              className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Edit className="w-4 h-4" />
+              Edit
+            </button>
+          </PermissionGate>
 
           <div className="relative">
             <button
@@ -776,19 +779,21 @@ export default function CampaignDetailsPage() {
                   )}
 
                 {/* Delete - Always available */}
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2 text-sm"
-                  style={{
-                    color: button.delete.background,
-                  }}
-                >
-                  <Trash2 className="w-4 h-4 mr-3" />
-                  Delete Campaign
-                </button>
+                <PermissionGate permission="campaigns.delete">
+                  <button
+                    onClick={() => {
+                      setShowDeleteModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm"
+                    style={{
+                      color: button.delete.background,
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-3" />
+                    Delete Campaign
+                  </button>
+                </PermissionGate>
               </div>
             )}
           </div>

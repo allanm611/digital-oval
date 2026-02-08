@@ -30,6 +30,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import type { Customer } from "../../customers360/types/customer";
@@ -464,41 +465,45 @@ export default function SegmentDetailsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleEdit}
-            className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
-            style={{
-              backgroundColor: button.action.background,
-              color: button.action.color,
-              borderRadius: button.action.borderRadius,
-              padding: `${button.action.paddingY} ${button.action.paddingX}`,
-            }}
-          >
-            <Edit className="w-4 h-4" />
-            Edit Segment
-          </button>
+          <PermissionGate permission="segments.update">
+            <button
+              onClick={handleEdit}
+              className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
+              style={{
+                backgroundColor: button.action.background,
+                color: button.action.color,
+                borderRadius: button.action.borderRadius,
+                padding: `${button.action.paddingY} ${button.action.paddingX}`,
+              }}
+            >
+              <Edit className="w-4 h-4" />
+              Edit Segment
+            </button>
+          </PermissionGate>
 
-          <button
-            onClick={handleDelete}
-            className={`${tw.rounded} font-medium transition-all duration-200 flex items-center gap-2 text-sm`}
-            style={{
-              backgroundColor: button.delete.background,
-              color: button.delete.color,
-              border: button.delete.border,
-              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
-              borderRadius: button.delete.borderRadius,
-              fontSize: button.delete.fontSize,
-            }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "0.9";
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "1";
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          <PermissionGate permission="segments.delete">
+            <button
+              onClick={handleDelete}
+              className={`${tw.rounded} font-medium transition-all duration-200 flex items-center gap-2 text-sm`}
+              style={{
+                backgroundColor: button.delete.background,
+                color: button.delete.color,
+                border: button.delete.border,
+                padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+                borderRadius: button.delete.borderRadius,
+                fontSize: button.delete.fontSize,
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "0.9";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "1";
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
