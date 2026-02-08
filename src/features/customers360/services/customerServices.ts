@@ -7,6 +7,7 @@ import {
 } from "../types/customer";
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/subscriber-360`;
+const BULK_CREATE_URL = `${API_CONFIG.BASE_URL}/subscribers/bulk-create`;
 
 class CustomerService {
   private async request<T>(
@@ -90,22 +91,39 @@ class CustomerService {
   }
 
   /**
-   * Bulk create customers
-   * POST /subscriber-360/bulk-create
+   * Bulk create customers (different endpoint than other customer operations)
+   * POST /api/database-service/subscribers/bulk-create
    */
   async bulkCreateCustomers(request: {
     profiles: {
       msisdn: string;
-      attributes?: Record<string, any>;
+      attributes?: {
+        segment?: string;
+        onboarded_at?: string;
+        [key: string]: string | undefined;
+      };
     }[];
   }): Promise<{ success: boolean; message?: string }> {
-    return this.request<{ success: boolean; message?: string }>(
-      "/bulk-create",
-      {
-        method: "POST",
-        body: JSON.stringify(request),
-      },
-    );
+    const response = await fetch(BULK_CREATE_URL, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error("API Error Response:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+        url: BULK_CREATE_URL,
+      });
+      throw new Error(
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
+      );
+    }
+
+    return response.json();
   }
 
   /**
@@ -123,13 +141,11 @@ class CustomerService {
         if (params.offset) queryParams.append("offset", String(params.offset));
       }
       const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-      console.log("🔍 Fetching customers from:", `${BASE_URL}${query}`);
 
       const response = await this.request<CustomersListResponse>(`${query}`);
-      console.log("✅ Successfully fetched customers:", response);
       return response;
     } catch (error) {
-      console.error("❌ Failed to fetch customers:", error);
+      console.error("Failed to fetch customers:", error);
       throw error;
     }
   }

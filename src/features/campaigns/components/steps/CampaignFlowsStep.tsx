@@ -82,25 +82,24 @@ export default function CampaignFlowsStep({
     }
   }, [campaignFlows, selectedOffers]);
 
-  // Get flow type based on campaign type 
-  const getFlowTypeFromCampaignType = (): CampaignFlowType => {
-    switch (formData.campaign_type) {
-      case "ab_test":
-        return "AB_TEST";
-      case "champion_challenger":
-        return "CHAMPION_CHALLENGER";
-      case "round_robin":
-        return "ROUND_ROBIN";
-      case "multiple_level":
-        return "MULTIPLE_LEVEL";
-      default:
-        return "STANDARD";
-    }
-  };
-
   // Sync campaign flows from segment flows state
   useEffect(() => {
     if (!setCampaignFlows) return;
+
+    const getFlowType = (): CampaignFlowType => {
+      switch (formData.campaign_type) {
+        case "ab_test":
+          return "AB_TEST";
+        case "champion_challenger":
+          return "CHAMPION_CHALLENGER";
+        case "round_robin":
+          return "ROUND_ROBIN";
+        case "multiple_level":
+          return "MULTIPLE_LEVEL";
+        default:
+          return "STANDARD";
+      }
+    };
 
     const flows: CampaignFlowConfig[] = [];
     let stepOrder = 1;
@@ -111,7 +110,7 @@ export default function CampaignFlowsStep({
           campaign_id: 0,
           segment_id: parseInt(segmentId),
           offer_id: parseInt(offer.id),
-          flow_type: getFlowTypeFromCampaignType(),
+          flow_type: getFlowType(),
           step_order: stepOrder,
           wait_interval_hours: data.waitHours || 0,
           bucket_allocation: data.allocation,
@@ -121,7 +120,8 @@ export default function CampaignFlowsStep({
     });
 
     setCampaignFlows(flows);
-  }, [segmentFlows, formData.campaign_type, setCampaignFlows]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [segmentFlows, formData.campaign_type]);
 
   const handleSelectOffers = (segmentId: string) => {
     setEditingSegmentId(segmentId);
@@ -145,15 +145,13 @@ export default function CampaignFlowsStep({
     });
 
     // Update selectedOffers to include all unique offers from all segments
-    setSelectedOffers((prevOffers) => {
-      const offerMap = new Map(prevOffers.map((offer) => [offer.id, offer]));
-      offers.forEach((offer) => {
-        if (!offerMap.has(offer.id)) {
-          offerMap.set(offer.id, offer);
-        }
-      });
-      return Array.from(offerMap.values());
+    const offerMap = new Map(selectedOffers.map((offer) => [offer.id, offer]));
+    offers.forEach((offer) => {
+      if (!offerMap.has(offer.id)) {
+        offerMap.set(offer.id, offer);
+      }
     });
+    setSelectedOffers(Array.from(offerMap.values()));
 
     setShowOfferModal(false);
     setEditingSegmentId(null);

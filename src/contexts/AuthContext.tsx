@@ -12,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
+  permissions: string[];
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
@@ -21,6 +22,9 @@ interface AuthContextType {
     newPassword: string
   ) => Promise<void>;
   loading: boolean;
+  hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
+  hasAllPermissions: (permissions: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,16 +37,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing token on app load
     const savedToken = localStorage.getItem("auth_token");
     const savedUser = localStorage.getItem("auth_user");
+    const savedPermissions = localStorage.getItem("auth_permissions");
 
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
+      setPermissions(savedPermissions ? JSON.parse(savedPermissions) : []);
       setIsAuthenticated(true);
     }
     setLoading(false);
@@ -65,28 +72,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setToken(response.session.token);
     setIsAuthenticated(true);
 
-    // Fetch user role from permissions endpoint
-    let userRole: "admin" | "user" = "user"; // Default role
-    try {
-      const permissionsResponse = await authService.getPermissions();
-      if (
-        permissionsResponse.success &&
-        permissionsResponse.roles &&
-        permissionsResponse.roles.length > 0
-      ) {
-        // Use the first role, or check if 'admin' is in the roles array
-        userRole = permissionsResponse.roles.includes("admin")
-          ? "admin"
-          : "user";
-      }
-    } catch (error) {
-      console.warn(
-        "Failed to fetch user permissions, using default role:",
-        error
-      );
-    }
+    // Extract permissions directly from login response
+    const userPermissions: string[] = response.session.permissions || [];
+    setPermissions(userPermissions);
+    localStorage.setItem("auth_permissions", JSON.stringify(userPermissions));
 
-    // Use user data from response if available, otherwise create basic user
+    // Determine role based on permissions
+    // If user has system.admin permission, they're an admin
+    const userRole: "admin" | "user" = userPermissions.includes("system.admin")
+      ? "admin"
+      : "user";
+
+    // Use user data from response if available
     if (response.user) {
       const user: User = {
         user_id: response.user.id,
@@ -135,11 +132,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(false);
       setUser(null);
       setToken(null);
+      setPermissions([]);
 
       // Clear localStorage
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
       localStorage.removeItem("session_id");
+      localStorage.removeItem("auth_permissions");
     }
   };
 
@@ -155,17 +154,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await authService.completePasswordReset({ token, email, newPassword });
   };
 
+  // Permission checking methods
+  const hasPermission = (permission: string): boolean => {
+    return permissions.includes(permission);
+  };
+
+  const hasAnyPermission = (requiredPermissions: string[]): boolean => {
+    return requiredPermissions.some(permission => permissions.includes(permission));
+  };
+
+  const hasAllPermissions = (requiredPermissions: string[]): boolean => {
+    return requiredPermissions.every(permission => permissions.includes(permission));
+  };
+
   return (
     <AuthContext.Provider
       value={{
         isAuthenticated,
         user,
         token,
+        permissions,
         login,
         logout,
         requestPasswordReset,
         resetPassword,
         loading,
+        hasPermission,
+        hasAnyPermission,
+        hasAllPermissions,
       }}
     >
       {children}

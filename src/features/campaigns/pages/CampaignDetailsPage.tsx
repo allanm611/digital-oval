@@ -1205,8 +1205,8 @@ export default function CampaignDetailsPage() {
         )}
       </div>
 
-      {/* Campaign Segments Table */}
-      <div className="mb-6">
+      {/* Campaign Segments Table - COMMENTED OUT */}
+      {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
             className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
@@ -1228,7 +1228,8 @@ export default function CampaignDetailsPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
+            className={`overflow-x-auto ${tw.rounded} border`}
+            style={{ borderColor: color.border.default }}
           >
             <table
               className="w-full"
@@ -1353,7 +1354,7 @@ export default function CampaignDetailsPage() {
             </table>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Campaign Offers Table - Commented out: using Campaign Flows instead */}
       {/* <div className="mb-6">
@@ -1378,7 +1379,8 @@ export default function CampaignDetailsPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
+            className={`overflow-x-auto ${tw.rounded} border`}
+            style={{ borderColor: color.border.default }}
           >
             <table
               className="w-full"

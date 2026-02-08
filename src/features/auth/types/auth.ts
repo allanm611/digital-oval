@@ -41,7 +41,8 @@ export interface LoginResponse {
   session?: { 
     id: string; 
     token: string; 
-    expires_at: string 
+    expires_at: string
+    permissions?:string[] 
   };
   error?: { 
     code: string; 

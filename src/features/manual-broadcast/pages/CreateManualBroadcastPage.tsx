@@ -4,6 +4,7 @@ import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -16,7 +17,6 @@ import DefineCommunicationStep from "../components/DefineCommunicationStep";
 import TestBroadcastStep from "../components/TestBroadcastStep";
 import ScheduleStep from "../components/ScheduleStep";
 import { communicationService } from "../../communications/services/communicationService";
-import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import type { ManualCommunicationRecipient } from "../../communications/types/communication";
@@ -24,28 +24,25 @@ import type { ManualCommunicationRecipient } from "../../communications/types/co
 export interface ManualBroadcastData {
   // Step 1: Audience
   audienceFile?: File;
-  audienceFileText?: string; // Raw file content
+  audienceFileText?: string; 
   audienceName?: string;
   audienceDescription?: string;
   uploadType?: string;
   quicklistId?: number;
   rowCount?: number;
-  // New fields for enhanced audience selection
-  subscriptionIdColumn?: string; // Selected column containing Subscription IDs
-  fileColumns?: string[]; // Columns extracted from uploaded file
-  fileDelimiter?: string; // Delimiter used in file (comma, semicolon, tab, pipe)
-  fileHeaders?: string; // CSV headers line
-  inputMethod?: AudienceInputMethod; // "file" or "manual" input method
+  subscriptionIdColumn?: string; 
+  fileColumns?: string[]; 
+  fileDelimiter?: string; 
+  fileHeaders?: string; 
+  inputMethod?: AudienceInputMethod; 
 
   // Step 2: Communication
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
   messageTitle?: string;
   messageBody?: string;
   isRichText?: boolean;
-  smsRoute?: string; // SMS route selection
-  // New field for template variables
-  selectedVariables?: TemplateVariable[]; // Variables used in the message
-  // Communication Policy
+  smsRoute?: string; 
+  selectedVariables?: TemplateVariable[]; 
   selectedCommunicationPolicy?: CommunicationPolicyConfiguration;
   selectedCommunicationPolicyId?: number;
 
@@ -63,6 +60,7 @@ export default function CreateManualBroadcastPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const STEPS: Step[] = [
     {
@@ -233,8 +231,6 @@ export default function CreateManualBroadcastPage() {
         const response = await communicationService.sendCommunication({
           source_type: "quicklist",
           source_id: broadcastData.quicklistId,
-          broadcast_name: broadcastData.audienceName,
-          list_type: broadcastData.uploadType,
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
             ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
@@ -246,8 +242,7 @@ export default function CreateManualBroadcastPage() {
             column_conditions: [],
             limit: 1000,
           },
-          batch_size: 500,
-          created_by: 1, // TODO: Get from auth context
+          batch_size: user?.user_id ,
         });
 
         if (response.success) {
@@ -258,7 +253,7 @@ export default function CreateManualBroadcastPage() {
           throw new Error("Communication sending failed");
         }
       }
-      // Case 2: Manual input submission (file upload or manual text entry)
+      // Case 2: Manual input submission
       else if (broadcastData.audienceFileText) {
         const recipientList = parseRecipientList();
 
@@ -266,11 +261,9 @@ export default function CreateManualBroadcastPage() {
           throw new Error("No valid recipients found in audience data");
         }
 
-        // Send manual communication using new endpoint
+        // Send manual communication
         const response = await communicationService.sendManualCommunication({
           source_type: "manual",
-          broadcast_name: broadcastData.audienceName,
-          list_type: broadcastData.uploadType,
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
             ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"

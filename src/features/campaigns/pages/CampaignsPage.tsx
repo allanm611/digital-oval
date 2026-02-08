@@ -43,7 +43,7 @@ import {
   CampaignSuperSearchQuery,
   GetCampaignsResponse,
 } from "../types/campaign";
-
+import { PermissionGate } from "../../auth/components/PermissionGate"
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
 
 interface CampaignDisplay {
@@ -1093,7 +1093,10 @@ export default function CampaignsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <CreateButton route="/dashboard/campaigns/create" />
+           <PermissionGate permission="campaigns.create">
+                        <CreateButton route="/dashboard/campaigns/create" />
+
+            </PermissionGate>
         </div>
       </div>
 
@@ -1749,11 +1752,14 @@ export default function CampaignsPage() {
                 ? "No completed campaigns yet. Campaigns will appear here once they finish running."
                 : `No ${selectedStatus} campaigns found. Try creating a new campaign or check other status filters.`}
             </p>
-            {selectedStatus !== "completed" && (
-              <div className="mt-4">
-                <CreateButton route="/dashboard/campaigns/create" />
-              </div>
-            )}
+            <PermissionGate permission="campaign.create">
+              {selectedStatus !== "completed" && (
+                <div className="mt-4">
+                  <CreateButton route="/dashboard/campaigns/create" />
+                </div>
+              )}
+            </PermissionGate>
+            
           </div>
         )}
       </div>
