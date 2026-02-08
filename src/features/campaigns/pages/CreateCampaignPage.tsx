@@ -443,6 +443,58 @@ export default function CreateCampaignPage() {
             }));
 
             setCampaignFlows(flows);
+
+            // Load offers directly from flows using new endpoint
+            try {
+              const offersResponse = await campaignFlowService.getCampaignOffers(
+                parseInt(campaignId),
+                true
+              );
+              if (offersResponse.success && Array.isArray(offersResponse.data)) {
+                const flowOfferIds = new Set(offersResponse.data.map(o => o.id));
+                const offerPromises = Array.from(flowOfferIds).map(async (offerId) => {
+                  try {
+                    const offerResponse = await offerService.getOfferById(offerId, true);
+                    if (offerResponse && typeof offerResponse === "object") {
+                      if ("data" in offerResponse && offerResponse.data) {
+                        return offerResponse.data as CampaignOffer;
+                      } else if ("id" in offerResponse) {
+                        return offerResponse as unknown as CampaignOffer;
+                      }
+                    }
+                    return null;
+                  } catch {
+                    return null;
+                  }
+                });
+                const loadedOffers = await Promise.all(offerPromises);
+                const validOffers = loadedOffers.filter((o): o is CampaignOffer => o !== null);
+                setSelectedOffers(validOffers);
+              }
+            } catch (offersError) {
+              console.error("Failed to load campaign offers from flows:", offersError);
+            }
+
+            // Load segments directly from flows using new endpoint
+            try {
+              const segmentsResponse = await campaignFlowService.getCampaignSegments(
+                parseInt(campaignId),
+                true
+              );
+              if (segmentsResponse.success && Array.isArray(segmentsResponse.data)) {
+                const flowSegments: CampaignSegment[] = segmentsResponse.data.map((segment) => ({
+                  id: String(segment.id),
+                  name: segment.name,
+                  code: segment.code,
+                  total_subscribers: 0,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                }));
+                setSelectedSegments(flowSegments);
+              }
+            } catch (segmentsError) {
+              console.error("Failed to load campaign segments from flows:", segmentsError);
+            }
           }
         } catch (flowError) {
           console.error("Failed to load campaign flows:", flowError);

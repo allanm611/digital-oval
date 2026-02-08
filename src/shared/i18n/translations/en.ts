@@ -117,12 +117,14 @@ export const en: Translations = {
       maxMessages: "Max messages per customer",
       timeWindow: "Time window (days)",
       mutuallyExclusiveSegments: "Mutually Exclusive Segments",
-      mutuallyExclusiveSegmentsDesc: "Ensure customers are not included in multiple segments",
+      mutuallyExclusiveSegmentsDesc:
+        "Ensure customers are not included in multiple segments",
       championChallengers: "Champion vs Challenger",
       abTestVariants: "A/B Test Variants",
       roundRobinTarget: "Round Robin Target",
       multipleLevelTarget: "Multiple Target Groups",
-      championChallengerDesc: "Champion vs Challenger configuration for testing strategies",
+      championChallengerDesc:
+        "Champion vs Challenger configuration for testing strategies",
       abTestDesc2: "A/B Test Variants configuration",
       roundRobinDesc: "Round robin distribution across segments",
       multipleLevelDesc: "Multiple target groups for the campaign",
@@ -165,7 +167,8 @@ export const en: Translations = {
       multipleTarget: "Multiple Target Groups",
       multipleTargetDesc: "Target multiple customer segments simultaneously",
       championChallenger: "Champion Challenger",
-      championChallengerDesc: "Compare performance between current and new strategies",
+      championChallengerDesc:
+        "Compare performance between current and new strategies",
       abTest: "A/B Test",
       abTestDesc: "Test two different campaign variations",
       abTestDesc2: "A/B Test Variants",
@@ -1117,7 +1120,7 @@ export const en: Translations = {
     startBySearching: "Start by searching for a customer above.",
     customer: "Customer",
     msisdn: "MSISDN",
-    subscriptionId: "Subscription ID",
+    subscriptionId: "Subscriber ID",
     customerType: "Customer Type",
     tariff: "Tariff",
     simType: "SIM Type",
@@ -2580,7 +2583,8 @@ export const en: Translations = {
       noCreativeSelected: "No Creative Selected",
       selectCreative: "Select a creative from the list above to start editing",
       selectPrompt: "Select a creative from the list above to start editing",
-      subheadline: "Create compelling content for your offer across different channels",
+      subheadline:
+        "Create compelling content for your offer across different channels",
     },
     channel: {
       label: "Channel",

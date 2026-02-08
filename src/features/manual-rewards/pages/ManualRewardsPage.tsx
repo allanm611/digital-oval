@@ -341,8 +341,7 @@ export default function ManualRewardsPage() {
 
       {/* Table */}
       <div
-        className={`bg-white ${tw.rounded} shadow-sm border overflow-hidden`}
-        style={{ borderColor: color.border.default }}
+        className={` ${tw.rounded} border overflow-hidden`}
       >
         {filteredRewards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -359,7 +358,10 @@ export default function ManualRewardsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table
+              className="w-full"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
               <thead style={{ backgroundColor: color.surface.tableHeader }}>
                 <tr>
                   <th
@@ -408,57 +410,72 @@ export default function ManualRewardsPage() {
               </thead>
               <tbody>
                 {filteredRewards.map((reward) => (
-                  <tr
-                    key={reward.id}
-                    className="border-b hover:bg-gray-50 transition-colors"
-                    style={{ borderColor: color.border.default }}
-                  >
-                    <td className="px-6 py-4">
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {reward.name}
-                      </span>
+                  <tr key={reward.id} className="transition-colors">
+                    <td
+                      className="px-6 py-4 text-sm"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div>
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(reward)}
+                          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                          title={reward.name}
+                        >
+                          {reward.name}
+                        </button>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {getRewardTypeLabel(reward.rewardType)}
-                      </span>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-600"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {getRewardTypeLabel(reward.rewardType)}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {reward.rewardValue}
-                      </span>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-600"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {reward.rewardValue}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-sm ${tw.textPrimary}`}>
-                        {reward.recipientCount.toLocaleString()}
-                      </span>
+                    <td
+                      className="px-6 py-4 text-sm text-gray-600"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {reward.recipientCount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-sm ${tw.textPrimary}`}>
+                    <td
+                      className="px-6 py-4 text-sm"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className="inline-flex px-2 py-1 text-sm font-medium rounded text-black">
                         {getStatusLabel(reward.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td
+                      className="px-6 py-4 text-sm text-gray-600"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
                       <DateFormatter date={reward.createdAt} />
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-2">
+                    <td
+                      className="px-6 py-4 text-sm font-medium"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => handleEdit(reward)}
-                          className={`p-2 ${tw.rounded} hover:bg-gray-100 transition-colors`}
+                          className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
                           title="Edit"
                         >
-                          <Edit
-                            className="w-4 h-4"
-                            style={{ color: color.text.primary }}
-                          />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(reward)}
-                          className={`p-2 ${tw.rounded} hover:bg-red-50 transition-colors`}
+                          className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Segment } from "../types/segment";
 import { segmentService } from "../services/segmentService";
+import { customerService } from "../../customers360/services/customerServices";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -31,15 +32,7 @@ import SegmentModal from "../components/SegmentModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import {
-  customerSubscriptions,
-  searchCustomers as searchCustomersUtil,
-} from "../../customers360/utils/customerDataService";
-import {
-  getSubscriptionDisplayName,
-  formatMsisdn,
-} from "../../customers360/utils/customerSubscriptionHelpers";
-import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
+import type { Customer } from "../../customers360/types/customer";
 
 export default function SegmentDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -98,17 +91,55 @@ export default function SegmentDetailsPage() {
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [allCustomersForSelection, setAllCustomersForSelection] = useState<
+    Customer[]
+  >([]);
+  const [isLoadingCustomersForSelection, setIsLoadingCustomersForSelection] =
+    useState(false);
+  const [isAddingMembers, setIsAddingMembers] = useState(false);
 
   // Filter customers based on search term
   const filteredCustomersForSelection = useMemo(() => {
     if (!customerSearchTerm.trim()) {
-      return customerSubscriptions.slice(0, 50); // Limit to 50 for performance
+      return allCustomersForSelection.slice(0, 50); // Limit to 50 for performance
     }
-    return searchCustomersUtil(customerSearchTerm, customerSubscriptions).slice(
-      0,
-      50
-    );
-  }, [customerSearchTerm]);
+    // Search in customer data fields
+    const term = customerSearchTerm.toLowerCase();
+    return allCustomersForSelection
+      .filter((customer) => {
+        const firstName = customer.attributes?.first_name || "";
+        const lastName = customer.attributes?.last_name || "";
+        const email = customer.attributes?.email || "";
+        const subscriberId = String(customer.subscriber_id || "");
+        
+        return (
+          firstName.toLowerCase().includes(term) ||
+          lastName.toLowerCase().includes(term) ||
+          email.toLowerCase().includes(term) ||
+          subscriberId.includes(term)
+        );
+      })
+      .slice(0, 50);
+  }, [customerSearchTerm, allCustomersForSelection]);
+
+  const loadCustomersForSelection = useCallback(async () => {
+    setIsLoadingCustomersForSelection(true);
+    try {
+      const response = await customerService.getAllCustomers({
+        limit: 100,
+        offset: 0,
+        _t: Date.now(),
+      } as Record<string, unknown> as Parameters<typeof customerService.getAllCustomers>[0]);
+      const customers = response.data || [];
+      setAllCustomersForSelection(customers);
+    } catch (err) {
+      console.error("Failed to load customers:", err);
+      showError("Error loading customers", "Please try again later.");
+      setAllCustomersForSelection([]);
+    } finally {
+      setIsLoadingCustomersForSelection(false);
+    }
+  }, [showError]);
 
   const loadCategoryName = useCallback(async (categoryId: number | string) => {
     try {
@@ -332,7 +363,8 @@ export default function SegmentDetailsPage() {
 
     try {
       await segmentService.addSegmentMembers(Number(id), {
-        customer_ids: customerIds,
+        segmentId: Number(id),
+        subscriberIds: customerIds,
       });
       success(
         "Members added",
@@ -977,10 +1009,11 @@ export default function SegmentDetailsPage() {
               View Members
             </button>
             <button
-              onClick={() => {
+              onClick={async () => {
                 setShowCustomerSelection(true);
                 setSelectedCustomers([]);
                 setCustomerSearchTerm("");
+                await loadCustomersForSelection();
               }}
               className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
               style={{
@@ -1250,7 +1283,16 @@ export default function SegmentDetailsPage() {
 
               {/* Customer List */}
               <div className="flex-1 overflow-y-auto p-6">
-                {filteredCustomersForSelection.length === 0 ? (
+                {isLoadingCustomersForSelection ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <LoadingSpinner
+                      variant="modern"
+                      size="lg"
+                      color="primary"
+                    />
+                    <p className="text-gray-500 mt-4">Loading customers...</p>
+                  </div>
+                ) : filteredCustomersForSelection.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-gray-500">
@@ -1262,16 +1304,17 @@ export default function SegmentDetailsPage() {
                 ) : (
                   <div className="space-y-3">
                     {filteredCustomersForSelection.map((customer) => {
-                      const customerId = customer.customerId;
-                      const displayName = getSubscriptionDisplayName(
-                        customer,
-                        `Customer ${customerId}`
-                      );
-                      const isSelected = selectedCustomers.includes(customerId);
+                      // Use subscriber_id as the unique identifier
+                      const customerId = customer.subscriber_id;
+                      const firstName = customer.attributes?.first_name || "";
+                      const lastName = customer.attributes?.last_name || "";
+                      const displayName = firstName || lastName ? `${firstName} ${lastName}`.trim() : `Customer ${customerId}`;
+                      const email = customer.attributes?.email;
+                      const isSelected = selectedCustomers.includes(Number(customerId));
 
                       return (
                         <div
-                          key={`${customer.customerId}-${customer.subscriptionId}`}
+                          key={customerId}
                           className={`p-4 border ${
                             tw.rounded
                           } cursor-pointer transition-colors ${
@@ -1282,8 +1325,8 @@ export default function SegmentDetailsPage() {
                           onClick={() => {
                             setSelectedCustomers((prev) =>
                               isSelected
-                                ? prev.filter((id) => id !== customerId)
-                                : [...prev, customerId]
+                                ? prev.filter((id) => id !== Number(customerId))
+                                : [...prev, Number(customerId)]
                             );
                           }}
                         >
@@ -1300,27 +1343,12 @@ export default function SegmentDetailsPage() {
                                   {displayName}
                                 </h3>
                                 <p className="text-sm text-gray-500">
-                                  {customer.email || "No email"}
+                                  {email || "No email"}
                                 </p>
                                 <p className="text-xs text-gray-400">
-                                  Customer ID: {customerId} • Sub ID:{" "}
-                                  {customer.subscriptionId}
-                                  {customer.msisdn &&
-                                    ` • ${formatMsisdn(customer.msisdn)}`}
+                                  Customer ID: {customerId}
                                 </p>
                               </div>
-                            </div>
-                            <div className="text-right">
-                              {customer.city && (
-                                <p className="text-xs text-gray-500">
-                                  {customer.city}
-                                </p>
-                              )}
-                              {customer.customerType && (
-                                <p className="text-xs text-gray-400">
-                                  {customer.customerType}
-                                </p>
-                              )}
                             </div>
                           </div>
                         </div>
@@ -1349,9 +1377,12 @@ export default function SegmentDetailsPage() {
                         return;
                       }
 
+                      setIsAddingMembers(true);
                       try {
+                        // Add all customers at once using bulk endpoint
                         await segmentService.addSegmentMembers(Number(id), {
-                          customer_ids: selectedCustomers,
+                          segmentId: Number(id),
+                          subscriberIds: selectedCustomers,
                         });
                         success(
                           "Members added",
@@ -1366,10 +1397,12 @@ export default function SegmentDetailsPage() {
                           "Error adding members",
                           "Please try again later."
                         );
+                      } finally {
+                        setIsAddingMembers(false);
                       }
                     }}
-                    disabled={selectedCustomers.length === 0}
-                    className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={selectedCustomers.length === 0 || isAddingMembers}
+                    className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                     style={{
                       backgroundColor: button.action.background,
                       color: button.action.color,
@@ -1377,8 +1410,16 @@ export default function SegmentDetailsPage() {
                       padding: `${button.action.paddingY} ${button.action.paddingX}`,
                     }}
                   >
-                    Add {selectedCustomers.length} Customer
-                    {selectedCustomers.length !== 1 ? "s" : ""}
+                    {isAddingMembers ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      `Add ${selectedCustomers.length} Customer${
+                        selectedCustomers.length !== 1 ? "s" : ""
+                      }`
+                    )}
                   </button>
                 </div>
               </div>

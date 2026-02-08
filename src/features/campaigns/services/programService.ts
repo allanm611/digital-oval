@@ -11,7 +11,7 @@ const BASE_URL = `${API_CONFIG.BASE_URL}/programs`;
 class ProgramService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
 
@@ -33,7 +33,7 @@ class ProgramService {
         url,
       });
       throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`
+        `HTTP error! status: ${response.status}, details: ${errorBody}`,
       );
     }
 
@@ -57,14 +57,14 @@ class ProgramService {
 
   async getProgramById(
     id: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ): Promise<SingleProgramResponse> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<SingleProgramResponse>(`/${id}${query}`);
   }
 
   async createProgram(
-    request: CreateProgramRequest
+    request: CreateProgramRequest,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>("", {
       method: "POST",
@@ -74,7 +74,7 @@ class ProgramService {
 
   async updateProgram(
     id: number,
-    request: UpdateProgramRequest
+    request: UpdateProgramRequest,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}`, {
       method: "PUT",
@@ -83,7 +83,7 @@ class ProgramService {
   }
 
   async deleteProgram(
-    id: number
+    id: number,
   ): Promise<{ success: boolean; message?: string }> {
     return this.request<{ success: boolean; message?: string }>(`/${id}`, {
       method: "DELETE",
@@ -92,7 +92,7 @@ class ProgramService {
 
   async activateProgram(
     id: number,
-    updatedBy: number
+    updatedBy: number,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/activate`, {
       method: "PATCH",
@@ -102,7 +102,7 @@ class ProgramService {
 
   async deactivateProgram(
     id: number,
-    updatedBy: number
+    updatedBy: number,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/deactivate`, {
       method: "PATCH",
@@ -114,7 +114,7 @@ class ProgramService {
    * Get program statistics
    */
   async getProgramStats(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(`/stats${query}`);
@@ -125,11 +125,11 @@ class ProgramService {
    */
   async getProgramBudgetUtilization(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(
-      `/${id}/budget-utilization${query}`
+      `/${id}/budget-utilization${query}`,
     );
   }
 
@@ -142,7 +142,7 @@ class ProgramService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<Record<string, unknown>> {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -159,7 +159,7 @@ class ProgramService {
    */
   async getProgramPerformance(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(`/${id}/performance${query}`);
@@ -169,7 +169,7 @@ class ProgramService {
    * Get budget analysis
    */
   async getProgramBudgetAnalysis(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(`/budget-analysis${query}`);
@@ -179,7 +179,7 @@ class ProgramService {
    * Get program timeline
    */
   async getProgramTimeline(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(`/timeline${query}`);
@@ -212,7 +212,7 @@ class ProgramService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<ProgramResponse> {
     const queryParams = new URLSearchParams();
     queryParams.append("searchTerm", searchTerm);
@@ -266,11 +266,11 @@ class ProgramService {
    */
   async getProgramByCode(
     code: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SingleProgramResponse> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<SingleProgramResponse>(
-      `/code/${encodeURIComponent(code)}${query}`
+      `/code/${encodeURIComponent(code)}${query}`,
     );
   }
 
@@ -279,11 +279,11 @@ class ProgramService {
    */
   async getProgramByName(
     name: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SingleProgramResponse> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<SingleProgramResponse>(
-      `/name/${encodeURIComponent(name)}${query}`
+      `/name/${encodeURIComponent(name)}${query}`,
     );
   }
 
@@ -296,7 +296,7 @@ class ProgramService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<ProgramResponse> {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -306,7 +306,7 @@ class ProgramService {
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request<ProgramResponse>(
-      `/type/${encodeURIComponent(programType)}${query}`
+      `/type/${encodeURIComponent(programType)}${query}`,
     );
   }
 
@@ -315,11 +315,11 @@ class ProgramService {
    */
   async getProgramCampaignCount(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(
-      `/${id}/campaigns/count${query}`
+      `/${id}/campaigns/count${query}`,
     );
   }
 
@@ -328,11 +328,11 @@ class ProgramService {
    */
   async getProgramCampaignsBudgetSummary(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(
-      `/${id}/campaigns/budget-summary${query}`
+      `/${id}/campaigns/budget-summary${query}`,
     );
   }
 
@@ -342,7 +342,7 @@ class ProgramService {
   async updateProgramBudget(
     id: number,
     budget_total: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget`, {
       method: "PATCH",
@@ -359,7 +359,7 @@ class ProgramService {
   async updateProgramSpentBudget(
     id: number,
     budget_spent: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget/spent`, {
       method: "PATCH",
@@ -479,7 +479,7 @@ class ProgramService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<ProgramResponse> {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -500,7 +500,7 @@ class ProgramService {
       limit?: number;
       offset?: number;
       skipCache?: boolean;
-    }
+    },
   ): Promise<ProgramResponse> {
     const queryParams = new URLSearchParams();
     if (params) {
@@ -510,7 +510,7 @@ class ProgramService {
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request<ProgramResponse>(
-      `/performance/${encodeURIComponent(metric)}${query}`
+      `/performance/${encodeURIComponent(metric)}${query}`,
     );
   }
 
@@ -519,11 +519,11 @@ class ProgramService {
    */
   async getProgramActiveCampaignCount(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<Record<string, unknown>> {
     const query = skipCache ? "?skipCache=true" : "";
     return this.request<Record<string, unknown>>(
-      `/${id}/campaigns/active-count${query}`
+      `/${id}/campaigns/active-count${query}`,
     );
   }
 
@@ -532,7 +532,7 @@ class ProgramService {
    */
   async recalculateProgramBudget(
     id: number,
-    updatedBy: number = 1
+    updatedBy: number = 1,
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/budget/recalculate`, {
       method: "POST",
@@ -548,8 +548,7 @@ class ProgramService {
     dates: {
       start_date?: string | null;
       end_date?: string | null;
-      updated_by: number;
-    }
+    },
   ): Promise<SingleProgramResponse> {
     return this.request<SingleProgramResponse>(`/${id}/dates`, {
       method: "PATCH",

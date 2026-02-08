@@ -48,7 +48,7 @@ export const CsvDownloadButton: React.FC<CsvDownloadButtonProps> = ({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      className={className}
+      className={`flex items-center gap-2 ${className}`}
       style={style}
       title={
         disabled

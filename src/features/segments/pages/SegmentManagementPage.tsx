@@ -1385,14 +1385,6 @@ export default function SegmentManagementPage() {
                           >
                             {segment.name}
                           </div>
-                          {segment.description && (
-                            <div
-                              className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                              title={segment.description}
-                            >
-                              {segment.description}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td

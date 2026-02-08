@@ -160,8 +160,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
 
         const newServer = await serverService.createServer(payload);
         success(
-          t.success.serverCreated,
-          t("success.serverCreatedMessage", { name: newServer.name }),
+          "Server Created",
+          `${newServer.name} has been created successfully`,
         );
         navigate("/dashboard/servers");
       } else if (mode === "edit" && id) {
@@ -195,8 +195,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
           payload,
         );
         success(
-          t.success.serverUpdated,
-          t("success.serverUpdatedMessage", { name: updatedServer.name }),
+          "Server Updated",
+          `${updatedServer.name} has been updated successfully`,
         );
         navigate(`/dashboard/servers/${id}`);
       }
@@ -204,11 +204,11 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
       const message =
         err instanceof Error
           ? err.message
-          : t(
-              `errors.unableUpdate${mode === "create" ? "Create" : "Update"}Server`,
-            );
+          : `Unable to ${mode === "create" ? "create" : "update"} server`;
       error(
-        t(`errors.failed${mode === "create" ? "Create" : "Update"}Server`),
+        mode === "create"
+          ? "Failed to Create Server"
+          : "Failed to Update Server",
         message,
       );
     } finally {
@@ -399,7 +399,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Server Type
               </label>
               <p className="text-xs text-gray-500 mb-1">
-                Classification of server type (e.g. database, api, file-storage).
+                Classification of server type (e.g. database, api,
+                file-storage).
               </p>
               <input
                 type="text"
@@ -554,7 +555,8 @@ export default function ServerFormPage({ mode }: ServerFormPageProps) {
                 Metadata
               </label>
               <p className="text-xs text-gray-500 mb-1">
-                Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;: &quot;value&quot;&#x7D;).
+                Additional metadata as JSON (e.g. &#x7B;&quot;key&quot;:
+                &quot;value&quot;&#x7D;).
               </p>
               <textarea
                 name="metadata"

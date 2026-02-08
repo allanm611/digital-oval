@@ -83,7 +83,7 @@ export default function ProgramDetailsPage() {
   const [performance, setPerformance] = useState<PerformanceData | null>(null);
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [activeCampaignCount, setActiveCampaignCount] = useState<number | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function ProgramDetailsPage() {
         budget_spent: parseFloat(String(performance.budget.spent || 0)) || 0,
         budget_remaining: Number(performance.budget.remaining || 0),
         utilization_percentage: Number(
-          performance.budget.utilization_percentage || 0
+          performance.budget.utilization_percentage || 0,
         ),
       });
     } else if (program) {
@@ -162,7 +162,7 @@ export default function ProgramDetailsPage() {
     try {
       const response = await programService.getProgramActiveCampaignCount(
         Number(id),
-        true
+        true,
       );
       if (response && typeof response === "object" && "data" in response) {
         const data = response.data as { active_count?: number; count?: number };
@@ -197,7 +197,7 @@ export default function ProgramDetailsPage() {
       setPerformanceLoading(true);
       const response = await programService.getProgramPerformance(
         Number(id),
-        true
+        true,
       );
       if (response && typeof response === "object" && "data" in response) {
         const data = (response as { data: PerformanceData }).data;
@@ -249,7 +249,6 @@ export default function ProgramDetailsPage() {
         code: programData.code,
         description: programData.description,
         budget_total: programData.budget_total,
-        updated_by: userId,
       });
 
       // Update dates separately if they changed
@@ -257,7 +256,6 @@ export default function ProgramDetailsPage() {
         await programService.updateProgramDates(Number(id), {
           start_date: programData.start_date || null,
           end_date: programData.end_date || null,
-          updated_by: userId,
         });
       }
 
@@ -670,7 +668,7 @@ export default function ProgramDetailsPage() {
                   style={{
                     width: `${Math.min(
                       budgetUtilization.utilization_percentage,
-                      100
+                      100,
                     )}%`,
                     backgroundColor: color.primary.accent,
                   }}

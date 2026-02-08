@@ -202,7 +202,9 @@ export type UpdateSegmentCategoryRequest = {
 };
 
 export type AddSegmentMembersRequest = {
-  customer_ids: number[]; // Required, array of customer IDs
+  segmentId: number; // Required, segment ID
+  subscriberIds?: number[]; // Optional, array of subscriber IDs for bulk operations
+  subscriberId?: number; // Optional, single subscriber ID for single operation
 };
 
 export type DeleteSegmentMembersRequest = {

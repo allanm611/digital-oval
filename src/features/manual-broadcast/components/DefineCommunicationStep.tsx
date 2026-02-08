@@ -114,7 +114,7 @@ export default function DefineCommunicationStep({
     const unsubscribe = communicationPolicyService.subscribe(
       (updatedPolicies) => {
         setCommunicationPolicies(updatedPolicies);
-      }
+      },
     );
 
     return unsubscribe;
@@ -124,7 +124,7 @@ export default function DefineCommunicationStep({
   useEffect(() => {
     if (data.selectedCommunicationPolicyId) {
       const policy = communicationPolicyService.getPolicyById(
-        data.selectedCommunicationPolicyId
+        data.selectedCommunicationPolicyId,
       );
       if (policy) {
         setSelectedPolicy(policy);
@@ -191,7 +191,7 @@ export default function DefineCommunicationStep({
 
   // Handle saving customized policy
   const handleSaveCustomizedPolicy = async (
-    policyData: Record<string, unknown>
+    policyData: Record<string, unknown>,
   ) => {
     // Store the policy data and open name modal
     // First close the customization modal
@@ -210,7 +210,7 @@ export default function DefineCommunicationStep({
       // Get the original policy name (remove the temporary suffix)
       const originalPolicyName = policyToCustomize.name.replace(
         " - Customizing...",
-        ""
+        "",
       );
 
       // Create new policy with customized configuration
@@ -464,7 +464,9 @@ export default function DefineCommunicationStep({
                             policy.isActive ? "bg-green-500" : "bg-gray-400"
                           }`}
                         ></div>
-                        <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                        <div
+                          className={`text-sm font-medium ${tw.textPrimary}`}
+                        >
                           {policy.name}
                         </div>
                       </div>
@@ -776,7 +778,9 @@ export default function DefineCommunicationStep({
           setPendingPolicyData(null);
         }}
         onConfirm={handleConfirmPolicyName}
-        defaultName={policyToCustomize?.name.replace(" - Customizing...", "") || ""}
+        defaultName={
+          policyToCustomize?.name.replace(" - Customizing...", "") || ""
+        }
       />
     </div>
   );

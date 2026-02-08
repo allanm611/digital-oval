@@ -25,7 +25,7 @@ const clampLimit = (value?: number) => {
 class ScheduledJobService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       ...options,
@@ -49,8 +49,12 @@ class ScheduledJobService {
       throw new Error(errorMessage);
     }
 
-    if (response.status === 204) {
-      return {} as T;
+    if (response.status === 204 || response.status === 201) {
+      const text = await response.text();
+      if (!text) {
+        return {} as T;
+      }
+      return JSON.parse(text);
     }
 
     return response.json();
@@ -62,7 +66,7 @@ class ScheduledJobService {
       | {
           success?: boolean;
           data?: ScheduledJob;
-        }
+        },
   ): ScheduledJob {
     if (
       response &&
@@ -76,7 +80,7 @@ class ScheduledJobService {
   }
 
   private buildQueryString(
-    params?: Record<string, string | number | boolean | undefined | null>
+    params?: Record<string, string | number | boolean | undefined | null>,
   ) {
     if (!params) return "";
     const searchParams = new URLSearchParams();
@@ -94,7 +98,7 @@ class ScheduledJobService {
       offset?: number;
       status?: string;
       skipCache?: boolean;
-    } = {}
+    } = {},
   ): Promise<ScheduledJobListResponse> {
     const query = this.buildQueryString({
       limit: clampLimit(params.limit),
@@ -106,7 +110,7 @@ class ScheduledJobService {
   }
 
   async searchScheduledJobs(
-    params: ScheduledJobSearchParams = {}
+    params: ScheduledJobSearchParams = {},
   ): Promise<ScheduledJobListResponse> {
     const query = this.buildQueryString({
       ...params,
@@ -142,7 +146,7 @@ class ScheduledJobService {
 
   async getScheduledJobsByStatus(status: string) {
     return this.request<ScheduledJobListResponse>(
-      `/status/${encodeURIComponent(status)}`
+      `/status/${encodeURIComponent(status)}`,
     );
   }
 
@@ -151,7 +155,7 @@ class ScheduledJobService {
   }
 
   async createScheduledJob(
-    payload: CreateScheduledJobPayload
+    payload: CreateScheduledJobPayload,
   ): Promise<ScheduledJob> {
     return this.request<ScheduledJob>("", {
       method: "POST",
@@ -162,7 +166,7 @@ class ScheduledJobService {
 
   async updateScheduledJob(
     id: number,
-    payload: UpdateScheduledJobPayload
+    payload: UpdateScheduledJobPayload,
   ): Promise<ScheduledJob> {
     return this.request<ScheduledJob>(`/${id}`, {
       method: "PUT",
@@ -248,7 +252,7 @@ class ScheduledJobService {
 
   async updateExecutionStats(
     id: number,
-    payload: ExecutionStatsPayload
+    payload: ExecutionStatsPayload,
   ): Promise<ScheduledJob> {
     return this.request<ScheduledJob>(`/${id}/execution-stats`, {
       method: "PATCH",
@@ -259,7 +263,7 @@ class ScheduledJobService {
 
   async updateLastRun(
     id: number,
-    payload: LastRunPayload
+    payload: LastRunPayload,
   ): Promise<ScheduledJob> {
     return this.request<ScheduledJob>(`/${id}/last-run`, {
       method: "PATCH",
@@ -270,7 +274,7 @@ class ScheduledJobService {
 
   async updateNextRun(
     id: number,
-    payload: NextRunPayload
+    payload: NextRunPayload,
   ): Promise<ScheduledJob> {
     return this.request<ScheduledJob>(`/${id}/next-run`, {
       method: "PATCH",
@@ -315,7 +319,7 @@ class ScheduledJobService {
 
   async addNotificationRecipients(
     id: number,
-    payload: NotificationRecipientsPayload
+    payload: NotificationRecipientsPayload,
   ) {
     const response = await this.request<
       ScheduledJob | { success?: boolean; data: ScheduledJob }
@@ -347,7 +351,7 @@ class ScheduledJobService {
   async rollbackVersion(
     id: number,
     versionId: number,
-    payload: RollbackPayload
+    payload: RollbackPayload,
   ) {
     return this.request<ScheduledJob>(`/${id}/rollback/${versionId}`, {
       method: "POST",
@@ -395,7 +399,7 @@ class ScheduledJobService {
 
   async batchActivate(
     jobIds: number[],
-    updated_by?: number
+    updated_by?: number,
   ): Promise<{
     success: number;
     failed: number;
@@ -410,7 +414,7 @@ class ScheduledJobService {
 
   async batchDeactivate(
     jobIds: number[],
-    updated_by?: number
+    updated_by?: number,
   ): Promise<{
     success: number;
     failed: number;
@@ -425,7 +429,7 @@ class ScheduledJobService {
 
   async batchPause(
     jobIds: number[],
-    updated_by?: number
+    updated_by?: number,
   ): Promise<{
     success: number;
     failed: number;
@@ -440,7 +444,7 @@ class ScheduledJobService {
 
   async batchArchive(
     jobIds: number[],
-    updated_by?: number
+    updated_by?: number,
   ): Promise<{
     success: number;
     failed: number;
@@ -455,7 +459,7 @@ class ScheduledJobService {
 
   async batchDelete(
     jobIds: number[],
-    updated_by?: number
+    updated_by?: number,
   ): Promise<{
     success: number;
     failed: number;
@@ -519,34 +523,34 @@ class ScheduledJobService {
   async getScheduledJobsByTenant(tenantId: number, skipCache?: boolean) {
     const query = this.buildQueryString({ skipCache });
     return this.request<ScheduledJobListResponse>(
-      `/tenant/${tenantId}${query}`
+      `/tenant/${tenantId}${query}`,
     );
   }
 
   async getScheduledJobsByScheduleType(
     scheduleType: string,
-    skipCache?: boolean
+    skipCache?: boolean,
   ) {
     const query = this.buildQueryString({ skipCache });
     return this.request<ScheduledJobListResponse>(
-      `/schedule-type/${encodeURIComponent(scheduleType)}${query}`
+      `/schedule-type/${encodeURIComponent(scheduleType)}${query}`,
     );
   }
 
   async getScheduledJobsByTag(tag: string, skipCache?: boolean) {
     const query = this.buildQueryString({ skipCache });
     return this.request<ScheduledJobListResponse>(
-      `/tag/${encodeURIComponent(tag)}${query}`
+      `/tag/${encodeURIComponent(tag)}${query}`,
     );
   }
 
   async getScheduledJobsByConnectionProfile(
     profileId: number,
-    skipCache?: boolean
+    skipCache?: boolean,
   ) {
     const query = this.buildQueryString({ skipCache });
     return this.request<ScheduledJobListResponse>(
-      `/connection-profile/${profileId}${query}`
+      `/connection-profile/${profileId}${query}`,
     );
   }
 

@@ -300,7 +300,6 @@ export default function ProgramsPage() {
           code: programData.code,
           description: programData.description,
           budget_total: programData.budget_total,
-          updated_by: userId,
         });
 
         // Update dates separately if they changed
@@ -528,15 +527,10 @@ export default function ProgramsPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="space-y-1">
-                          <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
-                          >
-                            {program.name}
-                          </div>
-                          <div className={`text-sm ${tw.textMuted}`}>
-                            ID: {program.id ?? "—"}
-                          </div>
+                        <div
+                          className={`text-base font-semibold ${tw.textPrimary}`}
+                        >
+                          {program.name}
                         </div>
                       </td>
                       <td

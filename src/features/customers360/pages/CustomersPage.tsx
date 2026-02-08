@@ -122,15 +122,14 @@ export default function CustomersPage() {
         }
 
         // Merge API and persisted customers (deduplicate by customerId)
-        const allCustomers = [...customerSubscriptions]; // Start with base JSON data
-        const seenIds = new Set(allCustomers.map((c) => c.customerId));
+        // Priority order: API data first, then localStorage, then JSON dummy data
+        const allCustomers: CustomerSubscriptionRecord[] = [];
+        const seenIds = new Set<number>();
 
-        // Add API customers
+        // Add API customers first (highest priority)
         for (const apiCustomer of apiCustomers) {
-          if (!seenIds.has(apiCustomer.customerId)) {
-            allCustomers.push(apiCustomer);
-            seenIds.add(apiCustomer.customerId);
-          }
+          allCustomers.push(apiCustomer);
+          seenIds.add(apiCustomer.customerId);
         }
 
         // Add persisted customers (bulk/import)
@@ -138,6 +137,14 @@ export default function CustomersPage() {
           if (!seenIds.has(persistedCustomer.customerId)) {
             allCustomers.push(persistedCustomer);
             seenIds.add(persistedCustomer.customerId);
+          }
+        }
+
+        // Add JSON dummy data last (lowest priority)
+        for (const jsonCustomer of customerSubscriptions) {
+          if (!seenIds.has(jsonCustomer.customerId)) {
+            allCustomers.push(jsonCustomer);
+            seenIds.add(jsonCustomer.customerId);
           }
         }
 
@@ -438,19 +445,16 @@ export default function CustomersPage() {
               t.customer360.simType,
               t.customer360.activationDate,
             ]}
-            rows={filteredCustomers.map((row) => ([
+            rows={filteredCustomers.map((row) => [
               row.subscriptionId,
               formatMsisdn(row.msisdn),
-              getSubscriptionDisplayName(
-                row,
-                `Customer ${row.customerId}`,
-              ),
+              getSubscriptionDisplayName(row, `Customer ${row.customerId}`),
               row.customerType || "—",
               row.status || "Unknown",
               row.tariff || "—",
               row.simType || "—",
               row.activationDate || "—",
-            ]))}
+            ])}
             filename="customers_360"
             label="Download CSV"
             disabled={filteredCustomers.length === 0}

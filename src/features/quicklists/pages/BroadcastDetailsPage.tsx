@@ -24,9 +24,8 @@ export default function BroadcastDetailsPage() {
   const navigate = useNavigate();
   const { error: showError } = useToast();
 
-  const [execution, setExecution] = useState<CommunicationExecutionDetail | null>(
-    null
-  );
+  const [execution, setExecution] =
+    useState<CommunicationExecutionDetail | null>(null);
   const [logs, setLogs] = useState<CommunicationLog[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +39,8 @@ export default function BroadcastDetailsPage() {
 
       try {
         setLoading(true);
-        const response = await communicationService.getExecutionDetails(executionId);
+        const response =
+          await communicationService.getExecutionDetails(executionId);
 
         if (response.success && response.data) {
           setExecution(response.data.execution);
@@ -121,7 +121,9 @@ export default function BroadcastDetailsPage() {
 
   const successRate =
     execution.total_recipients > 0
-      ? ((execution.messages_sent / execution.total_recipients) * 100).toFixed(1)
+      ? ((execution.messages_sent / execution.total_recipients) * 100).toFixed(
+          1,
+        )
       : "0.0";
 
   return (
@@ -155,7 +157,9 @@ export default function BroadcastDetailsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Total Recipients</p>
+            <p className="text-sm font-medium text-gray-600">
+              Total Recipients
+            </p>
           </div>
           <p className="mt-2 text-3xl font-bold text-gray-900">
             {execution.total_recipients.toLocaleString()}
@@ -193,7 +197,10 @@ export default function BroadcastDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5" style={{ color: color.primary.accent }} />
+            <Clock
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
             <p className="text-sm font-medium text-gray-600">Success Rate</p>
           </div>
           <p className="mt-2 text-3xl font-bold text-blue-600">

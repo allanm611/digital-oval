@@ -318,6 +318,8 @@ export default function CreateCustomerModal({
         .filter((line) => line.trim())
         .slice(1); // Skip header if present
 
+      // Prepare data for API
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
       const customers: CustomerSubscriptionRecord[] = [];
       let subscriptionIdCounter = nextSubscriptionId;
 
@@ -325,12 +327,29 @@ export default function CreateCustomerModal({
         const parts = line.split(",").map((p) => p.trim());
         if (parts.length < 3) continue; // Skip incomplete lines
 
+        // Format MSISDN for API (digits only, no +)
+        const formattedMsisdn = formatPhoneNumber(parts[2]);
+        const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
+
+        // Add to API profiles array
+        profiles.push({
+          msisdn: msisdnForApi,
+          attributes: {
+            first_name: parts[0] || "Unknown",
+            last_name: parts[1] || "Customer",
+            email: parts[3] || undefined,
+            device_type: "unknown",
+            premium_user: false,
+          },
+        });
+
+        // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
           customerId: Math.floor(Math.random() * 100000),
           subscriptionId: subscriptionIdCounter,
           firstName: parts[0] || "Unknown",
           lastName: parts[1] || "Customer",
-          msisdn: formatPhoneNumber(parts[2]),
+          msisdn: formattedMsisdn,
           email: parts[3] || undefined,
           city: parts[4] || undefined,
           customerType: parts[5] || "Non-member",
@@ -348,6 +367,10 @@ export default function CreateCustomerModal({
         return;
       }
 
+      // Call API to bulk create customers
+      await customerService.bulkCreateCustomers({ profiles });
+
+      // Add to local list
       onCustomersAdded(customers);
       success("Success", `${customers.length} customer(s) added successfully`);
 
@@ -375,12 +398,14 @@ export default function CreateCustomerModal({
       const text = await importFile.text();
       setBulkText(text);
       setActiveTab("bulk");
-      // Trigger bulk add
+      // Process file
       const lines = text
         .split("\n")
         .filter((line) => line.trim())
         .slice(1);
 
+      // Prepare data for API
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
       const customers: CustomerSubscriptionRecord[] = [];
       let subscriptionIdCounter = nextSubscriptionId;
 
@@ -388,12 +413,29 @@ export default function CreateCustomerModal({
         const parts = line.split(importFileDelimiter).map((p) => p.trim());
         if (parts.length < 3) continue;
 
+        // Format MSISDN for API (digits only, no +)
+        const formattedMsisdn = formatPhoneNumber(parts[2]);
+        const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
+
+        // Add to API profiles array
+        profiles.push({
+          msisdn: msisdnForApi,
+          attributes: {
+            first_name: parts[0] || "Unknown",
+            last_name: parts[1] || "Customer",
+            email: parts[3] || undefined,
+            device_type: "unknown",
+            premium_user: false,
+          },
+        });
+
+        // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
           customerId: Math.floor(Math.random() * 100000),
           subscriptionId: subscriptionIdCounter,
           firstName: parts[0] || "Unknown",
           lastName: parts[1] || "Customer",
-          msisdn: formatPhoneNumber(parts[2]),
+          msisdn: formattedMsisdn,
           email: parts[3] || undefined,
           city: parts[4] || undefined,
           customerType: parts[5] || "Non-member",
@@ -411,6 +453,10 @@ export default function CreateCustomerModal({
         return;
       }
 
+      // Call API to bulk create customers
+      await customerService.bulkCreateCustomers({ profiles });
+
+      // Add to local list
       onCustomersAdded(customers);
       success(
         "Success",

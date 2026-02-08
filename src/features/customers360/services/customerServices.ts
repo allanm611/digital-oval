@@ -90,6 +90,25 @@ class CustomerService {
   }
 
   /**
+   * Bulk create customers
+   * POST /subscriber-360/bulk-create
+   */
+  async bulkCreateCustomers(request: {
+    profiles: {
+      msisdn: string;
+      attributes?: Record<string, any>;
+    }[];
+  }): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(
+      "/bulk-create",
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      },
+    );
+  }
+
+  /**
    * Get all customers with pagination
    * GET /subscriber-360?limit=50&offset=0
    */

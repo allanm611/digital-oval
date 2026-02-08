@@ -230,29 +230,21 @@ export default function CampaignDetailsPage() {
   const fetchCampaignSegments = async (campaignId: number) => {
     try {
       setIsLoadingSegments(true);
-      const response = await campaignService.getCampaignSegments(
+      // Use new endpoint to get segments directly from campaign flows
+      const response = await campaignFlowService.getCampaignSegments(
         campaignId,
         true,
       );
-      if (response && typeof response === "object" && "data" in response) {
-        // Backend returns: { success: true, data: CampaignSegmentDetail[], total: number }
-        // Handle both nested and direct array responses
-        let fetchedSegments: CampaignSegmentDetail[] = [];
-        if (Array.isArray(response.data)) {
-          // Direct array: { data: [...] }
-          fetchedSegments = response.data;
-        } else if (
-          response.data &&
-          typeof response.data === "object" &&
-          "data" in response.data &&
-          Array.isArray(
-            (response.data as { data?: CampaignSegmentDetail[] }).data,
-          )
-        ) {
-          // Nested: { data: { data: [...] } }
-          fetchedSegments = (response.data as { data: CampaignSegmentDetail[] })
-            .data;
-        }
+      if (response && response.success && Array.isArray(response.data)) {
+        // Convert segment info from API to CampaignSegmentDetail format
+        const fetchedSegments: CampaignSegmentDetail[] = response.data.map((segment) => ({
+          id: segment.id,
+          name: segment.name,
+          code: segment.code,
+          total_subscribers: 0, // Not provided by campaign flows endpoint
+          created_at: "",
+          updated_at: "",
+        }));
         setSegments(fetchedSegments);
       } else {
         setSegments([]);
@@ -269,22 +261,15 @@ export default function CampaignDetailsPage() {
   const fetchCampaignOffers = async (campaignId: number) => {
     try {
       setIsLoadingOffers(true);
-      const response =
-        await campaignSegmentOfferService.getMappingsByCampaign(campaignId, true);
-      if (response && response.success && Array.isArray(response.data)) {
-        // Extract unique offer IDs from mappings
-        const offerIds = new Set<number>();
-        response.data.forEach((mapping) => {
-          if (mapping.offer_id) {
-            offerIds.add(mapping.offer_id);
-          }
-        });
+      // Use new endpoint to get offers directly from campaign flows
+      const response = await campaignFlowService.getCampaignOffers(campaignId, true);
 
-        // Fetch full offer details for each offer ID
-        const offerPromises = Array.from(offerIds).map(async (offerId) => {
+      if (response && response.success && Array.isArray(response.data)) {
+        // Fetch full offer details for each offer in the response
+        const offerPromises = response.data.map(async (offerInfo) => {
           try {
             const offerResponse = await offerService.getOfferById(
-              offerId,
+              offerInfo.id,
               true,
             );
             // Handle both direct Offer and { success: true, data: Offer } response formats
@@ -297,7 +282,7 @@ export default function CampaignDetailsPage() {
             }
             return null;
           } catch (error) {
-            console.error(`Failed to fetch offer ${offerId}:`, error);
+            console.error(`Failed to fetch offer ${offerInfo.id}:`, error);
             return null;
           }
         });

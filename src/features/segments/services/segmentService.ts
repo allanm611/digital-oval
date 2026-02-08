@@ -79,7 +79,7 @@ const MEMBERS_BASE_URL = buildApiUrl("/segment-members");
 class SegmentService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
 
@@ -107,7 +107,7 @@ class SegmentService {
       // If parsing fails, handle based on response status
       if (!response.ok) {
         throw new Error(
-          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`
+          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`,
         );
       }
       responseData = {};
@@ -125,7 +125,7 @@ class SegmentService {
         throw new Error(
           typeof responseData.details === "string"
             ? responseData.details
-            : JSON.stringify(responseData.details)
+            : JSON.stringify(responseData.details),
         );
       }
       throw new Error("Operation failed");
@@ -146,18 +146,18 @@ class SegmentService {
           throw new Error(
             typeof errorData.details === "string"
               ? errorData.details
-              : JSON.stringify(errorData.details)
+              : JSON.stringify(errorData.details),
           );
         }
         throw new Error(
-          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`
+          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`,
         );
       } catch (err) {
         if (err instanceof Error && !err.message.includes("HTTP error")) {
           throw err;
         }
         throw new Error(
-          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`
+          `HTTP error! status: ${response.status}, statusText: ${response.statusText}`,
         );
       }
     }
@@ -167,7 +167,7 @@ class SegmentService {
 
   private async requestCategories<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${CATEGORIES_BASE_URL}${endpoint}`;
 
@@ -235,11 +235,11 @@ class SegmentService {
    */
   async getSegmentCategories(
     search?: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ search, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
-      `/root${queryString}`
+      `/root${queryString}`,
     );
   }
 
@@ -248,11 +248,11 @@ class SegmentService {
    */
   async searchSegmentCategories(
     query: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ searchTerm: query, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
-      `/search${queryString}`
+      `/search${queryString}`,
     );
   }
 
@@ -261,11 +261,11 @@ class SegmentService {
    */
   async superSearchSegmentCategories(
     filters: AdvancedSearchQuery,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ ...filters, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
-      `/super-search${queryString}`
+      `/super-search${queryString}`,
     );
   }
 
@@ -274,7 +274,7 @@ class SegmentService {
    */
   async checkSegmentCategoryName(
     name: string,
-    excludeId?: number
+    excludeId?: number,
   ): Promise<ApiSuccessResponse<{ exists: boolean; available: boolean }>> {
     const queryString = this.buildQueryParams({ name, exclude_id: excludeId });
     return this.requestCategories<
@@ -287,11 +287,11 @@ class SegmentService {
    */
   async getSegmentCategoryById(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
-      `/${id}${queryString}`
+      `/${id}${queryString}`,
     );
   }
 
@@ -299,7 +299,7 @@ class SegmentService {
    * POST /segment-categories/ - Create category
    */
   async createSegmentCategory(
-    request: CreateSegmentCategoryRequest
+    request: CreateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>("", {
       method: "POST",
@@ -312,14 +312,14 @@ class SegmentService {
    */
   async updateSegmentCategory(
     id: number,
-    request: UpdateSegmentCategoryRequest
+    request: UpdateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
       `/${id}`,
       {
         method: "PUT",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -338,7 +338,7 @@ class SegmentService {
    * GET /segments/ - Get all segments (with pagination/filtering)
    */
   async getSegments(
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams({
       search: filters?.search,
@@ -358,7 +358,7 @@ class SegmentService {
    * POST /segments/ - Create segment
    */
   async createSegment(
-    segment: CreateSegmentRequest
+    segment: CreateSegmentRequest,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>("/", {
       method: "POST",
@@ -371,11 +371,11 @@ class SegmentService {
    */
   async getSegmentById(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
-      `/${id}${queryString}`
+      `/${id}${queryString}`,
     );
   }
 
@@ -384,7 +384,7 @@ class SegmentService {
    */
   async updateSegment(
     id: number,
-    segment: Partial<UpdateSegmentRequest>
+    segment: Partial<UpdateSegmentRequest>,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>(`/${id}`, {
       method: "PUT",
@@ -419,7 +419,7 @@ class SegmentService {
    * GET /segments/search - Search segments
    */
   async searchSegments(
-    query: SearchSegmentsQuery
+    query: SearchSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams({
       q: query.q,
@@ -431,7 +431,7 @@ class SegmentService {
     });
 
     return this.request<PaginatedResponse<SegmentType>>(
-      `/search${queryString}`
+      `/search${queryString}`,
     );
   }
 
@@ -439,7 +439,7 @@ class SegmentService {
    * POST /segments/validate-criteria - Validate segment criteria
    */
   async validateCriteria(
-    request: ValidateCriteriaRequest
+    request: ValidateCriteriaRequest,
   ): Promise<ApiSuccessResponse<{ valid: boolean; errors?: string[] }>> {
     return this.request<
       ApiSuccessResponse<{ valid: boolean; errors?: string[] }>
@@ -456,7 +456,7 @@ class SegmentService {
    */
   async getHealthSummary(): Promise<ApiSuccessResponse<HealthSummaryResponse>> {
     return this.request<ApiSuccessResponse<HealthSummaryResponse>>(
-      "/stats/health-summary"
+      "/stats/health-summary",
     );
   }
 
@@ -465,11 +465,11 @@ class SegmentService {
    */
   async getCreationTrend(
     period?: string,
-    days?: number
+    days?: number,
   ): Promise<ApiSuccessResponse<CreationTrendResponse>> {
     const queryString = this.buildQueryParams({ period, days });
     return this.request<ApiSuccessResponse<CreationTrendResponse>>(
-      `/stats/creation-trend${queryString}`
+      `/stats/creation-trend${queryString}`,
     );
   }
 
@@ -480,7 +480,7 @@ class SegmentService {
     ApiSuccessResponse<TypeDistributionResponse>
   > {
     return this.request<ApiSuccessResponse<TypeDistributionResponse>>(
-      "/stats/type-distribution"
+      "/stats/type-distribution",
     );
   }
 
@@ -488,13 +488,13 @@ class SegmentService {
    * GET /segments/stats/category-distribution - Get category distribution
    */
   async getCategoryDistribution(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<CategoryDistributionResponse[]>> {
     const endpoint = `/stats/category-distribution${
       skipCache ? "?skipCache=true" : ""
     }`;
     return this.request<ApiSuccessResponse<CategoryDistributionResponse[]>>(
-      endpoint
+      endpoint,
     );
   }
 
@@ -502,11 +502,11 @@ class SegmentService {
    * GET /segments/stats/largest - Get largest segments
    */
   async getLargestSegments(
-    limit: number = 10
+    limit: number = 10,
   ): Promise<ApiSuccessResponse<LargestSegmentsResponse[]>> {
     const queryString = this.buildQueryParams({ limit });
     return this.request<ApiSuccessResponse<LargestSegmentsResponse[]>>(
-      `/stats/largest${queryString}`
+      `/stats/largest${queryString}`,
     );
   }
 
@@ -517,7 +517,7 @@ class SegmentService {
     ApiSuccessResponse<StaleSegmentsResponse[]>
   > {
     return this.request<ApiSuccessResponse<StaleSegmentsResponse[]>>(
-      `/stats/stale`
+      `/stats/stale`,
     );
   }
 
@@ -525,11 +525,11 @@ class SegmentService {
    * GET /segments/stats - Get general segment statistics
    */
   async getSegmentStats(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<Record<string, unknown>>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<Record<string, unknown>>>(
-      `/stats${queryString}`
+      `/stats${queryString}`,
     );
   }
 
@@ -587,11 +587,11 @@ class SegmentService {
    */
   async getSegmentCategoryByNameNested(
     name: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
-      `/categories/name/${encodeURIComponent(name)}${queryString}`
+      `/categories/name/${encodeURIComponent(name)}${queryString}`,
     );
   }
 
@@ -600,11 +600,11 @@ class SegmentService {
    */
   async getSegmentCategoryByIdNested(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
-      `/categories/${id}${queryString}`
+      `/categories/${id}${queryString}`,
     );
   }
 
@@ -612,7 +612,7 @@ class SegmentService {
    * GET /segments/categories - Get all categories
    */
   async getSegmentCategoriesNested(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<SegmentCategoriesResponse>(`/categories${queryString}`);
@@ -622,14 +622,14 @@ class SegmentService {
    * POST /segments/categories - Create category
    */
   async createSegmentCategoryNested(
-    request: CreateSegmentCategoryRequest
+    request: CreateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
       "/categories",
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -638,14 +638,14 @@ class SegmentService {
    */
   async updateSegmentCategoryNested(
     id: number,
-    request: UpdateSegmentCategoryRequest
+    request: UpdateSegmentCategoryRequest,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
       `/categories/${id}`,
       {
         method: "PUT",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -721,11 +721,11 @@ class SegmentService {
    * GET /segments/active - Get active segments
    */
   async getActiveSegments(
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/active${queryString}`
+      `/active${queryString}`,
     );
   }
 
@@ -733,11 +733,11 @@ class SegmentService {
    * GET /segments/parents - Get parent segments
    */
   async getParentSegments(
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/parents${queryString}`
+      `/parents${queryString}`,
     );
   }
 
@@ -745,7 +745,7 @@ class SegmentService {
    * GET /segments/empty - Get empty segments
    */
   async getEmptySegments(
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(`/empty${queryString}`);
@@ -755,11 +755,11 @@ class SegmentService {
    * GET /segments/most-used - Get most used segments
    */
   async getMostUsedSegments(
-    limit: number = 10
+    limit: number = 10,
   ): Promise<ApiSuccessResponse<SegmentType[]>> {
     const queryString = this.buildQueryParams({ limit });
     return this.request<ApiSuccessResponse<SegmentType[]>>(
-      `/most-used${queryString}`
+      `/most-used${queryString}`,
     );
   }
 
@@ -767,11 +767,11 @@ class SegmentService {
    * GET /segments/needing-refresh - Get segments needing refresh
    */
   async getSegmentsNeedingRefresh(
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/needing-refresh${queryString}`
+      `/needing-refresh${queryString}`,
     );
   }
 
@@ -780,11 +780,11 @@ class SegmentService {
    */
   async getSegmentByCode(
     code: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
-      `/code/${code}${queryString}`
+      `/code/${code}${queryString}`,
     );
   }
 
@@ -793,11 +793,11 @@ class SegmentService {
    */
   async getSegmentByName(
     name: string,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
-      `/name/${name}${queryString}`
+      `/name/${name}${queryString}`,
     );
   }
 
@@ -806,11 +806,11 @@ class SegmentService {
    */
   async getSegmentsByType(
     type: "static" | "dynamic" | "trigger",
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/type/${type}${queryString}`
+      `/type/${type}${queryString}`,
     );
   }
 
@@ -819,11 +819,11 @@ class SegmentService {
    */
   async getSegmentsByCategory(
     categoryId: number,
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/category/${categoryId}${queryString}`
+      `/category/${categoryId}${queryString}`,
     );
   }
 
@@ -832,11 +832,11 @@ class SegmentService {
    */
   async getSegmentsByVisibility(
     visibility: "private" | "public",
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/visibility/${visibility}${queryString}`
+      `/visibility/${visibility}${queryString}`,
     );
   }
 
@@ -845,11 +845,11 @@ class SegmentService {
    */
   async getSegmentsByCreator(
     creatorId: number,
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/creator/${creatorId}${queryString}`
+      `/creator/${creatorId}${queryString}`,
     );
   }
 
@@ -858,11 +858,11 @@ class SegmentService {
    */
   async getSegmentsByTag(
     tag: string,
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/tag/${tag}${queryString}`
+      `/tag/${tag}${queryString}`,
     );
   }
 
@@ -873,11 +873,11 @@ class SegmentService {
    */
   async getSegmentChildren(
     id: number,
-    filters?: GetSegmentsQuery
+    filters?: GetSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams(filters || {});
     return this.request<PaginatedResponse<SegmentType>>(
-      `/${id}/children${queryString}`
+      `/${id}/children${queryString}`,
     );
   }
 
@@ -885,10 +885,10 @@ class SegmentService {
    * GET /segments/:id/hierarchy - Get segment hierarchy
    */
   async getSegmentHierarchy(
-    id: number
+    id: number,
   ): Promise<ApiSuccessResponse<SegmentHierarchyResponse>> {
     return this.request<ApiSuccessResponse<SegmentHierarchyResponse>>(
-      `/${id}/hierarchy`
+      `/${id}/hierarchy`,
     );
   }
 
@@ -898,11 +898,11 @@ class SegmentService {
   async getSegmentGrowthTrend(
     id: number,
     period?: string,
-    days?: number
+    days?: number,
   ): Promise<ApiSuccessResponse<GrowthTrendResponse>> {
     const queryString = this.buildQueryParams({ period, days });
     return this.request<ApiSuccessResponse<GrowthTrendResponse>>(
-      `/${id}/growth-trend${queryString}`
+      `/${id}/growth-trend${queryString}`,
     );
   }
 
@@ -910,10 +910,10 @@ class SegmentService {
    * GET /segments/:id/performance-metrics - Get segment performance metrics
    */
   async getSegmentPerformanceMetrics(
-    id: number
+    id: number,
   ): Promise<ApiSuccessResponse<PerformanceMetricsResponse>> {
     return this.request<ApiSuccessResponse<PerformanceMetricsResponse>>(
-      `/${id}/performance-metrics`
+      `/${id}/performance-metrics`,
     );
   }
 
@@ -921,10 +921,10 @@ class SegmentService {
    * GET /segments/:id/usage-in-campaigns - Get segment usage in campaigns
    */
   async getSegmentUsageInCampaigns(
-    id: number
+    id: number,
   ): Promise<ApiSuccessResponse<UsageInCampaignsResponse[]>> {
     return this.request<ApiSuccessResponse<UsageInCampaignsResponse[]>>(
-      `/${id}/usage-in-campaigns`
+      `/${id}/usage-in-campaigns`,
     );
   }
 
@@ -933,10 +933,10 @@ class SegmentService {
    */
   async getSegmentOverlap(
     id1: number,
-    id2: number
+    id2: number,
   ): Promise<ApiSuccessResponse<SegmentOverlapResponse>> {
     return this.request<ApiSuccessResponse<SegmentOverlapResponse>>(
-      `/${id1}/overlap/${id2}`
+      `/${id1}/overlap/${id2}`,
     );
   }
 
@@ -945,14 +945,14 @@ class SegmentService {
    */
   async refreshSegment(
     id: number,
-    request?: { force?: boolean }
+    request?: { force?: boolean },
   ): Promise<ApiSuccessResponse<ComputationStatusResponse>> {
     return this.request<ApiSuccessResponse<ComputationStatusResponse>>(
       `/${id}/refresh`,
       {
         method: "POST",
         body: JSON.stringify(request || {}),
-      }
+      },
     );
   }
 
@@ -961,14 +961,14 @@ class SegmentService {
    */
   async computeSegmentSize(
     id: number,
-    request?: SizeEstimateRequest
+    request?: SizeEstimateRequest,
   ): Promise<ApiSuccessResponse<SizeEstimateResponse>> {
     return this.request<ApiSuccessResponse<SizeEstimateResponse>>(
       `/${id}/compute-size`,
       {
         method: "POST",
         body: JSON.stringify(request || {}),
-      }
+      },
     );
   }
 
@@ -977,14 +977,14 @@ class SegmentService {
    */
   async validateSegmentQuery(
     id: number,
-    request?: QueryUpdateRequest
+    request?: QueryUpdateRequest,
   ): Promise<ApiSuccessResponse<QueryValidationResponse>> {
     return this.request<ApiSuccessResponse<QueryValidationResponse>>(
       `/${id}/validate-query`,
       {
         method: "POST",
         body: JSON.stringify(request || {}),
-      }
+      },
     );
   }
 
@@ -993,14 +993,14 @@ class SegmentService {
    */
   async updateSegmentTags(
     id: number,
-    request: TagManagementRequest
+    request: TagManagementRequest,
   ): Promise<ApiSuccessResponse<TagManagementResponse>> {
     return this.request<ApiSuccessResponse<TagManagementResponse>>(
       `/${id}/tags`,
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -1009,7 +1009,7 @@ class SegmentService {
    */
   async updateSegmentQuery(
     id: number,
-    request: QueryUpdateRequest
+    request: QueryUpdateRequest,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>(`/${id}/query`, {
       method: "PATCH",
@@ -1022,14 +1022,14 @@ class SegmentService {
    */
   async updateSegmentSizeEstimate(
     id: number,
-    sizeEstimate: number
+    sizeEstimate: number,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>(
       `/${id}/size-estimate`,
       {
         method: "PATCH",
         body: JSON.stringify({ size_estimate: sizeEstimate }),
-      }
+      },
     );
   }
 
@@ -1038,7 +1038,7 @@ class SegmentService {
    */
   async updateSegmentLastComputed(
     id: number,
-    timestamp?: string
+    timestamp?: string,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const body = timestamp
       ? { last_computed_at: timestamp }
@@ -1048,7 +1048,7 @@ class SegmentService {
       {
         method: "PATCH",
         body: JSON.stringify(body),
-      }
+      },
     );
   }
 
@@ -1057,7 +1057,7 @@ class SegmentService {
    */
   async updateSegmentParent(
     id: number,
-    parentId: number | null
+    parentId: number | null,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     return this.request<ApiSuccessResponse<SegmentType>>(`/${id}/parent`, {
       method: "PATCH",
@@ -1070,13 +1070,13 @@ class SegmentService {
    */
   async deleteSegmentTag(
     id: number,
-    tag: string
+    tag: string,
   ): Promise<ApiSuccessResponse<TagManagementResponse>> {
     return this.request<ApiSuccessResponse<TagManagementResponse>>(
       `/${id}/tags/${encodeURIComponent(tag)}`,
       {
         method: "DELETE",
-      }
+      },
     );
   }
 
@@ -1087,7 +1087,7 @@ class SegmentService {
    * NOTE: This endpoint doesn't exist in the backend - disabled
    */
   async getSegmentRules(
-    _segmentId: number
+    _segmentId: number,
   ): Promise<ApiSuccessResponse<SegmentRuleType[]>> {
     // Endpoint doesn't exist - return empty array
     console.warn("getSegmentRules endpoint doesn't exist in backend");
@@ -1099,14 +1099,14 @@ class SegmentService {
    */
   async createSegmentRule(
     segmentId: number,
-    request: CreateSegmentRuleRequest
+    request: CreateSegmentRuleRequest,
   ): Promise<ApiSuccessResponse<SegmentRuleType>> {
     return this.request<ApiSuccessResponse<SegmentRuleType>>(
       `/${segmentId}/srules`,
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -1116,14 +1116,14 @@ class SegmentService {
   async updateSegmentRule(
     segmentId: number,
     ruleId: number,
-    request: UpdateSegmentRuleRequest
+    request: UpdateSegmentRuleRequest,
   ): Promise<ApiSuccessResponse<SegmentRuleType>> {
     return this.request<ApiSuccessResponse<SegmentRuleType>>(
       `/${segmentId}/rules/${ruleId}`,
       {
         method: "PUT",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -1140,7 +1140,7 @@ class SegmentService {
    * POST /segments/rules/validate - Validate rules
    */
   async validateRules(
-    request: ValidateRulesRequest
+    request: ValidateRulesRequest,
   ): Promise<ApiSuccessResponse<{ valid: boolean; errors?: string[] }>> {
     return this.request<
       ApiSuccessResponse<{ valid: boolean; errors?: string[] }>
@@ -1174,10 +1174,10 @@ class SegmentService {
    */
   async getComputationStatus(
     segmentId: number,
-    jobId: string
+    jobId: string,
   ): Promise<ApiSuccessResponse<ComputationStatusResponse>> {
     return this.request<ApiSuccessResponse<ComputationStatusResponse>>(
-      `/${segmentId}/computation-status/${jobId}`
+      `/${segmentId}/computation-status/${jobId}`,
     );
   }
 
@@ -1185,14 +1185,14 @@ class SegmentService {
    * POST /segments/batch-compute - Batch compute segments
    */
   async batchCompute(
-    request: BatchComputeRequest
+    request: BatchComputeRequest,
   ): Promise<ApiSuccessResponse<ComputationStatusResponse>> {
     return this.request<ApiSuccessResponse<ComputationStatusResponse>>(
       "/batch-compute",
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -1203,7 +1203,7 @@ class SegmentService {
    */
   async previewSegment(
     id: number,
-    request?: PreviewSegmentRequest
+    request?: PreviewSegmentRequest,
   ): Promise<ApiSuccessResponse<PreviewResponse>> {
     return this.request<ApiSuccessResponse<PreviewResponse>>(`/${id}/preview`, {
       method: "POST",
@@ -1216,7 +1216,7 @@ class SegmentService {
    */
   async getPreviewCount(
     id: number,
-    criteriaOverride?: SegmentCriteriaType
+    criteriaOverride?: SegmentCriteriaType,
   ): Promise<ApiSuccessResponse<{ count: number }>> {
     const queryString = criteriaOverride
       ? this.buildQueryParams({
@@ -1224,7 +1224,7 @@ class SegmentService {
         })
       : "";
     return this.request<ApiSuccessResponse<{ count: number }>>(
-      `/${id}/preview/count${queryString}`
+      `/${id}/preview/count${queryString}`,
     );
   }
 
@@ -1233,13 +1233,13 @@ class SegmentService {
    */
   async getPreviewSample(
     segmentId: number,
-    previewId: string
+    previewId: string,
   ): Promise<ApiSuccessResponse<PreviewSampleResponse>> {
     return this.request<ApiSuccessResponse<PreviewSampleResponse>>(
       `/${segmentId}/preview/sample/${previewId}`,
       {
         method: "POST",
-      }
+      },
     );
   }
 
@@ -1251,7 +1251,7 @@ class SegmentService {
    */
   async getSegmentMembers(
     id: number,
-    query?: GetSegmentMembersQuery
+    query?: GetSegmentMembersQuery,
   ): Promise<PaginatedResponse<SegmentMemberType>> {
     // Backend doesn't accept page/pageSize - fetch all and handle pagination client-side
     const url = `${MEMBERS_BASE_URL}/segment/${id}`;
@@ -1259,11 +1259,14 @@ class SegmentService {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch segment members: ${response.statusText}`
+        `Failed to fetch segment members: ${response.statusText}`,
       );
     }
     const data = await response.json();
@@ -1288,20 +1291,32 @@ class SegmentService {
   }
 
   /**
-   * POST /segment-members/segment/:segmentId - Add segment members
+   * POST /segment-members or POST /segment-members/bulk - Add member(s) to segment
+   * For single member: { segmentId: number, subscriberId: number }
+   * For bulk: { segmentId: number, subscriberIds: number[] }
    */
   async addSegmentMembers(
     id: number,
-    request: AddSegmentMembersRequest
+    request: AddSegmentMembersRequest,
   ): Promise<ApiSuccessResponse<{ added_count: number }>> {
-    const url = `${MEMBERS_BASE_URL}/segment/${id}`;
+    // Use bulk endpoint for multiple members
+    const isBulk = request.subscriberIds && request.subscriberIds.length > 0;
+    const endpoint = isBulk ? "/bulk" : "";
+
+    // Build payload
+    const payload = {
+      ...request,
+      segmentId: request.segmentId || id,
+    };
+
+    const url = `${MEMBERS_BASE_URL}${endpoint}`;
     const response = await fetch(url, {
       method: "POST",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       throw new Error(`Failed to add segment members: ${response.statusText}`);
@@ -1314,7 +1329,7 @@ class SegmentService {
    */
   async deleteSegmentMembers(
     id: number,
-    request: DeleteSegmentMembersRequest
+    request: DeleteSegmentMembersRequest,
   ): Promise<ApiSuccessResponse<{ removed_count: number }>> {
     const url = `${MEMBERS_BASE_URL}/segment/${id}`;
     const response = await fetch(url, {
@@ -1327,7 +1342,7 @@ class SegmentService {
     });
     if (!response.ok) {
       throw new Error(
-        `Failed to delete segment members: ${response.statusText}`
+        `Failed to delete segment members: ${response.statusText}`,
       );
     }
     return response.json();
@@ -1338,7 +1353,7 @@ class SegmentService {
    */
   async getSegmentMembersCount(
     id: number,
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<ApiSuccessResponse<{ count: number }>> {
     const queryString = this.buildQueryParams({
       segmentIds: id.toString(),
@@ -1354,7 +1369,7 @@ class SegmentService {
     if (!response.ok) {
       // If endpoint fails, return 0 count instead of throwing
       console.warn(
-        `Failed to fetch segment members count: ${response.statusText}`
+        `Failed to fetch segment members count: ${response.statusText}`,
       );
       return Promise.resolve({ success: true, data: { count: 0 } });
     }
@@ -1375,7 +1390,7 @@ class SegmentService {
    */
   async searchSegmentMembers(
     id: number,
-    request: SearchSegmentMembersRequest
+    request: SearchSegmentMembersRequest,
   ): Promise<PaginatedResponse<SegmentMemberType>> {
     // Fetch all members and filter client-side since backend doesn't support query params
     const url = `${MEMBERS_BASE_URL}/segment/${id}`;
@@ -1383,11 +1398,14 @@ class SegmentService {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
     if (!response.ok) {
       throw new Error(
-        `Failed to search segment members: ${response.statusText}`
+        `Failed to search segment members: ${response.statusText}`,
       );
     }
     const data = await response.json();
@@ -1411,7 +1429,7 @@ class SegmentService {
             email.includes(searchTerm) ||
             customerId.includes(searchTerm)
           );
-        }
+        },
       );
     }
 
@@ -1462,14 +1480,14 @@ class SegmentService {
    */
   async customExport(
     id: number,
-    request: CustomExportRequest
+    request: CustomExportRequest,
   ): Promise<ApiSuccessResponse<ExportStatusResponse>> {
     return this.request<ApiSuccessResponse<ExportStatusResponse>>(
       `/${id}/export/custom`,
       {
         method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -1478,10 +1496,10 @@ class SegmentService {
    */
   async getExportStatus(
     segmentId: number,
-    jobId: string
+    jobId: string,
   ): Promise<ApiSuccessResponse<ExportStatusResponse>> {
     return this.request<ApiSuccessResponse<ExportStatusResponse>>(
-      `/${segmentId}/export-status/${jobId}`
+      `/${segmentId}/export-status/${jobId}`,
     );
   }
 
@@ -1492,7 +1510,7 @@ class SegmentService {
    * This endpoint returns the field configuration that users can use to build segment conditions
    */
   async getSegmentationFields(
-    skipCache: boolean = false
+    skipCache: boolean = false,
   ): Promise<SegmentationFieldsResponse> {
     const params: Record<string, unknown> = { skipCache };
 
@@ -1523,7 +1541,7 @@ class SegmentService {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
+        errorData.error || `HTTP error! status: ${response.status}`,
       );
     }
 
@@ -1535,7 +1553,7 @@ class SegmentService {
    * This endpoint takes the user's segment conditions and returns the generated SQL queries
    */
   async generateSegmentQueryPreview(
-    request: GenerateQueryPreviewRequest
+    request: GenerateQueryPreviewRequest,
   ): Promise<GenerateQueryPreviewResponse> {
     const url = `${buildApiUrl("/segments")}/generate-query/preview`;
 
@@ -1551,7 +1569,7 @@ class SegmentService {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        errorData.error || `HTTP error! status: ${response.status}`
+        errorData.error || `HTTP error! status: ${response.status}`,
       );
     }
 

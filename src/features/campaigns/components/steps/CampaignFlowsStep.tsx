@@ -47,7 +47,42 @@ export default function CampaignFlowsStep({
     [segmentId: string]: SegmentFlowState;
   }>({});
 
-  // Get flow type based on campaign type (auto-derived, not user-selectable)
+  // Initialize segmentFlows from existing campaignFlows when editing
+  useEffect(() => {
+    if (campaignFlows && campaignFlows.length > 0) {
+      const flowsBySegment: { [segmentId: string]: SegmentFlowState } = {};
+
+      campaignFlows.forEach((flow) => {
+        const segmentIdStr = String(flow.segment_id);
+        const offerIdStr = String(flow.offer_id);
+
+        // Find the offer in selectedOffers
+        const offer = selectedOffers.find((o) => o.id === offerIdStr);
+
+        if (!flowsBySegment[segmentIdStr]) {
+          flowsBySegment[segmentIdStr] = {
+            offers: [],
+            waitHours: 0,
+            allocation: flow.bucket_allocation,
+          };
+        }
+
+        // Add offer if it exists and not already in the list
+        if (offer && !flowsBySegment[segmentIdStr].offers.some((o) => o.id === offerIdStr)) {
+          flowsBySegment[segmentIdStr].offers.push(offer);
+        }
+
+        // Update wait hours (use the highest value if multiple flows for same segment)
+        if (flow.wait_interval_hours > flowsBySegment[segmentIdStr].waitHours) {
+          flowsBySegment[segmentIdStr].waitHours = flow.wait_interval_hours;
+        }
+      });
+
+      setSegmentFlows(flowsBySegment);
+    }
+  }, [campaignFlows, selectedOffers]);
+
+  // Get flow type based on campaign type 
   const getFlowTypeFromCampaignType = (): CampaignFlowType => {
     switch (formData.campaign_type) {
       case "ab_test":

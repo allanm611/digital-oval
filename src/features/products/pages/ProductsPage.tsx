@@ -582,14 +582,6 @@ export default function ProductsPage() {
                           >
                             {product.name}
                           </div>
-                          {product.description && (
-                            <div
-                              className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                              title={product.description}
-                            >
-                              {product.description || "No description"}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td

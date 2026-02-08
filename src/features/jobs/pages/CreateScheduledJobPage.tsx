@@ -20,12 +20,32 @@ import { useAuth } from "../../../contexts/AuthContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 
-const SCHEDULE_TYPES: { value: ScheduleType; label: string; description?: string }[] = [
+const SCHEDULE_TYPES: {
+  value: ScheduleType;
+  label: string;
+  description?: string;
+}[] = [
   { value: "manual", label: "Manual", description: "Trigger the job manually" },
-  { value: "cron", label: "Custom Schedule", description: "Define specific times (e.g., daily, weekly)" },
-  { value: "interval", label: "Repeat Regularly", description: "Run every N seconds" },
-  { value: "event_driven", label: "Event Driven", description: "Trigger when an event occurs" },
-  { value: "dependency_based", label: "Dependency Based", description: "Trigger based on other jobs" },
+  {
+    value: "cron",
+    label: "Custom Schedule",
+    description: "Define specific times (e.g., daily, weekly)",
+  },
+  {
+    value: "interval",
+    label: "Repeat Regularly",
+    description: "Run every N seconds",
+  },
+  {
+    value: "event_driven",
+    label: "Event Driven",
+    description: "Trigger when an event occurs",
+  },
+  {
+    value: "dependency_based",
+    label: "Dependency Based",
+    description: "Trigger based on other jobs",
+  },
 ];
 
 const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
@@ -140,8 +160,8 @@ export default function CreateScheduledJobPage() {
           });
         } catch (err) {
           showError(
-            t("scheduledJob.loadFailed", "Failed to load job"),
-            err instanceof Error ? err.message : t.common.error || "Unknown error",
+            "Failed to load job",
+            err instanceof Error ? err.message : "Unknown error",
           );
           navigate("/dashboard/scheduled-jobs");
         } finally {
@@ -161,9 +181,9 @@ export default function CreateScheduledJobPage() {
 
     if (!formData.code.trim()) {
       newErrors.code = "Code is required";
-    } else if (!/^[A-Z0-9_-]+$/.test(formData.code)) {
+    } else if (!/^[A-Za-z0-9_-]+$/.test(formData.code)) {
       newErrors.code =
-        "Code must be uppercase letters, numbers, hyphens, or underscores";
+        "Code must contain letters, numbers, hyphens, or underscores";
     }
 
     if (!formData.description?.trim()) {
@@ -181,6 +201,14 @@ export default function CreateScheduledJobPage() {
     if (formData.schedule_type === "interval" && !formData.interval_seconds) {
       newErrors.interval_seconds =
         "Interval is required for interval schedule type";
+    } else if (
+      formData.schedule_type === "interval" &&
+      formData.interval_seconds
+    ) {
+      const intervalValue = Number(formData.interval_seconds);
+      if (intervalValue < 60) {
+        newErrors.interval_seconds = "Interval must be at least 60 seconds";
+      }
     }
 
     setErrors(newErrors);
@@ -236,25 +264,36 @@ export default function CreateScheduledJobPage() {
           updated_by: user?.user_id || 1,
         };
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
+        const jobDisplayName =
+          (formData.name && formData.name.trim()) || "Scheduled job";
         showToast(
-          t("scheduledJob.updated", "Job updated"),
-          t("scheduledJob.updateSuccess", `${jobDisplayName} has been updated successfully`),
+          "Job updated",
+          `${jobDisplayName} has been updated successfully`,
         );
+        // Add a small delay to ensure toast displays before navigation
+        setTimeout(() => {
+          navigate("/dashboard/scheduled-jobs");
+        }, 500);
       } else {
         await scheduledJobService.createScheduledJob({
           ...payloadWithoutUnsupportedFields,
           created_by: created_by ?? (user?.user_id || 1),
         });
+        const jobDisplayName =
+          (formData.name && formData.name.trim()) || "Scheduled job";
         showToast(
-          t("scheduledJob.created", "Job created"),
-          t("scheduledJob.createSuccess", `${jobDisplayName} has been created successfully`),
+          "Job created",
+          `${jobDisplayName} has been created successfully`,
         );
+        // Add a small delay to ensure toast displays before navigation
+        setTimeout(() => {
+          navigate("/dashboard/scheduled-jobs");
+        }, 500);
       }
-      navigate("/dashboard/scheduled-jobs");
     } catch (err) {
       showError(
-        isEditMode ? t("scheduledJob.updateFailed", "Failed to update job") : t("scheduledJob.createFailed", "Failed to create job"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error",
+        isEditMode ? "Failed to update job" : "Failed to create job",
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsSaving(false);
@@ -265,7 +304,13 @@ export default function CreateScheduledJobPage() {
     const trimmed = newTag.trim();
     if (!trimmed) return;
     if (formData.tags?.includes(trimmed)) {
-      showError(t("scheduledJob.duplicateTag", "Duplicate tag"), t("scheduledJob.duplicateTagMessage", "This tag has already been added"));
+      showError(
+        t("scheduledJob.duplicateTag", "Duplicate tag"),
+        t(
+          "scheduledJob.duplicateTagMessage",
+          "This tag has already been added",
+        ),
+      );
       return;
     }
     setFormData({
@@ -349,12 +394,10 @@ export default function CreateScheduledJobPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    code: e.target.value.toUpperCase(),
+                    code: e.target.value,
                   })
                 }
-                className={`w-full ${
-                  tw.rounded
-                } border px-3 py-2 text-sm ${
+                className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
                   errors.code
                     ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                     : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -665,9 +708,7 @@ export default function CreateScheduledJobPage() {
                       cron_expression: e.target.value,
                     })
                   }
-                  className={`w-full ${
-                    tw.rounded
-                  } border px-3 py-2 text-sm ${
+                  className={`w-full ${tw.rounded} border px-3 py-2 text-sm ${
                     errors.cron_expression
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
                       : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
@@ -682,8 +723,7 @@ export default function CreateScheduledJobPage() {
                 <p className="mt-1 text-xs text-gray-500">
                   Use cron syntax to define when the job runs. Examples:{" "}
                   <span>0 0 * * *</span> = daily at midnight,
-                  <span className="ml-1">0 */3 * * * *</span> = every 3
-                  hours.
+                  <span className="ml-1">0 */3 * * * *</span> = every 3 hours.
                 </p>
               </div>
             )}
@@ -718,9 +758,9 @@ export default function CreateScheduledJobPage() {
                   </p>
                 )}
                 <p className="mt-1 text-xs text-gray-500">
-                  Enter the number of seconds between each job execution. For example,
-                  <span>300</span> means the job runs every 5
-                  minutes.
+                  Enter the number of seconds between each job execution. For
+                  example,
+                  <span>300</span> means the job runs every 5 minutes.
                 </p>
               </div>
             )}
@@ -911,27 +951,6 @@ export default function CreateScheduledJobPage() {
             >
               Add
             </button>
-          </div>
-        </div>
-
-        {/* Active Status */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="is_active"
-              checked={formData.is_active ?? true}
-              onChange={(e) =>
-                setFormData({ ...formData, is_active: e.target.checked })
-              }
-              className="h-4 w-4 rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-            />
-            <label
-              htmlFor="is_active"
-              className="ml-2 text-sm font-medium text-gray-700"
-            >
-              Active
-            </label>
           </div>
         </div>
 

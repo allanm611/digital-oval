@@ -1188,14 +1188,6 @@ export default function OffersPage() {
                         >
                           {offer.name}
                         </div>
-                        {offer.description && (
-                          <div
-                            className={`text-xs sm:text-sm ${tw.textMuted} truncate mt-1`}
-                            title={offer.description}
-                          >
-                            {offer.description}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td

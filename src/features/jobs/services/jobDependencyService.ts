@@ -453,15 +453,10 @@ class JobDependencyService {
   async createJobDependency(
     payload: CreateJobDependencyPayload,
   ): Promise<JobDependency> {
-
-    // Backend only accepts these fields, not created_by
+    // Backend expects camelCase userId, not user_id
     const body = {
       ...payload,
-      user_id: payload.userId ?? null,
     };
-
-    // Remove userId from body as it's now mapped to user_id
-    delete (body as any).userId;
 
     return this.request<JobDependency>("", {
       method: "POST",
@@ -502,12 +497,9 @@ class JobDependencyService {
     id: number,
     payload: UpdateJobDependencyPayload,
   ): Promise<JobDependency> {
-    // Include aliases for `updated_by` and `user_id` so backend accepting
-    // different field names still receives the user information.
+    // Backend expects camelCase userId
     const body = {
       ...payload,
-      updated_by: payload.userId ?? null,
-      user_id: payload.userId ?? null,
     };
 
     return this.request<JobDependency>(`/${id}`, {
