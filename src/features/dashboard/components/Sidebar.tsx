@@ -3125,6 +3125,45 @@ export default function Sidebar({
                   );
                 }
 
+                if (item.entity === "manual-actions") {
+                  return (
+                    <PermissionGate key={item.name} permission="manual-actions.read">
+                      {item.type === "single" ? (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      ) : null}
+                    </PermissionGate>
+                  );
+                }
+
                 // if (item.entity === "analytics") {
                 //   return (
                 //     <PermissionGate key={item.name} permission="analytics.read">
