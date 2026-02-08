@@ -3,6 +3,7 @@ import { Calendar, Clock, Send, AlertCircle } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 interface ScheduleStepProps {
   data: ManualBroadcastData;
@@ -19,7 +20,7 @@ export default function ScheduleStep({
 }: ScheduleStepProps) {
   const { t } = useLanguage();
   const [scheduleType, setScheduleType] = useState<"now" | "later">(
-    data.scheduleType || "now"
+    data.scheduleType || "now",
   );
   const [scheduleDate, setScheduleDate] = useState(data.scheduleDate || "");
   const [scheduleTime, setScheduleTime] = useState(data.scheduleTime || "");
@@ -322,13 +323,13 @@ export default function ScheduleStep({
                 {scheduleType === "now"
                   ? t.manualBroadcast.summarySendNow
                   : scheduleDate && scheduleTime
-                  ? t.manualBroadcast.summaryScheduled.replace(
-                      "{dateTime}",
-                      `${new Date(
-                        `${scheduleDate}T${scheduleTime}`
-                      ).toLocaleString()}`
-                    )
-                  : t.manualBroadcast.summaryNotSet}
+                    ? t.manualBroadcast.summaryScheduled.replace(
+                        "{dateTime}",
+                        `${new Date(
+                          `${scheduleDate}T${scheduleTime}`,
+                        ).toLocaleString()}`,
+                      )
+                    : t.manualBroadcast.summaryNotSet}
               </span>
             </div>
           </div>
@@ -398,27 +399,29 @@ export default function ScheduleStep({
         >
           {t.manualBroadcast.previous}
         </button>
-        <button
-          onClick={handleSubmit}
-          disabled={
-            isSubmitting ||
-            (scheduleType === "later" && (!scheduleDate || !scheduleTime))
-          }
-          className="w-full sm:w-auto px-6 sm:px-8 py-2.5 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-          style={{ backgroundColor: color.primary.action }}
-        >
-          {isSubmitting ? (
-            <>
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0" />
-              <span>{t.manualBroadcast.creating}</span>
-            </>
-          ) : (
-            <>
-              <Send className="w-4 h-4 flex-shrink-0" />
-              <span>{t.manualBroadcast.launchBroadcast}</span>
-            </>
-          )}
-        </button>
+        <PermissionGate permission="manual-communications.create">
+          <button
+            onClick={handleSubmit}
+            disabled={
+              isSubmitting ||
+              (scheduleType === "later" && (!scheduleDate || !scheduleTime))
+            }
+            className="w-full sm:w-auto px-6 sm:px-8 py-2.5 text-white rounded-md transition-all text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            style={{ backgroundColor: color.primary.action }}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                <span>{t.manualBroadcast.creating}</span>
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4 flex-shrink-0" />
+                <span>{t.manualBroadcast.launchBroadcast}</span>
+              </>
+            )}
+          </button>
+        </PermissionGate>
       </div>
     </div>
   );

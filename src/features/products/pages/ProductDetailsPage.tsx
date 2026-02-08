@@ -24,6 +24,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function ProductDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +80,7 @@ export default function ProductDetailsPage() {
 
       // Find the category for this product
       const productCategory = (categoriesResponse.data || []).find(
-        (cat) => cat.id === productData.category_id
+        (cat) => cat.id === productData.category_id,
       );
       setCategory(productCategory || null);
     } catch (err) {
@@ -111,13 +112,13 @@ export default function ProductDetailsPage() {
         await productService.deactivateProduct(Number(id));
         success(
           "Product Deactivated",
-          `"${product.name}" has been deactivated successfully.`
+          `"${product.name}" has been deactivated successfully.`,
         );
       } else {
         await productService.activateProduct(Number(id));
         success(
           "Product Activated",
-          `"${product.name}" has been activated successfully.`
+          `"${product.name}" has been activated successfully.`,
         );
       }
       loadProduct(); // Reload to get updated status
@@ -147,7 +148,7 @@ export default function ProductDetailsPage() {
       await productService.deleteProduct(Number(id));
       success(
         "Product Deleted",
-        `"${product.name}" has been deleted successfully.`
+        `"${product.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       navigate("/dashboard/products");
@@ -249,41 +250,45 @@ export default function ProductDetailsPage() {
               </>
             )}
           </button>
-          <button
-            onClick={() => navigate(`/dashboard/products/${id}/edit`)}
-            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
-            style={{ backgroundColor: button.action.background }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "0.9";
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "1";
-            }}
-          >
-            <Edit className="w-4 h-4" />
-            Edit Product
-          </button>
-          <button
-            onClick={handleDelete}
-            className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
-            style={{
-              backgroundColor: button.delete.background,
-              color: button.delete.color,
-              border: button.delete.border,
-              padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
-              borderRadius: button.delete.borderRadius,
-              fontSize: button.delete.fontSize,
-            }}
-            onMouseEnter={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "0.9";
-            }}
-            onMouseLeave={(e) => {
-              (e.target as HTMLButtonElement).style.opacity = "1";
-            }}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          <PermissionGate permission="products.update">
+            <button
+              onClick={() => navigate(`/dashboard/products/${id}/edit`)}
+              className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+              style={{ backgroundColor: button.action.background }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "0.9";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "1";
+              }}
+            >
+              <Edit className="w-4 h-4" />
+              Edit Product
+            </button>
+          </PermissionGate>
+          <PermissionGate permission="products.delete">
+            <button
+              onClick={handleDelete}
+              className={`${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
+              style={{
+                backgroundColor: button.delete.background,
+                color: button.delete.color,
+                border: button.delete.border,
+                padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+                borderRadius: button.delete.borderRadius,
+                fontSize: button.delete.fontSize,
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "0.9";
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.opacity = "1";
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          </PermissionGate>
         </div>
       </div>
 

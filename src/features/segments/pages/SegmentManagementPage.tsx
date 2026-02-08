@@ -999,16 +999,16 @@ export default function SegmentManagementPage() {
               {isSelectionMode ? "Exit Selection" : "Select Segments"}
             </button>
             <PermissionGate permission="segments.create">
-            <button
-              onClick={handleCreateSegment}
-              className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
-              style={{
-                backgroundColor: color.primary.action,
-                color: "white",
-              }}
-            >
-              + Create
-            </button>
+              <button
+                onClick={handleCreateSegment}
+                className={`inline-flex items-center gap-2 px-6 py-2 text-sm font-medium ${tw.rounded} transition-colors`}
+                style={{
+                  backgroundColor: color.primary.action,
+                  color: "white",
+                }}
+              >
+                + Create
+              </button>
             </PermissionGate>
           </div>
         </div>

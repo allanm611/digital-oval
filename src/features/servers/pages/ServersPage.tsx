@@ -36,6 +36,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const PAGE_SIZE = 15;
 const BASE_FETCH_LIMIT = 100;
@@ -746,7 +747,9 @@ export default function ServersPage() {
               ? t.servers.exitSelection
               : t.servers.selectServers}
           </button>
-          <CreateButton route="/dashboard/servers/new" />
+          <PermissionGate permission="servers.create">
+            <CreateButton route="/dashboard/servers/new" />
+          </PermissionGate>
         </div>
       </div>
 
@@ -1067,15 +1070,17 @@ export default function ServersPage() {
                           </button>
 
                           {/* Edit Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => handleEdit(server, e)}
-                            className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                            aria-label={`Edit ${server.name}`}
-                            title="Edit server"
-                          >
-                            <Edit size={16} />
-                          </button>
+                          <PermissionGate permission="servers.update">
+                            <button
+                              type="button"
+                              onClick={(e) => handleEdit(server, e)}
+                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
+                              aria-label={`Edit ${server.name}`}
+                              title="Edit server"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          </PermissionGate>
 
                           {/* More Actions Menu */}
                           <div className="relative" ref={menuRef}>

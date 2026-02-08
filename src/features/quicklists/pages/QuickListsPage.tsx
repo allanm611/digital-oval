@@ -26,6 +26,7 @@ import {
 } from "../types/quicklist";
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -175,7 +176,10 @@ export default function QuickListsPage() {
       }
 
       // Check for validation errors even if upload was successful
-      if (response.data && (response.data.has_errors || response.data.rows_failed > 0)) {
+      if (
+        response.data &&
+        (response.data.has_errors || response.data.rows_failed > 0)
+      ) {
         const errorCount =
           response.data.errors?.length || response.data.rows_failed;
         const errorDetails =
@@ -365,7 +369,9 @@ export default function QuickListsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateButton onClick={() => setIsCreateModalOpen(true)} />
+          <PermissionGate permission="quicklists.create">
+            <CreateButton onClick={() => setIsCreateModalOpen(true)} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -519,7 +525,8 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {quicklist.processing_status
-                        ? quicklist.processing_status.charAt(0).toUpperCase() + quicklist.processing_status.slice(1)
+                        ? quicklist.processing_status.charAt(0).toUpperCase() +
+                          quicklist.processing_status.slice(1)
                         : "N/A"}
                     </td>
                     <td
@@ -540,13 +547,15 @@ export default function QuickListsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => handleEdit(quicklist)}
-                          className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                          title={t.quickList.edit}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="quicklists.update">
+                          <button
+                            onClick={() => handleEdit(quicklist)}
+                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
+                            title={t.quickList.edit}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                         <button
                           onClick={() => handleViewDetails(quicklist)}
                           className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200 cursor-pointer`}
@@ -561,13 +570,15 @@ export default function QuickListsPage() {
                         >
                           <Download className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() => handleDelete(quicklist)}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200 cursor-pointer`}
-                          title={t.quickList.delete}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="quicklists.delete">
+                          <button
+                            onClick={() => handleDelete(quicklist)}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200 cursor-pointer`}
+                            title={t.quickList.delete}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>

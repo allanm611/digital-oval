@@ -16,6 +16,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 // Dummy data for manual rewards
 interface ManualReward {
@@ -266,7 +267,9 @@ export default function ManualRewardsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <CreateButton route="/dashboard/manual-rewards/create" />
+          <PermissionGate permission="manual-rewards.create">
+            <CreateButton route="/dashboard/manual-rewards/create" />
+          </PermissionGate>
         </div>
       </div>
 
@@ -340,9 +343,7 @@ export default function ManualRewardsPage() {
       </div>
 
       {/* Table */}
-      <div
-        className={` ${tw.rounded} border overflow-hidden`}
-      >
+      <div className={` ${tw.rounded} border overflow-hidden`}>
         {filteredRewards.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Gift
@@ -353,7 +354,9 @@ export default function ManualRewardsPage() {
               No manual rewards found
             </p>
             <div className="mt-4">
-              <CreateButton route="/dashboard/manual-rewards/create" />
+              <PermissionGate permission="manual-rewards.create">
+                <CreateButton route="/dashboard/manual-rewards/create" />
+              </PermissionGate>
             </div>
           </div>
         ) : (
@@ -463,20 +466,24 @@ export default function ManualRewardsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(reward)}
-                          className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(reward)}
-                          className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="manual-rewards.update">
+                          <button
+                            onClick={() => handleEdit(reward)}
+                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
+                        <PermissionGate permission="manual-rewards.delete">
+                          <button
+                            onClick={() => handleDelete(reward)}
+                            className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>

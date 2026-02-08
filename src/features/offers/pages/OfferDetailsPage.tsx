@@ -1,4 +1,12 @@
-import { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  lazy,
+  Suspense,
+} from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import {
@@ -18,7 +26,9 @@ import {
   X,
 } from "lucide-react";
 
-const CreateProductModalWrapper = lazy(() => import("../../products/components/CreateProductModalWrapper"));
+const CreateProductModalWrapper = lazy(
+  () => import("../../products/components/CreateProductModalWrapper"),
+);
 import { Offer, OfferStatusEnum, OfferProductLink } from "../types/offer";
 import { OfferCategoryType } from "../types/offerCategory";
 import { offerService } from "../services/offerService";
@@ -44,6 +54,7 @@ import { useConfirm } from "../../../contexts/ConfirmContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { Product } from "../../products/types/product";
 import { Search, Check, FileText, Eye } from "lucide-react";
 import { productCategoryService } from "../../products/services/productCategoryService";
@@ -88,10 +99,12 @@ const localeLabelMap: Record<string, string> = {
 const getLocaleLabel = (locale: string): string =>
   localeLabelMap[locale] || locale;
 
-const creativeChannelOptions = ["SMS", "Email", "Push", "WhatsApp"].map((channel) => ({
-  value: channel,
-  label: channel,
-}));
+const creativeChannelOptions = ["SMS", "Email", "Push", "WhatsApp"].map(
+  (channel) => ({
+    value: channel,
+    label: channel,
+  }),
+);
 
 // Locale options will be generated from languages config
 
@@ -1571,14 +1584,16 @@ export default function OfferDetailsPage() {
           )}
 
           {/* Edit Button */}
-          <button
-            onClick={() => navigate(`/dashboard/offers/${id}/edit`)}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Edit className="w-4 h-4" />
-            Edit
-          </button>
+          <PermissionGate permission="offers.update">
+            <button
+              onClick={() => navigate(`/dashboard/offers/${id}/edit`)}
+              className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm text-white`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              <Edit className="w-4 h-4" />
+              Edit
+            </button>
+          </PermissionGate>
 
           {/* More Menu */}
           <div className="relative" ref={moreMenuRef}>
@@ -1636,16 +1651,18 @@ export default function OfferDetailsPage() {
                 )}
 
                 {/* Delete */}
-                <button
-                  onClick={() => {
-                    handleDelete();
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Offer
-                </button>
+                <PermissionGate permission="offers.delete">
+                  <button
+                    onClick={() => {
+                      handleDelete();
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Offer
+                  </button>
+                </PermissionGate>
               </div>
             )}
           </div>
@@ -2253,63 +2270,63 @@ export default function OfferDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column - Form Fields (1/2) */}
           <div className="lg:col-span-1 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Channel
-              </label>
-              <HeadlessSelect
-                value={newCreativeForm.channel}
-                onChange={(value) => {
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    channel: value as CreativeChannel,
-                  }));
-                  // Clear template when channel changes
-                  setSelectedTemplateId(null);
-                }}
-                options={creativeChannelOptions}
-                placeholder="Select a channel"
-                zIndex={zIndex.popover}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Channel
+                </label>
+                <HeadlessSelect
+                  value={newCreativeForm.channel}
+                  onChange={(value) => {
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      channel: value as CreativeChannel,
+                    }));
+                    // Clear template when channel changes
+                    setSelectedTemplateId(null);
+                  }}
+                  options={creativeChannelOptions}
+                  placeholder="Select a channel"
+                  zIndex={zIndex.popover}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Locale / Language
+                </label>
+                <HeadlessSelect
+                  value={newCreativeForm.locale}
+                  onChange={(value) => {
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      locale: String(value),
+                    }));
+                    // Clear template selection when locale changes
+                    setSelectedTemplateId(null);
+                  }}
+                  options={[
+                    ...((languages as TypeConfigurationItem[]) || [])
+                      .filter((lang) => lang.isActive)
+                      .map((lang) => ({
+                        label: lang.name,
+                        value: lang.metadataValue as string,
+                      })),
+                    // Fallback to COMMON_LOCALES if languages config is empty
+                    ...((languages as TypeConfigurationItem[])?.length === 0
+                      ? COMMON_LOCALES.map((locale) => ({
+                          label: getLocaleLabel(locale),
+                          value: locale,
+                        }))
+                      : []),
+                  ]}
+                  placeholder="Select language"
+                  searchable
+                  zIndex={zIndex.popover}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Locale / Language
-              </label>
-              <HeadlessSelect
-                value={newCreativeForm.locale}
-                onChange={(value) => {
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    locale: String(value),
-                  }));
-                  // Clear template selection when locale changes
-                  setSelectedTemplateId(null);
-                }}
-                options={[
-                  ...((languages as TypeConfigurationItem[]) || [])
-                    .filter((lang) => lang.isActive)
-                    .map((lang) => ({
-                      label: lang.name,
-                      value: lang.metadataValue as string,
-                    })),
-                  // Fallback to COMMON_LOCALES if languages config is empty
-                  ...((languages as TypeConfigurationItem[])?.length === 0
-                    ? COMMON_LOCALES.map((locale) => ({
-                        label: getLocaleLabel(locale),
-                        value: locale,
-                      }))
-                    : []),
-                ]}
-                placeholder="Select language"
-                searchable
-                zIndex={zIndex.popover}
-              />
-            </div>
-          </div>
 
-          {/* Template Selector - Temporarily Disabled
+            {/* Template Selector - Temporarily Disabled
           {availableTemplates.length > 0 && (
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
@@ -2374,324 +2391,333 @@ export default function OfferDetailsPage() {
           )}
           */}
 
-          <div className="space-y-4">
-            {/* Sender ID (SMS) or Subject (Email/Web) */}
-            {newCreativeForm.channel === "SMS" ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sender ID
-                </label>
-                <HeadlessSelect
-                  value={newCreativeForm.title || ""}
-                  onChange={(value) =>
-                    setNewCreativeForm((prev) => ({
-                      ...prev,
-                      title: value || "",
-                    }))
-                  }
-                  options={[
-                    { label: "Select Sender ID", value: "" },
-                    ...((senderIds as TypeConfigurationItem[]) || [])
-                      .filter(
-                        (senderId) =>
-                          senderId.isActive &&
-                          senderId.metadataValue === "active",
-                      )
-                      .map((senderId) => ({
-                        label: senderId.name,
-                        value: senderId.name,
-                      })),
-                  ]}
-                  placeholder="Select Sender ID..."
-                  className="w-full"
-                  zIndex={zIndex.popover}
-                />
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Subject Line
-                </label>
-                <input
-                  ref={titleInputRefAdd}
-                  type="text"
-                  maxLength={160}
-                  value={newCreativeForm.title}
-                  onChange={(e) => {
-                    setActiveFieldAdd("title");
-                    setCursorPositionAdd(e.target.selectionStart || 0);
-                    setNewCreativeForm((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }));
-                  }}
-                  onClick={(e) => {
-                    setActiveFieldAdd("title");
-                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                  }}
-                  onFocus={(e) => {
-                    setActiveFieldAdd("title");
-                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                  }}
-                  placeholder="Enter email subject..."
-                  className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                />
-              </div>
-            )}
-
-            {/* SMS Route (for SMS channel only) */}
-            {newCreativeForm.channel === "SMS" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  SMS Route
-                </label>
-                <HeadlessSelect
-                  value={(newCreativeForm.variables as any)?.sms_route || ""}
-                  onChange={(value) =>
-                    setNewCreativeForm((prev) => ({
-                      ...prev,
-                      variables: {
-                        ...(prev.variables || {}),
-                        sms_route: value || undefined,
-                      },
-                    }))
-                  }
-                  options={[
-                    { label: "Select Route", value: "" },
-                    ...((smsRoutes as TypeConfigurationItem[]) || [])
-                      .filter((route) => route.isActive)
-                      .map((route) => ({
-                        label: route.name,
-                        value: route.name,
-                      })),
-                  ]}
-                  placeholder="Select SMS Route..."
-                  className="w-full"
-                  zIndex={zIndex.popover}
-                />
-              </div>
-            )}
-
-            {/* Message content toolbar */}
-            <div
-              className="flex items-center justify-between p-3 rounded-lg"
-              style={{ backgroundColor: color.surface.cards }}
-            >
-              <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                Message Content
-              </span>
-              <div className="flex items-center gap-2">
-                {(newCreativeForm.channel === "Email" ||
-                  newCreativeForm.channel === "SMS" ||
-                  newCreativeForm.channel === "Push" ||
-                  newCreativeForm.channel === "WhatsApp") && (
-                  <button
-                    type="button"
-                    onClick={() => setIsRichTextAdd((prev) => !prev)}
-                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
-                    style={{
-                      backgroundColor: isRichTextAdd
-                        ? `${color.primary.accent}10`
-                        : "white",
-                      borderColor: isRichTextAdd
-                        ? color.primary.accent
-                        : color.border.default,
-                      color: isRichTextAdd
-                        ? color.primary.accent
-                        : color.text.secondary,
-                    }}
-                  >
-                    {isRichTextAdd ? "Rich Text" : "Plain Text"}
-                  </button>
-                )}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowVariableSelectorAdd(!showVariableSelectorAdd)
+            <div className="space-y-4">
+              {/* Sender ID (SMS) or Subject (Email/Web) */}
+              {newCreativeForm.channel === "SMS" ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sender ID
+                  </label>
+                  <HeadlessSelect
+                    value={newCreativeForm.title || ""}
+                    onChange={(value) =>
+                      setNewCreativeForm((prev) => ({
+                        ...prev,
+                        title: value || "",
+                      }))
                     }
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
-                    style={{
-                      backgroundColor: color.primary.accent,
-                      color: "white",
+                    options={[
+                      { label: "Select Sender ID", value: "" },
+                      ...((senderIds as TypeConfigurationItem[]) || [])
+                        .filter(
+                          (senderId) =>
+                            senderId.isActive &&
+                            senderId.metadataValue === "active",
+                        )
+                        .map((senderId) => ({
+                          label: senderId.name,
+                          value: senderId.name,
+                        })),
+                    ]}
+                    placeholder="Select Sender ID..."
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject Line
+                  </label>
+                  <input
+                    ref={titleInputRefAdd}
+                    type="text"
+                    maxLength={160}
+                    value={newCreativeForm.title}
+                    onChange={(e) => {
+                      setActiveFieldAdd("title");
+                      setCursorPositionAdd(e.target.selectionStart || 0);
+                      setNewCreativeForm((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }));
                     }}
-                  >
-                    Insert Variable
-                  </button>
-                  <div
-                    className="absolute left-0 mt-1"
-                    style={{ zIndex: zIndex.popover }}
-                  >
-                    <CascadingVariableSelector
-                      isOpen={showVariableSelectorAdd}
-                      onClose={() => setShowVariableSelectorAdd(false)}
-                      onVariableSelect={handleVariableSelectAdd}
-                    />
+                    onClick={(e) => {
+                      setActiveFieldAdd("title");
+                      setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                    }}
+                    onFocus={(e) => {
+                      setActiveFieldAdd("title");
+                      setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                    }}
+                    placeholder="Enter email subject..."
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+              )}
+
+              {/* SMS Route (for SMS channel only) */}
+              {newCreativeForm.channel === "SMS" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    SMS Route
+                  </label>
+                  <HeadlessSelect
+                    value={(newCreativeForm.variables as any)?.sms_route || ""}
+                    onChange={(value) =>
+                      setNewCreativeForm((prev) => ({
+                        ...prev,
+                        variables: {
+                          ...(prev.variables || {}),
+                          sms_route: value || undefined,
+                        },
+                      }))
+                    }
+                    options={[
+                      { label: "Select Route", value: "" },
+                      ...((smsRoutes as TypeConfigurationItem[]) || [])
+                        .filter((route) => route.isActive)
+                        .map((route) => ({
+                          label: route.name,
+                          value: route.name,
+                        })),
+                    ]}
+                    placeholder="Select SMS Route..."
+                    className="w-full"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+              )}
+
+              {/* Message content toolbar */}
+              <div
+                className="flex items-center justify-between p-3 rounded-lg"
+                style={{ backgroundColor: color.surface.cards }}
+              >
+                <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                  Message Content
+                </span>
+                <div className="flex items-center gap-2">
+                  {(newCreativeForm.channel === "Email" ||
+                    newCreativeForm.channel === "SMS" ||
+                    newCreativeForm.channel === "Push" ||
+                    newCreativeForm.channel === "WhatsApp") && (
+                    <button
+                      type="button"
+                      onClick={() => setIsRichTextAdd((prev) => !prev)}
+                      className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                      style={{
+                        backgroundColor: isRichTextAdd
+                          ? `${color.primary.accent}10`
+                          : "white",
+                        borderColor: isRichTextAdd
+                          ? color.primary.accent
+                          : color.border.default,
+                        color: isRichTextAdd
+                          ? color.primary.accent
+                          : color.text.secondary,
+                      }}
+                    >
+                      {isRichTextAdd ? "Rich Text" : "Plain Text"}
+                    </button>
+                  )}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowVariableSelectorAdd(!showVariableSelectorAdd)
+                      }
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors"
+                      style={{
+                        backgroundColor: color.primary.accent,
+                        color: "white",
+                      }}
+                    >
+                      Insert Variable
+                    </button>
+                    <div
+                      className="absolute left-0 mt-1"
+                      style={{ zIndex: zIndex.popover }}
+                    >
+                      <CascadingVariableSelector
+                        isOpen={showVariableSelectorAdd}
+                        onClose={() => setShowVariableSelectorAdd(false)}
+                        onVariableSelect={handleVariableSelectAdd}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Message Body */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message Body
-              </label>
-              <textarea
-                ref={bodyTextareaRefAdd}
-                value={newCreativeForm.text_body || ""}
-                onChange={(e) => {
-                  setActiveFieldAdd("body");
-                  setCursorPositionAdd(e.target.selectionStart || 0);
-                  setNewCreativeForm((prev) => ({
-                    ...prev,
-                    text_body: e.target.value,
-                  }));
-                }}
-                onClick={(e) => {
-                  setActiveFieldAdd("body");
-                  setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                }}
-                onFocus={(e) => {
-                  setActiveFieldAdd("body");
-                  setCursorPositionAdd(e.currentTarget.selectionStart || 0);
-                }}
-                placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-              />
+              {/* Message Body */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message Body
+                </label>
+                <textarea
+                  ref={bodyTextareaRefAdd}
+                  value={newCreativeForm.text_body || ""}
+                  onChange={(e) => {
+                    setActiveFieldAdd("body");
+                    setCursorPositionAdd(e.target.selectionStart || 0);
+                    setNewCreativeForm((prev) => ({
+                      ...prev,
+                      text_body: e.target.value,
+                    }));
+                  }}
+                  onClick={(e) => {
+                    setActiveFieldAdd("body");
+                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                  }}
+                  onFocus={(e) => {
+                    setActiveFieldAdd("body");
+                    setCursorPositionAdd(e.currentTarget.selectionStart || 0);
+                  }}
+                  placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                />
 
-              {/* Info bar */}
-              <div className="mt-2 flex items-center justify-between">
-                {newCreativeForm.channel === "SMS" ||
-                newCreativeForm.channel === "WhatsApp" ? (
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>
-                      {
-                        getCharacterInfoAdd(newCreativeForm.text_body || "")
-                          .charCount
-                      }{" "}
-                      characters
-                    </span>
-                    {getCharacterInfoAdd(newCreativeForm.text_body || "").segments > 1 && (
+                {/* Info bar */}
+                <div className="mt-2 flex items-center justify-between">
+                  {newCreativeForm.channel === "SMS" ||
+                  newCreativeForm.channel === "WhatsApp" ? (
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span>
                         {
                           getCharacterInfoAdd(newCreativeForm.text_body || "")
-                            .segments
+                            .charCount
                         }{" "}
-                        segments
+                        characters
                       </span>
-                    )}
-                    {getCharacterInfoAdd(newCreativeForm.text_body || "")
-                      .isUnicode && (
-                      <span className="text-amber-600">Unicode</span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-500">
-                    Variables like {"{{field}}"} will be replaced with customer
-                    data
-                  </span>
-                )}
+                      {getCharacterInfoAdd(newCreativeForm.text_body || "")
+                        .segments > 1 && (
+                        <span>
+                          {
+                            getCharacterInfoAdd(newCreativeForm.text_body || "")
+                              .segments
+                          }{" "}
+                          segments
+                        </span>
+                      )}
+                      {getCharacterInfoAdd(newCreativeForm.text_body || "")
+                        .isUnicode && (
+                        <span className="text-amber-600">Unicode</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500">
+                      Variables like {"{{field}}"} will be replaced with
+                      customer data
+                    </span>
+                  )}
 
-                {selectedVariablesAdd.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {selectedVariablesAdd.slice(0, 3).map((v) => (
-                      <span
-                        key={v.id}
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{
-                          backgroundColor: `${color.primary.accent}10`,
-                          color: color.primary.accent,
-                        }}
-                      >
-                        {v.name}
-                      </span>
-                    ))}
-                    {selectedVariablesAdd.length > 3 && (
-                      <span className="text-xs text-gray-400">
-                        +{selectedVariablesAdd.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
+                  {selectedVariablesAdd.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {selectedVariablesAdd.slice(0, 3).map((v) => (
+                        <span
+                          key={v.id}
+                          className="px-2 py-0.5 rounded text-xs"
+                          style={{
+                            backgroundColor: `${color.primary.accent}10`,
+                            color: color.primary.accent,
+                          }}
+                        >
+                          {v.name}
+                        </span>
+                      ))}
+                      {selectedVariablesAdd.length > 3 && (
+                        <span className="text-xs text-gray-400">
+                          +{selectedVariablesAdd.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* HTML Body removed per request; message body covers content */}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                id="new-creative-active"
+                type="checkbox"
+                checked={newCreativeForm.is_active}
+                onChange={(e) =>
+                  setNewCreativeForm((prev) => ({
+                    ...prev,
+                    is_active: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 rounded border-gray-300"
+                style={{ accentColor: color.primary.action }}
+              />
+              <label
+                htmlFor="new-creative-active"
+                className="text-sm text-gray-700"
+              >
+                Mark creative as active
+              </label>
+            </div>
+
+            {/* Button Bar */}
+            <div className="flex items-center justify-between gap-4 pt-4">
+              <button
+                onClick={handlePreview}
+                disabled={
+                  !newCreativeForm.title &&
+                  !newCreativeForm.text_body &&
+                  !newCreativeForm.html_body
+                }
+                className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsAddCreativeModalOpen(false);
+                    resetNewCreativeForm();
+                  }}
+                  disabled={isCreatingCreative}
+                  className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateCreative}
+                  disabled={isCreatingCreative}
+                  className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  {isCreatingCreative ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating Creative...</span>
+                    </>
+                  ) : (
+                    <span>Create Creative</span>
+                  )}
+                </button>
               </div>
             </div>
-
-            {/* HTML Body removed per request; message body covers content */}
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              id="new-creative-active"
-              type="checkbox"
-              checked={newCreativeForm.is_active}
-              onChange={(e) =>
-                setNewCreativeForm((prev) => ({
-                  ...prev,
-                  is_active: e.target.checked,
-                }))
-              }
-              className="h-4 w-4 rounded border-gray-300"
-              style={{ accentColor: color.primary.action }}
-            />
-            <label
-              htmlFor="new-creative-active"
-              className="text-sm text-gray-700"
-            >
-              Mark creative as active
-            </label>
-          </div>
-
-          {/* Button Bar */}
-          <div className="flex items-center justify-between gap-4 pt-4">
-            <button
-              onClick={handlePreview}
-              disabled={
-                !newCreativeForm.title &&
-                !newCreativeForm.text_body &&
-                !newCreativeForm.html_body
-              }
-              className={`px-4 py-2 text-sm font-medium ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50`}
-            >
-              <Eye className="w-4 h-4" />
-              Preview
-            </button>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsAddCreativeModalOpen(false);
-                  resetNewCreativeForm();
-                }}
-                disabled={isCreatingCreative}
-                className={`px-4 py-2 text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateCreative}
-                disabled={isCreatingCreative}
-                className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isCreatingCreative ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating Creative...</span>
-                  </>
-                ) : (
-                  <span>Create Creative</span>
-                )}
-              </button>
-            </div>
-          </div>
           </div>
 
           {/* Right Column - Preview Panel (1/2) */}
           <div className="lg:col-span-1">
             <div>
               <PreviewPanel
-                channel={newCreativeForm.channel === "SMS" ? "SMS" : newCreativeForm.channel === "Email" ? "EMAIL" : newCreativeForm.channel === "WhatsApp" ? "WHATSAPP" : "PUSH"}
+                channel={
+                  newCreativeForm.channel === "SMS"
+                    ? "SMS"
+                    : newCreativeForm.channel === "Email"
+                      ? "EMAIL"
+                      : newCreativeForm.channel === "WhatsApp"
+                        ? "WHATSAPP"
+                        : "PUSH"
+                }
                 title={newCreativeForm.title}
                 body={newCreativeForm.text_body || ""}
               />
@@ -2781,8 +2807,12 @@ export default function OfferDetailsPage() {
             {/* Header with Create Product Button */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Add Products to Offer</h2>
-                <p className="text-sm text-gray-500 mt-1">Select products to link to this offer</p>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Add Products to Offer
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Select products to link to this offer
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -2828,7 +2858,9 @@ export default function OfferDetailsPage() {
                   <div className="[&_button]:py-2 [&_li]:py-1.5">
                     <HeadlessSelect
                       value={selectedProductCategory}
-                      onChange={(value) => setSelectedProductCategory(String(value))}
+                      onChange={(value) =>
+                        setSelectedProductCategory(String(value))
+                      }
                       options={productCategories}
                       placeholder="Filter by catalog"
                     />
@@ -2927,7 +2959,9 @@ export default function OfferDetailsPage() {
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
-                                  onChange={() => toggleProductSelection(product)}
+                                  onChange={() =>
+                                    toggleProductSelection(product)
+                                  }
                                   onClick={(e) => e.stopPropagation()}
                                   className="w-4 h-4 border-gray-400 rounded"
                                   style={{ accentColor: "#111827" }}
@@ -2968,9 +3002,7 @@ export default function OfferDetailsPage() {
                                   className="text-sm font-medium text-gray-900"
                                 />
                               ) : (
-                                <span className="text-sm text-gray-400">
-                                  -
-                                </span>
+                                <span className="text-sm text-gray-400">-</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -3017,7 +3049,9 @@ export default function OfferDetailsPage() {
               </button>
               <button
                 onClick={handleConfirmAddProducts}
-                disabled={isLinkingProducts || selectedProductsToAdd.length === 0}
+                disabled={
+                  isLinkingProducts || selectedProductsToAdd.length === 0
+                }
                 className={`px-4 py-2 text-white ${tw.rounded} transition-colors disabled:opacity-50 flex items-center gap-2`}
                 style={{ backgroundColor: color.primary.action }}
               >
@@ -3068,11 +3102,15 @@ export default function OfferDetailsPage() {
                   setAvailableProducts(reloadedProducts);
 
                   // Find and auto-select the newly created product
-                  const newProduct = reloadedProducts.find((p) => p.id === productId);
+                  const newProduct = reloadedProducts.find(
+                    (p) => p.id === productId,
+                  );
                   if (newProduct) {
                     // Add to selected products
                     setSelectedProductsToAdd((prev) => {
-                      const isAlreadySelected = prev.some((p) => p.id === newProduct.id);
+                      const isAlreadySelected = prev.some(
+                        (p) => p.id === newProduct.id,
+                      );
                       if (isAlreadySelected) return prev;
                       return [...prev, newProduct];
                     });

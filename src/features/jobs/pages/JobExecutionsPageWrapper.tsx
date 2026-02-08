@@ -7,6 +7,8 @@
 
 import JobExecutionsPage from "./JobExecutionsPage";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
+import { PermissionGate } from "../../auth/components/PermissionGate";
+import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
 
 /**
  * Suspense-enabled wrapper
@@ -14,9 +16,11 @@ import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWra
  */
 export default function JobExecutionsPageWrapper() {
   return (
-    <SuspenseBoundary type="table">
-      <JobExecutionsPage />
-    </SuspenseBoundary>
+    <PermissionGate permission="jobs.read" fallback={<UnauthorizedPage />}>
+      <SuspenseBoundary type="table">
+        <JobExecutionsPage />
+      </SuspenseBoundary>
+    </PermissionGate>
   );
 }
 
@@ -29,7 +33,9 @@ export function JobExecutionsPageWithErrorHandling() {
       type="table"
       errorFallback={(error) => (
         <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-          <h3 className="text-red-900 font-bold mb-2">Failed to Load Job Executions</h3>
+          <h3 className="text-red-900 font-bold mb-2">
+            Failed to Load Job Executions
+          </h3>
           <p className="text-red-700 text-sm">{error.message}</p>
           <button
             onClick={() => window.location.reload()}

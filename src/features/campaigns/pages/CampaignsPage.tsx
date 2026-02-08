@@ -44,7 +44,6 @@ import {
   CampaignSuperSearchQuery,
   GetCampaignsResponse,
 } from "../types/campaign";
-import { PermissionGate } from "../../auth/components/PermissionGate"
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
 
 interface CampaignDisplay {
@@ -1094,10 +1093,9 @@ export default function CampaignsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-           <PermissionGate permission="campaigns.create">
-                        <CreateButton route="/dashboard/campaigns/create" />
-
-            </PermissionGate>
+          <PermissionGate permission="campaigns.create">
+            <CreateButton route="/dashboard/campaigns/create" />
+          </PermissionGate>
         </div>
       </div>
 
@@ -1764,7 +1762,6 @@ export default function CampaignsPage() {
                 </div>
               )}
             </PermissionGate>
-            
           </div>
         )}
       </div>

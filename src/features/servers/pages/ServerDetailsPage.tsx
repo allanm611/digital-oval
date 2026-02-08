@@ -25,6 +25,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const InfoRow = ({
   label,
@@ -422,15 +423,17 @@ export default function ServerDetailsPage() {
             )}
             {server.is_active ? "Deactivate" : "Activate"}
           </button>
-          <button
-            onClick={handleEdit}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-2 text-sm font-semibold text-white transition-colors`}
-            style={{ backgroundColor: color.primary.action }}
-            title="Edit server"
-          >
-            <Pencil size={16} />
-            Edit
-          </button>
+          <PermissionGate permission="servers.update">
+            <button
+              onClick={handleEdit}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-2 text-sm font-semibold text-white transition-colors`}
+              style={{ backgroundColor: color.primary.action }}
+              title="Edit server"
+            >
+              <Pencil size={16} />
+              Edit
+            </button>
+          </PermissionGate>
           {/* More Menu */}
           <div className="relative" ref={moreMenuRef}>
             <button

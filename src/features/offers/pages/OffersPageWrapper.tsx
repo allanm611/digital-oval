@@ -7,6 +7,8 @@
 
 import OffersPage from "./OffersPage";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
+import { PermissionGate } from "../../auth/components/PermissionGate";
+import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
 
 /**
  * Suspense-enabled wrapper
@@ -14,9 +16,11 @@ import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWra
  */
 export default function OffersPageWrapper() {
   return (
-    <SuspenseBoundary type="table">
-      <OffersPage />
-    </SuspenseBoundary>
+    <PermissionGate permission="offers.read" fallback={<UnauthorizedPage />}>
+      <SuspenseBoundary type="table">
+        <OffersPage />
+      </SuspenseBoundary>
+    </PermissionGate>
   );
 }
 

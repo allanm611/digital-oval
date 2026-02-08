@@ -1618,7 +1618,9 @@ export default function UserManagementPage() {
                               <PermissionGate permission="users.delete">
                                 <button
                                   onClick={() => handleDeleteUser(user)}
-                                  disabled={loadingActions.deleting.has(user.id)}
+                                  disabled={loadingActions.deleting.has(
+                                    user.id,
+                                  )}
                                   className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                                   title={
                                     loadingActions.deleting.has(user.id)

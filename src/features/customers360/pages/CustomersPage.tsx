@@ -31,6 +31,7 @@ import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const pageSize = 10;
 
@@ -486,14 +487,16 @@ export default function CustomersPage() {
               </button>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setIsCreateCustomerModalOpen(true)}
-            className={`${tw.button} flex items-center gap-2`}
-          >
-            <Plus className="h-4 w-4" />
-            {t.customer360.addCustomer}
-          </button>
+          <PermissionGate permission="customers.create">
+            <button
+              type="button"
+              onClick={() => setIsCreateCustomerModalOpen(true)}
+              className={`${tw.button} flex items-center gap-2`}
+            >
+              <Plus className="h-4 w-4" />
+              {t.customer360.addCustomer}
+            </button>
+          </PermissionGate>
         </div>
       </div>
 

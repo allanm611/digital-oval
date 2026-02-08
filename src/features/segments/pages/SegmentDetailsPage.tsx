@@ -112,7 +112,7 @@ export default function SegmentDetailsPage() {
         const lastName = customer.attributes?.last_name || "";
         const email = customer.attributes?.email || "";
         const subscriberId = String(customer.subscriber_id || "");
-        
+
         return (
           firstName.toLowerCase().includes(term) ||
           lastName.toLowerCase().includes(term) ||
@@ -130,7 +130,9 @@ export default function SegmentDetailsPage() {
         limit: 100,
         offset: 0,
         _t: Date.now(),
-      } as Record<string, unknown> as Parameters<typeof customerService.getAllCustomers>[0]);
+      } as Record<string, unknown> as Parameters<
+        typeof customerService.getAllCustomers
+      >[0]);
       const customers = response.data || [];
       setAllCustomersForSelection(customers);
     } catch (err) {
@@ -142,23 +144,26 @@ export default function SegmentDetailsPage() {
     }
   }, [showError]);
 
-  const loadCategoryName = useCallback(async (categoryId: number | string) => {
-    try {
-      const response = await segmentService.getSegmentCategories();
-      const categories = response.data || [];
+  const loadCategoryName = useCallback(
+    async (categoryId: number | string) => {
+      try {
+        const response = await segmentService.getSegmentCategories();
+        const categories = response.data || [];
 
-      // Handle both string and number IDs
-      const category = categories.find(
-        (cat: { id: number | string; name: string }) =>
-          String(cat.id) === String(categoryId)
-      );
+        // Handle both string and number IDs
+        const category = categories.find(
+          (cat: { id: number | string; name: string }) =>
+            String(cat.id) === String(categoryId),
+        );
 
-      const name = category?.name || "Uncategorized";
-      setCategoryName(name);
-    } catch {
-      setCategoryName("Uncategorized");
-    }
-  }, [t]);
+        const name = category?.name || "Uncategorized";
+        setCategoryName(name);
+      } catch {
+        setCategoryName("Uncategorized");
+      }
+    },
+    [t],
+  );
 
   const loadSegment = useCallback(async () => {
     try {
@@ -292,7 +297,7 @@ export default function SegmentDetailsPage() {
       await segmentService.deleteSegment(Number(id));
       success(
         "Segment deleted",
-        `Segment "${segment.name}" has been deleted successfully`
+        `Segment "${segment.name}" has been deleted successfully`,
       );
       setShowDeleteModal(false);
       navigate("/dashboard/segments");
@@ -313,7 +318,7 @@ export default function SegmentDetailsPage() {
 
     showInfo(
       "Export unavailable",
-      "Cannot access this functionality right now."
+      "Cannot access this functionality right now.",
     );
     setShowExportModal(false);
     return;
@@ -335,7 +340,7 @@ export default function SegmentDetailsPage() {
       document.body.removeChild(a);
       success(
         "Export successful",
-        `Segment data has been exported as ${exportFormat.toUpperCase()}`
+        `Segment data has been exported as ${exportFormat.toUpperCase()}`,
       );
       setShowExportModal(false);
     } catch (err) {
@@ -369,7 +374,7 @@ export default function SegmentDetailsPage() {
       });
       success(
         "Members added",
-        `${customerIds.length} member(s) added successfully`
+        `${customerIds.length} member(s) added successfully`,
       );
       setCustomerIdsInput("");
       setShowMembersModal(false);
@@ -403,7 +408,7 @@ export default function SegmentDetailsPage() {
       });
       success(
         "Members removed",
-        `${customerIds.length} member(s) removed successfully`
+        `${customerIds.length} member(s) removed successfully`,
       );
       await loadMembersCount();
       await loadMembers();
@@ -884,7 +889,7 @@ export default function SegmentDetailsPage() {
           {segment.criteria &&
           "conditions" in segment.criteria &&
           Array.isArray(
-            (segment.criteria as Record<string, unknown>).conditions
+            (segment.criteria as Record<string, unknown>).conditions,
           ) ? (
             <div className="space-y-2">
               {(
@@ -1153,16 +1158,16 @@ export default function SegmentDetailsPage() {
                               {String(
                                 member.name ||
                                   `Customer ID: ${String(
-                                    member.customer_id || ""
+                                    member.customer_id || "",
                                   )}` ||
-                                  "Unknown Customer"
+                                  "Unknown Customer",
                               )}
                             </p>
                             <p className="text-sm text-gray-500">
                               {String(
                                 member.email ||
                                   `ID: ${String(member.customer_id || "")}` ||
-                                  "No email"
+                                  "No email",
                               )}
                             </p>
                             {member.joined_at ? (
@@ -1241,7 +1246,7 @@ export default function SegmentDetailsPage() {
               )}
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Customer Selection Modal */}
@@ -1313,9 +1318,14 @@ export default function SegmentDetailsPage() {
                       const customerId = customer.subscriber_id;
                       const firstName = customer.attributes?.first_name || "";
                       const lastName = customer.attributes?.last_name || "";
-                      const displayName = firstName || lastName ? `${firstName} ${lastName}`.trim() : `Customer ${customerId}`;
+                      const displayName =
+                        firstName || lastName
+                          ? `${firstName} ${lastName}`.trim()
+                          : `Customer ${customerId}`;
                       const email = customer.attributes?.email;
-                      const isSelected = selectedCustomers.includes(Number(customerId));
+                      const isSelected = selectedCustomers.includes(
+                        Number(customerId),
+                      );
 
                       return (
                         <div
@@ -1331,7 +1341,7 @@ export default function SegmentDetailsPage() {
                             setSelectedCustomers((prev) =>
                               isSelected
                                 ? prev.filter((id) => id !== Number(customerId))
-                                : [...prev, Number(customerId)]
+                                : [...prev, Number(customerId)],
                             );
                           }}
                         >
@@ -1377,7 +1387,7 @@ export default function SegmentDetailsPage() {
                       if (selectedCustomers.length === 0) {
                         showError(
                           "No selection",
-                          "Please select at least one customer"
+                          "Please select at least one customer",
                         );
                         return;
                       }
@@ -1391,7 +1401,7 @@ export default function SegmentDetailsPage() {
                         });
                         success(
                           "Members added",
-                          `${selectedCustomers.length} customer(s) added successfully`
+                          `${selectedCustomers.length} customer(s) added successfully`,
                         );
                         setShowCustomerSelection(false);
                         setSelectedCustomers([]);
@@ -1400,7 +1410,7 @@ export default function SegmentDetailsPage() {
                         console.error("Failed to add members:", err);
                         showError(
                           "Error adding members",
-                          "Please try again later."
+                          "Please try again later.",
                         );
                       } finally {
                         setIsAddingMembers(false);
@@ -1430,7 +1440,7 @@ export default function SegmentDetailsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Export Modal */}
@@ -1468,7 +1478,7 @@ export default function SegmentDetailsPage() {
                           checked={exportFormat === "csv"}
                           onChange={(e) =>
                             setExportFormat(
-                              e.target.value as "csv" | "json" | "xml"
+                              e.target.value as "csv" | "json" | "xml",
                             )
                           }
                           className="mr-3"
@@ -1489,7 +1499,7 @@ export default function SegmentDetailsPage() {
                           checked={exportFormat === "json"}
                           onChange={(e) =>
                             setExportFormat(
-                              e.target.value as "csv" | "json" | "xml"
+                              e.target.value as "csv" | "json" | "xml",
                             )
                           }
                           className="mr-3"
@@ -1510,7 +1520,7 @@ export default function SegmentDetailsPage() {
                           checked={exportFormat === "xml"}
                           onChange={(e) =>
                             setExportFormat(
-                              e.target.value as "csv" | "json" | "xml"
+                              e.target.value as "csv" | "json" | "xml",
                             )
                           }
                           className="mr-3"
@@ -1568,7 +1578,7 @@ export default function SegmentDetailsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Edit Segment Modal */}

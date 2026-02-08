@@ -238,14 +238,16 @@ export default function CampaignDetailsPage() {
       );
       if (response && response.success && Array.isArray(response.data)) {
         // Convert segment info from API to CampaignSegmentDetail format
-        const fetchedSegments: CampaignSegmentDetail[] = response.data.map((segment) => ({
-          id: segment.id,
-          name: segment.name,
-          code: segment.code,
-          total_subscribers: 0, // Not provided by campaign flows endpoint
-          created_at: "",
-          updated_at: "",
-        }));
+        const fetchedSegments: CampaignSegmentDetail[] = response.data.map(
+          (segment) => ({
+            id: segment.id,
+            name: segment.name,
+            code: segment.code,
+            total_subscribers: 0, // Not provided by campaign flows endpoint
+            created_at: "",
+            updated_at: "",
+          }),
+        );
         setSegments(fetchedSegments);
       } else {
         setSegments([]);
@@ -263,7 +265,10 @@ export default function CampaignDetailsPage() {
     try {
       setIsLoadingOffers(true);
       // Use new endpoint to get offers directly from campaign flows
-      const response = await campaignFlowService.getCampaignOffers(campaignId, true);
+      const response = await campaignFlowService.getCampaignOffers(
+        campaignId,
+        true,
+      );
 
       if (response && response.success && Array.isArray(response.data)) {
         // Fetch full offer details for each offer in the response
@@ -289,7 +294,9 @@ export default function CampaignDetailsPage() {
         });
 
         const fetchedOffers = await Promise.all(offerPromises);
-        const validOffers = fetchedOffers.filter((offer): offer is Offer => offer !== null);
+        const validOffers = fetchedOffers.filter(
+          (offer): offer is Offer => offer !== null,
+        );
         setOffers(validOffers);
       } else {
         setOffers([]);
@@ -302,7 +309,9 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const fetchCampaignFlows = async (campaignId: number): Promise<CampaignFlowConfig[]> => {
+  const fetchCampaignFlows = async (
+    campaignId: number,
+  ): Promise<CampaignFlowConfig[]> => {
     try {
       setIsLoadingFlows(true);
       const response = await campaignFlowService.getCampaignFlows(campaignId);
@@ -310,7 +319,10 @@ export default function CampaignDetailsPage() {
         // Convert API response to CampaignFlowConfig format
         const flowsData: CampaignFlowConfig[] = response.data.map((flow) => ({
           campaign_id: flow.campaign_id,
-          segment_id: typeof flow.segment_id === "string" ? parseInt(flow.segment_id) : flow.segment_id,
+          segment_id:
+            typeof flow.segment_id === "string"
+              ? parseInt(flow.segment_id)
+              : flow.segment_id,
           offer_id: flow.offer_id,
           offer_creative_id: flow.offer_creative_id || undefined,
           template_id: flow.template_id || undefined,
@@ -368,7 +380,9 @@ export default function CampaignDetailsPage() {
       });
 
       const fetchedOffers = await Promise.all(offerPromises);
-      const validOffers = fetchedOffers.filter((offer): offer is Offer => offer !== null);
+      const validOffers = fetchedOffers.filter(
+        (offer): offer is Offer => offer !== null,
+      );
       setOffers(validOffers);
     } catch (error) {
       console.error("Failed to fetch offers from flows:", error);
@@ -625,27 +639,27 @@ export default function CampaignDetailsPage() {
         <div className="flex flex-wrap gap-3">
           {/* Primary Action - Based on Status */}
           {campaign.approval_status === "pending" && (
-              <button
-                onClick={handleApproveCampaign}
-                disabled={isApproveLoading}
-                className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
-                style={{
-                  backgroundColor: button.secondaryAction.background,
-                  color: button.secondaryAction.color,
-                  border: button.secondaryAction.border,
-                  padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-                  borderRadius: button.secondaryAction.borderRadius,
-                  fontSize: button.secondaryAction.fontSize,
-                }}
-              >
-                {isApproveLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                ) : (
-                  <CheckCircle className="w-4 h-4" />
-                )}
-                {isApproveLoading ? "Approving..." : "Approve"}
-              </button>
-            )}
+            <button
+              onClick={handleApproveCampaign}
+              disabled={isApproveLoading}
+              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
+              style={{
+                backgroundColor: button.secondaryAction.background,
+                color: button.secondaryAction.color,
+                border: button.secondaryAction.border,
+                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
+                borderRadius: button.secondaryAction.borderRadius,
+                fontSize: button.secondaryAction.fontSize,
+              }}
+            >
+              {isApproveLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+              ) : (
+                <CheckCircle className="w-4 h-4" />
+              )}
+              {isApproveLoading ? "Approving..." : "Approve"}
+            </button>
+          )}
 
           {campaign.approval_status === "approved" &&
             campaign.status === "draft" && (
@@ -766,17 +780,17 @@ export default function CampaignDetailsPage() {
               >
                 {/* Reject - Only if pending */}
                 {campaign.approval_status === "pending" && (
-                    <button
-                      onClick={() => {
-                        setShowRejectModal(true);
-                        setShowMoreMenu(false);
-                      }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-red-600"
-                    >
-                      <XCircle className="w-4 h-4 mr-3" />
-                      Reject Campaign
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setShowRejectModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-red-600"
+                  >
+                    <XCircle className="w-4 h-4 mr-3" />
+                    Reject Campaign
+                  </button>
+                )}
 
                 {/* Delete - Always available */}
                 <PermissionGate permission="campaigns.delete">
@@ -1002,23 +1016,24 @@ export default function CampaignDetailsPage() {
               {campaign.description}
             </p>
             {/* Rejection Reason Display */}
-            {campaign.approval_status === "rejected" && campaign.rejection_reason && (
-              <div
-                className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}
-              >
-                <div className="flex items-start gap-2">
-                  <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className={`text-sm font-semibold text-red-800 mb-1`}>
-                      Rejection Reason
-                    </p>
-                    <p className={`text-sm text-red-700`}>
-                      {campaign.rejection_reason}
-                    </p>
+            {campaign.approval_status === "rejected" &&
+              campaign.rejection_reason && (
+                <div
+                  className={`mt-4 p-4 bg-red-50 border border-red-200 ${tw.rounded}`}
+                >
+                  <div className="flex items-start gap-2">
+                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className={`text-sm font-semibold text-red-800 mb-1`}>
+                        Rejection Reason
+                      </p>
+                      <p className={`text-sm text-red-700`}>
+                        {campaign.rejection_reason}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Campaign Details Grid */}
@@ -1651,13 +1666,18 @@ export default function CampaignDetailsPage() {
                   // Match on segment_id (not id which is the association ID)
                   // Name is in segment_name (not name)
                   const segment = segments.find(
-                    (s) => parseInt((s as any).segment_id || s.id) === flow.segment_id
+                    (s) =>
+                      parseInt((s as any).segment_id || s.id) ===
+                      flow.segment_id,
                   );
                   const offer = offers.find(
-                    (o) => parseInt(o.id) === flow.offer_id
+                    (o) => parseInt(o.id) === flow.offer_id,
                   );
                   return (
-                    <tr key={`${flow.segment_id}-${flow.offer_id}-${flow.step_order}`} className="transition-colors">
+                    <tr
+                      key={`${flow.segment_id}-${flow.offer_id}-${flow.step_order}`}
+                      className="transition-colors"
+                    >
                       <td
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
@@ -1675,12 +1695,16 @@ export default function CampaignDetailsPage() {
                       >
                         <button
                           onClick={() =>
-                            navigate(`/dashboard/segments/${(segment as any)?.segment_id || flow.segment_id}`)
+                            navigate(
+                              `/dashboard/segments/${(segment as any)?.segment_id || flow.segment_id}`,
+                            )
                           }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
-                          {(segment as any)?.segment_name || segment?.name || `Segment #${flow.segment_id}`}
+                          {(segment as any)?.segment_name ||
+                            segment?.name ||
+                            `Segment #${flow.segment_id}`}
                         </button>
                       </td>
                       <td
@@ -1689,7 +1713,9 @@ export default function CampaignDetailsPage() {
                       >
                         <button
                           onClick={() =>
-                            navigate(`/dashboard/offers/${offer?.id || flow.offer_id}`)
+                            navigate(
+                              `/dashboard/offers/${offer?.id || flow.offer_id}`,
+                            )
                           }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
@@ -1701,7 +1727,9 @@ export default function CampaignDetailsPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className={`text-xs font-medium ${tw.textPrimary}`}>
+                        <span
+                          className={`text-xs font-medium ${tw.textPrimary}`}
+                        >
                           {getFlowTypeLabel(flow.flow_type)}
                         </span>
                       </td>

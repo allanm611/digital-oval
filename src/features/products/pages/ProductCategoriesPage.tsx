@@ -42,6 +42,7 @@ import CreateCategoryModal from "../../../shared/components/CreateCategoryModal"
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 interface ProductsModalProps {
   isOpen: boolean;
@@ -931,7 +932,9 @@ export default function ProductCatalogsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <CreateButton onClick={() => setShowCreateModal(true)} />
+          <PermissionGate permission="products.create">
+            <CreateButton onClick={() => setShowCreateModal(true)} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -1172,7 +1175,9 @@ export default function ProductCatalogsPage() {
               : "Create your first product catalog to organize your products"}
           </p>
           {!searchTerm && (
-            <CreateButton onClick={() => setShowCreateModal(true)} />
+            <PermissionGate permission="products.create">
+              <CreateButton onClick={() => setShowCreateModal(true)} />
+            </PermissionGate>
           )}
         </div>
       ) : viewMode === "grid" ? (
@@ -1205,20 +1210,24 @@ export default function ProductCatalogsPage() {
                       <Power className="w-4 h-4 text-green-600" />
                     )}
                   </button>
-                  <button
-                    onClick={() => handleEditCatalog(category)}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                    title={t.productCatalogs.edit}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCatalog(category)}
-                    className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                    title={t.productCatalogs.delete}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
+                  <PermissionGate permission="products.update">
+                    <button
+                      onClick={() => handleEditCatalog(category)}
+                      className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                      title={t.productCatalogs.edit}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                  </PermissionGate>
+                  <PermissionGate permission="products.delete">
+                    <button
+                      onClick={() => handleDeleteCatalog(category)}
+                      className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                      title={t.productCatalogs.delete}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </button>
+                  </PermissionGate>
                 </div>
               </div>
               {category.description && (
@@ -1358,20 +1367,24 @@ export default function ProductCatalogsPage() {
                     <Power className="w-4 h-4 text-green-600" />
                   )}
                 </button>
-                <button
-                  onClick={() => handleEditCatalog(category)}
-                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteCatalog(category)}
-                  className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
+                <PermissionGate permission="products.update">
+                  <button
+                    onClick={() => handleEditCatalog(category)}
+                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                    title="Edit"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="products.delete">
+                  <button
+                    onClick={() => handleDeleteCatalog(category)}
+                    className={`p-2 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-600" />
+                  </button>
+                </PermissionGate>
               </div>
             </div>
           ))}

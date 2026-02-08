@@ -31,6 +31,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function OffersPage() {
   const navigate = useNavigate();
@@ -1010,7 +1011,9 @@ export default function OffersPage() {
             {t.pages.offersDescription}
           </p>
         </div>
-        <CreateButton route="/dashboard/offers/create" />
+        <PermissionGate permission="offers.create">
+          <CreateButton route="/dashboard/offers/create" />
+        </PermissionGate>
       </div>
 
       {/* Offer Stats Cards */}
@@ -1124,7 +1127,9 @@ export default function OffersPage() {
             <div className="text-center">
               <p className={`${tw.textSecondary}`}>No offers found</p>
               <div className="mt-4">
-                <CreateButton route="/dashboard/offers/create" />
+                <PermissionGate permission="offers.create">
+                  <CreateButton route="/dashboard/offers/create" />
+                </PermissionGate>
               </div>
             </div>
           </div>
@@ -1314,13 +1319,17 @@ export default function OffersPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => offer.id && handleEditOffer(offer.id)}
-                          className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
-                          title="Edit"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
+                        <PermissionGate permission="offers.update">
+                          <button
+                            onClick={() =>
+                              offer.id && handleEditOffer(offer.id)
+                            }
+                            className={`${tw.textMuted} hover:${tw.textPrimary} p-1 rounded`}
+                            title="Edit"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                        </PermissionGate>
                         <button
                           onClick={() =>
                             offer.id && handleCopyOfferId(offer.id)
@@ -1611,19 +1620,21 @@ export default function OffersPage() {
                               </button> */}
 
                         {/* Delete - Dangerous Action */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (offer.id) {
-                              handleDeleteOffer(offer.id, offer.name);
-                              setShowActionMenu(null);
-                            }
-                          }}
-                          className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4 mr-3" />
-                          Delete Offer
-                        </button>
+                        <PermissionGate permission="offers.delete">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (offer.id) {
+                                handleDeleteOffer(offer.id, offer.name);
+                                setShowActionMenu(null);
+                              }
+                            }}
+                            className="w-full flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 mr-3" />
+                            Delete Offer
+                          </button>
+                        </PermissionGate>
                       </div>,
                       document.body,
                     );

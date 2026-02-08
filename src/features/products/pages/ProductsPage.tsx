@@ -29,6 +29,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 interface ProductFilters {
   search?: string;
@@ -273,7 +274,9 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <CreateButton route="/dashboard/products/create" />
+          <PermissionGate permission="products.create">
+            <CreateButton route="/dashboard/products/create" />
+          </PermissionGate>
         </div>
       </div>
 
@@ -503,7 +506,9 @@ export default function ProductsPage() {
               Get started by creating your first product.
             </p>
             <div className="mx-auto">
-              <CreateButton route="/dashboard/products/create" />
+              <PermissionGate permission="products.create">
+                <CreateButton route="/dashboard/products/create" />
+              </PermissionGate>
             </div>
           </div>
         ) : (
@@ -636,15 +641,17 @@ export default function ProductsPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() =>
-                              navigate(`/dashboard/products/${product.id}/edit`)
-                            }
-                            className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
-                            title="Edit Product"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
+                          <PermissionGate permission="products.update">
+                            <button
+                              onClick={() =>
+                                navigate(`/dashboard/products/${product.id}/edit`)
+                              }
+                              className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
+                              title="Edit Product"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          </PermissionGate>
                           <button
                             onClick={() => handleToggleStatus(product)}
                             className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
@@ -658,13 +665,15 @@ export default function ProductsPage() {
                               <Play className="w-4 h-4" />
                             )}
                           </button>
-                          <button
-                            onClick={() => handleDelete(product.id)}
-                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
-                            title="Delete Product"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <PermissionGate permission="products.delete">
+                            <button
+                              onClick={() => handleDelete(product.id)}
+                              className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-all duration-200`}
+                              title="Delete Product"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>

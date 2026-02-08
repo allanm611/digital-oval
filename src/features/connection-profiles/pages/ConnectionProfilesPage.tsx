@@ -38,6 +38,7 @@ import {
   ConnectionProfileType,
   ConnectionProfileTypeStatsItem,
 } from "../types/connectionProfile";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 type StatusFilter = "all" | "active" | "inactive" | "expired";
 type PiiFilter = "all" | "with" | "without";
@@ -636,7 +637,9 @@ export default function ConnectionProfilesPage() {
           : "Create your first connection profile to get started"}
       </p>
       {!profiles.length && (
-        <CreateButton route="/dashboard/connection-profiles/new" />
+        <PermissionGate permission="servers.create">
+          <CreateButton route="/dashboard/connection-profiles/new" />
+        </PermissionGate>
       )}
     </div>
   );
@@ -699,7 +702,9 @@ export default function ConnectionProfilesPage() {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </button>
-            <CreateButton route="/dashboard/connection-profiles/new" />
+            <PermissionGate permission="servers.create">
+              <CreateButton route="/dashboard/connection-profiles/new" />
+            </PermissionGate>
           </div>
         </div>
 
@@ -954,13 +959,15 @@ export default function ConnectionProfilesPage() {
                           >
                             <Eye className="w-4 h-4 text-black" />
                           </button>
-                          <button
-                            onClick={() => handleEdit(profile.id)}
-                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4 text-black" />
-                          </button>
+                          <PermissionGate permission="servers.update">
+                            <button
+                              onClick={() => handleEdit(profile.id)}
+                              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4 text-black" />
+                            </button>
+                          </PermissionGate>
                           <button
                             onClick={(e) => handleToggleActive(profile, e)}
                             className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}

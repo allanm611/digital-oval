@@ -20,29 +20,30 @@ import { communicationService } from "../../communications/services/communicatio
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import type { ManualCommunicationRecipient } from "../../communications/types/communication";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export interface ManualBroadcastData {
   // Step 1: Audience
   audienceFile?: File;
-  audienceFileText?: string; 
+  audienceFileText?: string;
   audienceName?: string;
   audienceDescription?: string;
   uploadType?: string;
   quicklistId?: number;
   rowCount?: number;
-  subscriptionIdColumn?: string; 
-  fileColumns?: string[]; 
-  fileDelimiter?: string; 
-  fileHeaders?: string; 
-  inputMethod?: AudienceInputMethod; 
+  subscriptionIdColumn?: string;
+  fileColumns?: string[];
+  fileDelimiter?: string;
+  fileHeaders?: string;
+  inputMethod?: AudienceInputMethod;
 
   // Step 2: Communication
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
   messageTitle?: string;
   messageBody?: string;
   isRichText?: boolean;
-  smsRoute?: string; 
-  selectedVariables?: TemplateVariable[]; 
+  smsRoute?: string;
+  selectedVariables?: TemplateVariable[];
   selectedCommunicationPolicy?: CommunicationPolicyConfiguration;
   selectedCommunicationPolicyId?: number;
 
@@ -242,7 +243,7 @@ export default function CreateManualBroadcastPage() {
             column_conditions: [],
             limit: 1000,
           },
-          batch_size: user?.user_id ,
+          batch_size: user?.user_id,
         });
 
         if (response.success) {

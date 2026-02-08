@@ -35,6 +35,7 @@ import type {
   ScheduledJobSearchParams,
 } from "../types/scheduledJob";
 import { useAuth } from "../../../contexts/AuthContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -513,7 +514,9 @@ export default function ScheduledJobsPage() {
             )}
             {isSelectionMode ? "Exit Selection" : "Select Jobs"}
           </button>
-          <CreateButton route="/dashboard/scheduled-jobs/create" />
+          <PermissionGate permission="jobs.create">
+            <CreateButton route="/dashboard/scheduled-jobs/create" />
+          </PermissionGate>
         </div>
       </div>
 
@@ -848,7 +851,9 @@ export default function ScheduledJobsPage() {
                         }),
                       }}
                     >
-                      <div className={`text-base font-semibold ${tw.textPrimary}`}>
+                      <div
+                        className={`text-base font-semibold ${tw.textPrimary}`}
+                      >
                         {job.name}
                       </div>
                     </td>
@@ -856,9 +861,7 @@ export default function ScheduledJobsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div className="text-sm text-gray-600">
-                        {job.code}
-                      </div>
+                      <div className="text-sm text-gray-600">{job.code}</div>
                     </td>
                     <td
                       className="px-6 py-4"
@@ -906,25 +909,31 @@ export default function ScheduledJobsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          onClick={() =>
-                            navigate(`/dashboard/scheduled-jobs/${job.id}/edit`)
-                          }
-                          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-                          aria-label="Edit job"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeletingJob(job);
-                            setShowDeleteModal(true);
-                          }}
-                          className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                          aria-label="Delete job"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <PermissionGate permission="jobs.update">
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/scheduled-jobs/${job.id}/edit`,
+                              )
+                            }
+                            className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
+                            aria-label="Edit job"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
+                        <PermissionGate permission="jobs.delete">
+                          <button
+                            onClick={() => {
+                              setDeletingJob(job);
+                              setShowDeleteModal(true);
+                            }}
+                            className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors`}
+                            aria-label="Delete job"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>

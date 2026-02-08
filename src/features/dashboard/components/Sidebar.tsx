@@ -17,9 +17,7 @@ import {
   Tag,
   Layers,
   Calendar,
- 
   Briefcase,
- 
   List,
   Activity,
   LineChart,
@@ -45,7 +43,6 @@ import {
   Send,
   Box,
   Download,
- 
 } from "lucide-react";
 import logo from "../../../assets/Effortel_logo.svg";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -111,7 +108,9 @@ interface NavigationItem {
     | "analytics"
     | "configuration"
     | "customers"
-    | "servers";
+    | "servers"
+    | "jobs"
+    | "settings";
 }
 
 export default function Sidebar({
@@ -205,7 +204,6 @@ export default function Sidebar({
         href: "/dashboard",
         icon: Home,
         type: "single",
-        entity: "campaigns",
       },
       {
         name: t.sidebar.navigation.campaignManagement,
@@ -399,49 +397,42 @@ export default function Sidebar({
         href: "/dashboard/reports",
         icon: LineChart,
         type: "parent",
-        entity: "analytics",
         children: [
           {
             name: t.sidebar.navigation.overallDashboardPerformance,
             href: "/dashboard/reports/overview",
             icon: Activity,
             type: "single",
-            entity: "analytics",
           },
           {
             name: t.sidebar.navigation.customerProfileReports,
             href: "/dashboard/reports/customer-profiles",
             icon: Users,
             type: "single",
-            entity: "analytics",
           },
           {
             name: t.sidebar.navigation.campaignReports,
             href: "/dashboard/reports/campaigns",
             icon: Target,
             type: "single",
-            entity: "analytics",
           },
           {
             name: t.sidebar.navigation.offerReports,
             href: "/dashboard/reports/offers",
             icon: Gift,
             type: "single",
-            entity: "analytics",
           },
           {
             name: t.sidebar.navigation.deliverySmsReports,
             href: "/dashboard/reports/delivery",
             icon: MessageSquare,
             type: "single",
-            entity: "analytics",
           },
           {
             name: t.sidebar.navigation.deliveryEmailReports,
             href: "/dashboard/reports/email-delivery",
             icon: Mail,
             type: "single",
-            entity: "analytics",
           },
         ],
       },
@@ -495,56 +486,56 @@ export default function Sidebar({
         href: "/dashboard/jobs",
         icon: Briefcase,
         type: "parent",
-        entity: "campaigns",
+        entity: "jobs",
         children: [
           {
             name: t.sidebar.navigation.scheduledJobs,
             href: "/dashboard/jobs",
             icon: Briefcase,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
           {
             name: t.sidebar.navigation.jobExecutions,
             href: "/dashboard/job-executions",
             icon: PlayCircle,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
           // {
           //   name: "Step Executions",
           //   href: "/dashboard/step-executions",
           //   icon: List,
           //   type: "single",
-          //   entity: "campaigns",
+          //   entity: "jobs",
           // },
           {
             name: t.sidebar.navigation.jobTypes,
             href: "/dashboard/job-types",
             icon: Layers,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
           {
             name: t.sidebar.navigation.jobDependencies,
             href: "/dashboard/job-dependencies",
             icon: Link2,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
           {
             name: t.sidebar.navigation.jobWorkflowSteps,
             href: "/dashboard/job-workflow-steps",
             icon: Activity,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
           {
             name: t.sidebar.navigation.jobWorkflows,
             href: "/dashboard/workflows",
             icon: GitBranch,
             type: "single",
-            entity: "campaigns",
+            entity: "jobs",
           },
         ],
       },
@@ -580,7 +571,7 @@ export default function Sidebar({
       href: "/dashboard/settings",
       icon: Settings,
       type: "single",
-      entity: "configuration" as const,
+      entity: "settings" as const,
     },
   ];
 
@@ -769,7 +760,9 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
                               } ${getItemClasses(isActive)}`}
                             >
                               <div className="flex items-center gap-x-3">
@@ -830,7 +823,10 @@ export default function Sidebar({
 
                   if (item.entity === "campaigns") {
                     return (
-                      <PermissionGate key={item.name} permission="campaigns.read">
+                      <PermissionGate
+                        key={item.name}
+                        permission="campaigns.read"
+                      >
                         {item.type === "parent" ? (
                           <div>
                             <button
@@ -843,7 +839,9 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
                               } ${getItemClasses(isActive)}`}
                             >
                               <div className="flex items-center gap-x-3">
@@ -904,7 +902,10 @@ export default function Sidebar({
 
                   if (item.entity === "segments") {
                     return (
-                      <PermissionGate key={item.name} permission="segments.read">
+                      <PermissionGate
+                        key={item.name}
+                        permission="segments.read"
+                      >
                         {item.type === "parent" ? (
                           <div>
                             <button
@@ -917,7 +918,9 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
                               } ${getItemClasses(isActive)}`}
                             >
                               <div className="flex items-center gap-x-3">
@@ -975,166 +978,820 @@ export default function Sidebar({
                       </PermissionGate>
                     );
                   }
+
+                  // Add permission gates for other entities - Offers
+                  if (item.entity === "offers") {
                     return (
-                      <div key={item.name}>
-                        <button
-                          onClick={() =>
-                            toggleExpanded(
-                              item.name.toLowerCase(),
-                              parentItemNames,
-                            )
-                          }
-                          className={`group w-full flex items-center justify-between ${
-                            tw.rounded
-                          } p-3 text-sm transition-all duration-300 ease-out ${
-                            !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                          } ${getItemClasses(isActive)}`}
-                        >
-                          <div className="flex items-center gap-x-3">
+                      <PermissionGate key={item.name} permission="offers.read">
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
                             <Icon
                               className={`h-5 w-5 shrink-0 ${getIconClasses(
                                 isActive,
                               )}`}
                             />
                             {item.name}
-                          </div>
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-gray-400" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                          )}
-                        </button>
-
-                        <div
-                          className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                            isExpanded
-                              ? "max-h-[1000px] opacity-100"
-                              : "max-h-0 opacity-0"
-                          }`}
-                        >
-                          <div className="mt-2 ml-6 space-y-2">
-                            {item.children?.map((child) => {
-                              const ChildIcon = child.icon;
-                              const isChildActive =
-                                location.pathname === child.href;
-
-                              // Check if child has its own children (nested dropdown)
-                              if (child.type === "parent" && child.children) {
-                                const isChildExpanded = expandedItems.includes(
-                                  child.name.toLowerCase(),
-                                );
-                                return (
-                                  <div key={child.name}>
-                                    <button
-                                      onClick={() =>
-                                        toggleExpanded(child.name.toLowerCase())
-                                      }
-                                      className={`group w-full flex items-center justify-between ${
-                                        tw.rounded
-                                      } p-2.5 text-sm transition-all duration-200 ${
-                                        isChildActive
-                                          ? getItemClasses(isChildActive)
-                                          : getItemClasses(false)
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-x-3">
-                                        <ChildIcon
-                                          className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                            isChildActive,
-                                          )}`}
-                                        />
-                                        {child.name}
-                                      </div>
-                                      {isChildExpanded ? (
-                                        <ChevronDown className="h-3 w-3 text-gray-400" />
-                                      ) : (
-                                        <ChevronRight className="h-3 w-3 text-gray-400" />
-                                      )}
-                                    </button>
-
-                                    {isChildExpanded && (
-                                      <div className="mt-2 ml-6 space-y-2">
-                                        {child.children?.map((grandchild) => {
-                                          const GrandchildIcon =
-                                            grandchild.icon;
-                                          const isGrandchildActive =
-                                            location.pathname ===
-                                            grandchild.href;
-                                          return (
-                                            <Link
-                                              key={grandchild.name}
-                                              to={grandchild.href}
-                                              onClick={handleLinkClick}
-                                              className={`group flex items-center gap-x-3 ${
-                                                tw.rounded
-                                              } p-2.5 text-sm transition-all duration-200 ${
-                                                isGrandchildActive
-                                                  ? getItemClasses(
-                                                      isGrandchildActive,
-                                                    )
-                                                  : getItemClasses(false)
-                                              }`}
-                                            >
-                                              <GrandchildIcon
-                                                className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                                  isGrandchildActive,
-                                                )}`}
-                                              />
-                                              {grandchild.name}
-                                            </Link>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              }
-
-                              // Regular child item (no nested children)
-                              return (
-                                <Link
-                                  key={child.name}
-                                  to={child.href}
-                                  onClick={handleLinkClick}
-                                  className={`group flex items-center gap-x-3 ${
-                                    tw.rounded
-                                  } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
-                                    isChildActive,
-                                  )}`}
-                                >
-                                  <ChildIcon
-                                    className={`h-4 w-4 shrink-0 ${getIconClasses(
-                                      isChildActive,
-                                    )}`}
-                                  />
-                                  {child.name}
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
+                          </Link>
+                        )}
+                      </PermissionGate>
                     );
                   }
 
+                  // Products
+                  if (item.entity === "products") {
+                    return (
+                      <PermissionGate
+                        key={item.name}
+                        permission="products.read"
+                      >
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Customers
+                  if (item.entity === "customers") {
+                    return (
+                      <PermissionGate
+                        key={item.name}
+                        permission="customers.read"
+                      >
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Servers
+                  if (item.entity === "servers") {
+                    return (
+                      <PermissionGate key={item.name} permission="servers.read">
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Quicklists
+                  if (item.entity === "quicklists") {
+                    return (
+                      <PermissionGate
+                        key={item.name}
+                        permission="quicklists.read"
+                      >
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Jobs
+                  if (item.entity === "jobs") {
+                    return (
+                      <PermissionGate key={item.name} permission="jobs.read">
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Configuration
+                  if (item.entity === "configuration") {
+                    return (
+                      <PermissionGate key={item.name} permission="system.admin">
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
+                  // Analytics / Reports (commented out as requested)
+                  // if (item.entity === "analytics") {
+                  //   return (
+                  //     <PermissionGate key={item.name} permission="analytics.read">
+                  //       {/* Analytics sections */}
+                  //     </PermissionGate>
+                  //   );
+                  // }
+
                   return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={handleLinkClick}
-                      className={`group flex items-center gap-x-3 ${
-                        tw.rounded
-                      } p-3 text-sm transition-all duration-300 ease-out ${
-                        !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                      } ${getItemClasses(isActive)}`}
-                    >
-                      <Icon
-                        className={`h-5 w-5 shrink-0 ${getIconClasses(
-                          isActive,
-                        )}`}
-                      />
-                      {item.name}
-                    </Link>
+                    <div key={item.name}>
+                      <button
+                        onClick={() =>
+                          toggleExpanded(
+                            item.name.toLowerCase(),
+                            parentItemNames,
+                          )
+                        }
+                        className={`group w-full flex items-center justify-between ${
+                          tw.rounded
+                        } p-3 text-sm transition-all duration-300 ease-out ${
+                          !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                        } ${getItemClasses(isActive)}`}
+                      >
+                        <div className="flex items-center gap-x-3">
+                          <Icon
+                            className={`h-5 w-5 shrink-0 ${getIconClasses(
+                              isActive,
+                            )}`}
+                          />
+                          {item.name}
+                        </div>
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded
+                            ? "max-h-[1000px] opacity-100"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="mt-2 ml-6 space-y-2">
+                          {item.children?.map((child) => {
+                            const ChildIcon = child.icon;
+                            const isChildActive =
+                              location.pathname === child.href;
+
+                            // Check if child has its own children (nested dropdown)
+                            if (child.type === "parent" && child.children) {
+                              const isChildExpanded = expandedItems.includes(
+                                child.name.toLowerCase(),
+                              );
+                              return (
+                                <div key={child.name}>
+                                  <button
+                                    onClick={() =>
+                                      toggleExpanded(child.name.toLowerCase())
+                                    }
+                                    className={`group w-full flex items-center justify-between ${
+                                      tw.rounded
+                                    } p-2.5 text-sm transition-all duration-200 ${
+                                      isChildActive
+                                        ? getItemClasses(isChildActive)
+                                        : getItemClasses(false)
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-x-3">
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </div>
+                                    {isChildExpanded ? (
+                                      <ChevronDown className="h-3 w-3 text-gray-400" />
+                                    ) : (
+                                      <ChevronRight className="h-3 w-3 text-gray-400" />
+                                    )}
+                                  </button>
+
+                                  {isChildExpanded && (
+                                    <div className="mt-2 ml-6 space-y-2">
+                                      {child.children?.map((grandchild) => {
+                                        const GrandchildIcon = grandchild.icon;
+                                        const isGrandchildActive =
+                                          location.pathname === grandchild.href;
+                                        return (
+                                          <Link
+                                            key={grandchild.name}
+                                            to={grandchild.href}
+                                            onClick={handleLinkClick}
+                                            className={`group flex items-center gap-x-3 ${
+                                              tw.rounded
+                                            } p-2.5 text-sm transition-all duration-200 ${
+                                              isGrandchildActive
+                                                ? getItemClasses(
+                                                    isGrandchildActive,
+                                                  )
+                                                : getItemClasses(false)
+                                            }`}
+                                          >
+                                            <GrandchildIcon
+                                              className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                                isGrandchildActive,
+                                              )}`}
+                                            />
+                                            {grandchild.name}
+                                          </Link>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+
+                            // Regular child item (no nested children)
+                            return (
+                              <Link
+                                key={child.name}
+                                to={child.href}
+                                onClick={handleLinkClick}
+                                className={`group flex items-center gap-x-3 ${
+                                  tw.rounded
+                                } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                  isChildActive,
+                                )}`}
+                              >
+                                <ChildIcon
+                                  className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                    isChildActive,
+                                  )}`}
+                                />
+                                {child.name}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
               </nav>
@@ -1142,6 +1799,34 @@ export default function Sidebar({
                 {secondaryNavigation.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.href;
+
+                  // Settings with system.settings.manage permission
+                  if (item.entity === "settings") {
+                    return (
+                      <PermissionGate
+                        key={item.name}
+                        permission="system.settings.manage"
+                      >
+                        <Link
+                          to={item.href}
+                          onClick={handleLinkClick}
+                          className={`group flex items-center gap-x-3 ${
+                            tw.rounded
+                          } p-3 text-sm transition-all duration-300 ease-out ${
+                            !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                          } ${getItemClasses(isActive)}`}
+                        >
+                          <Icon
+                            className={`h-5 w-5 shrink-0 ${getIconClasses(
+                              isActive,
+                            )}`}
+                          />
+                          {item.name}
+                        </Link>
+                      </PermissionGate>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.name}
@@ -1298,7 +1983,10 @@ export default function Sidebar({
                                 const isChildActive =
                                   location.pathname === child.href;
                                 return (
-                                  <li key={child.name} className="relative group">
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
                                     <Link
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
@@ -1390,7 +2078,10 @@ export default function Sidebar({
                                 const isChildActive =
                                   location.pathname === child.href;
                                 return (
-                                  <li key={child.name} className="relative group">
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
                                     <Link
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
@@ -1482,7 +2173,10 @@ export default function Sidebar({
                                 const isChildActive =
                                   location.pathname === child.href;
                                 return (
-                                  <li key={child.name} className="relative group">
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
                                     <Link
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
@@ -1513,6 +2207,907 @@ export default function Sidebar({
                     </PermissionGate>
                   );
                 }
+
+                // Offers
+                if (item.entity === "offers") {
+                  return (
+                    <PermissionGate key={item.name} permission="offers.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Products
+                if (item.entity === "products") {
+                  return (
+                    <PermissionGate key={item.name} permission="products.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Customers
+                if (item.entity === "customers") {
+                  return (
+                    <PermissionGate key={item.name} permission="customers.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Servers
+                if (item.entity === "servers") {
+                  return (
+                    <PermissionGate key={item.name} permission="servers.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Quicklists
+                if (item.entity === "quicklists") {
+                  return (
+                    <PermissionGate
+                      key={item.name}
+                      permission="quicklists.read"
+                    >
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Jobs
+                if (item.entity === "jobs") {
+                  return (
+                    <PermissionGate key={item.name} permission="jobs.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Configuration
+                if (item.entity === "configuration") {
+                  return (
+                    <PermissionGate key={item.name} permission="system.admin">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
+
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
+
+                // Analytics / Reports (commented out as requested)
+                // if (item.entity === "analytics") {
+                //   return (
+                //     <PermissionGate key={item.name} permission="analytics.read">
+                //       {/* Analytics sections nested here */}
+                //     </PermissionGate>
+                //   );
+                // }
 
                 if (item.type === "parent") {
                   const itemLowerName = item.name.toLowerCase();
@@ -1584,10 +3179,14 @@ export default function Sidebar({
 
                       <div
                         className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                          isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+                          isExpanded
+                            ? "max-h-[1000px] opacity-100"
+                            : "max-h-0 opacity-0"
                         }`}
                       >
-                        <ul className={`${isMinimized ? "flex flex-col mt-2 md:space-y-5 xl:space-y-5" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
+                        <ul
+                          className={`${isMinimized ? "flex flex-col mt-2 md:space-y-5 xl:space-y-5" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}
+                        >
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
                             const isChildActive =
@@ -1643,52 +3242,62 @@ export default function Sidebar({
                                   </div>
 
                                   {isChildExpanded && (
-                                    <ul className={`${isMinimized ? "flex flex-col mt-2 md:space-y-5 xl:space-y-5" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}>
-                                      {child.children?.map((grandchild, gcIndex) => {
-                                        const GrandchildIcon = grandchild.icon;
-                                        const isGrandchildActive =
-                                          location.pathname === grandchild.href;
-                                        const isLastGrandchild = gcIndex === child.children!.length - 1;
-                                        return (
-                                          <li
-                                            key={grandchild.name}
-                                            className="relative group"
-                                          >
-                                            <Link
-                                              to={grandchild.href}
-                                              onClick={handleLinkClick}
-                                              className={`group flex items-center ${isMinimized ? "gap-x-2 px-3 py-2" : "md:justify-center xl:justify-start gap-x-3 md:p-2.5 xl:p-2.5"} ${
-                                                tw.rounded
-                                              } text-sm transition-all duration-200 ${getItemClasses(
-                                                isGrandchildActive,
-                                              )} ${isMinimized && isLastGrandchild ? "border-b border-white/20" : ""}`}
-                                              title={grandchild.name}
+                                    <ul
+                                      className={`${isMinimized ? "flex flex-col mt-2 md:space-y-5 xl:space-y-5" : "mt-2 md:ml-0 xl:ml-6 md:space-y-4 xl:space-y-2"}`}
+                                    >
+                                      {child.children?.map(
+                                        (grandchild, gcIndex) => {
+                                          const GrandchildIcon =
+                                            grandchild.icon;
+                                          const isGrandchildActive =
+                                            location.pathname ===
+                                            grandchild.href;
+                                          const isLastGrandchild =
+                                            gcIndex ===
+                                            child.children!.length - 1;
+                                          return (
+                                            <li
+                                              key={grandchild.name}
+                                              className="relative group"
                                             >
-                                              <GrandchildIcon
-                                                className={`${isMinimized ? "h-4 w-4" : "md:h-5 md:w-5 xl:h-4 xl:w-4"} shrink-0 ${getIconClasses(
+                                              <Link
+                                                to={grandchild.href}
+                                                onClick={handleLinkClick}
+                                                className={`group flex items-center ${isMinimized ? "gap-x-2 px-3 py-2" : "md:justify-center xl:justify-start gap-x-3 md:p-2.5 xl:p-2.5"} ${
+                                                  tw.rounded
+                                                } text-sm transition-all duration-200 ${getItemClasses(
                                                   isGrandchildActive,
-                                                )}`}
-                                              />
-                                              <span className={`${isMinimized ? "hidden" : "hidden xl:block"}`}>
-                                                {grandchild.name}
-                                              </span>
-                                            </Link>
+                                                )} ${isMinimized && isLastGrandchild ? "border-b border-white/20" : ""}`}
+                                                title={grandchild.name}
+                                              >
+                                                <GrandchildIcon
+                                                  className={`${isMinimized ? "h-4 w-4" : "md:h-5 md:w-5 xl:h-4 xl:w-4"} shrink-0 ${getIconClasses(
+                                                    isGrandchildActive,
+                                                  )}`}
+                                                />
+                                                <span
+                                                  className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                                >
+                                                  {grandchild.name}
+                                                </span>
+                                              </Link>
 
-                                            {/* Tooltip for grandchild */}
-                                            <div
-                                              className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
-                                              style={{
-                                                top: "50%",
-                                                transform: "translateY(-50%)",
-                                                zIndex: zIndex.popover,
-                                              }}
-                                            >
-                                              {grandchild.name}
-                                              <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[6px] border-r-gray-900"></div>
-                                            </div>
-                                          </li>
-                                        );
-                                      })}
+                                              {/* Tooltip for grandchild */}
+                                              <div
+                                                className={`md:block ${isMinimized ? "xl:block" : "xl:hidden"} absolute left-full ml-4 px-3 py-2 bg-gray-900 text-white text-xs font-medium ${tw.rounded} whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-75 pointer-events-none shadow-xl`}
+                                                style={{
+                                                  top: "50%",
+                                                  transform: "translateY(-50%)",
+                                                  zIndex: zIndex.popover,
+                                                }}
+                                              >
+                                                {grandchild.name}
+                                                <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[6px] border-r-gray-900"></div>
+                                              </div>
+                                            </li>
+                                          );
+                                        },
+                                      )}
                                     </ul>
                                   )}
                                 </li>
@@ -1696,7 +3305,9 @@ export default function Sidebar({
                             }
 
                             // Regular child item (no nested children)
-                            const isLastChild = item.children && index === item.children.length - 1;
+                            const isLastChild =
+                              item.children &&
+                              index === item.children.length - 1;
                             return (
                               <li key={child.name} className="relative group">
                                 <Link
@@ -1716,7 +3327,9 @@ export default function Sidebar({
                                       isChildActive,
                                     )}`}
                                   />
-                                  <span className={`${isMinimized ? "hidden" : "hidden xl:block"}`}>
+                                  <span
+                                    className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                  >
                                     {child.name}
                                   </span>
                                 </Link>

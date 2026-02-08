@@ -373,7 +373,7 @@ const UserPages = {
   UserManagementPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../users/pages/UserManagementPage"
+        /* webpackPrefetch: true */ "../../users/pages/UserManagementPageWrapper"
       ),
   ),
   UserDetailsPage: lazy(
@@ -438,12 +438,15 @@ const ServerPages = {
       ),
   ),
   ServersPage: lazy(
-    () => import(/* webpackPrefetch: true */ "../../servers/pages/ServersPage"),
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../servers/pages/ServersPageWrapper"
+      ),
   ),
   ServerDetailsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../servers/pages/ServerDetailsPage"
+        /* webpackPrefetch: true */ "../../servers/pages/ServerDetailsPageWrapper"
       ),
   ),
   ServerFormPage: lazy(
@@ -568,7 +571,7 @@ const OtherPages = {
   QuickListsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListsPage"
+        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListsPageWrapper"
       ),
   ),
   QuickListPage: lazy(
@@ -580,7 +583,7 @@ const OtherPages = {
   QuickListDetailsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListDetailsPage"
+        /* webpackPrefetch: true */ "../../quicklists/pages/QuickListDetailsPageWrapper"
       ),
   ),
   CreateManualBroadcastPage: lazy(
