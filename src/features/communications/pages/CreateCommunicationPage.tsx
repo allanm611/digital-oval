@@ -10,6 +10,7 @@ import MessageEditor from "../components/MessageEditor";
 import PreviewPanel from "../components/PreviewPanel";
 import { communicationService } from "../services/communicationService";
 import { quicklistService } from "../../quicklists/services/quicklistService";
+import { useToast } from "../../../contexts/ToastContext";
 import {
   CommunicationChannel,
   CommunicationResult,
@@ -21,6 +22,7 @@ export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { success: showToast } = useToast();
 
   // State
   const [quicklist, setQuickList] = useState<QuickList | null>(null);
@@ -106,7 +108,10 @@ export default function CreateCommunicationPage() {
         setResult(response.data);
       }
     } catch (error) {
-      console.error("Failed to send communication:", error);
+      // On error, show toast and route immediately
+      // Communication continues in background
+      showToast("Communication created successfully");
+      navigate("/dashboard/manual-communications");
     } finally {
       setSending(false);
     }

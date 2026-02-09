@@ -677,7 +677,7 @@ export default function AudienceConfigurationStep({
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm text-gray-900 font-medium">
-                          {segment.customer_count.toLocaleString()}
+                          {(segment.customer_count || 0).toLocaleString()}
                         </div>
                         <div className="text-xs text-gray-500">{t.campaigns.audienceConfiguration.customers}</div>
                       </td>
@@ -816,12 +816,13 @@ function ControlGroupConfigModal({
   };
 
   const calculateControlGroupSize = () => {
+    const customerCount = segment.customer_count || 0;
     if (config.type === "with_control_group") {
       if (
         config.control_group_method === "fixed_percentage" &&
         config.percentage
       ) {
-        return Math.round(segment.customer_count * (config.percentage / 100));
+        return Math.round(customerCount * (config.percentage / 100));
       }
       if (
         config.control_group_method === "fixed_number" &&
@@ -835,7 +836,7 @@ function ControlGroupConfigModal({
         config.margin_of_error
       ) {
         // Simplified calculation for demo - in reality this would use statistical formulas
-        const baseSize = Math.round(segment.customer_count * 0.1); // 10% base
+        const baseSize = Math.round(customerCount * 0.1); // 10% base
         const confidenceMultiplier = config.confidence_level / 95; // Normalize to 95%
         const errorMultiplier = 10 / config.margin_of_error; // Inverse relationship
         return Math.round(baseSize * confidenceMultiplier * errorMultiplier);
@@ -850,7 +851,7 @@ function ControlGroupConfigModal({
       );
       if (selectedGroup) {
         return Math.round(
-          segment.customer_count * (selectedGroup.percentage / 100)
+          customerCount * (selectedGroup.percentage / 100)
         );
       }
     }
@@ -1161,7 +1162,7 @@ function ControlGroupConfigModal({
                   <input
                     type="number"
                     min="1"
-                    max={segment.customer_count}
+                    max={segment.customer_count || 0}
                     value={config.fixed_number || 10000}
                     onChange={(e) =>
                       setConfig({
@@ -1174,7 +1175,7 @@ function ControlGroupConfigModal({
                   <p className="text-xs text-gray-500 mt-1">
                     {(
                       ((config.fixed_number || 10000) /
-                        segment.customer_count) *
+                        (segment.customer_count || 1)) *
                       100
                     ).toFixed(1)}
                     % {t.campaigns.audienceConfiguration.ofTotalSegment}
@@ -1315,7 +1316,7 @@ function ControlGroupConfigModal({
                 <div>
                   <span className="text-gray-500">{t.campaigns.audienceConfiguration.totalSegmentSize}</span>
                   <span className="font-medium ml-2">
-                    {segment.customer_count.toLocaleString()}
+                    {(segment.customer_count || 0).toLocaleString()}
                   </span>
                 </div>
                 <div>
@@ -1328,7 +1329,7 @@ function ControlGroupConfigModal({
                   <span className="text-gray-500">{t.campaigns.audienceConfiguration.targetGroupSize}</span>
                   <span className="font-medium ml-2">
                     {(
-                      segment.customer_count - calculateControlGroupSize()
+                      (segment.customer_count || 0) - calculateControlGroupSize()
                     ).toLocaleString()}
                   </span>
                 </div>
@@ -1342,14 +1343,14 @@ function ControlGroupConfigModal({
                         config.control_group_method === "fixed_number"
                       ? `${(
                           ((config.fixed_number || 0) /
-                            segment.customer_count) *
+                            (segment.customer_count || 1)) *
                           100
                         ).toFixed(1)}%`
                       : config.type === "with_control_group" &&
                         config.control_group_method === "advanced_parameters"
                       ? `${(
                           (calculateControlGroupSize() /
-                            segment.customer_count) *
+                            (segment.customer_count || 1)) *
                           100
                         ).toFixed(1)}%`
                       : config.type === "multiple_control_group" &&

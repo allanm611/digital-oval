@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Check,
   Plus,
   Search,
   AlertCircle,
-  Square,
-  CheckSquare,
+  // Square,
+  // CheckSquare,
   X,
   Trash2,
 } from "lucide-react";
@@ -40,7 +40,7 @@ export default function AssignPermissionsModal({
   onSelectionModeChange,
 }: AssignPermissionsModalProps) {
   const { success, error: showError } = useToast();
-  const { user } = useAuth();
+  const { user, permissions: userPermissions, updatePermissions } = useAuth();
 
   const userId = propUserId || user?.user_id;
 
@@ -68,13 +68,23 @@ export default function AssignPermissionsModal({
     propIsSelectionMode !== undefined
       ? propIsSelectionMode
       : localIsSelectionMode;
-  const handleSetSelectionMode = (mode: boolean) => {
-    if (onSelectionModeChange) {
-      onSelectionModeChange(mode);
-    } else {
-      setLocalIsSelectionMode(mode);
+  const handleSetSelectionMode = useCallback(
+    (mode: boolean) => {
+      if (onSelectionModeChange) {
+        onSelectionModeChange(mode);
+      } else {
+        setLocalIsSelectionMode(mode);
+      }
+    },
+    [onSelectionModeChange],
+  );
+
+  // Log current user's role information
+  useEffect(() => {
+    if (selectedRole && selectedRole.id === user?.user_id) {
+      // User is modifying their own role
     }
-  };
+  }, [selectedRole, user]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,6 +116,65 @@ export default function AssignPermissionsModal({
     loadPermissions();
   }, [isOpen, showError]);
 
+  const loadAssignedPermissions = useCallback(async () => {
+    if (!selectedRole) return;
+
+    try {
+      setIsLoading(true);
+
+      const rolePermsResponse = await rolePermissionService.getRolePermissions(
+        selectedRole.id,
+        {
+          limit: 100,
+          offset: 0,
+          skipCache: true, // Force fresh data, don't use cached response
+        },
+      );
+
+      // Handle both 'permissions' and 'rolePermissions' keys from API
+      let rolePerms = [];
+      if (Array.isArray(rolePermsResponse)) {
+        rolePerms = rolePermsResponse;
+      } else if (rolePermsResponse && typeof rolePermsResponse === "object") {
+        // Try 'permissions' key first (what the API returns)
+        if ((rolePermsResponse as any)?.permissions) {
+          rolePerms = (rolePermsResponse as any).permissions;
+        }
+        // Fall back to 'rolePermissions' key
+        else if ((rolePermsResponse as any)?.rolePermissions) {
+          rolePerms = (rolePermsResponse as any).rolePermissions;
+        }
+      }
+
+      // Handle two response formats:
+      // 1. Permission objects with 'id' directly: {id: 1, name: "...", ...}
+      // 2. RolePermission objects with 'permission_id': {permission_id: 1, ...}
+      const assigned = rolePerms
+        .map((rp: any) => {
+          const permId = rp.id || rp.permission_id;
+
+          // If it's already a full Permission object, use it directly
+          if (rp.name && rp.code) {
+            return rp as Permission;
+          }
+          // Otherwise find it in allPermissions
+          return allPermissions.find((p: Permission) => p.id === permId);
+        })
+        .filter((p: Permission | undefined) => p !== undefined) as Permission[];
+
+      setAssignedPermissions(assigned);
+    } catch (err) {
+      showError(
+        "Error",
+        err instanceof Error
+          ? err.message
+          : "Failed to load assigned permissions",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedRole, allPermissions, showError]);
+
   useEffect(() => {
     if (!selectedRole || !isOpen) {
       setAssignedPermissions([]);
@@ -114,65 +183,8 @@ export default function AssignPermissionsModal({
       return;
     }
 
-    const loadAssignedPermissions = async () => {
-      try {
-        setIsLoading(true);
-
-        const rolePermsResponse =
-          await rolePermissionService.getRolePermissions(selectedRole.id, {
-            limit: 100,
-            offset: 0,
-            skipCache: true, // Force fresh data, don't use cached response
-          });
-
-        // Handle both 'permissions' and 'rolePermissions' keys from API
-        let rolePerms = [];
-        if (Array.isArray(rolePermsResponse)) {
-          rolePerms = rolePermsResponse;
-        } else if (rolePermsResponse && typeof rolePermsResponse === "object") {
-          // Try 'permissions' key first (what the API returns)
-          if ((rolePermsResponse as any)?.permissions) {
-            rolePerms = (rolePermsResponse as any).permissions;
-          }
-          // Fall back to 'rolePermissions' key
-          else if ((rolePermsResponse as any)?.rolePermissions) {
-            rolePerms = (rolePermsResponse as any).rolePermissions;
-          }
-        }
-
-        // Handle two response formats:
-        // 1. Permission objects with 'id' directly: {id: 1, name: "...", ...}
-        // 2. RolePermission objects with 'permission_id': {permission_id: 1, ...}
-        const assigned = rolePerms
-          .map((rp: any) => {
-            const permId = rp.id || rp.permission_id;
-
-            // If it's already a full Permission object, use it directly
-            if (rp.name && rp.code) {
-              return rp as Permission;
-            }
-            // Otherwise find it in allPermissions
-            return allPermissions.find((p: Permission) => p.id === permId);
-          })
-          .filter(
-            (p: Permission | undefined) => p !== undefined,
-          ) as Permission[];
-
-        setAssignedPermissions(assigned);
-      } catch (err) {
-        showError(
-          "Error",
-          err instanceof Error
-            ? err.message
-            : "Failed to load assigned permissions",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadAssignedPermissions();
-  }, [selectedRole, allPermissions, isOpen, showError]);
+  }, [selectedRole, isOpen, loadAssignedPermissions, handleSetSelectionMode]);
 
   const handleTogglePermission = async (permission: Permission) => {
     if (!selectedRole) {
@@ -198,6 +210,14 @@ export default function AssignPermissionsModal({
           assignedPermissions.filter((p) => p.id !== permission.id),
         );
         success("Success", `Permission removed from role`);
+
+        // If user has this role, remove the permission from their context
+        if (selectedRole.id === user?.user_id || selectedRole.id === user?.role_id) {
+          const updatedUserPermissions = userPermissions.filter(
+            (p) => p !== permission.code,
+          );
+          updatePermissions(updatedUserPermissions);
+        }
       } else {
         await rolePermissionService.assignPermissionToRole(selectedRole.id, {
           permissionIds: [permission.id],
@@ -205,7 +225,17 @@ export default function AssignPermissionsModal({
         });
         setAssignedPermissions([...assignedPermissions, permission]);
         success("Success", `Permission assigned to role`);
+
+        // If user has this role, add the permission to their context
+        if (selectedRole.id === user?.user_id || selectedRole.id === user?.role_id) {
+          if (!userPermissions.includes(permission.code)) {
+            updatePermissions([...userPermissions, permission.code]);
+          }
+        }
       }
+
+      // Reload assigned permissions to show the actual state from backend
+      await loadAssignedPermissions();
 
       onPermissionsChanged();
     } catch (err) {
@@ -394,6 +424,12 @@ export default function AssignPermissionsModal({
       setAssignedPermissions((prev) => [...prev, ...newlyAssigned]);
 
       if (assignedCount > 0) {
+        console.log(
+          "[AssignPermissionsModal] Bulk assigning",
+          assignedCount,
+          "permissions to role:",
+          selectedRole.name,
+        );
         success(
           "Permissions Assigned",
           `${assignedCount} permission(s) assigned to ${selectedRole.name}`,
@@ -408,6 +444,16 @@ export default function AssignPermissionsModal({
       // Clear selection and exit selection mode
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
+
+      // Reload assigned permissions to show accurate count
+      await loadAssignedPermissions();
+
+      // Try to refresh permissions from backend, fallback to clearing if it fails
+      try {
+        await refreshPermissions();
+      } catch (refreshError) {
+        clearPermissionsCache();
+      }
 
       // Notify parent to refresh if needed
       onPermissionsChanged();
@@ -451,14 +497,31 @@ export default function AssignPermissionsModal({
         prev.filter((p) => !removedIds.has(p.id)),
       );
 
+      console.log(
+        "[AssignPermissionsModal] Bulk removing",
+        assignedToRemove.length,
+        "permissions from role:",
+        selectedRole.name,
+      );
       success(
         "Permissions Removed",
         `${assignedToRemove.length} permission(s) removed from ${selectedRole.name}`,
       );
+      console.log("[AssignPermissionsModal] Bulk remove successful");
 
       // Clear selection and exit selection mode
       setSelectedPermissionIds(new Set());
       handleSetSelectionMode(false);
+
+      // Reload assigned permissions to show accurate count
+      await loadAssignedPermissions();
+
+      // Try to refresh permissions from backend, fallback to clearing if it fails
+      try {
+        await refreshPermissions();
+      } catch (refreshError) {
+        clearPermissionsCache();
+      }
 
       // Notify parent to refresh if needed
       onPermissionsChanged();

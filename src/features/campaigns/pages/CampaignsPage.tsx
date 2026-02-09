@@ -28,6 +28,7 @@ import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
+import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -102,6 +103,8 @@ export default function CampaignsPage() {
   const [campaignToExecute, setCampaignToExecute] = useState<{
     id: number;
     name: string;
+    status?: string;
+    approval_status?: string;
   } | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [campaignToApprove, setCampaignToApprove] = useState<{
@@ -330,7 +333,7 @@ export default function CampaignsPage() {
     }
   }, [showToast]);
 
-  // Fetch offer and segment counts for campaigns
+  // Fetch offer and segment counts for campaigns using campaign flows
   const fetchCampaignCounts = useCallback(
     async (
       campaignIds: number[],
@@ -340,57 +343,37 @@ export default function CampaignsPage() {
       // Fetch counts in parallel for all campaigns
       const countPromises = campaignIds.map(async (campaignId) => {
         try {
-          // Fetch segments count
-          const segmentsResponse = await campaignService.getCampaignSegments(
+          // Fetch segments from campaign flows
+          const segmentsResponse = await campaignFlowService.getCampaignSegments(
             campaignId,
-            true,
           );
 
           let segmentCount = 0;
           if (
             segmentsResponse &&
             typeof segmentsResponse === "object" &&
+            segmentsResponse.success &&
             "data" in segmentsResponse &&
-            segmentsResponse.success
+            Array.isArray(segmentsResponse.data)
           ) {
-            // Handle both nested and direct array responses
-            if (Array.isArray(segmentsResponse.data)) {
-              // Direct array: { data: [...] }
-              segmentCount = segmentsResponse.data.length;
-            } else if (
-              segmentsResponse.data &&
-              typeof segmentsResponse.data === "object" &&
-              "data" in segmentsResponse.data &&
-              Array.isArray(
-                (segmentsResponse.data as { data?: CampaignSegmentDetail[] })
-                  .data,
-              )
-            ) {
-              // Nested: { data: { data: [...] } }
-              segmentCount = (
-                segmentsResponse.data as { data: CampaignSegmentDetail[] }
-              ).data.length;
-            } else if (
-              segmentsResponse.data &&
-              typeof segmentsResponse.data === "object" &&
-              "total" in segmentsResponse.data
-            ) {
-              // If we have a total field, use that
-              segmentCount =
-                typeof (segmentsResponse.data as { total?: number }).total ===
-                "number"
-                  ? (segmentsResponse.data as { total: number }).total
-                  : 0;
-            }
+            segmentCount = segmentsResponse.data.length;
           }
 
-          // Fetch offer mappings count
-          const offersResponse =
-            await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
-          const offerCount =
-            offersResponse.success && offersResponse.data
-              ? new Set(offersResponse.data.map((m) => m.offer_id)).size
-              : 0;
+          // Fetch offers from campaign flows
+          const offersResponse = await campaignFlowService.getCampaignOffers(
+            campaignId,
+          );
+
+          let offerCount = 0;
+          if (
+            offersResponse &&
+            typeof offersResponse === "object" &&
+            offersResponse.success &&
+            "data" in offersResponse &&
+            Array.isArray(offersResponse.data)
+          ) {
+            offerCount = offersResponse.data.length;
+          }
 
           return { campaignId, offers: offerCount, segments: segmentCount };
         } catch (error) {
@@ -1438,25 +1421,64 @@ export default function CampaignsPage() {
                         onMouseDown={(e) => e.stopPropagation()}
                       >
                         <PermissionGate permission="campaigns.execute">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCampaignToExecute({
-                                id: campaign.id,
-                                name: campaign.name,
-                              });
-                              setShowExecuteModal(true);
-                              setShowActionMenu(null);
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <Play
-                              className="w-4 h-4 mr-4"
-                              style={{ color: color.primary.accent }}
-                            />
-                            Execute Campaign
-                          </button>
+                          {campaign.approval_status === "approved" &&
+                          campaign.status === "active" ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCampaignToExecute({
+                                  id: campaign.id,
+                                  name: campaign.name,
+                                  status: campaign.status,
+                                  approval_status: campaign.approval_status,
+                                });
+                                setShowExecuteModal(true);
+                                setShowActionMenu(null);
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <Play
+                                className="w-4 h-4 mr-4"
+                                style={{ color: color.primary.accent }}
+                              />
+                              Execute Campaign
+                            </button>
+                          ) : null}
                         </PermissionGate>
+
+                        {campaign.status === "approved" && (
+                          <PermissionGate permission="campaigns.activate">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setShowActionMenu(null);
+                                try {
+                                  await campaignService.activateCampaign(
+                                    campaign.id,
+                                  );
+                                  showToast(
+                                    "success",
+                                    `Campaign "${campaign.name}" activated successfully!`,
+                                  );
+                                  fetchCampaigns();
+                                } catch (error) {
+                                  let errorMessage = "Failed to activate campaign";
+                                  if (error instanceof Error) {
+                                    errorMessage = error.message;
+                                  }
+                                  showToast("error", errorMessage);
+                                }
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <CheckCircle
+                                className="w-4 h-4 mr-4"
+                                style={{ color: "#10B981" }}
+                              />
+                              Activate Campaign
+                            </button>
+                          </PermissionGate>
+                        )}
 
                         {campaign.status === "draft" && (
                           <PermissionGate permission="campaigns.update">
@@ -1568,52 +1590,6 @@ export default function CampaignsPage() {
                           </>
                         )}
 
-                        {campaign.status === "approved" && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setShowActionMenu(null);
-                              try {
-                                await campaignService.activateCampaign(
-                                  campaign.id,
-                                );
-                                showToast(
-                                  "success",
-                                  `Campaign "${campaign.name}" activated successfully!`,
-                                );
-                                fetchCampaigns();
-                              } catch (error) {
-                                let errorMessage =
-                                  "Failed to activate campaign";
-                                if (error instanceof Error) {
-                                  const match =
-                                    error.message.match(/details: ({.*})/);
-                                  if (match) {
-                                    try {
-                                      const errorData = JSON.parse(match[1]);
-                                      errorMessage =
-                                        errorData.error ||
-                                        errorData.message ||
-                                        errorMessage;
-                                    } catch {
-                                      errorMessage = error.message;
-                                    }
-                                  } else {
-                                    errorMessage = error.message;
-                                  }
-                                }
-                                showToast("error", errorMessage);
-                              }
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <Play
-                              className="w-4 h-4 mr-4"
-                              style={{ color: "#10B981" }}
-                            />
-                            Activate Campaign
-                          </button>
-                        )}
 
                         {(campaign.status === "active" ||
                           campaign.status === "running") && (
@@ -2045,6 +2021,8 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToExecute.id}
           campaignName={campaignToExecute.name}
+          campaignStatus={campaignToExecute.status}
+          approvalStatus={campaignToExecute.approval_status}
           onSuccess={() => {
             fetchCampaigns();
           }}

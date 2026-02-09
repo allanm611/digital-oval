@@ -19,6 +19,7 @@ import {
   TrendingUp,
   DollarSign,
   Package,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -96,6 +97,13 @@ export default function CampaignDetailsPage() {
     useState<CampaignBudgetUtilisation | null>(null);
   const [isLoadingBudgetUtil, setIsLoadingBudgetUtil] = useState(false);
   const [createdByName, setCreatedByName] = useState<string>("");
+  const [showFlowEditModal, setShowFlowEditModal] = useState(false);
+  const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
+  const [selectedFlow, setSelectedFlow] = useState<CampaignFlowConfig | null>(
+    null,
+  );
+  const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
+  const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -581,6 +589,81 @@ export default function CampaignDetailsPage() {
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const handleFlowEdit = (flow: CampaignFlowConfig) => {
+    setSelectedFlow(flow);
+    setEditedFlow({
+      wait_interval_hours: flow.wait_interval_hours,
+      bucket_allocation: flow.bucket_allocation,
+      is_active: flow.is_active,
+    });
+    setShowFlowEditModal(true);
+  };
+
+  const handleFlowSave = async () => {
+    if (!selectedFlow || !id) return;
+
+    try {
+      setIsFlowActionLoading(true);
+
+      // Prepare update data
+      const updateData = {
+        wait_interval_hours: editedFlow.wait_interval_hours,
+        bucket_allocation: editedFlow.bucket_allocation,
+        is_active: editedFlow.is_active,
+      };
+
+      // Call updateCampaignFlow
+      // Note: The flow needs a unique ID for the API call
+      // Using a composite key if flow has an id field, otherwise use segment_id and offer_id
+      const flowId = (selectedFlow as any).id || `${selectedFlow.segment_id}-${selectedFlow.offer_id}`;
+
+      await campaignFlowService.updateCampaignFlow(parseInt(String(flowId)), updateData);
+
+      showToast("success", "Flow updated successfully");
+      setShowFlowEditModal(false);
+
+      // Reload flows
+      const campaignId = parseInt(id);
+      await fetchCampaignFlows(campaignId);
+    } catch (error) {
+      console.error("Error updating flow:", error);
+      showToast("error", "Failed to update flow");
+    } finally {
+      setIsFlowActionLoading(false);
+    }
+  };
+
+  const handleFlowDelete = (flow: CampaignFlowConfig) => {
+    setSelectedFlow(flow);
+    setShowFlowDeleteModal(true);
+  };
+
+  const handleFlowDeleteConfirm = async () => {
+    if (!selectedFlow || !id) return;
+
+    try {
+      setIsFlowActionLoading(true);
+
+      // Get flow ID - using a composite key if flow has an id field
+      const flowId = (selectedFlow as any).id || `${selectedFlow.segment_id}-${selectedFlow.offer_id}`;
+
+      // Call deleteCampaignFlow
+      await campaignFlowService.deleteCampaignFlow(parseInt(String(flowId)));
+
+      showToast("success", "Flow deleted successfully");
+      setShowFlowDeleteModal(false);
+
+      // Reload flows
+      const campaignId = parseInt(id);
+      await fetchCampaignFlows(campaignId);
+    } catch (error) {
+      console.error("Error deleting flow:", error);
+      showToast("error", "Failed to delete flow");
+    } finally {
+      setIsFlowActionLoading(false);
     }
   };
 
@@ -1595,12 +1678,28 @@ export default function CampaignDetailsPage() {
       {/* Campaign Flows Table */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3
-            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
-          >
-            <Zap className="w-5 h-5" />
-            Campaign Flows ({flows.length})
-          </h3>
+          <div className="flex items-center gap-4">
+            <h3
+              className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+            >
+              <Zap className="w-5 h-5" />
+              Campaign Flows ({flows.length})
+            </h3>
+            <div className="flex gap-4 text-sm">
+              <div className={tw.textSecondary}>
+                Segments:{" "}
+                <span className={`font-medium ${tw.textPrimary}`}>
+                  {segments.length}
+                </span>
+              </div>
+              <div className={tw.textSecondary}>
+                Offers:{" "}
+                <span className={`font-medium ${tw.textPrimary}`}>
+                  {offers.length}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
         {isLoadingFlows ? (
           <div className="flex items-center justify-center py-8">
@@ -1658,6 +1757,12 @@ export default function CampaignDetailsPage() {
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Allocation
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -1749,6 +1854,27 @@ export default function CampaignDetailsPage() {
                           {flow.bucket_allocation || "—"}
                         </div>
                       </td>
+                      <td
+                        className="px-6 py-4"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleFlowEdit(flow)}
+                            title="Edit flow"
+                            className="p-2 hover:bg-blue-50 rounded transition-colors"
+                          >
+                            <Edit className="w-4 h-4 text-blue-600" />
+                          </button>
+                          <button
+                            onClick={() => handleFlowDelete(flow)}
+                            title="Delete flow"
+                            className="p-2 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -1757,6 +1883,173 @@ export default function CampaignDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Flow Edit Modal */}
+      {showFlowEditModal && selectedFlow && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={() => setShowFlowEditModal(false)}
+            />
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+            >
+              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+                Edit Flow
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Wait Interval (hours)
+                  </label>
+                  <input
+                    type="number"
+                    value={editedFlow.wait_interval_hours || 0}
+                    onChange={(e) =>
+                      setEditedFlow({
+                        ...editedFlow,
+                        wait_interval_hours: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Bucket Allocation
+                  </label>
+                  <input
+                    type="text"
+                    value={editedFlow.bucket_allocation || ""}
+                    onChange={(e) =>
+                      setEditedFlow({
+                        ...editedFlow,
+                        bucket_allocation: e.target.value,
+                      })
+                    }
+                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="flowActive"
+                    checked={editedFlow.is_active !== false}
+                    onChange={(e) =>
+                      setEditedFlow({
+                        ...editedFlow,
+                        is_active: e.target.checked,
+                      })
+                    }
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="flowActive" className={`text-sm ${tw.textPrimary}`}>
+                    Active
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowFlowEditModal(false)}
+                  disabled={isFlowActionLoading}
+                  className={`flex-1 ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
+                  style={{
+                    border: button.borderedButton.border,
+                    backgroundColor: button.borderedButton.background,
+                    color: button.borderedButton.color,
+                    padding: `${button.borderedButton.paddingY} ${button.borderedButton.paddingX}`,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFlowSave}
+                  disabled={isFlowActionLoading}
+                  className={`flex-1 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
+                  style={{
+                    backgroundColor: button.actionButton.background,
+                    color: button.actionButton.color,
+                    padding: `${button.actionButton.paddingY} ${button.actionButton.paddingX}`,
+                  }}
+                >
+                  {isFlowActionLoading ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Flow Delete Modal */}
+      {showFlowDeleteModal && selectedFlow && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={() => setShowFlowDeleteModal(false)}
+            />
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+            >
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                    Delete Flow
+                  </h3>
+                  <p className={`text-sm ${tw.textMuted}`}>
+                    This action cannot be undone
+                  </p>
+                </div>
+              </div>
+
+              <p className={`text-sm ${tw.textSecondary} mb-6`}>
+                Are you sure you want to delete this flow? The campaign flow will
+                be permanently removed.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowFlowDeleteModal(false)}
+                  disabled={isFlowActionLoading}
+                  className={`flex-1 ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
+                  style={{
+                    border: button.borderedButton.border,
+                    backgroundColor: button.borderedButton.background,
+                    color: button.borderedButton.color,
+                    padding: `${button.borderedButton.paddingY} ${button.borderedButton.paddingX}`,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFlowDeleteConfirm}
+                  disabled={isFlowActionLoading}
+                  className={`flex-1 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
+                  style={{
+                    backgroundColor: button.delete.background,
+                    color: button.delete.color,
+                    padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
+                  }}
+                >
+                  {isFlowActionLoading ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

@@ -487,7 +487,7 @@ export default function CustomersPage() {
               </button>
             )}
           </div>
-          <PermissionGate permission="customers.create">
+          <PermissionGate permission="customer.create">
             <button
               type="button"
               onClick={() => setIsCreateCustomerModalOpen(true)}
@@ -651,13 +651,15 @@ export default function CustomersPage() {
                         className="rounded-r-md px-6 py-5 text-sm text-right"
                         style={cellBackground}
                       >
-                        <button
-                          type="button"
-                          onClick={() => handleSelectCustomer(row)}
-                          className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
+                        <PermissionGate permission="customer.read">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectCustomer(row)}
+                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </PermissionGate>
                       </td>
                     </tr>
                   );

@@ -6,6 +6,8 @@ import {
   useEffect,
 } from "react";
 import { authService } from "../features/auth/services/authService";
+import { userService } from "../features/users/services/userService";
+import { roleService } from "../features/roles/services/roleService";
 import { User, LoginResponse } from "../features/auth/types/auth";
 
 interface AuthContextType {
@@ -19,12 +21,15 @@ interface AuthContextType {
   resetPassword: (
     token: string,
     email: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<void>;
   loading: boolean;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
+  refreshPermissions: () => Promise<void>;
+  clearPermissionsCache: () => void;
+  updatePermissions: (permissions: string[]) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,7 +62,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (
     email: string,
-    password: string
+    password: string,
   ): Promise<LoginResponse> => {
     const response = await authService.login({ email, password });
 
@@ -77,14 +82,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setPermissions(userPermissions);
     localStorage.setItem("auth_permissions", JSON.stringify(userPermissions));
 
-    // Determine role based on permissions
-    // If user has system.admin permission, they're an admin
-    const userRole: "admin" | "user" = userPermissions.includes("system.admin")
-      ? "admin"
-      : "user";
+    // Fetch the actual role from the backend
+    let userRole = "User"; // Default fallback
 
-    // Use user data from response if available
     if (response.user) {
+      try {
+        // Get all roles
+        const rolesResponse = await roleService.listRoles({
+          limit: 100,
+          offset: 0,
+        });
+        const mappedRoles: Record<number, { name: string }> = {};
+        rolesResponse.roles.forEach((role: any) => {
+          mappedRoles[role.id] = { name: role.name };
+        });
+
+        // Get full user info to find their primary role
+        const userResponse = await userService.getUserById(response.user.id);
+        if (userResponse.success && userResponse.data) {
+          const fullUser = userResponse.data as any;
+          const primaryRoleId = fullUser.primary_role_id ?? fullUser.role_id;
+          if (primaryRoleId && mappedRoles[primaryRoleId]) {
+            userRole = mappedRoles[primaryRoleId].name;
+          }
+        }
+      } catch (error) {
+        // If fetching role fails, fall back to default
+        console.warn("Failed to fetch user role, using default", error);
+      }
+
       const user: User = {
         user_id: response.user.id,
         first_name: response.user.first_name,
@@ -149,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const resetPassword = async (
     token: string,
     email: string,
-    newPassword: string
+    newPassword: string,
   ): Promise<void> => {
     await authService.completePasswordReset({ token, email, newPassword });
   };
@@ -160,11 +186,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const hasAnyPermission = (requiredPermissions: string[]): boolean => {
-    return requiredPermissions.some(permission => permissions.includes(permission));
+    return requiredPermissions.some((permission) =>
+      permissions.includes(permission),
+    );
   };
 
   const hasAllPermissions = (requiredPermissions: string[]): boolean => {
-    return requiredPermissions.every(permission => permissions.includes(permission));
+    return requiredPermissions.every((permission) =>
+      permissions.includes(permission),
+    );
+  };
+
+  const updatePermissions = (newPermissions: string[]): void => {
+    setPermissions(newPermissions);
+    localStorage.setItem("auth_permissions", JSON.stringify(newPermissions));
+  };
+
+  const refreshPermissions = async (): Promise<void> => {
+    try {
+      const response = await authService.getPermissions();
+      if (response.success && response.permissions) {
+        setPermissions(response.permissions);
+        localStorage.setItem(
+          "auth_permissions",
+          JSON.stringify(response.permissions),
+        );
+      } else {
+        if (
+          response.error?.code === "INVALID_TOKEN" ||
+          response.error?.code === "GET_PERMISSIONS_FAILED"
+        ) {
+          throw new Error(
+            response.error.message || "Failed to refresh permissions",
+          );
+        }
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const clearPermissionsCache = (): void => {
+    setPermissions([]);
+    localStorage.removeItem("auth_permissions");
   };
 
   return (
@@ -182,6 +246,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         hasPermission,
         hasAnyPermission,
         hasAllPermissions,
+        refreshPermissions,
+        clearPermissionsCache,
+        updatePermissions,
       }}
     >
       {children}

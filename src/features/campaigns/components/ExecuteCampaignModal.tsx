@@ -8,7 +8,7 @@ import {
   Bell,
 } from "lucide-react";
 import { campaignService } from "../services/campaignService";
-import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
+import { campaignFlowService } from "../services/campaignFlowService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
@@ -18,13 +18,17 @@ interface ExecuteCampaignModalProps {
   onClose: () => void;
   campaignId: number;
   campaignName: string;
+  campaignStatus?: string;
+  approvalStatus?: string;
   onSuccess?: () => void;
 }
 
 interface SegmentMapping {
   id: number;
   segment_id: string;
+  segment_name?: string;
   offer_id: number;
+  offer_name?: string;
   selected: boolean;
   channels: string[];
 }
@@ -40,36 +44,76 @@ export default function ExecuteCampaignModal({
   onClose,
   campaignId,
   campaignName,
+  campaignStatus,
+  approvalStatus,
   onSuccess,
 }: ExecuteCampaignModalProps) {
   const { showToast } = useToast();
   const [segments, setSegments] = useState<SegmentMapping[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionMode, setExecutionMode] = useState<"immediate" | "scheduled">(
+  const [executionMode, setExecutionMode] = useState<"immediate" | "schedule">(
     "immediate",
   );
+
+  // Check if campaign is approved and can be executed
+  const isApproved = approvalStatus === "approved";
+  const isActive = campaignStatus === "active";
+  const canExecute = isApproved && isActive;
+  const executionDisabledReason = !isApproved
+    ? `Campaign is pending approval (status: ${approvalStatus})`
+    : !isActive
+      ? `Campaign is not active (status: ${campaignStatus})`
+      : null;
 
   const loadSegments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response =
-        await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
+      // Get segments and flows from campaign flows service (Step 2-3 data)
+      const segmentsResponse =
+        await campaignFlowService.getCampaignSegments(campaignId);
+      const flowsResponse = await campaignFlowService.getCampaignFlows(
+        campaignId,
+      );
 
-      // Transform mappings to segment list with default EMAIL channel
-      const uniqueSegments = Array.from(
-        new Set(response.data.map((m) => m.segment_id)),
-      ).map((segmentId) => {
-        const mapping = response.data.find((m) => m.segment_id === segmentId);
+      console.log("ExecuteCampaignModal - segmentsResponse:", segmentsResponse);
+      console.log("ExecuteCampaignModal - flowsResponse:", flowsResponse);
+      console.log("ExecuteCampaignModal - flows data:", flowsResponse?.data);
+
+      if (
+        !segmentsResponse?.success ||
+        !Array.isArray(segmentsResponse.data) ||
+        !flowsResponse?.success ||
+        !Array.isArray(flowsResponse.data)
+      ) {
+        setSegments([]);
+        return;
+      }
+
+      // Create segment list with their first associated offer from flows
+      const uniqueSegments = segmentsResponse.data.map((segment) => {
+        // API returns segment_id (not id), so use that for matching
+        const segmentId = (segment as any)?.segment_id || segment.id;
+
+        // Find the first flow for this segment to get offer_id
+        const flow = flowsResponse.data.find(
+          (f) => f.segment_id === segmentId || String(f.segment_id) === String(segmentId),
+        );
+
+        console.log(`Processing segment:`, segment, "Flow:", flow);
+
         return {
-          id: mapping!.id,
-          segment_id: segmentId,
-          offer_id: mapping!.offer_id,
+          id: segmentId,
+          segment_id: String(segmentId), // Use the actual segment_id from API
+          segment_name: (segment as any)?.segment_name || (segment as any)?.name,
+          offer_id: flow?.offer_id || 0,
+          offer_name: (flow as any)?.offer_name, // Will try to get from flow
           selected: true,
           channels: ["EMAIL"], // Default channel
         };
       });
 
+      console.log("ExecuteCampaignModal - uniqueSegments:", uniqueSegments);
       setSegments(uniqueSegments);
     } catch (error) {
       console.error("Error loading segments:", error);
@@ -251,25 +295,45 @@ export default function ExecuteCampaignModal({
 
           {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Warning Alert */}
-            <div
-              className={`flex items-start gap-3 p-4 ${tw.rounded}`}
-              style={{
-                backgroundColor: "#FEF3C7",
-                border: "1px solid #FCD34D",
-              }}
-            >
-              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-amber-900">
-                  Confirm Campaign Execution
-                </h4>
-                <p className="text-sm text-amber-700 mt-1">
-                  This will send communications to the selected segments. Please
-                  review carefully before proceeding.
-                </p>
+            {/* Warning/Error Alert */}
+            {executionDisabledReason ? (
+              <div
+                className={`flex items-start gap-3 p-4 ${tw.rounded}`}
+                style={{
+                  backgroundColor: "#FEE2E2",
+                  border: "1px solid #FECACA",
+                }}
+              >
+                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-red-900">
+                    Cannot Execute Campaign
+                  </h4>
+                  <p className="text-sm text-red-700 mt-1">
+                    {executionDisabledReason}
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div
+                className={`flex items-start gap-3 p-4 ${tw.rounded}`}
+                style={{
+                  backgroundColor: "#FEF3C7",
+                  border: "1px solid #FCD34D",
+                }}
+              >
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-medium text-amber-900">
+                    Confirm Campaign Execution
+                  </h4>
+                  <p className="text-sm text-amber-700 mt-1">
+                    This will send communications to the selected segments. Please
+                    review carefully before proceeding.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Execution Mode */}
             <div>
@@ -298,16 +362,16 @@ export default function ExecuteCampaignModal({
                   <div className="text-xs text-gray-500 mt-1">Execute now</div>
                 </button>
                 <button
-                  onClick={() => setExecutionMode("scheduled")}
+                  onClick={() => setExecutionMode("schedule")}
                   className={`flex-1 p-3 ${
                     tw.rounded
                   } border-2 transition-all ${
-                    executionMode === "scheduled"
+                    executionMode === "schedule"
                       ? "border-current"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                   style={
-                    executionMode === "scheduled"
+                    executionMode === "schedule"
                       ? { borderColor: color.primary.accent }
                       : {}
                   }
@@ -348,7 +412,7 @@ export default function ExecuteCampaignModal({
                 <div className="space-y-3">
                   {segments.map((segment) => (
                     <div
-                      key={segment.id}
+                      key={`${segment.id}-${segment.offer_id}`}
                       className={`${components.card.surface} transition-all ${
                         segment.selected ? "border-2" : ""
                       }`}
@@ -371,10 +435,10 @@ export default function ExecuteCampaignModal({
                             <div
                               className={`text-sm font-medium ${tw.textPrimary}`}
                             >
-                              Segment ID: {segment.segment_id}
+                              Segment: {segment.segment_name || segment.segment_id || "Unknown"}
                             </div>
                             <div className={`text-xs ${tw.textSecondary}`}>
-                              Offer ID: {segment.offer_id}
+                              Offer: {segment.offer_name || segment.offer_id || "None"}
                             </div>
                           </div>
                         </div>
@@ -447,18 +511,23 @@ export default function ExecuteCampaignModal({
             <button
               onClick={onClose}
               disabled={isExecuting}
-              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors disabled:opacity-50`}
-              style={{ borderColor: color.border.default }}
+              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium transition-colors disabled:opacity-50`}
+              style={{
+                borderColor: color.border.default,
+                color: tw.textPrimary,
+              }}
             >
               Cancel
             </button>
             <button
               onClick={handleExecute}
               disabled={
+                !canExecute ||
                 isExecuting ||
                 segments.filter((s) => s.selected && s.channels.length > 0)
                   .length === 0
               }
+              title={executionDisabledReason || "Execute campaign"}
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >

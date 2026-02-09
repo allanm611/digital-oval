@@ -14,6 +14,7 @@ import { CustomerIdentityField } from "../types/customerIdentity";
 import { AlertTriangle } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function CustomerIdentityPage() {
   const navigate = useNavigate();
@@ -85,15 +86,16 @@ export default function CustomerIdentityPage() {
   }, [filteredFields.length, hasNoFields, isLoading]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className={`${tw.mainHeading} text-gray-900`}>
-          {t.customerIdentity.title}
-        </h1>
-        <p className={`${tw.textSecondary} mt-2 text-sm`}>
-          {t.customerIdentity.description}
-        </p>
-      </div>
+    <PermissionGate permission="customer-identity.read">
+      <div className="space-y-6">
+        <div>
+          <h1 className={`${tw.mainHeading} text-gray-900`}>
+            {t.customerIdentity.title}
+          </h1>
+          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            {t.customerIdentity.description}
+          </p>
+        </div>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="relative w-full md:flex-1">
@@ -286,6 +288,7 @@ export default function CustomerIdentityPage() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </PermissionGate>
   );
 }

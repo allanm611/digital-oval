@@ -28,10 +28,10 @@ import {
 } from "recharts";
 import { colors } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
-import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import type {
   CustomerRow,
   CustomerSearchResultsResponse,
@@ -302,7 +302,6 @@ type TabType =
   | "subscribedLists";
 
 export default function CustomerSearchResultsPage() {
-  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -733,31 +732,32 @@ export default function CustomerSearchResultsPage() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        {origin && (
-          <button
-            onClick={handleBackNavigation}
-            className={`inline-flex items-center justify-center ${tw.rounded} border border-gray-200 p-2 text-gray-600 hover:text-gray-900 transition-colors`}
-            aria-label={
-              origin === "customers"
-                ? "Back to customers"
-                : "Back to customer reports"
-            }
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-        )}
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            {customer.name}
-          </h1>
-          <p className={`${tw.textSecondary} text-sm mt-1 font-mono`}>
-            {customer.id}
-          </p>
+    <PermissionGate permission="customer.read">
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          {origin && (
+            <button
+              onClick={handleBackNavigation}
+              className={`inline-flex items-center justify-center ${tw.rounded} border border-gray-200 p-2 text-gray-600 hover:text-gray-900 transition-colors`}
+              aria-label={
+                origin === "customers"
+                  ? "Back to customers"
+                  : "Back to customer reports"
+              }
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
+          <div>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+              {customer.name}
+            </h1>
+            <p className={`${tw.textSecondary} text-sm mt-1 font-mono`}>
+              {customer.id}
+            </p>
+          </div>
         </div>
-      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-gray-200">
@@ -1132,7 +1132,7 @@ export default function CustomerSearchResultsPage() {
                       <Tooltip
                         content={<CustomTooltip />}
                         cursor={{ fill: "transparent" }}
-                        formatter={(value: number) => `${value}%`}
+                        formatter={(value?: number) => value ? `${value}%` : ""}
                       />
                       <Bar
                         dataKey="engagementRate"
@@ -1430,6 +1430,7 @@ export default function CustomerSearchResultsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </PermissionGate>
   );
 }

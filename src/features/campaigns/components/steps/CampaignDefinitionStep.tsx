@@ -1193,10 +1193,6 @@ export default function CampaignDefinitionStep({
                 // Trigger date picker on click
                 (e.target as HTMLInputElement).showPicker?.();
               }}
-              onFocus={(e) => {
-                // Show picker when focused
-                (e.target as HTMLInputElement).showPicker?.();
-              }}
               className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157] text-sm cursor-pointer`}
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -1226,10 +1222,6 @@ export default function CampaignDefinitionStep({
               }}
               onClick={(e) => {
                 // Trigger date picker on click
-                (e.target as HTMLInputElement).showPicker?.();
-              }}
-              onFocus={(e) => {
-                // Show picker when focused
                 (e.target as HTMLInputElement).showPicker?.();
               }}
               className={`w-full px-3 py-2 border ${

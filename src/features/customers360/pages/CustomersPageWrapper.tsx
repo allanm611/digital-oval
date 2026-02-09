@@ -16,7 +16,7 @@ import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
  */
 export default function CustomersPageWrapper() {
   return (
-    <PermissionGate permission="customers.read" fallback={<UnauthorizedPage />}>
+    <PermissionGate permission="customer.read" fallback={<UnauthorizedPage />}>
       <SuspenseBoundary type="table">
         <CustomersPage />
       </SuspenseBoundary>

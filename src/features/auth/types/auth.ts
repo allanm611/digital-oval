@@ -5,7 +5,7 @@ export interface User {
   last_name: string;
   private_email_address: string;
   email: string;
-  role: 'admin' | 'user';
+  role: string;
   photo_url?: string;
   is_activated: boolean;
   is_deleted: boolean;

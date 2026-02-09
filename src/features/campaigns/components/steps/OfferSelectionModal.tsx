@@ -84,12 +84,24 @@ export default function OfferSelectionModal({
       setError(null);
 
       // Get offers created during this campaign flow session
+      let campaignFlowOfferIds: number[] = [];
       const campaignFlowOffersStr = sessionStorage.getItem(
         "campaignFlowCreatedOffers",
       );
-      const campaignFlowOfferIds: number[] = campaignFlowOffersStr
-        ? JSON.parse(campaignFlowOffersStr)
-        : [];
+
+      if (campaignFlowOffersStr) {
+        try {
+          const parsed = JSON.parse(campaignFlowOffersStr);
+          // Validate all IDs: must be number > 0
+          campaignFlowOfferIds = (Array.isArray(parsed) ? parsed : []).filter(
+            (id) => typeof id === "number" && id > 0 && id !== undefined && id !== null
+          );
+        } catch (err) {
+          console.warn("Failed to parse campaignFlowCreatedOffers, using empty array:", err);
+          // Clear corrupted data
+          sessionStorage.removeItem("campaignFlowCreatedOffers");
+        }
+      }
 
       // Fetch only active and approved offers (standard offers)
       // Handle errors gracefully so we can still show campaign flow offers
@@ -140,22 +152,32 @@ export default function OfferSelectionModal({
       });
 
       // Fetch and add offers created during this campaign flow (even if draft/pending)
-      if (campaignFlowOfferIds.length > 0) {
+      if (campaignFlowOfferIds && campaignFlowOfferIds.length > 0) {
         try {
-          const campaignFlowOffersPromises = campaignFlowOfferIds.map(
-            (offerId) =>
-              offerService.getOfferById(offerId, true).catch(() => null),
-          );
-          const campaignFlowOffersResults = await Promise.all(
-            campaignFlowOffersPromises,
+          // Double-check: filter out any undefined/null values before fetching
+          const validOfferIds = campaignFlowOfferIds.filter(
+            (id) => typeof id === "number" && id > 0 && id !== undefined && id !== null
           );
 
-          campaignFlowOffersResults.forEach((response) => {
-            if (response?.data?.id) {
-              const offer = response.data;
-              offersMap.set(offer.id, offer);
-            }
-          });
+          if (validOfferIds.length > 0) {
+            const campaignFlowOffersPromises = validOfferIds.map(
+              (offerId) =>
+                offerService.getOfferById(offerId, true).catch((err) => {
+                  console.warn(`Failed to load offer ${offerId}:`, err);
+                  return null;
+                }),
+            );
+            const campaignFlowOffersResults = await Promise.all(
+              campaignFlowOffersPromises,
+            );
+
+            campaignFlowOffersResults.forEach((response) => {
+              if (response?.data?.id) {
+                const offer = response.data;
+                offersMap.set(offer.id, offer);
+              }
+            });
+          }
         } catch (err) {
           console.error("Failed to load campaign flow offers:", err);
         }
@@ -197,13 +219,30 @@ export default function OfferSelectionModal({
 
   const handleOfferCreated = useCallback(
     (offerId: number) => {
+      // Only store valid offer IDs (not undefined, not null, not 0)
+      if (offerId === undefined || offerId === null || offerId <= 0) {
+        console.warn("Invalid offer ID, skipping storage:", offerId);
+        return;
+      }
+
       // Store the created offer ID in sessionStorage so it shows with action buttons
       const campaignFlowOffersStr = sessionStorage.getItem(
         "campaignFlowCreatedOffers",
       );
-      const campaignFlowOfferIds: number[] = campaignFlowOffersStr
-        ? JSON.parse(campaignFlowOffersStr)
-        : [];
+      let campaignFlowOfferIds: number[] = [];
+
+      try {
+        campaignFlowOfferIds = campaignFlowOffersStr
+          ? JSON.parse(campaignFlowOffersStr)
+          : [];
+        // Validate all existing IDs and filter out invalid ones
+        campaignFlowOfferIds = campaignFlowOfferIds.filter(
+          (id) => id !== undefined && id !== null && id > 0
+        );
+      } catch (err) {
+        console.warn("Failed to parse campaignFlowCreatedOffers, resetting:", err);
+        campaignFlowOfferIds = [];
+      }
 
       if (!campaignFlowOfferIds.includes(offerId)) {
         campaignFlowOfferIds.push(offerId);

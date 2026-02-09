@@ -1,4 +1,4 @@
-import { API_CONFIG, getAuthHeaders } from '../../../shared/services/api';
+import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
 import {
   SendCommunicationRequest,
   SendCommunicationResponse,
@@ -22,21 +22,21 @@ import {
   RecipientData,
   MessageTemplate,
   CommunicationChannel,
-} from '../types/communication';
+} from "../types/communication";
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/communications`;
 
 class CommunicationService {
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${BASE_URL}${endpoint}`;
 
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...getAuthHeaders(),
         ...options.headers,
       },
@@ -44,7 +44,7 @@ class CommunicationService {
 
     if (!response.ok) {
       const errorBody = await response.text();
-      console.error('Communication API Error:', {
+      console.error("Communication API Error:", {
         status: response.status,
         statusText: response.statusText,
         body: errorBody,
@@ -64,10 +64,10 @@ class CommunicationService {
    * Send a communication to recipients from quicklist, segment, or manual list
    */
   async sendCommunication(
-    request: SendCommunicationRequest
+    request: SendCommunicationRequest,
   ): Promise<SendCommunicationResponse> {
-    return this.request<SendCommunicationResponse>('/send', {
-      method: 'POST',
+    return this.request<SendCommunicationResponse>("/send", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -83,10 +83,10 @@ class CommunicationService {
       filters?: any;
       batchSize?: number;
       createdBy?: number;
-    }
+    },
   ): Promise<SendCommunicationResponse> {
     return this.sendCommunication({
-      source_type: 'quicklist',
+      source_type: "quicklist",
       source_id: quicklistId,
       channels,
       message_template: messageTemplate,
@@ -106,10 +106,10 @@ class CommunicationService {
     options?: {
       batchSize?: number;
       createdBy?: number;
-    }
+    },
   ): Promise<SendCommunicationResponse> {
     return this.sendCommunication({
-      source_type: 'segment',
+      source_type: "segment",
       source_id: segmentId,
       channels,
       message_template: messageTemplate,
@@ -127,10 +127,10 @@ class CommunicationService {
     messageTemplate: MessageTemplate,
     options?: {
       createdBy?: number;
-    }
+    },
   ): Promise<SendCommunicationResponse> {
     return this.sendCommunication({
-      source_type: 'manual',
+      source_type: "manual",
       recipient_list: recipientList,
       channels,
       message_template: messageTemplate,
@@ -141,9 +141,11 @@ class CommunicationService {
   /**
    * Send manual communication (legacy method - use sendToManualList instead)
    */
-  async sendManualCommunication(request: SendManualCommunicationRequest): Promise<SendManualCommunicationResponse> {
-    return this.request<SendManualCommunicationResponse>('/send', {
-      method: 'POST',
+  async sendManualCommunication(
+    request: SendManualCommunicationRequest,
+  ): Promise<SendManualCommunicationResponse> {
+    return this.request<SendManualCommunicationResponse>("/send", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -168,19 +170,20 @@ class CommunicationService {
    * Get communication executions with filtering
    */
   async getExecutions(
-    params?: GetExecutionsRequest
+    params?: GetExecutionsRequest,
   ): Promise<CommunicationExecutionsResponse> {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
-    if (params?.start_date) queryParams.append('start_date', params.start_date);
-    if (params?.end_date) queryParams.append('end_date', params.end_date);
-    if (params?.channel) queryParams.append('channel', params.channel);
-    if (params?.source_type) queryParams.append('source_type', params.source_type);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    if (params?.start_date) queryParams.append("start_date", params.start_date);
+    if (params?.end_date) queryParams.append("end_date", params.end_date);
+    if (params?.channel) queryParams.append("channel", params.channel);
+    if (params?.source_type)
+      queryParams.append("source_type", params.source_type);
 
     const queryString = queryParams.toString();
-    const endpoint = `/${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/${queryString ? `?${queryString}` : ""}`;
 
     return this.request<CommunicationExecutionsResponse>(endpoint);
   }
@@ -188,14 +191,20 @@ class CommunicationService {
   /**
    * Get details of a specific broadcast execution including recent logs
    */
-  async getExecutionDetails(executionId: string): Promise<CommunicationExecutionDetailResponse> {
-    return this.request<CommunicationExecutionDetailResponse>(`/executions/${executionId}`);
+  async getExecutionDetails(
+    executionId: string,
+  ): Promise<CommunicationExecutionDetailResponse> {
+    return this.request<CommunicationExecutionDetailResponse>(
+      `/executions/${executionId}`,
+    );
   }
 
   /**
    * Get detailed execution information (legacy - use getExecutionDetails)
    */
-  async getExecutionById(executionId: string): Promise<{ success: boolean; data: CommunicationExecutionDetail }> {
+  async getExecutionById(
+    executionId: string,
+  ): Promise<{ success: boolean; data: CommunicationExecutionDetail }> {
     const response = await this.getExecutionDetails(executionId);
     return {
       success: response.success,
@@ -208,17 +217,18 @@ class CommunicationService {
    */
   async getLogs(params?: GetLogsRequest): Promise<CommunicationLogsResponse> {
     const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
-    if (params?.execution_id) queryParams.append('execution_id', params.execution_id);
-    if (params?.channel) queryParams.append('channel', params.channel);
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.start_date) queryParams.append('start_date', params.start_date);
-    if (params?.end_date) queryParams.append('end_date', params.end_date);
+    if (params?.page) queryParams.append("page", params.page.toString());
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+    if (params?.offset) queryParams.append("offset", params.offset.toString());
+    if (params?.execution_id)
+      queryParams.append("execution_id", params.execution_id);
+    if (params?.channel) queryParams.append("channel", params.channel);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.start_date) queryParams.append("start_date", params.start_date);
+    if (params?.end_date) queryParams.append("end_date", params.end_date);
 
     const queryString = queryParams.toString();
-    const endpoint = `/logs${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/logs${queryString ? `?${queryString}` : ""}`;
 
     return this.request<CommunicationLogsResponse>(endpoint);
   }
@@ -226,12 +236,14 @@ class CommunicationService {
   /**
    * Get communication statistics for a period
    */
-  async getStats(params?: GetStatsRequest): Promise<CommunicationStatsResponse> {
+  async getStats(
+    params?: GetStatsRequest,
+  ): Promise<CommunicationStatsResponse> {
     const queryParams = new URLSearchParams();
-    if (params?.days) queryParams.append('days', params.days.toString());
+    if (params?.days) queryParams.append("days", params.days.toString());
 
     const queryString = queryParams.toString();
-    const endpoint = `/stats${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/stats${queryString ? `?${queryString}` : ""}`;
 
     return this.request<CommunicationStatsResponse>(endpoint);
   }
@@ -239,13 +251,16 @@ class CommunicationService {
   /**
    * Get manual broadcasts list
    */
-  async getManualBroadcasts(page?: number, limit?: number): Promise<ManualBroadcastsResponse> {
+  async getManualBroadcasts(
+    page?: number,
+    limit?: number,
+  ): Promise<ManualBroadcastsResponse> {
     const queryParams = new URLSearchParams();
-    if (page) queryParams.append('page', page.toString());
-    if (limit) queryParams.append('limit', limit.toString());
+    if (page) queryParams.append("page", page.toString());
+    if (limit) queryParams.append("limit", limit.toString());
 
     const queryString = queryParams.toString();
-    const endpoint = `/manual-broadcasts${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/manual-broadcasts${queryString ? `?${queryString}` : ""}`;
 
     return this.request<ManualBroadcastsResponse>(endpoint);
   }
@@ -257,16 +272,22 @@ class CommunicationService {
   /**
    * Get available template variables for a quicklist
    */
-  async getTemplateVariables(quicklistId: number): Promise<TemplateVariablesResponse> {
-    return this.request<TemplateVariablesResponse>(`/template-variables/${quicklistId}`);
+  async getTemplateVariables(
+    quicklistId: number,
+  ): Promise<TemplateVariablesResponse> {
+    return this.request<TemplateVariablesResponse>(
+      `/template-variables/${quicklistId}`,
+    );
   }
 
   /**
    * Create a communication definition
    */
-  async createCommunication(request: CreateCommunicationRequest): Promise<CreateCommunicationResponse> {
-    return this.request<CreateCommunicationResponse>('', {
-      method: 'POST',
+  async createCommunication(
+    request: CreateCommunicationRequest,
+  ): Promise<CreateCommunicationResponse> {
+    return this.request<CreateCommunicationResponse>("", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -275,7 +296,7 @@ class CommunicationService {
    * Get all communications
    */
   async getCommunications(): Promise<GetCommunicationsResponse> {
-    return this.request<GetCommunicationsResponse>('');
+    return this.request<GetCommunicationsResponse>("");
   }
 }
 

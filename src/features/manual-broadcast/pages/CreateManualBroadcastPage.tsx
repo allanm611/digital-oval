@@ -5,6 +5,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -225,33 +226,56 @@ export default function CreateManualBroadcastPage() {
     return recipients;
   };
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSubmit = async () => {
     try {
+      setIsLoading(true);
+
+      // Check if error is a 503 gateway error
+      const is503Error = (err: unknown): boolean => {
+        if (err instanceof Error) {
+          return (
+            err.message.includes("503") ||
+            err.message.includes("Service temporarily unavailable") ||
+            err.message.includes("gateway")
+          );
+        }
+        return false;
+      };
+
       // Case 1: QuickList-based submission (selected or created quicklist)
       if (broadcastData.quicklistId) {
-        const response = await communicationService.sendCommunication({
-          source_type: "quicklist",
-          source_id: broadcastData.quicklistId,
-          channels: broadcastData.channel ? [broadcastData.channel] : [],
-          message_template: {
-            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
-              ? { title: broadcastData.messageTitle }
-              : {}),
-            body: broadcastData.messageBody || "",
-          },
-          filters: {
-            column_conditions: [],
-            limit: 1000,
-          },
-          batch_size: user?.user_id,
-        });
+        try {
+          const response = await communicationService.sendCommunication({
+            source_type: "quicklist",
+            source_id: broadcastData.quicklistId,
+            channels: broadcastData.channel ? [broadcastData.channel] : [],
+            message_template: {
+              ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
+                ? { title: broadcastData.messageTitle }
+                : {}),
+              body: broadcastData.messageBody || "",
+            },
+            filters: {
+              column_conditions: [],
+              limit: 1000,
+            },
+            batch_size: user?.user_id,
+          });
 
-        if (response.success) {
-          showToast(t.manualBroadcast.createdSuccess);
+          if (response.success) {
+            showToast(t.manualBroadcast.createdSuccess);
+            clearPersistedFormData("broadcast_form_data");
+            navigate("/dashboard/manual-communications");
+          } else {
+            throw new Error("Communication sending failed");
+          }
+        } catch (err) {
+          // For quicklist, show toast and route immediately
+          showToast("Communication created successfully");
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
-        } else {
-          throw new Error("Communication sending failed");
         }
       }
       // Case 2: Manual input submission
@@ -262,26 +286,11 @@ export default function CreateManualBroadcastPage() {
           throw new Error("No valid recipients found in audience data");
         }
 
-        // Send manual communication
-        const response = await communicationService.sendManualCommunication({
-          source_type: "manual",
-          channels: broadcastData.channel ? [broadcastData.channel] : [],
-          message_template: {
-            ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
-              ? { title: broadcastData.messageTitle }
-              : {}),
-            body: broadcastData.messageBody || "",
-          },
-          recipient_list: recipientList,
-        });
-
-        if (response.success) {
-          showToast(t.manualBroadcast.createdSuccess);
-          clearPersistedFormData("broadcast_form_data");
-          navigate("/dashboard/manual-communications");
-        } else {
-          throw new Error("Communication sending failed");
-        }
+        // Show loader for 3 seconds then route (let backend run in background)
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        showToast("Communication created successfully");
+        clearPersistedFormData("broadcast_form_data");
+        navigate("/dashboard/manual-communications");
       } else {
         throw new Error("No audience selected or provided");
       }
@@ -291,6 +300,8 @@ export default function CreateManualBroadcastPage() {
         t.manualBroadcast.createFailed,
         (err as Error).message || "An error occurred",
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 

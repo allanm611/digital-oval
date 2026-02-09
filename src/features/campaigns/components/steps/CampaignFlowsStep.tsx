@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Users, Gift, Plus, X } from "lucide-react";
 import {
   CreateCampaignRequest,
@@ -46,10 +46,14 @@ export default function CampaignFlowsStep({
   const [segmentFlows, setSegmentFlows] = useState<{
     [segmentId: string]: SegmentFlowState;
   }>({});
+  const hasInitializedFromFlowsRef = useRef(false);
 
   // Initialize segmentFlows from existing campaignFlows when editing
+  // Allows initialization once on mount OR once when campaignFlows is loaded (for edit mode)
   useEffect(() => {
-    if (campaignFlows && campaignFlows.length > 0) {
+    if (campaignFlows && campaignFlows.length > 0 && !hasInitializedFromFlowsRef.current) {
+      hasInitializedFromFlowsRef.current = true;
+
       const flowsBySegment: { [segmentId: string]: SegmentFlowState } = {};
 
       campaignFlows.forEach((flow) => {
@@ -80,7 +84,10 @@ export default function CampaignFlowsStep({
 
       setSegmentFlows(flowsBySegment);
     }
-  }, [campaignFlows, selectedOffers]);
+    // Initialize once on mount or when campaignFlows first arrives (edit mode)
+    // The ref ensures we don't reinitialize on every campaignFlows change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaignFlows]);
 
   // Sync campaign flows from segment flows state
   useEffect(() => {
@@ -184,9 +191,10 @@ export default function CampaignFlowsStep({
   const handleUpdateWaitHours = (segmentId: string, hours: number) => {
     setSegmentFlows((prev) => {
       const updated = { ...prev };
-      if (updated[segmentId]) {
-        updated[segmentId].waitHours = hours;
+      if (!updated[segmentId]) {
+        updated[segmentId] = { offers: [], waitHours: 0 };
       }
+      updated[segmentId].waitHours = hours;
       return updated;
     });
   };
@@ -194,9 +202,10 @@ export default function CampaignFlowsStep({
   const handleUpdateAllocation = (segmentId: string, allocation: string) => {
     setSegmentFlows((prev) => {
       const updated = { ...prev };
-      if (updated[segmentId]) {
-        updated[segmentId].allocation = allocation;
+      if (!updated[segmentId]) {
+        updated[segmentId] = { offers: [], waitHours: 0 };
       }
+      updated[segmentId].allocation = allocation;
       return updated;
     });
   };
@@ -339,16 +348,27 @@ export default function CampaignFlowsStep({
                       Wait Interval (hours)
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       min="0"
-                      step="1"
                       placeholder="0"
                       value={flowState.waitHours}
                       onChange={(e) => {
                         const value = e.target.value;
-                        const numValue = value === "" ? 0 : parseInt(value, 10);
-                        if (!isNaN(numValue) && numValue >= 0) {
-                          handleUpdateWaitHours(segment.id, numValue);
+                        // Allow empty string or numeric values
+                        if (value === "") {
+                          handleUpdateWaitHours(segment.id, 0);
+                        } else {
+                          const numValue = parseInt(value, 10);
+                          if (!isNaN(numValue) && numValue >= 0) {
+                            handleUpdateWaitHours(segment.id, numValue);
+                          }
+                        }
+                      }}
+                      onBlur={(e) => {
+                        // Ensure a valid number on blur
+                        if (e.target.value === "") {
+                          handleUpdateWaitHours(segment.id, 0);
                         }
                       }}
                       className={`w-full px-3 py-2 border ${tw.rounded} text-sm`}

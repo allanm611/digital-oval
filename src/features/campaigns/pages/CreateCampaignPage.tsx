@@ -40,14 +40,8 @@ interface CampaignFormData extends CreateCampaignRequest {
   segmentOfferMappings?: SegmentOfferMapping[];
 }
 import { campaignService } from "../services/campaignService";
-import {
-  campaignSegmentOfferService,
-  CampaignSegmentOfferMapping,
-} from "../services/campaignSegmentOfferService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { CampaignFlowConfig } from "../types/campaignFlow";
-import { segmentService } from "../../segments/services/segmentService";
-import { offerService } from "../../offers/services/offerService";
 import { departmentsConfig } from "../../../shared/configs/configurationPageConfigs";
 
 // Objective options mapping
@@ -307,54 +301,45 @@ export default function CreateCampaignPage() {
           setFormData(newFormData);
         }
 
-        // Load segments and offers via mappings
+        // Load segments and offers via campaign flows service
         try {
-          const mappingsResponse =
-            await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
+          // Use campaignFlowService to get segments and offers for this campaign
+          const [segmentsResponse, offersResponse] = await Promise.all([
+            campaignFlowService.getCampaignSegments(parseInt(campaignId), true),
+            campaignFlowService.getCampaignOffers(parseInt(campaignId), true),
+          ]);
 
-          if (mappingsResponse.success && mappingsResponse.data.length > 0) {
-            // Extract unique segment IDs and offer IDs
-            const uniqueSegmentIds = [
-              ...new Set(mappingsResponse.data.map((m) => m.segment_id)),
-            ];
-            const uniqueOfferIds = [
-              ...new Set(mappingsResponse.data.map((m) => m.offer_id)),
-            ];
-
-            // Load full segment details
-            const segmentPromises = uniqueSegmentIds.map(async (segmentId) => {
-              try {
-                const response = await segmentService.getSegmentById(
-                  parseInt(segmentId),
-                  true,
-                );
-                const segment = response.data;
-                if (!segment || !segment.id) {
-                  console.warn(`Segment data invalid for ID: ${segmentId}`);
+          // Process segments from campaign flows
+          if (segmentsResponse.success && segmentsResponse.data?.length > 0) {
+            const validSegments: CampaignSegment[] = segmentsResponse.data
+              .map((segment: any) => {
+                if (!segment || !segment.segment_id) {
+                  console.warn("Segment data invalid:", segment);
                   return null;
                 }
                 return {
-                  id: String(segment.id),
-                  name: segment.name,
+                  id: String(segment.segment_id),
+                  name: segment.segment_name,
                   description: segment.description || "",
-                  customer_count: segment.size_estimate || 0,
+                  customer_count: segment.customer_count || segment.size_estimate || 0,
                   criteria: {},
                   created_at: segment.created_at,
                 } as CampaignSegment;
-              } catch {
-                return null;
-              }
-            });
+              })
+              .filter((s): s is CampaignSegment => s !== null);
 
-            // Load full offer details
-            const offerPromises = uniqueOfferIds.map(async (offerId) => {
-              try {
-                const response = await offerService.getOfferById(offerId, true);
-                const offer = response.data;
-                if (!offer || !offer.id) {
-                  console.warn(`Offer data invalid for ID: ${offerId}`);
+            setSelectedSegments(validSegments);
+          }
+
+          // Process offers from campaign flows
+          if (offersResponse.success && offersResponse.data?.length > 0) {
+            const validOffers: CampaignOffer[] = offersResponse.data
+              .map((offer: any) => {
+                if (!offer || !offer.offer_id) {
+                  console.warn("Offer data invalid:", offer);
                   return null;
                 }
+
                 // Calculate validity period from valid_from and valid_to
                 let validityPeriod = 30;
                 if (offer.valid_from && offer.valid_to) {
@@ -385,10 +370,10 @@ export default function CreateCampaignPage() {
                 }
 
                 return {
-                  id: String(offer.id),
-                  name: offer.name,
+                  id: String(offer.offer_id),
+                  name: offer.offer_name,
                   description: offer.description || "",
-                  offer_type: offer.offer_type,
+                  offer_type: offer.offer_type || "General",
                   reward_type: rewardType,
                   reward_value: rewardValue,
                   validity_period: validityPeriod,
@@ -396,37 +381,13 @@ export default function CreateCampaignPage() {
                     offer.eligibility_rules || {},
                   ),
                 } as CampaignOffer;
-              } catch {
-                return null;
-              }
-            });
+              })
+              .filter((o): o is CampaignOffer => o !== null);
 
-            // Wait for all loads to complete
-            const [loadedSegments, loadedOffers] = await Promise.all([
-              Promise.all(segmentPromises),
-              Promise.all(offerPromises),
-            ]);
-
-            // Filter out failed loads and set state
-            const validSegments = loadedSegments.filter(
-              (s): s is CampaignSegment => s !== null,
-            );
-            const validOffers = loadedOffers.filter(
-              (o): o is CampaignOffer => o !== null,
-            );
-
-            setSelectedSegments(validSegments);
             setSelectedOffers(validOffers);
-
-            // Set segment-offer mappings
-            const mappings = mappingsResponse.data.map((m) => ({
-              segment_id: m.segment_id,
-              offer_id: m.offer_id,
-            }));
-            setSegmentOfferMappings(mappings);
           }
-        } catch (mappingError) {
-          console.error("Failed to load segment-offer mappings:", mappingError);
+        } catch (campaignFlowsError) {
+          console.error("Failed to load segments/offers from campaign flows:", campaignFlowsError);
         }
 
         // Load campaign flows if they exist
@@ -458,82 +419,6 @@ export default function CreateCampaignPage() {
             );
 
             setCampaignFlows(flows);
-
-            // Load offers directly from flows using new endpoint
-            try {
-              const offersResponse =
-                await campaignFlowService.getCampaignOffers(
-                  parseInt(campaignId),
-                  true,
-                );
-              if (
-                offersResponse.success &&
-                Array.isArray(offersResponse.data)
-              ) {
-                const flowOfferIds = new Set(
-                  offersResponse.data.map((o) => o.id),
-                );
-                const offerPromises = Array.from(flowOfferIds).map(
-                  async (offerId) => {
-                    try {
-                      const offerResponse = await offerService.getOfferById(
-                        offerId,
-                        true,
-                      );
-                      if (offerResponse && typeof offerResponse === "object") {
-                        if ("data" in offerResponse && offerResponse.data) {
-                          return offerResponse.data as CampaignOffer;
-                        } else if ("id" in offerResponse) {
-                          return offerResponse as unknown as CampaignOffer;
-                        }
-                      }
-                      return null;
-                    } catch {
-                      return null;
-                    }
-                  },
-                );
-                const loadedOffers = await Promise.all(offerPromises);
-                const validOffers = loadedOffers.filter(
-                  (o): o is CampaignOffer => o !== null,
-                );
-                setSelectedOffers(validOffers);
-              }
-            } catch (offersError) {
-              console.error(
-                "Failed to load campaign offers from flows:",
-                offersError,
-              );
-            }
-
-            // Load segments directly from flows using new endpoint
-            try {
-              const segmentsResponse =
-                await campaignFlowService.getCampaignSegments(
-                  parseInt(campaignId),
-                  true,
-                );
-              if (
-                segmentsResponse.success &&
-                Array.isArray(segmentsResponse.data)
-              ) {
-                const flowSegments: CampaignSegment[] =
-                  segmentsResponse.data.map((segment) => ({
-                    id: String(segment.id),
-                    name: segment.name,
-                    code: segment.code,
-                    total_subscribers: 0,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  }));
-                setSelectedSegments(flowSegments);
-              }
-            } catch (segmentsError) {
-              console.error(
-                "Failed to load campaign segments from flows:",
-                segmentsError,
-              );
-            }
           }
         } catch (flowError) {
           console.error("Failed to load campaign flows:", flowError);
@@ -1085,29 +970,8 @@ export default function CreateCampaignPage() {
           }
         }
 
-        // Create Campaign-Segment-Offer mappings for all campaign types if mappings exist
-        if (segmentOfferMappings && segmentOfferMappings.length > 0) {
-          try {
-            const mappingsToCreate: CampaignSegmentOfferMapping[] =
-              segmentOfferMappings.map((mapping) => ({
-                campaign_id: createdCampaignIdValue,
-                segment_id: mapping.segment_id,
-                offer_id: mapping.offer_id,
-                created_by: user?.user_id || 1,
-              }));
-
-            await campaignSegmentOfferService.createBatchMappings(
-              mappingsToCreate,
-            );
-
-            showToast("success", t.messages.success || "Success");
-          } catch (mappingError) {
-            console.error("Error saving mappings:", mappingError);
-            showToast("warning", t.messages.warning || "Warning");
-          }
-        }
-
         // Create campaign flows (new approach) if flows exist
+        // Campaign flows contain all segment-offer-flow mappings, so we don't need the old mapping approach
         if (campaignFlows && campaignFlows.length > 0) {
           try {
             const flowsToCreate: CampaignFlowConfig[] = campaignFlows.map(
@@ -1346,29 +1210,8 @@ export default function CreateCampaignPage() {
         }
       }
 
-      // Save segment-offer mappings (Step 3) if they exist
-      if (
-        segmentOfferMappings &&
-        segmentOfferMappings.length > 0 &&
-        campaignId
-      ) {
-        try {
-          const mappingsToCreate: CampaignSegmentOfferMapping[] =
-            segmentOfferMappings.map((mapping) => ({
-              campaign_id: campaignId,
-              segment_id: mapping.segment_id,
-              offer_id: mapping.offer_id,
-              created_by: user?.user_id || 1,
-            }));
-
-          await campaignSegmentOfferService.createBatchMappings(
-            mappingsToCreate,
-          );
-        } catch (mappingError) {
-          console.error("Error saving mappings:", mappingError);
-          showToast("warning", t.messages.warning || "Warning");
-        }
-      }
+      // Note: Campaign flows are now the single source of truth for segment-offer mappings
+      // No need for separate mapping creation - they're handled via campaign flows
     } catch (error) {
       console.error("Error saving draft:", error);
       showToast("error", t.messages.error || "Error");
