@@ -38,15 +38,15 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   user?: AuthUser;
-  session?: { 
-    id: string; 
-    token: string; 
-    expires_at: string
-    permissions?:string[] 
+  session?: {
+    id: string;
+    token: string;
+    expires_at: string;
+    permissions?: string[];
   };
-  error?: { 
-    code: string; 
-    message: string 
+  error?: {
+    code: string;
+    message: string;
   };
 }
 
@@ -170,16 +170,16 @@ export interface AccountRequest {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'user';
+  role: "admin" | "user";
   photoUrl?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ApproveRejectRequest {
-  status: 'approved' | 'rejected';
-  role: 'admin' | 'user';
+  status: "approved" | "rejected";
+  role: "admin" | "user";
 }
 
 export interface ApproveAccountResponse {
@@ -221,7 +221,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
-  
+
   // Core auth methods (updated for new backend)
   login: (email: string, password: string) => Promise<LoginResponse>;
   logout: () => Promise<void>;
@@ -229,15 +229,25 @@ export interface AuthContextType {
   refreshToken: () => Promise<RefreshTokenResponse>;
   getMe: () => Promise<MeResponse>;
   getPermissions: () => Promise<PermissionsResponse>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<PasswordChangeResponse>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<PasswordChangeResponse>;
   validateToken: (token: string) => Promise<ValidateResponse>;
-  
+
   // Password reset methods (updated for new backend)
   requestPasswordReset: (email: string) => Promise<PasswordResetResponse>;
-  completePasswordReset: (token: string, email: string, newPassword: string) => Promise<PasswordResetCompleteResponse>;
-  
+  completePasswordReset: (
+    token: string,
+    email: string,
+    newPassword: string,
+  ) => Promise<PasswordResetCompleteResponse>;
+
   // Legacy user management methods (keeping unchanged)
   createUser: (userData: CreateUserRequest) => Promise<CreateUserResponse>;
-  approveAccount: (requestId: number, role: 'admin' | 'user') => Promise<ApproveAccountResponse>;
+  approveAccount: (
+    requestId: number,
+    role: "admin" | "user",
+  ) => Promise<ApproveAccountResponse>;
   rejectAccount: (requestId: number) => Promise<RejectAccountResponse>;
 }

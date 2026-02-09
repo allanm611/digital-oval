@@ -48,6 +48,7 @@ import {
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
 
 interface CampaignDisplay {
+  is_active: boolean;
   id: number;
   name: string;
   description?: string;
@@ -105,6 +106,7 @@ export default function CampaignsPage() {
     name: string;
     status?: string;
     approval_status?: string;
+    is_active?: boolean;
   } | null>(null);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [campaignToApprove, setCampaignToApprove] = useState<{
@@ -344,9 +346,8 @@ export default function CampaignsPage() {
       const countPromises = campaignIds.map(async (campaignId) => {
         try {
           // Fetch segments from campaign flows
-          const segmentsResponse = await campaignFlowService.getCampaignSegments(
-            campaignId,
-          );
+          const segmentsResponse =
+            await campaignFlowService.getCampaignSegments(campaignId);
 
           let segmentCount = 0;
           if (
@@ -360,9 +361,8 @@ export default function CampaignsPage() {
           }
 
           // Fetch offers from campaign flows
-          const offersResponse = await campaignFlowService.getCampaignOffers(
-            campaignId,
-          );
+          const offersResponse =
+            await campaignFlowService.getCampaignOffers(campaignId);
 
           let offerCount = 0;
           if (
@@ -477,6 +477,7 @@ export default function CampaignsPage() {
           name: campaign.name,
           description: campaign.description || undefined,
           status: campaign.status,
+          is_active: campaign.is_active || false,
           category_id: campaign.category_id || undefined,
           objective: campaign.objective,
           startDate: campaign.start_date || undefined,
@@ -1422,7 +1423,7 @@ export default function CampaignsPage() {
                       >
                         <PermissionGate permission="campaigns.execute">
                           {campaign.approval_status === "approved" &&
-                          campaign.status === "active" ? (
+                          campaign.is_active === true ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1431,6 +1432,7 @@ export default function CampaignsPage() {
                                   name: campaign.name,
                                   status: campaign.status,
                                   approval_status: campaign.approval_status,
+                                  is_active: campaign.is_active,
                                 });
                                 setShowExecuteModal(true);
                                 setShowActionMenu(null);
@@ -1446,7 +1448,8 @@ export default function CampaignsPage() {
                           ) : null}
                         </PermissionGate>
 
-                        {campaign.status === "approved" && (
+                        {campaign.approval_status === "approved" &&
+                        campaign.is_active === false ? (
                           <PermissionGate permission="campaigns.activate">
                             <button
                               onClick={async (e) => {
@@ -1462,7 +1465,8 @@ export default function CampaignsPage() {
                                   );
                                   fetchCampaigns();
                                 } catch (error) {
-                                  let errorMessage = "Failed to activate campaign";
+                                  let errorMessage =
+                                    "Failed to activate campaign";
                                   if (error instanceof Error) {
                                     errorMessage = error.message;
                                   }
@@ -1478,7 +1482,7 @@ export default function CampaignsPage() {
                               Activate Campaign
                             </button>
                           </PermissionGate>
-                        )}
+                        ) : null}
 
                         {campaign.status === "draft" && (
                           <PermissionGate permission="campaigns.update">
@@ -1589,7 +1593,6 @@ export default function CampaignsPage() {
                             </PermissionGate>
                           </>
                         )}
-
 
                         {(campaign.status === "active" ||
                           campaign.status === "running") && (
@@ -2021,7 +2024,7 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToExecute.id}
           campaignName={campaignToExecute.name}
-          campaignStatus={campaignToExecute.status}
+          isActive={campaignToExecute.is_active}
           approvalStatus={campaignToExecute.approval_status}
           onSuccess={() => {
             fetchCampaigns();

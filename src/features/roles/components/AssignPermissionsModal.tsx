@@ -203,6 +203,9 @@ export default function AssignPermissionsModal({
       setIsTogglingPermission(permission.id);
 
       if (isAssigned) {
+        console.log(
+          "[AssignPermissionsModal] Removing permission from role...",
+        );
         await rolePermissionService.removePermissionsFromRole(selectedRole.id, {
           permissionIds: [permission.id],
         });
@@ -212,13 +215,25 @@ export default function AssignPermissionsModal({
         success("Success", `Permission removed from role`);
 
         // If user has this role, remove the permission from their context
-        if (selectedRole.id === user?.user_id || selectedRole.id === user?.role_id) {
+        if (selectedRole.id === user?.user_id) {
+          console.log(
+            "[AssignPermissionsModal] User has this role, updating context...",
+          );
           const updatedUserPermissions = userPermissions.filter(
             (p) => p !== permission.code,
           );
+          console.log(
+            "[AssignPermissionsModal] Calling updatePermissions with:",
+            updatedUserPermissions,
+          );
           updatePermissions(updatedUserPermissions);
+        } else {
+          console.log(
+            "[AssignPermissionsModal] User does NOT have this role, skipping context update",
+          );
         }
       } else {
+        console.log("[AssignPermissionsModal] Adding permission to role...");
         await rolePermissionService.assignPermissionToRole(selectedRole.id, {
           permissionIds: [permission.id],
           createdBy: userId,
@@ -227,10 +242,25 @@ export default function AssignPermissionsModal({
         success("Success", `Permission assigned to role`);
 
         // If user has this role, add the permission to their context
-        if (selectedRole.id === user?.user_id || selectedRole.id === user?.role_id) {
+        if (selectedRole.id === user?.user_id) {
+          console.log(
+            "[AssignPermissionsModal] User has this role, updating context...",
+          );
           if (!userPermissions.includes(permission.code)) {
+            console.log(
+              "[AssignPermissionsModal] Calling updatePermissions with:",
+              [...userPermissions, permission.code],
+            );
             updatePermissions([...userPermissions, permission.code]);
+          } else {
+            console.log(
+              "[AssignPermissionsModal] Permission already in context",
+            );
           }
+        } else {
+          console.log(
+            "[AssignPermissionsModal] User does NOT have this role, skipping context update",
+          );
         }
       }
 
@@ -239,6 +269,7 @@ export default function AssignPermissionsModal({
 
       onPermissionsChanged();
     } catch (err) {
+      console.error("[AssignPermissionsModal] Error toggling permission:", err);
       showError(
         "Error",
         err instanceof Error ? err.message : "Failed to toggle permission",
@@ -448,13 +479,6 @@ export default function AssignPermissionsModal({
       // Reload assigned permissions to show accurate count
       await loadAssignedPermissions();
 
-      // Try to refresh permissions from backend, fallback to clearing if it fails
-      try {
-        await refreshPermissions();
-      } catch (refreshError) {
-        clearPermissionsCache();
-      }
-
       // Notify parent to refresh if needed
       onPermissionsChanged();
     } catch (err) {
@@ -484,12 +508,9 @@ export default function AssignPermissionsModal({
 
     setIsRemoving(true);
     try {
-      const response = await rolePermissionService.removePermissionsFromRole(
-        selectedRole.id,
-        {
-          permissionIds: assignedToRemove,
-        },
-      );
+      await rolePermissionService.removePermissionsFromRole(selectedRole.id, {
+        permissionIds: assignedToRemove,
+      });
 
       // Update local state - remove the permissions from assignedPermissions
       const removedIds = new Set(assignedToRemove);
@@ -515,13 +536,6 @@ export default function AssignPermissionsModal({
 
       // Reload assigned permissions to show accurate count
       await loadAssignedPermissions();
-
-      // Try to refresh permissions from backend, fallback to clearing if it fails
-      try {
-        await refreshPermissions();
-      } catch (refreshError) {
-        clearPermissionsCache();
-      }
 
       // Notify parent to refresh if needed
       onPermissionsChanged();

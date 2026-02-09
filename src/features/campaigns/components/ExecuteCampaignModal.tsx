@@ -18,7 +18,7 @@ interface ExecuteCampaignModalProps {
   onClose: () => void;
   campaignId: number;
   campaignName: string;
-  campaignStatus?: string;
+  isActive?: boolean;
   approvalStatus?: string;
   onSuccess?: () => void;
 }
@@ -44,7 +44,7 @@ export default function ExecuteCampaignModal({
   onClose,
   campaignId,
   campaignName,
-  campaignStatus,
+  isActive,
   approvalStatus,
   onSuccess,
 }: ExecuteCampaignModalProps) {
@@ -56,14 +56,13 @@ export default function ExecuteCampaignModal({
     "immediate",
   );
 
-  // Check if campaign is approved and can be executed
+  // Check if campaign is approved and active, then it can be executed
   const isApproved = approvalStatus === "approved";
-  const isActive = campaignStatus === "active";
   const canExecute = isApproved && isActive;
   const executionDisabledReason = !isApproved
     ? `Campaign is pending approval (status: ${approvalStatus})`
     : !isActive
-      ? `Campaign is not active (status: ${campaignStatus})`
+      ? "Campaign is not active. Please activate it first."
       : null;
 
   const loadSegments = useCallback(async () => {
@@ -75,10 +74,6 @@ export default function ExecuteCampaignModal({
       const flowsResponse = await campaignFlowService.getCampaignFlows(
         campaignId,
       );
-
-      console.log("ExecuteCampaignModal - segmentsResponse:", segmentsResponse);
-      console.log("ExecuteCampaignModal - flowsResponse:", flowsResponse);
-      console.log("ExecuteCampaignModal - flows data:", flowsResponse?.data);
 
       if (
         !segmentsResponse?.success ||
@@ -100,8 +95,6 @@ export default function ExecuteCampaignModal({
           (f) => f.segment_id === segmentId || String(f.segment_id) === String(segmentId),
         );
 
-        console.log(`Processing segment:`, segment, "Flow:", flow);
-
         return {
           id: segmentId,
           segment_id: String(segmentId), // Use the actual segment_id from API
@@ -113,10 +106,8 @@ export default function ExecuteCampaignModal({
         };
       });
 
-      console.log("ExecuteCampaignModal - uniqueSegments:", uniqueSegments);
       setSegments(uniqueSegments);
     } catch (error) {
-      console.error("Error loading segments:", error);
       showToast("error", "Failed to load campaign segments");
     } finally {
       setIsLoading(false);
@@ -195,8 +186,6 @@ export default function ExecuteCampaignModal({
       onSuccess?.();
       onClose();
     } catch (error) {
-      console.error("Error executing campaign:", error);
-
       // Extract error message from backend response
       let errorMessage = "Failed to execute campaign. Please try again.";
 

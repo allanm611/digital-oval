@@ -252,7 +252,8 @@ export default function CreateManualBroadcastPage() {
             source_id: broadcastData.quicklistId,
             channels: broadcastData.channel ? [broadcastData.channel] : [],
             message_template: {
-              ...(broadcastData.messageTitle && broadcastData.channel === "EMAIL"
+              ...(broadcastData.messageTitle &&
+              broadcastData.channel === "EMAIL"
                 ? { title: broadcastData.messageTitle }
                 : {}),
               body: broadcastData.messageBody || "",
