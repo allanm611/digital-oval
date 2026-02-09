@@ -1,5 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { Check, Plus, Search, AlertCircle, Square, CheckSquare, X, Trash2 } from "lucide-react";
+import {
+  Check,
+  Plus,
+  Search,
+  AlertCircle,
+  Square,
+  CheckSquare,
+  X,
+  Trash2,
+} from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { Role, Permission } from "../types/role";
@@ -35,8 +44,7 @@ export default function AssignPermissionsModal({
 
   const userId = propUserId || user?.user_id;
 
-  useEffect(() => {
-  }, [userId]);
+  useEffect(() => {}, [userId]);
 
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
   const [assignedPermissions, setAssignedPermissions] = useState<Permission[]>(
@@ -47,14 +55,19 @@ export default function AssignPermissionsModal({
     number | null
   >(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<Set<number>>(new Set());
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<
+    Set<number>
+  >(new Set());
   const [isAssigning, setIsAssigning] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
   const [localIsSelectionMode, setLocalIsSelectionMode] = useState(false);
 
   // Use prop if provided by parent, otherwise use local state
-  const isSelectionMode = propIsSelectionMode !== undefined ? propIsSelectionMode : localIsSelectionMode;
+  const isSelectionMode =
+    propIsSelectionMode !== undefined
+      ? propIsSelectionMode
+      : localIsSelectionMode;
   const handleSetSelectionMode = (mode: boolean) => {
     if (onSelectionModeChange) {
       onSelectionModeChange(mode);
@@ -76,7 +89,9 @@ export default function AssignPermissionsModal({
           skipCache: true,
         });
 
-        const permsToSet = Array.isArray(permissionsArray) ? permissionsArray : [];
+        const permsToSet = Array.isArray(permissionsArray)
+          ? permissionsArray
+          : [];
         setAllPermissions(permsToSet);
       } catch (err) {
         showError(
@@ -107,14 +122,14 @@ export default function AssignPermissionsModal({
           await rolePermissionService.getRolePermissions(selectedRole.id, {
             limit: 100,
             offset: 0,
-            skipCache: true,  // Force fresh data, don't use cached response
+            skipCache: true, // Force fresh data, don't use cached response
           });
 
         // Handle both 'permissions' and 'rolePermissions' keys from API
         let rolePerms = [];
         if (Array.isArray(rolePermsResponse)) {
           rolePerms = rolePermsResponse;
-        } else if (rolePermsResponse && typeof rolePermsResponse === 'object') {
+        } else if (rolePermsResponse && typeof rolePermsResponse === "object") {
           // Try 'permissions' key first (what the API returns)
           if ((rolePermsResponse as any)?.permissions) {
             rolePerms = (rolePermsResponse as any).permissions;
@@ -139,7 +154,9 @@ export default function AssignPermissionsModal({
             // Otherwise find it in allPermissions
             return allPermissions.find((p: Permission) => p.id === permId);
           })
-          .filter((p: Permission | undefined) => p !== undefined) as Permission[];
+          .filter(
+            (p: Permission | undefined) => p !== undefined,
+          ) as Permission[];
 
         setAssignedPermissions(assigned);
       } catch (err) {
@@ -207,8 +224,9 @@ export default function AssignPermissionsModal({
   );
 
   const filteredRoles = useMemo(() => {
-    // Filter out system roles - they can't be modified
-    return rolesList.filter((role) => !role.is_system_role);
+    // Display all roles including system roles
+    // return rolesList.filter((role) => !role.is_system_role);
+    return rolesList;
   }, [rolesList]);
 
   const filteredPermissions = useMemo(() => {
@@ -240,7 +258,8 @@ export default function AssignPermissionsModal({
   );
 
   // Context-aware: if there are unassigned visible, use those; otherwise use assigned visible
-  const contextVisibleIds = unassignedVisibleIds.length > 0 ? unassignedVisibleIds : assignedVisibleIds;
+  const contextVisibleIds =
+    unassignedVisibleIds.length > 0 ? unassignedVisibleIds : assignedVisibleIds;
 
   const allVisibleSelected =
     contextVisibleIds.length > 0 &&
@@ -261,7 +280,9 @@ export default function AssignPermissionsModal({
   useEffect(() => {
     if (isSelectionMode && selectedPermissionIds.size === 0 && selectedRole) {
       // Auto-select all unassigned permissions
-      const allUnassigned = allPermissions.filter((p) => !assignedIds.has(p.id));
+      const allUnassigned = allPermissions.filter(
+        (p) => !assignedIds.has(p.id),
+      );
       if (allUnassigned.length > 0) {
         setSelectedPermissionIds(new Set(allUnassigned.map((p) => p.id)));
       }
@@ -283,28 +304,28 @@ export default function AssignPermissionsModal({
   // Count how many visible permissions are assigned vs unassigned
   const visibleAssignedCount = useMemo(
     () => assignedVisibleIds.length,
-    [assignedVisibleIds]
+    [assignedVisibleIds],
   );
 
   const visibleUnassignedCount = useMemo(
     () => unassignedVisibleIds.length,
-    [unassignedVisibleIds]
+    [unassignedVisibleIds],
   );
 
   // Determine button visibility based on visible permissions
   const showOnlyAssignButton = useMemo(
     () => visibleUnassignedCount > 0 && visibleAssignedCount === 0,
-    [visibleUnassignedCount, visibleAssignedCount]
+    [visibleUnassignedCount, visibleAssignedCount],
   );
 
   const showOnlyRemoveButton = useMemo(
     () => visibleAssignedCount > 0 && visibleUnassignedCount === 0,
-    [visibleAssignedCount, visibleUnassignedCount]
+    [visibleAssignedCount, visibleUnassignedCount],
   );
 
   const showBothButtons = useMemo(
     () => visibleAssignedCount > 0 && visibleUnassignedCount > 0,
-    [visibleAssignedCount, visibleUnassignedCount]
+    [visibleAssignedCount, visibleUnassignedCount],
   );
 
   const togglePermissionSelection = (id: number) => {
@@ -347,24 +368,27 @@ export default function AssignPermissionsModal({
     if (unassignedIds.length === 0) {
       showError(
         "No Action Needed",
-        "All selected permissions are already assigned to this role"
+        "All selected permissions are already assigned to this role",
       );
       return;
     }
 
     setIsAssigning(true);
     try {
-      const response = await rolePermissionService.assignPermissionToRole(selectedRole.id, {
-        permissionIds: unassignedIds,
-        createdBy: userId,
-      });
+      const response = await rolePermissionService.assignPermissionToRole(
+        selectedRole.id,
+        {
+          permissionIds: unassignedIds,
+          createdBy: userId,
+        },
+      );
 
       // response is the list of RolePermission[] that were assigned
       const assignedCount = response.length;
 
       // Update local state - add all newly assigned permissions
       const newlyAssigned = allPermissions.filter((p) =>
-        response.some((rp: any) => rp.permission_id === p.id)
+        response.some((rp: any) => rp.permission_id === p.id),
       );
 
       setAssignedPermissions((prev) => [...prev, ...newlyAssigned]);
@@ -372,12 +396,12 @@ export default function AssignPermissionsModal({
       if (assignedCount > 0) {
         success(
           "Permissions Assigned",
-          `${assignedCount} permission(s) assigned to ${selectedRole.name}`
+          `${assignedCount} permission(s) assigned to ${selectedRole.name}`,
         );
       } else {
         showError(
           "No Permissions Assigned",
-          "All selected permissions were already assigned to this role"
+          "All selected permissions were already assigned to this role",
         );
       }
 
@@ -390,7 +414,7 @@ export default function AssignPermissionsModal({
     } catch (err) {
       showError(
         "Assignment Failed",
-        err instanceof Error ? err.message : "Failed to assign permissions"
+        err instanceof Error ? err.message : "Failed to assign permissions",
       );
     } finally {
       setIsAssigning(false);
@@ -407,7 +431,7 @@ export default function AssignPermissionsModal({
     if (assignedToRemove.length === 0) {
       showError(
         "No Action Needed",
-        "No assigned permissions selected to remove"
+        "No assigned permissions selected to remove",
       );
       return;
     }
@@ -418,18 +442,18 @@ export default function AssignPermissionsModal({
         selectedRole.id,
         {
           permissionIds: assignedToRemove,
-        }
+        },
       );
 
       // Update local state - remove the permissions from assignedPermissions
       const removedIds = new Set(assignedToRemove);
       setAssignedPermissions((prev) =>
-        prev.filter((p) => !removedIds.has(p.id))
+        prev.filter((p) => !removedIds.has(p.id)),
       );
 
       success(
         "Permissions Removed",
-        `${assignedToRemove.length} permission(s) removed from ${selectedRole.name}`
+        `${assignedToRemove.length} permission(s) removed from ${selectedRole.name}`,
       );
 
       // Clear selection and exit selection mode
@@ -441,7 +465,7 @@ export default function AssignPermissionsModal({
     } catch (err) {
       showError(
         "Removal Failed",
-        err instanceof Error ? err.message : "Failed to remove permissions"
+        err instanceof Error ? err.message : "Failed to remove permissions",
       );
     } finally {
       setIsRemoving(false);
@@ -534,8 +558,17 @@ export default function AssignPermissionsModal({
                 {(showOnlyAssignButton || showBothButtons) && (
                   <button
                     onClick={handleBulkAssign}
-                    disabled={isAssigning || isRemoving || !selectedRole || !hasUnassignedSelected}
-                    title={!hasUnassignedSelected ? "All selected permissions are already assigned" : "Assign selected permissions to role"}
+                    disabled={
+                      isAssigning ||
+                      isRemoving ||
+                      !selectedRole ||
+                      !hasUnassignedSelected
+                    }
+                    title={
+                      !hasUnassignedSelected
+                        ? "All selected permissions are already assigned"
+                        : "Assign selected permissions to role"
+                    }
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: color.primary.action }}
                   >
@@ -549,10 +582,21 @@ export default function AssignPermissionsModal({
                 {(showOnlyRemoveButton || showBothButtons) && (
                   <button
                     onClick={handleBulkRemove}
-                    disabled={isAssigning || isRemoving || !selectedRole || !hasAssignedSelected}
-                    title={!hasAssignedSelected ? "No assigned permissions selected to remove" : "Remove selected permissions from role"}
+                    disabled={
+                      isAssigning ||
+                      isRemoving ||
+                      !selectedRole ||
+                      !hasAssignedSelected
+                    }
+                    title={
+                      !hasAssignedSelected
+                        ? "No assigned permissions selected to remove"
+                        : "Remove selected permissions from role"
+                    }
                     className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: color.status.danger || "#dc2626" }}
+                    style={{
+                      backgroundColor: color.status.danger || "#dc2626",
+                    }}
                   >
                     {isRemoving && <LoadingSpinner />}
                     <Trash2 size={14} />
@@ -634,7 +678,9 @@ export default function AssignPermissionsModal({
                         {isSelectionMode && (
                           <td
                             className="px-4 py-3 sm:py-4 text-sm"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
                           >
                             <input
                               type="checkbox"
@@ -646,7 +692,9 @@ export default function AssignPermissionsModal({
                               }}
                               aria-label={`Select ${permission.name}`}
                               className={`cursor-pointer w-4 h-4 ${
-                                isAssigned ? "opacity-50 cursor-not-allowed" : ""
+                                isAssigned
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
                               }`}
                             />
                             {isAssigned && (

@@ -3,8 +3,8 @@ import {
   SendCommunicationRequest,
   SendCommunicationResponse,
   CommunicationExecutionDetail,
-  CommunicationStats,
-  CommunicationLog,
+  // CommunicationStats,
+  // CommunicationLog,
   GetExecutionsRequest,
   GetLogsRequest,
   GetStatsRequest,
@@ -154,17 +154,18 @@ class CommunicationService {
 
   /**
    * Get list of all communication executions (broadcasts)
+   * @deprecated Use getExecutions instead - endpoint is /executions not /communications
    */
-  async getAllExecutions(page: number = 1, limit: number = 20): Promise<CommunicationExecutionsResponse> {
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page.toString());
-    queryParams.append('limit', limit.toString());
-
-    return this.request<CommunicationExecutionsResponse>(`/executions?${queryParams.toString()}`);
-  }
+  // async getAllExecutions(page: number = 1, limit: number = 20): Promise<CommunicationExecutionsResponse> {
+  //   const queryParams = new URLSearchParams();
+  //   queryParams.append('page', page.toString());
+  //   queryParams.append('limit', limit.toString());
+  //
+  //   return this.request<CommunicationExecutionsResponse>(`/executions?${queryParams.toString()}`);
+  // }
 
   /**
-   * Get communication executions with filtering (legacy - use getAllExecutions)
+   * Get communication executions with filtering
    */
   async getExecutions(
     params?: GetExecutionsRequest
@@ -179,7 +180,7 @@ class CommunicationService {
     if (params?.source_type) queryParams.append('source_type', params.source_type);
 
     const queryString = queryParams.toString();
-    const endpoint = `/executions${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/${queryString ? `?${queryString}` : ''}`;
 
     return this.request<CommunicationExecutionsResponse>(endpoint);
   }

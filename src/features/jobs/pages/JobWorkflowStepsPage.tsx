@@ -935,7 +935,9 @@ export default function JobWorkflowStepsPage() {
               onClick={() => {
                 if (!isSelectionMode) {
                   setIsSelectionMode(true);
-                  setSelectedSteps(new Set(filteredSteps.map((step) => step.id)));
+                  setSelectedSteps(
+                    new Set(filteredSteps.map((step) => step.id)),
+                  );
                 } else {
                   setIsSelectionMode(false);
                   setSelectedSteps(new Set());

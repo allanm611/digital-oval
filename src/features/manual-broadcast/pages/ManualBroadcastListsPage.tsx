@@ -17,7 +17,7 @@ import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { useToast } from "../../../contexts/ToastContext";
-import {PermissionGate} from "../../auth/components/PermissionGate";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
@@ -39,7 +39,10 @@ export default function ManualBroadcastListsPage() {
   const loadInitialData = useCallback(async () => {
     try {
       // Load all executions (broadcasts) from the communications API
-      const response = await communicationService.getAllExecutions(1, 10);
+      const response = await communicationService.getExecutions({
+        page: 1,
+        limit: 10,
+      });
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
@@ -90,10 +93,10 @@ export default function ManualBroadcastListsPage() {
       setLoading(true);
 
       // Get all executions from the API
-      const response = await communicationService.getAllExecutions(
+      const response = await communicationService.getExecutions({
         page,
-        pagination.limit,
-      );
+        limit: pagination.limit,
+      });
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
@@ -230,11 +233,11 @@ export default function ManualBroadcastListsPage() {
             View and manage communications sent to manual recipient lists
           </p>
         </div>
-        <PermissionGate permission="manual-communications.create">
-          <div className="flex items-center gap-3">
-            <CreateButton route="/dashboard/manual-communications/create" />
-          </div>
-        </PermissionGate>
+        {/* <PermissionGate permission="manual-communications.create"> */}
+        <div className="flex items-center gap-3">
+          <CreateButton route="/dashboard/manual-communications/create" />
+        </div>
+        {/* </PermissionGate> */}
       </div>
 
       {/* Stats Cards */}
@@ -302,18 +305,17 @@ export default function ManualBroadcastListsPage() {
                 : "No broadcasts yet. Create your first manual broadcast to get started."}
             </p>
             {!searchTerm && (
-                      <PermissionGate permission="manual-communications.create">
-
-              <button
-                onClick={() =>
-                  navigate("/dashboard/manual-communications/create")
-                }
-                className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                <Plus className="w-4 h-4" />
-                Create broadcast
-              </button>
+              <PermissionGate permission="manual-communications.create">
+                <button
+                  onClick={() =>
+                    navigate("/dashboard/manual-communications/create")
+                  }
+                  className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create broadcast
+                </button>
               </PermissionGate>
             )}
           </div>

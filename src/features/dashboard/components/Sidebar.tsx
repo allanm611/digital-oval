@@ -1555,6 +1555,99 @@ export default function Sidebar({
                     );
                   }
 
+                  if (item.entity === "customers") {
+                    return (
+                      <PermissionGate key={item.name} permission="customers.read">
+                        {item.type === "parent" ? (
+                          <div>
+                            <button
+                              onClick={() =>
+                                toggleExpanded(
+                                  item.name.toLowerCase(),
+                                  parentItemNames,
+                                )
+                              }
+                              className={`group w-full flex items-center justify-between ${
+                                tw.rounded
+                              } p-3 text-sm transition-all duration-300 ease-out ${
+                                !isActive
+                                  ? "hover:scale-105 hover:shadow-lg"
+                                  : ""
+                              } ${getItemClasses(isActive)}`}
+                            >
+                              <div className="flex items-center gap-x-3">
+                                <Icon
+                                  className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                    isActive,
+                                  )}`}
+                                />
+                                {item.name}
+                              </div>
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                              )}
+                            </button>
+
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                isExpanded
+                                  ? "max-h-[1000px] opacity-100"
+                                  : "max-h-0 opacity-0"
+                              }`}
+                            >
+                              <div className="mt-2 ml-6 space-y-2">
+                                {item.children?.map((child) => {
+                                  const ChildIcon = child.icon;
+                                  const isChildActive =
+                                    location.pathname === child.href;
+
+                                  return (
+                                    <Link
+                                      key={child.name}
+                                      to={child.href}
+                                      onClick={handleLinkClick}
+                                      className={`group flex items-center gap-x-3 ${
+                                        tw.rounded
+                                      } p-2.5 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                    >
+                                      <ChildIcon
+                                        className={`h-4 w-4 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      {child.name}
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link
+                            to={item.href}
+                            onClick={handleLinkClick}
+                            className={`group flex items-center gap-x-3 ${
+                              tw.rounded
+                            } p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                          >
+                            <Icon
+                              className={`h-5 w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            {item.name}
+                          </Link>
+                        )}
+                      </PermissionGate>
+                    );
+                  }
+
                   if (item.entity === "configuration") {
                     return (
                       <PermissionGate key={item.name} permission="system.admin">
@@ -2872,131 +2965,131 @@ export default function Sidebar({
                 }
 
                 // Jobs
-                // if (item.entity === "jobs") {
-                //   return (
-                //     <PermissionGate key={item.name} permission="jobs.read">
-                //       {item.type === "parent" ? (
-                //         <li
-                //           className="relative group"
-                //           style={{
-                //             animation: `slideInFromLeft 0.8s ease-out ${
-                //               index * 0.1
-                //             }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
-                //           }}
-                //         >
-                //           <button
-                //             onClick={() =>
-                //               toggleExpanded(
-                //                 item.name.toLowerCase(),
-                //                 parentItemNames,
-                //               )
-                //             }
-                //             className={`group w-full flex items-center ${
-                //               isMinimized
-                //                 ? "md:justify-center xl:justify-center"
-                //                 : "md:justify-center xl:justify-between"
-                //             } ${
-                //               tw.rounded
-                //             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
-                //               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                //             } ${getItemClasses(isActive)}`}
-                //             title={item.name}
-                //           >
-                //             <div className="flex items-center gap-x-3">
-                //               <Icon
-                //                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                //                   isActive,
-                //                 )}`}
-                //               />
-                //               <span
-                //                 className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
-                //               >
-                //                 {item.name}
-                //               </span>
-                //             </div>
-                //             {isExpanded ? (
-                //               <ChevronDown
-                //                 className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
-                //               />
-                //             ) : (
-                //               <ChevronRight
-                //                 className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
-                //               />
-                //             )}
-                //           </button>
+                if (item.entity === "jobs") {
+                  return (
+                    <PermissionGate key={item.name} permission="jobs.read">
+                      {item.type === "parent" ? (
+                        <li
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <button
+                            onClick={() =>
+                              toggleExpanded(
+                                item.name.toLowerCase(),
+                                parentItemNames,
+                              )
+                            }
+                            className={`group w-full flex items-center ${
+                              isMinimized
+                                ? "md:justify-center xl:justify-center"
+                                : "md:justify-center xl:justify-between"
+                            } ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                              !isActive ? "hover:scale-105 hover:shadow-lg" : ""
+                            } ${getItemClasses(isActive)}`}
+                            title={item.name}
+                          >
+                            <div className="flex items-center gap-x-3">
+                              <Icon
+                                className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                  isActive,
+                                )}`}
+                              />
+                              <span
+                                className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              >
+                                {item.name}
+                              </span>
+                            </div>
+                            {isExpanded ? (
+                              <ChevronDown
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            ) : (
+                              <ChevronRight
+                                className={`h-4 w-4 text-gray-400 ${isMinimized ? "hidden" : "hidden xl:block"}`}
+                              />
+                            )}
+                          </button>
 
-                //           {isExpanded && (
-                //             <ul className="mt-2 md:space-y-2 xl:space-y-2">
-                //               {item.children?.map((child) => {
-                //                 const ChildIcon = child.icon;
-                //                 const isChildActive =
-                //                   location.pathname === child.href;
-                //                 return (
-                //                   <li
-                //                     key={child.name}
-                //                     className="relative group"
-                //                   >
-                //                     <Link
-                //                       to={child.href}
-                //                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
-                //                         tw.rounded
-                //                       } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
-                //                         isChildActive,
-                //                       )}`}
-                //                       title={child.name}
-                //                     >
-                //                       <ChildIcon
-                //                         className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                //                           isChildActive,
-                //                         )}`}
-                //                       />
-                //                       <span
-                //                         className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
-                //                       >
-                //                         {child.name}
-                //                       </span>
-                //                     </Link>
-                //                   </li>
-                //                 );
-                //               })}
-                //             </ul>
-                //           )}
-                //         </li>
-                //       ) : (
-                //         <li
-                //           key={item.name}
-                //           className="relative group"
-                //           style={{
-                //             animation: `slideInFromLeft 0.8s ease-out ${
-                //               index * 0.1
-                //             }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
-                //           }}
-                //         >
-                //           <Link
-                //             to={item.href}
-                //             className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
-                //               tw.rounded
-                //             } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
-                //               isActive,
-                //             )}`}
-                //             title={item.name}
-                //           >
-                //             <Icon
-                //               className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                //                 isActive,
-                //               )}`}
-                //             />
-                //             <span
-                //               className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
-                //             >
-                //               {item.name}
-                //             </span>
-                //           </Link>
-                //         </li>
-                //       )}
-                //     </PermissionGate>
-                //   );
-                // }
+                          {isExpanded && (
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                              {item.children?.map((child) => {
+                                const ChildIcon = child.icon;
+                                const isChildActive =
+                                  location.pathname === child.href;
+                                return (
+                                  <li
+                                    key={child.name}
+                                    className="relative group"
+                                  >
+                                    <Link
+                                      to={child.href}
+                                      className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                                        tw.rounded
+                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                        isChildActive,
+                                      )}`}
+                                      title={child.name}
+                                    >
+                                      <ChildIcon
+                                        className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                          isChildActive,
+                                        )}`}
+                                      />
+                                      <span
+                                        className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                                      >
+                                        {child.name}
+                                      </span>
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      ) : (
+                        <li
+                          key={item.name}
+                          className="relative group"
+                          style={{
+                            animation: `slideInFromLeft 0.8s ease-out ${
+                              index * 0.1
+                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                          }}
+                        >
+                          <Link
+                            to={item.href}
+                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                              tw.rounded
+                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                              isActive,
+                            )}`}
+                            title={item.name}
+                          >
+                            <Icon
+                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                                isActive,
+                              )}`}
+                            />
+                            <span
+                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                            >
+                              {item.name}
+                            </span>
+                          </Link>
+                        </li>
+                      )}
+                    </PermissionGate>
+                  );
+                }
 
                 // Configuration
                 if (item.entity === "configuration") {
@@ -3125,44 +3218,44 @@ export default function Sidebar({
                   );
                 }
 
-                if (item.entity === "manual-actions") {
-                  return (
-                    <PermissionGate key={item.name} permission="manual-actions.read">
-                      {item.type === "single" ? (
-                        <li
-                          key={item.name}
-                          className="relative group"
-                          style={{
-                            animation: `slideInFromLeft 0.8s ease-out ${
-                              index * 0.1
-                            }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
-                          }}
-                        >
-                          <Link
-                            to={item.href}
-                            className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
-                              tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
-                              isActive,
-                            )}`}
-                            title={item.name}
-                          >
-                            <Icon
-                              className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                isActive,
-                              )}`}
-                            />
-                            <span
-                              className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
-                            >
-                              {item.name}
-                            </span>
-                          </Link>
-                        </li>
-                      ) : null}
-                    </PermissionGate>
-                  );
-                }
+                // if (item.entity === "manual-actions") {
+                //   return (
+                //     <PermissionGate key={item.name} permission="manual-actions.read">
+                //       {item.type === "single" ? (
+                //         <li
+                //           key={item.name}
+                //           className="relative group"
+                //           style={{
+                //             animation: `slideInFromLeft 0.8s ease-out ${
+                //               index * 0.1
+                //             }s both, fadeIn 1s ease-out ${index * 0.1}s both`,
+                //           }}
+                //         >
+                //           <Link
+                //             to={item.href}
+                //             className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
+                //               tw.rounded
+                //             } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                //               isActive,
+                //             )}`}
+                //             title={item.name}
+                //           >
+                //             <Icon
+                //               className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
+                //                 isActive,
+                //               )}`}
+                //             />
+                //             <span
+                //               className={`${isMinimized ? "hidden" : "hidden xl:block"}`}
+                //             >
+                //               {item.name}
+                //             </span>
+                //           </Link>
+                //         </li>
+                //       ) : null}
+                //     </PermissionGate>
+                //   );
+                // }
 
                 // if (item.entity === "analytics") {
                 //   return (

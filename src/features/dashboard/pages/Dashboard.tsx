@@ -535,13 +535,13 @@ const OtherPages = {
   ManualBroadcastListsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../quicklists/pages/ManualBroadcastListsPage"
+        /* webpackPrefetch: true */ "../../manual-broadcast/pages/ManualBroadcastListsPage"
       ),
   ),
   BroadcastDetailsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../quicklists/pages/BroadcastDetailsPage"
+        /* webpackPrefetch: true */ "../../manual-broadcast/pages/BroadcastDetailsPage"
       ),
   ),
   QuickListsPage: lazy(

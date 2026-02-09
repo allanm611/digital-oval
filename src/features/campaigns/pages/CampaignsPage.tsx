@@ -1437,124 +1437,134 @@ export default function CampaignsPage() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                       >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCampaignToExecute({
-                              id: campaign.id,
-                              name: campaign.name,
-                            });
-                            setShowExecuteModal(true);
-                            setShowActionMenu(null);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-black"
-                        >
-                          <Play
-                            className="w-4 h-4 mr-4"
-                            style={{ color: color.primary.accent }}
-                          />
-                          Execute Campaign
-                        </button>
-
-                        {campaign.status === "draft" && (
+                        <PermissionGate permission="campaigns.execute">
                           <button
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
+                              setCampaignToExecute({
+                                id: campaign.id,
+                                name: campaign.name,
+                              });
+                              setShowExecuteModal(true);
                               setShowActionMenu(null);
-                              try {
-                                await campaignService.submitForApproval(
-                                  campaign.id,
-                                );
-                                showToast(
-                                  "success",
-                                  `Campaign "${campaign.name}" submitted for approval!`,
-                                );
-                                fetchCampaigns();
-                              } catch (error) {
-                                let errorMessage =
-                                  "Failed to submit campaign for approval";
-                                let errorTitle = "Submission Failed";
-
-                                if (error instanceof Error) {
-                                  // Check for budget-related errors
-                                  if (
-                                    error.message
-                                      .toLowerCase()
-                                      .includes("budget") ||
-                                    error.message
-                                      .toLowerCase()
-                                      .includes("positive")
-                                  ) {
-                                    errorTitle = "Budget Required";
-                                    errorMessage =
-                                      "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
-                                  } else {
-                                    // Try to extract error from response
-                                    const match =
-                                      error.message.match(/details: ({.*})/);
-                                    if (match) {
-                                      try {
-                                        const errorData = JSON.parse(match[1]);
-                                        errorMessage =
-                                          errorData.error ||
-                                          errorData.message ||
-                                          errorMessage;
-                                      } catch {
-                                        errorMessage = error.message;
-                                      }
-                                    } else {
-                                      errorMessage = error.message;
-                                    }
-                                  }
-                                }
-                                showToast("error", errorTitle, errorMessage);
-                              }
                             }}
                             className="w-full flex items-center px-4 py-3 text-sm text-black"
                           >
-                            <Send
+                            <Play
                               className="w-4 h-4 mr-4"
-                              style={{ color: "#3B82F6" }}
+                              style={{ color: color.primary.accent }}
                             />
-                            Request Approval
+                            Execute Campaign
                           </button>
+                        </PermissionGate>
+
+                        {campaign.status === "draft" && (
+                          <PermissionGate permission="campaigns.update">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setShowActionMenu(null);
+                                try {
+                                  await campaignService.submitForApproval(
+                                    campaign.id,
+                                  );
+                                  showToast(
+                                    "success",
+                                    `Campaign "${campaign.name}" submitted for approval!`,
+                                  );
+                                  fetchCampaigns();
+                                } catch (error) {
+                                  let errorMessage =
+                                    "Failed to submit campaign for approval";
+                                  let errorTitle = "Submission Failed";
+
+                                  if (error instanceof Error) {
+                                    // Check for budget-related errors
+                                    if (
+                                      error.message
+                                        .toLowerCase()
+                                        .includes("budget") ||
+                                      error.message
+                                        .toLowerCase()
+                                        .includes("positive")
+                                    ) {
+                                      errorTitle = "Budget Required";
+                                      errorMessage =
+                                        "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
+                                    } else {
+                                      // Try to extract error from response
+                                      const match =
+                                        error.message.match(/details: ({.*})/);
+                                      if (match) {
+                                        try {
+                                          const errorData = JSON.parse(
+                                            match[1],
+                                          );
+                                          errorMessage =
+                                            errorData.error ||
+                                            errorData.message ||
+                                            errorMessage;
+                                        } catch {
+                                          errorMessage = error.message;
+                                        }
+                                      } else {
+                                        errorMessage = error.message;
+                                      }
+                                    }
+                                  }
+                                  showToast("error", errorTitle, errorMessage);
+                                }
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <Send
+                                className="w-4 h-4 mr-4"
+                                style={{ color: "#3B82F6" }}
+                              />
+                              Request Approval
+                            </button>
+                          </PermissionGate>
                         )}
 
                         {campaign.status === "pending_approval" && (
                           <>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCampaignToApprove({
-                                  id: campaign.id,
-                                  name: campaign.name,
-                                });
-                                setShowApproveModal(true);
-                                setShowActionMenu(null);
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                            >
-                              <CheckCircle
-                                className="w-4 h-4 mr-4"
-                                style={{ color: "#10B981" }}
-                              />
-                              Approve Campaign
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setCampaignToReject({
-                                  id: campaign.id,
-                                  name: campaign.name,
-                                });
-                                setShowRejectModal(true);
-                                setShowActionMenu(null);
-                              }}
-                              className="w-full flex items-center px-4 py-3 text-sm text-black"
-                            >
-                              <Trash2 className="w-4 h-4 mr-4 text-red-600" />
-                              Reject Campaign
-                            </button>
+                            <PermissionGate permission="campaigns.approve">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCampaignToApprove({
+                                    id: campaign.id,
+                                    name: campaign.name,
+                                  });
+                                  setShowApproveModal(true);
+                                  setShowActionMenu(null);
+                                }}
+                                className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              >
+                                <CheckCircle
+                                  className="w-4 h-4 mr-4"
+                                  style={{ color: "#10B981" }}
+                                />
+                                Approve Campaign
+                              </button>
+                            </PermissionGate>
+                            <PermissionGate permission="campaigns.reject">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCampaignToReject({
+                                    id: campaign.id,
+                                    name: campaign.name,
+                                  });
+                                  setShowRejectModal(true);
+                                  setShowActionMenu(null);
+                                }}
+                                className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              >
+                                <Trash2 className="w-4 h-4 mr-4 text-red-600" />
+                                Reject Campaign
+                              </button>
+                            </PermissionGate>
                           </>
                         )}
 

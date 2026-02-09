@@ -5,7 +5,10 @@ import UnauthorizedPage from "../../auth/pages/UnauthorizedPage";
 
 export default function JobExecutionDetailsPageWrapper() {
   return (
-    <PermissionGate permission="job-executions.read" fallback={<UnauthorizedPage />}>
+    <PermissionGate
+      permission="job-executions.read"
+      fallback={<UnauthorizedPage />}
+    >
       <SuspenseBoundary type="table">
         <JobExecutionDetailsPage />
       </SuspenseBoundary>

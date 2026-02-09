@@ -11,6 +11,7 @@ import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, components } from "../../../shared/utils/utils";
+import React, { useCallback } from "react";
 
 interface ExecuteCampaignModalProps {
   isOpen: boolean;
@@ -46,25 +47,18 @@ export default function ExecuteCampaignModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionMode, setExecutionMode] = useState<"immediate" | "scheduled">(
-    "immediate"
+    "immediate",
   );
-
-  useEffect(() => {
-    if (isOpen) {
-      loadSegments();
-    }
-  }, [isOpen, campaignId, loadSegments]);
 
   const loadSegments = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await campaignSegmentOfferService.getMappingsByCampaign(
-        campaignId
-      );
+      const response =
+        await campaignSegmentOfferService.getMappingsByCampaign(campaignId);
 
       // Transform mappings to segment list with default EMAIL channel
       const uniqueSegments = Array.from(
-        new Set(response.data.map((m) => m.segment_id))
+        new Set(response.data.map((m) => m.segment_id)),
       ).map((segmentId) => {
         const mapping = response.data.find((m) => m.segment_id === segmentId);
         return {
@@ -85,11 +79,19 @@ export default function ExecuteCampaignModal({
     }
   }, [campaignId, showToast]);
 
+  useEffect(() => {
+    if (isOpen) {
+      loadSegments();
+    }
+  }, [isOpen, campaignId, loadSegments]);
+
   const toggleSegment = (segmentId: string) => {
     setSegments((prev) =>
       prev.map((seg) =>
-        seg.segment_id === segmentId ? { ...seg, selected: !seg.selected } : seg
-      )
+        seg.segment_id === segmentId
+          ? { ...seg, selected: !seg.selected }
+          : seg,
+      ),
     );
   };
 
@@ -103,13 +105,13 @@ export default function ExecuteCampaignModal({
           return { ...seg, channels };
         }
         return seg;
-      })
+      }),
     );
   };
 
   const handleExecute = async () => {
     const selectedSegments = segments.filter(
-      (s) => s.selected && s.channels.length > 0
+      (s) => s.selected && s.channels.length > 0,
     );
 
     if (selectedSegments.length === 0) {
@@ -391,7 +393,7 @@ export default function ExecuteCampaignModal({
                             {AVAILABLE_CHANNELS.map((channel) => {
                               const Icon = channel.icon;
                               const isSelected = segment.channels.includes(
-                                channel.code
+                                channel.code,
                               );
                               return (
                                 <button
@@ -399,7 +401,7 @@ export default function ExecuteCampaignModal({
                                   onClick={() =>
                                     toggleChannel(
                                       segment.segment_id,
-                                      channel.code
+                                      channel.code,
                                     )
                                   }
                                   className={`flex items-center gap-2 px-3 py-1.5 ${

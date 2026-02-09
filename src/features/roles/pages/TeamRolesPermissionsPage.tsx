@@ -93,8 +93,7 @@ export default function TeamRolesPermissionsPage() {
 
   const userId = user?.user_id;
 
-  useEffect(() => {
-  }, [userId]);
+  useEffect(() => {}, [userId]);
 
   // Tab state
   const [activeTab, setActiveTab] = useState<TabType>("roles");
@@ -443,9 +442,7 @@ export default function TeamRolesPermissionsPage() {
     } catch (err) {
       showError(
         t.common.error,
-        err instanceof Error
-          ? err.message
-          : t.common.failedToPerformAction,
+        err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
       setIsDeleting(false);
@@ -487,8 +484,12 @@ export default function TeamRolesPermissionsPage() {
                 : "border text-gray-700 bg-transparent hover:border-gray-400"
             } disabled:opacity-50 disabled:cursor-not-allowed`}
             style={{
-              backgroundColor: isSelectionMode ? color.primary.action : "transparent",
-              borderColor: isSelectionMode ? "transparent" : color.primary.action + "40",
+              backgroundColor: isSelectionMode
+                ? color.primary.action
+                : "transparent",
+              borderColor: isSelectionMode
+                ? "transparent"
+                : color.primary.action + "40",
               color: isSelectionMode ? "white" : color.primary.action,
             }}
           >
@@ -696,16 +697,18 @@ export default function TeamRolesPermissionsPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleEditRole(role)}
-                            disabled={role.is_system_role}
+                            // disabled={role.is_system_role}
                             className={`p-1.5 rounded transition-colors ${
-                              role.is_system_role
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                              // role.is_system_role
+                              //   ? "opacity-50 cursor-not-allowed text-gray-400"
+                              //   :
+                              "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                             }`}
                             title={
-                              role.is_system_role
-                                ? "Cannot modify system roles"
-                                : "Edit"
+                              // role.is_system_role
+                              //   ? "Cannot modify system roles"
+                              //   :
+                              "Edit"
                             }
                           >
                             <Edit2 className="w-4 h-4" />
@@ -721,11 +724,13 @@ export default function TeamRolesPermissionsPage() {
                             onClick={() => handleToggleRoleActive(role)}
                             disabled={
                               togglingRoleId === role.id ||
-                              (role.is_active && (role.is_system_role || role.is_default))
+                              (role.is_active &&
+                                (role.is_system_role || role.is_default))
                             }
                             className={`p-1.5 rounded transition-colors ${
                               togglingRoleId === role.id ||
-                              (role.is_active && (role.is_system_role || role.is_default))
+                              (role.is_active &&
+                                (role.is_system_role || role.is_default))
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
                                 : role.is_active
                                   ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
@@ -751,16 +756,18 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteRole(role)}
-                            disabled={role.is_system_role}
+                            // disabled={role.is_system_role}
                             className={`p-1.5 rounded transition-colors ${
-                              role.is_system_role
-                                ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : "text-red-600 hover:text-red-700 hover:bg-red-50"
+                              // role.is_system_role
+                              //   ? "opacity-50 cursor-not-allowed text-gray-400"
+                              //   :
+                              "text-red-600 hover:text-red-700 hover:bg-red-50"
                             }`}
                             title={
-                              role.is_system_role
-                                ? "Cannot modify system roles"
-                                : "Delete"
+                              // role.is_system_role
+                              //   ? "Cannot modify system roles"
+                              //   :
+                              "Delete"
                             }
                           >
                             <Trash2 className="w-4 h-4" />

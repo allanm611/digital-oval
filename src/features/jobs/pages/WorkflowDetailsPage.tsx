@@ -220,7 +220,9 @@ export default function WorkflowDetailsPage() {
           </PermissionGate>
           <PermissionGate permission="job-workflows.update">
             <button
-              onClick={() => navigate(`/dashboard/workflows/${workflow.id}/edit`)}
+              onClick={() =>
+                navigate(`/dashboard/workflows/${workflow.id}/edit`)
+              }
               className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50`}
               style={{
                 paddingTop: button.bordered.paddingY,
