@@ -13,14 +13,13 @@ import {
   Search,
   Square,
   CheckSquare,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import {
   Role,
   Permission,
@@ -189,6 +188,11 @@ export default function TeamRolesPermissionsPage() {
     }
   }, [activeTab, rolesPaginationModel, fetchRoles]);
 
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setRolesPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [rolesSearch, rolesLevelFilter, rolesDataAccessFilter]);
+
   const filteredRoles = useMemo(() => {
     let filtered = [...roles];
 
@@ -215,6 +219,12 @@ export default function TeamRolesPermissionsPage() {
 
     return filtered;
   }, [roles, rolesSearch, rolesLevelFilter, rolesDataAccessFilter]);
+
+  const paginatedRoles = useMemo(() => {
+    const start = rolesPaginationModel.page * rolesPaginationModel.pageSize;
+    const end = start + rolesPaginationModel.pageSize;
+    return filteredRoles.slice(start, end);
+  }, [filteredRoles, rolesPaginationModel]);
 
   const handleCreateRole = () => {
     setEditingRole(undefined);
@@ -398,6 +408,11 @@ export default function TeamRolesPermissionsPage() {
     }
   }, [activeTab, permissionsPaginationModel, fetchPermissions]);
 
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setPermissionsPaginationModel((prev) => ({ ...prev, page: 0 }));
+  }, [permissionsSearch, permissionsActionFilter]);
+
   const filteredPermissions = useMemo(() => {
     let filtered = Array.isArray(permissions) ? [...permissions] : [];
 
@@ -416,6 +431,13 @@ export default function TeamRolesPermissionsPage() {
 
     return filtered;
   }, [permissions, permissionsSearch, permissionsActionFilter]);
+
+  const paginatedPermissions = useMemo(() => {
+    const start =
+      permissionsPaginationModel.page * permissionsPaginationModel.pageSize;
+    const end = start + permissionsPaginationModel.pageSize;
+    return filteredPermissions.slice(start, end);
+  }, [filteredPermissions, permissionsPaginationModel]);
 
   const handleCreatePermission = () => {
     setEditingPermission(undefined);
@@ -664,7 +686,7 @@ export default function TeamRolesPermissionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredRoles.map((role) => (
+                  {paginatedRoles.map((role) => (
                     <tr key={role.id} className="transition-colors">
                       <td
                         className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
@@ -790,6 +812,26 @@ export default function TeamRolesPermissionsPage() {
                   ))}
                 </tbody>
               </table>
+              {/* Pagination Controls */}
+              {filteredRoles.length > 0 && (
+                <Pagination
+                  currentPage={rolesPaginationModel.page + 1}
+                  pageSize={rolesPaginationModel.pageSize}
+                  totalItems={filteredRoles.length}
+                  onPageChange={(page) =>
+                    setRolesPaginationModel({
+                      page: page - 1,
+                      pageSize: rolesPaginationModel.pageSize,
+                    })
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setRolesPaginationModel({
+                      page: 0,
+                      pageSize,
+                    })
+                  }
+                />
+              )}
             </div>
           )}
         </div>
@@ -891,7 +933,7 @@ export default function TeamRolesPermissionsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPermissions.map((permission) => (
+                  {paginatedPermissions.map((permission) => (
                     <tr key={permission.id} className="transition-colors">
                       <td
                         className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-medium"
@@ -971,69 +1013,23 @@ export default function TeamRolesPermissionsPage() {
               </table>
               {/* Pagination Controls */}
               {filteredPermissions.length > 0 && (
-                <div
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
-                  style={{ borderColor: "#e5e7eb" }}
-                >
-                  <div className="flex items-center gap-2">
-                    <label
-                      htmlFor="permPageSize"
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      Per page:
-                    </label>
-                    <select
-                      id="permPageSize"
-                      value={permissionsPaginationModel.pageSize}
-                      onChange={(e) => {
-                        setPermissionsPaginationModel({
-                          page: 0,
-                          pageSize: Number(e.target.value),
-                        });
-                      }}
-                      className={`px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none`}
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setPermissionsPaginationModel((prev) => ({
-                          ...prev,
-                          page: Math.max(0, prev.page - 1),
-                        }))
-                      }
-                      disabled={permissionsPaginationModel.page === 0}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: "#e5e7eb" }}
-                      title="Previous page"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
-                      Page {permissionsPaginationModel.page + 1}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setPermissionsPaginationModel((prev) => ({
-                          ...prev,
-                          page: prev.page + 1,
-                        }))
-                      }
-                      disabled={filteredPermissions.length < permissionsPaginationModel.pageSize}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: "#e5e7eb" }}
-                      title="Next page"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={permissionsPaginationModel.page + 1}
+                  pageSize={permissionsPaginationModel.pageSize}
+                  totalItems={filteredPermissions.length}
+                  onPageChange={(page) =>
+                    setPermissionsPaginationModel({
+                      page: page - 1,
+                      pageSize: permissionsPaginationModel.pageSize,
+                    })
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setPermissionsPaginationModel({
+                      page: 0,
+                      pageSize,
+                    })
+                  }
+                />
               )}
             </div>
           )}

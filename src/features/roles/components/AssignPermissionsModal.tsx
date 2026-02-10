@@ -17,6 +17,7 @@ import { permissionService } from "../services/permissionService";
 import { color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 interface AssignPermissionsModalProps {
   isOpen: boolean;
@@ -62,7 +63,10 @@ export default function AssignPermissionsModal({
   const [isRemoving, setIsRemoving] = useState(false);
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
   const [localIsSelectionMode, setLocalIsSelectionMode] = useState(false);
-
+  const [permissionsPaginationModel, setPermissionsPaginationModel] = useState({
+    page: 0,
+    pageSize: 20,
+  });
   // Use prop if provided by parent, otherwise use local state
   const isSelectionMode =
     propIsSelectionMode !== undefined
@@ -186,6 +190,11 @@ export default function AssignPermissionsModal({
     loadAssignedPermissions();
   }, [selectedRole, isOpen, loadAssignedPermissions, handleSetSelectionMode]);
 
+  // Reset pagination when search term changes
+  useEffect(() => {
+    setPermissionsPaginationModel({ page: 0, pageSize: 20 });
+  }, [searchTerm]);
+
   const handleTogglePermission = async (permission: Permission) => {
     if (!selectedRole) {
       showError("Error", "Role not selected. Please select a role first.");
@@ -300,6 +309,13 @@ export default function AssignPermissionsModal({
         p.action.toLowerCase().includes(term),
     );
   }, [allPermissions, searchTerm]);
+
+  const paginatedPermissions = useMemo(() => {
+    const start =
+      permissionsPaginationModel.page * permissionsPaginationModel.pageSize;
+    const end = start + permissionsPaginationModel.pageSize;
+    return filteredPermissions.slice(start, end);
+  }, [filteredPermissions, permissionsPaginationModel]);
 
   const visibleIds = useMemo(
     () => filteredPermissions.map((p) => p.id),
@@ -745,7 +761,7 @@ export default function AssignPermissionsModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPermissions.map((permission) => {
+                  {paginatedPermissions.map((permission) => {
                     const isAssigned = assignedIds.has(permission.id);
                     const isToggling = isTogglingPermission === permission.id;
                     const isSelected = selectedPermissionIds.has(permission.id);
@@ -846,6 +862,26 @@ export default function AssignPermissionsModal({
                   })}
                 </tbody>
               </table>
+              {/* Pagination Controls */}
+              {filteredPermissions.length > 0 && (
+                <Pagination
+                  currentPage={permissionsPaginationModel.page + 1}
+                  pageSize={permissionsPaginationModel.pageSize}
+                  totalItems={filteredPermissions.length}
+                  onPageChange={(page) =>
+                    setPermissionsPaginationModel({
+                      page: page - 1,
+                      pageSize: permissionsPaginationModel.pageSize,
+                    })
+                  }
+                  onPageSizeChange={(pageSize) =>
+                    setPermissionsPaginationModel({
+                      page: 0,
+                      pageSize,
+                    })
+                  }
+                />
+              )}
             </div>
           )}
         </div>

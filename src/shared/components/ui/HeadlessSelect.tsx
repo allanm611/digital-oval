@@ -116,7 +116,7 @@ export default function HeadlessSelect({
       {isOpen &&
         createPortal(
           <div
-            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-60 overflow-auto pointer-events-auto`}
+            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-80 overflow-auto pointer-events-auto`}
             style={{
               position: "fixed",
               top: `${dropdownPosition.top}px`,
