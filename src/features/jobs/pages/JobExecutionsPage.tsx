@@ -36,6 +36,7 @@ import type {
 } from "../types/jobExecution";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "" },
@@ -108,7 +109,7 @@ export default function JobExecutionsPage() {
   // Batch selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedExecutions, setSelectedExecutions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -148,21 +149,31 @@ export default function JobExecutionsPage() {
           // Search by trace ID
           try {
             const exec = await jobExecutionService.getJobExecutionByTraceId(
-              traceIdFilter.trim()
+              traceIdFilter.trim(),
             );
             response = {
               data: [exec],
-              pagination: { total: 1, limit: pageSize, offset: 0, hasMore: false },
+              pagination: {
+                total: 1,
+                limit: pageSize,
+                offset: 0,
+                hasMore: false,
+              },
             };
           } catch {
             response = {
               data: [],
-              pagination: { total: 0, limit: pageSize, offset: 0, hasMore: false },
+              pagination: {
+                total: 0,
+                limit: pageSize,
+                offset: 0,
+                hasMore: false,
+              },
             };
           }
         } else if (correlationIdFilter.trim()) {
           response = await jobExecutionService.getExecutionsByCorrelationId(
-            correlationIdFilter.trim()
+            correlationIdFilter.trim(),
           );
         } else if (startDateFilter && endDateFilter) {
           response = await jobExecutionService.getExecutionsByDateRange({
@@ -187,7 +198,7 @@ export default function JobExecutionsPage() {
             {
               limit: pageSize,
               offset,
-            }
+            },
           );
         } else if (jobIdFilter) {
           response = await jobExecutionService.getExecutionsByJobId(
@@ -195,7 +206,7 @@ export default function JobExecutionsPage() {
             {
               limit: pageSize,
               offset,
-            }
+            },
           );
         } else {
           // Use search endpoint for general queries
@@ -222,15 +233,19 @@ export default function JobExecutionsPage() {
 
         // Ensure we always have an array
         let executionList: JobExecution[] = [];
-        if (response && response.data) {
-          if (Array.isArray(response.data)) {
-            executionList = response.data;
-          } else if (
-            typeof response.data === "object" &&
-            "data" in response.data &&
-            Array.isArray(response.data.data)
-          ) {
-            executionList = response.data.data;
+        const responseData = response as unknown as Record<string, unknown>;
+        if (responseData && responseData.data) {
+          if (Array.isArray(responseData.data)) {
+            executionList = responseData.data as JobExecution[];
+          } else {
+            const nestedData = responseData.data as Record<string, unknown>;
+            if (
+              nestedData &&
+              "data" in nestedData &&
+              Array.isArray(nestedData.data)
+            ) {
+              executionList = nestedData.data as JobExecution[];
+            }
           }
         }
 
@@ -268,24 +283,31 @@ export default function JobExecutionsPage() {
       showError,
       currentPage,
       pageSize,
-    ]
+    ],
   );
 
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const response = await jobExecutionService.getExecutionStatistics({ skipCache: true }).catch((err) => {
-        console.error("Failed to fetch execution statistics:", err);
-        return null;
-      });
+      const response = await jobExecutionService
+        .getExecutionStatistics({ skipCache: true })
+        .catch((err) => {
+          console.error("Failed to fetch execution statistics:", err);
+          return null;
+        });
 
       if (response) {
         // Handle both wrapped response { success, data, source } and direct data
-        const statsData = (response as any).data || response;
+        const responseObj = response as unknown as Record<string, unknown>;
+        const statsData =
+          (responseObj.data as unknown as Record<string, unknown>) ||
+          responseObj;
 
         // Parse string values to numbers
-        const totalExecutions = parseInt(String(statsData.total_executions), 10) || 0;
-        const successfulExecutions = parseInt(String(statsData.successful), 10) || 0;
+        const totalExecutions =
+          parseInt(String(statsData.total_executions), 10) || 0;
+        const successfulExecutions =
+          parseInt(String(statsData.successful), 10) || 0;
         const failedExecutions = parseInt(String(statsData.failed), 10) || 0;
         const timedOut = parseInt(String(statsData.timed_out), 10) || 0;
         const aborted = parseInt(String(statsData.aborted), 10) || 0;
@@ -304,7 +326,7 @@ export default function JobExecutionsPage() {
       console.error("Failed to load stats:", err);
       showError(
         "Failed to load execution statistics",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsLoadingStats(false);
@@ -350,7 +372,7 @@ export default function JobExecutionsPage() {
           exec.error_message.toLowerCase().includes(term)) ||
         (exec.trace_id && exec.trace_id.toLowerCase().includes(term)) ||
         (exec.correlation_id &&
-          exec.correlation_id.toLowerCase().includes(term))
+          exec.correlation_id.toLowerCase().includes(term)),
     );
   }, [executions, searchTerm]);
 
@@ -388,12 +410,12 @@ export default function JobExecutionsPage() {
             executionIds.map((id) =>
               jobExecutionService.markJobExecutionAborted(id, {
                 reason: "Batch abort",
-              })
-            )
+              }),
+            ),
           );
           showToast(
             "Executions Aborted",
-            `${executionIds.length} execution(s) aborted successfully`
+            `${executionIds.length} execution(s) aborted successfully`,
           );
           break;
         case "archive":
@@ -404,7 +426,7 @@ export default function JobExecutionsPage() {
           });
           showToast(
             "Executions Archived",
-            `${executionIds.length} execution(s) archived successfully`
+            `${executionIds.length} execution(s) archived successfully`,
           );
           break;
         case "retry": {
@@ -414,8 +436,8 @@ export default function JobExecutionsPage() {
             new Set(
               filteredExecutions
                 .filter((exec) => selectedExecutions.has(exec.id))
-                .map((exec) => exec.job_id)
-            )
+                .map((exec) => exec.job_id),
+            ),
           );
           await Promise.all(
             jobIds.map((jobId) =>
@@ -423,12 +445,12 @@ export default function JobExecutionsPage() {
                 jobId,
                 daysBack: 7,
                 userId: user.user_id,
-              })
-            )
+              }),
+            ),
           );
           showToast(
             "Retry Initiated",
-            `Retrying failed executions for ${jobIds.length} job(s)`
+            `Retrying failed executions for ${jobIds.length} job(s)`,
           );
           break;
         }
@@ -439,7 +461,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         `Batch ${action} failed`,
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsBatchProcessing(false);
@@ -448,7 +470,7 @@ export default function JobExecutionsPage() {
 
   const handleAction = async (
     execution: JobExecution,
-    action: "abort" | "archive" | "retry"
+    action: "abort" | "archive" | "retry",
   ) => {
     setSelectedExecution(execution);
     setActionType(action);
@@ -466,18 +488,18 @@ export default function JobExecutionsPage() {
             selectedExecution.id,
             {
               reason: "User requested abort",
-            }
+            },
           );
           showToast(
             "Execution Aborted",
-            "The execution has been aborted successfully"
+            "The execution has been aborted successfully",
           );
           break;
         case "archive":
           await jobExecutionService.archiveJobExecution(selectedExecution.id);
           showToast(
             "Execution Archived",
-            "The execution has been archived successfully"
+            "The execution has been archived successfully",
           );
           break;
         case "retry":
@@ -496,7 +518,7 @@ export default function JobExecutionsPage() {
     } catch (err) {
       showError(
         "Action Failed",
-        err instanceof Error ? err.message : "Unknown error"
+        err instanceof Error ? err.message : "Unknown error",
       );
     } finally {
       setIsProcessingAction(false);
@@ -508,7 +530,12 @@ export default function JobExecutionsPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {t?.jobs?.executions?.executions || "Job Executions"}
+            {((
+              (t as unknown as Record<string, unknown>)?.jobs as Record<
+                string,
+                unknown
+              >
+            )?.scheduledJobs as string) || "Job Executions"}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Monitor and track all job execution records
@@ -527,34 +554,36 @@ export default function JobExecutionsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedExecutions(
-                  new Set(filteredExecutions.map((exec) => exec.id))
-                );
-              } else {
-                setIsSelectionMode(false);
-                setSelectedExecutions(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-            {isSelectionMode ? "Exit Selection" : "Select Executions"}
-          </button>
+          <PermissionGate permission="job-executions.select">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedExecutions(
+                    new Set(filteredExecutions.map((exec) => exec.id)),
+                  );
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedExecutions(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              {isSelectionMode ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              {isSelectionMode ? "Exit Selection" : "Select Executions"}
+            </button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -779,7 +808,7 @@ export default function JobExecutionsPage() {
                             setQuickFilter(
                               quickFilter === "sla-breached"
                                 ? ""
-                                : "sla-breached"
+                                : "sla-breached",
                             );
                             setStatusFilter("");
                           }}
@@ -799,7 +828,7 @@ export default function JobExecutionsPage() {
                             setQuickFilter(
                               quickFilter === "long-running"
                                 ? ""
-                                : "long-running"
+                                : "long-running",
                             );
                             setStatusFilter("");
                           }}
@@ -819,7 +848,7 @@ export default function JobExecutionsPage() {
                             setQuickFilter(
                               quickFilter === "currently-running"
                                 ? ""
-                                : "currently-running"
+                                : "currently-running",
                             );
                             setStatusFilter("");
                           }}
@@ -847,7 +876,7 @@ export default function JobExecutionsPage() {
                         value={jobIdFilter}
                         onChange={(e) =>
                           setJobIdFilter(
-                            e.target.value ? Number(e.target.value) : ""
+                            e.target.value ? Number(e.target.value) : "",
                           )
                         }
                       />
@@ -924,7 +953,7 @@ export default function JobExecutionsPage() {
                           value={longRunningThreshold}
                           onChange={(e) =>
                             setLongRunningThreshold(
-                              Number(e.target.value) || 60
+                              Number(e.target.value) || 60,
                             )
                           }
                         />
@@ -963,7 +992,7 @@ export default function JobExecutionsPage() {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       <div>
@@ -1185,7 +1214,7 @@ export default function JobExecutionsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/job-executions/${execution.id}`
+                              `/dashboard/job-executions/${execution.id}`,
                             )
                           }
                           className={`p-2 ${tw.rounded} text-gray-600`}
@@ -1236,7 +1265,7 @@ export default function JobExecutionsPage() {
             {filteredExecutions.length > 0 && (
               <div
                 className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
-                style={{ borderColor: color.surface.border }}
+                style={{ borderColor: "#e5e7eb" }}
               >
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -1277,7 +1306,7 @@ export default function JobExecutionsPage() {
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderColor: color.surface.border }}
+                    style={{ borderColor: "#e5e7eb" }}
                     title="Previous page"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -1289,7 +1318,7 @@ export default function JobExecutionsPage() {
                     onClick={() => setCurrentPage((p) => p + 1)}
                     disabled={!hasMore}
                     className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    style={{ borderColor: color.surface.border }}
+                    style={{ borderColor: "#e5e7eb" }}
                     title="Next page"
                   >
                     <ChevronRight className="h-4 w-4" />

@@ -970,34 +970,36 @@ export default function SegmentManagementPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  // Entering selection mode - select all visible segments
-                  setIsSelectionMode(true);
-                  setSelectedSegmentIds(new Set(visibleIds));
-                } else {
-                  // Exiting selection mode - clear selection
-                  setIsSelectionMode(false);
-                  setSelectedSegmentIds(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              {isSelectionMode ? (
-                <CheckSquare size={16} />
-              ) : (
-                <Square size={16} />
-              )}
-              {isSelectionMode ? "Exit Selection" : "Select Segments"}
-            </button>
+            <PermissionGate permission="segments.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    // Entering selection mode - select all visible segments
+                    setIsSelectionMode(true);
+                    setSelectedSegmentIds(new Set(visibleIds));
+                  } else {
+                    // Exiting selection mode - clear selection
+                    setIsSelectionMode(false);
+                    setSelectedSegmentIds(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare size={16} />
+                ) : (
+                  <Square size={16} />
+                )}
+                {isSelectionMode ? "Exit Selection" : "Select Segments"}
+              </button>
+            </PermissionGate>
             <PermissionGate permission="segments.create">
               <button
                 onClick={handleCreateSegment}

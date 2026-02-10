@@ -637,7 +637,7 @@ export default function ConnectionProfilesPage() {
           : "Create your first connection profile to get started"}
       </p>
       {!profiles.length && (
-        <PermissionGate permission="servers.create">
+        <PermissionGate permission="connection-profiles.create">
           <CreateButton route="/dashboard/connection-profiles/new" />
         </PermissionGate>
       )}
@@ -658,36 +658,38 @@ export default function ConnectionProfilesPage() {
             </p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={() => {
-                if (!isSelectionMode) {
-                  // Entering selection mode - select all visible profiles
-                  setIsSelectionMode(true);
-                  setSelectedProfileIds(
-                    new Set(filteredProfiles.map((p) => p.id)),
-                  );
-                } else {
-                  // Exiting selection mode - clear selection
-                  setIsSelectionMode(false);
-                  setSelectedProfileIds(new Set());
-                }
-              }}
-              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
-              style={{
-                backgroundColor: isSelectionMode
-                  ? color.primary.action
-                  : "transparent",
-                color: isSelectionMode ? "white" : color.primary.action,
-                border: `1px solid ${color.primary.action}`,
-              }}
-            >
-              {isSelectionMode ? (
-                <CheckSquare size={16} />
-              ) : (
-                <Square size={16} />
-              )}
-              {isSelectionMode ? "Cancel Selection" : "Select Profiles"}
-            </button>
+            <PermissionGate permission="connection-profiles.select">
+              <button
+                onClick={() => {
+                  if (!isSelectionMode) {
+                    // Entering selection mode - select all visible profiles
+                    setIsSelectionMode(true);
+                    setSelectedProfileIds(
+                      new Set(filteredProfiles.map((p) => p.id)),
+                    );
+                  } else {
+                    // Exiting selection mode - clear selection
+                    setIsSelectionMode(false);
+                    setSelectedProfileIds(new Set());
+                  }
+                }}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors whitespace-nowrap`}
+                style={{
+                  backgroundColor: isSelectionMode
+                    ? color.primary.action
+                    : "transparent",
+                  color: isSelectionMode ? "white" : color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                {isSelectionMode ? (
+                  <CheckSquare size={16} />
+                ) : (
+                  <Square size={16} />
+                )}
+                {isSelectionMode ? "Cancel Selection" : "Select Profiles"}
+              </button>
+            </PermissionGate>
             <button
               onClick={() =>
                 navigate("/dashboard/connection-profiles/analytics")
@@ -702,7 +704,7 @@ export default function ConnectionProfilesPage() {
               <BarChart3 className="h-4 w-4" />
               Analytics
             </button>
-            <PermissionGate permission="servers.create">
+            <PermissionGate permission="connection-profiles.create">
               <CreateButton route="/dashboard/connection-profiles/new" />
             </PermissionGate>
           </div>
@@ -959,7 +961,7 @@ export default function ConnectionProfilesPage() {
                           >
                             <Eye className="w-4 h-4 text-black" />
                           </button>
-                          <PermissionGate permission="servers.update">
+                          <PermissionGate permission="connection-profiles.update">
                             <button
                               onClick={() => handleEdit(profile.id)}
                               className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
@@ -968,19 +970,21 @@ export default function ConnectionProfilesPage() {
                               <Edit className="w-4 h-4 text-black" />
                             </button>
                           </PermissionGate>
-                          <button
-                            onClick={(e) => handleToggleActive(profile, e)}
-                            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                            title={
-                              profile.is_active ? "Deactivate" : "Activate"
-                            }
-                          >
-                            {profile.is_active ? (
-                              <PowerOff className="w-4 h-4 text-red-600" />
-                            ) : (
-                              <Play className="w-4 h-4 text-black" />
-                            )}
-                          </button>
+                          <PermissionGate permission="connection-profiles.update">
+                            <button
+                              onClick={(e) => handleToggleActive(profile, e)}
+                              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                              title={
+                                profile.is_active ? "Deactivate" : "Activate"
+                              }
+                            >
+                              {profile.is_active ? (
+                                <PowerOff className="w-4 h-4 text-red-600" />
+                              ) : (
+                                <Play className="w-4 h-4 text-black" />
+                              )}
+                            </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>

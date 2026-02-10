@@ -1720,7 +1720,7 @@ export default function JobDependenciesPage() {
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          <PermissionGate permission="job-dependencies.update">
+          <PermissionGate permission="job-dependencies.select">
             <button
               onClick={() => {
                 if (!isSelectionMode) {
@@ -2482,19 +2482,21 @@ export default function JobDependenciesPage() {
                           </span>
                         </button>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteAllForJobClick(dependency.job_id);
-                            setShowActionMenu(null);
-                          }}
-                          className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4 mr-4 flex-shrink-0" />
-                          <span className="truncate">
-                            Delete All Dependencies
-                          </span>
-                        </button>
+                        <PermissionGate permission="job-dependencies.delete">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteAllForJobClick(dependency.job_id);
+                              setShowActionMenu(null);
+                            }}
+                            className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4 mr-4 flex-shrink-0" />
+                            <span className="truncate">
+                              Delete All Dependencies
+                            </span>
+                          </button>
+                        </PermissionGate>
                       </div>,
                       document.body,
                     );

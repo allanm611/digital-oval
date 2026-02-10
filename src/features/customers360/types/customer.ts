@@ -19,6 +19,44 @@ export interface Customer {
   last_computed_at?: string;
 }
 
+export interface Subscriber {
+  id: string;
+  subscriber_id?: string | number; // User-provided subscription ID (if backend stores it)
+  msisdn: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  country_code?: string | null;
+  timezone?: string | null;
+  subscriber_status?: string | null;
+  subscriber_type?: string | null;
+  is_active: boolean;
+  is_test_account?: boolean;
+  is_vip?: boolean;
+  kyc_verified?: boolean;
+  fraud_flag?: boolean;
+  language_preference?: string | null;
+  preferred_channel?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: unknown;
+}
+
+// Form data interface used in customer creation and edit modals
+export interface CustomerFormData {
+  subscriptionId: string;
+  firstName: string;
+  lastName: string;
+  msisdn: string;
+  email: string;
+  city: string;
+  customerType: string;
+  tariff: string;
+  status: string;
+  simType: string;
+}
+
 export interface CreateCustomerRequest {
   subscriber_id: number;
   msisdn: string;
@@ -45,7 +83,7 @@ export interface PaginationInfo {
 
 export interface CustomersListResponse {
   success: boolean;
-  data: Customer[];
+  data: Subscriber[];
   pagination?: PaginationInfo;
   total?: number;
   message?: string;

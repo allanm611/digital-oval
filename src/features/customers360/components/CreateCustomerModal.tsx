@@ -1,12 +1,20 @@
 import { useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus, Upload, Users, Download, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  X,
+  Plus,
+  Upload,
+  Users,
+  Download,
+  
+} from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { customerService } from "../services/customerServices";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
+import type { CustomerFormData } from "../types/customer";
 
 interface CreateCustomerModalProps {
   isOpen: boolean;
@@ -15,56 +23,20 @@ interface CreateCustomerModalProps {
   existingCustomers?: CustomerSubscriptionRecord[];
 }
 
-/**
- * Format phone number with country code
- * Detects Uganda (75x) or Kenya (74x) and adds appropriate prefix
- */
+type FormData = CustomerFormData;
+
+
 function formatPhoneNumber(msisdn: string): string {
   if (!msisdn) return msisdn;
 
-  const cleaned = msisdn.replace(/\D/g, ""); // Remove non-digits
+  // Remove non-digits and any + prefix
+  const cleaned = msisdn.replace(/\D/g, "");
 
-  // Already has country code
-  if (cleaned.startsWith("254") || cleaned.startsWith("256")) {
-    return `+${cleaned}`;
-  }
-
-  // Starts with 0 - detect country from next digits
-  if (cleaned.startsWith("0")) {
-    const nextTwoDigits = cleaned.substring(1, 3);
-
-    // Uganda: 75x, 76x, 77x, 78x, 70x (starting with 075, 076, 077, 078, 070)
-    if (nextTwoDigits.startsWith("7") && ["5", "6", "7", "8", "0"].includes(nextTwoDigits.charAt(1))) {
-      return `+256${cleaned.substring(1)}`;
-    }
-
-    // Kenya: 74x, 73x, 71x, 72x, etc.
-    if (nextTwoDigits.charAt(0) === "7" || nextTwoDigits.startsWith("1")) {
-      return `+254${cleaned.substring(1)}`;
-    }
-  }
-
-  // No leading 0, assume Kenya by default if starts with 7
-  if (cleaned.length === 9 && cleaned.startsWith("7")) {
-    return `+254${cleaned}`;
-  }
-
-  return `+254${cleaned}`; // Default to Kenya
+  // Return cleaned digits (validation happens in form validation)
+  return cleaned;
 }
 
 type TabType = "single" | "bulk" | "import";
-
-interface FormData {
-  firstName: string;
-  lastName: string;
-  msisdn: string;
-  email: string;
-  city: string;
-  customerType: string;
-  tariff: string;
-  status: string;
-  simType: string;
-}
 
 // Options from actual dummy data
 const CUSTOMER_TYPE_OPTIONS = [
@@ -105,6 +77,7 @@ const STATUS_OPTIONS = [
 ];
 
 const initialFormData: FormData = {
+  subscriptionId: "",
   firstName: "",
   lastName: "",
   msisdn: "",
@@ -119,9 +92,11 @@ const initialFormData: FormData = {
 /**
  * Get the next sequential subscription ID based on existing customers
  */
-function getNextSubscriptionId(existingCustomers: CustomerSubscriptionRecord[] = []): number {
+function getNextSubscriptionId(
+  existingCustomers: CustomerSubscriptionRecord[] = [],
+): number {
   if (existingCustomers.length === 0) return 1;
-  const maxId = Math.max(...existingCustomers.map(c => c.subscriptionId));
+  const maxId = Math.max(...existingCustomers.map((c) => c.subscriptionId));
   return maxId + 1;
 }
 
@@ -134,7 +109,7 @@ export default function CreateCustomerModal({
   const { success, error } = useToast();
   const nextSubscriptionId = useMemo(
     () => getNextSubscriptionId(existingCustomers),
-    [existingCustomers]
+    [existingCustomers],
   );
   const [activeTab, setActiveTab] = useState<TabType>("single");
   const [isLoading, setIsLoading] = useState(false);
@@ -142,7 +117,12 @@ export default function CreateCustomerModal({
   const [bulkText, setBulkText] = useState("");
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importFileDelimiter, setImportFileDelimiter] = useState(",");
-  const [importPreview, setImportPreview] = useState<{ valid: number; invalid: number; rows: any[]; headers: string[] } | null>(null);
+  const [importPreview, setImportPreview] = useState<{
+    valid: number;
+    invalid: number;
+    rows: any[];
+    headers: string[];
+  } | null>(null);
 
   // Real-time bulk data parsing and validation
   const bulkValidation = useMemo(() => {
@@ -150,19 +130,28 @@ export default function CreateCustomerModal({
       return { valid: 0, invalid: 0, rows: [], headers: [] };
     }
 
-    const lines = bulkText
-      .split("\n")
-      .filter((line) => line.trim());
+    const lines = bulkText.split("\n").filter((line) => line.trim());
 
-    const rows = lines.map((line, index) => {
+    const rows = lines.slice(1).map((line, index) => {
       const parts = line.split(",").map((p) => p.trim());
-      const hasMinimumFields = parts.length >= 3 && parts[0] && parts[1] && parts[2];
+      const hasMinimumFields =
+        parts.length >= 4 && parts[0] && parts[1] && parts[2] && parts[3];
 
       if (!hasMinimumFields) {
         return {
           rowNum: index + 1,
           valid: false,
-          error: "Missing required fields (FirstName, LastName, Phone)",
+          error: "Missing required fields (SubID, FirstName, LastName, Phone)",
+          data: parts,
+        };
+      }
+
+      // Validate subscription ID is numeric
+      if (!/^\d+$/.test(parts[0])) {
+        return {
+          rowNum: index + 1,
+          valid: false,
+          error: "Subscription ID must be numeric",
           data: parts,
         };
       }
@@ -175,23 +164,25 @@ export default function CreateCustomerModal({
           parts[0],
           parts[1],
           parts[2],
-          parts[3] || "—",
+          parts[3],
           parts[4] || "—",
-          parts[5] || "Non-member",
+          parts[5] || "—",
           parts[6] || "Non-member",
-          parts[7] || "Active",
-          parts[8] || "2FF",
+          parts[7] || "Non-member",
+          parts[8] || "Active",
+          parts[9] || "2FF",
         ],
         customer: {
-          firstName: parts[0],
-          lastName: parts[1],
-          msisdn: parts[2],
-          email: parts[3] || undefined,
-          city: parts[4] || undefined,
-          customerType: parts[5] || "Non-member",
-          tariff: parts[6] || "Non-member",
-          status: parts[7] || "Active",
-          simType: parts[8] || "2FF",
+          subscriptionId: parts[0],
+          firstName: parts[1],
+          lastName: parts[2],
+          msisdn: parts[3],
+          email: parts[4] || undefined,
+          city: parts[5] || undefined,
+          customerType: parts[6] || "Non-member",
+          tariff: parts[7] || "Non-member",
+          status: parts[8] || "Active",
+          simType: parts[9] || "2FF",
         },
       };
     });
@@ -203,7 +194,18 @@ export default function CreateCustomerModal({
       valid: validRows,
       invalid: invalidRows,
       rows,
-      headers: ["FirstName", "LastName", "Phone", "Email", "City", "CustomerType", "Tariff", "Status", "SimType"],
+      headers: [
+        "SubID",
+        "FirstName",
+        "LastName",
+        "Phone",
+        "Email",
+        "City",
+        "CustomerType",
+        "Tariff",
+        "Status",
+        "SimType",
+      ],
     };
   }, [bulkText]);
 
@@ -211,13 +213,28 @@ export default function CreateCustomerModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+
+    // Sanitize MSISDN: remove '+' prefix and keep only numbers
+    let sanitizedValue = value;
+    if (name === "msisdn") {
+      sanitizedValue = value.replace(/^\+/, "").replace(/\D/g, "");
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizedValue,
     }));
   };
 
   const validateSingleCustomer = (): boolean => {
+    if (!formData.subscriptionId.trim()) {
+      error("Validation Error", "Subscription ID is required");
+      return false;
+    }
+    if (!/^\d+$/.test(formData.subscriptionId)) {
+      error("Validation Error", "Subscription ID must be numeric");
+      return false;
+    }
     if (!formData.firstName.trim()) {
       error("Validation Error", "First name is required");
       return false;
@@ -230,6 +247,13 @@ export default function CreateCustomerModal({
       error("Validation Error", "Phone number is required");
       return false;
     }
+    if (formData.msisdn.length < 10 || formData.msisdn.length > 15) {
+      error(
+        "Validation Error",
+        "Phone number must be between 10 and 15 digits",
+      );
+      return false;
+    }
     return true;
   };
 
@@ -238,14 +262,11 @@ export default function CreateCustomerModal({
 
     setIsLoading(true);
     try {
-      // Format phone number with country code
-      const formattedMsisdn = formatPhoneNumber(formData.msisdn);
+      // Format phone number - removes + and keeps only digits
+      const msisdnForApi = formatPhoneNumber(formData.msisdn);
 
-      // API expects MSISDN without the '+' prefix (digits only)
-      const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
-
-      // Generate subscriber ID (using random for now, can be sequential if needed)
-      const subscriberId = Math.floor(Math.random() * 100000);
+      // Use user-provided subscription ID (converted to number)
+      const subscriberId = parseInt(formData.subscriptionId, 10);
 
       // Call API to create customer
       const apiResponse = await customerService.createCustomer({
@@ -264,18 +285,21 @@ export default function CreateCustomerModal({
 
       // Create local customer record for display (includes form-specific fields)
       // API returns subscriber_id as string, convert to number for consistency
-      const apiSubscriberId = typeof apiResponse.data.subscriber_id === "string"
-        ? parseInt(apiResponse.data.subscriber_id, 10)
-        : apiResponse.data.subscriber_id;
+      const apiSubscriberId =
+        typeof apiResponse.data.subscriber_id === "string"
+          ? parseInt(apiResponse.data.subscriber_id, 10)
+          : apiResponse.data.subscriber_id;
 
       const newCustomer: CustomerSubscriptionRecord = {
         customerId: apiSubscriberId,
-        subscriptionId: nextSubscriptionId,
+        subscriptionId: subscriberId,
         // Use API response attributes where available
-        firstName: apiResponse.data.attributes?.first_name || formData.firstName,
+        firstName:
+          apiResponse.data.attributes?.first_name || formData.firstName,
         lastName: apiResponse.data.attributes?.last_name || formData.lastName,
-        msisdn: formattedMsisdn,
-        email: apiResponse.data.attributes?.email || formData.email || undefined,
+        msisdn: msisdnForApi,
+        email:
+          apiResponse.data.attributes?.email || formData.email || undefined,
         // Frontend-only fields (not in API)
         city: formData.city || undefined,
         customerType: formData.customerType,
@@ -287,10 +311,7 @@ export default function CreateCustomerModal({
 
       // Add to local storage and state
       onCustomersAdded([newCustomer]);
-      success(
-        "Success",
-        `Customer ${formData.firstName} ${formData.lastName} created on backend and added to list`,
-      );
+      success("Success", "Customer added successfully");
 
       // Reset form
       setFormData(initialFormData);
@@ -319,25 +340,30 @@ export default function CreateCustomerModal({
         .slice(1); // Skip header if present
 
       // Prepare data for API
-      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] =
+        [];
       const customers: CustomerSubscriptionRecord[] = [];
-      let subscriptionIdCounter = nextSubscriptionId;
 
       for (const line of lines) {
         const parts = line.split(",").map((p) => p.trim());
-        if (parts.length < 3) continue; // Skip incomplete lines
+        if (parts.length < 4) continue; // Skip incomplete lines (need SubID, FirstName, LastName, Phone)
 
-        // Format MSISDN for API (digits only, no +)
-        const formattedMsisdn = formatPhoneNumber(parts[2]);
-        const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
+        // Validate subscription ID is numeric
+        if (!/^\d+$/.test(parts[0])) continue;
+
+        // Parse subscription ID from first column
+        const subscriptionId = parseInt(parts[0], 10);
+
+        // Format MSISDN for API - removes + and keeps only digits
+        const msisdnForApi = formatPhoneNumber(parts[3]);
 
         // Add to API profiles array
         profiles.push({
           msisdn: msisdnForApi,
           attributes: {
-            first_name: parts[0] || "Unknown",
-            last_name: parts[1] || "Customer",
-            email: parts[3] || undefined,
+            first_name: parts[1] || "Unknown",
+            last_name: parts[2] || "Customer",
+            email: parts[4] || undefined,
             device_type: "unknown",
             premium_user: false,
           },
@@ -345,21 +371,20 @@ export default function CreateCustomerModal({
 
         // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
-          customerId: Math.floor(Math.random() * 100000),
-          subscriptionId: subscriptionIdCounter,
-          firstName: parts[0] || "Unknown",
-          lastName: parts[1] || "Customer",
-          msisdn: formattedMsisdn,
-          email: parts[3] || undefined,
-          city: parts[4] || undefined,
-          customerType: parts[5] || "Non-member",
-          tariff: parts[6] || "Non-member",
-          status: parts[7] || "Active",
-          simType: parts[8] || "2FF",
+          customerId: subscriptionId,
+          subscriptionId: subscriptionId,
+          firstName: parts[1] || "Unknown",
+          lastName: parts[2] || "Customer",
+          msisdn: msisdnForApi,
+          email: parts[4] || undefined,
+          city: parts[5] || undefined,
+          customerType: parts[6] || "Non-member",
+          tariff: parts[7] || "Non-member",
+          status: parts[8] || "Active",
+          simType: parts[9] || "2FF",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
-        subscriptionIdCounter++;
       }
 
       if (customers.length === 0) {
@@ -405,25 +430,30 @@ export default function CreateCustomerModal({
         .slice(1);
 
       // Prepare data for API
-      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] =
+        [];
       const customers: CustomerSubscriptionRecord[] = [];
-      let subscriptionIdCounter = nextSubscriptionId;
 
       for (const line of lines) {
         const parts = line.split(importFileDelimiter).map((p) => p.trim());
-        if (parts.length < 3) continue;
+        if (parts.length < 4) continue;
 
-        // Format MSISDN for API (digits only, no +)
-        const formattedMsisdn = formatPhoneNumber(parts[2]);
-        const msisdnForApi = formattedMsisdn.replace(/\D/g, "");
+        // Validate subscription ID is numeric
+        if (!/^\d+$/.test(parts[0])) continue;
+
+        // Parse subscription ID from first column
+        const subscriptionId = parseInt(parts[0], 10);
+
+        // Format MSISDN for API - removes + and keeps only digits
+        const msisdnForApi = formatPhoneNumber(parts[3]);
 
         // Add to API profiles array
         profiles.push({
           msisdn: msisdnForApi,
           attributes: {
-            first_name: parts[0] || "Unknown",
-            last_name: parts[1] || "Customer",
-            email: parts[3] || undefined,
+            first_name: parts[1] || "Unknown",
+            last_name: parts[2] || "Customer",
+            email: parts[4] || undefined,
             device_type: "unknown",
             premium_user: false,
           },
@@ -431,21 +461,20 @@ export default function CreateCustomerModal({
 
         // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
-          customerId: Math.floor(Math.random() * 100000),
-          subscriptionId: subscriptionIdCounter,
-          firstName: parts[0] || "Unknown",
-          lastName: parts[1] || "Customer",
-          msisdn: formattedMsisdn,
-          email: parts[3] || undefined,
-          city: parts[4] || undefined,
-          customerType: parts[5] || "Non-member",
-          tariff: parts[6] || "Non-member",
-          status: parts[7] || "Active",
-          simType: parts[8] || "2FF",
+          customerId: subscriptionId,
+          subscriptionId: subscriptionId,
+          firstName: parts[1] || "Unknown",
+          lastName: parts[2] || "Customer",
+          msisdn: msisdnForApi,
+          email: parts[4] || undefined,
+          city: parts[5] || undefined,
+          customerType: parts[6] || "Non-member",
+          tariff: parts[7] || "Non-member",
+          status: parts[8] || "Active",
+          simType: parts[9] || "2FF",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
-        subscriptionIdCounter++;
       }
 
       if (customers.length === 0) {
@@ -528,7 +557,9 @@ export default function CreateCustomerModal({
                   key={id}
                   onClick={() => setActiveTab(id as TabType)}
                   className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-colors relative flex-shrink-0 ${
-                    isActive ? "text-black" : "text-gray-600 hover:text-gray-900"
+                    isActive
+                      ? "text-black"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -550,6 +581,38 @@ export default function CreateCustomerModal({
           {/* Single Customer Tab */}
           {activeTab === "single" && (
             <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Subscription ID *
+                  </label>
+                  <input
+                    type="text"
+                    name="subscriptionId"
+                    value={formData.subscriptionId}
+                    onChange={handleInputChange}
+                    placeholder="Enter Subscription ID"
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Phone Number (MSISDN) *
+                  </label>
+                  <input
+                    type="text"
+                    name="msisdn"
+                    value={formData.msisdn}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
@@ -581,22 +644,6 @@ export default function CreateCustomerModal({
                     className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Phone Number (MSISDN) *
-                </label>
-                <input
-                  type="text"
-                  name="msisdn"
-                  value={formData.msisdn}
-                  onChange={handleInputChange}
-                  placeholder="+254712345678"
-                  className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                />
               </div>
 
               <div>
@@ -719,7 +766,7 @@ export default function CreateCustomerModal({
                   Required Fields
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {["FirstName", "LastName", "Phone"].map((field) => (
+                  {["SubID", "FirstName", "LastName", "Phone"].map((field) => (
                     <span
                       key={field}
                       className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium"
@@ -748,9 +795,13 @@ export default function CreateCustomerModal({
                 <div className="mt-4 space-y-3">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
-                    <span className="text-green-600">{bulkValidation.valid} valid</span>
+                    <span className="text-green-600">
+                      {bulkValidation.valid} valid
+                    </span>
                     {bulkValidation.invalid > 0 && (
-                      <span className="text-red-600 ml-3">{bulkValidation.invalid} invalid</span>
+                      <span className="text-red-600 ml-3">
+                        {bulkValidation.invalid} invalid
+                      </span>
                     )}
                   </p>
 
@@ -760,7 +811,9 @@ export default function CreateCustomerModal({
                       {bulkValidation.rows
                         .filter((r) => !r.valid)
                         .map((row, idx) => (
-                          <p key={idx} className="text-red-600 mb-1">Row {row.rowNum}: {row.error}</p>
+                          <p key={idx} className="text-red-600 mb-1">
+                            Row {row.rowNum}: {row.error}
+                          </p>
                         ))}
                     </div>
                   )}
@@ -771,15 +824,21 @@ export default function CreateCustomerModal({
                       <label className="text-sm font-medium text-black mb-2 block">
                         Data Preview
                       </label>
-                      <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
+                      <div
+                        className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}
+                      >
                         <table className="w-full text-sm">
-                          <thead style={{ background: color.surface.tableHeader }}>
+                          <thead
+                            style={{ background: color.surface.tableHeader }}
+                          >
                             <tr>
                               {bulkValidation.headers.map((header, idx) => (
                                 <th
                                   key={idx}
                                   className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap border-b border-gray-200"
-                                  style={{ color: color.surface.tableHeaderText }}
+                                  style={{
+                                    color: color.surface.tableHeaderText,
+                                  }}
                                 >
                                   {header}
                                 </th>
@@ -793,10 +852,15 @@ export default function CreateCustomerModal({
                                 <tr
                                   key={idx}
                                   className="border-b border-gray-100 hover:bg-gray-50"
-                                  style={{ backgroundColor: color.surface.tablebodybg }}
+                                  style={{
+                                    backgroundColor: color.surface.tablebodybg,
+                                  }}
                                 >
                                   {row.data?.map((cell, cellIdx) => (
-                                    <td key={cellIdx} className="px-3 py-2 text-xs whitespace-nowrap">
+                                    <td
+                                      key={cellIdx}
+                                      className="px-3 py-2 text-xs whitespace-nowrap"
+                                    >
                                       {cell}
                                     </td>
                                   ))}
@@ -829,10 +893,10 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType
-Samuel,Kipchoge,0750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
-Mary,Wangari,0712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
-James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
+                    const sampleData = `SubID,FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType
+1001,Samuel,Kipchoge,0750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
+1002,Mary,Wangari,0712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
+1003,James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -863,8 +927,8 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                     : "Click to select or drag a CSV file"}
                 </p>
                 <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  CSV file with columns: FirstName, LastName, Phone, Email,
-                  City, CustomerType, Tariff, Status, SimType
+                  CSV file with columns: SubID, FirstName, LastName, Phone,
+                  Email, City, CustomerType, Tariff, Status, SimType
                 </p>
               </div>
               <input
@@ -880,18 +944,48 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                     const reader = new FileReader();
                     reader.onload = (event) => {
                       const content = event.target?.result as string;
-                      const lines = content.split("\n").filter((line) => line.trim());
-                      const headers = ["FirstName", "LastName", "Phone", "Email", "City", "CustomerType", "Tariff", "Status", "SimType"];
+                      const lines = content
+                        .split("\n")
+                        .filter((line) => line.trim());
+                      const headers = [
+                        "SubID",
+                        "FirstName",
+                        "LastName",
+                        "Phone",
+                        "Email",
+                        "City",
+                        "CustomerType",
+                        "Tariff",
+                        "Status",
+                        "SimType",
+                      ];
 
-                      const rows = lines.slice(0).map((line, index) => {
-                        const parts = line.split(importFileDelimiter).map((p) => p.trim());
-                        const hasMinimumFields = parts.length >= 3 && parts[0] && parts[1] && parts[2];
+                      const rows = lines.slice(1).map((line, index) => {
+                        const parts = line
+                          .split(importFileDelimiter)
+                          .map((p) => p.trim());
+                        const hasMinimumFields =
+                          parts.length >= 4 &&
+                          parts[0] &&
+                          parts[1] &&
+                          parts[2] &&
+                          parts[3];
 
                         if (!hasMinimumFields) {
                           return {
                             rowNum: index + 1,
                             valid: false,
                             error: "Missing required fields",
+                            data: parts,
+                          };
+                        }
+
+                        // Validate subscription ID is numeric
+                        if (!/^\d+$/.test(parts[0])) {
+                          return {
+                            rowNum: index + 1,
+                            valid: false,
+                            error: "Subscription ID must be numeric",
                             data: parts,
                           };
                         }
@@ -903,12 +997,13 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                             parts[0],
                             parts[1],
                             parts[2],
-                            parts[3] || "—",
+                            parts[3],
                             parts[4] || "—",
-                            parts[5] || "Non-member",
+                            parts[5] || "—",
                             parts[6] || "Non-member",
-                            parts[7] || "Active",
-                            parts[8] || "2FF",
+                            parts[7] || "Non-member",
+                            parts[8] || "Active",
+                            parts[9] || "2FF",
                           ],
                         };
                       });
@@ -931,15 +1026,18 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                 className="hidden"
               />
 
-
               {/* Import Preview */}
               {importPreview && (
                 <div className="mt-4 space-y-3">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">
-                    <span className="text-green-600">{importPreview.valid} valid</span>
+                    <span className="text-green-600">
+                      {importPreview.valid} valid
+                    </span>
                     {importPreview.invalid > 0 && (
-                      <span className="text-red-600 ml-3">{importPreview.invalid} invalid</span>
+                      <span className="text-red-600 ml-3">
+                        {importPreview.invalid} invalid
+                      </span>
                     )}
                   </p>
 
@@ -949,7 +1047,9 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                       {importPreview.rows
                         .filter((r) => !r.valid)
                         .map((row, idx) => (
-                          <p key={idx} className="text-red-600 mb-1">Row {row.rowNum}: {row.error}</p>
+                          <p key={idx} className="text-red-600 mb-1">
+                            Row {row.rowNum}: {row.error}
+                          </p>
                         ))}
                     </div>
                   )}
@@ -960,15 +1060,21 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                       <label className="text-sm font-medium text-black mb-2 block">
                         Data Preview
                       </label>
-                      <div className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}>
+                      <div
+                        className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}
+                      >
                         <table className="w-full text-sm">
-                          <thead style={{ background: color.surface.tableHeader }}>
+                          <thead
+                            style={{ background: color.surface.tableHeader }}
+                          >
                             <tr>
                               {importPreview.headers.map((header, idx) => (
                                 <th
                                   key={idx}
                                   className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider whitespace-nowrap border-b border-gray-200"
-                                  style={{ color: color.surface.tableHeaderText }}
+                                  style={{
+                                    color: color.surface.tableHeaderText,
+                                  }}
                                 >
                                   {header}
                                 </th>
@@ -982,10 +1088,15 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
                                 <tr
                                   key={idx}
                                   className="border-b border-gray-100 hover:bg-gray-50"
-                                  style={{ backgroundColor: color.surface.tablebodybg }}
+                                  style={{
+                                    backgroundColor: color.surface.tablebodybg,
+                                  }}
                                 >
                                   {row.data?.map((cell, cellIdx) => (
-                                    <td key={cellIdx} className="px-3 py-2 text-xs whitespace-nowrap">
+                                    <td
+                                      key={cellIdx}
+                                      className="px-3 py-2 text-xs whitespace-nowrap"
+                                    >
                                       {cell}
                                     </td>
                                   ))}
@@ -1031,7 +1142,11 @@ James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumz
             ) : (
               <>
                 <Plus className="w-4 h-4" />
-                Add Customer{activeTab === "bulk" ? "s" : ""}
+                {activeTab === "single"
+                  ? "Add Single Customer"
+                  : activeTab === "bulk"
+                    ? "Add Bulk"
+                    : "Add Bulk"}
               </>
             )}
           </button>

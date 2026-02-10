@@ -7,15 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Edit,
-  Trash2,
-  MessageSquare,
-  ArrowLeft,
-  Grid,
-  List,
-} from "lucide-react";
+import { Search, Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -26,6 +18,7 @@ import { campaignService } from "../services/campaignService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 import { BackendCampaignType } from "../types/campaign";
 import {
   FolderOpen,
@@ -788,7 +781,9 @@ export default function CampaignCategoriesPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <CreateButton onClick={handleCreateCategory} />
+          <PermissionGate permission="campaign-catalog.create">
+            <CreateButton onClick={handleCreateCategory} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -910,7 +905,11 @@ export default function CampaignCategoriesPage() {
               ? "Try adjusting your search terms"
               : "Create your first campaign catalog to organize your campaigns"}
           </p>
-          {!searchTerm && <CreateButton onClick={handleCreateCategory} />}
+          {!searchTerm && (
+            <PermissionGate permission="campaign-catalog.create">
+              <CreateButton onClick={handleCreateCategory} />
+            </PermissionGate>
+          )}
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -978,13 +977,15 @@ export default function CampaignCategoriesPage() {
                     );
                   })()}
                 </span>
-                <button
-                  onClick={() => handleViewCampaigns(category)}
-                  className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                  title="View & Assign Campaigns"
-                >
-                  View Campaigns
-                </button>
+                <PermissionGate permission="campaign-catalog-view.read">
+                  <button
+                    onClick={() => handleViewCampaigns(category)}
+                    className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                    title="View & Assign Campaigns"
+                  >
+                    View Campaigns
+                  </button>
+                </PermissionGate>
               </div>
             </div>
           ))}
@@ -1016,30 +1017,34 @@ export default function CampaignCategoriesPage() {
                       })()}
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleViewCampaigns(category)}
-                    className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                    title="View & Assign Campaigns"
-                  >
-                    View Campaigns
-                  </button>
+                  <PermissionGate permission="campaign-catalog-view.read">
+                    <button
+                      onClick={() => handleViewCampaigns(category)}
+                      className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                      title="View & Assign Campaigns"
+                    >
+                      View Campaigns
+                    </button>
+                  </PermissionGate>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
-                <button
-                  onClick={() => handleToggleActive(category)}
-                  disabled={togglingCategoryId === category.id}
-                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={category.is_active ? "Deactivate" : "Activate"}
-                >
-                  {togglingCategoryId === category.id ? (
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : category.is_active ? (
-                    <PowerOff className="w-4 h-4 text-orange-600" />
-                  ) : (
-                    <Power className="w-4 h-4 text-green-600" />
-                  )}
-                </button>
+                <PermissionGate permission="campaign-catalog.update">
+                  <button
+                    onClick={() => handleToggleActive(category)}
+                    disabled={togglingCategoryId === category.id}
+                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title={category.is_active ? "Deactivate" : "Activate"}
+                  >
+                    {togglingCategoryId === category.id ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : category.is_active ? (
+                      <PowerOff className="w-4 h-4 text-orange-600" />
+                    ) : (
+                      <Power className="w-4 h-4 text-green-600" />
+                    )}
+                  </button>
+                </PermissionGate>
                 <button
                   onClick={() => handleEditCategory(category)}
                   className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}

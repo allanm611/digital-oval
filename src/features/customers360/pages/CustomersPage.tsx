@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  Edit,
   X,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -20,40 +21,48 @@ import {
   formatMsisdn,
   getSubscriptionDisplayName,
 } from "../utils/customerSubscriptionHelpers";
-import {
-  customerSubscriptions,
-  searchCustomers as searchCustomersUtil,
-} from "../utils/customerDataService";
+import { searchCustomers as searchCustomersUtil } from "../utils/customerDataService";
 import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
+import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
+import EditCustomerModal from "../components/EditCustomerModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
-const pageSize = 10;
+const pageSize = 20;
 
 export default function CustomersPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { success: showSuccess, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isTimeout, setIsTimeout] = useState(false);
   const [page, setPage] = useState(1);
+
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] =
+    useState<CustomerSubscriptionRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Search modal state
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  // Customer creation modal state
+  // Customer creation/edit modal state
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
     useState(false);
-  const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>(
-    customerSubscriptions,
-  );
+  const [editingCustomer, setEditingCustomer] =
+    useState<CustomerSubscriptionRecord | null>(null);
+  const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
 
   // Load customers from API and localStorage on mount
   useEffect(() => {
@@ -61,126 +70,87 @@ export default function CustomersPage() {
       try {
         setIsLoading(true);
         setError("");
+        setIsTimeout(false);
 
-        // Fetch from API
-        let apiCustomers: CustomerSubscriptionRecord[] = [];
+        // Create timeout promise (10 second timeout)
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("TIMEOUT")), 10000),
+        );
+
+        // Fetch customers from API with timeout
         try {
-          const apiResponse = await customerService.getAllCustomers({
-            limit: 50,
-            offset: 0,
-            _t: Date.now(),
-          });
+          const apiResponse = await Promise.race([
+            customerService.getAllCustomers({
+              limit: 50,
+              offset: 0,
+            }),
+            timeoutPromise,
+          ]);
+
           if (
             apiResponse.success &&
             apiResponse.data &&
             Array.isArray(apiResponse.data)
           ) {
             // Convert API customers to local format
-            apiCustomers = apiResponse.data.map((apiCustomer) => {
-              const subscriberId =
-                typeof apiCustomer.subscriber_id === "string"
-                  ? parseInt(apiCustomer.subscriber_id, 10)
-                  : apiCustomer.subscriber_id;
+            const apiCustomers = apiResponse.data.map((apiCustomer) => {
+              const customerId =
+                typeof apiCustomer.id === "string"
+                  ? parseInt(apiCustomer.id, 10)
+                  : apiCustomer.id;
+
+              // Try to get subscriber_id from API response, fallback to id
+              // This allows for future backend update without frontend change
+              const subscriberId = (apiCustomer as any).subscriber_id
+                ? typeof (apiCustomer as any).subscriber_id === "string"
+                  ? parseInt((apiCustomer as any).subscriber_id, 10)
+                  : (apiCustomer as any).subscriber_id
+                : customerId;
+
               return {
-                customerId: subscriberId,
+                customerId: customerId,
                 subscriptionId: subscriberId,
-                firstName: apiCustomer.attributes?.first_name || "Unknown",
-                lastName: apiCustomer.attributes?.last_name || "Customer",
+                firstName: apiCustomer.first_name || "Unknown",
+                lastName: apiCustomer.last_name || "Customer",
                 msisdn: apiCustomer.msisdn,
-                email: apiCustomer.attributes?.email,
-                city: undefined,
-                customerType: "Non-member",
-                tariff: "Non-member",
-                status: "Active",
+                email: apiCustomer.email,
+                city: apiCustomer.city,
+                customerType: apiCustomer.subscriber_type || "prepaid",
+                tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+                status: apiCustomer.subscriber_status || "active",
                 simType: "2FF",
                 activationDate: apiCustomer.created_at,
               };
             });
+            setCustomers(apiCustomers);
           }
-        } catch (apiError) {
-          console.warn("Could not load customers from API:", apiError);
-        }
-
-        // Load persisted customers from localStorage
-        let persistedCustomers: CustomerSubscriptionRecord[] = [];
-        try {
-          const saved = localStorage.getItem("customers_360_data");
-          if (saved) {
-            const parsed = JSON.parse(saved) as CustomerSubscriptionRecord[];
-            if (Array.isArray(parsed)) {
-              persistedCustomers = parsed.filter(
-                (record) =>
-                  record.customerId !== undefined &&
-                  record.subscriptionId !== undefined,
-              );
-            }
-          }
-        } catch (storageError) {
-          console.error(
-            "Failed to load customer data from localStorage:",
-            storageError,
-          );
-        }
-
-        // Merge API and persisted customers (deduplicate by customerId)
-        // Priority order: API data first, then localStorage, then JSON dummy data
-        const allCustomers: CustomerSubscriptionRecord[] = [];
-        const seenIds = new Set<number>();
-
-        // Add API customers first (highest priority)
-        for (const apiCustomer of apiCustomers) {
-          allCustomers.push(apiCustomer);
-          seenIds.add(apiCustomer.customerId);
-        }
-
-        // Add persisted customers (bulk/import)
-        for (const persistedCustomer of persistedCustomers) {
-          if (!seenIds.has(persistedCustomer.customerId)) {
-            allCustomers.push(persistedCustomer);
-            seenIds.add(persistedCustomer.customerId);
+        } catch (apiError: any) {
+          if (apiError.message === "TIMEOUT") {
+            setIsTimeout(true);
+            showError(
+              "Network Timeout",
+              "Backend server may be unresponsive. Please try again.",
+            );
+          } else {
+            console.error("Failed to load customers from API:", apiError);
+            showError(
+              "Failed to Load Customers",
+              "Unable to retrieve customers. Please try again.",
+            );
           }
         }
-
-        // Add JSON dummy data last (lowest priority)
-        for (const jsonCustomer of customerSubscriptions) {
-          if (!seenIds.has(jsonCustomer.customerId)) {
-            allCustomers.push(jsonCustomer);
-            seenIds.add(jsonCustomer.customerId);
-          }
-        }
-
-        setCustomers(allCustomers);
         setIsLoading(false);
       } catch (error) {
         console.error("Failed to load customers:", error);
-        setError("Failed to load customers");
+        showError("Error", "Failed to load customers");
         setIsLoading(false);
       }
     };
 
     loadCustomers();
-  }, []);
-
-  // Auto-save customers to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem("customers_360_data", JSON.stringify(customers));
-    } catch (error) {
-      console.error("Failed to save customer data to localStorage:", error);
-    }
-  }, [customers]);
+  }, [showError]);
 
   const dataset = customers;
-
-  // Simulate async loading when inputs change (placeholder until API wiring exists)
-  useEffect(() => {
-    setIsLoading(true);
-    setError("");
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
 
   useEffect(() => {
     setPage(1);
@@ -397,6 +367,61 @@ export default function CustomersPage() {
     setIsCreateCustomerModalOpen(false);
   };
 
+  const handleViewCustomer = async (customer: CustomerSubscriptionRecord) => {
+    try {
+      // Fetch full customer details from API
+      await customerService.getCustomerById(customer.customerId);
+      // Then navigate to detail view
+      handleSelectCustomer(customer);
+    } catch (err) {
+      showError("Error", "Failed to load customer details");
+    }
+  };
+
+  const handleEditCustomer = (customer: CustomerSubscriptionRecord) => {
+    // Open edit modal with customer data
+    setEditingCustomer(customer);
+  };
+
+  const handleCustomerUpdated = (
+    updatedCustomer: CustomerSubscriptionRecord,
+  ) => {
+    // Update customer in local state
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.customerId === updatedCustomer.customerId ? updatedCustomer : c,
+      ),
+    );
+    setEditingCustomer(null);
+  };
+
+  const handleDeleteCustomer = (customer: CustomerSubscriptionRecord) => {
+    setCustomerToDelete(customer);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!customerToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await customerService.deleteCustomer(customerToDelete.customerId);
+
+      // Remove customer from local state
+      setCustomers((prev) =>
+        prev.filter((c) => c.customerId !== customerToDelete.customerId),
+      );
+
+      showSuccess("Success", "Customer deleted successfully");
+      setDeleteModalOpen(false);
+      setCustomerToDelete(null);
+    } catch (err) {
+      showError("Error", "Failed to delete customer");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleOpenSearchModal = () => {
     setModalSearchTerm(searchTerm); // Pre-fill with current search if exists
     setIsSearchModalOpen(true);
@@ -501,50 +526,68 @@ export default function CustomersPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {statCards.map(({ title, value, helper, icon: Icon }) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map(({ title, value, icon: Icon }) => (
           <div
             key={title}
-            className={`${tw.rounded} border border-gray-100 bg-white p-5 shadow-sm`}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <p className={`${tw.textMuted} text-xs font-semibold uppercase`}>
-                {title}
-              </p>
-              <div
-                className="rounded-full p-2"
-                style={{ backgroundColor: `${color.primary.accent}20` }}
-              >
-                <Icon
-                  className="h-4 w-4"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <Icon
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">{title}</p>
             </div>
-            <p className="mt-3 text-2xl font-bold text-gray-900">{value}</p>
-            <p className={`${tw.textSecondary} mt-1 text-xs`}>{helper}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
           </div>
         ))}
       </div>
 
       {/* Table card */}
       <div>
-        {error ? (
-          <div className="px-6 py-10 text-center text-sm text-red-500">
-            {error}
-          </div>
-        ) : isLoading ? (
-          <div className="flex flex-col items-center justify-center px-6 py-16">
-            <LoadingSpinner variant="modern" size="lg" />
-            <p className={`${tw.textMuted} mt-4 text-sm`}>
-              {t.customer360.preparingCustomerData}
+        {isLoading || isDeleting ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <LoadingSpinner
+              variant="modern"
+              size="xl"
+              color="primary"
+              className="mb-4"
+            />
+            <p className={`${tw.textMuted} font-medium text-sm`}>
+              {isDeleting
+                ? "Deleting customer..."
+                : t.customer360.preparingCustomerData}
             </p>
           </div>
+        ) : customers.length === 0 && !hasSearchFilters ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className={`${tw.textSecondary}`}>
+                {t.customer360.noCustomersMatch}
+              </p>
+              <div className="mt-4">
+                <PermissionGate permission="customer.create">
+                  <button
+                    onClick={() => setIsCreateCustomerModalOpen(true)}
+                    className={`${tw.button} flex items-center gap-2 mx-auto`}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {t.customer360.addCustomer}
+                  </button>
+                </PermissionGate>
+              </div>
+            </div>
+          </div>
         ) : paginatedResults.length === 0 ? (
-          <div className="px-6 py-16 text-center text-sm text-gray-500">
-            {hasSearchFilters
-              ? t.customer360.noCustomersMatch
-              : t.customer360.startBySearching}
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className={`${tw.textSecondary}`}>
+                {hasSearchFilters
+                  ? t.customer360.noCustomersMatch
+                  : t.customer360.startBySearching}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -579,7 +622,7 @@ export default function CustomersPage() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedResults.map((row) => {
+                {paginatedResults.map((row, index) => {
                   const name = getSubscriptionDisplayName(
                     row,
                     `Customer ${row.customerId}`,
@@ -587,7 +630,9 @@ export default function CustomersPage() {
                   const status = row.status ?? "Unknown";
 
                   return (
-                    <tr key={`${row.customerId}-${row.subscriptionId}`}>
+                    <tr
+                      key={`${row.customerId}-${row.subscriptionId}-${index}`}
+                    >
                       <td
                         className="rounded-l-md px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
@@ -598,7 +643,7 @@ export default function CustomersPage() {
                         className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
-                        {formatMsisdn(row.msisdn)}
+                        {row.msisdn}
                       </td>
                       <td className="px-6 py-5 text-sm" style={cellBackground}>
                         <button
@@ -651,15 +696,39 @@ export default function CustomersPage() {
                         className="rounded-r-md px-6 py-5 text-sm text-right"
                         style={cellBackground}
                       >
-                        <PermissionGate permission="customer.read">
-                          <button
-                            type="button"
-                            onClick={() => handleSelectCustomer(row)}
-                            className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </PermissionGate>
+                        <div className="flex items-center justify-end gap-2">
+                          <PermissionGate permission="customer.read">
+                            <button
+                              type="button"
+                              onClick={() => handleViewCustomer(row)}
+                              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                              title="View customer"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </PermissionGate>
+                          <PermissionGate permission="customer.update">
+                            <button
+                              type="button"
+                              onClick={() => handleEditCustomer(row)}
+                              className="inline-flex items-center justify-center p-2 text-gray-700 hover:text-gray-900 transition-colors"
+                              title="Edit customer"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          </PermissionGate>
+                          {/* Delete button - commented out as CVM platforms typically don't delete customers */}
+                          {/* <PermissionGate permission="customer.delete">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCustomer(row)}
+                              className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-800 transition-colors"
+                              title="Delete customer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </PermissionGate> */}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -832,12 +901,35 @@ export default function CustomersPage() {
         </div>
       </RegularModal>
 
-      {/* Create customer modal */}
+      {/* Create/Edit customer modals */}
       <CreateCustomerModal
         isOpen={isCreateCustomerModalOpen}
         onClose={() => setIsCreateCustomerModalOpen(false)}
         onCustomersAdded={handleCustomersAdded}
         existingCustomers={customers}
+      />
+
+      <EditCustomerModal
+        isOpen={editingCustomer !== null}
+        onClose={() => setEditingCustomer(null)}
+        customer={editingCustomer}
+        onCustomerUpdated={handleCustomerUpdated}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        title="Delete Customer"
+        description="This customer and all their data will be permanently deleted. This action cannot be undone."
+        itemName={`${customerToDelete?.firstName} ${customerToDelete?.lastName}`}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setCustomerToDelete(null);
+        }}
+        isLoading={isDeleting}
+        confirmText="Delete"
+        cancelText="Cancel"
       />
 
       {/* Advanced filters modal */}

@@ -932,7 +932,7 @@ export default function ProductCatalogsPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <PermissionGate permission="products.create">
+          <PermissionGate permission="product-catalog.create">
             <CreateButton onClick={() => setShowCreateModal(true)} />
           </PermissionGate>
         </div>
@@ -1175,7 +1175,7 @@ export default function ProductCatalogsPage() {
               : "Create your first product catalog to organize your products"}
           </p>
           {!searchTerm && (
-            <PermissionGate permission="products.create">
+            <PermissionGate permission="product-catalog.create">
               <CreateButton onClick={() => setShowCreateModal(true)} />
             </PermissionGate>
           )}
@@ -1192,24 +1192,26 @@ export default function ProductCatalogsPage() {
                   {category.name}
                 </h3>
                 <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handleToggleActive(category)}
-                    disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={
-                      category.is_active
-                        ? t.productCatalogs.deactivate
-                        : t.productCatalogs.activate
-                    }
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  <PermissionGate permission="product-catalog.update">
+                    <button
+                      onClick={() => handleToggleActive(category)}
+                      disabled={togglingCategoryId === category.id}
+                      className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                      title={
+                        category.is_active
+                          ? t.productCatalogs.deactivate
+                          : t.productCatalogs.activate
+                      }
+                    >
+                      {togglingCategoryId === category.id ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : category.is_active ? (
+                        <PowerOff className="w-4 h-4 text-orange-600" />
+                      ) : (
+                        <Power className="w-4 h-4 text-green-600" />
+                      )}
+                    </button>
+                  </PermissionGate>
                   <PermissionGate permission="products.update">
                     <button
                       onClick={() => handleEditCatalog(category)}
@@ -1247,13 +1249,15 @@ export default function ProductCatalogsPage() {
                       products
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleViewProducts(category)}
-                    className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                    title={t.productCatalogs.viewProducts}
-                  >
-                    View Products
-                  </button>
+                  <PermissionGate permission="product-catalog-view.read">
+                    <button
+                      onClick={() => handleViewProducts(category)}
+                      className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                      title={t.productCatalogs.viewProducts}
+                    >
+                      View Products
+                    </button>
+                  </PermissionGate>
                 </div>
                 {(() => {
                   const performance = categoryPerformance[category.id];
@@ -1343,30 +1347,34 @@ export default function ProductCatalogsPage() {
                       return null;
                     })()}
                   </div>
-                  <button
-                    onClick={() => handleViewProducts(category)}
-                    className={tw.borderedButton}
-                    title={t.productCatalogs.viewProducts}
-                  >
-                    View Products
-                  </button>
+                  <PermissionGate permission="product-catalog-view.read">
+                    <button
+                      onClick={() => handleViewProducts(category)}
+                      className={tw.borderedButton}
+                      title={t.productCatalogs.viewProducts}
+                    >
+                      View Products
+                    </button>
+                  </PermissionGate>
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-200">
-                <button
-                  onClick={() => handleToggleActive(category)}
-                  disabled={togglingCategoryId === category.id}
-                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={category.is_active ? "Deactivate" : "Activate"}
-                >
-                  {togglingCategoryId === category.id ? (
-                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                  ) : category.is_active ? (
-                    <PowerOff className="w-4 h-4 text-orange-600" />
-                  ) : (
-                    <Power className="w-4 h-4 text-green-600" />
-                  )}
-                </button>
+                <PermissionGate permission="product-catalog.update">
+                  <button
+                    onClick={() => handleToggleActive(category)}
+                    disabled={togglingCategoryId === category.id}
+                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                    title={category.is_active ? "Deactivate" : "Activate"}
+                  >
+                    {togglingCategoryId === category.id ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : category.is_active ? (
+                      <PowerOff className="w-4 h-4 text-orange-600" />
+                    ) : (
+                      <Power className="w-4 h-4 text-green-600" />
+                    )}
+                  </button>
+                </PermissionGate>
                 <PermissionGate permission="products.update">
                   <button
                     onClick={() => handleEditCatalog(category)}

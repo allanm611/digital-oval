@@ -721,32 +721,38 @@ export default function ServersPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                // Entering selection mode - select all visible servers
-                setIsSelectionMode(true);
-                setSelectedServerIds(new Set(visibleIds));
-              } else {
-                // Exiting selection mode - clear selection
-                setIsSelectionMode(false);
-                setSelectedServerIds(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? <CheckSquare size={16} /> : <Square size={16} />}
-            {isSelectionMode
-              ? t.servers.exitSelection
-              : t.servers.selectServers}
-          </button>
+          <PermissionGate permission="servers.select">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  // Entering selection mode - select all visible servers
+                  setIsSelectionMode(true);
+                  setSelectedServerIds(new Set(visibleIds));
+                } else {
+                  // Exiting selection mode - clear selection
+                  setIsSelectionMode(false);
+                  setSelectedServerIds(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              {isSelectionMode ? (
+                <CheckSquare size={16} />
+              ) : (
+                <Square size={16} />
+              )}
+              {isSelectionMode
+                ? t.servers.exitSelection
+                : t.servers.selectServers}
+            </button>
+          </PermissionGate>
           <PermissionGate permission="servers.create">
             <CreateButton route="/dashboard/servers/new" />
           </PermissionGate>
@@ -1161,39 +1167,41 @@ export default function ServersPage() {
                                   </button>
 
                                   {/* Deprecate Option */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      handleDeprecationToggle(server, e);
-                                      setOpenMenuId(null);
-                                      setMenuPosition(null);
-                                    }}
-                                    disabled={deprecateLoading}
-                                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors border-t border-gray-100 ${
-                                      deprecateLoading ? "opacity-50" : ""
-                                    } text-purple-600`}
-                                    title={
-                                      server.is_deprecated
-                                        ? "Undeprecate"
-                                        : "Deprecate"
-                                    }
-                                  >
-                                    {deprecateLoading ? (
-                                      <Loader2
-                                        size={14}
-                                        className="animate-spin"
-                                      />
-                                    ) : server.is_deprecated ? (
-                                      <RotateCcw size={14} />
-                                    ) : (
-                                      <Archive size={14} />
-                                    )}
-                                    <span>
-                                      {server.is_deprecated
-                                        ? "Undeprecate"
-                                        : "Deprecate"}
-                                    </span>
-                                  </button>
+                                  <PermissionGate permission="servers.delete">
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        handleDeprecationToggle(server, e);
+                                        setOpenMenuId(null);
+                                        setMenuPosition(null);
+                                      }}
+                                      disabled={deprecateLoading}
+                                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors border-t border-gray-100 ${
+                                        deprecateLoading ? "opacity-50" : ""
+                                      } text-purple-600`}
+                                      title={
+                                        server.is_deprecated
+                                          ? "Undeprecate"
+                                          : "Deprecate"
+                                      }
+                                    >
+                                      {deprecateLoading ? (
+                                        <Loader2
+                                          size={14}
+                                          className="animate-spin"
+                                        />
+                                      ) : server.is_deprecated ? (
+                                        <RotateCcw size={14} />
+                                      ) : (
+                                        <Archive size={14} />
+                                      )}
+                                      <span>
+                                        {server.is_deprecated
+                                          ? "Undeprecate"
+                                          : "Deprecate"}
+                                      </span>
+                                    </button>
+                                  </PermissionGate>
                                 </div>,
                                 document.body,
                               )}

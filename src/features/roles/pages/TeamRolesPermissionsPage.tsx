@@ -13,6 +13,8 @@ import {
   Search,
   Square,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -121,8 +123,11 @@ export default function TeamRolesPermissionsPage() {
   const [permissionsPaginationModel, setPermissionsPaginationModel] =
     useState<PaginationModel>({
       page: 0,
-      pageSize: 25,
+      pageSize: 20, // Display 20 per page in frontend
     });
+
+  // Backend fetches 100 at a time for permissions table
+  const PERMISSIONS_BACKEND_LIMIT = 100;
 
   // Modals state
   const [roleFormOpen, setRoleFormOpen] = useState(false);
@@ -359,10 +364,17 @@ export default function TeamRolesPermissionsPage() {
 
     try {
       setPermissionsLoading(true);
+
+      // Calculate which backend batch we need based on current page
+      const currentBackendPage = Math.floor(
+        (permissionsPaginationModel.page *
+          permissionsPaginationModel.pageSize) /
+          PERMISSIONS_BACKEND_LIMIT,
+      );
+
       const permissionsArray = await permissionService.getActivePermissions({
-        limit: permissionsPaginationModel.pageSize,
-        offset:
-          permissionsPaginationModel.page * permissionsPaginationModel.pageSize,
+        limit: PERMISSIONS_BACKEND_LIMIT, // Always fetch 100 from backend
+        offset: currentBackendPage * PERMISSIONS_BACKEND_LIMIT,
         skipCache: true,
       });
 
@@ -957,6 +969,72 @@ export default function TeamRolesPermissionsPage() {
                   ))}
                 </tbody>
               </table>
+              {/* Pagination Controls */}
+              {filteredPermissions.length > 0 && (
+                <div
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-t"
+                  style={{ borderColor: "#e5e7eb" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <label
+                      htmlFor="permPageSize"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Per page:
+                    </label>
+                    <select
+                      id="permPageSize"
+                      value={permissionsPaginationModel.pageSize}
+                      onChange={(e) => {
+                        setPermissionsPaginationModel({
+                          page: 0,
+                          pageSize: Number(e.target.value),
+                        });
+                      }}
+                      className={`px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none`}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setPermissionsPaginationModel((prev) => ({
+                          ...prev,
+                          page: Math.max(0, prev.page - 1),
+                        }))
+                      }
+                      disabled={permissionsPaginationModel.page === 0}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: "#e5e7eb" }}
+                      title="Previous page"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
+                      Page {permissionsPaginationModel.page + 1}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setPermissionsPaginationModel((prev) => ({
+                          ...prev,
+                          page: prev.page + 1,
+                        }))
+                      }
+                      disabled={filteredPermissions.length < permissionsPaginationModel.pageSize}
+                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      style={{ borderColor: "#e5e7eb" }}
+                      title="Next page"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

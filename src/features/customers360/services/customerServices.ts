@@ -6,7 +6,8 @@ import {
   CustomersListResponse,
 } from "../types/customer";
 
-const BASE_URL = `${API_CONFIG.BASE_URL}/subscriber-360`;
+// const BASE_URL = `${API_CONFIG.BASE_URL}/subscriber-360`;
+const BASE_URL = `${API_CONFIG.BASE_URL}/subscribers`;
 const BULK_CREATE_URL = `${API_CONFIG.BASE_URL}/subscribers/bulk-create`;
 
 class CustomerService {
@@ -126,10 +127,6 @@ class CustomerService {
     return response.json();
   }
 
-  /**
-   * Get all customers with pagination
-   * GET /subscriber-360?limit=50&offset=0
-   */
   async getAllCustomers(params?: {
     limit?: number;
     offset?: number;
@@ -140,10 +137,24 @@ class CustomerService {
         if (params.limit) queryParams.append("limit", String(params.limit));
         if (params.offset) queryParams.append("offset", String(params.offset));
       }
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
 
-      const response = await this.request<CustomersListResponse>(`${query}`);
-      return response;
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+      const url = `${BASE_URL}${query}`;
+
+      const response = await fetch(url, {
+        headers: {
+          ...getAuthHeaders(),
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
+
+      if (!response.ok && response.status !== 304) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       throw error;

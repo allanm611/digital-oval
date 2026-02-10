@@ -2,29 +2,24 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Download,
-  Eye,
   BarChart3,
   Play,
-  RefreshCw,
   Search,
   ChevronDown,
   FileText,
   CheckCircle,
-  AlertCircle,
-  Clock,
   Upload,
   X,
 } from "lucide-react";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
 import { useToast } from "../../../contexts/ToastContext";
-import { useAuth } from "../../../contexts/AuthContext";
-import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import FetchControlsModal from "../components/FetchControlsModal";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const PAGE_SIZE = 15;
 
@@ -34,9 +29,8 @@ type FetchMode = "immediate" | "by-time" | "by-range";
 
 export default function EtlFileRegistryPage() {
   const { error: showError, success } = useToast();
-  const { user } = useAuth();
-  const { confirm } = useConfirm();
-  const { t } = useLanguage();
+  const languageContext = useLanguage();
+  const t = languageContext.t as Record<string, Record<string, string>>;
   const navigate = useNavigate();
 
   // Fetch controls modal
@@ -123,38 +117,6 @@ export default function EtlFileRegistryPage() {
     setPage(1);
   }, [statusFilter, categoryFilter]);
 
-  const handleReprocess = async (file: EtlFileRegistryRowType) => {
-    const confirmed = await confirm({
-      title: t.etl.reprocessFile,
-      message: `${t.etl.reprocessFileConfirmation.replace("{fileName}", file.file_name)}`,
-      type: "info",
-      confirmText: t.etl.reprocess,
-      cancelText: t.common.cancel,
-    });
-
-    if (!confirmed) return;
-
-    try {
-      const response = await etlService.reprocessFile({
-        id: file.id,
-        user_id: user?.user_id,
-      });
-
-      if (response.success) {
-        success(
-          t.etl.fileReprocessed,
-          `${file.file_name} ${t.etl.fileReprocessed}.`,
-        );
-        await loadRegistry();
-      }
-    } catch (err) {
-      showError(
-        t.etl.failedToReprocessFile,
-        (err as Error).message || t.etl.pleaseRetry,
-      );
-    }
-  };
-
   const handleFetchModalOpen = (mode: FetchMode) => {
     setFetchModalMode(mode);
     setIsFetchModalOpen(true);
@@ -206,7 +168,10 @@ export default function EtlFileRegistryPage() {
               type="button"
               onClick={() => setShowFetchDropdown(!showFetchDropdown)}
               className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-              style={{ backgroundColor: color.primary.action, padding: `${button.action.paddingY} ${button.action.paddingX}` }}
+              style={{
+                backgroundColor: color.primary.action,
+                padding: `${button.action.paddingY} ${button.action.paddingX}`,
+              }}
             >
               <Play className="h-4 w-4" />
               {t.etl.fetchControlsButton}
@@ -247,15 +212,20 @@ export default function EtlFileRegistryPage() {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsUploadModalOpen(true)}
-            className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
-            style={{ backgroundColor: color.primary.action, padding: `${button.action.paddingY} ${button.action.paddingX}` }}
-          >
-            <Upload className="h-4 w-4" />
-            Upload
-          </button>
+          <PermissionGate permission="etl.create">
+            <button
+              type="button"
+              onClick={() => setIsUploadModalOpen(true)}
+              className={`inline-flex items-center gap-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+              style={{
+                backgroundColor: color.primary.action,
+                padding: `${button.action.paddingY} ${button.action.paddingX}`,
+              }}
+            >
+              <Upload className="h-4 w-4" />
+              Upload
+            </button>
+          </PermissionGate>
 
           <button
             type="button"
@@ -273,97 +243,123 @@ export default function EtlFileRegistryPage() {
       </div>
 
       {/* Stats Cards */}
-      {!isLoadingStats && stats && (() => {
-        const statsArray = Array.isArray(stats.data) ? stats.data : [];
+      {!isLoadingStats &&
+        stats &&
+        (() => {
+          const statsArray = Array.isArray(stats.data) ? stats.data : [];
 
-        const totalCdrFiles = statsArray
-          .filter((row: any) => row.file_category === "CDR")
-          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+          const totalCdrFiles = statsArray
+            .filter((row: Record<string, unknown>) => row.file_category === "CDR")
+            .reduce(
+              (sum: number, row: Record<string, unknown>) =>
+                sum + parseInt((row.file_count as string) || "0", 10),
+              0,
+            );
 
-        const totalTdrFiles = statsArray
-          .filter((row: any) => row.file_category === "TDR")
-          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+          const totalTdrFiles = statsArray
+            .filter((row: Record<string, unknown>) => row.file_category === "TDR")
+            .reduce(
+              (sum: number, row: Record<string, unknown>) =>
+                sum + parseInt((row.file_count as string) || "0", 10),
+              0,
+            );
 
-        const completedCdrFiles = statsArray
-          .filter((row: any) => row.file_category === "CDR" && row.processing_status === "completed")
-          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+          const completedCdrFiles = statsArray
+            .filter(
+              (row: Record<string, unknown>) =>
+                row.file_category === "CDR" &&
+                row.processing_status === "completed",
+            )
+            .reduce(
+              (sum: number, row: Record<string, unknown>) =>
+                sum + parseInt((row.file_count as string) || "0", 10),
+              0,
+            );
 
-        const completedTdrFiles = statsArray
-          .filter((row: any) => row.file_category === "TDR" && row.processing_status === "completed")
-          .reduce((sum: number, row: any) => sum + parseInt(row.file_count || "0", 10), 0);
+          const completedTdrFiles = statsArray
+            .filter(
+              (row: Record<string, unknown>) =>
+                row.file_category === "TDR" &&
+                row.processing_status === "completed",
+            )
+            .reduce(
+              (sum: number, row: Record<string, unknown>) =>
+                sum + parseInt((row.file_count as string) || "0", 10),
+              0,
+            );
 
-        return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <FileText
-                  className="h-5 w-5"
-                  style={{ color: color.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  Total CDR Files
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Total CDR Files
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {totalCdrFiles}
                 </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {totalCdrFiles}
-              </p>
-            </div>
 
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <FileText
-                  className="h-5 w-5"
-                  style={{ color: color.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  Total TDR Files
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Total TDR Files
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {totalTdrFiles}
                 </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {totalTdrFiles}
-              </p>
-            </div>
 
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle
-                  className="h-5 w-5"
-                  style={{ color: color.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  Completed CDR
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Completed CDR
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {completedCdrFiles}
                 </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {completedCdrFiles}
-              </p>
-            </div>
 
-            <div
-              className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-            >
-              <div className="flex items-center gap-2">
-                <CheckCircle
-                  className="h-5 w-5"
-                  style={{ color: color.primary.accent }}
-                />
-                <p className="text-sm font-medium text-gray-600">
-                  Completed TDR
+              <div
+                className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle
+                    className="h-5 w-5"
+                    style={{ color: color.primary.accent }}
+                  />
+                  <p className="text-sm font-medium text-gray-600">
+                    Completed TDR
+                  </p>
+                </div>
+                <p className="mt-2 text-3xl font-bold text-gray-900">
+                  {completedTdrFiles}
                 </p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">
-                {completedTdrFiles}
-              </p>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Filters */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -423,13 +419,23 @@ export default function EtlFileRegistryPage() {
             >
               <thead style={{ background: color.surface.tableHeader }}>
                 <tr className="text-left text-xs uppercase tracking-wide text-black">
-                  <th className="px-6 py-4 font-medium">{t.etl.fileNameHeader}</th>
-                  <th className="px-6 py-4 font-medium">{t.etl.categoryHeader}</th>
-                  <th className="px-6 py-4 font-medium">{t.etl.statusHeader}</th>
+                  <th className="px-6 py-4 font-medium">
+                    {t.etl.fileNameHeader}
+                  </th>
+                  <th className="px-6 py-4 font-medium">
+                    {t.etl.categoryHeader}
+                  </th>
+                  <th className="px-6 py-4 font-medium">
+                    {t.etl.statusHeader}
+                  </th>
                   <th className="px-6 py-4 font-medium">Total Rows</th>
-                  <th className="px-6 py-4 font-medium">{t.etl.rowsProcessedHeader}</th>
+                  <th className="px-6 py-4 font-medium">
+                    {t.etl.rowsProcessedHeader}
+                  </th>
                   <th className="px-6 py-4 font-medium">{t.etl.sizeHeader}</th>
-                  <th className="px-6 py-4 font-medium">{t.etl.updatedHeader}</th>
+                  <th className="px-6 py-4 font-medium">
+                    {t.etl.updatedHeader}
+                  </th>
                   {/* <th className="px-6 py-4 text-right font-medium">{t.etl.actionsHeader}</th> */}
                 </tr>
               </thead>
@@ -470,7 +476,9 @@ export default function EtlFileRegistryPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div className="text-sm font-medium">
-                        {file.rows_parsed ? file.rows_parsed.toLocaleString() : "—"}
+                        {file.rows_parsed
+                          ? file.rows_parsed.toLocaleString()
+                          : "—"}
                       </div>
                     </td>
                     <td
@@ -575,7 +583,7 @@ export default function EtlFileRegistryPage() {
         mode={fetchModalMode}
         isOpen={isFetchModalOpen}
         onClose={handleFetchModalClose}
-        onSuccess={(executionId, timeFilter) => {
+        onSuccess={(_, timeFilter) => {
           // Set category filter to match what was fetched
           if (timeFilter?.category) {
             setCategoryFilter(timeFilter.category as CategoryFilter);
@@ -611,7 +619,9 @@ export default function EtlFileRegistryPage() {
 
             {/* File Input */}
             <div>
-              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+              <label
+                className={`text-sm font-medium ${tw.textPrimary} block mb-2`}
+              >
                 Select File
               </label>
               <div
@@ -621,7 +631,9 @@ export default function EtlFileRegistryPage() {
               >
                 <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                 <p className={`text-sm ${tw.textPrimary}`}>
-                  {uploadFile ? uploadFile.name : "Click to select or drag file"}
+                  {uploadFile
+                    ? uploadFile.name
+                    : "Click to select or drag file"}
                 </p>
                 <p className={`text-xs ${tw.textMuted} mt-1`}>
                   .cdr or .tdr file
@@ -636,10 +648,13 @@ export default function EtlFileRegistryPage() {
 
                   // Validate file extension
                   if (file) {
-                    const extension = file.name.split('.').pop()?.toLowerCase();
-                    if (!['cdr', 'tdr'].includes(extension || '')) {
-                      error("Invalid File", "Please select a .cdr or .tdr file");
-                      e.target.value = '';
+                    const extension = file.name.split(".").pop()?.toLowerCase();
+                    if (!["cdr", "tdr"].includes(extension || "")) {
+                      showError(
+                        "Invalid File",
+                        "Please select a .cdr or .tdr file",
+                      );
+                      e.target.value = "";
                       return;
                     }
                   }
@@ -652,19 +667,25 @@ export default function EtlFileRegistryPage() {
                     reader.onload = (event) => {
                       try {
                         const content = event.target?.result as string;
-                        const lines = content.split('\n').filter(line => line.trim());
+                        const lines = content
+                          .split("\n")
+                          .filter((line) => line.trim());
 
                         if (lines.length > 0) {
                           // Parse headers from first line
-                          const delimiter = ',';
-                          const headers = lines[0].split(delimiter).map(h => h.trim());
+                          const delimiter = ",";
+                          const headers = lines[0]
+                            .split(delimiter)
+                            .map((h) => h.trim());
 
                           // Parse up to 5 rows for preview
-                          const rows = lines.slice(1, 6).map(line => {
-                            const values = line.split(delimiter).map(v => v.trim());
+                          const rows = lines.slice(1, 6).map((line) => {
+                            const values = line
+                              .split(delimiter)
+                              .map((v) => v.trim());
                             const row: Record<string, string> = {};
                             headers.forEach((header, idx) => {
-                              row[header] = values[idx] || '';
+                              row[header] = values[idx] || "";
                             });
                             return row;
                           });
@@ -672,7 +693,7 @@ export default function EtlFileRegistryPage() {
                           setUploadPreview({ headers, rows });
                         }
                       } catch (err) {
-                        console.error('Failed to parse file:', err);
+                        console.error("Failed to parse file:", err);
                         setUploadPreview(null);
                       }
                     };
@@ -687,7 +708,9 @@ export default function EtlFileRegistryPage() {
 
             {/* File Category */}
             <div>
-              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+              <label
+                className={`text-sm font-medium ${tw.textPrimary} block mb-2`}
+              >
                 File Category
               </label>
               <HeadlessSelect
@@ -696,7 +719,9 @@ export default function EtlFileRegistryPage() {
                   { value: "TDR", label: "TDR" },
                 ]}
                 value={uploadCategory}
-                onChange={(val) => setUploadCategory((val as "CDR" | "TDR") || "CDR")}
+                onChange={(val) =>
+                  setUploadCategory((val as "CDR" | "TDR") || "CDR")
+                }
                 placeholder="Select category"
                 className="w-full"
               />
@@ -705,18 +730,32 @@ export default function EtlFileRegistryPage() {
             {/* File Preview */}
             {uploadPreview && uploadPreview.rows.length > 0 && (
               <div>
-                <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
-                  Preview ({uploadPreview.rows.length} row{uploadPreview.rows.length !== 1 ? 's' : ''})
+                <label
+                  className={`text-sm font-medium ${tw.textPrimary} block mb-2`}
+                >
+                  Preview ({uploadPreview.rows.length} row
+                  {uploadPreview.rows.length !== 1 ? "s" : ""})
                 </label>
-                <div className="overflow-x-auto border rounded" style={{ borderColor: color.border.default }}>
-                  <table className="w-full text-xs" style={{ borderCollapse: "collapse" }}>
-                    <thead style={{ backgroundColor: color.surface.tableHeader }}>
+                <div
+                  className="overflow-x-auto border rounded"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <table
+                    className="w-full text-xs"
+                    style={{ borderCollapse: "collapse" }}
+                  >
+                    <thead
+                      style={{ backgroundColor: color.surface.tableHeader }}
+                    >
                       <tr>
                         {uploadPreview.headers.map((header) => (
                           <th
                             key={header}
                             className="px-3 py-2 text-left font-semibold uppercase tracking-wider"
-                            style={{ color: color.surface.tableHeaderText, borderRight: `1px solid ${color.border.default}` }}
+                            style={{
+                              color: color.surface.tableHeaderText,
+                              borderRight: `1px solid ${color.border.default}`,
+                            }}
                           >
                             {header}
                           </th>
@@ -728,7 +767,9 @@ export default function EtlFileRegistryPage() {
                         <tr
                           key={idx}
                           className="hover:bg-gray-50 transition-colors"
-                          style={{ borderBottom: `1px solid ${color.border.default}` }}
+                          style={{
+                            borderBottom: `1px solid ${color.border.default}`,
+                          }}
                         >
                           {uploadPreview.headers.map((header) => (
                             <td
@@ -740,7 +781,7 @@ export default function EtlFileRegistryPage() {
                                 borderRight: `1px solid ${color.border.default}`,
                               }}
                             >
-                              {row[header] || '—'}
+                              {row[header] || "—"}
                             </td>
                           ))}
                         </tr>
@@ -760,7 +801,10 @@ export default function EtlFileRegistryPage() {
                   setUploadPreview(null);
                 }}
                 className={`flex-1 px-4 py-2 ${tw.rounded} border font-medium transition-colors`}
-                style={{ borderColor: color.border.default, color: tw.textPrimary }}
+                style={{
+                  borderColor: color.border.default,
+                  color: tw.textPrimary,
+                }}
               >
                 Cancel
               </button>

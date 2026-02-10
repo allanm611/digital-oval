@@ -3,7 +3,7 @@ import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 
 export const getSubscriptionDisplayName = (
   record: CustomerSubscriptionRecord,
-  fallback = "Customer"
+  fallback = "Customer",
 ) => {
   const parts = [record.firstName, record.lastName].filter(Boolean);
   return parts.length ? parts.join(" ") : fallback;
@@ -12,7 +12,7 @@ export const getSubscriptionDisplayName = (
 export const formatMsisdn = (value?: string | number | null) => {
   if (!value) return "—";
   const digits = value.toString().replace(/\D/g, "");
-  return digits ? `+${digits}` : "—";
+  return digits ? digits : "—";
 };
 
 export const formatDateTime = (value?: string | null) => {
@@ -42,11 +42,11 @@ const deriveChurnRisk = (status?: string | null) => {
 };
 
 export const convertSubscriptionToCustomerRow = (
-  record: CustomerSubscriptionRecord
+  record: CustomerSubscriptionRecord,
 ): CustomerRow => {
   const name = getSubscriptionDisplayName(
     record,
-    `Customer ${record.customerId}`
+    `Customer ${record.customerId}`,
   );
 
   const activationDate = record.activationDate

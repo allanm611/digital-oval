@@ -373,31 +373,33 @@ export default function WorkflowsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                setIsSelectionMode(true);
-                setSelectedWorkflows(new Set(workflows.map((w) => w.id)));
-              } else {
-                setIsSelectionMode(false);
-                setSelectedWorkflows(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
-            style={{
-              background: button.bordered.background,
-              color: button.bordered.color,
-              border: button.bordered.border,
-              paddingTop: button.bordered.paddingY,
-              paddingBottom: button.bordered.paddingY,
-              paddingLeft: button.bordered.paddingX,
-              paddingRight: button.bordered.paddingX,
-              borderRadius: button.bordered.borderRadius,
-              fontSize: button.bordered.fontSize,
-            }}
-          >
-            {isSelectionMode ? "Cancel" : "Select"}
-          </button>
+          <PermissionGate permission="job-workflows.select">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedWorkflows(new Set(workflows.map((w) => w.id)));
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedWorkflows(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 ${tw.rounded} text-sm font-medium`}
+              style={{
+                background: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
+                paddingTop: button.bordered.paddingY,
+                paddingBottom: button.bordered.paddingY,
+                paddingLeft: button.bordered.paddingX,
+                paddingRight: button.bordered.paddingX,
+                borderRadius: button.bordered.borderRadius,
+                fontSize: button.bordered.fontSize,
+              }}
+            >
+              {isSelectionMode ? "Cancel" : "Select"}
+            </button>
+          </PermissionGate>
           <PermissionGate permission="job-workflows.create">
             <CreateButton route="/dashboard/workflows/create" />
           </PermissionGate>

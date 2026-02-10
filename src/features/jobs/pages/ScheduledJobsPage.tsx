@@ -7,7 +7,6 @@ import {
   Clock,
   Eye,
   Edit,
-  Plus,
   Search,
   Trash2,
   Play,
@@ -44,33 +43,6 @@ const STATUS_OPTIONS = [
   { label: "Draft", value: "draft" },
   { label: "Archived", value: "archived" },
 ];
-
-// formatDateTime and getStatusColors are defined but not currently used - kept for future use
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _formatDateTime = (value?: string | null) => {
-  if (!value) return "—";
-  try {
-    return new Date(value).toLocaleString();
-  } catch {
-    return value;
-  }
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _getStatusColors = (status: string) => {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "bg-green-50 text-green-700";
-    case "paused":
-      return "bg-amber-50 text-amber-700";
-    case "archived":
-      return "bg-gray-100 text-gray-600";
-    case "draft":
-      return "bg-blue-50 text-blue-700";
-    default:
-      return "bg-slate-100 text-slate-700";
-  }
-};
 
 export default function ScheduledJobsPage() {
   const navigate = useNavigate();
@@ -486,34 +458,36 @@ export default function ScheduledJobsPage() {
             <BarChart3 className="h-4 w-4" />
             {t.jobs.analytics}
           </button>
-          <button
-            onClick={() => {
-              if (!isSelectionMode) {
-                // Entering selection mode - select all visible jobs
-                setIsSelectionMode(true);
-                setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
-              } else {
-                // Exiting selection mode - clear selection
-                setIsSelectionMode(false);
-                setSelectedJobs(new Set());
-              }
-            }}
-            className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
-            style={{
-              backgroundColor: isSelectionMode
-                ? color.primary.action
-                : "transparent",
-              color: isSelectionMode ? "white" : color.primary.action,
-              border: `1px solid ${color.primary.action}`,
-            }}
-          >
-            {isSelectionMode ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
-            {isSelectionMode ? "Exit Selection" : "Select Jobs"}
-          </button>
+          <PermissionGate permission="jobs.select">
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  // Entering selection mode - select all visible jobs
+                  setIsSelectionMode(true);
+                  setSelectedJobs(new Set(filteredJobs.map((job) => job.id)));
+                } else {
+                  // Exiting selection mode - clear selection
+                  setIsSelectionMode(false);
+                  setSelectedJobs(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              {isSelectionMode ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              {isSelectionMode ? "Exit Selection" : "Select Jobs"}
+            </button>
+          </PermissionGate>
           <PermissionGate permission="jobs.create">
             <CreateButton route="/dashboard/scheduled-jobs/create" />
           </PermissionGate>

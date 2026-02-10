@@ -24,7 +24,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
 import { offerCategoryService } from "../services/offerCategoryService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import BackButton from "../../../shared/components/ui/BackButton";
+// import BackButton from "../../../shared/components/ui/BackButton";
 import { offerService } from "../services/offerService";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import {
@@ -36,6 +36,7 @@ import { Offer, UpdateOfferRequest } from "../types/offer";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const CATALOG_TAG_PREFIX = "catalog:";
 
@@ -1011,7 +1012,9 @@ function OfferCategoriesPage() {
           </div>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <CreateButton onClick={handleCreateCategory} />
+          <PermissionGate permission="offer-catalog.create">
+            <CreateButton onClick={handleCreateCategory} />
+          </PermissionGate>
         </div>
       </div>
 
@@ -1266,7 +1269,11 @@ function OfferCategoriesPage() {
               ? "Try adjusting your search terms"
               : t.offerCatalogs.createFirstCatalog}
           </p>
-          {!searchTerm && <CreateButton onClick={handleCreateCategory} />}
+          {!searchTerm && (
+            <PermissionGate permission="offer-catalog.create">
+              <CreateButton onClick={handleCreateCategory} />
+            </PermissionGate>
+          )}
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1290,24 +1297,26 @@ function OfferCategoriesPage() {
                   >
                     <Eye className="w-4 h-4 text-gray-600" />
                   </button> */}
-                  <button
-                    onClick={() => handleToggleActive(category)}
-                    disabled={togglingCategoryId === category.id}
-                    className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                    title={
-                      category.is_active
-                        ? t.offerCatalogs.deactivate
-                        : t.offerCatalogs.activate
-                    }
-                  >
-                    {togglingCategoryId === category.id ? (
-                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                    ) : category.is_active ? (
-                      <PowerOff className="w-4 h-4 text-orange-600" />
-                    ) : (
-                      <Power className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
+                  <PermissionGate permission="offer-catalog.update">
+                    <button
+                      onClick={() => handleToggleActive(category)}
+                      disabled={togglingCategoryId === category.id}
+                      className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                      title={
+                        category.is_active
+                          ? t.offerCatalogs.deactivate
+                          : t.offerCatalogs.activate
+                      }
+                    >
+                      {togglingCategoryId === category.id ? (
+                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                      ) : category.is_active ? (
+                        <PowerOff className="w-4 h-4 text-orange-600" />
+                      ) : (
+                        <Power className="w-4 h-4 text-green-600" />
+                      )}
+                    </button>
+                  </PermissionGate>
                   <button
                     onClick={() => handleEditCategory(category)}
                     className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
@@ -1359,13 +1368,15 @@ function OfferCategoriesPage() {
                       );
                     })()}
                   </span>
-                  <button
-                    onClick={() => handleViewOffers(category)}
-                    className="text-sm font-medium text-gray-700 hover:underline transition-colors"
-                    title={t.offerCatalogs.viewOffers}
-                  >
-                    {t.offerCatalogs.viewOffers}
-                  </button>
+                  <PermissionGate permission="offer-catalog-view.read">
+                    <button
+                      onClick={() => handleViewOffers(category)}
+                      className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                      title={t.offerCatalogs.viewOffers}
+                    >
+                      {t.offerCatalogs.viewOffers}
+                    </button>
+                  </PermissionGate>
                 </div>
                 {(() => {
                   const categoryId =

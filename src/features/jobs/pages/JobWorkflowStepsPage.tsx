@@ -930,7 +930,7 @@ export default function JobWorkflowStepsPage() {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </button>
-          <PermissionGate permission="job-workflow-steps.update">
+          <PermissionGate permission="job-workflow-steps.select">
             <button
               onClick={() => {
                 if (!isSelectionMode) {

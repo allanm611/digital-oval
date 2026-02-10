@@ -209,7 +209,7 @@ export default function SegmentModal({
             });
           } else {
             throw new Error(
-              `Missing field_id or operator_id for condition. Please reload the page.`,
+              `Missing field_id or operator_id for condition. Please reload the page.`
             );
           }
         }
@@ -217,7 +217,7 @@ export default function SegmentModal({
 
       if (queryConditions.length === 0) {
         setError(
-          "No 360 Profile conditions to preview. Please add at least one 360 Profile condition.",
+          "No 360 Profile conditions to preview. Please add at least one 360 Profile condition."
         );
         setPreviewCount(null);
         setPreviewQuery(null);
@@ -237,7 +237,7 @@ export default function SegmentModal({
                   (c) =>
                     c.conditionType === "360_profile" &&
                     c.field_id &&
-                    c.operator_id,
+                    c.operator_id
                 )
                 .map((c) => ({
                   field_id: c.field_id!,
@@ -251,8 +251,9 @@ export default function SegmentModal({
       };
 
       // Call the query generation preview API
-      const response =
-        await segmentService.generateSegmentQueryPreview(queryRequest);
+      const response = await segmentService.generateSegmentQueryPreview(
+        queryRequest
+      );
 
       if (response.success && response.data) {
         setPreviewQuery(response.data.segment_query);
@@ -292,12 +293,8 @@ export default function SegmentModal({
     segment_query: string;
     count_query: string;
   } | null> => {
-    // Allow empty conditions - return a basic SELECT all query
     if (formData.conditions.length === 0) {
-      return {
-        segment_query: "SELECT * FROM subscriber_360",
-        count_query: "SELECT COUNT(*) FROM subscriber_360",
-      };
+      return null;
     }
 
     try {
@@ -316,7 +313,7 @@ export default function SegmentModal({
             fieldIds.add(condition.field_id);
           } else {
             throw new Error(
-              `Missing field_id or operator_id for condition. Please reload the page.`,
+              `Missing field_id or operator_id for condition. Please reload the page.`
             );
           }
         }
@@ -339,7 +336,7 @@ export default function SegmentModal({
                   (c) =>
                     c.conditionType === "360_profile" &&
                     c.field_id &&
-                    c.operator_id,
+                    c.operator_id
                 )
                 .map((c) => ({
                   field_id: c.field_id!,
@@ -353,8 +350,9 @@ export default function SegmentModal({
       };
 
       // Call the query generation API
-      const response =
-        await segmentService.generateSegmentQueryPreview(queryRequest);
+      const response = await segmentService.generateSegmentQueryPreview(
+        queryRequest
+      );
 
       if (response.success && response.data) {
         return {
@@ -366,7 +364,7 @@ export default function SegmentModal({
       }
     } catch (err) {
       throw new Error(
-        (err as Error).message || "Failed to generate query from conditions",
+        (err as Error).message || "Failed to generate query from conditions"
       );
     }
   };
@@ -384,6 +382,16 @@ export default function SegmentModal({
     if (!formData.description.trim()) {
       setFieldErrors({ description: "Description is required" });
       return;
+    }
+
+    if (formData.conditions.length === 0) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        conditions: "Please add at least one condition",
+      }));
+      return;
+    } else {
+      setFieldErrors((prev) => ({ ...prev, conditions: undefined }));
     }
 
     setIsLoading(true);
@@ -456,8 +464,9 @@ export default function SegmentModal({
           visibility: "private",
         };
 
-        const createResponse =
-          await segmentService.createSegment(createRequest);
+        const createResponse = await segmentService.createSegment(
+          createRequest
+        );
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
         const response = createResponse as
@@ -503,22 +512,14 @@ export default function SegmentModal({
 
   return isOpen
     ? createPortal(
-        <div
-          className="fixed inset-0 overflow-y-auto"
-          style={{ zIndex: zIndex.modal }}
-        >
+        <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: zIndex.modal }}>
           <div
             className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={onClose}
             style={{ zIndex: zIndex.overlay }}
           />
-          <div
-            className="flex min-h-full items-center justify-center p-4 relative"
-            style={{ zIndex: zIndex.modal }}
-          >
-            <div
-              className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}
-            >
+          <div className="flex min-h-full items-center justify-center p-4 relative" style={{ zIndex: zIndex.modal }}>
+            <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}>
               {/* Header */}
               <div
                 className={`flex items-center justify-between p-6 border-b border-[${tw.borderDefault}] bg-gradient-to-r from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 flex-shrink-0`}
@@ -844,8 +845,8 @@ export default function SegmentModal({
                   {isLoading
                     ? "Saving..."
                     : segment
-                      ? "Update Segment"
-                      : "Create Segment"}
+                    ? "Update Segment"
+                    : "Create Segment"}
                 </button>
               </div>
             </div>
@@ -918,7 +919,7 @@ export default function SegmentModal({
                           type="button"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              formatSQL(previewQuery),
+                              formatSQL(previewQuery)
                             );
                           }}
                           className="text-xs px-3 py-1.5 rounded transition-colors font-medium"
@@ -1038,7 +1039,7 @@ export default function SegmentModal({
             )}
           </div>
         </div>,
-        document.body,
+        document.body
       )
     : null;
 }
