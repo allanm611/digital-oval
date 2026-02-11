@@ -31,6 +31,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export default function OffersPage() {
@@ -1044,7 +1045,8 @@ export default function OffersPage() {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[${color.text.muted}]`}
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5`}
+            style={{ color: color.text.muted }}
           />
           <input
             type="text"
@@ -1052,7 +1054,7 @@ export default function OffersPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch(searchTerm)}
-            className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+            className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
           />
         </div>
 
@@ -1108,7 +1110,8 @@ export default function OffersPage() {
 
       {/* Offers Table */}
       <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border overflow-hidden`}
+        style={{ borderColor: color.border.default }}
       >
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -1653,56 +1656,17 @@ export default function OffersPage() {
 
       {/* Pagination */}
       {!loading && filteredOffers.length > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border border-[${color.border.default}] px-4 sm:px-6 py-4`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-base ${tw.textSecondary} text-center sm:text-left`}
-            >
-              Showing {((filters.page || 1) - 1) * (filters.pageSize || 10) + 1}{" "}
-              to{" "}
-              {Math.min(
-                (filters.page || 1) * (filters.pageSize || 10),
-                totalOffers,
-              )}{" "}
-              of {totalOffers} offers
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    page: Math.max(1, (prev.page || 1) - 1),
-                  }))
-                }
-                disabled={(filters.page || 1) <= 1}
-                className={`px-3 py-2 text-base border border-[${color.border.default}] ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                Previous
-              </button>
-              <span className={`text-base ${tw.textSecondary} px-2`}>
-                Page {filters.page || 1} of{" "}
-                {Math.ceil(totalOffers / (filters.pageSize || 10))}
-              </span>
-              <button
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    page: (prev.page || 1) + 1,
-                  }))
-                }
-                disabled={
-                  (filters.page || 1) >=
-                  Math.ceil(totalOffers / (filters.pageSize || 10))
-                }
-                className={`px-3 py-2 text-base border border-[${color.border.default}] ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={filters.page || 1}
+          pageSize={filters.pageSize || 20}
+          totalItems={totalOffers}
+          onPageChange={(page) =>
+            setFilters((prev) => ({
+              ...prev,
+              page,
+            }))
+          }
+        />
       )}
 
       {/* Advanced Filters Side Modal */}

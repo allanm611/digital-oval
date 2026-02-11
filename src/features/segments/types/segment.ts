@@ -254,8 +254,14 @@ export type PreviewSegmentRequest = {
 export type SearchSegmentMembersRequest = {
   query?: string; // Optional, search term
   filters?: Record<string, unknown>; // Optional, additional filters
-  page?: number; // Optional, default 1
-  pageSize?: number; // Optional, default 10
+  page?: number; // Optional, page number (converted to offset)
+  pageSize?: number; // Optional, limit per page (default 50, max 100)
+  offset?: number; // Optional, offset (alternative to page)
+  minScore?: number; // Optional, min relevance score (0.0-1.0)
+  maxScore?: number; // Optional, max relevance score (0.0-1.0)
+  orderBy?: "score" | "created_at" | "updated_at"; // Optional, sort field
+  orderDirection?: "ASC" | "DESC"; // Optional, sort direction
+  skipCache?: boolean; // Optional, bypass cache
 };
 
 export type ExportSegmentQuery = {
@@ -295,10 +301,12 @@ export type GetSegmentsQuery = {
 };
 
 export type GetSegmentMembersQuery = {
-  page?: number; // Optional, default 1
-  pageSize?: number; // Optional, default 10
-  sortBy?: string; // Optional
-  sortDirection?: "ASC" | "DESC"; // Optional
+  page?: number; // Optional, page number (converted to offset)
+  pageSize?: number; // Optional, limit per page (default 50, max 100)
+  offset?: number; // Optional, offset (alternative to page)
+  sortBy?: string; // Optional, sort field (default "created_at")
+  sortDirection?: "ASC" | "DESC"; // Optional, sort direction (default "DESC")
+  skipCache?: boolean; // Optional, bypass cache
 };
 
 // Status Response Types

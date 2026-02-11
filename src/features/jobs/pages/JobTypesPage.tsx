@@ -11,6 +11,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -18,6 +19,7 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import { jobTypeService } from "../services/jobTypeService";
 import { CreateJobTypePayload, JobType } from "../types/job";
 
+const PAGE_SIZE = 20;
 const codeRegex = /^[a-z][a-z0-9_]*$/;
 
 interface JobTypeModalProps {
@@ -415,6 +417,7 @@ export default function JobTypesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJobType, setEditingJobType] = useState<JobType | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -559,6 +562,12 @@ export default function JobTypesPage() {
       return b.id - a.id;
     });
   }, [jobTypes]);
+
+  const paginatedJobTypes = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return filteredJobTypes.slice(startIndex, endIndex);
+  }, [filteredJobTypes, currentPage]);
 
   const handleCreate = () => {
     setEditingJobType(null);
@@ -831,7 +840,7 @@ export default function JobTypesPage() {
               </thead>
 
               <tbody>
-                {filteredJobTypes.map((jobType) => (
+                {paginatedJobTypes.map((jobType) => (
                   <tr key={jobType.id} className="transition-colors">
                     <td
                       className="px-6 py-4"
@@ -919,6 +928,23 @@ export default function JobTypesPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && filteredJobTypes.length > 0 && (
+          <div
+            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
+          >
+            <p>
+              {`Showing ${(currentPage - 1) * PAGE_SIZE + 1}-${Math.min(currentPage * PAGE_SIZE, filteredJobTypes.length)} of ${filteredJobTypes.length} job types`}
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={filteredJobTypes.length}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

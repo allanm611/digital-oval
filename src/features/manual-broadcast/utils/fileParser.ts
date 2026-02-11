@@ -1,13 +1,12 @@
 /**
  * File Parsing Utilities for Manual Broadcast
- * 
+ *
  * Provides functions to parse uploaded files (CSV, XLSX, XLS) and extract
  * column headers for Subscription ID field selection.
- * 
+ *
  * Requirements: 1.2, 1.3
  */
 
-import * as XLSX from "xlsx";
 import { FileParseResult } from "../types";
 
 /**
@@ -68,12 +67,15 @@ export async function parseFileColumns(
       };
     }
 
+    // Dynamic import - XLSX only loads when file parsing is needed
+    const XLSX = await import("xlsx");
+
     // Read file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    
+
     // Parse workbook
     const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    
+
     // Get first sheet
     const firstSheetName = workbook.SheetNames[0];
     if (!firstSheetName) {
@@ -84,9 +86,9 @@ export async function parseFileColumns(
         error: "The file contains no sheets.",
       };
     }
-    
+
     const worksheet = workbook.Sheets[firstSheetName];
-    
+
     // Convert to JSON to get data (header: 1 returns array of arrays)
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {
       header: 1,

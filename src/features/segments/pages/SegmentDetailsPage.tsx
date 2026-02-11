@@ -17,10 +17,22 @@ import {
   Calendar,
   Clock,
   Layers,
+  Zap,
+  MoreVertical,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { Segment } from "../types/segment";
 import { segmentService } from "../services/segmentService";
 import { customerService } from "../../customers360/services/customerServices";
+import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -30,6 +42,7 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -70,10 +83,11 @@ export default function SegmentDetailsPage() {
   const [membersCount, setMembersCount] = useState<number>(0);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
+  const [exportFormat, setExportFormat] = useState<"csv" | "json" | "xml">("csv");
   const [isExporting, setIsExporting] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Members state
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -98,6 +112,44 @@ export default function SegmentDetailsPage() {
   const [isLoadingCustomersForSelection, setIsLoadingCustomersForSelection] =
     useState(false);
   const [isAddingMembers, setIsAddingMembers] = useState(false);
+
+  // Action button states
+  const [isRecomputingMembers, setIsRecomputingMembers] = useState(false);
+  const [isComputingSize, setIsComputingSize] = useState(false);
+  const [isValidatingQuery, setIsValidatingQuery] = useState(false);
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const [showAddTagInput, setShowAddTagInput] = useState(false);
+
+  // Phase 3 - New sections
+  const [segmentHierarchy, setSegmentHierarchy] = useState<{ parent_id?: number; parent_name?: string } | null>(null);
+  const [childSegments, setChildSegments] = useState<Array<{ id: number; name: string }>>([]);
+  const [isLoadingHierarchy, setIsLoadingHierarchy] = useState(false);
+  const [growthTrend, setGrowthTrend] = useState<Array<{ date: string; member_count: number }>>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<{ conversion_rate?: number; campaign_count?: number; avg_engagement?: number } | null>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
+  // Phase 4 - Preview & Export
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewMembers, setPreviewMembers] = useState<Array<{ [key: string]: unknown }>>([]);
+  const [previewCount, setPreviewCount] = useState<number>(0);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [exportFields, setExportFields] = useState<string[]>(["id", "name", "email", "phone"]);
+  const [isExportJobRunning, setIsExportJobRunning] = useState(false);
+  const [exportJobId, setExportJobId] = useState<string | null>(null);
+
+  // Phase 4 - Advanced Edit
+  const [showAdvancedEdit, setShowAdvancedEdit] = useState(false);
+  const [editQuery, setEditQuery] = useState<string>("");
+  const [editParentId, setEditParentId] = useState<number | null>(null);
+  const [parentSegments, setParentSegments] = useState<Array<{ id: number; name: string }>>([]);
+  const [isLoadingParents, setIsLoadingParents] = useState(false);
+  const [isUpdatingQuery, setIsUpdatingQuery] = useState(false);
+  const [isUpdatingParent, setIsUpdatingParent] = useState(false);
+
+  // Campaign Flows tab
+  const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; offer_name: string; flow_type: string; wait_interval_hours: number }>>([]);
+  const [isLoadingCampaignFlows, setIsLoadingCampaignFlows] = useState(false);
 
   // Filter customers based on search term
   const filteredCustomersForSelection = useMemo(() => {
@@ -143,6 +195,18 @@ export default function SegmentDetailsPage() {
       setIsLoadingCustomersForSelection(false);
     }
   }, [showError]);
+
+  // Map flow types to user-friendly labels
+  const getFlowTypeLabel = (flowType: string): string => {
+    const flowTypeMap: { [key: string]: string } = {
+      STANDARD: "Standard",
+      AB_TEST: "A/B Test",
+      CHAMPION_CHALLENGER: "Champion-Challenger",
+      ROUND_ROBIN: "Round Robin",
+      MULTIPLE_LEVEL: "Multiple Level",
+    };
+    return flowTypeMap[flowType] || flowType;
+  };
 
   const loadCategoryName = useCallback(
     async (categoryId: number | string) => {
@@ -257,6 +321,50 @@ export default function SegmentDetailsPage() {
     }
   }, [id, membersPage, debouncedMembersSearchTerm, t]);
 
+  // Load Phase 3 sections - Define before useEffect that depends on them
+  const loadHierarchy = useCallback(async () => {
+    if (!id) return;
+    setIsLoadingHierarchy(true);
+    try {
+      const [hierarchyRes, childrenRes] = await Promise.all([
+        segmentService.getSegmentHierarchy(Number(id)),
+        segmentService.getSegmentChildren(Number(id)),
+      ]);
+      setSegmentHierarchy(hierarchyRes.data || null);
+      const children = Array.isArray(childrenRes.data) ? childrenRes.data : childrenRes.data ? [childrenRes.data] : [];
+      setChildSegments(children);
+    } catch (err) {
+      console.warn("Failed to load hierarchy:", err);
+      setSegmentHierarchy(null);
+      setChildSegments([]);
+    } finally {
+      setIsLoadingHierarchy(false);
+    }
+  }, [id]);
+
+  const loadAnalyticsData = useCallback(async () => {
+    if (!id) return;
+    setIsLoadingAnalytics(true);
+    try {
+      const [trendRes, metricsRes] = await Promise.all([
+        segmentService.getSegmentGrowthTrend(Number(id)),
+        segmentService.getSegmentPerformanceMetrics(Number(id)),
+      ]);
+      const trend = Array.isArray(trendRes.data) ? trendRes.data : trendRes.data ? [trendRes.data] : [];
+      setGrowthTrend(trend.map((item: any) => ({
+        date: item.date || item.name || "Unknown",
+        member_count: parseInt(item.member_count) || parseInt(item.count) || 0,
+      })));
+      setPerformanceMetrics(metricsRes.data || null);
+    } catch (err) {
+      console.warn("Failed to load analytics:", err);
+      setGrowthTrend([]);
+      setPerformanceMetrics(null);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     if (id) {
       loadSegment();
@@ -271,6 +379,19 @@ export default function SegmentDetailsPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, membersPage, debouncedMembersSearchTerm]);
+
+  // Load Phase 3 data
+  useEffect(() => {
+    if (id) {
+      loadHierarchy();
+    }
+  }, [id, loadHierarchy]);
+
+  useEffect(() => {
+    if (id) {
+      loadAnalyticsData();
+    }
+  }, [id, loadAnalyticsData]);
 
   const handleEdit = () => {
     setIsEditModalOpen(true);
@@ -418,6 +539,269 @@ export default function SegmentDetailsPage() {
     }
   };
 
+  // Action button handlers
+  const handleRecomputeMembers = async () => {
+    if (!id) return;
+    setIsRecomputingMembers(true);
+    try {
+      await segmentService.recomputeSegmentMembers({
+        segment_id: Number(id),
+      });
+      success("Recompute started", "Segment members are being recomputed");
+      await loadMembersCount();
+    } catch (err) {
+      console.error("Failed to recompute members:", err);
+      showError("Error recomputing members", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsRecomputingMembers(false);
+    }
+  };
+
+  const handleComputeSize = async () => {
+    if (!id) return;
+    setIsComputingSize(true);
+    try {
+      await segmentService.computeSegmentSize({
+        segment_id: Number(id),
+      });
+      success("Size computation started", "Segment size is being computed");
+      await loadSegment();
+    } catch (err) {
+      console.error("Failed to compute size:", err);
+      showError("Error computing size", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsComputingSize(false);
+    }
+  };
+
+  const handleValidateQuery = async () => {
+    if (!id) return;
+    setIsValidatingQuery(true);
+    try {
+      const result = await segmentService.validateSegmentQuery(Number(id));
+      if (result.data?.valid) {
+        success("Query validation successful", "The segment query is valid");
+      } else {
+        showError("Query validation failed", result.data?.error || "Query contains errors");
+      }
+    } catch (err) {
+      console.error("Failed to validate query:", err);
+      showError("Error validating query", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsValidatingQuery(false);
+    }
+  };
+
+  const handleAddTag = async () => {
+    if (!segment || !newTag.trim()) return;
+
+    setIsAddingTag(true);
+    try {
+      await segmentService.updateSegmentTags(segment.id, {
+        tags: [...(segment.tags || []), newTag.trim()],
+      });
+      success("Tag added", `Tag "${newTag}" has been added`);
+      setNewTag("");
+      setShowAddTagInput(false);
+      await loadSegment();
+    } catch (err) {
+      console.error("Failed to add tag:", err);
+      showError("Error adding tag", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsAddingTag(false);
+    }
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    if (!segment) return;
+
+    setIsAddingTag(true);
+    try {
+      await segmentService.deleteSegmentTag(segment.id, tag);
+      success("Tag removed", `Tag "${tag}" has been removed`);
+      await loadSegment();
+    } catch (err) {
+      console.error("Failed to remove tag:", err);
+      showError("Error removing tag", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsAddingTag(false);
+    }
+  };
+
+  // Phase 4 - Preview
+  const handlePreview = async () => {
+    if (!segment) return;
+
+    setIsLoadingPreview(true);
+    try {
+      const [countRes, previewRes] = await Promise.all([
+        segmentService.getPreviewCount(Number(id)),
+        segmentService.previewSegment(Number(id)),
+      ]);
+
+      setPreviewCount(countRes.data?.count || 0);
+      const members = Array.isArray(previewRes.data) ? previewRes.data : previewRes.data ? [previewRes.data] : [];
+      setPreviewMembers(members);
+      setShowPreviewModal(true);
+      success("Preview loaded", "Member preview has been generated");
+    } catch (err) {
+      console.error("Failed to load preview:", err);
+      showError("Error loading preview", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsLoadingPreview(false);
+    }
+  };
+
+  // Phase 4 - Export
+  const handleExport = async () => {
+    if (!segment) return;
+
+    setIsExporting(true);
+    try {
+      const response = await segmentService.customExport(Number(id), {
+        format: exportFormat,
+        fields: exportFields,
+      });
+
+      const jobId = response.data?.job_id || response.data?.jobId;
+      if (jobId) {
+        setExportJobId(jobId);
+        setIsExportJobRunning(true);
+        success("Export started", `Export job ${jobId} has been queued`);
+
+        // Poll export status
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await segmentService.getExportStatus(Number(id), jobId);
+            const status = statusRes.data?.status;
+
+            if (status === "completed" || status === "failed") {
+              clearInterval(pollInterval);
+              setIsExportJobRunning(false);
+
+              if (status === "completed") {
+                const downloadUrl = statusRes.data?.download_url || statusRes.data?.downloadUrl;
+                if (downloadUrl) {
+                  window.location.href = downloadUrl;
+                }
+                success("Export completed", "Your export file is ready");
+              } else {
+                showError("Export failed", statusRes.data?.error || "Export job failed");
+              }
+            }
+          } catch (err) {
+            console.warn("Failed to check export status:", err);
+          }
+        }, 2000);
+
+        // Stop polling after 5 minutes
+        setTimeout(() => {
+          clearInterval(pollInterval);
+          setIsExportJobRunning(false);
+        }, 300000);
+      }
+    } catch (err) {
+      console.error("Failed to start export:", err);
+      showError("Error starting export", (err as Error).message || "Please try again later.");
+      setIsExporting(false);
+    }
+  };
+
+  // Phase 4 - Load parent segments for advanced edit
+  const loadParentSegments = useCallback(async () => {
+    if (!id) return;
+
+    setIsLoadingParents(true);
+    try {
+      const response = await segmentService.getParentSegments();
+      const parents = Array.isArray(response.data) ? response.data : response.data ? [response.data] : [];
+      // Filter out current segment from parent list
+      const filteredParents = parents.filter((p: { id: number }) => p.id !== Number(id));
+      setParentSegments(filteredParents);
+    } catch (err) {
+      console.warn("Failed to load parent segments:", err);
+      setParentSegments([]);
+    } finally {
+      setIsLoadingParents(false);
+    }
+  }, [id]);
+
+  // Phase 4 - Update Query
+  const handleUpdateQuery = async () => {
+    if (!segment || !editQuery.trim()) return;
+
+    setIsUpdatingQuery(true);
+    try {
+      await segmentService.updateSegmentQuery(Number(id), {
+        query: editQuery.trim(),
+      });
+      success("Query updated", "Segment query has been updated successfully");
+      setShowAdvancedEdit(false);
+      setEditQuery("");
+      await loadSegment();
+    } catch (err) {
+      console.error("Failed to update query:", err);
+      showError("Error updating query", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsUpdatingQuery(false);
+    }
+  };
+
+  // Phase 4 - Update Parent
+  const handleUpdateParent = async () => {
+    if (!segment || editParentId === null) return;
+
+    setIsUpdatingParent(true);
+    try {
+      await segmentService.updateSegmentParent(Number(id), editParentId);
+      success("Parent updated", "Segment parent has been updated successfully");
+      setShowAdvancedEdit(false);
+      setEditParentId(null);
+      await loadSegment();
+      await loadHierarchy();
+    } catch (err) {
+      console.error("Failed to update parent:", err);
+      showError("Error updating parent", (err as Error).message || "Please try again later.");
+    } finally {
+      setIsUpdatingParent(false);
+    }
+  };
+
+  const loadCampaignFlows = useCallback(async () => {
+    if (!id) return;
+    setIsLoadingCampaignFlows(true);
+    try {
+      const response = await campaignFlowService.getCampaignFlowsBySegment(Number(id));
+      if (response && response.success && Array.isArray(response.data)) {
+        // Transform API response to display format
+        const flows = response.data.map((flow: any) => ({
+          campaign_id: flow.campaign_id,
+          campaign_name: flow.campaign_name || `Campaign #${flow.campaign_id}`,
+          segment_id: flow.segment_id,
+          offer_id: flow.offer_id,
+          offer_name: flow.offer_name || `Offer${flow.offer_id}`,
+          flow_type: flow.flow_type,
+          wait_interval_hours: flow.wait_interval_hours,
+        }));
+        setCampaignFlows(flows);
+      } else {
+        setCampaignFlows([]);
+      }
+    } catch (err) {
+      console.warn("Failed to load campaign flows:", err);
+      setCampaignFlows([]);
+    } finally {
+      setIsLoadingCampaignFlows(false);
+    }
+  }, [id]);
+
+  // Load campaign flows on mount
+  useEffect(() => {
+    if (id) {
+      loadCampaignFlows();
+    }
+  }, [id, loadCampaignFlows]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -469,7 +853,7 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <PermissionGate permission="segments.update">
             <button
               onClick={handleEdit}
@@ -509,10 +893,89 @@ export default function SegmentDetailsPage() {
               Delete
             </button>
           </PermissionGate>
+
+          {/* More Menu Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className={`${tw.rounded} border border-gray-200 px-3 py-2 font-medium transition-all hover:bg-gray-50 flex items-center gap-1`}
+            >
+              <MoreVertical className="w-4 h-4" />
+              More
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMoreMenu && (
+              <div className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg z-10`}>
+                <PermissionGate permission="segments.update">
+                  <button
+                    onClick={() => {
+                      handleRecomputeMembers();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isRecomputingMembers}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isRecomputingMembers ? "Recomputing..." : "Recompute Members"}
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="segments.update">
+                  <button
+                    onClick={() => {
+                      handleComputeSize();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isComputingSize}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isComputingSize ? "Computing..." : "Compute Size"}
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="segments.update">
+                  <button
+                    onClick={() => {
+                      handleValidateQuery();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isValidatingQuery}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isValidatingQuery ? "Validating..." : "Validate Query"}
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="segments.read">
+                  <button
+                    onClick={() => {
+                      handlePreview();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isLoadingPreview}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isLoadingPreview ? "Loading..." : "Preview"}
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="segments.read">
+                  <button
+                    onClick={() => {
+                      setShowExportModal(true);
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isExporting || isExportJobRunning}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
+                  >
+                    <Download className="w-3 h-3" />
+                    {isExporting || isExportJobRunning ? "Exporting..." : "Export"}
+                  </button>
+                </PermissionGate>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards and Overview Content */}
+          {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
@@ -598,6 +1061,78 @@ export default function SegmentDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Tag Management Section */}
+      {segment && (
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-4 shadow-sm`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Tag className="w-4 h-4" style={{ color: color.primary.accent }} />
+            <h4 className="font-medium text-sm text-gray-900">Tags</h4>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {segment.tags && segment.tags.length > 0 ? (
+              <>
+                {segment.tags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                    style={{ backgroundColor: color.primary.accent, color: "white" }}
+                  >
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      disabled={isAddingTag}
+                      className="hover:opacity-80 disabled:opacity-50"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p className="text-xs text-gray-500">No tags yet</p>
+            )}
+            {showAddTagInput ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  placeholder="Enter tag name"
+                  className={`px-3 py-1.5 border ${tw.borderDefault} ${tw.rounded} text-sm focus:outline-none focus:ring-1`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddTag();
+                    if (e.key === "Escape") setShowAddTagInput(false);
+                  }}
+                  autoFocus
+                />
+                <button
+                  onClick={handleAddTag}
+                  disabled={isAddingTag || !newTag.trim()}
+                  className={`${tw.rounded} px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => setShowAddTagInput(false)}
+                  className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 hover:bg-gray-50`}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAddTagInput(true)}
+                className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1`}
+              >
+                <Plus className="w-3 h-3" />
+                Add Tag
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Details Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1047,6 +1582,346 @@ export default function SegmentDetailsPage() {
         </p>
       </div>
 
+      {/* Hierarchy Section */}
+      {(segmentHierarchy || childSegments.length > 0) && !isLoadingHierarchy && (
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+          <div className="flex items-center gap-2 mb-6">
+            <Layers
+              className="w-5 h-5"
+              style={{ color: color.primary.accent }}
+            />
+            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+              Segment Hierarchy
+            </h3>
+          </div>
+          <div className="space-y-4">
+            {segmentHierarchy?.parent_id && (
+              <div>
+                <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  Parent Segment
+                </label>
+                <p className={`text-sm ${tw.textPrimary} px-4 py-2 bg-gray-50 ${tw.rounded}`}>
+                  {segmentHierarchy.parent_name || `ID: ${segmentHierarchy.parent_id}`}
+                </p>
+              </div>
+            )}
+            {childSegments.length > 0 && (
+              <div>
+                <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  Child Segments ({childSegments.length})
+                </label>
+                <div className="space-y-2">
+                  {childSegments.map((child) => (
+                    <div
+                      key={child.id}
+                      className={`text-sm ${tw.textPrimary} px-4 py-2 bg-gray-50 ${tw.rounded} border border-gray-200`}
+                    >
+                      {child.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {!segmentHierarchy?.parent_id && childSegments.length === 0 && (
+              <p className={`text-sm ${tw.textSecondary}`}>
+                No parent or child segments
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Edit Section */}
+      <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Activity className="w-5 h-5" style={{ color: color.primary.accent }} />
+            <h3 className={`font-semibold ${tw.textPrimary}`}>Advanced Settings</h3>
+          </div>
+          {!showAdvancedEdit && (
+            <button
+              onClick={() => {
+                setShowAdvancedEdit(true);
+                setEditQuery(segment?.query || "");
+                setEditParentId(segment?.parent_id || null);
+                loadParentSegments();
+              }}
+              className={`text-sm font-medium px-3 py-1.5 ${tw.rounded} border border-gray-200 hover:bg-gray-50 transition-colors`}
+            >
+              <Edit className="w-4 h-4 inline mr-1" />
+              Edit
+            </button>
+          )}
+        </div>
+
+        {showAdvancedEdit ? (
+          <div className="space-y-4">
+            {/* Update Query Section */}
+            <div className="border-b border-gray-200 pb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Segment Query
+              </label>
+              <textarea
+                value={editQuery}
+                onChange={(e) => setEditQuery(e.target.value)}
+                placeholder="Enter SQL query..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                rows={5}
+              />
+              <div className="flex justify-end gap-2 mt-3">
+                <button
+                  onClick={() => setShowAdvancedEdit(false)}
+                  className={`px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 ${tw.rounded} hover:bg-gray-50`}
+                >
+                  Cancel
+                </button>
+                <PermissionGate permission="segments.update">
+                  <button
+                    onClick={handleUpdateQuery}
+                    disabled={isUpdatingQuery || !editQuery.trim()}
+                    className={`px-3 py-1.5 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1`}
+                    style={{ backgroundColor: isUpdatingQuery ? "#ccc" : color.primary.action }}
+                  >
+                    {isUpdatingQuery ? "Updating..." : "Update Query"}
+                  </button>
+                </PermissionGate>
+              </div>
+            </div>
+
+            {/* Update Parent Section */}
+            <div className="pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Parent Segment
+              </label>
+              {isLoadingParents ? (
+                <div className="text-sm text-gray-500">Loading parent segments...</div>
+              ) : (
+                <HeadlessSelect
+                  value={editParentId || ""}
+                  onChange={(value) => setEditParentId(value ? Number(value) : null)}
+                  options={[
+                    { label: "No parent segment", value: "" },
+                    ...parentSegments.map((parent) => ({
+                      label: parent.name,
+                      value: String(parent.id),
+                    })),
+                  ]}
+                  placeholder="Select parent segment"
+                />
+              )}
+              <div className="flex justify-end gap-2 mt-3">
+                <button
+                  onClick={() => setShowAdvancedEdit(false)}
+                  className={`px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 ${tw.rounded} hover:bg-gray-50`}
+                >
+                  Cancel
+                </button>
+                <PermissionGate permission="segments.update">
+                  <button
+                    onClick={handleUpdateParent}
+                    disabled={isUpdatingParent}
+                    className={`px-3 py-1.5 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    style={{ backgroundColor: isUpdatingParent ? "#ccc" : color.primary.action }}
+                  >
+                    {isUpdatingParent ? "Updating..." : "Update Parent"}
+                  </button>
+                </PermissionGate>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3 text-sm">
+            <div>
+              <span className="font-medium text-gray-700">Query:</span>
+              {segment?.query ? (
+                <code className="block bg-gray-50 p-2 rounded mt-1 text-xs text-gray-600 font-mono overflow-x-auto max-h-20 overflow-y-auto">
+                  {segment.query}
+                </code>
+              ) : (
+                <p className="text-gray-500 mt-1">No query defined</p>
+              )}
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Parent Segment:</span>
+              <p className="text-gray-600 mt-1">
+                {segment?.parent_id
+                  ? `ID: ${segment.parent_id}`
+                  : "No parent segment assigned"}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Analytics Section */}
+          {/* Growth Trend Chart */}
+          {growthTrend.length > 0 && !isLoadingAnalytics && (
+            <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+              <div className="mb-4">
+                <h3 className={`font-semibold ${tw.textPrimary}`}>
+                  Member Growth Trend
+                </h3>
+              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={growthTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="member_count"
+                    stroke={color.primary.accent}
+                    strokeWidth={2}
+                    dot={{ fill: color.primary.accent, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Performance Metrics Cards */}
+          {performanceMetrics && !isLoadingAnalytics && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {performanceMetrics.conversion_rate !== undefined && (
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Conversion Rate
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {typeof performanceMetrics.conversion_rate === "number"
+                      ? `${(performanceMetrics.conversion_rate * 100).toFixed(2)}%`
+                      : "N/A"}
+                  </p>
+                </div>
+              )}
+              {performanceMetrics.campaign_count !== undefined && (
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Campaigns Used In
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {performanceMetrics.campaign_count}
+                  </p>
+                </div>
+              )}
+              {performanceMetrics.avg_engagement !== undefined && (
+                <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Avg. Engagement
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {typeof performanceMetrics.avg_engagement === "number"
+                      ? `${(performanceMetrics.avg_engagement * 100).toFixed(1)}%`
+                      : "N/A"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isLoadingAnalytics && (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner />
+            </div>
+          )}
+
+      {/* Campaign Flows Section */}
+      <div className="mb-6">
+        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
+          Campaign Flows ({campaignFlows.length})
+        </h3>
+        <p className={`text-sm ${tw.textSecondary} mb-4`}>
+          Campaigns that use this segment
+        </p>
+      </div>
+          {isLoadingCampaignFlows ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner />
+            </div>
+          ) : campaignFlows.length === 0 ? (
+            <div className="text-center py-8">
+              <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className={`text-sm ${tw.textSecondary}`}>
+                This segment is not used in any campaign flows
+              </p>
+            </div>
+          ) : (
+            <div className={`overflow-x-auto ${tw.rounded}`}>
+              <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+                <thead style={{ background: color.surface.tableHeader }}>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                      Step
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                      Campaign
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                      Offer
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                      Flow Type
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                      Wait (hours)
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell" style={{ color: color.surface.tableHeaderText }}>
+                      Allocation
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaignFlows.map((flow, idx) => (
+                    <tr key={idx} className="transition-colors">
+                      <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <span
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
+                          style={{ color: "#000000" }}
+                        >
+                          {(flow as any).step_order || idx + 1}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <button
+                          onClick={() => navigate(`/dashboard/campaigns/${flow.campaign_id}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {flow.campaign_name}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <button
+                          onClick={() => navigate(`/dashboard/offers/${flow.offer_id}`)}
+                          className="text-sm font-medium hover:underline"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {flow.offer_name}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                          {getFlowTypeLabel(flow.flow_type)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <div className={`text-sm ${tw.textPrimary}`}>
+                          {flow.wait_interval_hours}h
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 hidden md:table-cell" style={{ backgroundColor: color.surface.tablebodybg }}>
+                        <div className={`text-sm ${tw.textMuted}`}>
+                          {(flow as any).bucket_allocation || "—"}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
       {/* Members Modal */}
       {showMembersModal &&
         createPortal(
@@ -1443,6 +2318,79 @@ export default function SegmentDetailsPage() {
           document.body,
         )}
 
+      {/* Preview Modal */}
+      {showPreviewModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto`}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Segment Preview
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {previewCount.toLocaleString()} matching members
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                {previewMembers.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600 font-medium">
+                      Sample of first {previewMembers.length} members:
+                    </p>
+                    <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                      {previewMembers.map((member, index) => (
+                        <div
+                          key={index}
+                          className="p-4 bg-gray-50 border border-gray-200 rounded-lg"
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            {Object.entries(member).map(([key, value]) => (
+                              <div key={key}>
+                                <div className="font-medium text-gray-700 capitalize">
+                                  {key.replace(/_/g, " ")}:
+                                </div>
+                                <div className="text-gray-600">
+                                  {String(value || "—")}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600">No members to preview</p>
+                  </div>
+                )}
+
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <button
+                    onClick={() => setShowPreviewModal(false)}
+                    className={`w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 ${tw.rounded} transition-colors text-sm font-medium`}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
       {/* Export Modal */}
       {showExportModal &&
         createPortal(
@@ -1552,8 +2500,8 @@ export default function SegmentDetailsPage() {
                     Cancel
                   </button>
                   <button
-                    onClick={handleCustomExport}
-                    disabled={isExporting}
+                    onClick={handleExport}
+                    disabled={isExporting || isExportJobRunning}
                     className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
                     style={{
                       backgroundColor: button.action.background,
@@ -1562,7 +2510,7 @@ export default function SegmentDetailsPage() {
                       padding: `${button.action.paddingY} ${button.action.paddingX}`,
                     }}
                   >
-                    {isExporting ? (
+                    {isExporting || isExportJobRunning ? (
                       <>
                         <LoadingSpinner size="sm" className="inline" />
                         Exporting...

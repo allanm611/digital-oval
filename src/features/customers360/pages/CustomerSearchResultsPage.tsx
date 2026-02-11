@@ -29,6 +29,7 @@ import {
 import { colors } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -71,7 +72,9 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   }
 
   return (
-    <div className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}>
+    <div
+      className={`${tw.rounded} border border-gray-200 bg-white p-3 shadow-lg`}
+    >
       <p className="mb-2 text-sm font-semibold text-gray-900">{label}</p>
       {payload.map((entry, idx) => (
         <div
@@ -94,7 +97,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 // Using shared customer data from customerDataService
 const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
-  convertSubscriptionToCustomerRow
+  convertSubscriptionToCustomerRow,
 );
 const subscriptionLookup: Record<string, CustomerSubscriptionRecord> = {};
 excelCustomerRows.forEach((row, index) => {
@@ -286,8 +289,8 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
         index < 3
           ? "active"
           : customer.engagementScore > 70
-          ? "active"
-          : "unsubscribed",
+            ? "active"
+            : "unsubscribed",
     };
   });
 
@@ -314,7 +317,7 @@ export default function CustomerSearchResultsPage() {
       : undefined;
 
   const [origin, setOrigin] = useState<OriginSource | undefined>(
-    stateSource ?? urlSource
+    stateSource ?? urlSource,
   );
 
   useEffect(() => {
@@ -340,7 +343,7 @@ export default function CustomerSearchResultsPage() {
   const customerFromUrl = useMemo(() => {
     if (!customerIdFromUrl) return undefined;
     return excelCustomerRows.find(
-      (customer) => customer.id === customerIdFromUrl
+      (customer) => customer.id === customerIdFromUrl,
     );
   }, [customerIdFromUrl]);
 
@@ -352,7 +355,7 @@ export default function CustomerSearchResultsPage() {
       return customerSubscriptions.find(
         (record) =>
           record.subscriptionId?.toString() === subscriptionIdFromUrl ||
-          record.customerId?.toString() === subscriptionIdFromUrl
+          record.customerId?.toString() === subscriptionIdFromUrl,
       );
     }
     if (customerIdFromUrl) {
@@ -360,7 +363,7 @@ export default function CustomerSearchResultsPage() {
       return customerSubscriptions.find(
         (record) =>
           record.customerId?.toString() === numericId ||
-          `CUST-${record.customerId}` === customerIdFromUrl
+          `CUST-${record.customerId}` === customerIdFromUrl,
       );
     }
     return undefined;
@@ -424,7 +427,7 @@ export default function CustomerSearchResultsPage() {
       if (selectedSubscription?.subscriptionId) {
         params.set(
           "subscriptionId",
-          selectedSubscription.subscriptionId.toString()
+          selectedSubscription.subscriptionId.toString(),
         );
       }
       if (origin) {
@@ -438,7 +441,7 @@ export default function CustomerSearchResultsPage() {
           state: origin
             ? { customer, subscription: selectedSubscription, source: origin }
             : { customer, subscription: selectedSubscription },
-        }
+        },
       );
     }
   }, [customer, customerIdFromUrl, origin, navigate, selectedSubscription]);
@@ -458,11 +461,33 @@ export default function CustomerSearchResultsPage() {
   const [eventDateTo, setEventDateTo] = useState<string>("");
   const [eventStatusFilter, setEventStatusFilter] = useState<string>("all");
 
+  // Pagination states for the 4 tables
+  const [eventPage, setEventPage] = useState(1);
+  const [segmentPage, setSegmentPage] = useState(1);
+  const [offerPage, setOfferPage] = useState(1);
+  const [listPage, setListPage] = useState(1);
+  const pageSize = 20;
+
   useEffect(() => {
     if (customer) {
       setActiveTab("overview");
+      setEventPage(1);
+      setSegmentPage(1);
+      setOfferPage(1);
+      setListPage(1);
     }
   }, [customer]);
+
+  // Reset pagination when event filters change
+  useEffect(() => {
+    setEventPage(1);
+  }, [
+    eventSearchTerm,
+    eventTypeFilter,
+    eventStatusFilter,
+    eventDateFrom,
+    eventDateTo,
+  ]);
 
   const { segments, offers, events, lists } = useMemo(() => {
     if (!customer) return { segments: [], offers: [], events: [], lists: [] };
@@ -503,6 +528,27 @@ export default function CustomerSearchResultsPage() {
     eventDateFrom,
     eventDateTo,
   ]);
+
+  // Paginated data slices for all 4 tables
+  const paginatedEvents = useMemo(() => {
+    const startIdx = (eventPage - 1) * pageSize;
+    return filteredEvents.slice(startIdx, startIdx + pageSize);
+  }, [filteredEvents, eventPage]);
+
+  const paginatedSegments = useMemo(() => {
+    const startIdx = (segmentPage - 1) * pageSize;
+    return segments.slice(startIdx, startIdx + pageSize);
+  }, [segments, segmentPage]);
+
+  const paginatedOffers = useMemo(() => {
+    const startIdx = (offerPage - 1) * pageSize;
+    return offers.slice(startIdx, startIdx + pageSize);
+  }, [offers, offerPage]);
+
+  const paginatedLists = useMemo(() => {
+    const startIdx = (listPage - 1) * pageSize;
+    return lists.slice(startIdx, startIdx + pageSize);
+  }, [lists, listPage]);
 
   const eventDistributionData = useMemo(() => {
     const distribution: Record<string, number> = {};
@@ -578,7 +624,7 @@ export default function CustomerSearchResultsPage() {
   const email =
     selectedSubscription?.email ?? enrichedCustomer?.email ?? fallbackEmail;
   const phone = formatMsisdn(
-    selectedSubscription?.msisdn ?? enrichedCustomer?.phone ?? null
+    selectedSubscription?.msisdn ?? enrichedCustomer?.phone ?? null,
   );
 
   const overviewSections = useMemo(() => {
@@ -711,7 +757,9 @@ export default function CustomerSearchResultsPage() {
   if (!customer) {
     return (
       <div className="space-y-4">
-        <div className={`${tw.rounded} border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-900`}>
+        <div
+          className={`${tw.rounded} border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-900`}
+        >
           {origin === "reports"
             ? "We couldn't load that customer profile. Please return to Customer Reports and run your search again."
             : "We couldn't load that customer profile. Please return to the Customers list and select a profile to view its insights."}
@@ -759,402 +807,170 @@ export default function CustomerSearchResultsPage() {
           </div>
         </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
-        {[
-          { id: "overview", label: "Customer Information", icon: FileText },
-          { id: "activity", label: "Events", icon: Activity },
-          { id: "subscribedLists", label: "Subscribed Lists", icon: List },
-          { id: "engagement", label: "Analytics", icon: BarChart3 },
-          { id: "marketing", label: "Segments & Offers", icon: Megaphone },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as TabType)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 relative ${
-              activeTab === tab.id
-                ? "text-black"
-                : "text-gray-600 hover:text-gray-900"
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-            {activeTab === tab.id && (
-              <div
-                className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: color.primary.accent }}
-              />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      {activeTab === "overview" && (
-        <div className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}>
-          <div className="p-6 space-y-6">
-            {overviewSections.map((section) => (
-              <div key={section.title} className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {section.title}
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {section.items.map(({ label, value }) => (
-                    <div
-                      key={`${section.title}-${label}`}
-                      className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
-                    >
-                      <p className="text-xs uppercase text-gray-500">{label}</p>
-                      <p className="mt-1 text-sm font-semibold text-gray-900 break-words">
-                        {value ?? "—"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {!selectedSubscription && (
-              <p className="text-sm text-gray-500">
-                Detailed subscription data is unavailable for this record.
-              </p>
-            )}
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-1 border-b border-gray-200">
+          {[
+            { id: "overview", label: "Customer Information", icon: FileText },
+            { id: "activity", label: "Events", icon: Activity },
+            { id: "subscribedLists", label: "Subscribed Lists", icon: List },
+            { id: "engagement", label: "Analytics", icon: BarChart3 },
+            { id: "marketing", label: "Segments & Offers", icon: Megaphone },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as TabType)}
+              className={`px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-2 relative ${
+                activeTab === tab.id
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+              {activeTab === tab.id && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: color.primary.accent }}
+                />
+              )}
+            </button>
+          ))}
         </div>
-      )}
 
-      {activeTab === "activity" && (
-        <div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Customer Events
-            </h3>
-            <p className="text-sm text-gray-500">
-              Track all customer interactions including emails, SMS, push
-              notifications, purchases, and more
-            </p>
-          </div>
-
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                value={eventSearchTerm}
-                onChange={(e) => setEventSearchTerm(e.target.value)}
-                placeholder="Search events..."
-                className={`w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent`}
-              />
-            </div>
-            <HeadlessSelect
-              value={eventTypeFilter}
-              onChange={(value) => setEventTypeFilter(value as string)}
-              options={[
-                { label: "All Channels", value: "all" },
-                { label: "Email", value: "email" },
-                { label: "SMS", value: "sms" },
-                { label: "Push", value: "push" },
-              ]}
-              placeholder="All Channels"
-              className="w-auto min-w-[150px]"
-            />
-            <HeadlessSelect
-              value={eventStatusFilter}
-              onChange={(value) => setEventStatusFilter(value as string)}
-              options={[
-                { label: "All Status", value: "all" },
-                { label: "Sent", value: "Sent" },
-                { label: "Delivered", value: "Delivered" },
-                { label: "Opened", value: "Opened" },
-                { label: "Clicked", value: "Clicked" },
-                { label: "Read", value: "Read" },
-              ]}
-              placeholder="All Status"
-              className="w-auto min-w-[150px]"
-            />
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              <input
-                type="date"
-                value={eventDateFrom}
-                onChange={(e) => setEventDateFrom(e.target.value)}
-                placeholder="From Date"
-                className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
-                onClick={(e) =>
-                  (e.currentTarget as HTMLInputElement).showPicker()
-                }
-              />
-              {eventDateFrom && (
-                <button
-                  onClick={() => setEventDateFrom("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
-              <input
-                type="date"
-                value={eventDateTo}
-                onChange={(e) => setEventDateTo(e.target.value)}
-                placeholder="To Date"
-                className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
-                onClick={(e) =>
-                  (e.currentTarget as HTMLInputElement).showPicker()
-                }
-              />
-              {eventDateTo && (
-                <button
-                  onClick={() => setEventDateTo("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Table */}
+        {/* Content */}
+        {activeTab === "overview" && (
           <div
-            className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+            className={`bg-white border border-gray-200 ${tw.rounded} overflow-hidden`}
           >
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                    {["Event Type", "Description", "Channel", "Status"].map(
-                      (header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          {header}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEvents.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-6 py-10 text-center text-sm text-gray-500"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
+            <div className="p-6 space-y-6">
+              {overviewSections.map((section) => (
+                <div key={section.title} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold text-gray-900">
+                      {section.title}
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {section.items.map(({ label, value }) => (
+                      <div
+                        key={`${section.title}-${label}`}
+                        className={`${tw.rounded} border border-gray-100 bg-gray-50 px-4 py-3`}
                       >
-                        No events found
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredEvents.map((event) => {
-                      return (
-                        <tr key={event.id} className="transition-colors">
-                          <td
-                            className="px-6 py-4 font-semibold text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {event.title}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {event.description}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {event.type.toUpperCase()}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {event.status}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === "engagement" && (
-        <div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Event Distribution by Channel - Bar Chart */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Event Distribution by Channel
-              </h3>
-              {eventDistributionData.length === 0 ? (
-                <p className="text-gray-400 text-sm">No data available</p>
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={eventDistributionData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: "transparent" }}
-                      />
-                      <Bar
-                        dataKey="value"
-                        fill={colors.reportCharts.palette.color1}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                        <p className="text-xs uppercase text-gray-500">
+                          {label}
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-gray-900 break-words">
+                          {value ?? "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-            </div>
-
-            {/* Activity Timeline */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Activity Timeline
-              </h3>
-              {activityTimelineData.length === 0 ? (
-                <p className="text-gray-400 text-sm">No data available</p>
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={activityTimelineData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="month"
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: "transparent" }}
-                      />
-                      <Bar
-                        dataKey="events"
-                        fill={colors.reportCharts.palette.color2}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            {/* Status Distribution */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Status Distribution
-              </h3>
-              {statusDistributionData.length === 0 ? (
-                <p className="text-gray-400 text-sm">No data available</p>
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={statusDistributionData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: "transparent" }}
-                      />
-                      <Bar
-                        dataKey="value"
-                        fill={colors.reportCharts.palette.color3}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            {/* Engagement Rate by Channel */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Engagement Rate by Channel
-              </h3>
-              {engagementByChannelData.length === 0 ? (
-                <p className="text-gray-400 text-sm">No data available</p>
-              ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={engagementByChannelData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                        label={{
-                          value: "Engagement Rate (%)",
-                          angle: -90,
-                          position: "insideLeft",
-                        }}
-                      />
-                      <Tooltip
-                        content={<CustomTooltip />}
-                        cursor={{ fill: "transparent" }}
-                        formatter={(value?: number) => value ? `${value}%` : ""}
-                      />
-                      <Bar
-                        dataKey="engagementRate"
-                        fill={colors.reportCharts.palette.color4}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+              ))}
+              {!selectedSubscription && (
+                <p className="text-sm text-gray-500">
+                  Detailed subscription data is unavailable for this record.
+                </p>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === "marketing" && (
-        <div className="space-y-6">
-          {/* Segments Section */}
+        {activeTab === "activity" && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Segments
-            </h3>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Customer Events
+              </h3>
+              <p className="text-sm text-gray-500">
+                Track all customer interactions including emails, SMS, push
+                notifications, purchases, and more
+              </p>
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={eventSearchTerm}
+                  onChange={(e) => setEventSearchTerm(e.target.value)}
+                  placeholder="Search events..."
+                  className={`w-full pl-10 pr-4 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent`}
+                />
+              </div>
+              <HeadlessSelect
+                value={eventTypeFilter}
+                onChange={(value) => setEventTypeFilter(value as string)}
+                options={[
+                  { label: "All Channels", value: "all" },
+                  { label: "Email", value: "email" },
+                  { label: "SMS", value: "sms" },
+                  { label: "Push", value: "push" },
+                ]}
+                placeholder="All Channels"
+                className="w-auto min-w-[150px]"
+              />
+              <HeadlessSelect
+                value={eventStatusFilter}
+                onChange={(value) => setEventStatusFilter(value as string)}
+                options={[
+                  { label: "All Status", value: "all" },
+                  { label: "Sent", value: "Sent" },
+                  { label: "Delivered", value: "Delivered" },
+                  { label: "Opened", value: "Opened" },
+                  { label: "Clicked", value: "Clicked" },
+                  { label: "Read", value: "Read" },
+                ]}
+                placeholder="All Status"
+                className="w-auto min-w-[150px]"
+              />
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={eventDateFrom}
+                  onChange={(e) => setEventDateFrom(e.target.value)}
+                  placeholder="From Date"
+                  className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
+                  onClick={(e) =>
+                    (e.currentTarget as HTMLInputElement).showPicker()
+                  }
+                />
+                {eventDateFrom && (
+                  <button
+                    onClick={() => setEventDateFrom("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="date"
+                  value={eventDateTo}
+                  onChange={(e) => setEventDateTo(e.target.value)}
+                  placeholder="To Date"
+                  className={`w-full pl-10 pr-10 py-2.5 text-sm bg-white border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent cursor-pointer`}
+                  onClick={(e) =>
+                    (e.currentTarget as HTMLInputElement).showPicker()
+                  }
+                />
+                {eventDateTo && (
+                  <button
+                    onClick={() => setEventDateTo("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Table */}
             <div
               className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
             >
@@ -1165,38 +981,505 @@ export default function CustomerSearchResultsPage() {
                 >
                   <thead style={{ background: color.surface.tableHeader }}>
                     <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {["Segment Name", "Type", "Added Date"].map((header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          {header}
-                        </th>
-                      ))}
+                      {["Event Type", "Description", "Channel", "Status"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3"
+                            style={{ color: color.surface.tableHeaderText }}
+                          >
+                            {header}
+                          </th>
+                        ),
+                      )}
                     </tr>
                   </thead>
                   <tbody>
-                    {segments.length === 0 ? (
+                    {filteredEvents.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className="px-6 py-10 text-center text-sm text-gray-500"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
+                          No events found
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedEvents.map((event) => {
+                        return (
+                          <tr key={event.id} className="transition-colors">
+                            <td
+                              className="px-6 py-4 font-semibold text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {event.title}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {event.description}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {event.type.toUpperCase()}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {event.status}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <Pagination
+              currentPage={eventPage}
+              pageSize={pageSize}
+              totalItems={filteredEvents.length}
+              onPageChange={setEventPage}
+            />
+          </div>
+        )}
+
+        {activeTab === "engagement" && (
+          <div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Event Distribution by Channel - Bar Chart */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Event Distribution by Channel
+                </h3>
+                {eventDistributionData.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No data available</p>
+                ) : (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={eventDistributionData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                        />
+                        <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill={colors.reportCharts.palette.color1}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Activity Timeline */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Activity Timeline
+                </h3>
+                {activityTimelineData.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No data available</p>
+                ) : (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={activityTimelineData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="month"
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                        <Bar
+                          dataKey="events"
+                          fill={colors.reportCharts.palette.color2}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Distribution */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Status Distribution
+                </h3>
+                {statusDistributionData.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No data available</p>
+                ) : (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={statusDistributionData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                        />
+                        <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill={colors.reportCharts.palette.color3}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Engagement Rate by Channel */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Engagement Rate by Channel
+                </h3>
+                {engagementByChannelData.length === 0 ? (
+                  <p className="text-gray-400 text-sm">No data available</p>
+                ) : (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={engagementByChannelData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          label={{
+                            value: "Engagement Rate (%)",
+                            angle: -90,
+                            position: "insideLeft",
+                          }}
+                        />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          cursor={{ fill: "transparent" }}
+                          formatter={(value?: number) =>
+                            value ? `${value}%` : ""
+                          }
+                        />
+                        <Bar
+                          dataKey="engagementRate"
+                          fill={colors.reportCharts.palette.color4}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "marketing" && (
+          <div className="space-y-6">
+            {/* Segments Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Segments
+              </h3>
+              <div
+                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+              >
+                <div className="hidden lg:block overflow-x-auto">
+                  <table
+                    className="w-full"
+                    style={{
+                      borderCollapse: "separate",
+                      borderSpacing: "0 8px",
+                    }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                        {["Segment Name", "Type", "Added Date"].map(
+                          (header) => (
+                            <th
+                              key={header}
+                              className="px-6 py-3"
+                              style={{ color: color.surface.tableHeaderText }}
+                            >
+                              {header}
+                            </th>
+                          ),
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {segments.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            className="px-6 py-10 text-center text-sm text-gray-500"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            No segments assigned
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedSegments.map((segment) => (
+                          <tr key={segment.id} className="transition-colors">
+                            <td
+                              className="px-6 py-4 font-semibold text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {segment.name}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {segment.type}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {segment.addedDate ? (
+                                <DateFormatter
+                                  date={segment.addedDate}
+                                  useLocale
+                                  year="numeric"
+                                  month="short"
+                                  day="numeric"
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <Pagination
+                currentPage={segmentPage}
+                pageSize={pageSize}
+                totalItems={segments.length}
+                onPageChange={setSegmentPage}
+              />
+            </div>
+
+            {/* Offers Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Offers
+              </h3>
+              <div
+                className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+              >
+                <div className="hidden lg:block overflow-x-auto">
+                  <table
+                    className="w-full"
+                    style={{
+                      borderCollapse: "separate",
+                      borderSpacing: "0 8px",
+                    }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                        {[
+                          "Offer Name",
+                          "Type",
+                          "Status",
+                          "Value",
+                          "Redeemed Date",
+                        ].map((header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3"
+                            style={{ color: color.surface.tableHeaderText }}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {offers.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="px-6 py-10 text-center text-sm text-gray-500"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            No offers available
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedOffers.map((offer) => (
+                          <tr key={offer.id} className="transition-colors">
+                            <td
+                              className="px-6 py-4 font-semibold text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {offer.name}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {offer.type}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {offer.status}
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              <CurrencyFormatter amount={offer.value} />
+                            </td>
+                            <td
+                              className="px-6 py-4 text-sm text-gray-900"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              {offer.redeemedDate ? (
+                                <DateFormatter
+                                  date={offer.redeemedDate}
+                                  useLocale
+                                  year="numeric"
+                                  month="short"
+                                  day="numeric"
+                                />
+                              ) : (
+                                "—"
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <Pagination
+                currentPage={offerPage}
+                pageSize={pageSize}
+                totalItems={offers.length}
+                onPageChange={setOfferPage}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "subscribedLists" && (
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Subscribed Lists
+              </h3>
+              <p className="text-sm text-gray-500">
+                View all mailing lists and subscriptions for this customer
+              </p>
+            </div>
+
+            {/* Table */}
+            <div
+              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+            >
+              <div className="hidden lg:block overflow-x-auto">
+                <table
+                  className="w-full"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead style={{ background: color.surface.tableHeader }}>
+                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
+                      {["List Name", "Subscribed Date", "Status"].map(
+                        (header) => (
+                          <th
+                            key={header}
+                            className="px-6 py-3"
+                            style={{ color: color.surface.tableHeaderText }}
+                          >
+                            {header}
+                          </th>
+                        ),
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lists.length === 0 ? (
                       <tr>
                         <td
                           colSpan={3}
                           className="px-6 py-10 text-center text-sm text-gray-500"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          No segments assigned
+                          No subscriptions found
                         </td>
                       </tr>
                     ) : (
-                      segments.map((segment) => (
-                        <tr key={segment.id} className="transition-colors">
+                      paginatedLists.map((list) => (
+                        <tr key={list.id} className="transition-colors">
                           <td
                             className="px-6 py-4 font-semibold text-sm text-gray-900"
                             style={{
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {segment.name}
+                            {list.name}
                           </td>
                           <td
                             className="px-6 py-4 text-sm text-gray-900"
@@ -1204,17 +1487,9 @@ export default function CustomerSearchResultsPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {segment.type}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {segment.addedDate ? (
+                            {list.subscribedDate ? (
                               <DateFormatter
-                                date={segment.addedDate}
+                                date={list.subscribedDate}
                                 useLocale
                                 year="numeric"
                                 month="short"
@@ -1224,108 +1499,15 @@ export default function CustomerSearchResultsPage() {
                               "—"
                             )}
                           </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Offers Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Offers</h3>
-            <div
-              className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-            >
-              <div className="hidden lg:block overflow-x-auto">
-                <table
-                  className="w-full"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                      {[
-                        "Offer Name",
-                        "Type",
-                        "Status",
-                        "Value",
-                        "Redeemed Date",
-                      ].map((header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {offers.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="px-6 py-10 text-center text-sm text-gray-500"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          No offers available
-                        </td>
-                      </tr>
-                    ) : (
-                      offers.map((offer) => (
-                        <tr key={offer.id} className="transition-colors">
-                          <td
-                            className="px-6 py-4 font-semibold text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {offer.name}
-                          </td>
                           <td
                             className="px-6 py-4 text-sm text-gray-900"
                             style={{
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {offer.type}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {offer.status}
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <CurrencyFormatter amount={offer.value} />
-                          </td>
-                          <td
-                            className="px-6 py-4 text-sm text-gray-900"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {offer.redeemedDate ? (
-                              <DateFormatter
-                                date={offer.redeemedDate}
-                                useLocale
-                                year="numeric"
-                                month="short"
-                                day="numeric"
-                              />
-                            ) : (
-                              "—"
-                            )}
+                            {list.status === "active"
+                              ? "Active"
+                              : "Unsubscribed"}
                           </td>
                         </tr>
                       ))
@@ -1334,102 +1516,14 @@ export default function CustomerSearchResultsPage() {
                 </table>
               </div>
             </div>
+            <Pagination
+              currentPage={listPage}
+              pageSize={pageSize}
+              totalItems={lists.length}
+              onPageChange={setListPage}
+            />
           </div>
-        </div>
-      )}
-
-      {activeTab === "subscribedLists" && (
-        <div>
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Subscribed Lists
-            </h3>
-            <p className="text-sm text-gray-500">
-              View all mailing lists and subscriptions for this customer
-            </p>
-          </div>
-
-          {/* Table */}
-          <div
-            className={`${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
-          >
-            <div className="hidden lg:block overflow-x-auto">
-              <table
-                className="w-full"
-                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-              >
-                <thead style={{ background: color.surface.tableHeader }}>
-                  <tr className="text-left text-sm font-medium uppercase tracking-wider">
-                    {["List Name", "Subscribed Date", "Status"].map(
-                      (header) => (
-                        <th
-                          key={header}
-                          className="px-6 py-3"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
-                          {header}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lists.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={3}
-                        className="px-6 py-10 text-center text-sm text-gray-500"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        No subscriptions found
-                      </td>
-                    </tr>
-                  ) : (
-                    lists.map((list) => (
-                      <tr key={list.id} className="transition-colors">
-                        <td
-                          className="px-6 py-4 font-semibold text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {list.name}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {list.subscribedDate ? (
-                            <DateFormatter
-                              date={list.subscribedDate}
-                              useLocale
-                              year="numeric"
-                              month="short"
-                              day="numeric"
-                            />
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td
-                          className="px-6 py-4 text-sm text-gray-900"
-                          style={{
-                            backgroundColor: color.surface.tablebodybg,
-                          }}
-                        >
-                          {list.status === "active" ? "Active" : "Unsubscribed"}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
       </div>
     </PermissionGate>
   );

@@ -17,6 +17,7 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import HeadlessSelect from "./ui/HeadlessSelect";
+import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
 

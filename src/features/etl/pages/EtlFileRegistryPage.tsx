@@ -18,6 +18,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import FetchControlsModal from "../components/FetchControlsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
@@ -249,7 +250,9 @@ export default function EtlFileRegistryPage() {
           const statsArray = Array.isArray(stats.data) ? stats.data : [];
 
           const totalCdrFiles = statsArray
-            .filter((row: Record<string, unknown>) => row.file_category === "CDR")
+            .filter(
+              (row: Record<string, unknown>) => row.file_category === "CDR",
+            )
             .reduce(
               (sum: number, row: Record<string, unknown>) =>
                 sum + parseInt((row.file_count as string) || "0", 10),
@@ -257,7 +260,9 @@ export default function EtlFileRegistryPage() {
             );
 
           const totalTdrFiles = statsArray
-            .filter((row: Record<string, unknown>) => row.file_category === "TDR")
+            .filter(
+              (row: Record<string, unknown>) => row.file_category === "TDR",
+            )
             .reduce(
               (sum: number, row: Record<string, unknown>) =>
                 sum + parseInt((row.file_count as string) || "0", 10),
@@ -550,32 +555,12 @@ export default function EtlFileRegistryPage() {
 
       {/* Pagination */}
       {!isLoadingFiles && files.length > 0 && (
-        <div
-          className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
-        >
-          <p>
-            {`Showing ${(page - 1) * PAGE_SIZE + 1}-${Math.min(page * PAGE_SIZE, totalCount)} of ${totalCount} files`}
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={page === 1}
-              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
-            >
-              {t.etl.prev}
-            </button>
-            <span className="text-gray-500">
-              {`Page ${page} of ${totalPages}`}
-            </span>
-            <button
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={page === totalPages}
-              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
-            >
-              {t.etl.nextButton}
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          pageSize={PAGE_SIZE}
+          totalItems={totalCount}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Fetch Controls Modal */}

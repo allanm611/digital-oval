@@ -50,7 +50,7 @@ export default function HeadlessSelect({
 
   const filteredOptions = searchable
     ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+        option.label.toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : options;
 
@@ -175,7 +175,7 @@ export default function HeadlessSelect({
               ))
             )}
           </div>,
-          document.body
+          document.body,
         )}
 
       {isOpen && (

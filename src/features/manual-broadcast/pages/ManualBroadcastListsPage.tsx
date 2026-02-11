@@ -9,9 +9,11 @@ import {
   CheckCircle,
   XCircle,
   Plus,
+  ArrowLeft,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { communicationService } from "../../communications/services/communicationService";
 import { ManualBroadcast } from "../../communications/types/communication";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -225,13 +227,22 @@ export default function ManualBroadcastListsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Manual Communications
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            View and manage communications sent to manual recipient lists
-          </p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Go back"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </button>
+          <div>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+              Manual Communications
+            </h1>
+            <p className={`${tw.textSecondary} mt-2 text-sm`}>
+              View and manage communications sent to manual recipient lists
+            </p>
+          </div>
         </div>
         {/* <PermissionGate permission="manual-communications.create"> */}
         <div className="flex items-center gap-3">
@@ -467,48 +478,13 @@ export default function ManualBroadcastListsPage() {
             </div>
 
             {/* Pagination */}
-            {broadcasts.length > 0 && pagination.total > pagination.limit && (
-              <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-200">
-                <div className="text-sm text-gray-700">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                  {Math.min(
-                    pagination.page * pagination.limit,
-                    pagination.total,
-                  )}{" "}
-                  of {pagination.total.toLocaleString()} broadcasts
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() =>
-                      loadBroadcasts(Math.max(1, pagination.page - 1))
-                    }
-                    disabled={pagination.page === 1}
-                    className={`${tw.button} px-3 py-1 text-sm ${
-                      pagination.page === 1
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-700">
-                    Page {pagination.page}
-                  </span>
-                  <button
-                    onClick={() => loadBroadcasts(pagination.page + 1)}
-                    disabled={
-                      pagination.page * pagination.limit >= pagination.total
-                    }
-                    className={`${tw.button} px-3 py-1 text-sm ${
-                      pagination.page * pagination.limit >= pagination.total
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+            {broadcasts.length > 0 && pagination.total > 0 && (
+              <Pagination
+                currentPage={pagination.page}
+                pageSize={pagination.limit}
+                totalItems={pagination.total}
+                onPageChange={(page) => loadBroadcasts(page)}
+              />
             )}
           </>
         )}

@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, Search, Eye, DollarSign } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { RevenueMetric } from "../types/revenueMetrics";
 import { revenueMetricService } from "../services/revenueMetricService";
 import { useToast } from "../../../contexts/ToastContext";
@@ -20,10 +21,16 @@ export default function RevenueMetricsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
 
   useEffect(() => {
     loadMetrics();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter]);
 
   const loadMetrics = async () => {
     try {
@@ -48,7 +55,10 @@ export default function RevenueMetricsPage() {
     try {
       setDeleting(deleteConfirmId);
       await revenueMetricService.deleteMetric(deleteConfirmId);
-      success("Success", `"${deleteConfirmName}" has been deleted successfully`);
+      success(
+        "Success",
+        `"${deleteConfirmName}" has been deleted successfully`,
+      );
       await loadMetrics();
       setDeleteConfirmId(null);
       setDeleteConfirmName("");
@@ -64,18 +74,28 @@ export default function RevenueMetricsPage() {
       const matchesSearch =
         metric.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         metric.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = categoryFilter === "all" || metric.category === categoryFilter;
+      const matchesCategory =
+        categoryFilter === "all" || metric.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [metrics, searchTerm, categoryFilter]);
+
+  const paginatedMetrics = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredMetrics.slice(startIndex, endIndex);
+  }, [filteredMetrics, currentPage, pageSize]);
 
   // Calculate statistics
   const stats = {
     totalMetrics: metrics.length,
     dataRevenue: metrics.filter((m) => m.category === "data_revenue").length,
     voiceRevenue: metrics.filter((m) => m.category === "voice_revenue").length,
-    otherRevenue: metrics.filter((m) =>
-      m.category === "sms_revenue" || m.category === "bundle_revenue" || m.category === "other_revenue"
+    otherRevenue: metrics.filter(
+      (m) =>
+        m.category === "sms_revenue" ||
+        m.category === "bundle_revenue" ||
+        m.category === "other_revenue",
     ).length,
   };
 
@@ -106,7 +126,9 @@ export default function RevenueMetricsPage() {
         <div className="flex items-center gap-4">
           <BackButton fallbackTo="/dashboard/kpis" />
           <div>
-            <h2 className="text-3xl font-bold text-gray-900">Revenue Metrics</h2>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Revenue Metrics
+            </h2>
             <p className={`text-sm ${tw.textSecondary} mt-1`}>
               Manage revenue performance indicators and metrics tracking
             </p>
@@ -139,7 +161,9 @@ export default function RevenueMetricsPage() {
                 />
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {stat.value}
+              </p>
             </div>
           );
         })}
@@ -228,8 +252,14 @@ export default function RevenueMetricsPage() {
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center justify-center">
-                    <LoadingSpinner variant="modern" size="md" color="primary" />
-                    <p className={`${tw.textMuted} font-medium mt-4`}>Loading metrics...</p>
+                    <LoadingSpinner
+                      variant="modern"
+                      size="md"
+                      color="primary"
+                    />
+                    <p className={`${tw.textMuted} font-medium mt-4`}>
+                      Loading metrics...
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -242,7 +272,7 @@ export default function RevenueMetricsPage() {
                 </td>
               </tr>
             ) : (
-              filteredMetrics.map((metric) => (
+              paginatedMetrics.map((metric) => (
                 <tr
                   key={metric.id}
                   style={{ backgroundColor: color.surface.tablebodybg }}
@@ -251,7 +281,9 @@ export default function RevenueMetricsPage() {
                     {metric.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-black">
-                    {metric.category.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                    {metric.category
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </td>
                   <td className="px-6 py-4 text-sm text-black">
                     {metric.field_type === "decimal" ? "Decimal" : "Numeric"}
@@ -262,7 +294,11 @@ export default function RevenueMetricsPage() {
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center justify-end space-x-2">
                       <button
-                        onClick={() => navigate(`/dashboard/kpis/revenue-metrics/${metric.id}`)}
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/kpis/revenue-metrics/${metric.id}`,
+                          )
+                        }
                         disabled={deleting === metric.id || loading}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="View details"
@@ -270,7 +306,11 @@ export default function RevenueMetricsPage() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => navigate(`/dashboard/kpis/revenue-metrics/${metric.id}/edit`)}
+                        onClick={() =>
+                          navigate(
+                            `/dashboard/kpis/revenue-metrics/${metric.id}/edit`,
+                          )
+                        }
                         disabled={deleting === metric.id || loading}
                         className={`p-2 ${tw.rounded} text-black disabled:opacity-60`}
                         title="Edit metric"
@@ -294,13 +334,25 @@ export default function RevenueMetricsPage() {
         </table>
       </div>
 
+      {paginatedMetrics.length > 0 && filteredMetrics.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredMetrics.length}
+          onPageChange={setCurrentPage}
+        />
+      )}
+
       {/* Delete Confirmation Modal */}
       {deleteConfirmId !== null && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-md p-6 max-w-md w-full mx-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>Delete Revenue Metric</h3>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
+              Delete Revenue Metric
+            </h3>
             <p className={`${tw.textSecondary} text-sm mb-6`}>
-              Are you sure you want to delete "{deleteConfirmName}"? This action cannot be undone.
+              Are you sure you want to delete "{deleteConfirmName}"? This action
+              cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button

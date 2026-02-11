@@ -670,28 +670,6 @@ export default function ProductCatalogsPage() {
       setTogglingCategoryId(category.id);
       const newActiveStatus = !category.is_active;
 
-      // If deactivating, check for active products first
-      if (!newActiveStatus) {
-        const activeProductsResponse =
-          await productCategoryService.getCategoryProducts(category.id, {
-            limit: 1,
-            active_only: true,
-            skipCache: true,
-          });
-        const activeProducts = activeProductsResponse.data || [];
-
-        if (activeProducts.length > 0) {
-          showError(
-            "Cannot Deactivate Category",
-            `This category cannot be deactivated because it has ${
-              activeProductsResponse.pagination?.total || activeProducts.length
-            } active product(s) using it. Please deactivate or reassign those products first.`,
-          );
-          setTogglingCategoryId(null);
-          return;
-        }
-      }
-
       if (newActiveStatus) {
         await productCategoryService.activateCategory(category.id);
       } else {
@@ -708,17 +686,10 @@ export default function ProductCatalogsPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
+      // Display full backend error message
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      // Check if it's the backend validation error
-      if (
-        errorMessage.includes("Cannot modify category") ||
-        errorMessage.includes("active")
-      ) {
-        showError("Cannot Deactivate Category", errorMessage);
-      } else {
-        showError(t.productCatalogs.saveFailed, t.productCatalogs.saveFailed);
-      }
+      showError("Deactivation Failed", errorMessage);
     } finally {
       setTogglingCategoryId(null);
     }

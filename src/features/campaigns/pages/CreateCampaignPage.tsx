@@ -5,7 +5,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { ArrowLeft, Target, Users, Gift, Calendar, Eye } from "lucide-react";
+import { Target, Users, Gift, Calendar, Eye } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -15,6 +15,7 @@ import {
 } from "../../../shared/hooks/useFormDataPersistence";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -210,6 +211,7 @@ export default function CreateCampaignPage() {
     SegmentOfferMapping[]
   >([]);
   const [campaignFlows, setCampaignFlows] = useState<CampaignFlowConfig[]>([]);
+  const [originalFlows, setOriginalFlows] = useState<CampaignFlowConfig[]>([]); // Track original flows for edit mode
   const [controlGroup, setControlGroup] = useState<ControlGroup>({
     enabled: false,
     percentage: 5,
@@ -419,6 +421,8 @@ export default function CreateCampaignPage() {
             );
 
             setCampaignFlows(flows);
+            // Store original flows for edit mode comparison
+            setOriginalFlows(JSON.parse(JSON.stringify(flows)));
           }
         } catch (flowError) {
           console.error("Failed to load campaign flows:", flowError);
@@ -970,22 +974,102 @@ export default function CreateCampaignPage() {
           }
         }
 
-        // Create campaign flows (new approach) if flows exist
-        // Campaign flows contain all segment-offer-flow mappings, so we don't need the old mapping approach
+        // Handle campaign flows (create, update, delete)
         if (campaignFlows && campaignFlows.length > 0) {
           try {
-            const flowsToCreate: CampaignFlowConfig[] = campaignFlows.map(
-              (flow, index) => ({
-                ...flow,
-                campaign_id: createdCampaignIdValue,
-                step_order: index + 1,
-                created_by: user?.user_id || 1,
-              }),
-            );
+            if (isEditMode && originalFlows.length > 0) {
+              // EDIT MODE: Compare and sync flows (delete/update/create)
 
-            await campaignFlowService.createBatchCampaignFlows(flowsToCreate);
+              // 1. DELETE flows that are no longer in the list
+              for (const originalFlow of originalFlows) {
+                const stillExists = campaignFlows.some(
+                  (f) =>
+                    f.segment_id === originalFlow.segment_id &&
+                    f.offer_id === originalFlow.offer_id,
+                );
+                if (!stillExists && (originalFlow as any).id) {
+                  try {
+                    await campaignFlowService.deleteCampaignFlow(
+                      (originalFlow as any).id,
+                    );
+                    console.log(
+                      "Deleted flow:",
+                      originalFlow.segment_id,
+                      originalFlow.offer_id,
+                    );
+                  } catch (deleteError) {
+                    console.error("Error deleting flow:", deleteError);
+                  }
+                }
+              }
 
-            showToast("success", t.messages.success || "Success");
+              // 2. UPDATE existing flows that changed
+              for (const updatedFlow of campaignFlows) {
+                const originalFlow = originalFlows.find(
+                  (f) =>
+                    f.segment_id === updatedFlow.segment_id &&
+                    f.offer_id === updatedFlow.offer_id,
+                );
+                if (
+                  originalFlow &&
+                  (originalFlow as any).id &&
+                  JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
+                ) {
+                  try {
+                    await campaignFlowService.updateCampaignFlow(
+                      (originalFlow as any).id,
+                      updatedFlow,
+                    );
+                    console.log(
+                      "Updated flow:",
+                      updatedFlow.segment_id,
+                      updatedFlow.offer_id,
+                    );
+                  } catch (updateError) {
+                    console.error("Error updating flow:", updateError);
+                  }
+                }
+              }
+
+              // 3. CREATE new flows
+              const newFlows = campaignFlows.filter(
+                (f) =>
+                  !originalFlows.some(
+                    (of) =>
+                      of.segment_id === f.segment_id &&
+                      of.offer_id === f.offer_id,
+                  ),
+              );
+              if (newFlows.length > 0) {
+                const flowsToCreate: CampaignFlowConfig[] = newFlows.map(
+                  (flow, index) => ({
+                    ...flow,
+                    campaign_id: createdCampaignIdValue,
+                    step_order: index + 1,
+                    created_by: user?.user_id || 1,
+                  }),
+                );
+                await campaignFlowService.createBatchCampaignFlows(
+                  flowsToCreate,
+                );
+                console.log("Created new flows:", newFlows.length);
+              }
+
+              showToast("success", "Campaign updated successfully");
+            } else {
+              // CREATE MODE: Create all flows as new
+              const flowsToCreate: CampaignFlowConfig[] = campaignFlows.map(
+                (flow, index) => ({
+                  ...flow,
+                  campaign_id: createdCampaignIdValue,
+                  step_order: index + 1,
+                  created_by: user?.user_id || 1,
+                }),
+              );
+
+              await campaignFlowService.createBatchCampaignFlows(flowsToCreate);
+              showToast("success", t.messages.success || "Success");
+            }
           } catch (flowError) {
             console.error("Error saving campaign flows:", flowError);
             showToast("warning", t.messages.warning || "Warning");
@@ -1319,17 +1403,16 @@ export default function CreateCampaignPage() {
   return (
     <div className="min-h-screen">
       <div
-        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-4`}
+        className={`bg-white ${tw.rounded} border p-4`}
+        style={{ borderColor: color.border.default }}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => navigate("/dashboard/campaigns")}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+              <BackButton
+                fallbackTo="/dashboard/campaigns"
+                className="text-gray-400 hover:text-gray-600"
+              />
               <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
                 {isEditMode
                   ? "Edit Campaign"

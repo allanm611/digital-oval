@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Database, Activity, Shield, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Database,
+  Activity,
+  Shield,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import {
   PieChart,
   Pie,
@@ -113,7 +121,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
     ConnectionProfileType[]
   >([]);
   const [activeProfiles, setActiveProfiles] = useState<ConnectionProfileType[]>(
-    []
+    [],
   );
   const [piiProfiles, setPiiProfiles] = useState<ConnectionProfileType[]>([]);
   const [healthEnabledProfiles, setHealthEnabledProfiles] = useState<
@@ -155,7 +163,10 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
       setHealthEnabledProfiles(healthEnabled || []);
     } catch (err) {
       console.error("Failed to load analytics:", err);
-      showError(t.analytics.failedToLoadAnalytics, t.analytics.errorLoadingData);
+      showError(
+        t.analytics.failedToLoadAnalytics,
+        t.analytics.errorLoadingData,
+      );
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +182,9 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
           skipCache: true,
         });
         setMostUsedProfiles(response.data || []);
-        setMostUsedTotalCount(response.pagination?.total || response.count || 0);
+        setMostUsedTotalCount(
+          response.pagination?.total || response.count || 0,
+        );
       } catch (err) {
         console.error("Failed to load most used profiles:", err);
       }
@@ -238,7 +251,7 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
         ([key, value]) => ({
           name: key.charAt(0).toUpperCase() + key.slice(1),
           value: Number(value) || 0,
-        })
+        }),
       )
     : [];
 
@@ -685,39 +698,12 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
               </div>
               {/* Pagination Controls for Most Used Profiles */}
               {mostUsedTotalCount > mostUsedPageSize && (
-                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
-                  <span className="text-sm text-gray-600">
-                    Showing{" "}
-                    <strong>
-                      {(mostUsedCurrentPage - 1) * mostUsedPageSize + 1}-
-                      {Math.min(mostUsedCurrentPage * mostUsedPageSize, mostUsedTotalCount)}
-                    </strong>{" "}
-                    of <strong>{mostUsedTotalCount}</strong>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setMostUsedCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={mostUsedCurrentPage === 1}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: color.surface.border }}
-                      title="Previous page"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
-                      Page {mostUsedCurrentPage}
-                    </span>
-                    <button
-                      onClick={() => setMostUsedCurrentPage((p) => p + 1)}
-                      disabled={mostUsedCurrentPage * mostUsedPageSize >= mostUsedTotalCount}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: color.surface.border }}
-                      title="Next page"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={mostUsedCurrentPage}
+                  pageSize={mostUsedPageSize}
+                  totalItems={mostUsedTotalCount}
+                  onPageChange={setMostUsedCurrentPage}
+                />
               )}
             </div>
           )}
@@ -807,39 +793,12 @@ export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
               </div>
               {/* Pagination Controls for Expired Profiles */}
               {expiredTotalCount > expiredPageSize && (
-                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-2">
-                  <span className="text-sm text-gray-600">
-                    Showing{" "}
-                    <strong>
-                      {(expiredCurrentPage - 1) * expiredPageSize + 1}-
-                      {Math.min(expiredCurrentPage * expiredPageSize, expiredTotalCount)}
-                    </strong>{" "}
-                    of <strong>{expiredTotalCount}</strong>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setExpiredCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={expiredCurrentPage === 1}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: color.surface.border }}
-                      title="Previous page"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <span className="text-sm text-gray-600 min-w-[50px] text-center">
-                      Page {expiredCurrentPage}
-                    </span>
-                    <button
-                      onClick={() => setExpiredCurrentPage((p) => p + 1)}
-                      disabled={expiredCurrentPage * expiredPageSize >= expiredTotalCount}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      style={{ borderColor: color.surface.border }}
-                      title="Next page"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={expiredCurrentPage}
+                  pageSize={expiredPageSize}
+                  totalItems={expiredTotalCount}
+                  onPageChange={setExpiredCurrentPage}
+                />
               )}
             </div>
           )}

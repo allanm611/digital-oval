@@ -533,10 +533,10 @@ export default function CampaignCategoriesPage() {
         );
       } catch (err) {
         console.error("Failed to toggle category status:", err);
+        // Display full backend error message
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update category";
-        // Display backend error message directly
-        showError("Cannot Deactivate Category", errorMessage);
+        showError("Deactivation Failed", errorMessage);
       } finally {
         setTogglingCategoryId(null);
       }

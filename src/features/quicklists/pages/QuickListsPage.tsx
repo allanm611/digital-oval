@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Upload,
@@ -27,6 +27,7 @@ import {
 import CreateQuickListModal from "../components/CreateQuickListModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 export default function QuickListsPage() {
   const navigate = useNavigate();
@@ -43,12 +44,9 @@ export default function QuickListsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-    hasMore: false,
-  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalQuicklists, setTotalQuicklists] = useState(0);
+  const PAGE_SIZE = 20;
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -69,17 +67,18 @@ export default function QuickListsPage() {
     }
 
     // Reset to page 1 and reload when search changes
+    setCurrentPage(1);
     loadQuickLists(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   useEffect(() => {
     // Load quicklists when page changes (skip initial mount)
-    if (!isInitialMount.current && pagination.page > 0) {
-      loadQuickLists(pagination.page);
+    if (!isInitialMount.current && currentPage > 0) {
+      loadQuickLists(currentPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.page]);
+  }, [currentPage]);
 
   const loadStats = async () => {
     try {
@@ -98,22 +97,16 @@ export default function QuickListsPage() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const initialLimit = 10;
       // Load quicklists
       const quicklistsRes = await quicklistService.getAllQuickLists({
-        limit: initialLimit,
+        limit: PAGE_SIZE,
         offset: 0,
       });
 
       if (quicklistsRes.success) {
         setQuicklists(quicklistsRes.data || []);
         if (quicklistsRes.pagination) {
-          setPagination({
-            page: 1,
-            limit: quicklistsRes.pagination.limit || initialLimit,
-            total: quicklistsRes.pagination.total,
-            hasMore: quicklistsRes.pagination.hasMore,
-          });
+          setTotalQuicklists(quicklistsRes.pagination.total);
         }
       }
     } catch (err) {
@@ -124,20 +117,20 @@ export default function QuickListsPage() {
     }
   };
 
-  const loadQuickLists = async (page: number = pagination.page) => {
+  const loadQuickLists = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const offset = (page - 1) * pagination.limit;
+      const offset = (page - 1) * PAGE_SIZE;
       let response;
       if (searchTerm) {
         response = await quicklistService.searchQuickLists({
           q: searchTerm,
-          limit: pagination.limit,
+          limit: PAGE_SIZE,
           offset,
         });
       } else {
         response = await quicklistService.getAllQuickLists({
-          limit: pagination.limit,
+          limit: PAGE_SIZE,
           offset,
         });
       }
@@ -145,12 +138,7 @@ export default function QuickListsPage() {
       if (response.success) {
         setQuicklists(response.data || []);
         if (response.pagination) {
-          setPagination({
-            page,
-            limit: response.pagination.limit,
-            total: response.pagination.total,
-            hasMore: response.pagination.hasMore,
-          });
+          setTotalQuicklists(response.pagination.total);
         }
       } else {
         throw new Error(
@@ -312,7 +300,7 @@ export default function QuickListsPage() {
         showToast(t.quickList.updatedSuccess);
         setIsEditModalOpen(false);
         setEditQuickList(null);
-        await loadQuickLists(pagination.page);
+        await loadQuickLists(currentPage);
         await loadStats();
       }
     } catch (err) {
@@ -355,8 +343,6 @@ export default function QuickListsPage() {
       color: color.tertiary.tag2,
     },
   ];
-
-  const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   return (
     <div className="space-y-6">
@@ -589,55 +575,14 @@ export default function QuickListsPage() {
         )}
       </div>
 
-      {/* Pagination - Outside table container */}
-      {!loading && pagination.total > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4 overflow-x-auto`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-base ${tw.textSecondary} text-center sm:text-left`}
-            >
-              Showing{" "}
-              {Math.min(
-                (pagination.page - 1) * pagination.limit + 1,
-                pagination.total,
-              )}{" "}
-              to{" "}
-              {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-              of {pagination.total.toLocaleString()} QuickLists
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    page: Math.max(1, prev.page - 1),
-                  }))
-                }
-                disabled={pagination.page <= 1}
-                className={`px-3 py-2 text-base border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                Previous
-              </button>
-              <span className={`text-base ${tw.textSecondary} px-2`}>
-                Page {pagination.page} of {totalPages || 1}
-              </span>
-              <button
-                onClick={() =>
-                  setPagination((prev) => ({
-                    ...prev,
-                    page: prev.page + 1,
-                  }))
-                }
-                disabled={pagination.page >= totalPages}
-                className={`px-3 py-2 text-base border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Pagination */}
+      {!loading && totalQuicklists > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          pageSize={PAGE_SIZE}
+          totalItems={totalQuicklists}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Modals */}

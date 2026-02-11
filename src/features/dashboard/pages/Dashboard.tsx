@@ -8,20 +8,16 @@ const DashboardHome = lazy(
   () => import(/* webpackPrefetch: true */ "../components/DashboardHome"),
 );
 
-import CampaignsPageWrapper from "../../campaigns/pages/CampaignsPageWrapper";
-import CreateCampaignPageWrapper from "../../campaigns/pages/CreateCampaignPageWrapper";
-import CampaignDetailsPageWrapper from "../../campaigns/pages/CampaignDetailsPageWrapper";
-
 const CampaignPages = {
-  CampaignsPage: CampaignsPageWrapper,
+  CampaignsPage: lazy(() => import("../../campaigns/pages/CampaignsPageWrapper")),
   CampaignsAnalyticsPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../campaigns/pages/CampaignsAnalyticsPage"
       ),
   ),
-  CampaignDetailsPage: CampaignDetailsPageWrapper,
-  CreateCampaignPage: CreateCampaignPageWrapper,
+  CampaignDetailsPage: lazy(() => import("../../campaigns/pages/CampaignDetailsPageWrapper")),
+  CreateCampaignPage: lazy(() => import("../../campaigns/pages/CreateCampaignPageWrapper")),
   CampaignCategoriesPage: lazy(
     () =>
       import(
@@ -114,13 +110,9 @@ const CampaignPages = {
 
 // Offer Pages - All routes preloaded for instant access
 
-import OfferCategoriesPageWrapper from "../../offers/pages/OfferCategoriesPageWrapper";
-import OfferDetailsPageWrapper from "../../offers/pages/OfferDetailsPageWrapper";
-import OffersPageWrapper from "../../offers/pages/OffersPageWrapper";
-
 const OfferPages = {
-  OffersPage: OffersPageWrapper,
-  OfferDetailsPage: OfferDetailsPageWrapper,
+  OffersPage: lazy(() => import("../../offers/pages/OffersPageWrapper")),
+  OfferDetailsPage: lazy(() => import("../../offers/pages/OfferDetailsPageWrapper")),
   OfferLifecycleHistoryPage: lazy(
     () =>
       import(
@@ -141,7 +133,7 @@ const OfferPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../offers/pages/OfferTypesPage"),
   ),
-  OfferCategoriesPage: OfferCategoriesPageWrapper,
+  OfferCategoriesPage: lazy(() => import("../../offers/pages/OfferCategoriesPageWrapper")),
   TrackingSourcesPage: lazy(
     () =>
       import(
@@ -182,12 +174,8 @@ const OfferPages = {
 
 // Product Pages - All routes preloaded for instant access
 
-import ProductCategoriesPageWrapper from "../../products/pages/ProductCategoriesPageWrapper";
-import ProductDetailsPageWrapper from "../../products/pages/ProductDetailsPageWrapper";
-import ProductsPageWrapper from "../../products/pages/ProductsPageWrapper";
-
 const ProductPages = {
-  ProductsPage: ProductsPageWrapper,
+  ProductsPage: lazy(() => import("../../products/pages/ProductsPageWrapper")),
   CreateProductPage: lazy(
     () =>
       import(
@@ -200,8 +188,8 @@ const ProductPages = {
         /* webpackPrefetch: true */ "../../products/pages/EditProductPage"
       ),
   ),
-  ProductDetailsPage: ProductDetailsPageWrapper,
-  ProductCategoriesPage: ProductCategoriesPageWrapper,
+  ProductDetailsPage: lazy(() => import("../../products/pages/ProductDetailsPageWrapper")),
+  ProductCategoriesPage: lazy(() => import("../../products/pages/ProductCategoriesPageWrapper")),
   ProductTypesPage: lazy(
     () =>
       import(
@@ -222,20 +210,17 @@ const ProductPages = {
 
 // Segment Pages - All routes preloaded for instant access
 
-import SegmentCategoriesPageWrapper from "../../segments/pages/SegmentCategoriesPageWrapper";
-import SegmentDetailsPageWrapper from "../../segments/pages/SegmentDetailsPageWrapper";
-import SegmentManagementPageWrapper from "../../segments/pages/SegmentManagementPageWrapper";
-
 const SegmentPages = {
-  SegmentManagementPage: SegmentManagementPageWrapper,
-  SegmentDetailsPage: SegmentDetailsPageWrapper,
+  SegmentManagementPage: lazy(() => import("../../segments/pages/SegmentManagementPageWrapper")),
+  SegmentAnalyticsPage: lazy(() => import("../../segments/pages/SegmentAnalyticsPage")),
+  SegmentDetailsPage: lazy(() => import("../../segments/pages/SegmentDetailsPageWrapper")),
   EditSegmentPage: lazy(
     () =>
       import(
         /* webpackPrefetch: true */ "../../segments/pages/EditSegmentPage"
       ),
   ),
-  SegmentCategoriesPage: SegmentCategoriesPageWrapper,
+  SegmentCategoriesPage: lazy(() => import("../../segments/pages/SegmentCategoriesPageWrapper")),
   SegmentListPage: lazy(
     () =>
       import(
@@ -252,20 +237,12 @@ const SegmentPages = {
 
 // Job Pages - All routes preloaded for instant access
 
-import ScheduledJobsPageWrapper from "../../jobs/pages/ScheduledJobsPageWrapper";
-import ScheduledJobDetailsPageWrapper from "../../jobs/pages/ScheduledJobDetailsPageWrapper";
-import JobExecutionsPageWrapper from "../../jobs/pages/JobExecutionsPageWrapper";
-import JobExecutionDetailsPageWrapper from "../../jobs/pages/JobExecutionDetailsPageWrapper";
-import JobWorkflowStepDetailsPageWrapper from "../../jobs/pages/JobWorkflowStepDetailsPageWrapper";
-import WorkflowDetailsPageWrapper from "../../jobs/pages/WorkflowDetailsPageWrapper";
-import StepExecutionDetailsPageWrapper from "../../jobs/pages/StepExecutionDetailsPageWrapper";
-
 const JobPages = {
   JobTypesPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../jobs/pages/JobTypesPage"),
   ),
-  ScheduledJobsPage: ScheduledJobsPageWrapper,
-  ScheduledJobDetailsPage: ScheduledJobDetailsPageWrapper,
+  ScheduledJobsPage: lazy(() => import("../../jobs/pages/ScheduledJobsPageWrapper")),
+  ScheduledJobDetailsPage: lazy(() => import("../../jobs/pages/ScheduledJobDetailsPageWrapper")),
   CreateScheduledJobPage: lazy(
     () =>
       import(
@@ -296,7 +273,7 @@ const JobPages = {
         /* webpackPrefetch: true */ "../../jobs/pages/JobWorkflowStepsPage"
       ),
   ),
-  JobWorkflowStepDetailsPage: JobWorkflowStepDetailsPageWrapper,
+  JobWorkflowStepDetailsPage: lazy(() => import("../../jobs/pages/JobWorkflowStepDetailsPageWrapper")),
   CreateJobWorkflowStepPage: lazy(
     () =>
       import(
@@ -312,7 +289,7 @@ const JobPages = {
   WorkflowsPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../jobs/pages/WorkflowsPage"),
   ),
-  WorkflowDetailsPage: WorkflowDetailsPageWrapper,
+  WorkflowDetailsPage: lazy(() => import("../../jobs/pages/WorkflowDetailsPageWrapper")),
   CreateWorkflowPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../jobs/pages/CreateWorkflowPage"),
@@ -323,8 +300,8 @@ const JobPages = {
         /* webpackPrefetch: true */ "../../jobs/pages/WorkflowsAnalyticsPage"
       ),
   ),
-  JobExecutionsPage: JobExecutionsPageWrapper,
-  JobExecutionDetailsPage: JobExecutionDetailsPageWrapper,
+  JobExecutionsPage: lazy(() => import("../../jobs/pages/JobExecutionsPageWrapper")),
+  JobExecutionDetailsPage: lazy(() => import("../../jobs/pages/JobExecutionDetailsPageWrapper")),
   JobExecutionsAnalyticsPage: lazy(
     () =>
       import(
@@ -335,7 +312,7 @@ const JobPages = {
     () =>
       import(/* webpackPrefetch: true */ "../../jobs/pages/StepExecutionsPage"),
   ),
-  StepExecutionDetailsPage: StepExecutionDetailsPageWrapper,
+  StepExecutionDetailsPage: lazy(() => import("../../jobs/pages/StepExecutionDetailsPageWrapper")),
   StepExecutionsAnalyticsPage: lazy(
     () =>
       import(
@@ -478,7 +455,6 @@ const EtlPages = {
 
 // Analytics & Reports Pages - All routes preloaded for instant access
 // Using Suspense wrapper for faster perceived loading
-import CustomersPageWrapper from "../../customers360/pages/CustomersPageWrapper";
 
 const AnalyticsPages = {
   OverallDashboardPerformancePage: lazy(
@@ -491,7 +467,7 @@ const AnalyticsPages = {
         /* webpackPrefetch: true */ "../../reports-analytics/pages/CustomerProfileReportsPage"
       ),
   ),
-  CustomersPage: CustomersPageWrapper,
+  CustomersPage: lazy(() => import("../../customers360/pages/CustomersPageWrapper")),
   CustomerSearchResultsPage: lazy(
     () =>
       import(
@@ -763,6 +739,10 @@ export default function Dashboard() {
           <Route
             path="/segments"
             element={<SegmentPages.SegmentManagementPage />}
+          />
+          <Route
+            path="/segments/analytics"
+            element={<SegmentPages.SegmentAnalyticsPage />}
           />
           <Route
             path="/segments/:id"

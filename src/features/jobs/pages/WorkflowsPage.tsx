@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -74,7 +75,7 @@ export default function WorkflowsPage() {
     new Set(),
   );
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -89,7 +90,7 @@ export default function WorkflowsPage() {
           {
             activeOnly: statusFilter === "active",
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (page - 1) * pageSize,
             skipCache: true,
           },
         );
@@ -98,25 +99,25 @@ export default function WorkflowsPage() {
           q: searchTerm.trim(),
           activeOnly: statusFilter === "active",
           limit: pageSize,
-          offset: page * pageSize,
+          offset: (page - 1) * pageSize,
           skipCache: true,
         });
       } else if (statusFilter === "active") {
         response = await workflowService.getActiveWorkflows({
           limit: pageSize,
-          offset: page * pageSize,
+          offset: (page - 1) * pageSize,
           skipCache: true,
         });
       } else if (statusFilter === "inactive") {
         response = await workflowService.getInactiveWorkflows({
           limit: pageSize,
-          offset: page * pageSize,
+          offset: (page - 1) * pageSize,
           skipCache: true,
         });
       } else {
         response = await workflowService.getAllWorkflows({
           limit: pageSize,
-          offset: page * pageSize,
+          offset: (page - 1) * pageSize,
           skipCache: true,
         });
       }
@@ -149,7 +150,7 @@ export default function WorkflowsPage() {
 
   // Reset pagination when filters/search change
   useEffect(() => {
-    setPage(0);
+    setPage(1);
   }, [searchTerm, statusFilter, workflowTypeFilter]);
 
   const fetchStats = useCallback(async () => {
@@ -794,38 +795,14 @@ export default function WorkflowsPage() {
             </tbody>
           </table>
           {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
-            <div className="text-sm text-gray-600">
-              Showing{" "}
-              <span className="font-medium">
-                {workflows.length === 0 ? 0 : page * pageSize + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-medium">
-                {Math.min((page + 1) * pageSize, totalCount)}
-              </span>{" "}
-              of <span className="font-medium">{totalCount}</span> workflows
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(p - 1, 0))}
-                disabled={page === 0 || isLoading}
-                className={`inline-flex items-center gap-1 ${tw.rounded} px-3 py-1.5 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
-              >
-                Prev
-              </button>
-              <button
-                onClick={() => {
-                  const nextOffset = (page + 1) * pageSize;
-                  if (nextOffset < totalCount) setPage((p) => p + 1);
-                }}
-                disabled={isLoading || (page + 1) * pageSize >= totalCount}
-                className={`inline-flex items-center gap-1 ${tw.rounded} px-3 py-1.5 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          {workflows.length > 0 && (
+            <Pagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={totalCount}
+              onPageChange={setPage}
+            />
+          )}
         </div>
       )}
 

@@ -11,7 +11,6 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   Target,
   DollarSign,
-  ArrowLeft,
   Gift,
   Palette,
   BarChart,
@@ -22,6 +21,7 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
@@ -2277,31 +2277,29 @@ export default function CreateOfferPage({
         className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-4`}
       >
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center pb-6 min-h-[48px]">
-            <div></div>
+          <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-center space-x-3">
+              <BackButton
+                fallbackTo={getBackButtonFallback()}
+                className="text-gray-400 hover:text-gray-600"
+              />
+              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                {isEditMode ? "Edit Offer" : "Create Offer"}
+              </h1>
+            </div>
             {currentStep !== 6 && (
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
                 <button
                   onClick={handleCancel}
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200`}
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 sm:w-auto`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveDraft}
                   disabled={isSavingDraft}
-                  className={`inline-flex items-center px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`inline-flex w-full items-center justify-center px-4 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto`}
                   style={{ backgroundColor: color.primary.action }}
-                  onMouseEnter={(e) => {
-                    if (!isSavingDraft)
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.interactive.hover;
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isSavingDraft)
-                      (e.target as HTMLButtonElement).style.backgroundColor =
-                        color.primary.action;
-                  }}
                 >
                   {isSavingDraft ? (
                     <>
@@ -2314,20 +2312,6 @@ export default function CreateOfferPage({
                 </button>
               </div>
             )}
-          </div>
-
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Back button removed for modal context */}
-              <div>
-                <h1 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                  {isEditMode ? "Edit Offer" : "Create Offer"}
-                </h1>
-                <p className={`text-sm ${tw.textMuted}`}>
-                  Step {currentStep} of {steps.length}
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Sticky Progress Navigation */}

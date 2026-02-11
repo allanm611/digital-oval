@@ -23,10 +23,12 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
   useEffect(() => {
     setIsVisible(true);
 
+    // Error messages stay longer (8 seconds) to allow reading detailed messages
+    const duration = toast.duration || (toast.type === "error" ? 8000 : 5000);
     const timer = setTimeout(() => {
       setIsVisible(false);
       setTimeout(() => onRemove(toast.id), 300);
-    }, toast.duration || 5000);
+    }, duration);
 
     return () => clearTimeout(timer);
   }, [toast.id, toast.duration, onRemove]);
@@ -64,7 +66,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
         ${
           isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
         }
-        max-w-sm w-full ${getStyles()} border ${tw.rounded} shadow-lg p-4 mb-3
+        ${toast.type === "error" ? "max-w-2xl" : "max-w-sm"} w-full ${getStyles()} border ${tw.rounded} shadow-lg p-4 mb-3
       `}
     >
       <div className="flex items-start">
@@ -72,7 +74,7 @@ const ToastComponent = ({ toast, onRemove }: ToastProps) => {
         <div className="ml-3 flex-1">
           <p className="text-sm font-semibold">{String(toast.title)}</p>
           {toast.message && (
-            <p className="text-sm mt-1 opacity-90">{String(toast.message)}</p>
+            <p className="text-sm mt-1 opacity-90 break-words whitespace-pre-wrap">{String(toast.message)}</p>
           )}
         </div>
         <button

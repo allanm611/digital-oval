@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Search,
   Plus,
@@ -33,6 +33,7 @@ import { formatDate } from "../../../shared/services/dateService";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Pagination from "../../../shared/components/ui/Pagination";
 import {
   PieChart,
   Pie,
@@ -148,6 +149,8 @@ export default function UserManagementPage() {
   const { t } = useLanguage();
   type UserWithResolvedRole = UserType & { resolvedRoleName?: string };
 
+  const PAGE_SIZE = 20;
+
   const [users, setUsers] = useState<UserWithResolvedRole[]>([]);
   const [accountRequests, setAccountRequests] = useState<
     AccountRequestListItem[]
@@ -155,6 +158,7 @@ export default function UserManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorState, setErrorState] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<
     "users" | "requests" | "analytics"
   >("users");
@@ -1081,6 +1085,17 @@ export default function UserManagementPage() {
     return matchesSearch && matchesDepartment && matchesRole && matchesStatus;
   });
 
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return filteredUsers.slice(startIndex, endIndex);
+  }, [filteredUsers, currentPage]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterDepartment, filterRole, filterStatus]);
+
   const filteredRequests = accountRequests.filter((request) => {
     const firstName = (request.first_name ?? "").toLowerCase();
     const lastName = (request.last_name ?? "").toLowerCase();
@@ -1456,7 +1471,7 @@ export default function UserManagementPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => {
+                    {paginatedUsers.map((user) => {
                       const normalizedStatus = normalizeStatus(user);
                       const userIsActive = normalizedStatus === "active";
                       const statusLabel = formatStatusLabel(normalizedStatus);
@@ -1790,6 +1805,14 @@ export default function UserManagementPage() {
                   );
                 })}
               </div>
+              {!isLoading && filteredUsers.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  pageSize={PAGE_SIZE}
+                  totalItems={filteredUsers.length}
+                  onPageChange={setCurrentPage}
+                />
+              )}
             </>
           )
         ) : activeTab === "requests" ? (

@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, Eye, ChevronLeft, ChevronRight, ListChecks, Zap } from "lucide-react";
+import { Search, Filter, Eye, ListChecks, Zap } from "lucide-react";
 import { SYSTEM_EVENTS, SYSTEM_EVENT_CATEGORIES } from "../types/systemEvent";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useNavigate } from "react-router-dom";
 
@@ -18,10 +19,13 @@ export default function SystemEventsPage() {
     return SYSTEM_EVENTS.filter((event) => {
       const matchesSearch =
         event.event_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.event_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.event_description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         event.event_code.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesCategory = categoryFilter === "all" || event.category === categoryFilter;
+      const matchesCategory =
+        categoryFilter === "all" || event.category === categoryFilter;
 
       return matchesSearch && matchesCategory;
     });
@@ -29,7 +33,10 @@ export default function SystemEventsPage() {
 
   const totalPages = Math.ceil(filteredEvents.length / ITEMS_PER_PAGE);
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedEvents = filteredEvents.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+  const paginatedEvents = filteredEvents.slice(
+    startIdx,
+    startIdx + ITEMS_PER_PAGE,
+  );
 
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value || "all");
@@ -69,7 +76,10 @@ export default function SystemEventsPage() {
 
   const categoryOptions = [
     { value: "all", label: "All Categories" },
-    ...SYSTEM_EVENT_CATEGORIES.map((cat) => ({ value: cat.value, label: cat.label })),
+    ...SYSTEM_EVENT_CATEGORIES.map((cat) => ({
+      value: cat.value,
+      label: cat.label,
+    })),
   ];
 
   return (
@@ -78,7 +88,9 @@ export default function SystemEventsPage() {
       <div className="flex items-center gap-4 mb-6">
         <BackButton fallbackTo="/dashboard/kpis" />
         <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>System Events</h1>
+          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            System Events
+          </h1>
           <p className={`text-sm ${tw.textSecondary} mt-1`}>
             View all platform system events and interactions (read-only)
           </p>
@@ -101,7 +113,9 @@ export default function SystemEventsPage() {
                 />
                 <p className="text-sm font-medium text-gray-600">{stat.name}</p>
               </div>
-              <p className="mt-2 text-3xl font-bold text-gray-900">{stat.value}</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {stat.value}
+              </p>
             </div>
           );
         })}
@@ -142,8 +156,12 @@ export default function SystemEventsPage() {
       >
         {filteredEvents.length === 0 ? (
           <div className="p-8 md:p-16 text-center">
-            <div className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}>
-              <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>No events found</h3>
+            <div
+              className={`bg-gradient-to-br from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 ${tw.rounded} p-6 md:p-12`}
+            >
+              <h3 className={`${tw.cardHeading} ${tw.textPrimary} mb-1`}>
+                No events found
+              </h3>
               <p className="text-sm text-gray-600 mb-4 max-w-md mx-auto">
                 {searchTerm || categoryFilter !== "all"
                   ? "No events match your search criteria."
@@ -206,7 +224,10 @@ export default function SystemEventsPage() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="font-semibold text-sm text-gray-900 truncate" title={event.event_name}>
+                        <div
+                          className="font-semibold text-sm text-gray-900 truncate"
+                          title={event.event_name}
+                        >
                           {event.event_name}
                         </div>
                       </td>
@@ -214,21 +235,28 @@ export default function SystemEventsPage() {
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="font-mono text-gray-900">{event.event_code}</span>
+                        <span className="font-mono text-gray-900">
+                          {event.event_code}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-gray-900">
-                          {SYSTEM_EVENT_CATEGORIES.find(cat => cat.value === event.category)?.label || event.category}
+                          {SYSTEM_EVENT_CATEGORIES.find(
+                            (cat) => cat.value === event.category,
+                          )?.label || event.category}
                         </span>
                       </td>
                       <td
                         className="px-6 py-4 text-sm max-w-xs"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <p className="text-sm text-gray-900 truncate" title={event.event_description}>
+                        <p
+                          className="text-sm text-gray-900 truncate"
+                          title={event.event_description}
+                        >
                           {event.event_description}
                         </p>
                       </td>
@@ -236,7 +264,9 @@ export default function SystemEventsPage() {
                         className="px-6 py-4 text-sm hidden lg:table-cell"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <p className="text-sm text-gray-900">{event.source_table}</p>
+                        <p className="text-sm text-gray-900">
+                          {event.source_table}
+                        </p>
                       </td>
                       <td
                         className="px-6 py-4 text-sm font-medium"
@@ -244,7 +274,11 @@ export default function SystemEventsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           <button
-                            onClick={() => navigate(`/dashboard/kpis/system-events/${event.id}`)}
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/kpis/system-events/${event.id}`,
+                              )
+                            }
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-[${color.primary.accent}]/10 transition-all duration-300`}
                             title="View Details"
                           >
@@ -275,11 +309,17 @@ export default function SystemEventsPage() {
                         <h4 className="font-semibold text-sm text-gray-900">
                           {event.event_name}
                         </h4>
-                        <p className="text-xs text-gray-600 mt-1 font-mono">{event.event_code}</p>
-                        <p className="text-xs text-gray-600 mt-1">{event.event_description}</p>
+                        <p className="text-xs text-gray-600 mt-1 font-mono">
+                          {event.event_code}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {event.event_description}
+                        </p>
                       </div>
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 text-gray-900">
-                        {SYSTEM_EVENT_CATEGORIES.find(cat => cat.value === event.category)?.label || event.category}
+                        {SYSTEM_EVENT_CATEGORIES.find(
+                          (cat) => cat.value === event.category,
+                        )?.label || event.category}
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-xs">
@@ -303,41 +343,15 @@ export default function SystemEventsPage() {
               ))}
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: color.border.default, backgroundColor: color.surface.tablebodybg }}>
-              <div className="text-sm text-gray-600">
-                Showing <span className="font-medium">{startIdx + 1}</span> to <span className="font-medium">{Math.min(startIdx + ITEMS_PER_PAGE, filteredEvents.length)}</span> of <span className="font-medium">{filteredEvents.length}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className={`p-2 ${tw.rounded} transition-colors ${
-                    currentPage === 1
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  title="Previous page"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <div className="text-sm text-gray-600">
-                  Page <span className="font-medium">{currentPage}</span> of <span className="font-medium">{totalPages}</span>
-                </div>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className={`p-2 ${tw.rounded} transition-colors ${
-                    currentPage === totalPages
-                      ? "text-gray-300 cursor-not-allowed"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  title="Next page"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+            {filteredEvents.length > 0 && paginatedEvents.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                pageSize={ITEMS_PER_PAGE}
+                totalItems={filteredEvents.length}
+                onPageChange={setCurrentPage}
+                maxPages={totalPages}
+              />
+            )}
           </>
         )}
       </div>

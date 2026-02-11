@@ -24,7 +24,8 @@ export default function Pagination({
 
   return (
     <div
-      className={`bg-white ${tw.rounded} border border-[${color.border.default}] px-4 sm:px-6 py-4`}
+      className={`bg-white ${tw.rounded} border px-4 sm:px-6 py-4`}
+      style={{ borderColor: color.border.default }}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
         <div className={`text-sm ${tw.textSecondary} text-center sm:text-left`}>
@@ -59,7 +60,8 @@ export default function Pagination({
             <button
               onClick={() => onPageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
-              className={`px-3 py-2 text-sm border border-[${color.border.default}] ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              className={`px-3 py-2 text-sm border ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              style={{ borderColor: color.border.default }}
             >
               Previous
             </button>
@@ -69,7 +71,8 @@ export default function Pagination({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className={`px-3 py-2 text-sm border border-[${color.border.default}] ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              className={`px-3 py-2 text-sm border ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+              style={{ borderColor: color.border.default }}
             >
               Next
             </button>

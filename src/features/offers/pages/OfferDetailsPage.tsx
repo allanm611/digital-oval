@@ -24,6 +24,7 @@ import {
   Save,
   Plus,
   X,
+  Zap,
 } from "lucide-react";
 
 const CreateProductModalWrapper = lazy(
@@ -35,6 +36,7 @@ import { offerService } from "../services/offerService";
 import { offerCategoryService } from "../services/offerCategoryService";
 import { productService } from "../../products/services/productService";
 import { offerCreativeService } from "../services/offerCreativeService";
+import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import {
   OfferCreative,
   CreativeChannel,
@@ -238,6 +240,44 @@ export default function OfferDetailsPage() {
     rendered_text_body?: string;
     rendered_html_body?: string;
   } | null>(null);
+
+  // Campaign Flows state
+  const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; segment_name: string; flow_type: string; wait_interval_hours: number }>>([]);
+  const [isLoadingCampaignFlows, setIsLoadingCampaignFlows] = useState(false);
+
+  // Flow type mapping (same as CampaignDetailsPage)
+  const flowTypeOptions = [
+    {
+      value: "STANDARD",
+      label: "Multiple Target Group",
+      backendType: "STANDARD",
+    },
+    {
+      value: "AB_TEST",
+      label: "A/B Test",
+      backendType: "AB_TEST",
+    },
+    {
+      value: "CHAMPION_CHALLENGER",
+      label: "Champion-Challenger",
+      backendType: "CHAMPION_CHALLENGER",
+    },
+    {
+      value: "ROUND_ROBIN",
+      label: "Round Robin",
+      backendType: "ROUND_ROBIN",
+    },
+    {
+      value: "MULTIPLE_LEVEL",
+      label: "Multiple Level",
+      backendType: "MULTIPLE_LEVEL",
+    },
+  ];
+
+  const getFlowTypeLabel = (flowType: string): string => {
+    const option = flowTypeOptions.find((opt) => opt.backendType === flowType);
+    return option?.label || flowType;
+  };
 
   // Load creative templates from configuration
   const { data: templates } = useConfigurationData("creativeTemplates");
@@ -701,6 +741,37 @@ export default function OfferDetailsPage() {
     [id],
   );
 
+  const loadCampaignFlows = useCallback(
+    async (skipCache: boolean = false) => {
+      if (!id) return;
+
+      try {
+        setIsLoadingCampaignFlows(true);
+        const response = await campaignFlowService.getCampaignFlowsByOffer(Number(id));
+        if (response && response.success && Array.isArray(response.data)) {
+          // Transform API response to display format
+          const flows = response.data.map((flow: any) => ({
+            campaign_id: flow.campaign_id,
+            campaign_name: flow.campaign_name || `Campaign${flow.campaign_id}`,
+            segment_id: flow.segment_id,
+            segment_name: flow.segment_name || `Segment${flow.segment_id}`,
+            flow_type: flow.flow_type,
+            wait_interval_hours: flow.wait_interval_hours,
+          }));
+          setCampaignFlows(flows);
+        } else {
+          setCampaignFlows([]);
+        }
+      } catch (err) {
+        console.warn("Failed to load campaign flows:", err);
+        setCampaignFlows([]);
+      } finally {
+        setIsLoadingCampaignFlows(false);
+      }
+    },
+    [id],
+  );
+
   // Handle edit creative
   const handleEditCreative = (creative: OfferCreative) => {
     setEditingCreative(creative);
@@ -1042,6 +1113,7 @@ export default function OfferDetailsPage() {
       loadOffer(true); // Skip cache for fresh data
       loadProducts(true); // Skip cache for fresh data
       loadCreatives(true); // Skip cache for fresh data
+      loadCampaignFlows(true); // Skip cache for fresh data
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -1671,7 +1743,8 @@ export default function OfferDetailsPage() {
 
       {/* Main Offer Info */}
       <div
-        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6`}
+        className={`bg-white ${tw.rounded} border p-6`}
+        style={{ borderColor: color.border.default }}
       >
         <div className="flex items-start space-x-4">
           <div className="flex-1">
@@ -1708,7 +1781,8 @@ export default function OfferDetailsPage() {
 
       {/* Offer Details */}
       <div
-        className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6`}
+        className={`bg-white ${tw.rounded} border p-6`}
+        style={{ borderColor: color.border.default }}
       >
         <h3 className={`${tw.cardHeading} mb-4`}>Offer Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1779,7 +1853,8 @@ export default function OfferDetailsPage() {
         </div>
 
         <div
-          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+          className={` ${tw.rounded} border overflow-hidden`}
+        style={{ borderColor: color.border.default }}
         >
           {productsLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -2053,7 +2128,8 @@ export default function OfferDetailsPage() {
         </div>
 
         <div
-          className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+          className={` ${tw.rounded} border overflow-hidden`}
+        style={{ borderColor: color.border.default }}
         >
           {creativesLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
@@ -2255,6 +2331,123 @@ export default function OfferDetailsPage() {
             </div>
           )}
         </div>
+      </section>
+
+      {/* Campaign Flows Section */}
+      <section className={`${tw.rounded} border-gray-200 py-6`}>
+        <div className="px-6 mb-6">
+          <h3 className={`${tw.cardHeading}`}>
+            Campaign Flows ({campaignFlows.length})
+          </h3>
+          <p className={`${tw.textSecondary} text-sm mt-1`}>
+            Campaigns that use this offer
+          </p>
+        </div>
+
+        {isLoadingCampaignFlows ? (
+          <div className="px-6 flex justify-center py-8">
+            <LoadingSpinner variant="modern" size="md" color="primary" />
+          </div>
+        ) : campaignFlows.length === 0 ? (
+          <div className="px-6 text-center py-8">
+            <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+            <p className={`text-sm ${tw.textSecondary}`}>
+              This offer is not used in any campaign flows
+            </p>
+          </div>
+        ) : (
+          <div className={`overflow-x-auto ${tw.rounded} border`} style={{ borderColor: color.border.default }}>
+            <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+              <thead style={{ background: color.surface.tableHeader }}>
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    Step
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    Campaign
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    Segment
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    Flow Type
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    Wait (hours)
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell" style={{ color: color.surface.tableHeaderText }}>
+                    Allocation
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaignFlows.map((flow, idx) => (
+                  <tr key={idx} className="transition-colors">
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
+                        style={{ color: "#000000" }}
+                      >
+                        {flow.step_order || idx + 1}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <button
+                        onClick={() => navigate(`/dashboard/campaigns/${flow.campaign_id}`)}
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: color.primary.accent }}
+                      >
+                        {flow.campaign_name}
+                      </button>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <button
+                        onClick={() => navigate(`/dashboard/segments/${flow.segment_id}`)}
+                        className="text-sm font-medium hover:underline"
+                        style={{ color: color.primary.accent }}
+                      >
+                        {flow.segment_name}
+                      </button>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                        {getFlowTypeLabel(flow.flow_type)}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className={`text-sm ${tw.textPrimary}`}>
+                        {flow.wait_interval_hours}h
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4 hidden md:table-cell"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className={`text-sm ${tw.textMuted}`}>
+                        {flow.bucket_allocation || "—"}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       {/* Add Creative Modal */}

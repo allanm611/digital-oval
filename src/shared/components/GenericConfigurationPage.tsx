@@ -433,20 +433,23 @@ export default function GenericConfigurationPage({
       <div className={` my-5`}>
         <div className="relative w-full">
           <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[${color.text.muted}]`}
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5`}
+            style={{ color: color.text.muted }}
           />
           <input
             type="text"
             placeholder={config.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full pl-10 pr-4 py-3 text-sm border border-[${color.border.default}] ${tw.rounded} focus:outline-none`}
+            className={`w-full pl-10 pr-4 py-3 text-sm border ${tw.rounded} focus:outline-none`}
+            style={{ borderColor: color.border.default }}
           />
         </div>
       </div>
 
       <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border overflow-hidden`}
+        style={{ borderColor: color.border.default }}
       >
         {loading ? (
           <div className="flex items-center justify-center py-12">

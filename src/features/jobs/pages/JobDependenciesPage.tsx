@@ -21,6 +21,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
@@ -40,6 +41,8 @@ import {
   JobDependencySearchParams,
 } from "../types/jobDependency";
 import { ScheduledJob } from "../types/scheduledJob";
+
+const PAGE_SIZE = 20;
 
 interface JobDependencyModalProps {
   isOpen: boolean;
@@ -532,6 +535,7 @@ export default function JobDependenciesPage() {
   const [isLoadingJobsMap, setIsLoadingJobsMap] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDependency, setEditingDependency] =
     useState<JobDependency | null>(null);
@@ -1118,6 +1122,12 @@ export default function JobDependenciesPage() {
       return b.id - a.id;
     });
   }, [dependencies]);
+
+  const paginatedDependencies = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return filteredDependencies.slice(startIndex, endIndex);
+  }, [filteredDependencies, currentPage]);
 
   const handleCreate = () => {
     setEditingDependency(null);
@@ -2116,7 +2126,7 @@ export default function JobDependenciesPage() {
               </thead>
 
               <tbody>
-                {filteredDependencies.map((dependency) => (
+                {paginatedDependencies.map((dependency) => (
                   <tr key={dependency.id} className="transition-colors">
                     {isSelectionMode && (
                       <td
@@ -2505,6 +2515,23 @@ export default function JobDependenciesPage() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!isLoading && !isLoadingJobsMap && filteredDependencies.length > 0 && (
+          <div
+            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
+          >
+            <p>
+              {`Showing ${(currentPage - 1) * PAGE_SIZE + 1}-${Math.min(currentPage * PAGE_SIZE, filteredDependencies.length)} of ${filteredDependencies.length} dependencies`}
+            </p>
+            <Pagination
+              currentPage={currentPage}
+              pageSize={PAGE_SIZE}
+              totalItems={filteredDependencies.length}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

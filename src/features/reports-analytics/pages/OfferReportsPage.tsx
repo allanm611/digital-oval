@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
 import type {
@@ -523,6 +524,8 @@ export default function OfferReportsPage() {
     end: "",
   });
   const [useDummyData, setUseDummyData] = useState(true);
+  const [tablePage, setTablePage] = useState(1);
+  const tablePageSize = 20;
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -769,6 +772,23 @@ export default function OfferReportsPage() {
     selectedRange,
     useDummyData,
   ]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setTablePage(1);
+  }, [
+    tableQuery,
+    statusFilter,
+    segmentFilter,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+  ]);
+
+  // Paginated rows for table display
+  const paginatedRows = useMemo(() => {
+    const startIdx = (tablePage - 1) * tablePageSize;
+    return filteredRows.slice(startIdx, startIdx + tablePageSize);
+  }, [filteredRows, tablePage]);
 
   const csvHeaders = [
     "Offer Name",
@@ -1233,7 +1253,7 @@ export default function OfferReportsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredRows.map((entry) => (
+                  paginatedRows.map((entry) => (
                     <tr key={entry.id} className="transition-colors">
                       <td
                         className="px-6 py-4 font-semibold"
@@ -1317,6 +1337,12 @@ export default function OfferReportsPage() {
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={tablePage}
+            pageSize={tablePageSize}
+            totalItems={filteredRows.length}
+            onPageChange={setTablePage}
+          />
         </div>
       </section>
     </div>

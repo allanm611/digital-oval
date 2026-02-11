@@ -37,14 +37,19 @@ const SCHEDULE_TYPES: {
     description: "Run every N seconds",
   },
   {
-    value: "event_driven",
+    value: "event",
     label: "Event Driven",
     description: "Trigger when an event occurs",
   },
   {
-    value: "dependency_based",
+    value: "dependency",
     label: "Dependency Based",
     description: "Trigger based on other jobs",
+  },
+  {
+    value: "api_trigger",
+    label: "API Trigger",
+    description: "Trigger via API call",
   },
 ];
 

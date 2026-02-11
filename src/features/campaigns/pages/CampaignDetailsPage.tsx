@@ -31,7 +31,9 @@ import { campaignService } from "../services/campaignService";
 import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { offerService } from "../../offers/services/offerService";
+import { segmentService } from "../../segments/services/segmentService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
@@ -104,6 +106,9 @@ export default function CampaignDetailsPage() {
   );
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
   const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
+  const [activeSegments, setActiveSegments] = useState<CampaignSegmentDetail[]>([]);
+  const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
+  const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -592,13 +597,51 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const handleFlowEdit = (flow: CampaignFlowConfig) => {
+  const handleFlowEdit = async (flow: CampaignFlowConfig) => {
     setSelectedFlow(flow);
     setEditedFlow({
-      wait_interval_hours: flow.wait_interval_hours,
+      flow_type: flow.flow_type,
+      segment_id: flow.segment_id,
+      offer_id: flow.offer_id,
+      offer_creative_id: (flow as any).offer_creative_id,
+      template_id: (flow as any).template_id,
+      condition_rule: (flow as any).condition_rule,
       bucket_allocation: flow.bucket_allocation,
+      step_order: (flow as any).step_order,
+      wait_interval_hours: flow.wait_interval_hours,
       is_active: flow.is_active,
     });
+
+    // Load active segments and offers if not already loaded
+    if (activeSegments.length === 0 || activeOffers.length === 0) {
+      try {
+        setIsLoadingActiveData(true);
+        const [segmentsResponse, offersResponse] = await Promise.all([
+          segmentService.getActiveSegments(),
+          offerService.getActiveOffers(),
+        ]);
+
+        if (segmentsResponse?.data) {
+          const activeSegs = Array.isArray(segmentsResponse.data)
+            ? segmentsResponse.data
+            : [];
+          setActiveSegments(activeSegs);
+        }
+
+        if (offersResponse?.data) {
+          const activeOffersList = Array.isArray(offersResponse.data)
+            ? offersResponse.data
+            : [];
+          setActiveOffers(activeOffersList);
+        }
+      } catch (error) {
+        console.error("Error loading active segments/offers:", error);
+        showToast("warning", "Failed to load active options");
+      } finally {
+        setIsLoadingActiveData(false);
+      }
+    }
+
     setShowFlowEditModal(true);
   };
 
@@ -608,19 +651,35 @@ export default function CampaignDetailsPage() {
     try {
       setIsFlowActionLoading(true);
 
-      // Prepare update data
+      // Prepare update data - include all editable fields
       const updateData = {
-        wait_interval_hours: editedFlow.wait_interval_hours,
+        flow_type: editedFlow.flow_type,
+        segment_id: editedFlow.segment_id,
+        offer_id: editedFlow.offer_id,
+        offer_creative_id: editedFlow.offer_creative_id,
+        template_id: editedFlow.template_id,
+        condition_rule: editedFlow.condition_rule,
         bucket_allocation: editedFlow.bucket_allocation,
+        step_order: editedFlow.step_order,
+        wait_interval_hours: editedFlow.wait_interval_hours,
         is_active: editedFlow.is_active,
       };
 
-      // Call updateCampaignFlow
-      // Note: The flow needs a unique ID for the API call
-      // Using a composite key if flow has an id field, otherwise use segment_id and offer_id
-      const flowId = (selectedFlow as any).id || `${selectedFlow.segment_id}-${selectedFlow.offer_id}`;
+      // Get flow ID - must be numeric
+      let flowId = (selectedFlow as any).id;
+      if (!flowId) {
+        showToast("error", "Flow ID not found - cannot update");
+        return;
+      }
 
-      await campaignFlowService.updateCampaignFlow(parseInt(String(flowId)), updateData);
+      flowId = parseInt(String(flowId));
+      if (isNaN(flowId)) {
+        showToast("error", "Invalid flow ID - cannot update");
+        return;
+      }
+
+      console.log("Updating flow with ID:", flowId, "Data:", updateData);
+      await campaignFlowService.updateCampaignFlow(flowId, updateData);
 
       showToast("success", "Flow updated successfully");
       setShowFlowEditModal(false);
@@ -647,11 +706,22 @@ export default function CampaignDetailsPage() {
     try {
       setIsFlowActionLoading(true);
 
-      // Get flow ID - using a composite key if flow has an id field
-      const flowId = (selectedFlow as any).id || `${selectedFlow.segment_id}-${selectedFlow.offer_id}`;
+      // Get flow ID - must be numeric
+      let flowId = (selectedFlow as any).id;
+      if (!flowId) {
+        showToast("error", "Flow ID not found - cannot delete");
+        return;
+      }
 
+      flowId = parseInt(String(flowId));
+      if (isNaN(flowId)) {
+        showToast("error", "Invalid flow ID - cannot delete");
+        return;
+      }
+
+      console.log("Deleting flow with ID:", flowId);
       // Call deleteCampaignFlow
-      await campaignFlowService.deleteCampaignFlow(parseInt(String(flowId)));
+      await campaignFlowService.deleteCampaignFlow(flowId);
 
       showToast("success", "Flow deleted successfully");
       setShowFlowDeleteModal(false);
@@ -684,7 +754,8 @@ export default function CampaignDetailsPage() {
       <div className="space-y-6">
         <div className="text-center py-12">
           <AlertCircle
-            className={`w-16 h-16 text-[${color.primary.action}] mx-auto mb-4`}
+            className={`w-16 h-16 mx-auto mb-4`}
+            style={{ color: color.primary.action }}
           />
           <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
             Campaign Not Found
@@ -900,7 +971,8 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Sent Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -927,7 +999,8 @@ export default function CampaignDetailsPage() {
 
         {/* Delivered Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -956,7 +1029,8 @@ export default function CampaignDetailsPage() {
 
         {/* Converted Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -985,7 +1059,8 @@ export default function CampaignDetailsPage() {
 
         {/* Conversion Rate Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -1021,7 +1096,8 @@ export default function CampaignDetailsPage() {
 
         {/* Revenue Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -1053,7 +1129,8 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
         {/* Campaign Information Card */}
         <div
-          className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
         >
           {/* Campaign Header */}
           <div className="mb-3 pb-3 border-b border-gray-200">
@@ -1213,7 +1290,11 @@ export default function CampaignDetailsPage() {
                     {campaign.tags.map((tag, index) => (
                       <span
                         key={`${tag}-${index}`}
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
+                        style={{
+                          backgroundColor: `${color.primary.accent}19`,
+                          color: color.primary.accent,
+                        }}
                       >
                         <Tag className="w-3 h-3 mr-1" />
                         {tag.replace("catalog:", "")}
@@ -1233,7 +1314,8 @@ export default function CampaignDetailsPage() {
         {/* Budget Utilization Card */}
         {budgetUtilisation && (
           <div
-            className={`bg-white ${tw.rounded} border border-[${color.border.default}] p-6 shadow-sm`}
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+          style={{ borderColor: color.border.default }}
           >
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Budget Utilization
@@ -1680,25 +1762,10 @@ export default function CampaignDetailsPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <h3
-              className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+              className={`text-lg font-semibold ${tw.textPrimary}`}
             >
-              <Zap className="w-5 h-5" />
               Campaign Flows ({flows.length})
             </h3>
-            <div className="flex gap-4 text-sm">
-              <div className={tw.textSecondary}>
-                Segments:{" "}
-                <span className={`font-medium ${tw.textPrimary}`}>
-                  {segments.length}
-                </span>
-              </div>
-              <div className={tw.textSecondary}>
-                Offers:{" "}
-                <span className={`font-medium ${tw.textPrimary}`}>
-                  {offers.length}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
         {isLoadingFlows ? (
@@ -1714,7 +1781,8 @@ export default function CampaignDetailsPage() {
           </div>
         ) : (
           <div
-            className={`overflow-x-auto ${tw.rounded} border border-[${color.border.default}]`}
+            className={`overflow-x-auto ${tw.rounded} border`}
+            style={{ borderColor: color.border.default }}
           >
             <table
               className="w-full"
@@ -1809,7 +1877,7 @@ export default function CampaignDetailsPage() {
                         >
                           {(segment as any)?.segment_name ||
                             segment?.name ||
-                            `Segment #${flow.segment_id}`}
+                            `Segment${flow.segment_id}`}
                         </button>
                       </td>
                       <td
@@ -1825,7 +1893,7 @@ export default function CampaignDetailsPage() {
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
-                          {offer?.name || `Offer #${flow.offer_id}`}
+                          {offer?.name || `Offer${flow.offer_id}`}
                         </button>
                       </td>
                       <td
@@ -1833,7 +1901,7 @@ export default function CampaignDetailsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <span
-                          className={`text-xs font-medium ${tw.textPrimary}`}
+                          className={`text-sm font-medium ${tw.textPrimary}`}
                         >
                           {getFlowTypeLabel(flow.flow_type)}
                         </span>
@@ -1862,9 +1930,9 @@ export default function CampaignDetailsPage() {
                           <button
                             onClick={() => handleFlowEdit(flow)}
                             title="Edit flow"
-                            className="p-2 hover:bg-blue-50 rounded transition-colors"
+                            className="p-2 hover:bg-gray-50 rounded transition-colors"
                           >
-                            <Edit className="w-4 h-4 text-blue-600" />
+                            <Edit className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
                             onClick={() => handleFlowDelete(flow)}
@@ -1893,95 +1961,298 @@ export default function CampaignDetailsPage() {
               onClick={() => setShowFlowEditModal(false)}
             />
             <div
-              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto`}
             >
-              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-                Edit Flow
+              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+                Edit Campaign Flow
               </h3>
 
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Wait Interval (hours)
-                  </label>
-                  <input
-                    type="number"
-                    value={editedFlow.wait_interval_hours || 0}
-                    onChange={(e) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        wait_interval_hours: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
+              <div className="space-y-6 mb-6">
+                {/* Core Selection */}
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Campaign Type
+                    </label>
+                    <HeadlessSelect
+                      value={editedFlow.flow_type || ""}
+                      onChange={(value) =>
+                        setEditedFlow({
+                          ...editedFlow,
+                          flow_type: value,
+                        })
+                      }
+                      options={[
+                        { value: "", label: "Select Campaign Type" },
+                        ...flowTypeOptions.map((opt) => ({
+                          value: opt.value,
+                          label: opt.label,
+                        })),
+                      ]}
+                      disabled={isLoadingActiveData}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Segment
+                      </label>
+                      <HeadlessSelect
+                        value={String(editedFlow.segment_id || "")}
+                        onChange={(value) =>
+                          setEditedFlow({
+                            ...editedFlow,
+                            segment_id: parseInt(value) || 0,
+                          })
+                        }
+                        options={[
+                          { value: "", label: "Select Segment" },
+                          ...activeSegments.map((seg) => ({
+                            value: String((seg as any).segment_id || seg.id),
+                            label: (seg as any).segment_name || seg.name,
+                          })),
+                        ]}
+                        disabled={isLoadingActiveData}
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Offer
+                      </label>
+                      <HeadlessSelect
+                        value={String(editedFlow.offer_id || "")}
+                        onChange={(value) =>
+                          setEditedFlow({
+                            ...editedFlow,
+                            offer_id: parseInt(value) || 0,
+                          })
+                        }
+                        options={[
+                          { value: "", label: "Select Offer" },
+                          ...activeOffers.map((offer) => ({
+                            value: String(offer.id),
+                            label: offer.name,
+                          })),
+                        ]}
+                        disabled={isLoadingActiveData}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Condition Rule (JSON)
+                    </label>
+                    <textarea
+                      value={(editedFlow as any).condition_rule ? JSON.stringify((editedFlow as any).condition_rule, null, 2) : ""}
+                      onChange={(e) => {
+                        try {
+                          const parsed = e.target.value ? JSON.parse(e.target.value) : undefined;
+                          setEditedFlow({
+                            ...editedFlow,
+                            condition_rule: parsed,
+                          } as any);
+                        } catch {
+                          // Invalid JSON, just update as string for now
+                        }
+                      }}
+                      placeholder='{"condition": "value"}'
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs`}
+                      rows={3}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Bucket Allocation
-                  </label>
-                  <input
-                    type="text"
-                    value={editedFlow.bucket_allocation || ""}
-                    onChange={(e) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        bucket_allocation: e.target.value,
-                      })
-                    }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
+                {/* Execution Settings */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Step Order
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editedFlow.step_order || 1}
+                        onChange={(e) =>
+                          setEditedFlow({
+                            ...editedFlow,
+                            step_order: parseInt(e.target.value) || 1,
+                          })
+                        }
+                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                      >
+                        Wait Interval (hours)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editedFlow.wait_interval_hours || 0}
+                        onChange={(e) =>
+                          setEditedFlow({
+                            ...editedFlow,
+                            wait_interval_hours: parseInt(e.target.value) || 0,
+                          })
+                        }
+                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Bucket Allocation
+                      {editedFlow.flow_type === "AB_TEST" && (
+                        <span className="text-red-600 ml-1">*</span>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., 50-50"
+                      value={editedFlow.bucket_allocation || ""}
+                      onChange={(e) =>
+                        setEditedFlow({
+                          ...editedFlow,
+                          bucket_allocation: e.target.value,
+                        })
+                      }
+                      className={`w-full px-3 py-2 border ${
+                        editedFlow.flow_type === "AB_TEST" &&
+                        !editedFlow.bucket_allocation
+                          ? "border-red-500 bg-red-50"
+                          : "border-gray-300"
+                      } ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                    {editedFlow.flow_type === "AB_TEST" &&
+                      !editedFlow.bucket_allocation && (
+                        <p className="text-red-600 text-sm mt-1">
+                          Bucket allocation is required for A/B Test campaigns
+                        </p>
+                      )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="flowActive"
-                    checked={editedFlow.is_active !== false}
-                    onChange={(e) =>
-                      setEditedFlow({
-                        ...editedFlow,
-                        is_active: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4"
-                  />
-                  <label htmlFor="flowActive" className={`text-sm ${tw.textPrimary}`}>
-                    Active
-                  </label>
+                {/* Advanced Fields */}
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Offer Creative
+                    </label>
+                    <HeadlessSelect
+                      value={String((editedFlow as any).offer_creative_id || "")}
+                      onChange={(value) =>
+                        setEditedFlow({
+                          ...editedFlow,
+                          offer_creative_id: parseInt(value) || undefined,
+                        } as any)
+                      }
+                      options={[
+                        { value: "", label: "Select Creative" },
+                        // Add creative options here when available from API
+                      ]}
+                    />
+                  </div>
+
+                  {/* <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Template ID
+                    </label>
+                    <input
+                      type="number"
+                      value={(editedFlow as any).template_id || ""}
+                      onChange={(e) =>
+                        setEditedFlow({
+                          ...editedFlow,
+                          template_id: parseInt(e.target.value) || undefined,
+                        } as any)
+                      }
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                  </div> */}
+                </div>
+
+                {/* Status */}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="flowActive"
+                      checked={editedFlow.is_active !== false}
+                      onChange={(e) =>
+                        setEditedFlow({
+                          ...editedFlow,
+                          is_active: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="flowActive" className={`text-sm font-medium ${tw.textPrimary}`}>
+                      Active Flow
+                    </label>
+                  </div>
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowFlowEditModal(false)}
-                  disabled={isFlowActionLoading}
+                  disabled={isFlowActionLoading || isLoadingActiveData}
                   className={`flex-1 ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
                   style={{
-                    border: button.borderedButton.border,
-                    backgroundColor: button.borderedButton.background,
-                    color: button.borderedButton.color,
-                    padding: `${button.borderedButton.paddingY} ${button.borderedButton.paddingX}`,
+                    border: button.bordered.border,
+                    backgroundColor: button.bordered.background,
+                    color: button.bordered.color,
+                    padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
                   }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFlowSave}
-                  disabled={isFlowActionLoading}
+                  disabled={
+                    isFlowActionLoading ||
+                    isLoadingActiveData ||
+                    (editedFlow.flow_type === "AB_TEST" &&
+                      !editedFlow.bucket_allocation)
+                  }
                   className={`flex-1 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
                   style={{
-                    backgroundColor: button.actionButton.background,
-                    color: button.actionButton.color,
-                    padding: `${button.actionButton.paddingY} ${button.actionButton.paddingX}`,
+                    backgroundColor: button.action.background,
+                    color: button.action.color,
+                    padding: `${button.action.paddingY} ${button.action.paddingX}`,
                   }}
+                  title={
+                    editedFlow.flow_type === "AB_TEST" &&
+                    !editedFlow.bucket_allocation
+                      ? "Bucket allocation is required for A/B Test"
+                      : ""
+                  }
                 >
-                  {isFlowActionLoading ? "Saving..." : "Save"}
+                  {isFlowActionLoading ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -1990,66 +2261,17 @@ export default function CampaignDetailsPage() {
       )}
 
       {/* Flow Delete Modal */}
-      {showFlowDeleteModal && selectedFlow && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-screen items-center justify-center p-4">
-            <div
-              className="fixed inset-0 bg-black bg-opacity-50"
-              onClick={() => setShowFlowDeleteModal(false)}
-            />
-            <div
-              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
-            >
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
-                </div>
-                <div>
-                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                    Delete Flow
-                  </h3>
-                  <p className={`text-sm ${tw.textMuted}`}>
-                    This action cannot be undone
-                  </p>
-                </div>
-              </div>
-
-              <p className={`text-sm ${tw.textSecondary} mb-6`}>
-                Are you sure you want to delete this flow? The campaign flow will
-                be permanently removed.
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowFlowDeleteModal(false)}
-                  disabled={isFlowActionLoading}
-                  className={`flex-1 ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
-                  style={{
-                    border: button.borderedButton.border,
-                    backgroundColor: button.borderedButton.background,
-                    color: button.borderedButton.color,
-                    padding: `${button.borderedButton.paddingY} ${button.borderedButton.paddingX}`,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleFlowDeleteConfirm}
-                  disabled={isFlowActionLoading}
-                  className={`flex-1 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
-                  style={{
-                    backgroundColor: button.delete.background,
-                    color: button.delete.color,
-                    padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
-                  }}
-                >
-                  {isFlowActionLoading ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showFlowDeleteModal && selectedFlow !== null}
+        onClose={() => setShowFlowDeleteModal(false)}
+        onConfirm={handleFlowDeleteConfirm}
+        title="Delete Flow"
+        description="Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."
+        itemName={`Flow ${selectedFlow ? (selectedFlow as any).step_order || "" : ""}`}
+        isLoading={isFlowActionLoading}
+        confirmText="Delete Flow"
+        cancelText="Cancel"
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

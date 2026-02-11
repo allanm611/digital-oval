@@ -69,6 +69,8 @@ function CategoryModal({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [nameValidationError, setNameValidationError] = useState("");
+  const [isCheckingName, setIsCheckingName] = useState(false);
 
   useEffect(() => {
     if (category) {
@@ -80,12 +82,54 @@ function CategoryModal({
       setFormData({ name: "", description: "" });
     }
     setError("");
+    setNameValidationError("");
   }, [category, isOpen]);
+
+  // Debounce name validation
+  useEffect(() => {
+    if (!formData.name.trim()) {
+      setNameValidationError("");
+      return;
+    }
+
+    // Don't validate if name hasn't changed (for edit mode)
+    if (category && formData.name === category.name) {
+      setNameValidationError("");
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingName(true);
+      try {
+        const result = await segmentService.checkSegmentCategoryName(
+          formData.name.trim()
+        );
+        // If exists is true, it means the name is taken
+        if (result.data?.exists) {
+          setNameValidationError("This catalog name is already in use");
+        } else {
+          setNameValidationError("");
+        }
+      } catch (err) {
+        // On error, allow submission (don't block user)
+        setNameValidationError("");
+      } finally {
+        setIsCheckingName(false);
+      }
+    }, 500); // Debounce 500ms
+
+    return () => clearTimeout(timer);
+  }, [formData.name, category]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       setError("Catalog name is required");
+      return;
+    }
+
+    if (nameValidationError) {
+      setError(nameValidationError);
       return;
     }
 
@@ -141,10 +185,18 @@ function CategoryModal({
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, name: e.target.value }))
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-3 py-2 border ${
+                      nameValidationError ? "border-red-400" : "border-gray-300"
+                    } ${tw.rounded} focus:outline-none text-sm`}
                     placeholder="e.g., Marketing Segments, Retention Campaigns"
                     required
                   />
+                  {nameValidationError && (
+                    <p className="mt-1 text-sm text-red-600">{nameValidationError}</p>
+                  )}
+                  {isCheckingName && (
+                    <p className="mt-1 text-sm text-gray-500">Checking availability...</p>
+                  )}
                 </div>
 
                 <div>
@@ -176,7 +228,7 @@ function CategoryModal({
                 </button>
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !!nameValidationError || isCheckingName}
                   className={`px-4 py-2 text-white ${tw.rounded} transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                   style={{ backgroundColor: color.primary.action }}
                   onMouseEnter={(e) => {
@@ -192,9 +244,11 @@ function CategoryModal({
                 >
                   {isLoading
                     ? "Saving..."
-                    : category
-                      ? "Update Catalog"
-                      : "Create Catalog"}
+                    : isCheckingName
+                      ? "Checking..."
+                      : category
+                        ? "Update Catalog"
+                        : "Create Catalog"}
                 </button>
               </div>
             </form>
@@ -567,10 +621,10 @@ export default function SegmentCategoriesPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
+      // Display full backend error message
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      // Display backend error message directly
-      showError("Cannot Deactivate Category", errorMessage);
+      showError("Deactivation Failed", errorMessage);
     } finally {
       setTogglingCategoryId(null);
     }

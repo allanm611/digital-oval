@@ -212,9 +212,6 @@ export default function AssignPermissionsModal({
       setIsTogglingPermission(permission.id);
 
       if (isAssigned) {
-        console.log(
-          "[AssignPermissionsModal] Removing permission from role...",
-        );
         await rolePermissionService.removePermissionsFromRole(selectedRole.id, {
           permissionIds: [permission.id],
         });
@@ -225,24 +222,12 @@ export default function AssignPermissionsModal({
 
         // If user has this role, remove the permission from their context
         if (selectedRole.id === user?.user_id) {
-          console.log(
-            "[AssignPermissionsModal] User has this role, updating context...",
-          );
           const updatedUserPermissions = userPermissions.filter(
             (p) => p !== permission.code,
           );
-          console.log(
-            "[AssignPermissionsModal] Calling updatePermissions with:",
-            updatedUserPermissions,
-          );
           updatePermissions(updatedUserPermissions);
-        } else {
-          console.log(
-            "[AssignPermissionsModal] User does NOT have this role, skipping context update",
-          );
         }
       } else {
-        console.log("[AssignPermissionsModal] Adding permission to role...");
         await rolePermissionService.assignPermissionToRole(selectedRole.id, {
           permissionIds: [permission.id],
           createdBy: userId,
@@ -252,24 +237,9 @@ export default function AssignPermissionsModal({
 
         // If user has this role, add the permission to their context
         if (selectedRole.id === user?.user_id) {
-          console.log(
-            "[AssignPermissionsModal] User has this role, updating context...",
-          );
           if (!userPermissions.includes(permission.code)) {
-            console.log(
-              "[AssignPermissionsModal] Calling updatePermissions with:",
-              [...userPermissions, permission.code],
-            );
             updatePermissions([...userPermissions, permission.code]);
-          } else {
-            console.log(
-              "[AssignPermissionsModal] Permission already in context",
-            );
           }
-        } else {
-          console.log(
-            "[AssignPermissionsModal] User does NOT have this role, skipping context update",
-          );
         }
       }
 
@@ -278,7 +248,7 @@ export default function AssignPermissionsModal({
 
       onPermissionsChanged();
     } catch (err) {
-      console.error("[AssignPermissionsModal] Error toggling permission:", err);
+      console.error("Error toggling permission:", err);
       showError(
         "Error",
         err instanceof Error ? err.message : "Failed to toggle permission",
@@ -471,12 +441,7 @@ export default function AssignPermissionsModal({
       setAssignedPermissions((prev) => [...prev, ...newlyAssigned]);
 
       if (assignedCount > 0) {
-        console.log(
-          "[AssignPermissionsModal] Bulk assigning",
-          assignedCount,
-          "permissions to role:",
-          selectedRole.name,
-        );
+        
         success(
           "Permissions Assigned",
           `${assignedCount} permission(s) assigned to ${selectedRole.name}`,
@@ -534,17 +499,10 @@ export default function AssignPermissionsModal({
         prev.filter((p) => !removedIds.has(p.id)),
       );
 
-      console.log(
-        "[AssignPermissionsModal] Bulk removing",
-        assignedToRemove.length,
-        "permissions from role:",
-        selectedRole.name,
-      );
       success(
         "Permissions Removed",
         `${assignedToRemove.length} permission(s) removed from ${selectedRole.name}`,
       );
-      console.log("[AssignPermissionsModal] Bulk remove successful");
 
       // Clear selection and exit selection mode
       setSelectedPermissionIds(new Set());

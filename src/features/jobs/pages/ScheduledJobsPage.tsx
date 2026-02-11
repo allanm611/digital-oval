@@ -22,6 +22,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -91,6 +92,9 @@ export default function ScheduledJobsPage() {
     [],
   );
   const filterRef = useRef<HTMLDivElement>(null);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -348,6 +352,29 @@ export default function ScheduledJobsPage() {
   }, []);
 
   const filteredJobs = useMemo(() => jobs, [jobs]);
+
+  // Reset pagination when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    statusFilter,
+    jobTypeFilter,
+    ownerFilter,
+    tagFilter,
+    scheduleTypeFilter,
+    connectionProfileFilter,
+    tenantFilter,
+    jobCodeFilter,
+    activeJobsFilter,
+  ]);
+
+  // Paginate filtered jobs
+  const paginatedJobs = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredJobs.slice(startIndex, endIndex);
+  }, [filteredJobs, currentPage, pageSize]);
 
   // Bulk selection and batch operations
   const handleSelectJob = (jobId: number) => {
@@ -796,7 +823,7 @@ export default function ScheduledJobsPage() {
               </thead>
 
               <tbody>
-                {filteredJobs.map((job) => (
+                {paginatedJobs.map((job) => (
                   <tr key={job.id} className="transition-colors">
                     {isSelectionMode && (
                       <td
@@ -914,6 +941,14 @@ export default function ScheduledJobsPage() {
                 ))}
               </tbody>
             </table>
+            {paginatedJobs.length > 0 && filteredJobs.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                pageSize={pageSize}
+                totalItems={filteredJobs.length}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </div>
         )}
       </div>

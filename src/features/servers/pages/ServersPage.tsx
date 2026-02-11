@@ -30,6 +30,7 @@ import {
 import ServerStatsCards from "../components/ServerStatsCards";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -1218,33 +1219,12 @@ export default function ServersPage() {
       </div>
 
       {!isLoadingServers && filteredServers.length > 0 && (
-        <div
-          className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
-        >
-          <p>
-            Showing {(page - 1) * PAGE_SIZE + 1}-
-            {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} servers
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={page === 1}
-              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
-            >
-              Prev
-            </button>
-            <span className="text-gray-500">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={page === totalPages}
-              className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          pageSize={PAGE_SIZE}
+          totalItems={totalCount}
+          onPageChange={(newPage) => setPage(newPage)}
+        />
       )}
 
       {(showFilters || isClosingFilters) &&

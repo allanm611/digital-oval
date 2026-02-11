@@ -6,7 +6,6 @@ import {
   Download,
   Edit3,
 } from "lucide-react";
-import * as XLSX from "xlsx";
 import { color, tw } from "../utils/utils";
 import { UploadType } from "../../features/quicklists/types/quicklist";
 import HeadlessSelect from "./ui/HeadlessSelect";
@@ -70,6 +69,7 @@ export default function QuickListForm({
   // Parse Excel file for preview
   const parseExcelFile = async (fileToRead: File) => {
     try {
+      const XLSX = await import("xlsx");
       const buffer = await fileToRead.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheetName = workbook.SheetNames[0];

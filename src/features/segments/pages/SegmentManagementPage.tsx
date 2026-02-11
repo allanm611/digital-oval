@@ -24,6 +24,7 @@ import {
   CheckSquare,
   Square,
   Plus,
+  BarChart3,
 } from "lucide-react";
 import { Segment, SegmentFilters, SortDirection } from "../types/segment";
 import { segmentService } from "../services/segmentService";
@@ -38,6 +39,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import Pagination from "../../../shared/components/ui/Pagination";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();
@@ -62,6 +64,12 @@ export default function SegmentManagementPage() {
     | "geographic"
     | "transactional"
     | "all"
+  >("all");
+  const [filterTab, setFilterTab] = useState<
+    "all" | "active" | "empty" | "needs-refresh" | "parents" | "most-used"
+  >("all");
+  const [visibilityFilter, setVisibilityFilter] = useState<
+    "all" | "public" | "private"
   >("all");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
@@ -90,6 +98,16 @@ export default function SegmentManagementPage() {
     () => new Set(),
   );
   const headerCheckboxRef = useRef<HTMLInputElement | null>(null);
+
+  // Phase 4 - Batch Compute & Overlap
+  const [isBatchComputing, setIsBatchComputing] = useState(false);
+  const [showOverlapModal, setShowOverlapModal] = useState(false);
+  const [overlapData, setOverlapData] = useState<{
+    overlap_percentage?: number;
+    segment1_id?: number;
+    segment2_id?: number;
+  } | null>(null);
+  const [isCalculatingOverlap, setIsCalculatingOverlap] = useState(false);
 
   // Analytics state
   const [analyticsData, setAnalyticsData] = useState<{
@@ -388,15 +406,31 @@ export default function SegmentManagementPage() {
 
       let segmentData: Segment[] = [];
 
-      // Use searchSegments endpoint if there's a search term, otherwise use getSegments
-      // Note: Type filtering is done client-side only (backend doesn't support type parameter)
-      if (debouncedSearchTerm) {
+      // Handle filter tabs - call appropriate API endpoint
+      if (filterTab === "active") {
+        const response = await segmentService.getActiveSegments();
+        segmentData = response.data || [];
+      } else if (filterTab === "empty") {
+        const response = await segmentService.getEmptySegments();
+        segmentData = response.data || [];
+      } else if (filterTab === "needs-refresh") {
+        const response = await segmentService.getSegmentsNeedingRefresh();
+        segmentData = response.data || [];
+      } else if (filterTab === "parents") {
+        const response = await segmentService.getParentSegments();
+        segmentData = response.data || [];
+      } else if (filterTab === "most-used") {
+        const response = await segmentService.getMostUsedSegments(100);
+        segmentData = response.data || [];
+      } else if (debouncedSearchTerm) {
+        // Use searchSegments endpoint if there's a search term
         const searchResponse = await segmentService.searchSegments({
           q: debouncedSearchTerm,
           skipCache: true,
         });
         segmentData = searchResponse.data || [];
       } else {
+        // Default: get all segments
         const filters: SegmentFilters = {
           skipCache: true,
         };
@@ -482,7 +516,8 @@ export default function SegmentManagementPage() {
     }
   }, [
     debouncedSearchTerm,
-    // Note: typeFilter and selectedTags are applied client-side after fetching,
+    filterTab,
+    // Note: typeFilter, visibilityFilter and selectedTags are applied client-side after fetching,
     // so they don't need to trigger a new API call
     page,
     pageSize,
@@ -789,6 +824,76 @@ export default function SegmentManagementPage() {
     }
   };
 
+  // Phase 4 - Batch Compute
+  const handleBatchCompute = async () => {
+    if (selectedSegmentIds.size < 2) return;
+
+    const segmentIdsArray = Array.from(selectedSegmentIds);
+
+    const confirmed = await confirm({
+      title: "Batch Compute Segments",
+      message: `Do you want to compute size for ${segmentIdsArray.length} segment(s)? This will recalculate member counts for all selected segments.`,
+      type: "info",
+      confirmText: "Compute All",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    setIsBatchComputing(true);
+    try {
+      await segmentService.batchCompute({
+        segment_ids: segmentIdsArray,
+      });
+
+      success(
+        "Batch compute started",
+        `Computation started for ${segmentIdsArray.length} segment(s)`,
+      );
+
+      // Clear selection and reload segments
+      setSelectedSegmentIds(new Set());
+      setIsSelectionMode(false);
+      await loadSegments();
+    } catch (err: unknown) {
+      showError(
+        "Batch compute failed",
+        (err as Error).message || "Failed to compute segments",
+      );
+    } finally {
+      setIsBatchComputing(false);
+    }
+  };
+
+  // Phase 4 - Overlap Comparison
+  const handleCompareOverlap = async () => {
+    if (selectedSegmentIds.size !== 2) return;
+
+    const [id1, id2] = Array.from(selectedSegmentIds);
+    const seg1 = segments.find((s) => s.id === id1);
+    const seg2 = segments.find((s) => s.id === id2);
+
+    if (!seg1 || !seg2) {
+      showError("Error", "Could not find selected segments");
+      return;
+    }
+
+    setIsCalculatingOverlap(true);
+    try {
+      const response = await segmentService.getSegmentOverlap(id1, id2);
+      setOverlapData(response.data || { overlap_percentage: 0 });
+      setShowOverlapModal(true);
+      success("Overlap calculated", "Comparison result is ready");
+    } catch (err: unknown) {
+      showError(
+        "Comparison failed",
+        (err as Error).message || "Failed to calculate overlap",
+      );
+    } finally {
+      setIsCalculatingOverlap(false);
+    }
+  };
+
   const handleExportSegment = async (segment: Segment) => {
     setShowActionMenu(null);
     showInfo(
@@ -865,7 +970,12 @@ export default function SegmentManagementPage() {
 
     const matchesType = typeFilter === "all" || segment.type === typeFilter;
 
-    return matchesSearch && matchesTags && matchesType;
+    const matchesVisibility =
+      visibilityFilter === "all" ||
+      (visibilityFilter === "public" && segment.visibility === "public") ||
+      (visibilityFilter === "private" && segment.visibility === "private");
+
+    return matchesSearch && matchesTags && matchesType && matchesVisibility;
   });
 
   const visibleIds = useMemo(
@@ -969,7 +1079,19 @@ export default function SegmentManagementPage() {
               {t.pages.segmentsDescription}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => navigate("/dashboard/segments/analytics")}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: "transparent",
+                color: color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+            >
+              <BarChart3 size={16} />
+              Analytics
+            </button>
             <PermissionGate permission="segments.select">
               <button
                 onClick={() => {
@@ -1136,39 +1258,11 @@ export default function SegmentManagementPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
+              className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400`}
             />
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <HeadlessSelect
-              options={[
-                { value: "all", label: "All Types" },
-                { value: "static", label: "Static" },
-                { value: "dynamic", label: "Dynamic" },
-                { value: "predictive", label: "Predictive" },
-                { value: "behavioral", label: "Behavioral" },
-                { value: "demographic", label: "Demographic" },
-                { value: "geographic", label: "Geographic" },
-                { value: "transactional", label: "Transactional" },
-              ]}
-              value={typeFilter}
-              onChange={(value) =>
-                setTypeFilter(
-                  (value as
-                    | "all"
-                    | "static"
-                    | "dynamic"
-                    | "predictive"
-                    | "behavioral"
-                    | "demographic"
-                    | "geographic"
-                    | "transactional") || "all",
-                )
-              }
-              placeholder="Filter by type"
-              className="min-w-[160px]"
-            />
             <button
               onClick={() => setShowAdvancedFilters(true)}
               className={`flex items-center gap-2 ${tw.rounded} transition-colors font-medium`}
@@ -1229,7 +1323,7 @@ export default function SegmentManagementPage() {
               <X size={16} />
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleBulkRefresh}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -1238,13 +1332,38 @@ export default function SegmentManagementPage() {
               <RefreshCw size={14} />
               Refresh All
             </button>
+
+            {selectedSegmentIds.size >= 2 && (
+              <button
+                onClick={handleBatchCompute}
+                disabled={isBatchComputing}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: color.primary.accent }}
+              >
+                <BarChart3 size={14} />
+                {isBatchComputing ? "Computing..." : "Batch Compute"}
+              </button>
+            )}
+
+            {selectedSegmentIds.size === 2 && (
+              <button
+                onClick={handleCompareOverlap}
+                disabled={isCalculatingOverlap}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{ backgroundColor: "#6B7280" }}
+              >
+                <Activity size={14} />
+                {isCalculatingOverlap ? "Comparing..." : "Compare"}
+              </button>
+            )}
           </div>
         </div>
       )}
 
       {/* Content */}
       <div
-        className={` ${tw.rounded} border border-[${color.border.default}] overflow-hidden`}
+        className={` ${tw.rounded} border overflow-hidden`}
+        style={{ borderColor: color.border.default }}
       >
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
@@ -1783,44 +1902,12 @@ export default function SegmentManagementPage() {
 
       {/* Pagination */}
       {!isLoading && !error && filteredSegments.length > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-base ${tw.textSecondary} text-center sm:text-left`}
-            >
-              {totalCount === 0 ? (
-                "No segments found"
-              ) : (
-                <>
-                  Showing {(page - 1) * pageSize + 1} to{" "}
-                  {Math.min(page * pageSize, totalCount)} of {totalCount}{" "}
-                  segments
-                </>
-              )}
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page <= 1}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className={`text-base ${tw.textSecondary} px-2`}>
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={page >= totalPages}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          pageSize={pageSize}
+          totalItems={totalCount}
+          onPageChange={setPage}
+        />
       )}
 
       {/* Segment Modal */}
@@ -1869,6 +1956,70 @@ export default function SegmentManagementPage() {
               </div>
 
               <div className="p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+                {/* Filter Tabs */}
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
+                  >
+                    Quick Filters
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: "all", label: "All" },
+                      { value: "active", label: "Active" },
+                      { value: "empty", label: "Empty" },
+                      { value: "needs-refresh", label: "Needs Refresh" },
+                      { value: "parents", label: "Parents" },
+                      { value: "most-used", label: "Most Used" },
+                    ].map((tab) => (
+                      <button
+                        key={tab.value}
+                        onClick={() =>
+                          setFilterTab(
+                            tab.value as
+                              | "all"
+                              | "active"
+                              | "empty"
+                              | "needs-refresh"
+                              | "parents"
+                              | "most-used",
+                          )
+                        }
+                        className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                          filterTab === tab.value
+                            ? `bg-blue-500 text-white`
+                            : `border border-gray-200 text-gray-700 hover:bg-gray-50`
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visibility Filter */}
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
+                  >
+                    Visibility
+                  </label>
+                  <HeadlessSelect
+                    options={[
+                      { value: "all", label: "All Visibility" },
+                      { value: "public", label: "Public" },
+                      { value: "private", label: "Private" },
+                    ]}
+                    value={visibilityFilter}
+                    onChange={(value) =>
+                      setVisibilityFilter(
+                        (value as "all" | "public" | "private") || "all",
+                      )
+                    }
+                    placeholder="Select visibility"
+                  />
+                </div>
+
                 {/* Type Filter */}
                 <div>
                   <label
@@ -1945,7 +2096,9 @@ export default function SegmentManagementPage() {
                 <div className="flex space-x-3 pt-4">
                   <button
                     onClick={() => {
+                      setFilterTab("all");
                       setTypeFilter("all");
+                      setVisibilityFilter("all");
                       setSelectedTags([]);
                     }}
                     className={`flex-1 px-4 py-2 text-sm border border-gray-300 ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors`}
@@ -1960,6 +2113,77 @@ export default function SegmentManagementPage() {
                     className={`${tw.button} flex-1 px-4 py-2 text-sm`}
                   >
                     Apply Filters
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Overlap Comparison Modal */}
+      {showOverlapModal &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+            <div
+              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}
+            >
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Segment Overlap Analysis
+                </h2>
+                <button
+                  onClick={() => setShowOverlapModal(false)}
+                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-6">
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <div className="text-5xl font-bold text-blue-600 mb-2">
+                      {overlapData?.overlap_percentage?.toFixed(1)}%
+                    </div>
+                    <p className="text-gray-600">
+                      Members in common between selected segments
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 mb-1">
+                        Segment 1
+                      </div>
+                      <div className="text-gray-600 text-xs">
+                        ID: {overlapData?.segment1_id}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-gray-700 mb-1">
+                        Segment 2
+                      </div>
+                      <div className="text-gray-600 text-xs">
+                        ID: {overlapData?.segment2_id}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      This percentage indicates how many members from Segment 1
+                      also belong to Segment 2.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => setShowOverlapModal(false)}
+                    className={`px-4 py-2 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 ${tw.rounded} transition-colors text-sm font-medium`}
+                  >
+                    Close
                   </button>
                 </div>
               </div>

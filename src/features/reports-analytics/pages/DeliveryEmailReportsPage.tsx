@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Bar,
   BarChart,
@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
 import type {
@@ -329,6 +330,8 @@ export default function DeliveryEmailReportsPage() {
   const [statusFilter, setStatusFilter] = useState<EmailStatus | "All">("All");
   const [campaignQuery, setCampaignQuery] = useState("");
   const [useDummyData, setUseDummyData] = useState(true);
+  const [tablePage, setTablePage] = useState(1);
+  const tablePageSize = 20;
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -455,6 +458,22 @@ export default function DeliveryEmailReportsPage() {
     customDays,
     useDummyData,
   ]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setTablePage(1);
+  }, [
+    campaignQuery,
+    statusFilter,
+    appliedCustomRange.start,
+    appliedCustomRange.end,
+  ]);
+
+  // Paginated logs for table display
+  const paginatedLogs = useMemo(() => {
+    const startIdx = (tablePage - 1) * tablePageSize;
+    return filteredLogs.slice(startIdx, startIdx + tablePageSize);
+  }, [filteredLogs, tablePage]);
 
   const csvHeaders = [
     "Campaign ID",
@@ -830,7 +849,7 @@ export default function DeliveryEmailReportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((entry, index) => (
+                {paginatedLogs.map((entry, index) => (
                   <tr key={entry.id} className="transition-colors">
                     <td
                       className="px-6 py-4 font-semibold"
@@ -889,7 +908,13 @@ export default function DeliveryEmailReportsPage() {
                 No campaigns match your filters yet.
               </div>
             )}
-          </div>
+          </div>{" "}
+          <Pagination
+            currentPage={tablePage}
+            pageSize={tablePageSize}
+            totalItems={filteredLogs.length}
+            onPageChange={setTablePage}
+          />{" "}
         </div>
       </section>
     </div>

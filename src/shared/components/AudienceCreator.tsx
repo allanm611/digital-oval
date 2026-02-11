@@ -5,7 +5,6 @@ import {
   // AlertCircle,
   // Download,
 } from "lucide-react";
-import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../utils/utils";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../features/manual-broadcast/components/SubscriptionIdSelector";
@@ -143,8 +142,9 @@ export default function AudienceCreator({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const downloadSampleFile = () => {
+  const downloadSampleFile = async () => {
     // Create a sample file with realistic data in Excel format
+    const XLSX = await import("xlsx");
     const columns = ["MSISDN", "Customer ID", "Full Name", "Age", "City"];
 
     const sampleData = [
@@ -199,8 +199,9 @@ export default function AudienceCreator({
   const parseFileColumns = async (file: File): Promise<string[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
+          const XLSX = await import("xlsx");
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
           const workbook = XLSX.read(data, { type: "array" });
           const sheetName = workbook.SheetNames[0];

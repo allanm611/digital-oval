@@ -390,15 +390,12 @@ class ProductCategoryService {
     params: {
       limit?: number;
       offset?: number;
-      active_only?: boolean;
       skipCache?: boolean;
     } = {}
   ): Promise<PaginatedResponse<Product>> {
     const queryParams = new URLSearchParams();
     if (params.limit) queryParams.append("limit", params.limit.toString());
     if (params.offset) queryParams.append("offset", params.offset.toString());
-    if (params.active_only)
-      queryParams.append("active_only", params.active_only.toString());
     if (params.skipCache) queryParams.append("skipCache", "true");
 
     const query = queryParams.toString();

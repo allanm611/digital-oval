@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { color, tw, zIndex, noteStyles } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -150,7 +151,7 @@ export default function JobWorkflowStepsPage() {
   }>({});
   const [isBatchUpdating, setIsBatchUpdating] = useState(false);
   // Pagination
-  const [page, setPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -187,7 +188,7 @@ export default function JobWorkflowStepsPage() {
               job_id: Number(jobIdFilter),
               step_code: stepCodeFilter.trim(),
               limit: pageSize,
-              offset: page * pageSize,
+              offset: (currentPage - 1) * pageSize,
               skipCache: true,
             });
           }
@@ -207,7 +208,7 @@ export default function JobWorkflowStepsPage() {
               job_id: Number(jobIdFilter),
               step_order: Number(stepOrderFilter),
               limit: pageSize,
-              offset: page * pageSize,
+              offset: (currentPage - 1) * pageSize,
               skipCache: true,
             });
           }
@@ -216,7 +217,7 @@ export default function JobWorkflowStepsPage() {
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             job_id: Number(jobIdFilter),
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (currentPage - 1) * pageSize,
             skipCache: true,
           });
         } else if (stepTypeFilter) {
@@ -224,7 +225,7 @@ export default function JobWorkflowStepsPage() {
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             step_type: stepTypeFilter,
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (currentPage - 1) * pageSize,
             skipCache: true,
           });
         } else if (isCriticalFilter === true) {
@@ -232,7 +233,7 @@ export default function JobWorkflowStepsPage() {
           response = await jobWorkflowStepService.searchJobWorkflowSteps({
             is_critical: true,
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (currentPage - 1) * pageSize,
             skipCache: true,
           });
         } else if (showValidationSteps) {
@@ -242,7 +243,7 @@ export default function JobWorkflowStepsPage() {
             skipCache: true,
           });
           const allSteps = allResponse.data || [];
-          const startIndex = page * pageSize;
+          const startIndex = (currentPage - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
@@ -260,7 +261,7 @@ export default function JobWorkflowStepsPage() {
             skipCache: true,
           });
           const allSteps = allResponse.data || [];
-          const startIndex = page * pageSize;
+          const startIndex = (currentPage - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
@@ -276,7 +277,7 @@ export default function JobWorkflowStepsPage() {
           const allResponse =
             await jobWorkflowStepService.getOrphanedSteps(true);
           const allSteps = allResponse.data || [];
-          const startIndex = page * pageSize;
+          const startIndex = (currentPage - 1) * pageSize;
           const endIndex = startIndex + pageSize;
           response = {
             data: allSteps.slice(startIndex, endIndex),
@@ -300,7 +301,7 @@ export default function JobWorkflowStepsPage() {
           // Use search endpoint with filters
           const params: JobWorkflowStepSearchParams = {
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (currentPage - 1) * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -356,7 +357,7 @@ export default function JobWorkflowStepsPage() {
           // Use list endpoint
           const params = {
             limit: pageSize,
-            offset: page * pageSize,
+            offset: (currentPage - 1) * pageSize,
             ...overrideParams,
             skipCache: true,
           };
@@ -411,7 +412,7 @@ export default function JobWorkflowStepsPage() {
       showRetrySteps,
       showOrphanedSteps,
       showError,
-      page,
+      currentPage,
       pageSize,
       t,
     ],
@@ -519,6 +520,25 @@ export default function JobWorkflowStepsPage() {
     setIsSelectionMode(false);
     setSelectedSteps(new Set());
   }, [jobIdFilter]);
+
+  // Reset pagination when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    jobIdFilter,
+    stepTypeFilter,
+    isCriticalFilter,
+    isParallelFilter,
+    isActiveFilter,
+    failureActionFilter,
+    parallelGroupIdFilter,
+    stepCodeFilter,
+    stepOrderFilter,
+    showValidationSteps,
+    showRetrySteps,
+    showOrphanedSteps,
+  ]);
 
   useEffect(() => {
     const loadJobs = async () => {
@@ -1501,39 +1521,12 @@ export default function JobWorkflowStepsPage() {
 
         {/* Pagination */}
         {!isLoading && steps.length > 0 && (
-          <div
-            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
-          >
-            <p>
-              Showing {page * pageSize + 1}-
-              {Math.min((page + 1) * pageSize, totalCount)} of {totalCount}{" "}
-              steps
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((prev) => Math.max(0, prev - 1))}
-                disabled={page === 0}
-                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
-              >
-                Previous
-              </button>
-              <span className="text-gray-500">
-                Page {page + 1} of{" "}
-                {Math.max(1, Math.ceil(totalCount / pageSize))}
-              </span>
-              <button
-                onClick={() =>
-                  setPage((prev) =>
-                    Math.min(Math.ceil(totalCount / pageSize) - 1, prev + 1),
-                  )
-                }
-                disabled={page + 1 >= Math.ceil(totalCount / pageSize)}
-                className={`${tw.rounded} border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-40 hover:bg-gray-50 transition-colors`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            pageSize={pageSize}
+            totalItems={totalCount}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

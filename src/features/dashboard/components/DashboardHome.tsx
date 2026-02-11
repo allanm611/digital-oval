@@ -12,7 +12,7 @@ type RecentCampaign = {
   name: string;
   status: string;
   statusDisplay: string;
-  objective: string;
+  description: string;
   performance?: {
     response: number;
     delivered: number;
@@ -152,6 +152,22 @@ export default function DashboardHome() {
     }>
   >([]);
   const [recentItemsLoading, setRecentItemsLoading] = useState(true);
+
+  // State for "Requires Attention" section with actual data
+  const [requiresAttentionData, setRequiresAttentionData] = useState<
+    Array<{
+      id: string;
+      title: string;
+      description: string;
+      type: "campaign" | "offer" | "segment";
+      action: string;
+      priority: "high" | "medium";
+      count: number;
+      itemId: number | string;
+      itemName: string;
+    }>
+  >([]);
+  const [requiresAttentionLoading, setRequiresAttentionLoading] = useState(true);
 
   // State for stats
   const [offersStats, setOffersStats] = useState<{
@@ -728,15 +744,15 @@ export default function DashboardHome() {
               const participants = parseMetricValue(
                 campaign.current_participants ?? 0
               );
-              // Extract objective from campaign
-              const objective = campaign.objective || "N/A";
+              // Extract description from campaign
+              const description = campaign.description || "N/A";
 
               return {
                 id: campaign.id,
                 name: campaign.name,
                 status: campaign.status,
                 statusDisplay: formatStatusLabel(campaign.status),
-                objective,
+                description,
                 performance: {
                   response: participants,
                   delivered: participants,
@@ -1508,39 +1524,135 @@ export default function DashboardHome() {
     },
   ];
 
-  // CVM-relevant: Items requiring attention
-  const requiresAttention = [
+  // Fetch "Requires Attention" data from actual APIs
+  useEffect(() => {
+    const fetchRequiresAttentionData = async () => {
+      setRequiresAttentionLoading(true);
+      try {
+        const results: typeof requiresAttentionData = [];
+
+        // Fetch ONE campaign pending approval
+        try {
+          const pendingCampaigns =
+            await campaignService.getPendingApprovalCampaigns();
+          const pendingCampaign = (pendingCampaigns.data || [])[0];
+          if (pendingCampaign) {
+            results.push({
+              id: "campaigns-pending",
+              title: t.dashboard.pendingApproval,
+              description: `${pendingCampaign.name}`,
+              type: "campaign",
+              action: t.dashboard.approve,
+              priority: "medium",
+              count: (pendingCampaigns.meta?.total || 0),
+              itemId: pendingCampaign.id,
+              itemName: pendingCampaign.name,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch pending approval campaigns:", err);
+        }
+
+        // Fetch ONE offer - upcoming offers
+        try {
+          const upcomingOffers =
+            await offerService.getUpcomingOffers();
+          const upcomingOffer = (upcomingOffers.data || [])[0];
+          if (upcomingOffer) {
+            results.push({
+              id: "offers-upcoming",
+              title: "Upcoming Offers",
+              description: `${upcomingOffer.name}`,
+              type: "offer",
+              action: t.dashboard.review,
+              priority: "medium",
+              count: (upcomingOffers.meta?.total || 0),
+              itemId: upcomingOffer.id,
+              itemName: upcomingOffer.name,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch upcoming offers:", err);
+        }
+
+        // Fetch ONE offer - expired offers
+        try {
+          const expiredOffers =
+            await offerService.getExpiredOffers();
+          const expiredOffer = (expiredOffers.data || [])[0];
+          if (expiredOffer) {
+            results.push({
+              id: "offers-expired",
+              title: "Expired Offers",
+              description: `${expiredOffer.name}`,
+              type: "offer",
+              action: t.dashboard.review,
+              priority: "medium",
+              count: (expiredOffers.meta?.total || 0),
+              itemId: expiredOffer.id,
+              itemName: expiredOffer.name,
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch expired offers:", err);
+        }
+
+        setRequiresAttentionData(results);
+      } finally {
+        setRequiresAttentionLoading(false);
+      }
+    };
+
+    fetchRequiresAttentionData();
+  }, []);
+
+  // CVM-relevant: Items requiring attention (fallback to dummy data if no real data)
+  const requiresAttention = requiresAttentionData.length > 0 
+    ? requiresAttentionData
+    : [
     {
-      id: 1,
-      title: t.dashboard.campaignExpiringSoon,
-      description: t.dashboard.campaignExpiringSoon,
-      type: "campaign",
-      action: t.dashboard.reviewAndExtend,
-      priority: "high",
-    },
-    {
-      id: 2,
-      title: t.dashboard.offerExpiring,
-      description: t.dashboard.offerExpiring,
-      type: "offer",
-      action: t.dashboard.review,
-      priority: "high",
-    },
-    {
-      id: 3,
+      id: "1",
       title: t.dashboard.pendingApproval,
-      description: t.dashboard.pendingApproval,
-      type: "approval",
+      description: "Q4 Customer Retention Campaign",
+      type: "campaign" as const,
       action: t.dashboard.approve,
-      priority: "medium",
+      priority: "medium" as const,
+      count: 0,
+      itemId: 0,
+      itemName: "Q4 Customer Retention Campaign",
     },
     {
-      id: 4,
-      title: t.dashboard.segmentUpdateNeeded,
-      description: t.dashboard.segmentUpdateNeeded,
-      type: "segment",
-      action: t.dashboard.update,
-      priority: "medium",
+      id: "2",
+      title: "Upcoming Offers",
+      description: "Black Friday 20% Discount",
+      type: "offer" as const,
+      action: t.dashboard.review,
+      priority: "medium" as const,
+      count: 0,
+      itemId: 0,
+      itemName: "Black Friday 20% Discount",
+    },
+    {
+      id: "3",
+      title: "Expired Offers",
+      description: "Summer Flash Sale",
+      type: "offer" as const,
+      action: t.dashboard.review,
+      priority: "medium" as const,
+      count: 0,
+      itemId: 0,
+      itemName: "Summer Flash Sale",
+    },
+    {
+      id: "4",
+      title: "Segments Pending",
+      description: "High-Value Customers Segment",
+      type: "segment" as const,
+      action: t.dashboard.review,
+      priority: "medium" as const,
+      count: 0,
+      itemId: 0,
+      itemName: "High-Value Customers Segment",
     },
   ];
 
@@ -1874,7 +1986,7 @@ export default function DashboardHome() {
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-black">
                           <span className="text-black/80">
-                            {campaign.objective}
+                            {campaign.description}
                           </span>
                           {campaign.performance && (
                             <span className="text-black/80">
@@ -2513,45 +2625,74 @@ export default function DashboardHome() {
             </p>
           </div>
           <div className="p-6 space-y-4">
-            {requiresAttention.map((item) => (
-              <div
-                key={item.id}
-                className={`${tw.rounded} p-5 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <p className="font-semibold text-base text-black">
-                        {item.title}
-                      </p>
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium border ${
-                          item.priority === "high"
-                            ? "bg-red-100 text-red-700 border-red-200"
-                            : "bg-yellow-100 text-yellow-700 border-yellow-200"
-                        }`}
-                      >
-                        {item.priority === "high"
-                          ? t.dashboard.priorityHigh
-                          : t.dashboard.priorityMedium}
-                      </span>
-                    </div>
-                    <p className="text-sm text-black mb-2">
-                      {item.description}
-                    </p>
-                    <button
-                      className="text-sm font-medium hover:opacity-80 transition-opacity"
-                      style={{ color: "#2563eb" }}
-                      onClick={() => {
-                        // Placeholder for navigation action
-                      }}
-                    >
-                      {item.action} →
-                    </button>
-                  </div>
+            {requiresAttentionLoading ? (
+              <div className="text-center py-8">
+                <div className="inline-block">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-400"></div>
                 </div>
               </div>
-            ))}
+            ) : requiresAttention.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <p>{t.dashboard.allCaughtUp || "All caught up! No items requiring attention."}</p>
+              </div>
+            ) : (
+              requiresAttention.map((item) => (
+                <div
+                  key={item.id}
+                  className={`${tw.rounded} p-5 border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <p className="font-semibold text-base text-black">
+                          {item.title}
+                        </p>
+                        {/* Count badge - TODO: Enable when TS errors resolved */}
+                        {/* <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                            item.priority === "high"
+                              ? "bg-red-100 text-red-700 border-red-200"
+                              : "bg-yellow-100 text-yellow-700 border-yellow-200"
+                          }`}
+                        >
+                          {item.count > 0 ? `${item.count} item${item.count !== 1 ? 's' : ''}` : 'No items'}
+                        </span> */}
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium border text-white`}
+                          style={{
+                            backgroundColor: color.primary.accent,
+                            borderColor: color.primary.accent,
+                          }}
+                        >
+                          {item.priority === "high"
+                            ? t.dashboard.priorityHigh
+                            : t.dashboard.priorityMedium}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2 font-medium">
+                        {item.itemName}
+                      </p>
+                      <button
+                        className="text-sm font-medium hover:opacity-80 transition-opacity"
+                        style={{ color: "#2563eb" }}
+                        onClick={() => {
+                          // Navigate based on type
+                          if (item.type === "campaign") {
+                            navigate(`/dashboard/campaigns/${item.itemId}`);
+                          } else if (item.type === "offer") {
+                            navigate(`/dashboard/offers/${item.itemId}`);
+                          } else if (item.type === "segment") {
+                            navigate(`/dashboard/segments/${item.itemId}`);
+                          }
+                        }}
+                      >
+                        {item.action} →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

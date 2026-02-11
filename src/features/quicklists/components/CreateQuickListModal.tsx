@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Upload, FileText, AlertCircle, Download } from "lucide-react";
-import * as XLSX from "xlsx";
 import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../manual-broadcast/components/SubscriptionIdSelector";
@@ -151,8 +150,9 @@ export default function CreateQuickListModal({
     // Handle XLSX files
     if (fileExtension === ".xlsx") {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         try {
+          const XLSX = await import("xlsx");
           const data = e.target?.result;
           const workbook = XLSX.read(data, { type: "array" });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -208,7 +208,7 @@ export default function CreateQuickListModal({
     }
   };
 
-  const downloadSampleFile = () => {
+  const downloadSampleFile = async () => {
     // Create sample data
     const sampleData = [
       ["subscription_id", "email", "first_name", "last_name", "country"],
@@ -218,6 +218,9 @@ export default function CreateQuickListModal({
       ["SUB004", "alice.johnson@example.com", "Alice", "Johnson", "Australia"],
       ["SUB005", "charlie.brown@example.com", "Charlie", "Brown", "USA"],
     ];
+
+    // Dynamic import - XLSX only loads when download is triggered
+    const XLSX = await import("xlsx");
 
     // Create workbook and worksheet
     const worksheet = XLSX.utils.aoa_to_sheet(sampleData);

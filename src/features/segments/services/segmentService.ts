@@ -455,19 +455,21 @@ class SegmentService {
    * GET /segments/stats/health-summary - Get health summary
    */
   async getHealthSummary(): Promise<ApiSuccessResponse<HealthSummaryResponse>> {
+    const queryString = this.buildQueryParams({ skipCache: true });
     return this.request<ApiSuccessResponse<HealthSummaryResponse>>(
-      "/stats/health-summary",
+      `/stats/health-summary${queryString}`,
     );
   }
 
   /**
    * GET /segments/stats/creation-trend - Get creation trend
+   * Parameters: skipCache (optional, default false)
+   * Note: Does not accept period or days parameters
    */
-  async getCreationTrend(
-    period?: string,
-    days?: number,
-  ): Promise<ApiSuccessResponse<CreationTrendResponse>> {
-    const queryString = this.buildQueryParams({ period, days });
+  async getCreationTrend(): Promise<ApiSuccessResponse<CreationTrendResponse>> {
+    const queryString = this.buildQueryParams({
+      skipCache: true, // Always skip cache for analytics
+    });
     return this.request<ApiSuccessResponse<CreationTrendResponse>>(
       `/stats/creation-trend${queryString}`,
     );
@@ -479,8 +481,9 @@ class SegmentService {
   async getTypeDistribution(): Promise<
     ApiSuccessResponse<TypeDistributionResponse>
   > {
+    const queryString = this.buildQueryParams({ skipCache: true });
     return this.request<ApiSuccessResponse<TypeDistributionResponse>>(
-      "/stats/type-distribution",
+      `/stats/type-distribution${queryString}`,
     );
   }
 
@@ -504,7 +507,7 @@ class SegmentService {
   async getLargestSegments(
     limit: number = 10,
   ): Promise<ApiSuccessResponse<LargestSegmentsResponse[]>> {
-    const queryString = this.buildQueryParams({ limit });
+    const queryString = this.buildQueryParams({ limit, skipCache: true });
     return this.request<ApiSuccessResponse<LargestSegmentsResponse[]>>(
       `/stats/largest${queryString}`,
     );
@@ -516,8 +519,9 @@ class SegmentService {
   async getStaleSegments(): Promise<
     ApiSuccessResponse<StaleSegmentsResponse[]>
   > {
+    const queryString = this.buildQueryParams({ skipCache: true });
     return this.request<ApiSuccessResponse<StaleSegmentsResponse[]>>(
-      `/stats/stale`,
+      `/stats/stale${queryString}`,
     );
   }
 
@@ -1247,21 +1251,30 @@ class SegmentService {
 
   /**
    * GET /segment-members/segment/:segmentId - Get segment members
-   * Note: Backend doesn't accept page/pageSize query params
+   * Supports: limit (50 default, max 100), offset (0 default), orderBy, orderDirection, skipCache
    */
   async getSegmentMembers(
     id: number,
     query?: GetSegmentMembersQuery,
   ): Promise<PaginatedResponse<SegmentMemberType>> {
-    // Backend doesn't accept page/pageSize - fetch all and handle pagination client-side
-    const url = `${MEMBERS_BASE_URL}/segment/${id}`;
+    // Use offset-based pagination (not page-based)
+    const limit = Math.min(query?.pageSize || 50, 100); // Max 100
+    const offset = query?.offset ?? (query?.page ? (query.page - 1) * limit : 0);
+    const skipCache = query?.skipCache ? "true" : "false";
+
+    const queryString = this.buildQueryParams({
+      limit,
+      offset,
+      orderBy: query?.sortBy || "created_at",
+      orderDirection: query?.sortDirection || "DESC",
+      skipCache,
+    });
+
+    const url = `${MEMBERS_BASE_URL}/segment/${id}${queryString}`;
     const response = await fetch(url, {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
       },
     });
     if (!response.ok) {
@@ -1271,21 +1284,18 @@ class SegmentService {
     }
     const data = await response.json();
 
-    // Handle pagination client-side if needed
-    const allMembers = Array.isArray(data) ? data : data.data || [];
-    const page = query?.page || 1;
-    const pageSize = query?.pageSize || 10;
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedMembers = allMembers.slice(startIndex, endIndex);
+    // Backend returns paginated results directly
+    const members = Array.isArray(data) ? data : data.data || [];
+    const total = data.meta?.total || (Array.isArray(data) ? data.length : 0);
+    const page = Math.floor(offset / limit) + 1;
 
     return {
-      data: paginatedMembers,
+      data: members,
       meta: {
-        total: allMembers.length,
-        page: page,
-        pageSize: pageSize,
-        totalPages: Math.ceil(allMembers.length / pageSize),
+        total,
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }
@@ -1386,67 +1396,59 @@ class SegmentService {
 
   /**
    * POST /segment-members/segment/:segmentId/search - Search segment members
-   * Note: Backend doesn't accept query params, so we fetch all and filter client-side
+   * Supports: limit (50 default, max 100), offset (0 default), minScore, maxScore, orderBy, orderDirection, skipCache
    */
   async searchSegmentMembers(
     id: number,
     request: SearchSegmentMembersRequest,
   ): Promise<PaginatedResponse<SegmentMemberType>> {
-    // Fetch all members and filter client-side since backend doesn't support query params
-    const url = `${MEMBERS_BASE_URL}/segment/${id}`;
+    // Use offset-based pagination (not page-based)
+    const limit = Math.min(request.pageSize || 50, 100); // Max 100
+    const offset = request.offset ?? (request.page ? (request.page - 1) * limit : 0);
+    const skipCache = request.skipCache ? "true" : "false";
+
+    const queryString = this.buildQueryParams({
+      limit,
+      offset,
+      minScore: request.minScore,
+      maxScore: request.maxScore,
+      orderBy: request.orderBy || "created_at",
+      orderDirection: request.orderDirection || "DESC",
+      skipCache,
+    });
+
+    const url = `${MEMBERS_BASE_URL}/segment/${id}/search${queryString}`;
     const response = await fetch(url, {
+      method: "POST",
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
       },
+      body: JSON.stringify({
+        query: request.query,
+        filters: request.filters,
+      }),
     });
+
     if (!response.ok) {
       throw new Error(
         `Failed to search segment members: ${response.statusText}`,
       );
     }
     const data = await response.json();
-    const allMembers = Array.isArray(data) ? data : data.data || [];
 
-    // Filter by search query if provided
-    let filteredMembers = allMembers;
-    if (request.query) {
-      const searchTerm = request.query.toLowerCase();
-      filteredMembers = allMembers.filter(
-        (member: {
-          name?: string;
-          email?: string;
-          customer_id?: string | number;
-        }) => {
-          const name = String(member.name || "").toLowerCase();
-          const email = String(member.email || "").toLowerCase();
-          const customerId = String(member.customer_id || "").toLowerCase();
-          return (
-            name.includes(searchTerm) ||
-            email.includes(searchTerm) ||
-            customerId.includes(searchTerm)
-          );
-        },
-      );
-    }
-
-    // Handle pagination client-side
-    const page = request.page || 1;
-    const pageSize = request.pageSize || 10;
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedMembers = filteredMembers.slice(startIndex, endIndex);
+    // Backend returns filtered & paginated results directly
+    const members = Array.isArray(data) ? data : data.data || [];
+    const total = data.meta?.total || (Array.isArray(data) ? data.length : 0);
+    const page = Math.floor(offset / limit) + 1;
 
     return {
-      data: paginatedMembers,
+      data: members,
       meta: {
-        total: filteredMembers.length,
-        page: page,
-        pageSize: pageSize,
-        totalPages: Math.ceil(filteredMembers.length / pageSize),
+        total,
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil(total / limit),
       },
     };
   }

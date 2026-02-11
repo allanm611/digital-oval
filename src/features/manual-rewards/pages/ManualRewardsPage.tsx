@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Gift,
   Search,
@@ -7,6 +8,7 @@ import {
   CheckCircle,
   Clock,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -16,6 +18,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 // Dummy data for manual rewards
@@ -119,6 +122,9 @@ export default function ManualRewardsPage() {
     description: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
 
   // Dummy stats (matching actual dummy data: 5 rewards, 1 scheduled)
   // Recipients: 125 + 250 + 350 + 80 + 200 = 1005
@@ -227,6 +233,18 @@ export default function ManualRewardsPage() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  // Reset pagination when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStatus, selectedType]);
+
+  // Paginate filtered rewards
+  const paginatedRewards = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredRewards.slice(startIndex, endIndex);
+  }, [filteredRewards, currentPage, pageSize]);
+
   const rewardStatsCards = [
     {
       name: t.manualRewards.title.replace("Create ", "Total "),
@@ -258,13 +276,22 @@ export default function ManualRewardsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-            Manual Rewards
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Apply rewards directly to customers
-          </p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Go back"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </button>
+          <div>
+            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
+              Manual Rewards
+            </h1>
+            <p className={`${tw.textSecondary} mt-2 text-sm`}>
+              Apply rewards directly to customers
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <PermissionGate permission="manual-rewards.create">
@@ -412,7 +439,7 @@ export default function ManualRewardsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredRewards.map((reward) => (
+                {paginatedRewards.map((reward) => (
                   <tr key={reward.id} className="transition-colors">
                     <td
                       className="px-6 py-4 text-sm"
@@ -494,36 +521,14 @@ export default function ManualRewardsPage() {
         )}
       </div>
 
-      {/* Pagination placeholder */}
-      {filteredRewards.length > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border px-6 py-4`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <p className={`text-sm ${tw.textSecondary}`}>
-              Showing {filteredRewards.length} of {dummyManualRewards.length}{" "}
-              rewards
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                disabled
-                className={`px-3 py-1.5 text-sm ${tw.rounded} border disabled:opacity-50`}
-                style={{ borderColor: color.border.default }}
-              >
-                {t.manualRewards.previous}
-              </button>
-              <span className={`text-sm ${tw.textSecondary}`}>Page 1 of 1</span>
-              <button
-                disabled
-                className={`px-3 py-1.5 text-sm ${tw.rounded} border disabled:opacity-50`}
-                style={{ borderColor: color.border.default }}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Pagination */}
+      {paginatedRewards.length > 0 && filteredRewards.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredRewards.length}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

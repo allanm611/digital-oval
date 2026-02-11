@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    watch: {
+      ignored: ['**/node_modules/**']
+    }
+  },
   build: {
     sourcemap: true,
     rollupOptions: {
@@ -14,17 +19,6 @@ export default defineConfig({
           'vendor-ui': ['@headlessui/react', 'lucide-react'],
 
           // Feature chunks
-          'feature-campaigns': [
-            './src/features/campaigns/pages/CampaignsPage',
-            './src/features/campaigns/pages/CreateCampaignPage',
-            './src/features/campaigns/pages/CampaignDetailsPage',
-            './src/features/campaigns/pages/CampaignsAnalyticsPage',
-          ],
-          'feature-offers': [
-            './src/features/offers/pages/OffersPage',
-            './src/features/offers/pages/CreateOfferPage',
-            './src/features/offers/pages/OfferDetailsPage',
-          ],
           'feature-analytics': [
             './src/features/reports-analytics/pages/CampaignReportsPage',
             './src/features/reports-analytics/pages/OfferReportsPage',

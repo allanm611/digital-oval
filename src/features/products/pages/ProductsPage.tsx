@@ -27,6 +27,7 @@ import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
@@ -644,7 +645,9 @@ export default function ProductsPage() {
                           <PermissionGate permission="products.update">
                             <button
                               onClick={() =>
-                                navigate(`/dashboard/products/${product.id}/edit`)
+                                navigate(
+                                  `/dashboard/products/${product.id}/edit`,
+                                )
                               }
                               className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}
                               title="Edit Product"
@@ -687,48 +690,12 @@ export default function ProductsPage() {
 
       {/* Pagination */}
       {!loading && !error && (products.length > 0 || total > 0) && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-base ${tw.textSecondary} text-center sm:text-left`}
-            >
-              {products.length === 0 ? (
-                "No products on this page"
-              ) : (
-                <>
-                  Showing{" "}
-                  {((filters.page || 1) - 1) * (filters.pageSize || 10) + 1} to{" "}
-                  {Math.min(
-                    (filters.page || 1) * (filters.pageSize || 10),
-                    total,
-                  )}{" "}
-                  of {total} products
-                </>
-              )}
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() => handlePageChange((filters.page || 1) - 1)}
-                disabled={filters.page === 1}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className={`text-base ${tw.textSecondary} px-2`}>
-                Page {filters.page || 1} of {totalPages || 1}
-              </span>
-              <button
-                onClick={() => handlePageChange((filters.page || 1) + 1)}
-                disabled={(filters.page || 1) >= (totalPages || 1)}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={filters.page || 1}
+          pageSize={filters.pageSize || 20}
+          totalItems={total}
+          onPageChange={(page) => handlePageChange(page)}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

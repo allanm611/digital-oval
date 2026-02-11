@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -1810,35 +1811,12 @@ export default function CustomerProfileReportsPage() {
           )}
         </div>
         {tableCustomers.length > 0 && (
-          <div className="px-4 py-3 sm:flex sm:items-center sm:justify-between">
-            <p className="text-sm text-gray-600">
-              {t.customerProfileReports.page
-                .replace("{current}", tablePage.toString())
-                .replace("{total}", totalPages.toString())}
-            </p>
-            <div className="mt-2 flex items-center gap-2 sm:mt-0">
-              <button
-                type="button"
-                onClick={() => setTablePage((prev) => Math.max(1, prev - 1))}
-                disabled={tablePage === 1}
-                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {t.customerProfileReports.prev}
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  setTablePage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={tablePage >= totalPages}
-                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                {t.customerProfileReports.next}
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={tablePage}
+            pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+            totalItems={tableCustomers.length}
+            onPageChange={setTablePage}
+          />
         )}
       </section>
     </div>

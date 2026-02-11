@@ -16,6 +16,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { campaignService } from "../services/campaignService";
+import { campaignFlowService } from "../services/campaignFlowService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -133,6 +134,13 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
   >([]);
   const [topPerformersData, setTopPerformersData] =
     useState<TopPerformers | null>(null);
+
+  // Campaign Flow Analytics state
+  const [flowStats, setFlowStats] = useState<any>(null);
+  const [flowGrowthTrends, setFlowGrowthTrends] = useState<Array<{ date: string; count: number }>>([]);
+  const [relationshipStats, setRelationshipStats] = useState<any>(null);
+  const [uniqueCombinations, setUniqueCombinations] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; flow_count: number }>>([]);
+  const [isLoadingFlowAnalytics, setIsLoadingFlowAnalytics] = useState(false);
 
   const loadAnalytics = useCallback(async () => {
     setIsLoading(true);
@@ -371,9 +379,65 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
     }
   }, [showError, t]);
 
+  const loadFlowAnalytics = useCallback(async () => {
+    setIsLoadingFlowAnalytics(true);
+    try {
+      // Load all 4 campaign flow analytics endpoints in parallel
+      const [statsRes, trendsRes, relationshipRes, combinationsRes] = await Promise.all([
+        campaignFlowService.getFlowStatistics(),
+        campaignFlowService.getGrowthTrends("week", 12),
+        campaignFlowService.getRelationshipStatistics(),
+        campaignFlowService.getUniqueCombinations(100, 0),
+      ]);
+
+      // Process flow statistics
+      if (statsRes.success && statsRes.data) {
+        setFlowStats(statsRes.data);
+      }
+
+      // Process growth trends
+      if (trendsRes.success && Array.isArray(trendsRes.data)) {
+        const trends = trendsRes.data.map((item: any) => ({
+          date: item.date || item.name || new Date().toLocaleDateString(),
+          count: parseInt(item.count) || parseInt(item.flow_count) || 0,
+        }));
+        setFlowGrowthTrends(trends);
+      }
+
+      // Process relationship statistics
+      if (relationshipRes.success && relationshipRes.data) {
+        setRelationshipStats(relationshipRes.data);
+      }
+
+      // Process unique combinations
+      if (combinationsRes.success && Array.isArray(combinationsRes.data)) {
+        const combos = combinationsRes.data.map((item: any) => ({
+          campaign_id: item.campaign_id,
+          campaign_name: item.campaign_name || `Campaign #${item.campaign_id}`,
+          segment_id: item.segment_id,
+          offer_id: item.offer_id,
+          flow_count: parseInt(item.flow_count) || 1,
+        }));
+        setUniqueCombinations(combos);
+      }
+    } catch (err) {
+      console.warn("Failed to load flow analytics:", err);
+      setFlowStats(null);
+      setFlowGrowthTrends([]);
+      setRelationshipStats(null);
+      setUniqueCombinations([]);
+    } finally {
+      setIsLoadingFlowAnalytics(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadAnalytics();
   }, [loadAnalytics]);
+
+  useEffect(() => {
+    loadFlowAnalytics();
+  }, [loadFlowAnalytics]);
 
   // Process Top Performing Campaigns data from the stats response
   useEffect(() => {
@@ -1244,6 +1308,140 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                 )}
             </div>
           )}
+
+          {/* Campaign Flow Analytics */}
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Campaign Flow Analytics
+            </h2>
+
+            {!isLoadingFlowAnalytics && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                {/* Flow Statistics Cards */}
+                {flowStats && (
+                  <>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                        Total Flows
+                      </p>
+                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                        {flowStats.total_flows?.toLocaleString() || 0}
+                      </p>
+                    </div>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                        Active Flows
+                      </p>
+                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                        {flowStats.active_flows?.toLocaleString() || 0}
+                      </p>
+                    </div>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                        Unique Campaigns
+                      </p>
+                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                        {flowStats.unique_campaigns?.toLocaleString() || 0}
+                      </p>
+                    </div>
+                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                        Avg. Wait Hours
+                      </p>
+                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                        {flowStats.avg_wait_hours?.toFixed(1) || "0"}h
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Flow Growth Trends Chart */}
+            {flowGrowthTrends.length > 0 && !isLoadingFlowAnalytics && (
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Flow Creation Trends
+                </h3>
+                <div className="h-80 w-full">
+                  <ResponsiveContainer width="100%" height={320}>
+                    <LineChart
+                      data={flowGrowthTrends}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="count"
+                        stroke={color.primary.accent}
+                        strokeWidth={2}
+                        dot={{ fill: color.primary.accent, r: 4 }}
+                        name="Flows"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Unique Combinations Table */}
+            {uniqueCombinations.length > 0 && !isLoadingFlowAnalytics && (
+              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Segment-Offer Combinations ({uniqueCombinations.length})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          Campaign
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          Segment ID
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          Offer ID
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          Flows
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {uniqueCombinations.map((combo, idx) => (
+                        <tr key={idx}>
+                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            <button
+                              onClick={() => navigate(`/dashboard/campaigns/${combo.campaign_id}`)}
+                              className="hover:underline"
+                              style={{ color: color.primary.accent }}
+                            >
+                              {combo.campaign_name}
+                            </button>
+                          </td>
+                          <td className="px-6 py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            {combo.segment_id}
+                          </td>
+                          <td className="px-6 py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            {combo.offer_id}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: `${color.primary.accent}15`, color: color.primary.accent }}>
+                              {combo.flow_count}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

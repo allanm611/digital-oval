@@ -626,6 +626,35 @@ export default function Sidebar({
     return location.pathname === item.href;
   };
 
+  // Entity permission mapping - consolidates all entity permission strings
+  const entityPermissionMap: Record<string, string> = {
+    campaigns: "campaigns.read",
+    products: "products.read",
+    offers: "offers.read",
+    segments: "segments.read",
+    quicklists: "quicklists.read",
+    users: "users.read",
+    analytics: "analytics.read",
+    configuration: "system.admin",
+    customers: "customer.read",
+    servers: "servers.read",
+    jobs: "jobs.read",
+    "manual-actions": "manual-actions.read",
+    settings: "system.admin",
+  };
+
+  // Get permission for an entity type
+  const getEntityPermission = (entity?: string): string | null => {
+    if (!entity) return null;
+    return entityPermissionMap[entity] || null;
+  };
+
+  // Check if entity is a valid/recognized entity type
+  const isValidEntity = (entity?: string): boolean => {
+    if (!entity) return false;
+    return entity in entityPermissionMap;
+  };
+
   // Helper function to check if a pathname matches or is a sub-route of a href
   const isPathActive = useCallback(
     (pathname: string, href: string): boolean => {

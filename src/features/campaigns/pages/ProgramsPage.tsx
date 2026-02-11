@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,11 +19,14 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { programService } from "../services/programService";
 import { Program } from "../types/program";
 import ProgramModal from "../components/ProgramModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
+
+const PAGE_SIZE = 20;
 
 export default function ProgramsPage() {
   const navigate = useNavigate();
@@ -49,6 +52,7 @@ export default function ProgramsPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isClosingModal, setIsClosingModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<{
     is_active?: boolean | "all";
     program_type?: string;
@@ -64,6 +68,7 @@ export default function ProgramsPage() {
   useEffect(() => {
     loadPrograms(true); // Always skip cache to get fresh data
     loadStats();
+    setCurrentPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, filters]);
 
@@ -343,6 +348,12 @@ export default function ProgramsPage() {
         program.description.toLowerCase().includes(searchTerm.toLowerCase())),
   );
 
+  const paginatedPrograms = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return filteredPrograms.slice(startIndex, endIndex);
+  }, [filteredPrograms, currentPage]);
+
   const programStatsCards = [
     {
       name: t.programs.totalPrograms,
@@ -521,7 +532,7 @@ export default function ProgramsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPrograms.map((program) => (
+                  {paginatedPrograms.map((program) => (
                     <tr key={program.id} className="transition-colors">
                       <td
                         className="px-6 py-4"
@@ -588,6 +599,14 @@ export default function ProgramsPage() {
                 </tbody>
               </table>
             </div>
+            {!loading && filteredPrograms.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                pageSize={PAGE_SIZE}
+                totalItems={filteredPrograms.length}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </>
         )}
       </div>
