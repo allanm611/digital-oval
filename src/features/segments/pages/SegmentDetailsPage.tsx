@@ -106,6 +106,7 @@ export default function SegmentDetailsPage() {
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerStatusFilter, setCustomerStatusFilter] = useState<string>("all");
   const [allCustomersForSelection, setAllCustomersForSelection] = useState<
     Customer[]
   >([]);
@@ -151,29 +152,41 @@ export default function SegmentDetailsPage() {
   const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; offer_name: string; flow_type: string; wait_interval_hours: number }>>([]);
   const [isLoadingCampaignFlows, setIsLoadingCampaignFlows] = useState(false);
 
-  // Filter customers based on search term
+  // Filter customers based on search term and status
   const filteredCustomersForSelection = useMemo(() => {
-    if (!customerSearchTerm.trim()) {
-      return allCustomersForSelection.slice(0, 50); // Limit to 50 for performance
+    let filtered = allCustomersForSelection;
+
+    // Apply status filter
+    if (customerStatusFilter !== "all") {
+      filtered = filtered.filter(
+        (customer) =>
+          (customer.subscriber_status || "unknown").toLowerCase() ===
+          customerStatusFilter.toLowerCase()
+      );
     }
-    // Search in customer data fields
-    const term = customerSearchTerm.toLowerCase();
-    return allCustomersForSelection
-      .filter((customer) => {
-        const firstName = customer.attributes?.first_name || "";
-        const lastName = customer.attributes?.last_name || "";
-        const email = customer.attributes?.email || "";
-        const subscriberId = String(customer.subscriber_id || "");
+
+    // Apply search filter
+    if (customerSearchTerm.trim()) {
+      const term = customerSearchTerm.toLowerCase();
+      filtered = filtered.filter((customer) => {
+        const firstName = customer.first_name || "";
+        const lastName = customer.last_name || "";
+        const email = customer.email || "";
+        const msisdn = customer.msisdn || "";
+        const subscriberId = String(customer.subscriber_id || customer.id || "");
 
         return (
           firstName.toLowerCase().includes(term) ||
           lastName.toLowerCase().includes(term) ||
           email.toLowerCase().includes(term) ||
+          msisdn.toLowerCase().includes(term) ||
           subscriberId.includes(term)
         );
-      })
-      .slice(0, 50);
-  }, [customerSearchTerm, allCustomersForSelection]);
+      });
+    }
+
+    return filtered.slice(0, 50); // Limit to 50 for performance
+  }, [customerSearchTerm, customerStatusFilter, allCustomersForSelection]);
 
   const loadCustomersForSelection = useCallback(async () => {
     setIsLoadingCustomersForSelection(true);
@@ -181,10 +194,8 @@ export default function SegmentDetailsPage() {
       const response = await customerService.getAllCustomers({
         limit: 100,
         offset: 0,
-        _t: Date.now(),
-      } as Record<string, unknown> as Parameters<
-        typeof customerService.getAllCustomers
-      >[0]);
+        skipCache: true,
+      });
       const customers = response.data || [];
       setAllCustomersForSelection(customers);
     } catch (err) {
@@ -561,9 +572,7 @@ export default function SegmentDetailsPage() {
     if (!id) return;
     setIsComputingSize(true);
     try {
-      await segmentService.computeSegmentSize({
-        segment_id: Number(id),
-      });
+      await segmentService.computeSegmentSize(Number(id));
       success("Size computation started", "Segment size is being computed");
       await loadSegment();
     } catch (err) {
@@ -898,7 +907,14 @@ export default function SegmentDetailsPage() {
           <div className="relative">
             <button
               onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className={`${tw.rounded} border border-gray-200 px-3 py-2 font-medium transition-all hover:bg-gray-50 flex items-center gap-1`}
+              className="text-sm font-medium flex items-center gap-1 transition-all hover:opacity-80"
+              style={{
+                backgroundColor: button.bordered.background,
+                color: button.bordered.color,
+                border: button.bordered.border,
+                borderRadius: button.bordered.borderRadius,
+                padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
+              }}
             >
               <MoreVertical className="w-4 h-4" />
               More
@@ -964,7 +980,6 @@ export default function SegmentDetailsPage() {
                     disabled={isExporting || isExportJobRunning}
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
                   >
-                    <Download className="w-3 h-3" />
                     {isExporting || isExportJobRunning ? "Exporting..." : "Export"}
                   </button>
                 </PermissionGate>
@@ -1069,9 +1084,9 @@ export default function SegmentDetailsPage() {
             <Tag className="w-4 h-4" style={{ color: color.primary.accent }} />
             <h4 className="font-medium text-sm text-gray-900">Tags</h4>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-3">
             {segment.tags && segment.tags.length > 0 ? (
-              <>
+              <div className="flex flex-wrap gap-2">
                 {segment.tags.map((tag) => (
                   <div
                     key={tag}
@@ -1088,10 +1103,8 @@ export default function SegmentDetailsPage() {
                     </button>
                   </div>
                 ))}
-              </>
-            ) : (
-              <p className="text-xs text-gray-500">No tags yet</p>
-            )}
+              </div>
+            ) : null}
             {showAddTagInput ? (
               <div className="flex gap-2">
                 <input
@@ -1122,13 +1135,18 @@ export default function SegmentDetailsPage() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => setShowAddTagInput(true)}
-                className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1`}
-              >
-                <Plus className="w-3 h-3" />
-                Add Tag
-              </button>
+              <div className="flex items-center gap-2">
+                {!segment.tags || segment.tags.length === 0 ? (
+                  <p className="text-sm text-gray-500">No tags yet</p>
+                ) : null}
+                <button
+                  onClick={() => setShowAddTagInput(true)}
+                  className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1`}
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Tag
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1140,20 +1158,9 @@ export default function SegmentDetailsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
         >
-          <div className="flex items-center gap-2 mb-6">
-            <div
-              className={`p-2 ${tw.rounded}`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <Layers
-                className="w-5 h-5"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Basic Information
-            </h3>
-          </div>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            Basic Information
+          </h3>
           <div className="space-y-4">
             <div>
               <label
@@ -1312,20 +1319,9 @@ export default function SegmentDetailsPage() {
           <div
             className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
           >
-            <div className="flex items-center gap-2 mb-6">
-              <div
-                className={`p-2 ${tw.rounded}`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <Activity
-                  className="w-5 h-5"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
-              <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                Query Information
-              </h3>
-            </div>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Query Information
+            </h3>
             <div className="space-y-5">
               {segment.query && (
                 <div>
@@ -1365,20 +1361,9 @@ export default function SegmentDetailsPage() {
           <div
             className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
           >
-            <div className="flex items-center gap-2 mb-6">
-              <div
-                className={`p-2 ${tw.rounded}`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <Activity
-                  className="w-5 h-5"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
-              <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                Query Information
-              </h3>
-            </div>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+              Query Information
+            </h3>
             <div className="flex flex-col items-center justify-center py-12">
               <div
                 className={`p-4 ${tw.rounded} mb-4`}
@@ -1405,20 +1390,9 @@ export default function SegmentDetailsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
         >
-          <div className="flex items-center gap-2 mb-6">
-            <div
-              className={`p-2 ${tw.rounded}`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <Activity
-                className="w-5 h-5"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Segment Criteria
-            </h3>
-          </div>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            Segment Criteria
+          </h3>
 
           {/* Display criteria conditions in a user-friendly way */}
           {segment.criteria &&
@@ -1522,25 +1496,14 @@ export default function SegmentDetailsPage() {
         className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
       >
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div
-              className={`p-2 ${tw.rounded}`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <Users
-                className="w-5 h-5"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
-            <div>
-              <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                Segment Members
-              </h3>
-              <p className="text-sm text-gray-500">
-                {(membersCount || 0).toLocaleString()} total member
-                {membersCount !== 1 ? "s" : ""}
-              </p>
-            </div>
+          <div>
+            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+              Segment Members
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {(membersCount || 0).toLocaleString()} total member
+              {membersCount !== 1 ? "s" : ""}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -1558,6 +1521,7 @@ export default function SegmentDetailsPage() {
                 setShowCustomerSelection(true);
                 setSelectedCustomers([]);
                 setCustomerSearchTerm("");
+                setCustomerStatusFilter("all");
                 await loadCustomersForSelection();
               }}
               className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
@@ -1657,8 +1621,8 @@ export default function SegmentDetailsPage() {
         {showAdvancedEdit ? (
           <div className="space-y-4">
             {/* Update Query Section */}
-            <div className="border-b border-gray-200 pb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Segment Query
               </label>
               <textarea
@@ -1689,25 +1653,29 @@ export default function SegmentDetailsPage() {
             </div>
 
             {/* Update Parent Section */}
-            <div className="pt-4">
+            <div className="pt-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Parent Segment
               </label>
               {isLoadingParents ? (
                 <div className="text-sm text-gray-500">Loading parent segments...</div>
               ) : (
-                <HeadlessSelect
-                  value={editParentId || ""}
-                  onChange={(value) => setEditParentId(value ? Number(value) : null)}
-                  options={[
-                    { label: "No parent segment", value: "" },
-                    ...parentSegments.map((parent) => ({
-                      label: parent.name,
-                      value: String(parent.id),
-                    })),
-                  ]}
-                  placeholder="Select parent segment"
-                />
+                <div className="relative z-40">
+                  <HeadlessSelect
+                    value={editParentId ? String(editParentId) : ""}
+                    onChange={(value) => {
+                      setEditParentId(value ? Number(value) : null);
+                    }}
+                    options={[
+                      { label: "No parent segment", value: "" },
+                      ...parentSegments.map((parent) => ({
+                        label: parent.name,
+                        value: String(parent.id),
+                      })),
+                    ]}
+                    placeholder="Select parent segment"
+                  />
+                </div>
               )}
               <div className="flex justify-end gap-2 mt-3">
                 <button
@@ -2148,26 +2116,39 @@ export default function SegmentDetailsPage() {
                 </button>
               </div>
 
-              {/* Search and Selection */}
+              {/* Search and Filters */}
               <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="flex-1">
                     <input
                       type="text"
                       value={customerSearchTerm}
                       onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                      placeholder="Search customers by name or email..."
-                      className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      placeholder="Search by name, email, or phone..."
+                      className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm`}
                     />
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <HeadlessSelect
+                    value={customerStatusFilter}
+                    onChange={(value) => setCustomerStatusFilter(value)}
+                    options={[
+                      { label: "All Status", value: "all" },
+                      { label: "Active", value: "active" },
+                      { label: "Pending", value: "pending" },
+                      { label: "Deactivated", value: "deactivated" },
+                    ]}
+                    placeholder="Select status"
+                    zIndex={zIndex.modal + 1}
+                  />
+                  </div>
+                  <div className="text-sm text-gray-500 whitespace-nowrap">
                     {selectedCustomers.length} selected
                   </div>
                 </div>
               </div>
 
-              {/* Customer List */}
-              <div className="flex-1 overflow-y-auto p-6">
+              {/* Customer Table */}
+              <div className="flex-1 overflow-auto">
                 {isLoadingCustomersForSelection ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <LoadingSpinner
@@ -2175,76 +2156,131 @@ export default function SegmentDetailsPage() {
                       size="lg"
                       color="primary"
                     />
-                    <p className="text-gray-500 mt-4">Loading customers...</p>
+                    <p className="text-gray-500 mt-4 text-sm">Loading customers...</p>
                   </div>
                 ) : filteredCustomersForSelection.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">
+                    <p className="text-gray-500 text-sm">
                       {customerSearchTerm.trim()
                         ? "No customers found matching your search"
                         : "No customers available"}
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {filteredCustomersForSelection.map((customer) => {
-                      // Use subscriber_id as the unique identifier
-                      const customerId = customer.subscriber_id;
-                      const firstName = customer.attributes?.first_name || "";
-                      const lastName = customer.attributes?.last_name || "";
-                      const displayName =
-                        firstName || lastName
-                          ? `${firstName} ${lastName}`.trim()
-                          : `Customer ${customerId}`;
-                      const email = customer.attributes?.email;
-                      const isSelected = selectedCustomers.includes(
-                        Number(customerId),
-                      );
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                          <input
+                            type="checkbox"
+                            checked={
+                              filteredCustomersForSelection.length > 0 &&
+                              filteredCustomersForSelection.every((c) =>
+                                selectedCustomers.includes(
+                                  Number(c.subscriber_id || c.id)
+                                )
+                              )
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCustomers((prev) => {
+                                  const newSet = new Set(prev);
+                                  filteredCustomersForSelection.forEach((c) => {
+                                    newSet.add(Number(c.subscriber_id || c.id));
+                                  });
+                                  return Array.from(newSet);
+                                });
+                              } else {
+                                setSelectedCustomers((prev) =>
+                                  prev.filter(
+                                    (id) =>
+                                      !filteredCustomersForSelection.some(
+                                        (c) =>
+                                          Number(c.subscriber_id || c.id) === id
+                                      )
+                                  )
+                                );
+                              }
+                            }}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          MSISDN
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredCustomersForSelection.map((customer) => {
+                        const customerId = customer.subscriber_id || customer.id;
+                        const firstName = customer.first_name || "";
+                        const lastName = customer.last_name || "";
+                        const displayName =
+                          firstName || lastName
+                            ? `${firstName} ${lastName}`.trim()
+                            : `Customer ${customerId}`;
+                        const msisdn = customer.msisdn || "-";
+                        const email = customer.email || "-";
+                        const status = customer.subscriber_status || "unknown";
+                        const isSelected = selectedCustomers.includes(
+                          Number(customerId)
+                        );
 
-                      return (
-                        <div
-                          key={customerId}
-                          className={`p-4 border ${
-                            tw.rounded
-                          } cursor-pointer transition-colors ${
+                        const getStatusColor = (s: string) => {
+                          return "text-gray-900";
+                        };
+
+                        const toggleSelect = () => {
+                          setSelectedCustomers((prev) =>
                             isSelected
-                              ? "border-blue-500 bg-blue-50"
-                              : "border-gray-200 hover:border-gray-300"
-                          }`}
-                          onClick={() => {
-                            setSelectedCustomers((prev) =>
-                              isSelected
-                                ? prev.filter((id) => id !== Number(customerId))
-                                : [...prev, Number(customerId)],
-                            );
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
+                              ? prev.filter((id) => id !== Number(customerId))
+                              : [...prev, Number(customerId)],
+                          );
+                        };
+
+                        return (
+                          <tr
+                            key={customerId}
+                            onClick={toggleSelect}
+                            className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          >
+                            <td className="px-4 py-3">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
-                                onChange={() => {}}
+                                onChange={toggleSelect}
+                                onClick={(e) => e.stopPropagation()}
                                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                               />
-                              <div>
-                                <h3 className="font-medium text-gray-900">
-                                  {displayName}
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                  {email || "No email"}
-                                </p>
-                                <p className="text-xs text-gray-400">
-                                  Customer ID: {customerId}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {msisdn}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                              {displayName}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              {email}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-900">
+                              {status.charAt(0).toUpperCase() +
+                                status.slice(1)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 )}
               </div>
 
@@ -2418,7 +2454,7 @@ export default function SegmentDetailsPage() {
                     </label>
                     <div className="space-y-2">
                       <label
-                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                        className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
                         <input
                           type="radio"
@@ -2432,14 +2468,14 @@ export default function SegmentDetailsPage() {
                           className="mr-3"
                         />
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">CSV</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm font-medium text-gray-900">CSV</div>
+                          <div className="text-xs text-gray-500">
                             Comma-separated values (Excel compatible)
                           </div>
                         </div>
                       </label>
                       <label
-                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                        className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
                         <input
                           type="radio"
@@ -2453,14 +2489,14 @@ export default function SegmentDetailsPage() {
                           className="mr-3"
                         />
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">JSON</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm font-medium text-gray-900">JSON</div>
+                          <div className="text-xs text-gray-500">
                             JavaScript Object Notation (API friendly)
                           </div>
                         </div>
                       </label>
                       <label
-                        className={`flex items-center p-3 border border-gray-200 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
+                        className={`flex items-center p-3 ${tw.rounded} cursor-pointer hover:bg-gray-50 transition-colors`}
                       >
                         <input
                           type="radio"
@@ -2474,8 +2510,8 @@ export default function SegmentDetailsPage() {
                           className="mr-3"
                         />
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">XML</div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm font-medium text-gray-900">XML</div>
+                          <div className="text-xs text-gray-500">
                             Extensible Markup Language (legacy systems)
                           </div>
                         </div>

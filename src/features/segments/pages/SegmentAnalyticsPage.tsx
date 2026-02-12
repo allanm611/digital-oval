@@ -19,6 +19,7 @@ import { segmentService } from "../services/segmentService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { colors } from "../../../shared/utils/tokens";
 
 type ChartTooltipProps = {
   active?: boolean;
@@ -353,19 +354,34 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                     Category Distribution
                   </h3>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={categoryDistribution}>
+                <div className="rounded-md overflow-hidden">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={categoryDistribution}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      cursor={{ fill: "transparent" }}
+                    />
                     <Bar
                       dataKey="count"
-                      fill={color.primary.accent}
                       radius={[8, 8, 0, 0]}
-                    />
+                    >
+                      {categoryDistribution.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            colors.reportCharts.palette[
+                              `color${((index % 6) + 1) as 1 | 2 | 3 | 4 | 5 | 6}`
+                            ]
+                          }
+                        />
+                      ))}
+                    </Bar>
                   </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                </div>
               </div>
             )}
           </div>
@@ -438,23 +454,38 @@ export default function SegmentAnalyticsPage(): JSX.Element {
                   Top Segments by Campaign Usage
                 </h3>
               </div>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={mostUsedSegments}
-                  layout="vertical"
-                  margin={{ left: 100 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="name" type="category" width={90} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="usage_count"
-                    fill={color.primary.action}
-                    radius={[0, 8, 8, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="rounded-md overflow-hidden">
+                <ResponsiveContainer width="100%" height={mostUsedSegments.length * 60 + 100}>
+                  <BarChart
+                    data={mostUsedSegments}
+                    layout="vertical"
+                    margin={{ left: 100 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" />
+                    <YAxis dataKey="name" type="category" width={90} />
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      cursor={{ fill: "transparent" }}
+                    />
+                    <Bar
+                      dataKey="usage_count"
+                      radius={[0, 8, 8, 0]}
+                    >
+                      {mostUsedSegments.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={
+                            colors.reportCharts.palette[
+                              `color${((index % 6) + 1) as 1 | 2 | 3 | 4 | 5 | 6}`
+                            ]
+                          }
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
 

@@ -1290,7 +1290,8 @@ export default function SegmentManagementPage() {
             {selectedTags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-full border border-green-200"
+                className="inline-flex items-center px-3 py-1.5 text-sm text-white rounded-full"
+                style={{ backgroundColor: color.primary.accent }}
               >
                 {tag}
                 <button
@@ -1299,7 +1300,7 @@ export default function SegmentManagementPage() {
                   }
                   className="ml-2 "
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3 h-3 text-white" />
                 </button>
               </span>
             ))}
@@ -1666,7 +1667,8 @@ export default function SegmentManagementPage() {
                     onClick={(e) => e.stopPropagation()}
                     onMouseDown={(e) => e.stopPropagation()}
                   >
-                    <button
+                    {/* TODO: Enable when duplicate endpoint is implemented on backend */}
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDuplicateSegment(segment);
@@ -1689,7 +1691,7 @@ export default function SegmentManagementPage() {
                           Duplicate Segment
                         </>
                       )}
-                    </button>
+                    </button> */}
 
                     <button
                       onClick={(e) => {
@@ -1703,7 +1705,8 @@ export default function SegmentManagementPage() {
                       Compute Segment
                     </button>
 
-                    <button
+                    {/* TODO: Enable export after confirming implementation approach */}
+                    {/* <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleExportSegment(segment);
@@ -1713,9 +1716,7 @@ export default function SegmentManagementPage() {
                     >
                       <Download className="w-4 h-4 mr-4" />
                       Export Segment
-                    </button>
-
-                    <div className="border-t border-gray-200 my-1"></div>
+                    </button> */}
 
                     <PermissionGate permission="segments.delete">
                       <button
@@ -1909,7 +1910,7 @@ export default function SegmentManagementPage() {
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
-            style={{ zIndex: zIndexTokens.overlay }}
+            style={{ zIndex: zIndex.overlay }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
@@ -1966,9 +1967,10 @@ export default function SegmentManagementPage() {
                         }
                         className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                           filterTab === tab.value
-                            ? `bg-blue-500 text-white`
+                            ? `text-white`
                             : `border border-gray-200 text-gray-700 hover:bg-gray-50`
                         }`}
+                        style={filterTab === tab.value ? { backgroundColor: button.action.background } : {}}
                       >
                         {tab.label}
                       </button>
@@ -2089,7 +2091,7 @@ export default function SegmentManagementPage() {
                       handleSearch();
                       handleCloseModal();
                     }}
-                    className={`${tw.button} flex-1 px-4 py-2 text-sm`}
+                    className={`${button.action} flex-1 px-4 py-2 text-sm`}
                   >
                     Apply Filters
                   </button>

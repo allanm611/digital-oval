@@ -130,12 +130,14 @@ class CustomerService {
   async getAllCustomers(params?: {
     limit?: number;
     offset?: number;
+    skipCache?: boolean;
   }): Promise<CustomersListResponse> {
     try {
       const queryParams = new URLSearchParams();
       if (params) {
         if (params.limit) queryParams.append("limit", String(params.limit));
         if (params.offset) queryParams.append("offset", String(params.offset));
+        if (params.skipCache) queryParams.append("skipCache", "true");
       }
 
       const query = queryParams.toString() ? `?${queryParams.toString()}` : "";

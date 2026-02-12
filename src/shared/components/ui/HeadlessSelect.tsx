@@ -80,10 +80,14 @@ export default function HeadlessSelect({
 
   return (
     <div className={`relative ${className}`}>
-      <Listbox value={value} onChange={onChange} disabled={disabled}>
+      <Listbox value={value} onChange={(newValue) => {
+        onChange(newValue);
+      }} disabled={disabled}>
         <div className="relative w-full" ref={buttonRef}>
           <Listbox.Button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              setIsOpen(!isOpen);
+            }}
             className={`
             relative w-full cursor-default py-3 px-3 pr-10 text-left transition-all duration-200 text-sm
             ${error ? components.input.error : components.input.default}
@@ -113,18 +117,19 @@ export default function HeadlessSelect({
         </div>
       </Listbox>
 
-      {isOpen &&
-        createPortal(
-          <div
-            className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-80 overflow-auto pointer-events-auto`}
-            style={{
-              position: "fixed",
-              top: `${dropdownPosition.top}px`,
-              left: `${dropdownPosition.left}px`,
-              width: `${dropdownPosition.width}px`,
-              zIndex: effectiveZIndex,
-            }}
-          >
+      {isOpen && (
+        <>
+          {createPortal(
+            <div
+              className={`${tw.rounded} bg-white py-1 text-base shadow-lg border border-gray-300 focus:outline-none sm:text-sm max-h-80 overflow-auto pointer-events-auto`}
+              style={{
+                position: "fixed",
+                top: `${dropdownPosition.top}px`,
+                left: `${dropdownPosition.left}px`,
+                width: `${dropdownPosition.width}px`,
+                zIndex: effectiveZIndex,
+              }}
+            >
             {searchable && (
               <div
                 className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
@@ -174,9 +179,11 @@ export default function HeadlessSelect({
                 </div>
               ))
             )}
-          </div>,
-          document.body,
-        )}
+            </div>,
+            document.body,
+          )}
+        </>
+      )}
 
       {isOpen && (
         <div
