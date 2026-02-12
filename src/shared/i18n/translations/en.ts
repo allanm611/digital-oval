@@ -86,7 +86,7 @@ export const en: Translations = {
       selectTargetSegments: "Select target segments for your campaign",
       segmentSelection: "Segment Selection",
       availableSegments: "Available Segments",
-      selectedSegments: "Selected Segments ({count})",
+      selectedSegments: "Selected Segments ",
       searchSegments: "Search segments...",
       noSegmentsAvailable: "No segments available",
       noSegmentsSelected: "No segments selected",

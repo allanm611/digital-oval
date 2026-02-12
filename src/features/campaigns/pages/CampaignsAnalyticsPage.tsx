@@ -8,6 +8,8 @@ import {
   Cell,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -382,12 +384,12 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
   const loadFlowAnalytics = useCallback(async () => {
     setIsLoadingFlowAnalytics(true);
     try {
-      // Load all 4 campaign flow analytics endpoints in parallel
+      // Load all 4 campaign flow analytics endpoints in parallel with skipCache
       const [statsRes, trendsRes, relationshipRes, combinationsRes] = await Promise.all([
-        campaignFlowService.getFlowStatistics(),
-        campaignFlowService.getGrowthTrends("week", 12),
-        campaignFlowService.getRelationshipStatistics(),
-        campaignFlowService.getUniqueCombinations(100, 0),
+        campaignFlowService.getFlowStatistics(true),
+        campaignFlowService.getGrowthTrends(true),
+        campaignFlowService.getRelationshipStatistics(true),
+        campaignFlowService.getUniqueCombinations(100, 0, true),
       ]);
 
       // Process flow statistics
@@ -413,7 +415,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
       if (combinationsRes.success && Array.isArray(combinationsRes.data)) {
         const combos = combinationsRes.data.map((item: any) => ({
           campaign_id: item.campaign_id,
-          campaign_name: item.campaign_name || `Campaign #${item.campaign_id}`,
+          campaign_name: item.campaign_name || `Campaign ${item.campaign_id}`,
           segment_id: item.segment_id,
           offer_id: item.offer_id,
           flow_count: parseInt(item.flow_count) || 1,
@@ -674,6 +676,81 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* Campaign Flow Stats Cards */}
+          {!isLoadingFlowAnalytics && flowStats && relationshipStats && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Total Flows
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(flowStats.total_flows) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Standard Flows
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(flowStats.standard_flows) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    A/B Tests
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(flowStats.ab_tests) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Multi-level Flows
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(flowStats.multi_level_flows) || 0}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Unique Campaigns
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(relationshipStats.unique_campaigns) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Unique Segments
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(relationshipStats.unique_segments) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Advanced Logic Flows
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(relationshipStats.advanced_logic_count) || 0}
+                  </p>
+                </div>
+                <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+                  <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
+                    Active Campaigns
+                  </p>
+                  <p className={`text-3xl font-bold ${tw.textPrimary}`}>
+                    {parseInt(flowStats.active_campaigns) || 0}
+                  </p>
+                </div>
+              </div>
+            </>
           )}
 
           {/* Charts Section */}
@@ -1156,7 +1233,11 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
           {/* Top Performing Campaigns */}
           {topPerformersData && (
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+            <div className={`grid gap-6 ${
+              topPerformersData.by_participants && topPerformersData.by_participants.length > 0
+                ? "grid-cols-1 lg:grid-cols-2"
+                : "grid-cols-1"
+            }`}>
               {topPerformersData.by_participants &&
                 topPerformersData.by_participants.length > 0 && (
                   <div
@@ -1235,12 +1316,12 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
               {topPerformersData.by_spend &&
                 topPerformersData.by_spend.length > 0 && (
                   <div
-                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+                    className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}
                   >
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
                       Top Campaigns by Spend
                     </h3>
-                    <div className="h-96 w-full min-h-[384px]">
+                    <div className="h-96 w-full">
                       <ResponsiveContainer width="100%" height={384}>
                         <BarChart
                           data={topPerformersData.by_spend
@@ -1306,114 +1387,78 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                     </div>
                   </div>
                 )}
+
             </div>
           )}
 
-          {/* Campaign Flow Analytics */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          {/* Flow Growth Trends Chart */}
+          {flowGrowthTrends.length > 0 && !isLoadingFlowAnalytics && (
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mt-6`}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Flow Creation Trends
+              </h3>
+              <div className="h-80 w-full">
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart
+                    data={flowGrowthTrends}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke={color.primary.accent}
+                      strokeWidth={2}
+                      dot={{ fill: color.primary.accent, r: 4 }}
+                      name="Flows"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-8 pt-8 ">
+            {/* <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Campaign Flow Analytics
-            </h2>
+            </h2> */}
 
-            {!isLoadingFlowAnalytics && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                {/* Flow Statistics Cards */}
-                {flowStats && (
-                  <>
-                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                        Total Flows
-                      </p>
-                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
-                        {flowStats.total_flows?.toLocaleString() || 0}
-                      </p>
-                    </div>
-                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                        Active Flows
-                      </p>
-                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
-                        {flowStats.active_flows?.toLocaleString() || 0}
-                      </p>
-                    </div>
-                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                        Unique Campaigns
-                      </p>
-                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
-                        {flowStats.unique_campaigns?.toLocaleString() || 0}
-                      </p>
-                    </div>
-                    <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
-                      <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                        Avg. Wait Hours
-                      </p>
-                      <p className={`text-3xl font-bold ${tw.textPrimary}`}>
-                        {flowStats.avg_wait_hours?.toFixed(1) || "0"}h
-                      </p>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Flow Growth Trends Chart */}
-            {flowGrowthTrends.length > 0 && !isLoadingFlowAnalytics && (
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm mb-6`}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Flow Creation Trends
-                </h3>
-                <div className="h-80 w-full">
-                  <ResponsiveContainer width="100%" height={320}>
-                    <LineChart
-                      data={flowGrowthTrends}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Line
-                        type="monotone"
-                        dataKey="count"
-                        stroke={color.primary.accent}
-                        strokeWidth={2}
-                        dot={{ fill: color.primary.accent, r: 4 }}
-                        name="Flows"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            )}
 
             {/* Unique Combinations Table */}
             {uniqueCombinations.length > 0 && !isLoadingFlowAnalytics && (
-              <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <div className={tw.rounded}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Segment-Offer Combinations ({uniqueCombinations.length})
                 </h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
                     <thead style={{ background: color.surface.tableHeader }}>
                       <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                          Flows
+                        </th>
                         <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                           Campaign
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Segment ID
+                          Segment
                         </th>
                         <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Offer ID
-                        </th>
-                        <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
-                          Flows
+                          Offer
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {uniqueCombinations.map((combo, idx) => (
-                        <tr key={idx}>
+                        <tr key={idx} className="transition-colors">
+                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            <span className="inline-flex items-center  text-sm font-medium">
+                              {combo.flow_count}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
                             <button
                               onClick={() => navigate(`/dashboard/campaigns/${combo.campaign_id}`)}
@@ -1423,16 +1468,23 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
                               {combo.campaign_name}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            {combo.segment_id}
-                          </td>
-                          <td className="px-6 py-4 text-sm" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            {combo.offer_id}
+                          <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
+                            <button
+                              onClick={() => navigate(`/dashboard/segments/${combo.segment_id}`)}
+                              className="hover:underline"
+                              style={{ color: color.primary.accent }}
+                            >
+                              Segment {combo.segment_id}
+                            </button>
                           </td>
                           <td className="px-6 py-4 text-sm font-medium" style={{ backgroundColor: color.surface.tablebodybg }}>
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: `${color.primary.accent}15`, color: color.primary.accent }}>
-                              {combo.flow_count}
-                            </span>
+                            <button
+                              onClick={() => navigate(`/dashboard/offers/${combo.offer_id}`)}
+                              className="hover:underline"
+                              style={{ color: color.primary.accent }}
+                            >
+                              Offer {combo.offer_id}
+                            </button>
                           </td>
                         </tr>
                       ))}

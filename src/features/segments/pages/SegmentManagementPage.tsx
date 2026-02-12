@@ -1504,7 +1504,7 @@ export default function SegmentManagementPage() {
                       >
                         <div>
                           <div
-                            className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                            className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                             title={segment.name}
                           >
                             {segment.name}
@@ -1515,27 +1515,11 @@ export default function SegmentManagementPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                            segment.type === "dynamic"
-                              ? `bg-[${color.primary.accent}]`
-                              : segment.type === "static"
-                                ? `bg-[${color.primary.action}]`
-                                : `bg-[${color.status.warning}]`
-                          }`}
-                          style={{
-                            color:
-                              segment.type === "dynamic"
-                                ? "#1F2223" // Dark text on light accent background
-                                : segment.type === "static"
-                                  ? "white" // White text on dark action background
-                                  : "white", // White text on warning background
-                          }}
-                        >
+                        <span className="text-sm text-black">
                           {segment.type
                             ? segment.type.charAt(0).toUpperCase() +
                               segment.type.slice(1)
-                            : "N/A"}
+                            : "-"}
                         </span>
                       </td>
                       <td
@@ -1573,14 +1557,9 @@ export default function SegmentManagementPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="flex items-center space-x-2">
-                          <Users
-                            className={`w-4 h-4 text-[${color.primary.accent}] flex-shrink-0`}
-                          />
-                          <span className={`text-sm ${tw.textPrimary}`}>
-                            {(segment.size_estimate || 0).toLocaleString()}
-                          </span>
-                        </div>
+                        <span className={`text-sm ${tw.textPrimary}`}>
+                          {(segment.size_estimate || 0).toLocaleString()}
+                        </span>
                       </td>
                       <td
                         className="px-6 py-4 hidden lg:table-cell"

@@ -95,6 +95,7 @@ export interface CreateCampaignRequest {
     | "ab_test"
     | "round_robin"
     | "multiple_level";
+  step_order?: number; // Step order for flow execution (default: 1)
   tag?: string; // Temporary UI field for comma-separated tags
   department_id?: number; // UI field for department selection (maps to owner_team)
 }

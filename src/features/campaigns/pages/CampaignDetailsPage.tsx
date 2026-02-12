@@ -20,6 +20,8 @@ import {
   DollarSign,
   Package,
   ChevronDown,
+  Eye,
+  X,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -735,6 +737,15 @@ export default function CampaignDetailsPage() {
     } finally {
       setIsFlowActionLoading(false);
     }
+  };
+
+  const handleFlowView = (flow: CampaignFlowConfig) => {
+    // Navigate to flow details page using flow ID
+    // If flow has an id property, use it; otherwise use composite key
+    const flowId = (flow as any).id || `${flow.segment_id}-${flow.offer_id}-${flow.step_order}`;
+    navigate(`/dashboard/campaigns/${id}/flows/${flowId}`, {
+      state: { flow }, // Pass flow data via state for immediate display
+    });
   };
 
   // Use DateFormatter component instead of local formatDate function
@@ -1764,7 +1775,7 @@ export default function CampaignDetailsPage() {
             <h3
               className={`text-lg font-semibold ${tw.textPrimary}`}
             >
-              Campaign Flows ({flows.length})
+              Campaign Flows
             </h3>
           </div>
         </div>
@@ -1928,6 +1939,13 @@ export default function CampaignDetailsPage() {
                       >
                         <div className="flex items-center gap-2">
                           <button
+                            onClick={() => handleFlowView(flow)}
+                            title="View flow details"
+                            className="p-2 hover:bg-gray-50 rounded transition-colors"
+                          >
+                            <Eye className="w-4 h-4 text-gray-600" />
+                          </button>
+                          <button
                             onClick={() => handleFlowEdit(flow)}
                             title="Edit flow"
                             className="p-2 hover:bg-gray-50 rounded transition-colors"
@@ -1963,13 +1981,39 @@ export default function CampaignDetailsPage() {
             <div
               className={`relative bg-white ${tw.rounded} shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto`}
             >
-              <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-                Edit Campaign Flow
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                  Edit Campaign Flow
+                </h3>
+                <button
+                  onClick={() => setShowFlowEditModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  title="Close"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
 
               <div className="space-y-6 mb-6">
-                {/* Core Selection */}
-                <div className="space-y-4">
+                {/* Campaign ID and Campaign Type on same line */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Campaign ID - Read Only Input */}
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Campaign ID
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={campaign?.id || selectedFlow?.campaign_id || ""}
+                      className={`w-full px-4 py-2 border ${tw.rounded} text-sm ${tw.textSecondary} bg-gray-50`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  </div>
+
+                  {/* Campaign Type */}
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -1994,6 +2038,10 @@ export default function CampaignDetailsPage() {
                       disabled={isLoadingActiveData}
                     />
                   </div>
+                </div>
+
+                {/* Core Selection */}
+                <div className="space-y-4">
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -2217,20 +2265,7 @@ export default function CampaignDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowFlowEditModal(false)}
-                  disabled={isFlowActionLoading || isLoadingActiveData}
-                  className={`flex-1 ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
-                  style={{
-                    border: button.bordered.border,
-                    backgroundColor: button.bordered.background,
-                    color: button.bordered.color,
-                    padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
-                  }}
-                >
-                  Cancel
-                </button>
+              <div className="flex gap-3 justify-end">
                 <button
                   onClick={handleFlowSave}
                   disabled={
@@ -2239,7 +2274,7 @@ export default function CampaignDetailsPage() {
                     (editedFlow.flow_type === "AB_TEST" &&
                       !editedFlow.bucket_allocation)
                   }
-                  className={`flex-1 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
+                  className={`px-6 ${tw.rounded} text-white font-medium transition-colors disabled:opacity-50`}
                   style={{
                     backgroundColor: button.action.background,
                     color: button.action.color,

@@ -18,6 +18,7 @@ const CampaignPages = {
   ),
   CampaignDetailsPage: lazy(() => import("../../campaigns/pages/CampaignDetailsPageWrapper")),
   CreateCampaignPage: lazy(() => import("../../campaigns/pages/CreateCampaignPageWrapper")),
+  CampaignFlowDetailsPage: lazy(() => import("../../campaigns/pages/CampaignFlowDetailsPage")),
   CampaignCategoriesPage: lazy(
     () =>
       import(
@@ -608,6 +609,10 @@ export default function Dashboard() {
           <Route
             path="/campaigns/:id"
             element={<CampaignPages.CampaignDetailsPage />}
+          />
+          <Route
+            path="/campaigns/:campaignId/flows/:flowId"
+            element={<CampaignPages.CampaignFlowDetailsPage />}
           />
           <Route
             path="/campaigns/:id/edit"

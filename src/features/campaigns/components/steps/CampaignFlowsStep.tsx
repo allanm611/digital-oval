@@ -7,6 +7,7 @@ import {
 } from "../../types/campaign";
 import { CampaignFlowConfig, CampaignFlowType } from "../../types/campaignFlow";
 import { color, tw, components } from "../../../../shared/utils/utils";
+import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import OfferSelectionModal from "./OfferSelectionModal";
 
 interface CampaignFlowsStepProps {
@@ -24,12 +25,14 @@ interface CampaignFlowsStepProps {
   setCampaignFlows?: (flows: CampaignFlowConfig[]) => void;
   validationErrors?: { [key: string]: string };
   setValidationErrors?: (errors: { [key: string]: string }) => void;
+  stepOrder?: number; // Flow execution step order from Step 2
 }
 
 interface SegmentFlowState {
   offers: CampaignOffer[];
   waitHours: number;
   allocation?: string;
+  offerCreativeId?: number;
 }
 
 export default function CampaignFlowsStep({
@@ -40,6 +43,7 @@ export default function CampaignFlowsStep({
   campaignFlows = [],
   setCampaignFlows,
   validationErrors = {},
+  stepOrder,
 }: CampaignFlowsStepProps) {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null);
@@ -109,7 +113,7 @@ export default function CampaignFlowsStep({
     };
 
     const flows: CampaignFlowConfig[] = [];
-    let stepOrder = 1;
+    const flowStepOrder = stepOrder ?? 1; // Use step_order from props, default to 1
 
     Object.entries(segmentFlows).forEach(([segmentId, data]) => {
       data.offers.forEach((offer) => {
@@ -118,17 +122,17 @@ export default function CampaignFlowsStep({
           segment_id: parseInt(segmentId),
           offer_id: parseInt(offer.id),
           flow_type: getFlowType(),
-          step_order: stepOrder,
+          step_order: flowStepOrder, // Hard coded to value from Step 2
           wait_interval_hours: data.waitHours || 0,
           bucket_allocation: data.allocation,
+          offer_creative_id: data.offerCreativeId, // Optional offer creative
         });
-        stepOrder++;
       });
     });
 
     setCampaignFlows(flows);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [segmentFlows, formData.campaign_type]);
+  }, [segmentFlows, formData.campaign_type, stepOrder]);
 
   const handleSelectOffers = (segmentId: string) => {
     setEditingSegmentId(segmentId);
@@ -210,6 +214,17 @@ export default function CampaignFlowsStep({
     });
   };
 
+  const handleUpdateOfferCreative = (segmentId: string, creativeId?: number) => {
+    setSegmentFlows((prev) => {
+      const updated = { ...prev };
+      if (!updated[segmentId]) {
+        updated[segmentId] = { offers: [], waitHours: 0 };
+      }
+      updated[segmentId].offerCreativeId = creativeId;
+      return updated;
+    });
+  };
+
   const getOffersForSegment = (segmentId: string): CampaignOffer[] => {
     return segmentFlows[segmentId]?.offers || [];
   };
@@ -225,6 +240,28 @@ export default function CampaignFlowsStep({
           Define how and when your offers will be delivered to each segment. Select
           offers for each segment to create delivery flows.
         </p>
+      </div>
+
+      {/* Offer Creative Selection - Optional */}
+      <div className="w-full">
+        <label className={`block text-sm font-medium ${tw.textSecondary} mb-2`}>
+          Offer Creative (Optional)
+        </label>
+        <HeadlessSelect
+          value={String(segmentFlows[selectedSegments[0]?.id]?.offerCreativeId || "")}
+          onChange={(value) => {
+            const numValue = value ? parseInt(value) : undefined;
+            if (selectedSegments.length > 0) {
+              handleUpdateOfferCreative(selectedSegments[0].id, numValue);
+            }
+          }}
+          options={[
+            { value: "", label: "Select offer creative..." },
+            { value: "1", label: "Creative 1" },
+            { value: "2", label: "Creative 2" },
+            { value: "3", label: "Creative 3" },
+          ]}
+        />
       </div>
 
       {/* Error Display */}

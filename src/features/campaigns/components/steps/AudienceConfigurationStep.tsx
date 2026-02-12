@@ -431,6 +431,28 @@ export default function AudienceConfigurationStep({
         </div>
       </div>
 
+      {/* Step Order Field - appears after campaign type selected */}
+      {formData.campaign_type && (
+        <div className="space-y-3 mb-6">
+          <label className={`block text-sm font-semibold ${tw.textPrimary}`}>
+            Step Order
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={formData.step_order ?? 1}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                step_order: Math.max(1, parseInt(e.target.value) || 1),
+              })
+            }
+            className={`${components.input.default} w-full px-4 py-3`}
+            placeholder="1"
+          />
+        </div>
+      )}
+
       {/* Mutually Exclusive Segments Checkbox */}
       {selectedSegments.length > 1 && (
         <div className={`${tw.rounded} p-3`}>

@@ -477,11 +477,9 @@ class CampaignFlowService {
    * Get campaign flow statistics
    */
   async getFlowStatistics(
-    campaignId?: number,
     skipCache?: boolean
   ): Promise<FlowStatisticsResponse> {
     const queryParams = new URLSearchParams();
-    if (campaignId) queryParams.append("campaignId", String(campaignId));
     if (skipCache) queryParams.append("skipCache", String(skipCache));
 
     const url = `${BASE_URL}/statistics${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
@@ -540,13 +538,9 @@ class CampaignFlowService {
    * Get campaign flow growth trends
    */
   async getGrowthTrends(
-    period?: "day" | "week" | "month" | "year",
-    days?: number,
     skipCache?: boolean
   ): Promise<GrowthTrendsResponse> {
     const queryParams = new URLSearchParams();
-    if (period) queryParams.append("period", period);
-    if (days) queryParams.append("days", String(days));
     if (skipCache) queryParams.append("skipCache", String(skipCache));
 
     const url = `${BASE_URL}/growth-trends${queryParams.toString() ? "?" + queryParams.toString() : ""}`;

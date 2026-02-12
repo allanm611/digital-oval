@@ -1382,7 +1382,7 @@ export default function CreateCampaignPage() {
         return <AudienceConfigurationStep {...stepProps} />;
       case 3:
         // Use new CampaignFlowsStep for flows-first approach
-        return <CampaignFlowsStep {...stepProps} />;
+        return <CampaignFlowsStep {...stepProps} stepOrder={formData.step_order} />;
       case 4:
         return <SchedulingStep {...stepProps} />;
       case 5:
