@@ -20,7 +20,7 @@ interface ExecuteCampaignModalProps {
   campaignName: string;
   isActive?: boolean;
   approvalStatus?: string;
-  onSuccess?: () => void;
+  onSuccess?: (executionData?: any) => void;
 }
 
 interface SegmentMapping {
@@ -180,10 +180,10 @@ export default function ExecuteCampaignModal({
         mode: executionMode,
       };
 
-      await campaignService.executeCampaign(request);
+      const executionResult = await campaignService.executeCampaign(request);
 
       showToast("success", `Campaign "${campaignName}" executed successfully!`);
-      onSuccess?.();
+      onSuccess?.(executionResult?.data);
       onClose();
     } catch (error) {
       // Extract error message from backend response
@@ -334,34 +334,38 @@ export default function ExecuteCampaignModal({
               <div className="flex gap-3">
                 <button
                   onClick={() => setExecutionMode("immediate")}
-                  className={`flex-1 p-3 ${
-                    tw.rounded
-                  } border-2 transition-all ${
+                  className={`flex-1 p-3 ${tw.rounded} border-2 font-medium transition-all ${
                     executionMode === "immediate"
-                      ? "border-current"
+                      ? "border-2"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                   style={
                     executionMode === "immediate"
-                      ? { borderColor: color.primary.accent }
+                      ? {
+                          borderColor: color.primary.accent,
+                          backgroundColor: `${color.primary.accent}10`,
+                        }
                       : {}
                   }
                 >
                   <div className="font-medium text-sm">Immediate</div>
-                  <div className="text-xs text-gray-500 mt-1">Execute now</div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Execute now
+                  </div>
                 </button>
                 <button
                   onClick={() => setExecutionMode("schedule")}
-                  className={`flex-1 p-3 ${
-                    tw.rounded
-                  } border-2 transition-all ${
+                  className={`flex-1 p-3 ${tw.rounded} border-2 font-medium transition-all ${
                     executionMode === "schedule"
-                      ? "border-current"
+                      ? "border-2"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                   style={
                     executionMode === "schedule"
-                      ? { borderColor: color.primary.accent }
+                      ? {
+                          borderColor: color.primary.accent,
+                          backgroundColor: `${color.primary.accent}10`,
+                        }
                       : {}
                   }
                 >

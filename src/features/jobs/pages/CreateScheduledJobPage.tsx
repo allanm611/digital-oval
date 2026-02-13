@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Save, X, XCircle } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -7,6 +7,8 @@ import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Listbox, Transition } from "@headlessui/react";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { jobTypeService } from "../services/jobTypeService";
+import { campaignService } from "../../campaigns/services/campaignService";
+import { campaignFlowService } from "../../campaigns/services/campaignFlowService";
 import {
   CreateScheduledJobPayload,
   UpdateScheduledJobPayload,
@@ -14,6 +16,11 @@ import {
   JobStatus,
 } from "../types/scheduledJob";
 import { JobType } from "../types/job";
+import type {
+  BackendCampaignType,
+  GetCampaignsResponse,
+} from "../../campaigns/types/campaign";
+import type { GetCampaignFlowsResponse } from "../../campaigns/types/campaignFlow";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -78,6 +85,7 @@ const classNames = (...classes: (string | false | null | undefined)[]) =>
 export default function CreateScheduledJobPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { error: showError, success: showToast } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -112,6 +120,28 @@ export default function CreateScheduledJobPage() {
     metadata: {},
   });
 
+  // Campaign-specific state
+  const [campaignMeta, setCampaignMeta] = useState({
+    campaign_id: 0,
+    mode: "immediate" as const,
+    batch_size: 1000,
+    max_parallel_broadcasts: 3,
+  });
+  const [selectedSegmentIds, setSelectedSegmentIds] = useState<number[]>([]);
+  const [segmentChannelCodes, setSegmentChannelCodes] = useState<
+    Record<number, string[]>
+  >({});
+  const [campaigns, setCampaigns] = useState<BackendCampaignType[]>([]);
+  const [availableSegments, setAvailableSegments] = useState<
+    Array<{ segment_id: number; name: string }>
+  >([]);
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
+
+  // Detect if this is a campaign job
+  const isCampaignJob =
+    searchParams.get("type") === "campaign" ||
+    (formData.metadata as any)?.job_type === "campaign";
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newTag, setNewTag] = useState("");
 
@@ -130,6 +160,26 @@ export default function CreateScheduledJobPage() {
     };
     loadJobTypes();
   }, []);
+
+  // Load campaigns when isCampaignJob
+  useEffect(() => {
+    if (isCampaignJob) {
+      const loadCampaigns = async () => {
+        try {
+          const response: GetCampaignsResponse =
+            await campaignService.getCampaigns({
+              limit: 100,
+              skipCache: true,
+            });
+          setCampaigns(response.data || []);
+        } catch (err) {
+          console.error("Failed to load campaigns:", err);
+          showError("Failed to load campaigns", "");
+        }
+      };
+      loadCampaigns();
+    }
+  }, [isCampaignJob, showError]);
 
   // Load existing job for edit mode
   useEffect(() => {
@@ -163,6 +213,33 @@ export default function CreateScheduledJobPage() {
             processing_mode: job.processing_mode,
             metadata: job.metadata || {},
           });
+
+          // Handle campaign job metadata in edit mode
+          if (job.metadata?.job_type === "campaign") {
+            const meta = job.metadata as any;
+            setCampaignMeta({
+              campaign_id: meta.campaign_id || 0,
+              mode: meta.mode || "immediate",
+              batch_size: meta.batch_size || 1000,
+              max_parallel_broadcasts: meta.max_parallel_broadcasts || 3,
+            });
+            const segmentIds = (meta.segments || []).map(
+              (s: any) => s.segment_id,
+            );
+            setSelectedSegmentIds(segmentIds);
+
+            // Build per-segment channel codes mapping
+            const channelMap: Record<number, string[]> = {};
+            (meta.segments || []).forEach((s: any) => {
+              channelMap[s.segment_id] = s.channel_codes || ["EMAIL"];
+            });
+            setSegmentChannelCodes(channelMap);
+
+            // Load segments for the campaign, preserving existing channel codes
+            if (meta.campaign_id) {
+              await handleCampaignChange(meta.campaign_id, channelMap);
+            }
+          }
         } catch (err) {
           showError(
             "Failed to load job",
@@ -176,6 +253,47 @@ export default function CreateScheduledJobPage() {
       loadJob();
     }
   }, [id, isEditMode, navigate, showError, t]);
+
+  const handleCampaignChange = useCallback(
+    async (campaignId: number, existingChannelCodes?: Record<number, string[]>) => {
+      setCampaignMeta((prev) => ({
+        ...prev,
+        campaign_id: campaignId,
+      }));
+      setSelectedSegmentIds([]);
+      setSegmentChannelCodes({});
+
+      if (!campaignId) return;
+
+      setIsLoadingSegments(true);
+      try {
+        const response: GetCampaignFlowsResponse =
+          await campaignFlowService.getCampaignSegments(campaignId);
+        const segments = response.data || [];
+        const uniqueSegments = Array.from(
+          new Map(segments.map((s) => [s.segment_id, s])).values(),
+        );
+        setAvailableSegments(
+          uniqueSegments.map((s) => ({
+            segment_id: s.segment_id,
+            name: (s as any).segment_name || `Segment ${s.segment_id}`,
+          })),
+        );
+        // Initialize each segment with existing channels or default EMAIL
+        const defaultChannels: Record<number, string[]> = {};
+        uniqueSegments.forEach((s) => {
+          defaultChannels[s.segment_id] = existingChannelCodes?.[s.segment_id] || ["EMAIL"];
+        });
+        setSegmentChannelCodes(defaultChannels);
+      } catch (err) {
+        console.error("Failed to load segments:", err);
+        showError("Failed to load segments", "");
+      } finally {
+        setIsLoadingSegments(false);
+      }
+    },
+    [showError],
+  );
 
   const validateForm = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
@@ -216,9 +334,26 @@ export default function CreateScheduledJobPage() {
       }
     }
 
+    // Campaign-specific validation
+    if (isCampaignJob) {
+      if (!campaignMeta.campaign_id) {
+        newErrors.campaign_id = "Campaign is required";
+      }
+      if (selectedSegmentIds.length === 0) {
+        newErrors.segments = "Select at least one segment";
+      }
+      // Check that each selected segment has at least one channel
+      const segmentsWithoutChannels = selectedSegmentIds.filter(
+        (id) => !segmentChannelCodes[id] || segmentChannelCodes[id].length === 0,
+      );
+      if (segmentsWithoutChannels.length > 0) {
+        newErrors.channel_codes = "Each segment must have at least one channel";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData, isCampaignJob, campaignMeta, selectedSegmentIds, segmentChannelCodes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,10 +380,25 @@ export default function CreateScheduledJobPage() {
         ),
       };
 
-      // processing_mode & metadata are not supported by the backend yet
+      // Build metadata for campaign jobs
+      const campaignMetadata = isCampaignJob
+        ? {
+            mode: campaignMeta.mode,
+            job_type: "campaign",
+            campaign_id: campaignMeta.campaign_id,
+            segments: selectedSegmentIds.map((id) => ({
+              segment_id: id,
+              channel_codes: segmentChannelCodes[id] || [],
+            })),
+            batch_size: campaignMeta.batch_size,
+            max_parallel_broadcasts: campaignMeta.max_parallel_broadcasts,
+          }
+        : undefined;
+
+      // Only strip processing_mode; include metadata if campaign job
       const {
         processing_mode,
-        metadata,
+        metadata: _metadata,
         created_by,
         ...payloadWithoutUnsupportedFields
       } = normalizedPayload as CreateScheduledJobPayload & {
@@ -258,14 +408,19 @@ export default function CreateScheduledJobPage() {
       };
       // Explicitly mark as unused to avoid lint errors
       void processing_mode;
-      void metadata;
+      void _metadata;
 
       const jobDisplayName =
         (formData.name && formData.name.trim()) || "Scheduled job";
 
+      const finalPayload = {
+        ...payloadWithoutUnsupportedFields,
+        ...(campaignMetadata ? { metadata: campaignMetadata } : {}),
+      };
+
       if (isEditMode && id) {
         const updatePayload: UpdateScheduledJobPayload = {
-          ...payloadWithoutUnsupportedFields,
+          ...finalPayload,
           updated_by: user?.user_id || 1,
         };
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
@@ -281,7 +436,7 @@ export default function CreateScheduledJobPage() {
         }, 500);
       } else {
         await scheduledJobService.createScheduledJob({
-          ...payloadWithoutUnsupportedFields,
+          ...finalPayload,
           created_by: created_by ?? (user?.user_id || 1),
         });
         const jobDisplayName =
@@ -477,21 +632,13 @@ export default function CreateScheduledJobPage() {
                       <Listbox.Option
                         value={null}
                         className={({ active }) =>
-                          classNames(
-                            active
-                              ? "bg-gray-100 text-gray-900"
-                              : "text-gray-900",
-                            "relative cursor-default select-none py-2 pl-10 pr-4",
-                          )
+                          `${active ? "bg-gray-100 text-gray-900" : "text-gray-900"} relative cursor-default select-none py-2 pl-10 pr-4`
                         }
                       >
                         {({ selected }) => (
                           <>
                             <span
-                              className={classNames(
-                                selected ? "font-semibold" : "font-normal",
-                                "block truncate",
-                              )}
+                              className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
                             >
                               Select job type
                             </span>
@@ -519,10 +666,7 @@ export default function CreateScheduledJobPage() {
                           {({ selected }) => (
                             <>
                               <span
-                                className={classNames(
-                                  selected ? "font-semibold" : "font-normal",
-                                  "block truncate",
-                                )}
+                                className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
                               >
                                 {jt.name}
                               </span>
@@ -617,6 +761,391 @@ export default function CreateScheduledJobPage() {
             </div>
           </div>
         </div>
+
+        {/* Campaign Configuration - Only shown for campaign jobs */}
+        {isCampaignJob && (
+          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+              Campaign Configuration
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Campaign Dropdown */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Campaign <span className="text-red-500">*</span>
+                </label>
+                <Listbox<number | null>
+                  value={campaignMeta.campaign_id || null}
+                  onChange={(value) => {
+                    if (value) {
+                      handleCampaignChange(value);
+                    }
+                  }}
+                >
+                  <div className="relative mt-1">
+                    <Listbox.Button
+                      className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                    >
+                      <span className="block truncate">
+                        {campaignMeta.campaign_id
+                          ? campaigns.find(
+                              (c) => c.id === campaignMeta.campaign_id,
+                            )?.name || `Campaign #${campaignMeta.campaign_id}`
+                          : "Select campaign"}
+                      </span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <ChevronUpDownIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </Listbox.Button>
+                    <Transition
+                      as={Fragment}
+                      leave="transition ease-in duration-100"
+                      leaveFrom="opacity-100"
+                      leaveTo="opacity-0"
+                    >
+                      <Listbox.Options
+                        className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                      >
+                        <Listbox.Option
+                          value={null}
+                          className={({ active }) =>
+                            classNames(
+                              active
+                                ? "bg-gray-100 text-gray-900"
+                                : "text-gray-900",
+                              "relative cursor-default select-none py-2 pl-10 pr-4",
+                            )
+                          }
+                        >
+                          {({ selected }) => (
+                            <>
+                              <span
+                                className={classNames(
+                                  selected ? "font-semibold" : "font-normal",
+                                  "block truncate",
+                                )}
+                              >
+                                Select campaign
+                              </span>
+                              {selected ? (
+                                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
+                                  <CheckIcon className="h-4 w-4" />
+                                </span>
+                              ) : null}
+                            </>
+                          )}
+                        </Listbox.Option>
+                        {campaigns.map((campaign) => (
+                          <Listbox.Option
+                            key={campaign.id}
+                            value={campaign.id}
+                            className={({ active }) =>
+                              classNames(
+                                active
+                                  ? "bg-gray-100 text-gray-900"
+                                  : "text-gray-900",
+                                "relative cursor-default select-none py-2 pl-10 pr-4",
+                              )
+                            }
+                          >
+                            {({ selected }) => (
+                              <>
+                                <span
+                                  className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
+                                >
+                                  {campaign.name}
+                                </span>
+                                {selected ? (
+                                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
+                                    <CheckIcon className="h-4 w-4" />
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                </Listbox>
+                {errors.campaign_id && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.campaign_id}
+                  </p>
+                )}
+              </div>
+
+              {/* Segment Dropdown */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Segments <span className="text-red-500">*</span>
+                </label>
+                {isLoadingSegments ? (
+                  <div className="p-3 text-sm text-gray-600 border border-gray-300 rounded">
+                    Loading segments...
+                  </div>
+                ) : availableSegments.length === 0 ? (
+                  <div className="p-3 text-sm text-gray-600 border border-gray-300 rounded">
+                    {campaignMeta.campaign_id
+                      ? "No segments available for this campaign"
+                      : "Select a campaign first"}
+                  </div>
+                ) : (
+                  <Listbox<number[]>
+                    value={selectedSegmentIds}
+                    onChange={(newIds) => {
+                      setSelectedSegmentIds(newIds);
+                      // Initialize channels for newly selected segments as empty
+                      newIds.forEach((id) => {
+                        if (!segmentChannelCodes[id]) {
+                          setSegmentChannelCodes((prev) => ({
+                            ...prev,
+                            [id]: [],
+                          }));
+                        }
+                      });
+                      // Clean up channels for deselected segments
+                      Object.keys(segmentChannelCodes).forEach((key) => {
+                        const keyNum = parseInt(key);
+                        if (!newIds.includes(keyNum)) {
+                          setSegmentChannelCodes((prev) => {
+                            const newCodes = { ...prev };
+                            delete newCodes[keyNum];
+                            return newCodes;
+                          });
+                        }
+                      });
+                    }}
+                    multiple
+                  >
+                    <div className="relative">
+                      <Listbox.Button
+                        className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                      >
+                        <span className="block truncate">
+                          {selectedSegmentIds.length === 0
+                            ? "Select segments..."
+                            : `${selectedSegmentIds.length} segment${selectedSegmentIds.length > 1 ? "s" : ""} selected`}
+                        </span>
+                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <ChevronUpDownIcon className="h-4 w-4 text-gray-400" />
+                        </span>
+                      </Listbox.Button>
+                      <Transition
+                        as={Fragment}
+                        leave="transition ease-in duration-100"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                      >
+                        <Listbox.Options
+                          className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                        >
+                          {availableSegments.map((segment) => (
+                            <Listbox.Option
+                              key={segment.segment_id}
+                              value={segment.segment_id}
+                              className={({ active }) =>
+                                `${active ? "bg-gray-100 text-gray-900" : "text-gray-900"} relative cursor-default select-none py-2 pl-10 pr-4`
+                              }
+                            >
+                              {({ selected }) => (
+                                <>
+                                  <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={selected}
+                                      onChange={() => {}}
+                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <span
+                                      className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
+                                    >
+                                      {segment.name}
+                                    </span>
+                                  </label>
+                                  {selected ? (
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
+                                      <CheckIcon className="h-4 w-4" />
+                                    </span>
+                                  ) : null}
+                                </>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </Transition>
+                    </div>
+                  </Listbox>
+                )}
+                {errors.segments && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.segments}
+                  </p>
+                )}
+              </div>
+
+              {/* Channel Configuration per Segment */}
+              {selectedSegmentIds.length > 0 && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Channels per Segment <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-3 border border-gray-300 rounded p-3">
+                    {selectedSegmentIds.map((segmentId) => {
+                      const segment = availableSegments.find(
+                        (s) => s.segment_id === segmentId,
+                      );
+                      const channels = segmentChannelCodes[segmentId] || [];
+                      return (
+                        <div
+                          key={segmentId}
+                          className="flex items-center gap-4 pb-3 border-b border-gray-200 last:border-b-0 last:pb-0"
+                        >
+                          <span className="text-sm font-medium text-gray-700 min-w-fit">
+                            {segment?.name}:
+                          </span>
+                          <div className="flex gap-4">
+                            {["EMAIL", "SMS", "PUSH"].map((channel) => (
+                              <label
+                                key={channel}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={channels.includes(channel)}
+                                  onChange={(e) => {
+                                    const newChannels = e.target.checked
+                                      ? [...channels, channel]
+                                      : channels.filter(
+                                          (ch) => ch !== channel,
+                                        );
+                                    setSegmentChannelCodes((prev) => ({
+                                      ...prev,
+                                      [segmentId]: newChannels,
+                                    }));
+                                  }}
+                                  className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                                />
+                                <span className="text-sm text-gray-700">
+                                  {channel}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {errors.channel_codes && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.channel_codes}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Mode */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mode
+                </label>
+                <Listbox<string>
+                  value={campaignMeta.mode}
+                  onChange={(value) =>
+                    setCampaignMeta((prev) => ({ ...prev, mode: value }))
+                  }
+                >
+                  <div className="relative mt-1">
+                    <Listbox.Button
+                      className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                    >
+                      <span className="block truncate">
+                        {campaignMeta.mode}
+                      </span>
+                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <ChevronUpDownIcon className="h-4 w-4 text-gray-400" />
+                      </span>
+                    </Listbox.Button>
+                    <Transition
+                      as={Fragment}
+                      leave="transition ease-in duration-100"
+                      leaveFrom="opacity-100"
+                      leaveTo="opacity-0"
+                    >
+                      <Listbox.Options
+                        className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
+                      >
+                        {["immediate"].map((mode) => (
+                          <Listbox.Option
+                            key={mode}
+                            value={mode}
+                            className={({ active }) =>
+                              `${active ? "bg-gray-100 text-gray-900" : "text-gray-900"} relative cursor-default select-none py-2 pl-10 pr-4`
+                            }
+                          >
+                            {({ selected }) => (
+                              <>
+                                <span
+                                  className={`${selected ? "font-semibold" : "font-normal"} block truncate`}
+                                >
+                                  {mode}
+                                </span>
+                                {selected ? (
+                                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#3b8169]">
+                                    <CheckIcon className="h-4 w-4" />
+                                  </span>
+                                ) : null}
+                              </>
+                            )}
+                          </Listbox.Option>
+                        ))}
+                      </Listbox.Options>
+                    </Transition>
+                  </div>
+                </Listbox>
+              </div>
+
+              {/* Batch Size */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Batch Size
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={campaignMeta.batch_size}
+                  onChange={(e) =>
+                    setCampaignMeta((prev) => ({
+                      ...prev,
+                      batch_size: Number(e.target.value),
+                    }))
+                  }
+                  className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                />
+              </div>
+
+              {/* Max Parallel Broadcasts */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Max Parallel Broadcasts
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={campaignMeta.max_parallel_broadcasts}
+                  onChange={(e) =>
+                    setCampaignMeta((prev) => ({
+                      ...prev,
+                      max_parallel_broadcasts: Number(e.target.value),
+                    }))
+                  }
+                  className={`w-full ${tw.rounded} border border-gray-300 px-3 py-2 text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Schedule Configuration */}
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>

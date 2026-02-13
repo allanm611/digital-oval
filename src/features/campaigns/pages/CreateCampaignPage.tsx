@@ -12,6 +12,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import {
   useFormDataPersistence,
   clearPersistedFormData,
+  getPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -248,12 +249,27 @@ export default function CreateCampaignPage() {
     setSegmentOfferMappings,
     isEditMode,
   );
-  useFormDataPersistence(
-    "campaign_flows",
-    campaignFlows,
-    setCampaignFlows,
-    isEditMode,
-  );
+
+  // Handle campaign flows persistence - only in create mode
+  useEffect(() => {
+    if (isEditMode) {
+      // In edit mode: clear persisted flows to ensure fresh API data
+      clearPersistedFormData("campaign_flows");
+    } else {
+      // In create mode: load from localStorage if exists
+      const savedFlows = getPersistedFormData<CampaignFlowConfig[]>("campaign_flows");
+      if (savedFlows) {
+        setCampaignFlows(savedFlows);
+      }
+    }
+  }, [isEditMode]);
+
+  // Auto-save flows to localStorage during create (but not edit)
+  useEffect(() => {
+    if (!isEditMode && campaignFlows.length > 0) {
+      localStorage.setItem("campaign_flows", JSON.stringify(campaignFlows));
+    }
+  }, [campaignFlows, isEditMode]);
 
   const loadCampaignData = useCallback(
     async (
@@ -880,6 +896,82 @@ export default function CreateCampaignPage() {
         };
 
         await campaignService.updateCampaign(parseInt(id), updateData);
+
+        // Handle campaign flows updates (create, update, delete)
+        if (campaignFlows && campaignFlows.length > 0) {
+          try {
+            if (originalFlows.length > 0) {
+              // EDIT MODE: Compare and sync flows (delete/update/create)
+
+              // 1. DELETE flows that are no longer in the list
+              for (const originalFlow of originalFlows) {
+                const stillExists = campaignFlows.some(
+                  (f) =>
+                    f.segment_id === originalFlow.segment_id &&
+                    f.offer_id === originalFlow.offer_id,
+                );
+                if (!stillExists && (originalFlow as any).id) {
+                  try {
+                    await campaignFlowService.deleteCampaignFlow(
+                      (originalFlow as any).id,
+                    );
+                  } catch (deleteError) {
+                    console.error("Error deleting flow:", deleteError);
+                  }
+                }
+              }
+
+              // 2. UPDATE existing flows that changed
+              for (const updatedFlow of campaignFlows) {
+                const originalFlow = originalFlows.find(
+                  (f) =>
+                    f.segment_id === updatedFlow.segment_id &&
+                    f.offer_id === updatedFlow.offer_id,
+                );
+                if (
+                  originalFlow &&
+                  (originalFlow as any).id &&
+                  JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
+                ) {
+                  try {
+                    await campaignFlowService.updateCampaignFlow(
+                      (originalFlow as any).id,
+                      updatedFlow,
+                    );
+                  } catch (updateError) {
+                    console.error("Error updating flow:", updateError);
+                  }
+                }
+              }
+
+              // 3. CREATE new flows
+              const newFlows = campaignFlows.filter(
+                (f) =>
+                  !originalFlows.some(
+                    (of) =>
+                      of.segment_id === f.segment_id &&
+                      of.offer_id === f.offer_id,
+                  ),
+              );
+              if (newFlows.length > 0) {
+                const flowsToCreate: CampaignFlowConfig[] = newFlows.map(
+                  (flow, index) => ({
+                    ...flow,
+                    campaign_id: parseInt(id),
+                    step_order: index + 1,
+                    created_by: user?.user_id || 1,
+                  }),
+                );
+                await campaignFlowService.createBatchCampaignFlows(
+                  flowsToCreate,
+                );
+              }
+            }
+          } catch (flowError) {
+            console.error("Error updating campaign flows:", flowError);
+          }
+        }
+
         showToast(
           "success",
           `"${formData.name}" ${t.campaigns.campaignDefinition.updateSuccess}`,
@@ -1081,58 +1173,21 @@ export default function CreateCampaignPage() {
           );
         }
 
-        // If creating a new campaign (not edit mode), automatically execute it
-        if (!isEditMode && createdCampaignId) {
-          try {
-            // Prepare execution request with all segments and EMAIL channel by default
-            const executionRequest = {
-              campaign_id: createdCampaignId,
-              segments: selectedSegments.map((segment) => ({
-                segment_id: parseInt(segment.id),
-                channel_codes: ["EMAIL"], // Default to EMAIL channel
-              })),
-              mode: "immediate" as const,
-            };
+        // Clear campaign flow tracking and saved data
+        sessionStorage.removeItem("campaignFlowCreatedOffers");
+        sessionStorage.removeItem("campaignFormData");
+        sessionStorage.removeItem("offerModalAutoOpened");
+        sessionStorage.removeItem("campaignDataRestored");
 
-            // Execute the campaign
-            await campaignService.executeCampaign(executionRequest);
+        // Clear localStorage form data
+        clearPersistedFormData("campaign_form_data");
+        clearPersistedFormData("campaign_segments");
+        clearPersistedFormData("campaign_offers");
+        clearPersistedFormData("campaign_mappings");
+        clearPersistedFormData("campaign_flows");
 
-            // Show success toast
-            showToast(
-              "success",
-              `Campaign "${formData.name}" created and executed successfully!`,
-            );
-
-            // Clear campaign flow tracking and saved data
-            sessionStorage.removeItem("campaignFlowCreatedOffers");
-            sessionStorage.removeItem("campaignFormData");
-            sessionStorage.removeItem("offerModalAutoOpened");
-            sessionStorage.removeItem("campaignDataRestored");
-
-            // Clear localStorage form data
-            clearPersistedFormData("campaign_form_data");
-            clearPersistedFormData("campaign_segments");
-            clearPersistedFormData("campaign_offers");
-            clearPersistedFormData("campaign_mappings");
-
-            // Navigate to campaigns list
-            navigate("/dashboard/campaigns");
-            return;
-          } catch (executeError) {
-            console.error("Failed to execute campaign:", executeError);
-
-            // Execution failed - show error but campaign was created
-            let errorMessage =
-              "Campaign created successfully, but execution failed.";
-            if (executeError instanceof Error) {
-              errorMessage = executeError.message;
-            }
-
-            showToast("error", errorMessage);
-            setIsLoading(false);
-            return;
-          }
-        }
+        // Navigate to campaigns list
+        navigate("/dashboard/campaigns");
       }
 
       // Clear campaign flow tracking and saved data when campaign is created/updated

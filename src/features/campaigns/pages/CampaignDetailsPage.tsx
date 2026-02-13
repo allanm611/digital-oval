@@ -40,6 +40,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
+import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import {
   Campaign,
   CampaignSegmentDetail,
@@ -111,6 +112,14 @@ export default function CampaignDetailsPage() {
   const [activeSegments, setActiveSegments] = useState<CampaignSegmentDetail[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
+  const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [executionMetrics, setExecutionMetrics] = useState<{
+    total_messages_sent: number;
+    total_messages_failed: number;
+    total_broadcasts: number;
+    broadcasts_completed: number;
+    execution_time_ms: number;
+  } | null>(null);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -152,6 +161,20 @@ export default function CampaignDetailsPage() {
   const getFlowTypeLabel = (flowType: string): string => {
     const option = flowTypeOptions.find((opt) => opt.backendType === flowType);
     return option?.label || flowType;
+  };
+
+  // Refetch campaign status after actions like execute
+  const refreshCampaignStatus = async () => {
+    try {
+      const response = (await campaignService.getCampaignById(id!, true)) as {
+        data?: Campaign;
+        success?: boolean;
+      };
+      const campaignData = response.data || (response as Campaign);
+      setCampaign(campaignData);
+    } catch (error) {
+      console.error("Failed to refresh campaign status:", error);
+    }
   };
 
   useEffect(() => {
@@ -502,7 +525,7 @@ export default function CampaignDetailsPage() {
     try {
       setIsActionLoading(true);
       const pauseResponse = await campaignService.pauseCampaign(parseInt(id), {
-        comments: "Paused from details page",
+        updated_by: 1,
       });
       showToast("success", "Campaign paused");
 
@@ -860,7 +883,7 @@ export default function CampaignDetailsPage() {
                         </button>
                     )} */}
 
-          {campaign.status === "active" && (
+          {(campaign as any).is_active === true && campaign.status !== "paused" && (
             <button
               onClick={handlePauseCampaign}
               disabled={isActionLoading}
@@ -904,6 +927,20 @@ export default function CampaignDetailsPage() {
               )}
               {isActionLoading ? "Resuming..." : "Resume"}
             </button>
+          )}
+
+          {/* Execute Campaign Button */}
+          {campaign.approval_status === "approved" && (campaign as any).is_active === true && (
+            <PermissionGate permission="campaigns.execute">
+              <button
+                onClick={() => setShowExecuteModal(true)}
+                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                <Play className="w-4 h-4" />
+                Execute Campaign
+              </button>
+            </PermissionGate>
           )}
 
           {/* Edit Button - Always Visible */}
@@ -979,162 +1016,147 @@ export default function CampaignDetailsPage() {
         </div>
       </div>
 
+      {/* Execution Metrics Cards - Always Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Sent Card */}
-        <div
-          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>Sent</p>
-              {isLoadingPerformance ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-200 rounded mt-1"></div>
-              ) : (
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {performanceData?.sent?.toLocaleString() || 0}
+          {/* Messages Sent Card */}
+          <div
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+            style={{ borderColor: color.border.default }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
+                  Messages Sent
                 </p>
-              )}
-            </div>
-            <div
-              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <Send
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
+                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
+                  {executionMetrics.total_messages_sent.toLocaleString()}
+                </p>
+              </div>
+              <div
+                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                style={{ backgroundColor: `${color.primary.accent}15` }}
+              >
+                <Send
+                  className="w-6 h-6"
+                  style={{ color: color.primary.accent }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Delivered Card */}
-        <div
-          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                Delivered
-              </p>
-              {isLoadingPerformance ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-200 rounded mt-1"></div>
-              ) : (
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {performanceData?.delivered?.toLocaleString() || 0}
+          {/* Messages Failed Card */}
+          <div
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+            style={{ borderColor: color.border.default }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
+                  Failed
                 </p>
-              )}
-            </div>
-            <div
-              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <CheckCircle
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
+                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
+                  {executionMetrics.total_messages_failed.toLocaleString()}
+                </p>
+              </div>
+              <div
+                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                style={{ backgroundColor: `#FEE2E215` }}
+              >
+                <AlertCircle
+                  className="w-6 h-6"
+                  style={{ color: "#DC2626" }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Converted Card */}
-        <div
-          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                Converted
-              </p>
-              {isLoadingPerformance ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-200 rounded mt-1"></div>
-              ) : (
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {performanceData?.converted?.toLocaleString() || 0}
+          {/* Success Rate Card */}
+          <div
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+            style={{ borderColor: color.border.default }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
+                  Success Rate
                 </p>
-              )}
-            </div>
-            <div
-              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <TrendingUp
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Conversion Rate Card */}
-        <div
-          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                Conversion Rate
-              </p>
-              {isLoadingPerformance ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-200 rounded mt-1"></div>
-              ) : (
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {performanceData?.delivered && performanceData?.converted
+                  {executionMetrics.total_messages_sent + executionMetrics.total_messages_failed > 0
                     ? (
-                        (performanceData.converted /
-                          performanceData.delivered) *
+                        (executionMetrics.total_messages_sent /
+                          (executionMetrics.total_messages_sent +
+                            executionMetrics.total_messages_failed)) *
                         100
-                      ).toFixed(2)
-                    : "0.00"}
+                      ).toFixed(1)
+                    : "0.0"}
                   %
                 </p>
-              )}
-            </div>
-            <div
-              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <TrendingUp
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
+              </div>
+              <div
+                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                style={{ backgroundColor: `${color.primary.accent}15` }}
+              >
+                <CheckCircle
+                  className="w-6 h-6"
+                  style={{ color: color.primary.accent }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Revenue Card */}
-        <div
-          className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                Revenue
-              </p>
-              {isLoadingPerformance ? (
-                <div className="animate-pulse h-8 w-24 bg-gray-200 rounded mt-1"></div>
-              ) : (
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  <CurrencyFormatter amount={performanceData?.revenue || 0} />
+          {/* Broadcasts Card */}
+          <div
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+            style={{ borderColor: color.border.default }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
+                  Broadcasts
                 </p>
-              )}
+                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
+                  {executionMetrics.broadcasts_completed} /
+                  {executionMetrics.total_broadcasts}
+                </p>
+              </div>
+              <div
+                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                style={{ backgroundColor: `${color.primary.accent}15` }}
+              >
+                <TrendingUp
+                  className="w-6 h-6"
+                  style={{ color: color.primary.accent }}
+                />
+              </div>
             </div>
-            <div
-              className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-              style={{ backgroundColor: `${color.primary.accent}15` }}
-            >
-              <DollarSign
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
+          </div>
+
+          {/* Execution Time Card */}
+          <div
+            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+            style={{ borderColor: color.border.default }}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
+                  Execution Time
+                </p>
+                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
+                  {(executionMetrics.execution_time_ms / 1000).toFixed(2)}s
+                </p>
+              </div>
+              <div
+                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
+                style={{ backgroundColor: `${color.primary.accent}15` }}
+              >
+                <Clock
+                  className="w-6 h-6"
+                  style={{ color: color.primary.accent }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Campaign Information and Budget Utilization - Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
@@ -2320,6 +2342,32 @@ export default function CampaignDetailsPage() {
         confirmText="Delete Campaign"
         cancelText="Cancel"
       />
+
+      {/* Execute Campaign Modal */}
+      {campaign && (
+        <ExecuteCampaignModal
+          isOpen={showExecuteModal}
+          onClose={() => setShowExecuteModal(false)}
+          campaignId={parseInt(id || "0")}
+          campaignName={campaign.name}
+          isActive={(campaign as any).is_active}
+          approvalStatus={campaign.approval_status}
+          onSuccess={(executionData) => {
+            setShowExecuteModal(false);
+            // Store execution metrics
+            if (executionData) {
+              setExecutionMetrics({
+                total_messages_sent: executionData.total_messages_sent || 0,
+                total_messages_failed: executionData.total_messages_failed || 0,
+                total_broadcasts: executionData.total_broadcasts || 0,
+                broadcasts_completed: executionData.broadcasts_completed || 0,
+                execution_time_ms: executionData.execution_time_ms || 0,
+              });
+            }
+            refreshCampaignStatus();
+          }}
+        />
+      )}
     </div>
   );
 }

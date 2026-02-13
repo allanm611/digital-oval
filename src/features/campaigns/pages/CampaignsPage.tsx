@@ -1448,6 +1448,79 @@ export default function CampaignsPage() {
                           ) : null}
                         </PermissionGate>
 
+                        {/* Pause Campaign Button */}
+                        {campaign.approval_status === "approved" &&
+                        campaign.is_active === true &&
+                        campaign.status !== "paused" ? (
+                          <PermissionGate permission="campaigns.execute">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setShowActionMenu(null);
+                                try {
+                                  await campaignService.pauseCampaign(
+                                    campaign.id,
+                                  );
+                                  showToast(
+                                    "success",
+                                    `Campaign "${campaign.name}" paused successfully!`,
+                                  );
+                                  fetchCampaigns();
+                                } catch (error) {
+                                  let errorMessage = "Failed to pause campaign";
+                                  if (error instanceof Error) {
+                                    errorMessage = error.message;
+                                  }
+                                  showToast("error", errorMessage);
+                                }
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <Pause
+                                className="w-4 h-4 mr-4"
+                                style={{ color: "#F59E0B" }}
+                              />
+                              Pause Campaign
+                            </button>
+                          </PermissionGate>
+                        ) : null}
+
+                        {/* Resume Campaign Button */}
+                        {campaign.approval_status === "approved" &&
+                        campaign.status === "paused" ? (
+                          <PermissionGate permission="campaigns.execute">
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setShowActionMenu(null);
+                                try {
+                                  await campaignService.resumeCampaign(
+                                    campaign.id,
+                                  );
+                                  showToast(
+                                    "success",
+                                    `Campaign "${campaign.name}" resumed successfully!`,
+                                  );
+                                  fetchCampaigns();
+                                } catch (error) {
+                                  let errorMessage = "Failed to resume campaign";
+                                  if (error instanceof Error) {
+                                    errorMessage = error.message;
+                                  }
+                                  showToast("error", errorMessage);
+                                }
+                              }}
+                              className="w-full flex items-center px-4 py-3 text-sm text-black"
+                            >
+                              <Play
+                                className="w-4 h-4 mr-4"
+                                style={{ color: "#10B981" }}
+                              />
+                              Resume Campaign
+                            </button>
+                          </PermissionGate>
+                        ) : null}
+
                         {campaign.approval_status === "approved" &&
                         campaign.is_active === false ? (
                           <PermissionGate permission="campaigns.activate">
@@ -1592,39 +1665,6 @@ export default function CampaignsPage() {
                               </button>
                             </PermissionGate>
                           </>
-                        )}
-
-                        {(campaign.status === "active" ||
-                          campaign.status === "running") && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              setShowActionMenu(null);
-                              try {
-                                await campaignService.pauseCampaign(
-                                  campaign.id,
-                                );
-                                showToast(
-                                  "success",
-                                  `Campaign "${campaign.name}" paused successfully!`,
-                                );
-                                fetchCampaigns();
-                              } catch (error) {
-                                let errorMessage = "Failed to pause campaign";
-                                if (error instanceof Error) {
-                                  errorMessage = error.message;
-                                }
-                                showToast("error", errorMessage);
-                              }
-                            }}
-                            className="w-full flex items-center px-4 py-3 text-sm text-black"
-                          >
-                            <Pause
-                              className="w-4 h-4 mr-4"
-                              style={{ color: "#F59E0B" }}
-                            />
-                            Pause Campaign
-                          </button>
                         )}
 
                         <button

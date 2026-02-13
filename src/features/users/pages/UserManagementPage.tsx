@@ -1442,6 +1442,12 @@ export default function UserManagementPage() {
                         className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
                         style={{ color: color.surface.tableHeaderText }}
                       >
+                        Email
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
                         Department
                       </th>
                       <th
@@ -1505,12 +1511,19 @@ export default function UserManagementPage() {
                               >
                                 {user.first_name} {user.last_name}
                               </button>
-                              <div
-                                className={`text-sm ${tw.textMuted} truncate mt-1`}
-                                title={user.email_address || user.email}
-                              >
-                                {user.email_address || user.email}
-                              </div>
+                            </div>
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <div
+                              className={`text-sm ${tw.textMuted} truncate`}
+                              title={user.email_address || user.email}
+                            >
+                              {user.email_address || user.email}
                             </div>
                           </td>
                           <td
@@ -1520,7 +1533,7 @@ export default function UserManagementPage() {
                             }}
                           >
                             <span
-                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 whitespace-nowrap`}
+                              className={`text-sm text-gray-900 whitespace-nowrap`}
                             >
                               {user.department || "N/A"}
                             </span>
@@ -1532,7 +1545,7 @@ export default function UserManagementPage() {
                             }}
                           >
                             <span
-                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 whitespace-nowrap`}
+                              className={`text-sm text-gray-900 whitespace-nowrap`}
                             >
                               {getUserRoleName(user)}
                             </span>

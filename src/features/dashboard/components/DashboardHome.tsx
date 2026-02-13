@@ -849,6 +849,7 @@ export default function DashboardHome() {
                   static: color.charts.segments.static,
                   trigger: color.charts.segments.trigger,
                   hybrid: color.charts.segments.hybrid,
+                  predictive: color.charts.segments.predictive,
                 };
 
                 return {
@@ -1985,9 +1986,14 @@ export default function DashboardHome() {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-black">
-                          <span className="text-black/80">
-                            {campaign.description}
-                          </span>
+                          {(() => {
+                            console.log("Campaign description:", campaign.description);
+                            return campaign.description ? (
+                              <span className="text-black/80">
+                                {campaign.description}
+                              </span>
+                            ) : null;
+                          })()}
                           {campaign.performance && (
                             <span className="text-black/80">
                               {campaign.performance.converted.toLocaleString()}{" "}

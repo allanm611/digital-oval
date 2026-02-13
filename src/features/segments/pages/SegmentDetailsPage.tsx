@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { Popover } from "@headlessui/react";
 import {
   ArrowLeft,
   Users,
@@ -19,7 +20,9 @@ import {
   Layers,
   Zap,
   MoreVertical,
+  ChevronUpDown,
 } from "lucide-react";
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   LineChart,
   Line,
@@ -37,7 +40,7 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
@@ -484,18 +487,18 @@ export default function SegmentDetailsPage() {
   };
 
   const handleAddMembers = async () => {
-    if (!customerIdsInput.trim()) {
-      showError("Validation error", "Please enter at least one customer ID");
-      return;
-    }
-
-    const customerIds = customerIdsInput
-      .split(",")
-      .map((id) => parseInt(id.trim(), 10))
-      .filter((id) => !isNaN(id));
+    // Use selectedCustomers if from modal, otherwise use customerIdsInput
+    const customerIds = showCustomerSelection ? selectedCustomers :
+      customerIdsInput
+        .split(",")
+        .map((id) => parseInt(id.trim(), 10))
+        .filter((id) => !isNaN(id));
 
     if (customerIds.length === 0) {
-      showError("Validation error", "Please enter valid customer IDs");
+      const errorMsg = showCustomerSelection
+        ? "Please select at least one customer"
+        : "Please enter at least one customer ID";
+      showError("Validation error", errorMsg);
       return;
     }
 
@@ -990,8 +993,8 @@ export default function SegmentDetailsPage() {
       </div>
 
       {/* Stats Cards and Overview Content */}
-          {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
         >
@@ -1244,69 +1247,118 @@ export default function SegmentDetailsPage() {
                 </div>
               </div>
             )}
-            <div className="pt-4 mt-4">
-              <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+            <div className="pt-6 mt-6 border-t border-gray-200">
+              <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-5`}>
                 Metadata
               </h4>
-              <div className="space-y-4">
-                <div>
-                  <label
-                    className={`text-sm font-medium ${tw.textMuted} flex items-center gap-2 mb-1`}
-                  >
-                    <Calendar className="w-4 h-4" />
-                    Created
-                  </label>
-                  <p className={`text-sm ${tw.textPrimary} ml-6`}>
-                    <DateFormatter
-                      date={segment.created_on || segment.created_at}
-                      useLocale
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                      includeTime
-                    />
-                  </p>
-                </div>
-                <div>
-                  <label
-                    className={`text-sm font-medium ${tw.textMuted} flex items-center gap-2 mb-1`}
-                  >
-                    <Clock className="w-4 h-4" />
-                    Last Updated
-                  </label>
-                  <p className={`text-sm ${tw.textPrimary} ml-6`}>
-                    <DateFormatter
-                      date={segment.updated_on || segment.updated_at}
-                      useLocale
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                      includeTime
-                    />
-                  </p>
-                </div>
-                {segment.refresh_frequency && (
-                  <div>
-                    <label
-                      className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* Created */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="p-2 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: `${color.primary.accent}15` }}
                     >
-                      Refresh Frequency
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary} capitalize`}>
-                      {segment.refresh_frequency}
-                    </p>
+                      <Calendar
+                        className="w-4 h-4"
+                        style={{ color: color.primary.accent }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                        Created
+                      </label>
+                      <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                        <DateFormatter
+                          date={segment.created_on || segment.created_at}
+                          useLocale
+                          year="numeric"
+                          month="long"
+                          day="numeric"
+                          includeTime
+                        />
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Last Updated */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="p-2 rounded-lg flex-shrink-0"
+                      style={{ backgroundColor: `${color.primary.accent}15` }}
+                    >
+                      <Clock
+                        className="w-4 h-4"
+                        style={{ color: color.primary.accent }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                        Last Updated
+                      </label>
+                      <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                        <DateFormatter
+                          date={segment.updated_on || segment.updated_at}
+                          useLocale
+                          year="numeric"
+                          month="long"
+                          day="numeric"
+                          includeTime
+                        />
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Refresh Frequency */}
+                {segment.refresh_frequency && (
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="p-2 rounded-lg flex-shrink-0"
+                        style={{ backgroundColor: `${color.primary.accent}15` }}
+                      >
+                        <Layers
+                          className="w-4 h-4"
+                          style={{ color: color.primary.accent }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                          Refresh Frequency
+                        </label>
+                        <p className={`text-sm ${tw.textPrimary} font-medium capitalize`}>
+                          {segment.refresh_frequency}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                {/* Version */}
                 {segment.version && (
-                  <div>
-                    <label
-                      className={`text-sm font-medium ${tw.textMuted} block mb-1`}
-                    >
-                      Version
-                    </label>
-                    <p className={`text-sm ${tw.textPrimary}`}>
-                      {segment.version}
-                    </p>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="p-2 rounded-lg flex-shrink-0"
+                        style={{ backgroundColor: `${color.primary.accent}15` }}
+                      >
+                        <Zap
+                          className="w-4 h-4"
+                          style={{ color: color.primary.accent }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                          Version
+                        </label>
+                        <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                          {segment.version}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1722,6 +1774,8 @@ export default function SegmentDetailsPage() {
       </div>
 
       {/* Analytics Section */}
+      {(growthTrend.length > 0 || performanceMetrics || isLoadingAnalytics) && (
+        <div className="space-y-6">
           {/* Growth Trend Chart */}
           {growthTrend.length > 0 && !isLoadingAnalytics && (
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
@@ -1793,23 +1847,27 @@ export default function SegmentDetailsPage() {
               <LoadingSpinner />
             </div>
           )}
+        </div>
+      )}
 
       {/* Campaign Flows Section */}
-      <div className="mb-6">
-        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
-          Campaign Flows ({campaignFlows.length})
-        </h3>
-        <p className={`text-sm ${tw.textSecondary} mb-4`}>
-          Campaigns that use this segment
-        </p>
-      </div>
+      {campaignFlows.length > 0 || isLoadingCampaignFlows ? (
+        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+          <div className="flex items-center gap-2 mb-6">
+            <Zap className="w-5 h-5" style={{ color: color.primary.accent }} />
+            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+              Campaign Flows ({campaignFlows.length})
+            </h3>
+          </div>
+          <p className={`text-sm ${tw.textSecondary} mb-4`}>
+            Campaigns that use this segment
+          </p>
           {isLoadingCampaignFlows ? (
             <div className="flex justify-center py-8">
               <LoadingSpinner />
             </div>
           ) : campaignFlows.length === 0 ? (
             <div className="text-center py-8">
-              <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className={`text-sm ${tw.textSecondary}`}>
                 This segment is not used in any campaign flows
               </p>
@@ -1889,6 +1947,8 @@ export default function SegmentDetailsPage() {
               </table>
             </div>
           )}
+        </div>
+      ) : null}
 
       {/* Members Modal */}
       {showMembersModal &&
@@ -2092,243 +2152,191 @@ export default function SegmentDetailsPage() {
           document.body,
         )}
 
-      {/* Customer Selection Modal */}
+      {/* Customer Selection Modal - Add Members */}
       {showCustomerSelection &&
         createPortal(
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div
-              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
+            <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Add Members to Segment
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Select customers to add to "{segment?.name}"
-                  </p>
+                  <h2 className="text-xl font-semibold text-gray-900">Add Members to Segment</h2>
+                  <p className="text-sm text-gray-500 mt-1">Select customers to add to "{segment?.name}"</p>
                 </div>
                 <button
                   onClick={() => setShowCustomerSelection(false)}
-                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Search and Filters */}
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1">
+              {/* Search and Filter */}
+              <div className="px-6 pt-6 pb-4 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
+                      placeholder="Search by name, email, phone..."
                       value={customerSearchTerm}
                       onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                      placeholder="Search by name, email, or phone..."
-                      className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm`}
+                      className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} text-sm focus:outline-none focus:ring-2 focus:ring-opacity-50`}
                     />
                   </div>
-                  <HeadlessSelect
-                    value={customerStatusFilter}
-                    onChange={(value) => setCustomerStatusFilter(value)}
-                    options={[
-                      { label: "All Status", value: "all" },
-                      { label: "Active", value: "active" },
-                      { label: "Pending", value: "pending" },
-                      { label: "Deactivated", value: "deactivated" },
-                    ]}
-                    placeholder="Select status"
-                    zIndex={zIndex.modal + 1}
-                  />
-                  </div>
-                  <div className="text-sm text-gray-500 whitespace-nowrap">
-                    {selectedCustomers.length} selected
-                  </div>
+                  <Popover className="relative w-48">
+                    <Popover.Button className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center justify-between`}>
+                      {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter.charAt(0).toUpperCase() + customerStatusFilter.slice(1)}
+                      <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
+                    </Popover.Button>
+                    <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.modal }}>
+                      <div className="py-1">
+                        {["all", "active", "inactive", "suspended"].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => setCustomerStatusFilter(status)}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                              customerStatusFilter === status ? "bg-gray-50 font-medium" : ""
+                            }`}
+                          >
+                            {status === "all" ? "All Statuses" : status.charAt(0).toUpperCase() + status.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </Popover.Panel>
+                  </Popover>
                 </div>
               </div>
 
-              {/* Customer Table */}
-              <div className="flex-1 overflow-auto">
+              {/* Customers List */}
+              <div className="flex-1 overflow-y-auto px-6">
                 {isLoadingCustomersForSelection ? (
                   <div className="flex flex-col items-center justify-center py-12">
-                    <LoadingSpinner
-                      variant="modern"
-                      size="lg"
-                      color="primary"
-                    />
+                    <LoadingSpinner variant="modern" size="lg" color="primary" />
                     <p className="text-gray-500 mt-4 text-sm">Loading customers...</p>
                   </div>
                 ) : filteredCustomersForSelection.length === 0 ? (
                   <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No customers found</h3>
                     <p className="text-gray-500 text-sm">
-                      {customerSearchTerm.trim()
-                        ? "No customers found matching your search"
+                      {customerSearchTerm || customerStatusFilter !== "all"
+                        ? "Try adjusting your search or filter criteria"
                         : "No customers available"}
                     </p>
                   </div>
                 ) : (
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50 sticky top-0">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                          <input
-                            type="checkbox"
-                            checked={
-                              filteredCustomersForSelection.length > 0 &&
-                              filteredCustomersForSelection.every((c) =>
-                                selectedCustomers.includes(
-                                  Number(c.subscriber_id || c.id)
-                                )
-                              )
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedCustomers((prev) => {
-                                  const newSet = new Set(prev);
-                                  filteredCustomersForSelection.forEach((c) => {
-                                    newSet.add(Number(c.subscriber_id || c.id));
-                                  });
-                                  return Array.from(newSet);
-                                });
-                              } else {
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
+                            <input type="checkbox" className="w-4 h-4" />
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            MSISDN
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {filteredCustomersForSelection.map((customer) => {
+                          const customerId = Number(customer.subscriber_id || customer.id);
+                          const isSelected = selectedCustomers.includes(customerId);
+                          return (
+                            <tr
+                              key={`${customerId}-${customer.email}`}
+                              onClick={() => {
                                 setSelectedCustomers((prev) =>
-                                  prev.filter(
-                                    (id) =>
-                                      !filteredCustomersForSelection.some(
-                                        (c) =>
-                                          Number(c.subscriber_id || c.id) === id
-                                      )
-                                  )
+                                  prev.includes(customerId)
+                                    ? prev.filter((cid) => cid !== customerId)
+                                    : [...prev, customerId]
                                 );
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          MSISDN
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {filteredCustomersForSelection.map((customer) => {
-                        const customerId = customer.subscriber_id || customer.id;
-                        const firstName = customer.first_name || "";
-                        const lastName = customer.last_name || "";
-                        const displayName =
-                          firstName || lastName
-                            ? `${firstName} ${lastName}`.trim()
-                            : `Customer ${customerId}`;
-                        const msisdn = customer.msisdn || "-";
-                        const email = customer.email || "-";
-                        const status = customer.subscriber_status || "unknown";
-                        const isSelected = selectedCustomers.includes(
-                          Number(customerId)
-                        );
-
-                        const getStatusColor = (s: string) => {
-                          return "text-gray-900";
-                        };
-
-                        const toggleSelect = () => {
-                          setSelectedCustomers((prev) =>
-                            isSelected
-                              ? prev.filter((id) => id !== Number(customerId))
-                              : [...prev, Number(customerId)],
+                              }}
+                              className="cursor-pointer transition-colors"
+                              style={{
+                                backgroundColor: isSelected ? `${color.primary.accent}15` : "white",
+                                borderColor: "#e5e7eb",
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.backgroundColor = "#f9fafb";
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.backgroundColor = "white";
+                              }}
+                            >
+                              <td className="px-4 py-3">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    setSelectedCustomers((prev) =>
+                                      prev.includes(customerId)
+                                        ? prev.filter((cid) => cid !== customerId)
+                                        : [...prev, customerId]
+                                    );
+                                  }}
+                                  className="w-4 h-4 cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm text-gray-900">
+                                  {customer.msisdn || "—"}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {customer.first_name && customer.last_name
+                                    ? `${customer.first_name} ${customer.last_name}`
+                                    : customer.first_name || "—"}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm text-gray-900">
+                                  {customer.email || "—"}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm text-gray-900">
+                                  {customer.subscriber_status || "—"}
+                                </div>
+                              </td>
+                            </tr>
                           );
-                        };
-
-                        return (
-                          <tr
-                            key={customerId}
-                            onClick={toggleSelect}
-                            className="hover:bg-gray-50 transition-colors cursor-pointer"
-                          >
-                            <td className="px-4 py-3">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={toggleSelect}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              />
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {msisdn}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                              {displayName}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
-                              {email}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-gray-900">
-                              {status.charAt(0).toUpperCase() +
-                                status.slice(1)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="p-6 border-t border-gray-200">
-                <div className="flex items-center justify-between">
+              {/* Footer */}
+              <div className="flex items-center justify-between p-6 border-t border-gray-200 flex-shrink-0">
+                <p className="text-sm text-gray-600">
+                  {selectedCustomers.length} customer{selectedCustomers.length !== 1 ? "s" : ""} selected
+                </p>
+                <div className="flex gap-3">
                   <button
                     onClick={() => setShowCustomerSelection(false)}
-                    className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 transition-colors text-sm font-medium`}
+                    className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
                   >
                     Cancel
                   </button>
                   <button
-                    onClick={async () => {
-                      if (selectedCustomers.length === 0) {
-                        showError(
-                          "No selection",
-                          "Please select at least one customer",
-                        );
-                        return;
-                      }
-
-                      setIsAddingMembers(true);
-                      try {
-                        // Add all customers at once using bulk endpoint
-                        await segmentService.addSegmentMembers(Number(id), {
-                          segmentId: Number(id),
-                          subscriberIds: selectedCustomers,
-                        });
-                        success(
-                          "Members added",
-                          `${selectedCustomers.length} customer(s) added successfully`,
-                        );
-                        setShowCustomerSelection(false);
-                        setSelectedCustomers([]);
-                        await loadMembersCount();
-                      } catch (err) {
-                        console.error("Failed to add members:", err);
-                        showError(
-                          "Error adding members",
-                          "Please try again later.",
-                        );
-                      } finally {
-                        setIsAddingMembers(false);
-                      }
+                    onClick={() => {
+                      handleAddMembers();
+                      setShowCustomerSelection(false);
                     }}
                     disabled={selectedCustomers.length === 0 || isAddingMembers}
-                    className={`text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                    className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{
                       backgroundColor: button.action.background,
                       color: button.action.color,
@@ -2336,16 +2344,7 @@ export default function SegmentDetailsPage() {
                       padding: `${button.action.paddingY} ${button.action.paddingX}`,
                     }}
                   >
-                    {isAddingMembers ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      `Add ${selectedCustomers.length} Customer${
-                        selectedCustomers.length !== 1 ? "s" : ""
-                      }`
-                    )}
+                    {isAddingMembers ? "Adding..." : `Add Selected`}
                   </button>
                 </div>
               </div>

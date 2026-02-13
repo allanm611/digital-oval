@@ -24,6 +24,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import SelectJobTypeModal from "../components/SelectJobTypeModal";
 import { color, tw, zIndexTokens } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -72,6 +73,7 @@ export default function ScheduledJobsPage() {
   const [deletingJob, setDeletingJob] = useState<ScheduledJob | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [jobTypeMap, setJobTypeMap] = useState<Record<number, string>>({});
+  const [isSelectTypeModalOpen, setIsSelectTypeModalOpen] = useState(false);
   // Bulk selection and batch operations
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedJobs, setSelectedJobs] = useState<Set<number>>(new Set());
@@ -516,7 +518,7 @@ export default function ScheduledJobsPage() {
             </button>
           </PermissionGate>
           <PermissionGate permission="jobs.create">
-            <CreateButton route="/dashboard/scheduled-jobs/create" />
+            <CreateButton onClick={() => setIsSelectTypeModalOpen(true)} />
           </PermissionGate>
         </div>
       </div>
@@ -1208,6 +1210,19 @@ export default function ScheduledJobsPage() {
           </div>,
           document.body,
         )}
+
+      <SelectJobTypeModal
+        isOpen={isSelectTypeModalOpen}
+        onClose={() => setIsSelectTypeModalOpen(false)}
+        onContinue={(type) => {
+          setIsSelectTypeModalOpen(false);
+          navigate(
+            type === "campaign"
+              ? "/dashboard/scheduled-jobs/create?type=campaign"
+              : "/dashboard/scheduled-jobs/create",
+          );
+        }}
+      />
     </div>
   );
 }

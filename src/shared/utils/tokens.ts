@@ -68,6 +68,7 @@ export const colors = {
       static: "#B84A6B", // Lighter red/maroon (Red 600)
       trigger: "#A66B3D", // Lighter brown (Brown 600)
       hybrid: "#5B6870", // Lighter neutral (NEUTRAL 600)
+      predictive: "#4FDFF3", // Cyan/Teal (Brand accent)
     },
     campaigns: {
       active: "#94DF5A", // Green 500
