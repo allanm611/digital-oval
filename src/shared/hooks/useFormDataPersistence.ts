@@ -10,8 +10,13 @@ export function useFormDataPersistence<T>(
   setFormData: (data: T) => void,
   shouldClear?: boolean,
 ) {
-  // Load persisted data on mount
+  // Load persisted data on mount (only in create mode, not in edit mode)
   useEffect(() => {
+    // Skip loading from localStorage if shouldClear is true (edit mode)
+    if (shouldClear) {
+      return;
+    }
+
     const savedData = localStorage.getItem(key);
     if (savedData) {
       try {
@@ -24,16 +29,19 @@ export function useFormDataPersistence<T>(
         );
       }
     }
-  }, [key]); // Only run on mount
+  }, [key, shouldClear]); // Run on mount or when shouldClear changes
 
-  // Save data whenever it changes
+  // Save data whenever it changes (only in create mode)
   useEffect(() => {
+    if (shouldClear) {
+      return;
+    }
     try {
       localStorage.setItem(key, JSON.stringify(formData));
     } catch (error) {
       console.error(`Failed to persist data to key "${key}":`, error);
     }
-  }, [key, formData]);
+  }, [key, formData, shouldClear]);
 
   // Clear persisted data if requested
   useEffect(() => {

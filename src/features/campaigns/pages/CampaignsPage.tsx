@@ -1439,10 +1439,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <Play
-                                className="w-4 h-4 mr-4"
-                                style={{ color: color.primary.accent }}
-                              />
+                              <Play className="w-4 h-4 mr-4 text-black" />
                               Execute Campaign
                             </button>
                           ) : null}
@@ -1476,10 +1473,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <Pause
-                                className="w-4 h-4 mr-4"
-                                style={{ color: "#F59E0B" }}
-                              />
+                              <Pause className="w-4 h-4 mr-4 text-black" />
                               Pause Campaign
                             </button>
                           </PermissionGate>
@@ -1512,10 +1506,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <Play
-                                className="w-4 h-4 mr-4"
-                                style={{ color: "#10B981" }}
-                              />
+                              <Play className="w-4 h-4 mr-4 text-black" />
                               Resume Campaign
                             </button>
                           </PermissionGate>
@@ -1548,10 +1539,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <CheckCircle
-                                className="w-4 h-4 mr-4"
-                                style={{ color: "#10B981" }}
-                              />
+                              <CheckCircle className="w-4 h-4 mr-4 text-black" />
                               Activate Campaign
                             </button>
                           </PermissionGate>
@@ -1616,10 +1604,7 @@ export default function CampaignsPage() {
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
-                              <Send
-                                className="w-4 h-4 mr-4"
-                                style={{ color: "#3B82F6" }}
-                              />
+                              <Send className="w-4 h-4 mr-4 text-black" />
                               Request Approval
                             </button>
                           </PermissionGate>
@@ -1640,10 +1625,7 @@ export default function CampaignsPage() {
                                 }}
                                 className="w-full flex items-center px-4 py-3 text-sm text-black"
                               >
-                                <CheckCircle
-                                  className="w-4 h-4 mr-4"
-                                  style={{ color: "#10B981" }}
-                                />
+                                <CheckCircle className="w-4 h-4 mr-4 text-black" />
                                 Approve Campaign
                               </button>
                             </PermissionGate>
@@ -1678,10 +1660,7 @@ export default function CampaignsPage() {
                           }}
                           className="w-full flex items-center px-4 py-3 text-sm text-black"
                         >
-                          <Edit
-                            className="w-4 h-4 mr-4"
-                            style={{ color: color.primary.action }}
-                          />
+                          <Edit className="w-4 h-4 mr-4 text-black" />
                           Edit Campaign
                         </button>
 
@@ -1692,10 +1671,7 @@ export default function CampaignsPage() {
                           }}
                           className="w-full flex items-center px-4 py-3 text-sm text-black"
                         >
-                          <Archive
-                            className="w-4 h-4 mr-4"
-                            style={{ color: "#6B7280" }}
-                          />
+                          <Archive className="w-4 h-4 mr-4 text-black" />
                           Archive Campaign
                         </button>
 

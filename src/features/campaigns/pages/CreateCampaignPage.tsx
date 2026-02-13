@@ -54,6 +54,20 @@ const objectiveOptions = [
   { value: "upsell_cross_sell", label: "Upsell/Cross-sell" },
   { value: "reactivation", label: "Dormant Customer Reactivation" },
 ];
+
+// Helper function to map objective label back to value
+const mapObjectiveLabelToValue = (
+  labelOrValue: string | undefined
+): string => {
+  if (!labelOrValue) return "acquisition";
+  // Check if it's already a value
+  if (["acquisition", "retention", "churn_prevention", "upsell_cross_sell", "reactivation"].includes(labelOrValue)) {
+    return labelOrValue;
+  }
+  // Find by label
+  const found = objectiveOptions.find((o) => o.label === labelOrValue);
+  return found?.value || "acquisition";
+};
 import CampaignDefinitionStep from "../components/steps/CampaignDefinitionStep";
 import AudienceConfigurationStep from "../components/steps/AudienceConfigurationStep";
 import OfferMappingStep from "../components/steps/OfferMappingStep";
@@ -202,6 +216,7 @@ export default function CreateCampaignPage() {
     category_id: preselectedCategoryId,
     start_date: undefined,
     end_date: undefined,
+    budget_allocated: undefined,
   });
 
   const [selectedSegments, setSelectedSegments] = useState<CampaignSegment[]>(
@@ -224,12 +239,13 @@ export default function CreateCampaignPage() {
     [key: string]: string;
   }>({});
 
-  // Persist form data to localStorage
+  // Persist form data to localStorage - ONLY in create mode
+  // In edit mode, pass true as 4th parameter to skip loading from localStorage
   useFormDataPersistence(
     "campaign_form_data",
     formData,
     setFormData,
-    isEditMode,
+    isEditMode, // Skip localStorage in edit mode
   );
   useFormDataPersistence(
     "campaign_segments",
@@ -284,7 +300,7 @@ export default function CreateCampaignPage() {
         setIsLoadingCampaign(true);
       }
       try {
-        const response = await campaignService.getCampaignById(campaignId);
+        const response = await campaignService.getCampaignById(campaignId, true);
         const campaign =
           (response as { data?: BackendCampaignType } | BackendCampaignType)
             .data || response;
@@ -298,7 +314,7 @@ export default function CreateCampaignPage() {
               ? `Copy of ${campaign?.name}`
               : campaign?.name || "",
             description: campaign?.description || "",
-            objective: campaign?.objective || "acquisition",
+            objective: mapObjectiveLabelToValue(campaign?.objective),
             category_id: campaign?.category_id || undefined,
             program_id: campaign?.program_id || undefined,
             start_date: campaign?.start_date || undefined,
@@ -316,6 +332,14 @@ export default function CreateCampaignPage() {
             priority: campaign?.priority || undefined,
             priority_rank: campaign?.priority_rank || undefined,
           };
+          console.log("💾 Setting FormData with all fields:", {
+            name: newFormData.name,
+            budget_allocated: newFormData.budget_allocated,
+            start_date: newFormData.start_date,
+            end_date: newFormData.end_date,
+            category_id: newFormData.category_id,
+            objective: newFormData.objective,
+          });
           setFormData(newFormData);
         }
 
@@ -572,47 +596,15 @@ export default function CreateCampaignPage() {
 
     // Then handle edit/duplicate mode (only if not returning from offer creation)
     if (id && !hasRestoredDataRef.current) {
+      console.log("✏️  Edit mode detected, id:", id);
       // Edit mode - modifying existing campaign
       // isEditMode already set in state initialization
       setIsDuplicateMode(false);
 
-      // Check if campaign data is passed via location.state (from details page)
-      const campaignFromState = (
-        location.state as { campaign?: BackendCampaignType }
-      )?.campaign;
-      if (campaignFromState) {
-        // Use passed data to populate form immediately
-        hasRestoredDataRef.current = true;
-        const campaign = campaignFromState;
-
-        const newFormData: CampaignFormData = {
-          name: campaign?.name || "",
-          description: campaign?.description || "",
-          objective: campaign?.objective || "acquisition",
-          category_id: campaign?.category_id || undefined,
-          program_id: campaign?.program_id || undefined,
-          start_date: campaign?.start_date || undefined,
-          end_date: campaign?.end_date || undefined,
-          campaign_type: campaign?.campaign_type || "multiple_target_group",
-          tags: campaign?.tags || [],
-          department_id: campaign?.owner_team ? undefined : undefined,
-          budget_allocated: campaign?.budget_allocated
-            ? parseFloat(campaign.budget_allocated)
-            : undefined,
-          priority: campaign?.priority || undefined,
-          priority_rank: campaign?.priority_rank || undefined,
-        };
-        setFormData(newFormData);
-
-        // Load segments and offers in background silently (don't show loading spinner)
-        // Skip form data since we already populated it from state
-        loadCampaignData(id, false, true, true).catch(() => {
-          // Silently fail - segments/offers will just be empty
-        });
-      } else {
-        // No data passed, load from API
-        loadCampaignData(id, false);
-      }
+      // Always load from API in edit mode to get COMPLETE data
+      // Don't rely on location.state as it may have incomplete campaign data
+      console.log("✏️  Loading complete campaign data from API...");
+      loadCampaignData(id, false, false, false);
     } else if (duplicateIdParam && !hasRestoredDataRef.current) {
       // Duplicate mode - creating new campaign from existing one
       // No need to set isEditMode - state init handles it
@@ -646,7 +638,7 @@ export default function CreateCampaignPage() {
         if (!formData.category_id) {
           errors.category_id = "Campaign catalog is required";
         }
-        // Budget is now optional - only validate if provided and must be > 0
+        // Budget is optional - only validate if provided and must be > 0
         if (
           formData.budget_allocated &&
           Number(formData.budget_allocated) <= 0
@@ -1016,9 +1008,7 @@ export default function CreateCampaignPage() {
           ...(formData.end_date && { end_date: formData.end_date }),
           ...(tagsArray.length > 0 && { tags: tagsArray }),
           ...(ownerTeam && { owner_team: ownerTeam }),
-          ...(formData.budget_allocated && {
-            budget_allocated: String(formData.budget_allocated),
-          }),
+          budget_allocated: String(formData.budget_allocated || 0),
         };
         // New campaigns are created with status: 'draft' and approval_status: 'pending'
         const createResponse =
@@ -1301,9 +1291,7 @@ export default function CreateCampaignPage() {
         ...(formData.end_date && { end_date: formData.end_date }),
         ...(tagsArray.length > 0 && { tags: tagsArray }),
         ...(ownerTeam && { owner_team: ownerTeam }),
-        ...(formData.budget_allocated && {
-          budget_allocated: String(formData.budget_allocated),
-        }),
+        budget_allocated: String(formData.budget_allocated || 0),
         ...(formData.campaign_type && {
           campaign_type: formData.campaign_type,
         }),

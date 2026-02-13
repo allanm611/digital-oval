@@ -119,11 +119,12 @@ class ScheduledJobService {
     return this.request<ScheduledJobListResponse>(`/search${query}`);
   }
 
-  async getScheduledJobById(id: number): Promise<ScheduledJob> {
+  async getScheduledJobById(id: number, skipCache?: boolean): Promise<ScheduledJob> {
+    const query = this.buildQueryString({ skipCache });
     const response = await this.request<{
       success: boolean;
       data: ScheduledJob;
-    }>(`/${id}`);
+    }>(`/${id}${query}`);
     // Handle both wrapped and unwrapped responses
     if (
       response &&
@@ -136,22 +137,26 @@ class ScheduledJobService {
     return response as ScheduledJob;
   }
 
-  async getScheduledJobByCode(code: string): Promise<ScheduledJob> {
-    return this.request<ScheduledJob>(`/code/${encodeURIComponent(code)}`);
+  async getScheduledJobByCode(code: string, skipCache?: boolean): Promise<ScheduledJob> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ScheduledJob>(`/code/${encodeURIComponent(code)}${query}`);
   }
 
-  async getScheduledJobByUuid(uuid: string): Promise<ScheduledJob> {
-    return this.request<ScheduledJob>(`/uuid/${encodeURIComponent(uuid)}`);
+  async getScheduledJobByUuid(uuid: string, skipCache?: boolean): Promise<ScheduledJob> {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ScheduledJob>(`/uuid/${encodeURIComponent(uuid)}${query}`);
   }
 
-  async getScheduledJobsByStatus(status: string) {
+  async getScheduledJobsByStatus(status: string, skipCache?: boolean) {
+    const query = this.buildQueryString({ skipCache });
     return this.request<ScheduledJobListResponse>(
-      `/status/${encodeURIComponent(status)}`,
+      `/status/${encodeURIComponent(status)}${query}`,
     );
   }
 
-  async getScheduledJobsByJobType(jobTypeId: number) {
-    return this.request<ScheduledJobListResponse>(`/job-type/${jobTypeId}`);
+  async getScheduledJobsByJobType(jobTypeId: number, skipCache?: boolean) {
+    const query = this.buildQueryString({ skipCache });
+    return this.request<ScheduledJobListResponse>(`/job-type/${jobTypeId}${query}`);
   }
 
   async createScheduledJob(

@@ -744,8 +744,8 @@ export default function DashboardHome() {
               const participants = parseMetricValue(
                 campaign.current_participants ?? 0
               );
-              // Extract description from campaign
-              const description = campaign.description || "N/A";
+              // Extract objective from campaign - leave empty if not available
+              const description = campaign.objective || "";
 
               return {
                 id: campaign.id,
@@ -1987,8 +1987,7 @@ export default function DashboardHome() {
                         </div>
                         <div className="flex flex-wrap gap-3 text-sm text-black">
                           {(() => {
-                            console.log("Campaign description:", campaign.description);
-                            return campaign.description ? (
+                            return campaign.description && campaign.description.trim() !== "" ? (
                               <span className="text-black/80">
                                 {campaign.description}
                               </span>

@@ -73,6 +73,7 @@ export default function CampaignDefinitionStep({
   const t = useTranslation();
   const { t: tLanguage } = useLanguage();
   const { success: showToast, error: showError } = useToast();
+
   const [programSearchTerm, setProgramSearchTerm] = useState("");
   const [isProgramDropdownOpen, setIsProgramDropdownOpen] = useState(false);
   const [objectiveSearchTerm, setObjectiveSearchTerm] = useState("");
@@ -366,9 +367,11 @@ export default function CampaignDefinitionStep({
                   : ""
               }
             >
+              {console.log("📦 MultiCategorySelector props - selectedCategoryIds:", selectedCategoryIds, "formData.category_id:", formData.category_id)}
               <MultiCategorySelector
                 value={selectedCategoryIds}
                 onChange={(ids) => {
+                  console.log("📦 MultiCategorySelector onChange - new ids:", ids);
                   setSelectedCategoryIds(ids);
                   if (validationErrors.category_id && clearValidationErrors) {
                     clearValidationErrors();
@@ -1160,7 +1163,6 @@ export default function CampaignDefinitionStep({
                   : "border-gray-300 focus:ring-[#588157] focus:border-[#588157]"
               }`}
               placeholder="0.00"
-              required
             />
           </div>
           {validationErrors.budget_allocated && (

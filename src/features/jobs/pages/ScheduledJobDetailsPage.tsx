@@ -29,6 +29,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import { color, tw } from "../../../shared/utils/utils";
 import { userService } from "../../users/services/userService";
+import { segmentService } from "../../segments/services/segmentService";
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "—";
@@ -143,6 +144,8 @@ export default function ScheduledJobDetailsPage() {
   const [systemUserNames, setSystemUserNames] = useState<
     Record<number, string>
   >({});
+  const [segmentNames, setSegmentNames] = useState<Record<number, string>>({});
+  const [isLoadingSegments, setIsLoadingSegments] = useState(false);
 
   const showHealthCard =
     isLoadingHealth ||
@@ -205,6 +208,34 @@ export default function ScheduledJobDetailsPage() {
           })
         );
         setSystemUserNames((prev) => ({ ...prev, ...nameMap }));
+      }
+
+      // Fetch segment names for campaign metadata
+      if (data.metadata && typeof data.metadata === "object") {
+        const metadata = data.metadata as Record<string, unknown>;
+        if (Array.isArray(metadata.segments)) {
+          const segmentIds = metadata.segments
+            .map((seg: any) => seg.segment_id)
+            .filter((id: unknown) => typeof id === "number");
+
+          if (segmentIds.length > 0) {
+            setIsLoadingSegments(true);
+            const nameMap: Record<number, string> = {};
+            await Promise.all(
+              segmentIds.map(async (segmentId: number) => {
+                try {
+                  const segment = await segmentService.getSegmentById(segmentId, true);
+                  nameMap[segmentId] = segment.name || `Segment #${segmentId}`;
+                } catch (err) {
+                  console.error(`Failed to load segment ${segmentId}:`, err);
+                  nameMap[segmentId] = `Segment #${segmentId}`;
+                }
+              })
+            );
+            setSegmentNames(nameMap);
+            setIsLoadingSegments(false);
+          }
+        }
       }
     } catch (err) {
       const message =
@@ -616,7 +647,7 @@ export default function ScheduledJobDetailsPage() {
       {/* Main Content */}
       <div className="space-y-6">
         {/* Performance Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
@@ -1207,17 +1238,83 @@ export default function ScheduledJobDetailsPage() {
             Metadata
           </h2>
           {job.metadata && Object.keys(job.metadata || {}).length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(job.metadata as Record<string, unknown>).map(
-                ([key, value]) => (
-                  <div key={key}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {formatMetadataKey(key)}
-                    </label>
-                    {renderMetadataValue(value)}
-                  </div>
-                )
-              )}
+            <div className="space-y-6">
+              {/* Non-segment metadata fields on one line */}
+              {(() => {
+                const otherFields: Record<string, unknown> = {};
+                Object.entries(job.metadata as Record<string, unknown>).forEach(([key, value]) => {
+                  if (key !== "segments") {
+                    otherFields[key] = value;
+                  }
+                });
+
+                if (Object.keys(otherFields).length > 0) {
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {Object.entries(otherFields).map(([key, value]) => (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {formatMetadataKey(key)}
+                          </label>
+                          {renderMetadataValue(value)}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
+              })()}
+
+              {/* Segments - Compact list format */}
+              {(() => {
+                const segments = (job.metadata as Record<string, unknown>).segments;
+                if (segments && Array.isArray(segments) && segments.length > 0) {
+                  const isSegmentArray = segments.every(
+                    (item) => item && typeof item === "object" && ("segment_id" in item || "channel_codes" in item)
+                  );
+
+                  if (isSegmentArray) {
+                    return (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Segments
+                        </label>
+                        <div className="space-y-2">
+                          {segments.map((segment: any, idx: number) => {
+                            const segmentName = segmentNames[segment.segment_id] || `Segment #${segment.segment_id}`;
+                            return (
+                              <div key={idx} className="flex items-center gap-3">
+                                <button
+                                  onClick={() => navigate(`/dashboard/segments/${segment.segment_id}`)}
+                                  className="text-sm font-medium hover:underline transition-colors"
+                                  style={{ color: color.primary.accent }}
+                                  type="button"
+                                >
+                                  {segmentName}
+                                </button>
+                                <span className="text-gray-400">→</span>
+                                <div className="flex gap-2 flex-wrap">
+                                  {Array.isArray(segment.channel_codes) && segment.channel_codes.length > 0 ? (
+                                    segment.channel_codes.map((channel: string) => (
+                                      <span
+                                        key={channel}
+                                        className="text-sm text-gray-900"
+                                      >
+                                        {channel}
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-sm text-gray-500">—</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                }
+              })()}
             </div>
           ) : (
             <p className="text-sm text-gray-500">No metadata available.</p>
