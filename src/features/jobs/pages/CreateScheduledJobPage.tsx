@@ -86,7 +86,7 @@ export default function CreateScheduledJobPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { error: showError, success: showToast } = useToast();
+  const { showToast, error: showError, success: showSuccess } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
   const isEditMode = !!id;
@@ -99,7 +99,7 @@ export default function CreateScheduledJobPage() {
     code: "",
     description: "",
     job_type_id: undefined,
-    status: "draft",
+    status: "active",
     schedule_type: "cron",
     cron_expression: "",
     interval_seconds: undefined,
@@ -155,7 +155,7 @@ export default function CreateScheduledJobPage() {
         });
         setJobTypes(response.data);
       } catch (err) {
-        console.error("Failed to load job types:", err);
+        // Failed to load job types - handled silently
       }
     };
     loadJobTypes();
@@ -173,7 +173,6 @@ export default function CreateScheduledJobPage() {
             });
           setCampaigns(response.data || []);
         } catch (err) {
-          console.error("Failed to load campaigns:", err);
           showError("Failed to load campaigns", "");
         }
       };
@@ -286,7 +285,6 @@ export default function CreateScheduledJobPage() {
         });
         setSegmentChannelCodes(defaultChannels);
       } catch (err) {
-        console.error("Failed to load segments:", err);
         showError("Failed to load segments", "");
       } finally {
         setIsLoadingSegments(false);
@@ -311,6 +309,10 @@ export default function CreateScheduledJobPage() {
 
     if (!formData.description?.trim()) {
       newErrors.description = "Description is required";
+    }
+
+    if (!formData.job_type_id) {
+      newErrors.job_type_id = "Job Type is required";
     }
 
     if (
@@ -426,7 +428,7 @@ export default function CreateScheduledJobPage() {
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
         const jobDisplayName =
           (formData.name && formData.name.trim()) || "Scheduled job";
-        showToast(
+        showSuccess(
           "Job updated",
           `${jobDisplayName} has been updated successfully`,
         );
@@ -441,7 +443,7 @@ export default function CreateScheduledJobPage() {
         });
         const jobDisplayName =
           (formData.name && formData.name.trim()) || "Scheduled job";
-        showToast(
+        showSuccess(
           "Job created",
           `${jobDisplayName} has been created successfully`,
         );
@@ -451,9 +453,31 @@ export default function CreateScheduledJobPage() {
         }, 500);
       }
     } catch (err) {
-      showError(
+      // Handle backend validation errors (duplicate name/code)
+      let errorMessage = "Unknown error";
+
+      if (err instanceof Error) {
+        // Check if error message contains backend validation error
+        if (err.message.includes("already exists")) {
+          errorMessage = err.message;
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      // Also check if err has a data property with error details (common in axios responses)
+      if (err && typeof err === 'object' && 'data' in err) {
+        const errData = err.data as any;
+        if (errData?.error && typeof errData.error === 'string') {
+          errorMessage = errData.error;
+        }
+      }
+
+      // Use showToast directly to bypass VITE_SILENT_MODE (always display validation errors)
+      showToast(
+        "error",
         isEditMode ? "Failed to update job" : "Failed to create job",
-        err instanceof Error ? err.message : "Unknown error",
+        errorMessage,
       );
     } finally {
       setIsSaving(false);
@@ -595,7 +619,7 @@ export default function CreateScheduledJobPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Job Type
+                Job Type <span className="text-red-500">*</span>
               </label>
               <Listbox<number | null>
                 value={formData.job_type_id ?? null}
@@ -608,7 +632,11 @@ export default function CreateScheduledJobPage() {
               >
                 <div className="relative mt-1">
                   <Listbox.Button
-                    className={`relative w-full cursor-default ${tw.rounded} border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:border-[#3b8169] focus:outline-none focus:ring-1 focus:ring-[#3b8169]`}
+                    className={`relative w-full cursor-default ${tw.rounded} border ${
+                      errors.job_type_id
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-[#3b8169] focus:ring-[#3b8169]"
+                    } bg-white py-2 pl-3 pr-10 text-left text-sm focus:outline-none focus:ring-1`}
                   >
                     <span className="block truncate">
                       {formData.job_type_id
@@ -683,6 +711,9 @@ export default function CreateScheduledJobPage() {
                   </Transition>
                 </div>
               </Listbox>
+              {errors.job_type_id && (
+                <p className="mt-1 text-xs text-red-600">{errors.job_type_id}</p>
+              )}
             </div>
 
             <div>
@@ -722,7 +753,7 @@ export default function CreateScheduledJobPage() {
                     <Listbox.Options
                       className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
                     >
-                      {STATUS_OPTIONS.map((option) => (
+                      {STATUS_OPTIONS.filter((option) => option.value === "active").map((option) => (
                         <Listbox.Option
                           key={option.value}
                           value={option.value}
@@ -997,41 +1028,53 @@ export default function CreateScheduledJobPage() {
                         (s) => s.segment_id === segmentId,
                       );
                       const channels = segmentChannelCodes[segmentId] || [];
+                      const hasChannelError = channels.length === 0;
                       return (
                         <div
                           key={segmentId}
-                          className="flex items-center gap-4 pb-3 border-b border-gray-200 last:border-b-0 last:pb-0"
+                          className={`flex items-center gap-4 pb-3 border-b border-gray-200 last:border-b-0 last:pb-0 ${
+                            hasChannelError ? "bg-red-50 p-2 -m-2 rounded" : ""
+                          }`}
                         >
-                          <span className="text-sm font-medium text-gray-700 min-w-fit">
-                            {segment?.name}:
-                          </span>
-                          <div className="flex gap-4">
-                            {["EMAIL", "SMS", "PUSH"].map((channel) => (
-                              <label
-                                key={channel}
-                                className="flex items-center gap-2 cursor-pointer"
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={channels.includes(channel)}
-                                  onChange={(e) => {
-                                    const newChannels = e.target.checked
-                                      ? [...channels, channel]
-                                      : channels.filter(
-                                          (ch) => ch !== channel,
-                                        );
-                                    setSegmentChannelCodes((prev) => ({
-                                      ...prev,
-                                      [segmentId]: newChannels,
-                                    }));
-                                  }}
-                                  className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
-                                />
-                                <span className="text-sm text-gray-700">
-                                  {channel}
-                                </span>
-                              </label>
-                            ))}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-4 mb-2">
+                              <span className="text-sm font-medium text-gray-700 min-w-fit">
+                                {segment?.name}:
+                              </span>
+                              <div className="flex gap-4">
+                                {["EMAIL", "SMS", "PUSH"].map((channel) => (
+                                  <label
+                                    key={channel}
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={channels.includes(channel)}
+                                      onChange={(e) => {
+                                        const newChannels = e.target.checked
+                                          ? [...channels, channel]
+                                          : channels.filter(
+                                              (ch) => ch !== channel,
+                                            );
+                                        setSegmentChannelCodes((prev) => ({
+                                          ...prev,
+                                          [segmentId]: newChannels,
+                                        }));
+                                      }}
+                                      className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                                    />
+                                    <span className="text-sm text-gray-700">
+                                      {channel}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                            {hasChannelError && (
+                              <p className="text-xs text-red-600 ml-0">
+                                Select at least one channel
+                              </p>
+                            )}
                           </div>
                         </div>
                       );

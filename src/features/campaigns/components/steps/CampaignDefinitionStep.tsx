@@ -367,11 +367,9 @@ export default function CampaignDefinitionStep({
                   : ""
               }
             >
-              {console.log("📦 MultiCategorySelector props - selectedCategoryIds:", selectedCategoryIds, "formData.category_id:", formData.category_id)}
               <MultiCategorySelector
                 value={selectedCategoryIds}
                 onChange={(ids) => {
-                  console.log("📦 MultiCategorySelector onChange - new ids:", ids);
                   setSelectedCategoryIds(ids);
                   if (validationErrors.category_id && clearValidationErrors) {
                     clearValidationErrors();
