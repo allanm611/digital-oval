@@ -108,8 +108,6 @@ export default function RoleFormModal({
 
     if (!formData.code.trim()) {
       newErrors.code = "Role code is required";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.code)) {
-      newErrors.code = "Code must contain only alphanumeric characters and underscores";
     }
 
     if (formData.parent_role_id) {
@@ -237,10 +235,19 @@ export default function RoleFormModal({
       onSave();
       onClose();
     } catch (err) {
-      showError(
-        role ? "Update Error" : "Creation Error",
-        err instanceof Error ? err.message : "An error occurred"
-      );
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+
+      // Map duplicate errors
+      if (errorMessage.includes("roles_name_key")) {
+        setErrors({ name: "This role name already exists" });
+      } else if (errorMessage.includes("roles_code_key")) {
+        setErrors({ code: "This role code already exists" });
+      } else {
+        showError(
+          role ? "Update Error" : "Creation Error",
+          errorMessage
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -304,7 +311,7 @@ export default function RoleFormModal({
                 onChange={handleInputChange}
                 disabled={!!role}
                 maxLength={50}
-                placeholder="e.g., admin"
+                placeholder="e.g., role.admin.system"
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
                   errors.code
                     ? "border-red-300 focus:ring-red-500"
@@ -313,6 +320,9 @@ export default function RoleFormModal({
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
+              )}
+              {!errors.code && !role && (
+                <p className="mt-1 text-xs text-gray-500">Use dot notation for readability (e.g., role.admin.system)</p>
               )}
               {role && (
                 <p className="mt-1 text-xs text-gray-500">(Cannot be changed after creation)</p>

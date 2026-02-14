@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
-  Plus,
   Trash2,
-  Edit2,
+  Edit,
   Copy,
   Power,
   PowerOff,
@@ -20,6 +19,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
+import CreateButton from "../../../shared/components/ui/CreateButton";
 import {
   Role,
   Permission,
@@ -541,15 +541,12 @@ export default function TeamRolesPermissionsPage() {
           </button>
         )}
         {activeTab !== "assign" && (
-          <button
+          <CreateButton
             onClick={
               activeTab === "roles" ? handleCreateRole : handleCreatePermission
             }
-            className={`${tw.button} flex items-center gap-2 flex-shrink-0`}
-          >
-            <Plus className="w-4 h-4" />
-            Create
-          </button>
+            label={activeTab === "roles" ? "Create Role" : "Create Permission"}
+          />
         )}
       </div>
 
@@ -745,7 +742,7 @@ export default function TeamRolesPermissionsPage() {
                               "Edit"
                             }
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleCloneRole(role)}
@@ -981,7 +978,7 @@ export default function TeamRolesPermissionsPage() {
                             className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                             title="Edit"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() =>

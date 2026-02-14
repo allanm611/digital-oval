@@ -93,8 +93,6 @@ export default function PermissionFormModal({
 
     if (!formData.code.trim()) {
       newErrors.code = "Permission code is required";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.code)) {
-      newErrors.code = "Code must contain only alphanumeric characters and underscores";
     }
 
     if (!formData.action) {
@@ -193,10 +191,19 @@ export default function PermissionFormModal({
       onSave();
       onClose();
     } catch (err) {
-      showError(
-        permission ? "Update Error" : "Creation Error",
-        err instanceof Error ? err.message : "An error occurred"
-      );
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+
+      // Map duplicate errors
+      if (errorMessage.includes("permissions_name_key")) {
+        setErrors({ name: "This permission name already exists" });
+      } else if (errorMessage.includes("permissions_code_key")) {
+        setErrors({ code: "This permission code already exists" });
+      } else {
+        showError(
+          permission ? "Update Error" : "Creation Error",
+          errorMessage
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -256,7 +263,7 @@ export default function PermissionFormModal({
                 value={formData.code}
                 onChange={handleInputChange}
                 disabled={!!permission}
-                placeholder="e.g., user_management"
+                placeholder="e.g., permission.action.resource"
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
                   errors.code
                     ? "border-red-300 focus:ring-red-500"
@@ -265,6 +272,9 @@ export default function PermissionFormModal({
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
+              )}
+              {!errors.code && !permission && (
+                <p className="mt-1 text-xs text-gray-500">Use dot notation for readability</p>
               )}
               {permission && (
                 <p className="mt-1 text-xs text-gray-500">(Cannot be changed)</p>
@@ -319,7 +329,7 @@ export default function PermissionFormModal({
                 value={formData.resource_type_id}
                 onChange={handleInputChange}
                 min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>

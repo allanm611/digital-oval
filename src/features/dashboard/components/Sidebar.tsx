@@ -604,14 +604,16 @@ export default function Sidebar({
   const toggleExpanded = (itemName: string, exclusiveItems?: string[]) => {
     setExpandedItems((prev) => {
       if (prev.includes(itemName)) {
-        return prev.filter((item) => item !== itemName);
+        const result = prev.filter((item) => item !== itemName);
+        return result;
       }
 
       const filtered = exclusiveItems
         ? prev.filter((item) => !exclusiveItems.includes(item))
         : prev;
 
-      return [...filtered, itemName];
+      const result = [...filtered, itemName];
+      return result;
     });
   };
 
@@ -714,15 +716,15 @@ export default function Sidebar({
       }
     });
 
-    // Only update if the expanded items actually changed
+    // Merge auto-expanded (route-based) with manually expanded items
     setExpandedItems((prev) => {
-      const newExpanded = [...new Set(activeParentNames)];
+      const merged = [...new Set([...prev, ...activeParentNames])];
       const prevSorted = [...prev].sort().join(",");
-      const newSorted = [...newExpanded].sort().join(",");
+      const mergedSorted = [...merged].sort().join(",");
 
       // Only update if the arrays are different
-      if (prevSorted !== newSorted) {
-        return newExpanded;
+      if (prevSorted !== mergedSorted) {
+        return merged;
       }
       return prev;
     });
@@ -797,15 +799,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -876,15 +878,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -955,15 +957,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1022,24 +1024,24 @@ export default function Sidebar({
                         {item.type === "parent" ? (
                           <div>
                             <button
-                              onClick={() =>
+                              onClick={() => {
                                 toggleExpanded(
                                   item.name.toLowerCase(),
                                   parentItemNames,
-                                )
-                              }
+                                );
+                              }}
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1127,15 +1129,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1223,15 +1225,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1316,15 +1318,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1412,15 +1414,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1505,15 +1507,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}
@@ -1598,15 +1600,15 @@ export default function Sidebar({
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
                               } p-3 text-sm transition-all duration-300 ease-out ${
-                                !isActive
-                                  ? "hover:scale-105 hover:shadow-lg"
+                                isActive || isExpanded
+                                  ? "border-l-2 border-white"
                                   : ""
-                              } ${getItemClasses(isActive)}`}
+                              }`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
                                   className={`h-5 w-5 shrink-0 ${getIconClasses(
-                                    isActive,
+                                    isActive || isExpanded,
                                   )}`}
                                 />
                                 {item.name}

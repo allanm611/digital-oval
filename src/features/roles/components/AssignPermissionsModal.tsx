@@ -14,7 +14,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { Role, Permission } from "../types/role";
 import { rolePermissionService } from "../services/rolePermissionService";
 import { permissionService } from "../services/permissionService";
-import { color } from "../../../shared/utils/utils";
+import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -714,7 +714,7 @@ export default function AssignPermissionsModal({
                       className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Assigned
+                      Assign/Unassign
                     </th>
                   </tr>
                 </thead>
@@ -765,13 +765,13 @@ export default function AssignPermissionsModal({
                           {permission.name}
                         </td>
                         <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600 font-mono"
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black font-mono"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           {permission.code}
                         </td>
                         <td
-                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-600"
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           {permission.action}
@@ -781,10 +781,10 @@ export default function AssignPermissionsModal({
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
                           <span
-                            className={`inline-block px-2.5 py-1 rounded text-sm font-medium ${
+                            className={`text-sm font-medium ${
                               permission.is_sensitive
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
+                                ? "text-red-600"
+                                : "text-gray-600"
                             }`}
                           >
                             {permission.is_sensitive ? "Yes" : "No"}
@@ -794,26 +794,54 @@ export default function AssignPermissionsModal({
                           className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-center"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <button
-                            onClick={() => handleTogglePermission(permission)}
-                            disabled={isToggling}
-                            className={`inline-flex items-center justify-center p-1.5 rounded transition-colors ${
-                              isAssigned
-                                ? "text-green-600 hover:bg-green-50"
-                                : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={
-                              isAssigned ? "Click to remove" : "Click to assign"
-                            }
-                          >
-                            {isToggling ? (
-                              <LoadingSpinner />
-                            ) : isAssigned ? (
-                              <Check className="w-5 h-5" />
-                            ) : (
-                              <Plus className="w-5 h-5" />
-                            )}
-                          </button>
+                          <div className="inline-flex items-center gap-2">
+                            {/* Assign Button - Action style (filled) */}
+                            <button
+                              onClick={() => handleTogglePermission(permission)}
+                              disabled={isToggling || isAssigned}
+                              className="px-4 py-2 text-sm font-medium rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                              style={{
+                                backgroundColor: color.primary.action,
+                              }}
+                              title={
+                                isAssigned
+                                  ? "Already assigned"
+                                  : "Click to assign"
+                              }
+                            >
+                              {isToggling && !isAssigned ? (
+                                <LoadingSpinner />
+                              ) : (
+                                "Assign"
+                              )}
+                            </button>
+
+                            {/* Unassign Button - Bordered style */}
+                            <button
+                              onClick={() => handleTogglePermission(permission)}
+                              disabled={isToggling || !isAssigned}
+                              className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 hover:text-white"
+                              style={{
+                                borderColor: isAssigned
+                                  ? color.primary.action
+                                  : "#D1D5DB",
+                                color: isAssigned
+                                  ? color.primary.action
+                                  : "#9CA3AF",
+                              }}
+                              title={
+                                isAssigned
+                                  ? "Click to unassign"
+                                  : "Not assigned"
+                              }
+                            >
+                              {isToggling && isAssigned ? (
+                                <LoadingSpinner />
+                              ) : (
+                                "Unassign"
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

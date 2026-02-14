@@ -10,15 +10,6 @@ import { color, tw, button } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
-const languageOptions = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Spanish" },
-  { value: "fr", label: "French" },
-  { value: "de", label: "German" },
-  { value: "it", label: "Italian" },
-  { value: "pt", label: "Portuguese" },
-];
-
 export default function UserProfilePage() {
   const { user: authUser } = useAuth();
   const { success, error: showError } = useToast();
@@ -31,13 +22,12 @@ export default function UserProfilePage() {
   const [formData, setFormData] = useState<UpdateUserRequest>({
     first_name: "",
     last_name: "",
-    // middle_name: null,
-    // preferred_name: null,
+    middle_name: null,
+    preferred_name: null,
     phone_number: null,
     department: null,
     job_title: null,
     timezone: "",
-    language_preference: "",
   });
 
   useEffect(() => {
@@ -55,7 +45,7 @@ export default function UserProfilePage() {
 
     try {
       setIsLoading(true);
-      const response = await userService.getUserById(authUser.user_id);
+      const response = await userService.getUserById(authUser.user_id, true);
 
       if (response.success && response.data) {
         const userData = response.data;
@@ -63,13 +53,12 @@ export default function UserProfilePage() {
         setFormData({
           first_name: userData.first_name || "",
           last_name: userData.last_name || "",
-          // middle_name: userData.middle_name || null,
-          // preferred_name: userData.preferred_name || null,
+          middle_name: userData.middle_name || null,
+          preferred_name: userData.preferred_name || null,
           phone_number: userData.phone_number || null,
           department: userData.department || null,
           job_title: userData.job_title || null,
           timezone: userData.timezone || "",
-          language_preference: userData.language_preference || "",
         });
       }
     } catch (err) {
@@ -88,17 +77,9 @@ export default function UserProfilePage() {
         "phone_number",
         "department",
         "job_title",
-        "language_preference",
       ]),
     []
   );
-
-  const languageLookup = useMemo(() => {
-    return languageOptions.reduce<Record<string, string>>((acc, option) => {
-      acc[option.value] = option.label;
-      return acc;
-    }, {});
-  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -120,6 +101,34 @@ export default function UserProfilePage() {
     }));
   };
 
+  // const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       const dataUrl = reader.result as string;
+  //       setUser((prev) => prev ? { ...prev, photo_url: dataUrl } : null);
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         photo_url: dataUrl,
+  //       }));
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
+  // const handleUploadClick = () => {
+  //   fileInputRef.current?.click();
+  // };
+
+  // const handleRemovePhoto = () => {
+  //   setUser((prev) => prev ? { ...prev, photo_url: null } : null);
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     photo_url: null,
+  //   }));
+  // };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -127,12 +136,21 @@ export default function UserProfilePage() {
       setIsSaving(true);
       const response = await userService.updateUser(user.id, formData);
 
-      if (response.success) {
+      if (response.success && response.data) {
         setUser(response.data);
+        // Update formData with response to keep them in sync
+        setFormData({
+          first_name: response.data.first_name || "",
+          last_name: response.data.last_name || "",
+          middle_name: response.data.middle_name || null,
+          preferred_name: response.data.preferred_name || null,
+          phone_number: response.data.phone_number || null,
+          department: response.data.department || null,
+          job_title: response.data.job_title || null,
+          timezone: response.data.timezone || "",
+        });
         setIsEditing(false);
         success(t.profile.profileUpdated, t.profile.profileUpdatedSuccess);
-        // Reload profile to get latest data
-        await loadUserProfile();
       }
     } catch (err) {
       console.error("Error updating profile:", err);
@@ -147,13 +165,12 @@ export default function UserProfilePage() {
       setFormData({
         first_name: user.first_name || "",
         last_name: user.last_name || "",
-        // middle_name: user.middle_name || null,
-        // preferred_name: user.preferred_name || null,
+        middle_name: user.middle_name || null,
+        preferred_name: user.preferred_name || null,
         phone_number: user.phone_number || null,
         department: user.department || null,
         job_title: user.job_title || null,
         timezone: user.timezone || "",
-        language_preference: user.language_preference || "",
       });
     }
     setIsEditing(false);
@@ -267,28 +284,27 @@ export default function UserProfilePage() {
       {/* Profile Card */}
       <div className={`bg-white ${tw.rounded} shadow-sm p-6`}>
         {/* Profile Header */}
-        <div className="flex items-start justify-between mb-6 pb-6 border-b border-gray-200">
+        <div className="mb-8">
+          {/* Avatar + User Info Row */}
           <div className="flex items-center gap-4">
+            {/* Avatar */}
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold"
+              className="w-24 h-24 rounded-full flex items-center justify-center text-white text-4xl font-bold flex-shrink-0"
               style={{ backgroundColor: color.primary.accent }}
             >
               {user.first_name?.[0]?.toUpperCase() || ""}
               {user.last_name?.[0]?.toUpperCase() || ""}
             </div>
+
+            {/* User Info Beside Avatar */}
             <div>
               <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                {user.first_name} {/* {user.middle_name} */} {user.last_name}
-                {/* {user.preferred_name && (
-                  <span className="text-gray-500 font-normal ml-2">
-                    ({user.preferred_name})
-                  </span>
-                )} */}
+                {user.first_name} {user.last_name}
               </h2>
               <p className={`text-sm ${tw.textSecondary} mt-1`}>
                 {user.email_address || user.email}
               </p>
-              <div className="flex flex-wrap items-center gap-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-3">
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
                     statusValue
@@ -304,16 +320,50 @@ export default function UserProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Upload Button - Commented Out */}
+          {/* {isEditing && (
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleUploadClick}
+                className="inline-flex items-center text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2"
+                style={{
+                  backgroundColor: button.action.background,
+                  color: button.action.color,
+                  borderRadius: button.action.borderRadius,
+                  padding: `${button.action.paddingY} ${button.action.paddingX}`,
+                }}
+              >
+                Upload Photo
+              </button>
+              {user.photo_url && (
+                <button
+                  onClick={handleRemovePhoto}
+                  className="px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded hover:bg-red-50"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoUpload}
+            style={{ display: "none" }}
+          /> */}
         </div>
 
         {/* Profile Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-8">
           {/* Personal Information */}
-          <div className="space-y-4">
+          <div>
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               {t.profile.personalInformation}
             </h3>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
@@ -377,7 +427,28 @@ export default function UserProfilePage() {
               )}
             </div>
 
-            {/* <div>
+            <div>
+              <label
+                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
+              >
+                Middle Name
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="middle_name"
+                  value={formData.middle_name || ""}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                />
+              ) : (
+                <p className={`text-sm ${tw.textPrimary}`}>
+                  {user.middle_name || "N/A"}
+                </p>
+              )}
+            </div>
+
+            <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
               >
@@ -396,7 +467,7 @@ export default function UserProfilePage() {
                   {user.preferred_name || "N/A"}
                 </p>
               )}
-            </div> */}
+            </div>
 
             <div>
               <label
@@ -432,14 +503,15 @@ export default function UserProfilePage() {
                 {t.profile.emailCannotBeChanged}
               </p>
             </div>
+            </div>
           </div>
 
           {/* Professional Information */}
-          <div className="space-y-4">
+          <div>
             <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               {t.profile.professionalInformation}
             </h3>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label
                 className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
@@ -503,39 +575,12 @@ export default function UserProfilePage() {
                 </p>
               )}
             </div>
-
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textSecondary} mb-1`}
-              >
-                {t.profile.languagePreference}
-              </label>
-              {isEditing ? (
-                <HeadlessSelect
-                  options={languageOptions}
-                  value={formData.language_preference || ""}
-                  onChange={(value) =>
-                    handleSelectChange(
-                      "language_preference",
-                      (value as string) || ""
-                    )
-                  }
-                  placeholder={t.profile.selectLanguage}
-                  searchable
-                />
-              ) : (
-                <p className={`text-sm ${tw.textPrimary}`}>
-                  {languageLookup[user.language_preference ?? ""] ||
-                    user.language_preference?.toUpperCase() ||
-                    "N/A"}
-                </p>
-              )}
             </div>
           </div>
         </div>
 
         {/* Account Information (Read-only) */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6">
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             {t.profile.accountInformation}
           </h3>

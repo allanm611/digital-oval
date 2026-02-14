@@ -6,12 +6,14 @@ interface CreateButtonProps {
   route?: string;
   onClick?: () => void;
   className?: string;
+  label?: string;
 }
 
 export default function CreateButton({
   route,
   onClick,
   className = "",
+  label = "Create",
 }: CreateButtonProps) {
   const navigate = useNavigate();
 
@@ -30,7 +32,7 @@ export default function CreateButton({
       style={{ backgroundColor: color.primary.action }}
     >
       <Plus className="h-5 w-5 mr-2" />
-      Create
+      {label}
     </button>
   );
 }

@@ -15,6 +15,7 @@ export type UserType = {
   department?: string | null;
   job_title?: string | null;
   manager_id?: number | null;
+  photo_url?: string | null;
   password_hash?: string;
   password_algorithm?: string;
   primary_role_id?: number | null;

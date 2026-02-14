@@ -61,8 +61,8 @@ const SCHEDULE_TYPES: {
 ];
 
 const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
-  { value: "draft", label: "Draft" },
   { value: "active", label: "Active" },
+  { value: "draft", label: "Draft" },
   { value: "paused", label: "Paused" },
   { value: "archived", label: "Archived" },
 ];
@@ -753,7 +753,7 @@ export default function CreateScheduledJobPage() {
                     <Listbox.Options
                       className={`absolute z-10 mt-1 max-h-60 w-full overflow-auto ${tw.rounded} bg-white py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none`}
                     >
-                      {STATUS_OPTIONS.filter((option) => option.value === "active").map((option) => (
+                      {STATUS_OPTIONS.map((option) => (
                         <Listbox.Option
                           key={option.value}
                           value={option.value}
