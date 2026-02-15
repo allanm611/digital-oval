@@ -1,6 +1,30 @@
 import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
 import {
   CategoryFileStatsResponse,
+  ETLCategoryDistributionResponse,
+  ETLChecksumUsageResponse,
+  ETLDataSizeAnalyticsResponse,
+  ETLErrorMessageDistributionResponse,
+  ETLErrorMessagePaginationQuery,
+  ETLFetchDurationAnalyticsResponse,
+  ETLFileCountResponse,
+  ETLFileRegistryStatisticsResponse,
+  ETLFormatDistributionResponse,
+  ETLProcessingDurationAnalyticsResponse,
+  ETLProcessingStatusResponse,
+  ETLRetryAnalysisResponse,
+  ETLRowMetricsResponse,
+  ETLTaskDurationAnalyticsResponse,
+  ETLTaskFileCorrelationResponse,
+  ETLTaskJobCorrelationResponse,
+  ETLTaskPriorityDistributionResponse,
+  ETLTaskStatisticsResponse,
+  ETLTaskStatusDistributionResponse,
+  ETLTaskTrendsQuery,
+  ETLTaskTrendsResponse,
+  ETLTaskTypeDistributionResponse,
+  ETLTrendsQuery,
+  ETLTrendsResponse,
 //   EtlErrorResponse,
 //   EtlFileRegistryRowType,
   FetchByRangeRequest,
@@ -261,6 +285,190 @@ class EtlService {
     }
 
     return parsed as FileUploadResponse;
+  }
+
+  
+
+  // 1. GET /monitoring/etl-file-registry/statistics
+  async getFileRegistryStatistics(): Promise<ETLFileRegistryStatisticsResponse> {
+    const res = await this.request<ETLFileRegistryStatisticsResponse>(
+      "/monitoring/etl-file-registry/statistics",
+    );
+    return res;
+  }
+
+  // 2. GET /monitoring/etl-file-registry/category
+  async getFileRegistryCategoryDistribution(): Promise<ETLCategoryDistributionResponse> {
+    const res = await this.request<ETLCategoryDistributionResponse>(
+      "/monitoring/etl-file-registry/category",
+    );
+    return res;
+  }
+
+  // 3. GET /monitoring/etl-file-registry/processing-status
+  async getFileRegistryProcessingStatus(): Promise<ETLProcessingStatusResponse> {
+    const res = await this.request<ETLProcessingStatusResponse>(
+      "/monitoring/etl-file-registry/processing-status",
+    );
+    return res;
+  }
+
+  // 4. GET /monitoring/etl-file-registry/format-distribution
+  async getFileRegistryFormatDistribution(): Promise<ETLFormatDistributionResponse> {
+    const res = await this.request<ETLFormatDistributionResponse>(
+      "/monitoring/etl-file-registry/format-distribution",
+    );
+    return res;
+  }
+
+  // 5. GET /monitoring/etl-file-registry/fetch-duration-analytics
+  async getFileRegistryFetchDurationAnalytics(): Promise<ETLFetchDurationAnalyticsResponse> {
+    const res = await this.request<ETLFetchDurationAnalyticsResponse>(
+      "/monitoring/etl-file-registry/fetch-duration-analytics",
+    );
+    return res;
+  }
+
+  // 6. GET /monitoring/etl-file-registry/processing-duration-analytics
+  async getFileRegistryProcessingDurationAnalytics(): Promise<ETLProcessingDurationAnalyticsResponse> {
+    const res = await this.request<ETLProcessingDurationAnalyticsResponse>(
+      "/monitoring/etl-file-registry/processing-duration-analytics",
+    );
+    return res;
+  }
+
+  // 7. GET /monitoring/etl-file-registry/row-metrics
+  async getFileRegistryRowMetrics(): Promise<ETLRowMetricsResponse> {
+    const res = await this.request<ETLRowMetricsResponse>(
+      "/monitoring/etl-file-registry/row-metrics",
+    );
+    return res;
+  }
+
+  // 8. GET /monitoring/etl-file-registry/checksum-usuage
+  async getFileRegistryChecksumUsage(): Promise<ETLChecksumUsageResponse> {
+    const res = await this.request<ETLChecksumUsageResponse>(
+      "/monitoring/etl-file-registry/checksum-usuage",
+    );
+    return res;
+  }
+
+  // 9. GET /monitoring/etl-file-registry/trends
+  async getFileRegistryTrends(query?: ETLTrendsQuery): Promise<ETLTrendsResponse> {
+    const res = await this.request<ETLTrendsResponse>(
+      `/monitoring/etl-file-registry/trends${this.buildQueryParams(query as Record<string, unknown>)}`,
+    );
+    return res;
+  }
+
+  // 10. GET /monitoring/etl-file-registry/retry-analysis
+  async getFileRegistryRetryAnalysis(): Promise<ETLRetryAnalysisResponse> {
+    const res = await this.request<ETLRetryAnalysisResponse>(
+      "/monitoring/etl-file-registry/retry-analysis",
+    );
+    return res;
+  }
+
+  // 11. GET /monitoring/etl-file-registry/data-size-analytics
+  async getFileRegistryDataSizeAnalytics(): Promise<ETLDataSizeAnalyticsResponse> {
+    const res = await this.request<ETLDataSizeAnalyticsResponse>(
+      "/monitoring/etl-file-registry/data-size-analytics",
+    );
+    return res;
+  }
+
+  // 12. GET /monitoring/etl-file-registry/error-message-distribution
+  async getFileRegistryErrorMessageDistribution(
+    query?: ETLErrorMessagePaginationQuery,
+  ): Promise<ETLErrorMessageDistributionResponse> {
+    const res = await this.request<ETLErrorMessageDistributionResponse>(
+      `/monitoring/etl-file-registry/error-message-distribution${this.buildQueryParams(query as Record<string, unknown>)}`,
+    );
+    return res;
+  }
+
+  // 13. GET /monitoring/etl-file-registry/cdr-count
+  async getCDRFileCount(): Promise<ETLFileCountResponse> {
+    const res = await this.request<ETLFileCountResponse>(
+      "/monitoring/etl-file-registry/cdr-count",
+    );
+    return res;
+  }
+
+  // 14. GET /monitoring/etl-file-registry/tdr-count
+  async getTDRFileCount(): Promise<ETLFileCountResponse> {
+    const res = await this.request<ETLFileCountResponse>(
+      "/monitoring/etl-file-registry/tdr-count",
+    );
+    return res;
+  }
+
+  // ============================================
+  // Task 2: ETL Task Queue Analytics Methods
+  // ============================================
+
+  // 1. GET /monitoring/etl-task-queue/statistics
+  async getTaskQueueStatistics(): Promise<ETLTaskStatisticsResponse> {
+    const res = await this.request<ETLTaskStatisticsResponse>(
+      "/monitoring/etl-task-queue/statistics",
+    );
+    return res;
+  }
+
+  // 2. GET /monitoring/etl-task-queue/type-distribution
+  async getTaskQueueTypeDistribution(): Promise<ETLTaskTypeDistributionResponse> {
+    const res = await this.request<ETLTaskTypeDistributionResponse>(
+      "/monitoring/etl-task-queue/type-distribution",
+    );
+    return res;
+  }
+
+  // 3. GET /monitoring/etl-task-queue/status-distribution
+  async getTaskQueueStatusDistribution(): Promise<ETLTaskStatusDistributionResponse> {
+    const res = await this.request<ETLTaskStatusDistributionResponse>(
+      "/monitoring/etl-task-queue/status-distribution",
+    );
+    return res;
+  }
+
+  // 4. GET /monitoring/etl-task-queue/priority-distribution
+  async getTaskQueuePriorityDistribution(): Promise<ETLTaskPriorityDistributionResponse> {
+    const res = await this.request<ETLTaskPriorityDistributionResponse>(
+      "/monitoring/etl-task-queue/priority-distribution",
+    );
+    return res;
+  }
+
+  // 5. GET /monitoring/etl-task-queue/duration-analytics
+  async getTaskQueueDurationAnalytics(): Promise<ETLTaskDurationAnalyticsResponse> {
+    const res = await this.request<ETLTaskDurationAnalyticsResponse>(
+      "/monitoring/etl-task-queue/duration-analytics",
+    );
+    return res;
+  }
+
+  // 6. GET /monitoring/etl-task-queue/trends
+  async getTaskQueueTrends(query?: ETLTaskTrendsQuery): Promise<ETLTaskTrendsResponse> {
+    const res = await this.request<ETLTaskTrendsResponse>(
+      `/monitoring/etl-task-queue/trends${this.buildQueryParams(query as Record<string, unknown>)}`,
+    );
+    return res;
+  }
+
+  // 7. GET /monitoring/etl-task-queue/file-correlation
+  async getTaskQueueFileCorrelation(): Promise<ETLTaskFileCorrelationResponse> {
+    const res = await this.request<ETLTaskFileCorrelationResponse>(
+      "/monitoring/etl-task-queue/file-correlation",
+    );
+    return res;
+  }
+
+  // 8. GET /monitoring/etl-task-queue/job-correlation
+  async getTaskQueueJobCorrelation(): Promise<ETLTaskJobCorrelationResponse> {
+    const res = await this.request<ETLTaskJobCorrelationResponse>(
+      "/monitoring/etl-task-queue/job-correlation",
+    );
+    return res;
   }
 }
 

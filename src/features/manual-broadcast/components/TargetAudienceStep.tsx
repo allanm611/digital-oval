@@ -38,7 +38,7 @@ export default function TargetAudienceStep({
   const [selectedQuickList, setSelectedQuickList] =
     useState<QuickListItem | null>(null);
   const [isQuickListCreated, setIsQuickListCreated] = useState(false);
-  const [manualInput, setManualInput] = useState("");
+  const [manualInput, setManualInput] = useState(data.audienceFileText || "");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
@@ -142,6 +142,11 @@ export default function TargetAudienceStep({
       // Handle manual input method
       if (inputMethod === "manual") {
         updateData.audienceFileText = manualInput;
+        // Calculate the number of recipients from manual input
+        const recipientLines = manualInput
+          .split("\n")
+          .filter((line) => line.trim());
+        updateData.rowCount = recipientLines.length;
       }
 
       onUpdate(updateData);

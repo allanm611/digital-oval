@@ -209,6 +209,360 @@ export interface FileUploadResponse {
   timestamp?: string;
 }
 
+// ============================================
+// Task 1: ETL File Registry Analytics Types
+// ============================================
+
+// 1. GET /monitoring/etl-file-registry/statistics
+export interface FileCategoryStats {
+  file_category: string;
+  count: number;
+}
+
+export interface ETLFileRegistryStatistics {
+  total_files: number;
+  files_by_category: FileCategoryStats[];
+  active_files: number;
+  downloaded_files: number;
+  processed_files: number;
+  failed_files: number;
+  skipped_files: number;
+  total_file_size_bytes: number;
+  average_file_size_bytes: number;
+  total_rows_parsed: number;
+  total_rows_inserted: number;
+  total_rows_failed: number;
+  average_fetch_duration_ms: number;
+  average_processing_duration_ms: number;
+  average_retry_count: number;
+}
+
+export interface ETLFileRegistryStatisticsResponse {
+  success: boolean;
+  data: ETLFileRegistryStatistics;
+  timestamp?: string;
+}
+
+// 2. GET /monitoring/etl-file-registry/category
+export interface CategoryDistribution {
+  file_category: string;
+  count: number;
+  percentage: number;
+  average_size_bytes: number;
+  processed_count: number;
+}
+
+export interface ETLCategoryDistributionResponse {
+  success: boolean;
+  data: {
+    categories: CategoryDistribution[];
+  };
+  timestamp?: string;
+}
+
+// 3. GET /monitoring/etl-file-registry/processing-status
+export interface ProcessingStatusDistribution {
+  processing_status: "pending" | "downloading" | "downloaded" | "parsing" | "processing" | "failed" | "skipped";
+  count: number;
+  percentage: number;
+}
+
+export interface ETLProcessingStatusResponse {
+  success: boolean;
+  data: {
+    statuses: ProcessingStatusDistribution[];
+  };
+  timestamp?: string;
+}
+
+// 4. GET /monitoring/etl-file-registry/format-distribution
+export interface FormatDistribution {
+  file_format: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ETLFormatDistributionResponse {
+  success: boolean;
+  data: {
+    formats: FormatDistribution[];
+  };
+  timestamp?: string;
+}
+
+// 5. GET /monitoring/etl-file-registry/fetch-duration-analytics
+export interface ETLFetchDurationAnalytics {
+  average_fetch_duration_ms: number;
+  average_fetch_attempts: number;
+  files_with_fetch_errors: number;
+}
+
+export interface ETLFetchDurationAnalyticsResponse {
+  success: boolean;
+  data: ETLFetchDurationAnalytics;
+  timestamp?: string;
+}
+
+// 6. GET /monitoring/etl-file-registry/processing-duration-analytics
+export interface ETLProcessingDurationAnalytics {
+  average_processing_duration_ms: number;
+  average_total_batches: number;
+  average_processed_batches: number;
+}
+
+export interface ETLProcessingDurationAnalyticsResponse {
+  success: boolean;
+  data: ETLProcessingDurationAnalytics;
+  timestamp?: string;
+}
+
+// 7. GET /monitoring/etl-file-registry/row-metrics
+export interface ETLRowMetrics {
+  total_rows_parsed: number;
+  total_rows_inserted: number;
+  total_rows_failed: number;
+  insertion_rate: number;
+  failure_rate: number;
+}
+
+export interface ETLRowMetricsResponse {
+  success: boolean;
+  data: ETLRowMetrics;
+  timestamp?: string;
+}
+
+// 8. GET /monitoring/etl-file-registry/checksum-usuage
+export interface ETLChecksumUsage {
+  files_with_checksum: number;
+  unique_checksums: number;
+  duplicate_files: number;
+}
+
+export interface ETLChecksumUsageResponse {
+  success: boolean;
+  data: ETLChecksumUsage;
+  timestamp?: string;
+}
+
+// 9. GET /monitoring/etl-file-registry/trends
+export interface ETLTrendPeriod {
+  period: string;
+  files_created: number;
+  files_fetched: number;
+  files_processed: number;
+  rows_inserted: number;
+  failures: number;
+}
+
+export interface ETLTrendsQuery {
+  start_date?: string;
+  end_date?: string;
+  granularity?: "day" | "week" | "month";
+}
+
+export interface ETLTrendsResponse {
+  success: boolean;
+  data: {
+    trends: ETLTrendPeriod[];
+  };
+  timestamp?: string;
+}
+
+// 10. GET /monitoring/etl-file-registry/retry-analysis
+export interface ETLRetryAnalysis {
+  files_with_retries: number;
+  average_retry_count: number;
+  max_retry_count: number;
+  recent_retries_last_7_days: number;
+}
+
+export interface ETLRetryAnalysisResponse {
+  success: boolean;
+  data: ETLRetryAnalysis;
+  timestamp?: string;
+}
+
+// 11. GET /monitoring/etl-file-registry/data-size-analytics
+export interface DataSizeRange {
+  range: "0-1" | "1-10" | "10-100" | "100+";
+  count: number;
+}
+
+export interface ETLDataSizeAnalytics {
+  total_data_size_mb: number;
+  average_data_size_mb: number;
+  size_distribution: DataSizeRange[];
+}
+
+export interface ETLDataSizeAnalyticsResponse {
+  success: boolean;
+  data: ETLDataSizeAnalytics;
+  timestamp?: string;
+}
+
+// 12. GET /monitoring/etl-file-registry/error-message-distribution
+export interface ErrorMessageDistribution {
+  error_message: string;
+  count: number;
+}
+
+export interface ETLErrorMessagePaginationQuery {
+  offset?: number;
+  limit?: number;
+}
+
+export interface ETLErrorMessageDistributionResponse {
+  success: boolean;
+  data: {
+    total: number;
+    error_messages: ErrorMessageDistribution[];
+  };
+  pagination?: {
+    offset: number;
+    limit: number;
+    total: number;
+  };
+  timestamp?: string;
+}
+
+// ============================================
+// Task 2: ETL Task Queue Analytics Types
+// ============================================
+
+// 1. GET /monitoring/etl-task-queue/statistics
+export interface ETLTaskStatistics {
+  total_tasks: number;
+  pending_tasks: number;
+  processing_tasks: number;
+  completed_tasks: number;
+  failed_tasks: number;
+  tasks_with_retries: number;
+  average_retry_count: number;
+  tasks_with_errors: number;
+}
+
+export interface ETLTaskStatisticsResponse {
+  success: boolean;
+  data: ETLTaskStatistics;
+  timestamp?: string;
+}
+
+// 2. GET /monitoring/etl-task-queue/type-distribution
+export interface TaskTypeDistribution {
+  task_type: string;
+  count: number;
+  percentage: number;
+}
+
+export interface ETLTaskTypeDistributionResponse {
+  success: boolean;
+  data: {
+    task_types: TaskTypeDistribution[];
+  };
+  timestamp?: string;
+}
+
+// 3. GET /monitoring/etl-task-queue/status-distribution
+export interface TaskStatusDistribution {
+  status: "pending" | "processing" | "completed" | "failed";
+  count: number;
+  percentage: number;
+}
+
+export interface ETLTaskStatusDistributionResponse {
+  success: boolean;
+  data: {
+    statuses: TaskStatusDistribution[];
+  };
+  timestamp?: string;
+}
+
+// 4. GET /monitoring/etl-task-queue/priority-distribution
+export interface TaskPriorityDistribution {
+  priority: number;
+  count: number;
+}
+
+export interface ETLTaskPriorityDistributionResponse {
+  success: boolean;
+  data: {
+    priorities: TaskPriorityDistribution[];
+    average_priority: number;
+  };
+  timestamp?: string;
+}
+
+// 5. GET /monitoring/etl-task-queue/duration-analytics
+export interface ETLTaskDurationAnalytics {
+  average_duration_seconds: number;
+  max_duration_seconds: number;
+}
+
+export interface ETLTaskDurationAnalyticsResponse {
+  success: boolean;
+  data: ETLTaskDurationAnalytics;
+  timestamp?: string;
+}
+
+// 6. GET /monitoring/etl-task-queue/trends
+export interface TaskTrendPeriod {
+  period: string;
+  tasks_created: number;
+  tasks_completed: number;
+  failures: number;
+}
+
+export interface ETLTaskTrendsQuery {
+  start_date?: string;
+  end_date?: string;
+  granularity?: "day" | "week" | "month";
+}
+
+export interface ETLTaskTrendsResponse {
+  success: boolean;
+  data: {
+    trends: TaskTrendPeriod[];
+  };
+  timestamp?: string;
+}
+
+// 7. GET /monitoring/etl-task-queue/file-correlation
+export interface ETLTaskFileCorrelation {
+  tasks_with_files: number;
+  average_tasks_per_file: number;
+}
+
+export interface ETLTaskFileCorrelationResponse {
+  success: boolean;
+  data: ETLTaskFileCorrelation;
+  timestamp?: string;
+}
+
+// 8. GET /monitoring/etl-task-queue/job-correlation
+export interface ETLTaskJobCorrelation {
+  tasks_with_jobs: number;
+  average_tasks_per_job: number;
+}
+
+export interface ETLTaskJobCorrelationResponse {
+  success: boolean;
+  data: ETLTaskJobCorrelation;
+  timestamp?: string;
+}
+
+// ============================================
+// File Count Endpoints
+// ============================================
+
+// GET /monitoring/etl-file-registry/cdr-count
+export interface ETLFileCountResponse {
+  success: boolean;
+  data: {
+    count: number;
+  };
+  timestamp?: string;
+}
+
 // Common error format
 export interface EtlErrorResponse {
   success: false;
