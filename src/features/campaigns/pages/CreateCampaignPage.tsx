@@ -957,6 +957,19 @@ export default function CreateCampaignPage() {
                   flowsToCreate,
                 );
               }
+            } else {
+              // No existing flows - create all new flows
+              const flowsToCreate: CampaignFlowConfig[] = campaignFlows.map(
+                (flow, index) => ({
+                  ...flow,
+                  campaign_id: parseInt(id),
+                  step_order: index + 1,
+                  created_by: user?.user_id || 1,
+                }),
+              );
+              await campaignFlowService.createBatchCampaignFlows(
+                flowsToCreate,
+              );
             }
           } catch (flowError) {
             console.error("Error updating campaign flows:", flowError);
