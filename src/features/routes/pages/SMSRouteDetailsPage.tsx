@@ -148,7 +148,7 @@ export default function SMSRouteDetailsPage() {
                 <Zap className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>{route.name}</h2>
+                <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>{route.name}</h2>
                 <p className={`${tw.textSecondary} text-base leading-relaxed`}>
                   {route.description || "No description available"}
                 </p>
@@ -180,7 +180,7 @@ export default function SMSRouteDetailsPage() {
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Route Name
                 </label>
-                <p className={`text-base ${tw.textPrimary} font-semibold`}>{route.name}</p>
+                <p className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{route.name}</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>

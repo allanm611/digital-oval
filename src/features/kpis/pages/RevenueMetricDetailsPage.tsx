@@ -154,7 +154,7 @@ export default function RevenueMetricDetailsPage() {
                 <DollarSign className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>{metric.name}</h2>
+                <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>{metric.name}</h2>
                 <p className={`${tw.textSecondary} text-base leading-relaxed`}>
                   {metric.description || "No description available"}
                 </p>
@@ -186,7 +186,7 @@ export default function RevenueMetricDetailsPage() {
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>
                   Metric Name
                 </label>
-                <p className={`text-base ${tw.textPrimary} font-semibold`}>{metric.name}</p>
+                <p className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{metric.name}</p>
               </div>
               <div className="space-y-1">
                 <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide`}>

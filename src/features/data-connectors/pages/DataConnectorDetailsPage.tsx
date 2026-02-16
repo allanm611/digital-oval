@@ -28,6 +28,7 @@ import {
 import { dataConnectorService } from "../services/dataConnectorService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { tw } from "../../../shared/utils/utils";
 import ConnectorConfigDisplay from "../components/ConnectorConfigDisplay";
 // import ConnectionProfilesSection from "../components/ConnectionProfilesSection";
 // import AddConnectionModal from "../components/AddConnectionModal";
@@ -325,7 +326,7 @@ export default function DataConnectorDetailsPage() {
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-3xl font-bold text-gray-900">
+                  <h1 className={`${tw.tableFirstColumn} text-gray-900`}>
                     {connector.name}
                   </h1>
                   <span

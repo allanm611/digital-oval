@@ -1159,7 +1159,7 @@ export default function ProductCatalogsPage() {
               className={`bg-white border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
             >
               <div className="flex items-start justify-between mb-2">
-                <h3 className={`${tw.cardHeading} text-gray-900 flex-1`}>
+                <h3 className={`${tw.tableFirstColumn} text-gray-900 flex-1`}>
                   {category.name}
                 </h3>
                 <div className="flex items-center space-x-1">
@@ -1273,7 +1273,7 @@ export default function ProductCatalogsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-gray-900">
+                    <h3 className={`${tw.tableFirstColumn} text-gray-900`}>
                       {category.name}
                     </h3>
                     <div className="text-sm text-gray-600 mt-0.5">

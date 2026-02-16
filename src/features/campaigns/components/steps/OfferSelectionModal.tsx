@@ -9,6 +9,7 @@ import { CampaignOffer } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndexTokens } from "../../../../shared/utils/utils";
 import { offerService } from "../../../offers/services/offerService";
+import { offerCategoryService } from "../../../offers/services/offerCategoryService";
 import { Offer, OfferStatusEnum } from "../../../offers/types/offer";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useToast } from "../../../../contexts/ToastContext";
@@ -56,6 +57,7 @@ export default function OfferSelectionModal({
   const [error, setError] = useState<string | null>(null);
   const [updatingOfferId, setUpdatingOfferId] = useState<number | null>(null);
   const [createOfferModalOpen, setCreateOfferModalOpen] = useState(false);
+  const [categories, setCategories] = useState<Map<number, string>>(new Map());
 
   const filterOptions = [
     { value: "all", label: "All Offers" },
@@ -69,9 +71,30 @@ export default function OfferSelectionModal({
     if (isOpen) {
       setTempSelectedOffers(selectedOffers);
       loadOffers();
+      loadCategories();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]); // Only depend on isOpen to prevent loops
+
+  const loadCategories = async () => {
+    try {
+      const response = await offerCategoryService.getAllCategories({
+        limit: 100,
+        skipCache: true,
+      });
+      if (response.data) {
+        const categoryMap = new Map<number, string>();
+        response.data.forEach((cat: any) => {
+          if (cat.id && cat.name) {
+            categoryMap.set(cat.id, cat.name);
+          }
+        });
+        setCategories(categoryMap);
+      }
+    } catch (err) {
+      console.warn("Failed to load categories:", err);
+    }
+  };
 
   const loadOffers = async () => {
     try {
@@ -140,7 +163,9 @@ export default function OfferSelectionModal({
       const offersMap = new Map<number, Offer>();
 
       // Add active and approved offers
-      [...activeOffers, ...approvedOffers].forEach((offer) => {
+      const allOffers = [...activeOffers, ...approvedOffers];
+
+      allOffers.forEach((offer) => {
         if (offer.id) {
           offersMap.set(offer.id, offer);
         }
@@ -183,18 +208,21 @@ export default function OfferSelectionModal({
 
       // Convert Offer objects to CampaignOffer format
       const uniqueOffers = Array.from(offersMap.values());
+
       const campaignOffers: CampaignOffer[] = uniqueOffers.map(
         (offer: Offer) => ({
           id: offer.id?.toString() || "",
           name: offer.name,
           description: offer.description || "",
-          offer_type: offer.category?.name || "General",
+          offer_type: (offer as any).offer_type || "General",
           reward_type: "bundle" as const,
           reward_value: "Special Offer",
           validity_period: 30,
           terms_conditions: "See offer details",
           segments: [],
-        }),
+          code: (offer as any).code,
+          category_id: (offer as any).category_id,
+        } as any),
       );
 
       setOffers(campaignOffers);
@@ -501,19 +529,19 @@ export default function OfferSelectionModal({
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                       Select
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       Offer
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                      Code
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Type
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
-                      Value
+                      Catalog
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Duration
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       Status
                     </th>
                     {hasActionableOffers && (
@@ -560,22 +588,22 @@ export default function OfferSelectionModal({
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs text-black">
-                            {offer.reward_type}
+                          <span className="text-sm text-black">
+                            {(offer as any).code || "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm font-medium text-black">
-                            {offer.reward_value}
+                          <span className="text-sm text-black capitalize">
+                            {(offer as any).offer_type || "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs text-black">
-                            {offer.validity_period}d
+                          <span className="text-sm text-black">
+                            {(offer as any).category_id ? categories.get((offer as any).category_id) : "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs text-black">
+                          <span className="text-sm text-black">
                             {offerStatus || "Unknown"}
                           </span>
                         </td>

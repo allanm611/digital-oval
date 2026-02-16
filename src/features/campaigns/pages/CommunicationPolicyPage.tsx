@@ -417,7 +417,7 @@ export default function CommunicationPolicyPage() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-2">
-                        <div className="text-base font-semibold text-gray-900">
+                        <div className={`${tw.tableFirstColumn} text-gray-900`}>
                           {policy.name}
                         </div>
                         <span

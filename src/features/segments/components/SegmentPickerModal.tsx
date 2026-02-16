@@ -91,7 +91,8 @@ export default function SegmentPickerModal({
       }}
     >
       <div
-        className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        style={{ backgroundColor: color.surface.background }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
@@ -158,30 +159,29 @@ export default function SegmentPickerModal({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0 z-10">
+              <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
+                <thead style={{ background: color.surface.tableHeader }}>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                       Segment Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
                       Description
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-24">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-24" style={{ color: color.surface.tableHeaderText }}>
                       Type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-32" style={{ color: color.surface.tableHeaderText }}>
                       Size
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-32" style={{ color: color.surface.tableHeaderText }}>
                       Created Date
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {segments.map((segment) => {
                     const isSelected = selectedSegmentId === segment.id;
-                    const isHovered = hoveredSegmentId === segment.id;
 
                     return (
                       <tr
@@ -193,12 +193,13 @@ export default function SegmentPickerModal({
                         style={{
                           backgroundColor: isSelected
                             ? `${color.primary.accent}15`
-                            : isHovered
-                            ? "#f9fafb"
-                            : "white",
+                            : "transparent",
                         }}
                       >
-                        <td className="px-4 py-4">
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
                           <div className="flex items-center space-x-3">
                             <div
                               className={`w-10 h-10 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
@@ -211,17 +212,23 @@ export default function SegmentPickerModal({
                                 style={{ color: color.primary.accent }}
                               />
                             </div>
-                            <div className="font-medium text-gray-900">
+                            <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}>
                               {segment.name}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4">
+                        <td
+                          className="px-6 py-4"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
                           <div className="text-sm text-gray-600 max-w-md line-clamp-2">
                             {segment.description || "-"}
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td
+                          className="px-6 py-4 whitespace-nowrap"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
                           <span
                             className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                             style={{
@@ -232,7 +239,10 @@ export default function SegmentPickerModal({
                             {segment.type || "Static"}
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td
+                          className="px-6 py-4 whitespace-nowrap"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
                           <div className="flex items-center space-x-2">
                             <Users className="w-4 h-4 text-gray-400" />
                             <span className="text-sm font-medium text-gray-900">
@@ -242,7 +252,10 @@ export default function SegmentPickerModal({
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td
+                          className="px-6 py-4 whitespace-nowrap"
+                          style={{ backgroundColor: color.surface.tablebodybg }}
+                        >
                           <span className="text-sm text-gray-600">
                             {segment.created_at
                               ? new Date(

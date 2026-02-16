@@ -921,7 +921,7 @@ export default function CampaignCategoriesPage() {
             >
               <div className="flex items-start justify-between mb-2">
                 <h3
-                  className={`${tw.cardHeading} text-gray-900 flex-1 truncate`}
+                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
                 >
                   {category.name}
                 </h3>
@@ -1001,7 +1001,7 @@ export default function CampaignCategoriesPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 flex-1">
                   <div className="flex-1">
-                    <h3 className={`${tw.cardHeading} text-gray-900 truncate`}>
+                    <h3 className={`${tw.tableFirstColumn} text-gray-900 truncate`}>
                       {category.name}
                     </h3>
                     <p className={`${tw.cardSubHeading} text-gray-600 mt-0.5`}>

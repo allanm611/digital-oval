@@ -824,7 +824,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -901,7 +901,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -978,7 +978,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1052,7 +1052,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1146,7 +1146,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1240,7 +1240,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1331,7 +1331,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1425,7 +1425,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1516,7 +1516,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1607,7 +1607,7 @@ export default function Sidebar({
                                   : "max-h-0 opacity-0"
                               }`}
                             >
-                              <div className="mt-2 ml-6 space-y-2">
+                              <div className="mt-2 ml-7 space-y-2">
                                 {item.children?.map((child) => {
                                   const ChildIcon = child.icon;
                                   const isChildActive =
@@ -1731,7 +1731,7 @@ export default function Sidebar({
                             : "max-h-0 opacity-0"
                         }`}
                       >
-                        <div className="mt-2 ml-6 space-y-2">
+                        <div className="mt-2 ml-7 space-y-2">
                           {item.children?.map((child) => {
                             const ChildIcon = child.icon;
                             const isChildActive =
@@ -1772,7 +1772,7 @@ export default function Sidebar({
                                   </button>
 
                                   {isChildExpanded && (
-                                    <div className="mt-2 ml-6 space-y-2">
+                                    <div className="mt-2 ml-7 space-y-2">
                                       {child.children?.map((grandchild) => {
                                         const GrandchildIcon = grandchild.icon;
                                         const isGrandchildActive =
@@ -2014,7 +2014,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2109,7 +2109,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2204,7 +2204,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2299,7 +2299,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2425,7 +2425,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2552,7 +2552,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2679,7 +2679,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2809,7 +2809,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2936,7 +2936,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -3063,7 +3063,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2">
+                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =

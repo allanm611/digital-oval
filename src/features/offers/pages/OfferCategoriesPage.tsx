@@ -1285,7 +1285,7 @@ function OfferCategoriesPage() {
             >
               <div className="flex items-start justify-between mb-2">
                 <h3
-                  className={`${tw.cardHeading} text-gray-900 flex-1 truncate`}
+                  className={`${tw.tableFirstColumn} text-gray-900 flex-1 truncate`}
                 >
                   {category.name}
                 </h3>
@@ -1432,7 +1432,7 @@ function OfferCategoriesPage() {
                   <div className="flex items-center gap-4 flex-1">
                     <div className="flex-1">
                       <h3
-                        className={`${tw.cardHeading} text-gray-900 truncate`}
+                        className={`${tw.tableFirstColumn} text-gray-900 truncate`}
                       >
                         {category.name}
                       </h3>

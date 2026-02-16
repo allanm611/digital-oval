@@ -483,7 +483,7 @@ export default function QuickListsPage() {
                         <button
                           type="button"
                           onClick={() => handleViewDetails(quicklist)}
-                          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
                           title={quicklist.name}
                         >
                           {quicklist.name}

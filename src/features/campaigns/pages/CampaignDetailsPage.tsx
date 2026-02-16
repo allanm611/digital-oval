@@ -1168,7 +1168,7 @@ export default function CampaignDetailsPage() {
           {/* Campaign Header */}
           <div className="mb-3 pb-3 border-b border-gray-200">
             <div className="flex flex-wrap items-center gap-3 mb-2">
-              <h2 className={`text-2xl font-bold ${tw.textPrimary}`}>
+              <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
                 {campaign.name}
               </h2>
               <div className="flex items-center flex-wrap gap-2">

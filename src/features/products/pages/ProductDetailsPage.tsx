@@ -308,7 +308,7 @@ export default function ProductDetailsPage() {
                 <Package className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className={`text-2xl font-bold ${tw.textPrimary} mb-2`}>
+                <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
                   {product.name}
                 </h2>
                 <p className={`${tw.textSecondary} text-base leading-relaxed`}>

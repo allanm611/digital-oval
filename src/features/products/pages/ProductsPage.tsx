@@ -581,15 +581,13 @@ export default function ProductsPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div>
-                          <div
-                            className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                            title={product.name}
-                          >
-                            {product.name}
-                          </div>
-                        </div>
-                      </td>
+                        <div
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                        title={product.name}
+                      >
+                        {product.name}
+                      </div>
+                    </td>
                       <td
                         className={`px-6 py-4 hidden lg:table-cell text-sm ${tw.textPrimary}`}
                         style={{ backgroundColor: color.surface.tablebodybg }}

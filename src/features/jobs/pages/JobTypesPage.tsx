@@ -853,7 +853,7 @@ export default function JobTypesPage() {
                       <div className="flex items-center">
                         <div>
                           <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
+                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                           >
                             {jobType.name}
                           </div>

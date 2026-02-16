@@ -539,7 +539,7 @@ export default function ProgramsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div
-                          className={`text-base font-semibold ${tw.textPrimary}`}
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                         >
                           {program.name}
                         </div>

@@ -429,7 +429,7 @@ export default function SeedListManagementPage() {
                     >
                       <div>
                         <div
-                          className={`text-base font-semibold ${tw.textPrimary}`}
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                         >
                           {recipient.customer_name || "Unknown"}
                         </div>

@@ -1748,7 +1748,7 @@ export default function OfferDetailsPage() {
       >
         <div className="flex items-start space-x-4">
           <div className="flex-1">
-            <h2 className={`${tw.cardHeading} mb-2`}>{offer.name}</h2>
+            <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>{offer.name}</h2>
             <p className={`${tw.textSecondary} mb-4`}>
               {offer.description || "No description available"}
             </p>

@@ -104,6 +104,8 @@ export default function RoleFormModal({
 
     if (!formData.name.trim()) {
       newErrors.name = "Role name is required";
+    } else if (formData.name.length > 15) {
+      newErrors.name = "Role name must be at most 15 characters";
     }
 
     if (!formData.code.trim()) {
@@ -287,7 +289,7 @@ export default function RoleFormModal({
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                maxLength={80}
+                maxLength={15}
                 placeholder="e.g., Administrator"
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
                   errors.name
@@ -311,7 +313,7 @@ export default function RoleFormModal({
                 onChange={handleInputChange}
                 disabled={!!role}
                 maxLength={50}
-                placeholder="e.g., role.admin.system"
+                placeholder="e.g., administrator"
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
                   errors.code
                     ? "border-red-300 focus:ring-red-500"
@@ -320,9 +322,6 @@ export default function RoleFormModal({
               />
               {errors.code && (
                 <p className="mt-1 text-sm text-red-600">{errors.code}</p>
-              )}
-              {!errors.code && !role && (
-                <p className="mt-1 text-xs text-gray-500">Use dot notation for readability (e.g., role.admin.system)</p>
               )}
               {role && (
                 <p className="mt-1 text-xs text-gray-500">(Cannot be changed after creation)</p>

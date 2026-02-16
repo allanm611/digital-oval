@@ -1358,10 +1358,8 @@ export default function TypeConfigurationPage({
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className="flex items-center">
-                        <div className={`text-base font-semibold ${tw.textPrimary}`}>
-                          {item.name}
-                        </div>
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                        {item.name}
                       </div>
                     </td>
                     {config.configType === "characterSets" ? (

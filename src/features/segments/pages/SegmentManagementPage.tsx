@@ -1783,7 +1783,7 @@ export default function SegmentManagementPage() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className="text-base font-semibold text-gray-900 mb-1">
+                      <div className={`${tw.tableFirstColumn} text-gray-900 mb-1`}>
                         {segment.name}
                       </div>
                       <div className="text-sm text-gray-500 mb-2">

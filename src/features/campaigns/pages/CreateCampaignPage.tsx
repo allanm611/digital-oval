@@ -1440,7 +1440,42 @@ export default function CreateCampaignPage() {
       }
     } catch (error) {
       console.error("Error saving draft:", error);
-      showToast("error", t.messages.error || "Error");
+
+      // Extract error message from backend response
+      let errorMessage = t.messages.error || "Error";
+
+      if (error instanceof Error) {
+        // Check if the error message contains backend error details
+        errorMessage = error.message;
+
+        // If the error message looks like a backend error format, use it directly
+        if (
+          error.message &&
+          error.message !== "HTTP error! status: undefined"
+        ) {
+          errorMessage = error.message;
+        }
+      } else if (error && typeof error === "object") {
+        // Check for backend error response structure
+        const backendError = error as {
+          error?: string;
+          data?: { error?: string; success?: boolean };
+          response?: { error?: string };
+          message?: string;
+        };
+
+        if (backendError.error) {
+          errorMessage = backendError.error;
+        } else if (backendError.data?.error) {
+          errorMessage = backendError.data.error;
+        } else if (backendError.response?.error) {
+          errorMessage = backendError.response.error;
+        } else if (backendError.message) {
+          errorMessage = backendError.message;
+        }
+      }
+
+      showToast("error", errorMessage);
     } finally {
       setIsSavingDraft(false);
     }

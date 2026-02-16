@@ -1189,13 +1189,11 @@ export default function OffersPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div>
-                        <div
-                          className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                          title={offer.name}
-                        >
-                          {offer.name}
-                        </div>
+                      <div
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                        title={offer.name}
+                      >
+                        {offer.name}
                       </div>
                     </td>
                     <td

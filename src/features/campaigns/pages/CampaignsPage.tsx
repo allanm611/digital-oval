@@ -1234,7 +1234,7 @@ export default function CampaignsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div
-                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
                         title={campaign.name}
                       >
                         {campaign.name}

@@ -549,7 +549,7 @@ export default function ServerDetailsPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Server
             </p>
-            <h1 className="text-2xl font-semibold text-black">{server.name}</h1>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{server.name}</h1>
             <p className="text-sm text-black">Code: {server.code}</p>
           </div>
           <div className="flex items-center gap-2">

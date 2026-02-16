@@ -148,7 +148,7 @@ export default function WorkflowDetailsPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
               {workflow.name}
             </h1>
             <p className={`${tw.textSecondary} mt-1 text-sm`}>

@@ -474,7 +474,7 @@ export default function VIPListManagementPage() {
                       >
                         <div>
                           <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
+                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                           >
                             {customer.customer_name || "Unknown"}
                           </div>
@@ -634,7 +634,7 @@ export default function VIPListManagementPage() {
                       }}
                     >
                       <div
-                        className={`text-base font-semibold ${tw.textPrimary}`}
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                       >
                         {list.name}
                       </div>

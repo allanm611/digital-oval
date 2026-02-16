@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Search } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
-import { color, tw, zIndex } from "../../../../shared/utils/utils";
+import { color, tw, zIndexTokens } from "../../../../shared/utils/utils";
 import { segmentService } from "../../../segments/services/segmentService";
 import { Segment } from "../../../segments/types/segment";
 import LoadingSpinner from "../../../../shared/components/ui/LoadingSpinner";
@@ -124,20 +124,20 @@ export default function SegmentSelectionModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+      className="fixed bg-black bg-opacity-50 flex items-center justify-center p-4"
       style={{
-        zIndex: zIndex.modal,
-        position: "fixed",
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
         width: "100vw",
         height: "100vh",
+        zIndex: zIndexTokens.overlay,
       }}
     >
       <div
-        className={`bg-white ${tw.rounded}  w-full max-w-4xl max-h-[90vh] flex flex-col`}
+        className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col`}
+        style={{ zIndex: zIndexTokens.modal }}
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
@@ -260,11 +260,17 @@ export default function SegmentSelectionModal({
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 sticky top-0 z-10">
+            <div
+              className={`border ${tw.rounded} overflow-hidden`}
+              style={{ borderColor: color.border.default }}
+            >
+              <table
+                className="min-w-full divide-y"
+                style={{ borderColor: color.border.default }}
+              >
+                <thead style={{ backgroundColor: color.surface.cards }}>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                       <input
                         type="checkbox"
                         checked={
@@ -285,18 +291,21 @@ export default function SegmentSelectionModal({
                         }}
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Segment Name
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Customers
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Created Date
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody
+                  className="bg-white divide-y"
+                  style={{ borderColor: color.border.default }}
+                >
                   {filteredSegments.map((segment) => {
                     const isSelected = tempSelectedSegments.some(
                       (s) => s.id === segment.id
@@ -308,7 +317,7 @@ export default function SegmentSelectionModal({
                         onClick={() => handleSegmentToggle(segment)}
                         className="cursor-pointer transition-colors hover:bg-gray-50"
                       >
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -320,17 +329,17 @@ export default function SegmentSelectionModal({
                             }}
                           />
                         </td>
-                        <td className="px-4 py-4">
-                          <div className="text-sm font-medium text-black">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-black truncate">
                             {segment.name}
                           </div>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-black">
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-black">
                             {segment.customer_count.toLocaleString()}
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3">
                           <span className="text-sm text-black">
                             <DateFormatter date={segment.created_at} />
                           </span>

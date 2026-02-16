@@ -286,7 +286,7 @@ export default function ConnectionProfileDetailsPage() {
           <div className="flex items-center gap-2 sm:gap-4">
             <BackButton fallbackTo="/dashboard/connection-profiles" />
             <div>
-              <h1 className="text-xl font-semibold text-black">
+              <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
                 {profile.profile_name}
               </h1>
             </div>

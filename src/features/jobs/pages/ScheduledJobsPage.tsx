@@ -855,7 +855,7 @@ export default function ScheduledJobsPage() {
                       }}
                     >
                       <div
-                        className={`text-base font-semibold ${tw.textPrimary}`}
+                        className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                       >
                         {job.name}
                       </div>

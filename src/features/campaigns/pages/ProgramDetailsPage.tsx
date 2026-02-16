@@ -781,7 +781,7 @@ export default function ProgramDetailsPage() {
                             onClick={() =>
                               navigate(`/dashboard/campaigns/${campaign.id}`)
                             }
-                            className={`text-base font-semibold ${tw.textPrimary} hover:underline`}
+                            className={`${tw.tableFirstColumn} ${tw.textPrimary} hover:underline`}
                           >
                             {campaign.name}
                           </button>

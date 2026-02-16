@@ -1374,7 +1374,7 @@ export default function JobWorkflowStepsPage() {
                       <div className="flex items-center">
                         <div>
                           <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
+                            className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
                           >
                             {step.step_name}
                           </div>

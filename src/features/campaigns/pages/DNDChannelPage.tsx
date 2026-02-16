@@ -487,7 +487,7 @@ export default function DNDChannelPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div className={`text-base font-semibold ${tw.textPrimary}`}>
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
                         {subscription.customer_name || "Unknown"}
                       </div>
                     </td>

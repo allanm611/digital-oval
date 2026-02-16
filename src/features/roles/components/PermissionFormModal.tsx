@@ -93,6 +93,8 @@ export default function PermissionFormModal({
 
     if (!formData.code.trim()) {
       newErrors.code = "Permission code is required";
+    } else if (!formData.code.includes(".")) {
+      newErrors.code = "Permission code must use dot notation (e.g., permission.action.resource)";
     }
 
     if (!formData.action) {

@@ -907,7 +907,7 @@ export default function SegmentDetailsPage() {
         <div className="flex items-center space-x-2 sm:space-x-4">
           <BackButton fallbackTo="/dashboard/segments" onClick={handleBack} />
           <div>
-            <h1 className={`text-3xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
               {segment.name}
             </h1>
           </div>

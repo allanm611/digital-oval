@@ -259,7 +259,7 @@ export default function JobWorkflowStepDetailsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
               {step.step_name}
             </h1>
             {canExecute && (

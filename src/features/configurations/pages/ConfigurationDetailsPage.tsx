@@ -184,7 +184,7 @@ export default function ConfigurationDetailsPage() {
         <div className="flex items-center gap-2 sm:gap-4 mb-4">
           <BackButton fallbackTo="/dashboard/configuration" />
           <div className="flex-1">
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
               {config.name}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
