@@ -59,8 +59,8 @@ export default function QuickListPickerModal({
           id: item.id,
           name: item.name,
           description: item.description,
-          upload_type: item.upload_type,
-          row_count: item.row_count !== undefined ? item.row_count : item.rows_count || 0,
+          upload_type: item.processing_status || "multi",
+          row_count: item.rows_imported || 0,
           created_at: item.created_at,
         }));
         setQuickLists(lists);

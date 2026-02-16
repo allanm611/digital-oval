@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AlertCircle, Loader2, Plus, List } from "lucide-react";
 import { color, tw, button as buttonTokens } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
@@ -44,6 +44,45 @@ export default function TargetAudienceStep({
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
+  // Sync local state with data prop whenever component mounts or data changes
+  useEffect(() => {
+    setListName(data.audienceName || "");
+    setListType(data.uploadType || "");
+    setInputMethod((data.inputMethod as "file" | "manual") || "");
+    setManualInput(data.audienceFileText || "");
+
+    // Restore selected quicklist if they had selected one
+    if (data.inputMethod === "file" && data.quicklistId) {
+      // Try to fetch the actual quicklist details
+      quicklistService
+        .getQuickListById(data.quicklistId)
+        .then((response) => {
+          if (response.data) {
+            setSelectedQuickList({
+              id: response.data.id,
+              name: response.data.name,
+              upload_type: response.data.processing_status || "multi",
+              row_count: response.data.rows_imported || 0,
+              created_at: response.data.created_at,
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load quicklist details:", err);
+          // Fallback to minimal info we have
+          setSelectedQuickList({
+            id: data.quicklistId,
+            name: "QuickList",
+            upload_type: data.uploadType || "multi",
+            row_count: data.rowCount || 0,
+            created_at: new Date().toISOString(),
+          });
+        });
+    } else {
+      setSelectedQuickList(null);
+    }
+  }, [data]);
+
   const inputMethodOptions = [
     { value: "", label: "Select option" },
     { value: "file", label: "Upload File" },
@@ -85,16 +124,20 @@ export default function TargetAudienceStep({
     try {
       const response = await quicklistService.createQuickList(request);
       if (response.success && response.data) {
+        // Get rows_imported from the response
+        const rowsImported = (response.data as any).rows_imported || 0;
+        const quicklistId = (response.data as any).quicklist_id || (response.data as any).id;
+
         const newQuickList: QuickListItem = {
-          id: response.data.quicklist_id,
+          id: quicklistId,
           name: request.name,
           description: request.description || undefined,
-          upload_type: "multi",
-          row_count: response.data.rows_imported || 0,
+          upload_type: listType || "multi", // Use the list type user selected
+          row_count: rowsImported,
           created_at: new Date().toISOString(),
         };
         setSelectedQuickList(newQuickList);
-        setIsQuickListCreated(true); // Mark as created
+        setIsQuickListCreated(true);
         setShowCreateModal(false);
         setError("");
       }
@@ -137,6 +180,7 @@ export default function TargetAudienceStep({
       if (inputMethod === "file" && selectedQuickList) {
         updateData.quicklistId = selectedQuickList.id;
         updateData.rowCount = selectedQuickList.row_count;
+        // uploadType already set above from user's list type selection - don't overwrite
       }
 
       // Handle manual input method
@@ -245,32 +289,35 @@ export default function TargetAudienceStep({
             </label>
 
             {selectedQuickList ? (
-              <div
-                className="p-3 rounded-md bg-white border-2 border-gray-300"
-                style={{ borderColor: color.primary.accent }}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
-                      {selectedQuickList.name}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {selectedQuickList.row_count.toLocaleString()} rows
-                    </p>
-                  </div>
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <p className="text-xs text-gray-600">
+                    Select an existing quicklist or create a new one
+                  </p>
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedQuickList(null);
                       setIsQuickListCreated(false);
                     }}
-                    className="text-xs hover:underline whitespace-nowrap ml-3"
+                    className="text-sm hover:underline"
                     style={{ color: color.primary.accent }}
                   >
                     Change
                   </button>
                 </div>
-              </div>
+                <div
+                  className="p-3 rounded-md bg-white border-2 border-gray-300"
+                  style={{ borderColor: color.primary.accent }}
+                >
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedQuickList.name}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {selectedQuickList.row_count.toLocaleString()} rows
+                  </p>
+                </div>
+              </>
             ) : (
               <p className="text-xs text-gray-600 mb-3">
                 Select an existing quicklist or create a new one

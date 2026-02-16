@@ -798,11 +798,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -877,11 +875,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -956,11 +952,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1032,11 +1026,9 @@ export default function Sidebar({
                               }}
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1128,11 +1120,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1224,11 +1214,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1317,11 +1305,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1413,11 +1399,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1506,11 +1490,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -1599,11 +1581,9 @@ export default function Sidebar({
                               }
                               className={`group w-full flex items-center justify-between ${
                                 tw.rounded
-                              } p-3 text-sm transition-all duration-300 ease-out ${
-                                isActive || isExpanded
-                                  ? "border-l-2 border-white"
-                                  : ""
-                              }`}
+                              } p-3 text-sm transition-all duration-300 ease-out ${getItemClasses(
+                                isExpanded,
+                              )}`}
                             >
                               <div className="flex items-center gap-x-3">
                                 <Icon
@@ -2007,13 +1987,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2102,13 +2082,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2197,13 +2177,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2292,13 +2272,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2418,13 +2398,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2545,13 +2525,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2672,13 +2652,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2802,13 +2782,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -2929,13 +2909,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
@@ -3056,13 +3036,13 @@ export default function Sidebar({
                               tw.rounded
                             } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
-                            } ${getItemClasses(isActive)}`}
+                            } ${getItemClasses(isExpanded)}`}
                             title={item.name}
                           >
                             <div className="flex items-center gap-x-3">
                               <Icon
                                 className={`md:h-6 md:w-6 xl:h-5 xl:w-5 shrink-0 ${getIconClasses(
-                                  isActive,
+                                  isActive || isExpanded,
                                 )}`}
                               />
                               <span
