@@ -50,7 +50,7 @@ export default function QuickListPickerModal({
     try {
       setIsLoading(true);
       const response = await quicklistService.getAllQuickLists({
-        page: 1,
+        offset: 0,
         limit: 100,
       });
       if (response.success && response.data) {
@@ -60,7 +60,7 @@ export default function QuickListPickerModal({
           name: item.name,
           description: item.description,
           upload_type: item.upload_type,
-          row_count: item.row_count || 0,
+          row_count: item.row_count !== undefined ? item.row_count : item.rows_count || 0,
           created_at: item.created_at,
         }));
         setQuickLists(lists);

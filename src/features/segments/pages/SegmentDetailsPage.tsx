@@ -46,6 +46,8 @@ import BackButton from "../../../shared/components/ui/BackButton";
 import SegmentModal from "../components/SegmentModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import ViewMembersModal from "../components/ViewMembersModal";
+import AddMembersModal from "../components/AddMembersModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
@@ -274,8 +276,9 @@ export default function SegmentDetailsPage() {
     try {
       setIsLoadingMembers(true);
 
-      const response = await segmentService.getSegmentMembersCount(Number(id));
-      const count = response.data?.count ?? 0;
+      const response = await segmentService.getSegmentMembersCount(Number(id), true);
+      // API returns { success: true, data: { count: number } }
+      const count = response.data?.count || 0;
       setMembersCount(count);
     } catch (err) {
       // Silently fail for members count - don't show error to avoid loops
@@ -307,19 +310,28 @@ export default function SegmentDetailsPage() {
           query: debouncedMembersSearchTerm,
           page: membersPage,
           pageSize: 10,
+          skipCache: true,
         });
       } else {
         response = await segmentService.getSegmentMembers(Number(id), {
           page: membersPage,
           pageSize: 10,
+          skipCache: true,
         });
       }
 
       const membersData = response.data || [];
       setMembers(membersData);
-      if (response.meta) {
+      if (response.pagination) {
+        const total = response.pagination.total || membersData.length;
+        setMembersCount(total);
+        setMembersTotalPages(Math.ceil(total / (response.pagination.limit || 10)));
+      } else if (response.meta) {
+        const total = response.meta.total || membersData.length;
+        setMembersCount(total);
         setMembersTotalPages(response.meta.totalPages || 1);
       } else {
+        setMembersCount(membersData.length);
         setMembersTotalPages(1);
       }
     } catch (err) {
@@ -553,16 +565,52 @@ export default function SegmentDetailsPage() {
     }
   };
 
+  const handleAddCustomers = async (customers: any[]) => {
+    if (!customers || customers.length === 0) {
+      showError("Validation error", "Please select at least one customer");
+      return;
+    }
+
+    const customerIds = customers.map((c) => Number(c.customerId || c.id)).filter((id) => !isNaN(id));
+
+    if (customerIds.length === 0) {
+      showError("Validation error", "No valid customer IDs selected");
+      return;
+    }
+
+    try {
+      await segmentService.addSegmentMembers(Number(id), {
+        segmentId: Number(id),
+        subscriberIds: customerIds,
+      });
+      success(
+        "Members added",
+        `${customerIds.length} member(s) added successfully`,
+      );
+      setShowCustomerSelection(false);
+      await loadMembersCount();
+      await loadMembers();
+    } catch (err) {
+      console.error("Failed to add members:", err);
+      showError("Error adding members", "Please try again later.");
+    }
+  };
+
   // Action button handlers
   const handleRecomputeMembers = async () => {
     if (!id) return;
     setIsRecomputingMembers(true);
     try {
-      await segmentService.recomputeSegmentMembers({
+      const result = await segmentService.recomputeSegmentMembers({
         segment_id: Number(id),
       });
-      success("Recompute started", "Segment members are being recomputed");
-      await loadMembersCount();
+      if (result.success) {
+        success("Recompute started", "Segment members are being recomputed");
+        await loadMembersCount();
+      } else {
+        const errorMsg = Array.isArray(result.errors) ? result.errors[0] : result.errors || "Recomputation failed";
+        showError("Error recomputing members", errorMsg);
+      }
     } catch (err) {
       console.error("Failed to recompute members:", err);
       showError("Error recomputing members", (err as Error).message || "Please try again later.");
@@ -591,7 +639,7 @@ export default function SegmentDetailsPage() {
     setIsValidatingQuery(true);
     try {
       const result = await segmentService.validateSegmentQuery(Number(id));
-      if (result.data?.valid) {
+      if (result.success && result.data?.isValid) {
         success("Query validation successful", "The segment query is valid");
       } else {
         showError("Query validation failed", result.data?.error || "Query contains errors");
@@ -996,97 +1044,74 @@ export default function SegmentDetailsPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                Total Members
-              </p>
-              <p className={`text-3xl font-bold ${tw.textPrimary}`}>
-                {isLoadingMembers
-                  ? "..."
-                  : (membersCount || 0).toLocaleString()}
-              </p>
-              {segment.refresh_frequency && (
-                <p className="text-xs text-gray-500 mt-1">
-                  Updated {segment.refresh_frequency}
-                </p>
-              )}
-            </div>
-            <div className="flex-shrink-0">
-              <Users
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <Users
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Total Members
+            </p>
           </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {isLoadingMembers
+              ? "..."
+              : (membersCount || 0).toLocaleString()}
+          </p>
+          {segment.refresh_frequency && (
+            <p className="mt-1 text-sm text-gray-500">
+              Updated {segment.refresh_frequency}
+            </p>
+          )}
         </div>
 
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                Segment Type
-              </p>
-              <p
-                className={`text-xl font-semibold ${tw.textPrimary} capitalize`}
-              >
-                {segment.type || "dynamic"}
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-              <Activity
-                className="w-6 h-6"
-                style={{ color: color.primary.accent }}
-              />
-            </div>
+          <div className="flex items-center gap-2">
+            <Activity
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Segment Type
+            </p>
           </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900 capitalize">
+            {segment.type || "dynamic"}
+          </p>
         </div>
 
         <div
-          className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${tw.textMuted} mb-2`}>
-                Visibility
-              </p>
-              <p
-                className={`text-xl font-semibold ${
-                  segment.visibility === "public"
-                    ? "text-green-600"
-                    : "text-black"
-                }`}
-              >
-                {segment.visibility === "public" ? "Public" : "Private"}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {segment.visibility === "public"
-                  ? "Visible to all users"
-                  : "Only you can see this"}
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-              {segment.visibility === "public" ? (
-                <Eye className="w-6 h-6 text-green-600" />
-              ) : (
-                <EyeOff className="w-6 h-6 text-gray-600" />
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <Eye
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Visibility
+            </p>
           </div>
+          <p
+            className={`mt-2 text-3xl font-bold ${
+              segment.visibility === "public"
+                ? "text-green-600"
+                : "text-gray-900"
+            }`}
+          >
+            {segment.visibility === "public" ? "Public" : "Private"}
+          </p>
         </div>
       </div>
 
       {/* Tag Management Section */}
       {segment && (
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-4 shadow-sm`}>
-          <div className="flex items-center gap-2 mb-3">
-            <Tag className="w-4 h-4" style={{ color: color.primary.accent }} />
-            <h4 className="font-medium text-sm text-gray-900">Tags</h4>
-          </div>
+          <h4 className="font-medium text-sm text-gray-900 mb-3">Tags</h4>
           <div className="space-y-3">
             {segment.tags && segment.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -1192,22 +1217,10 @@ export default function SegmentDetailsPage() {
               {(() => {
                 const typeValue = segment.type || "dynamic";
                 const getTypeStyles = () => {
-                  if (typeValue === "dynamic") {
-                    return {
-                      backgroundColor: color.primary.accent,
-                      color: "white",
-                    };
-                  } else if (typeValue === "static") {
-                    return {
-                      backgroundColor: color.primary.action,
-                      color: "white",
-                    };
-                  } else {
-                    return {
-                      backgroundColor: color.status.warning,
-                      color: "white",
-                    };
-                  }
+                  return {
+                    backgroundColor: color.primary.accent,
+                    color: "white",
+                  };
                 };
                 return (
                   <span
@@ -1254,62 +1267,36 @@ export default function SegmentDetailsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Created */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="p-2 rounded-lg flex-shrink-0"
-                      style={{ backgroundColor: `${color.primary.accent}15` }}
-                    >
-                      <Calendar
-                        className="w-4 h-4"
-                        style={{ color: color.primary.accent }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
-                        Created
-                      </label>
-                      <p className={`text-sm ${tw.textPrimary} font-medium`}>
-                        <DateFormatter
-                          date={segment.created_on || segment.created_at}
-                          useLocale
-                          year="numeric"
-                          month="long"
-                          day="numeric"
-                          includeTime
-                        />
-                      </p>
-                    </div>
-                  </div>
+                  <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                    Created
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                    <DateFormatter
+                      date={segment.created_on || segment.created_at}
+                      useLocale
+                      year="numeric"
+                      month="long"
+                      day="numeric"
+                      includeTime
+                    />
+                  </p>
                 </div>
 
                 {/* Last Updated */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="p-2 rounded-lg flex-shrink-0"
-                      style={{ backgroundColor: `${color.primary.accent}15` }}
-                    >
-                      <Clock
-                        className="w-4 h-4"
-                        style={{ color: color.primary.accent }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
-                        Last Updated
-                      </label>
-                      <p className={`text-sm ${tw.textPrimary} font-medium`}>
-                        <DateFormatter
-                          date={segment.updated_on || segment.updated_at}
-                          useLocale
-                          year="numeric"
-                          month="long"
-                          day="numeric"
-                          includeTime
-                        />
-                      </p>
-                    </div>
-                  </div>
+                  <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
+                    Last Updated
+                  </label>
+                  <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                    <DateFormatter
+                      date={segment.updated_on || segment.updated_at}
+                      useLocale
+                      year="numeric"
+                      month="long"
+                      day="numeric"
+                      includeTime
+                    />
+                  </p>
                 </div>
 
                 {/* Refresh Frequency */}
@@ -1417,15 +1404,6 @@ export default function SegmentDetailsPage() {
               Query Information
             </h3>
             <div className="flex flex-col items-center justify-center py-12">
-              <div
-                className={`p-4 ${tw.rounded} mb-4`}
-                style={{ backgroundColor: `${color.primary.accent}10` }}
-              >
-                <Activity
-                  className="w-8 h-8"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
               <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
                 No queries available
               </p>
@@ -1563,9 +1541,8 @@ export default function SegmentDetailsPage() {
                 setShowMembersModal(true);
                 loadMembers();
               }}
-              className={`px-4 py-2 bg-white border border-gray-300 text-gray-700 ${tw.rounded} transition-all text-sm font-medium flex items-center gap-2 hover:bg-gray-50`}
+              className={`px-4 py-2 bg-white border border-gray-300 text-gray-700 ${tw.rounded} transition-all text-sm font-medium hover:bg-gray-50`}
             >
-              <Eye className="w-4 h-4" />
               View Members
             </button>
             <button
@@ -1576,7 +1553,7 @@ export default function SegmentDetailsPage() {
                 setCustomerStatusFilter("all");
                 await loadCustomersForSelection();
               }}
-              className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
+              className={`text-sm font-medium text-white ${tw.rounded}`}
               style={{
                 backgroundColor: button.action.background,
                 color: button.action.color,
@@ -1584,7 +1561,6 @@ export default function SegmentDetailsPage() {
                 padding: `${button.action.paddingY} ${button.action.paddingX}`,
               }}
             >
-              <Plus className="w-4 h-4" />
               Add Members
             </button>
           </div>
@@ -1601,15 +1577,9 @@ export default function SegmentDetailsPage() {
       {/* Hierarchy Section */}
       {(segmentHierarchy || childSegments.length > 0) && !isLoadingHierarchy && (
         <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
-          <div className="flex items-center gap-2 mb-6">
-            <Layers
-              className="w-5 h-5"
-              style={{ color: color.primary.accent }}
-            />
-            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Segment Hierarchy
-            </h3>
-          </div>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            Segment Hierarchy
+          </h3>
           <div className="space-y-4">
             {segmentHierarchy?.parent_id && (
               <div>
@@ -1650,10 +1620,7 @@ export default function SegmentDetailsPage() {
       {/* Advanced Edit Section */}
       <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5" style={{ color: color.primary.accent }} />
-            <h3 className={`font-semibold ${tw.textPrimary}`}>Advanced Settings</h3>
-          </div>
+          <h3 className={`font-semibold ${tw.textPrimary}`}>Advanced Settings</h3>
           {!showAdvancedEdit && (
             <button
               onClick={() => {
@@ -1852,13 +1819,10 @@ export default function SegmentDetailsPage() {
 
       {/* Campaign Flows Section */}
       {campaignFlows.length > 0 || isLoadingCampaignFlows ? (
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
-          <div className="flex items-center gap-2 mb-6">
-            <Zap className="w-5 h-5" style={{ color: color.primary.accent }} />
-            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Campaign Flows ({campaignFlows.length})
-            </h3>
-          </div>
+        <div className={`${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
+            Campaign Flows ({campaignFlows.length})
+          </h3>
           <p className={`text-sm ${tw.textSecondary} mb-4`}>
             Campaigns that use this segment
           </p>
@@ -1950,210 +1914,27 @@ export default function SegmentDetailsPage() {
         </div>
       ) : null}
 
-      {/* Members Modal */}
-      {showMembersModal &&
-        createPortal(
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-            <div
-              className={`bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col`}
-            >
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Segment Members
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {(membersCount || 0).toLocaleString()} total member
-                    {membersCount !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowMembersModal(false)}
-                  className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
+      {/* View Members Modal */}
+      <ViewMembersModal
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        segmentId={id || ""}
+        segmentName={segment?.name || ""}
+        segmentType={segment?.type}
+        onAddMembers={handleAddMembers}
+        onRemoveMembers={handleRemoveMembers}
+      />
 
-              {/* Add Members Form */}
-              {segment?.type === "static" && (
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Add Customer IDs (comma-separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={customerIdsInput}
-                        onChange={(e) => setCustomerIdsInput(e.target.value)}
-                        placeholder="e.g., 12345, 67890, 11111"
-                        className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
-                      />
-                    </div>
-                    <button
-                      onClick={handleAddMembers}
-                      className={`text-sm font-medium text-white ${tw.rounded}`}
-                      style={{
-                        backgroundColor: button.action.background,
-                        color: button.action.color,
-                        borderRadius: button.action.borderRadius,
-                        padding: `${button.action.paddingY} ${button.action.paddingX}`,
-                      }}
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              )}
+      {/* Add Members Modal */}
+      <AddMembersModal
+        isOpen={showCustomerSelection}
+        onClose={() => setShowCustomerSelection(false)}
+        segmentName={segment?.name || ""}
+        onAdd={handleAddCustomers}
+      />
 
-              {/* Members Search */}
-              <div className="p-6 border-b border-gray-200 bg-gray-50">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={membersSearchTerm}
-                    onChange={(e) => setMembersSearchTerm(e.target.value)}
-                    placeholder="Search members by name, email, or ID..."
-                    className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                  />
-                  {membersSearchTerm && (
-                    <button
-                      onClick={() => setMembersSearchTerm("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Members List */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {isLoadingMembersList ? (
-                  <div className="flex flex-col items-center justify-center py-12">
-                    <LoadingSpinner
-                      variant="modern"
-                      size="lg"
-                      color="primary"
-                    />
-                    <p className="text-gray-500 mt-4">Loading members...</p>
-                  </div>
-                ) : members.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No members in this segment</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {members.map((member, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between p-4 border border-gray-200 ${tw.rounded} hover:bg-gray-50 transition-colors`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {String(
-                                member.name ||
-                                  `Customer ID: ${String(
-                                    member.customer_id || "",
-                                  )}` ||
-                                  "Unknown Customer",
-                              )}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {String(
-                                member.email ||
-                                  `ID: ${String(member.customer_id || "")}` ||
-                                  "No email",
-                              )}
-                            </p>
-                            {member.joined_at ? (
-                              <p className="text-xs text-gray-400">
-                                Joined:{" "}
-                                <DateFormatter date={member.joined_at} />
-                              </p>
-                            ) : null}
-                            {member.total_spent ? (
-                              <p className="text-xs text-green-600 font-medium">
-                                Total Spent:{" "}
-                                <CurrencyFormatter
-                                  amount={member.total_spent}
-                                  className="inline"
-                                />
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                        {segment?.type === "static" && (
-                          <button
-                            onClick={() => {
-                              const customerId =
-                                typeof member.customer_id === "string"
-                                  ? parseInt(member.customer_id, 10)
-                                  : member.customer_id;
-                              if (!isNaN(customerId)) {
-                                handleRemoveMembers([customerId]);
-                              }
-                            }}
-                            className={`p-2 text-red-600 hover:bg-red-50 ${tw.rounded} transition-colors`}
-                            title="Remove member"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Pagination */}
-              {members.length > 0 && membersTotalPages > 1 && (
-                <div className="p-6 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500">
-                      Page {membersPage} of {membersTotalPages}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          const newPage = membersPage - 1;
-                          setMembersPage(newPage);
-                          loadMembers();
-                        }}
-                        disabled={membersPage <= 1}
-                        className={`px-3 py-1 border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={() => {
-                          const newPage = membersPage + 1;
-                          setMembersPage(newPage);
-                          loadMembers();
-                        }}
-                        disabled={membersPage >= membersTotalPages}
-                        className={`px-3 py-1 border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>,
-          document.body,
-        )}
-
-      {/* Customer Selection Modal - Add Members */}
-      {showCustomerSelection &&
+      {/* Customer Selection Modal - Add Members (DEPRECATED - USE AddMembersModal) */}
+      {false &&
         createPortal(
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" style={{ zIndex: 9999 }}>
             <div className={`bg-white ${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}>

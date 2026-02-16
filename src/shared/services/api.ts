@@ -10,7 +10,7 @@ const isVercel =
 
 // Determine API base URL based on environment:
 // - Vercel: use proxy (serverless function)
-// - Localhost: use .env value (http://cvm.groupngs.com:8080/api/database-service)
+// - Localhost: use .env value (http://sentra.groupngs.com:8080/api/database-service)
 // - UAT/Production: use dynamic URL (same host)
 const getApiBaseUrl = () => {
   if (isVercel) {
@@ -20,7 +20,7 @@ const getApiBaseUrl = () => {
     // Local development: use .env value
     return (
       import.meta.env.VITE_API_BASE_URL ||
-      "http://cvm.groupngs.com:8080/api/database-service"
+      "http://sentra.groupngs.com:8080/api/database-service"
     );
   }
   // UAT/Production: use dynamic URL (server will proxy to backend)

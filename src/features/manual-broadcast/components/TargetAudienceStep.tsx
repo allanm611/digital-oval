@@ -249,25 +249,27 @@ export default function TargetAudienceStep({
                 className="p-3 rounded-md bg-white border-2 border-gray-300"
                 style={{ borderColor: color.primary.accent }}
               >
-                <p className="text-sm font-medium text-gray-900">
-                  {selectedQuickList.name}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {selectedQuickList.row_count.toLocaleString()} rows
-                </p>
-                {isQuickListCreated && (
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedQuickList.name}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {selectedQuickList.row_count.toLocaleString()} rows
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedQuickList(null);
                       setIsQuickListCreated(false);
                     }}
-                    className="text-xs hover:underline mt-2"
+                    className="text-xs hover:underline whitespace-nowrap ml-3"
                     style={{ color: color.primary.accent }}
                   >
-                    Create Different QuickList
+                    Change
                   </button>
-                )}
+                </div>
               </div>
             ) : (
               <p className="text-xs text-gray-600 mb-3">

@@ -3,13 +3,8 @@ export default async function handler(req, res) {
   // Enable CORS with more specific headers
   const origin = req.headers.origin;
   const allowedOrigins = [
-    "http://localhost:3000",
     "http://localhost:5173",
-    "https://sentra-wheat.vercel.app",
-    "https://sentra-uat.vercel.app",
-
-    // Replace with your actual Vercel domain
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean);
 
   if (
@@ -45,7 +40,7 @@ export default async function handler(req, res) {
     const API_BASE_URL =
       process.env.VITE_API_BASE_URL ||
       process.env.API_BASE_URL ||
-      "http://cvm.groupngs.com:8080/api/database-service";
+      "http://sentra.groupngs.com:8080/api/database-service";
 
     // Build query string from all query parameters except 'path'
     const queryParams = new URLSearchParams();

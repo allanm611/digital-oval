@@ -1711,17 +1711,8 @@ export default function DashboardHome() {
   // };
 
   const getStatusColor = (status: string) => {
-    // Map status to standard Tailwind color classes
-    switch (status.toLowerCase()) {
-      case "active":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
-      case "paused":
-        return "bg-orange-100 text-orange-700 border-orange-200";
-      default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
-    }
+    // All statuses use accent color background with white text
+    return `text-white border-0`;
   };
 
   return (
@@ -1977,11 +1968,7 @@ export default function DashboardHome() {
                           >
                             {campaign.name}
                           </h3>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-bold border flex-shrink-0 ${getStatusColor(
-                              campaign.status
-                            )}`}
-                          >
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
                             {campaign.statusDisplay}
                           </span>
                         </div>
@@ -2031,11 +2018,7 @@ export default function DashboardHome() {
                           >
                             {offer.name}
                           </h3>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-bold border flex-shrink-0 ${getStatusColor(
-                              offer.status
-                            )}`}
-                          >
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
                             {offer.status}
                           </span>
                         </div>
@@ -2122,11 +2105,7 @@ export default function DashboardHome() {
                           >
                             {product.name}
                           </h3>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-bold border flex-shrink-0 ${getStatusColor(
-                              product.status
-                            )}`}
-                          >
+                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 flex-shrink-0">
                             {product.status}
                           </span>
                         </div>

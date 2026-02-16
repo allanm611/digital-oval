@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search, Plus, Users } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { CampaignSegment } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../../shared/utils/utils";
@@ -141,10 +141,10 @@ export default function SegmentSelectionModal({
       >
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-sm font-semibold text-black">
               {editingSegment ? "Edit Segment" : "Select Audience Segments"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-black mt-1">
               Choose segments to target with your campaign
             </p>
           </div>
@@ -156,7 +156,7 @@ export default function SegmentSelectionModal({
           </button>
           {tempSelectedSegments.length > 0 && (
             <div
-              className={`${tw.rounded} p-4 border border-gray-200 bg-gray-50 text-sm text-gray-700`}
+              className={`${tw.rounded} p-4 border border-gray-200 bg-white text-sm text-black`}
             >
               <div className="flex items-center justify-between">
                 <span>
@@ -166,7 +166,7 @@ export default function SegmentSelectionModal({
                 </span>
                 <button
                   onClick={() => setTempSelectedSegments([])}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-black hover:opacity-70 transition-opacity"
                 >
                   Clear All
                 </button>
@@ -211,7 +211,6 @@ export default function SegmentSelectionModal({
                 color: "white",
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
               Create New
             </button>
           </div>
@@ -253,11 +252,10 @@ export default function SegmentSelectionModal({
             </div>
           ) : filteredSegments.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-black mb-2">
                 No segments found
               </h3>
-              <p className="text-gray-500">
+              <p className="text-black">
                 Try adjusting your search or create a new segment
               </p>
             </div>
@@ -289,9 +287,6 @@ export default function SegmentSelectionModal({
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Segment Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Description
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
                       Customers
@@ -326,22 +321,17 @@ export default function SegmentSelectionModal({
                           />
                         </td>
                         <td className="px-4 py-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-black">
                             {segment.name}
                           </div>
                         </td>
-                        <td className="px-4 py-4">
-                          <div className="text-sm text-gray-600 max-w-md line-clamp-2">
-                            {segment.description || "-"}
-                          </div>
-                        </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-black">
                             {segment.customer_count.toLocaleString()}
                           </span>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-black">
                             <DateFormatter date={segment.created_at} />
                           </span>
                         </td>
@@ -356,14 +346,14 @@ export default function SegmentSelectionModal({
 
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-gray-200 flex-shrink-0">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-black">
             {tempSelectedSegments.length} of {filteredSegments.length} segments
             selected
           </div>
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+              className={`px-4 py-2 border border-gray-300 text-black ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
             >
               Cancel
             </button>

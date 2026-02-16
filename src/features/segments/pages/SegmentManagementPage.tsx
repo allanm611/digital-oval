@@ -1008,9 +1008,15 @@ export default function SegmentManagementPage() {
       analyticsData?.healthSummary?.active_segments ??
       allSegments.filter((s) => s.is_active).length,
     totalCustomers: (() => {
-      // Try to get total customers from generalStats first
+      // Try to get total subscribers from generalStats
       if (analyticsData?.generalStats) {
         const stats = analyticsData.generalStats;
+        if (typeof stats.total_subscribers === "number") {
+          return stats.total_subscribers;
+        }
+        if (typeof stats.total_subscribers === "string") {
+          return parseInt(stats.total_subscribers, 10) || 0;
+        }
         if (typeof stats.total_customers === "number") {
           return stats.total_customers;
         }
@@ -1191,25 +1197,34 @@ export default function SegmentManagementPage() {
             </p>
           </div>
 
-          {/* Total Customers */}
+          {/* Stale Segments */}
           <div
             className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
             <div className="flex items-center gap-2">
-              <Users
+              <Activity
                 className="h-5 w-5"
                 style={{ color: color.primary.accent }}
               />
               <p className="text-sm font-medium text-gray-600">
-                Total Customers
+                Stale Segments
               </p>
             </div>
             <p className="mt-2 text-3xl font-bold text-gray-900">
-              {stats.totalCustomers.toLocaleString()}
+              {isLoadingAnalytics ? (
+                <span className="text-gray-400">...</span>
+              ) : (() => {
+                const staleCount = analyticsData?.healthSummary?.stale_segments;
+                if (!staleCount && staleCount !== 0) {
+                  return "0";
+                }
+                const numValue = typeof staleCount === "number" ? staleCount : parseInt(String(staleCount), 10);
+                return String(numValue);
+              })()}
             </p>
-            {/* <p className="mt-1 text-sm text-gray-500">
-              Total customers in all segments
-            </p> */}
+            <p className="mt-1 text-sm text-gray-500">
+              need refresh
+            </p>
           </div>
 
           {/* Top Segment */}
@@ -1237,7 +1252,7 @@ export default function SegmentManagementPage() {
             </p>
             {stats.largestSegments.length > 0 && (
               <p className="mt-1 text-sm text-gray-500">
-                {(stats.largestSegments[0]?.member_count || 0).toLocaleString()}{" "}
+                {(stats.largestSegments[0]?.size_estimate || 0).toLocaleString()}{" "}
                 members
               </p>
             )}

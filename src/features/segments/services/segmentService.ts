@@ -235,7 +235,7 @@ class SegmentService {
    */
   async getSegmentCategories(
     search?: string,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ search, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
@@ -248,7 +248,7 @@ class SegmentService {
    */
   async searchSegmentCategories(
     query: string,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ searchTerm: query, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
@@ -261,7 +261,7 @@ class SegmentService {
    */
   async superSearchSegmentCategories(
     filters: AdvancedSearchQuery,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ ...filters, skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
@@ -287,7 +287,7 @@ class SegmentService {
    */
   async getSegmentCategoryById(
     id: number,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.requestCategories<ApiSuccessResponse<SegmentCategoryType>>(
@@ -371,7 +371,7 @@ class SegmentService {
    */
   async getSegmentById(
     id: number,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
@@ -427,7 +427,7 @@ class SegmentService {
       type: query.type,
       visibility: query.visibility,
       tags: query.tags,
-      skipCache: query.skipCache,
+      skipCache: query.skipCache !== false ? true : false,
     });
 
     return this.request<PaginatedResponse<SegmentType>>(
@@ -491,7 +491,7 @@ class SegmentService {
    * GET /segments/stats/category-distribution - Get category distribution
    */
   async getCategoryDistribution(
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<CategoryDistributionResponse[]>> {
     const endpoint = `/stats/category-distribution${
       skipCache ? "?skipCache=true" : ""
@@ -529,7 +529,7 @@ class SegmentService {
    * GET /segments/stats - Get general segment statistics
    */
   async getSegmentStats(
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<Record<string, unknown>>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<Record<string, unknown>>>(
@@ -591,7 +591,7 @@ class SegmentService {
    */
   async getSegmentCategoryByNameNested(
     name: string,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
@@ -604,7 +604,7 @@ class SegmentService {
    */
   async getSegmentCategoryByIdNested(
     id: number,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentCategoryType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentCategoryType>>(
@@ -616,7 +616,7 @@ class SegmentService {
    * GET /segments/categories - Get all categories
    */
   async getSegmentCategoriesNested(
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<SegmentCategoriesResponse>(`/categories${queryString}`);
@@ -784,7 +784,7 @@ class SegmentService {
    */
   async getSegmentByCode(
     code: string,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
@@ -797,7 +797,7 @@ class SegmentService {
    */
   async getSegmentByName(
     name: string,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<SegmentType>> {
     const queryString = this.buildQueryParams({ skipCache });
     return this.request<ApiSuccessResponse<SegmentType>>(
@@ -1260,7 +1260,7 @@ class SegmentService {
     // Use offset-based pagination (not page-based)
     const limit = Math.min(query?.pageSize || 50, 100); // Max 100
     const offset = query?.offset ?? (query?.page ? (query.page - 1) * limit : 0);
-    const skipCache = query?.skipCache ? "true" : "false";
+    const skipCache = query?.skipCache !== false ? "true" : "false";
 
     const queryString = this.buildQueryParams({
       limit,
@@ -1363,7 +1363,7 @@ class SegmentService {
    */
   async getSegmentMembersCount(
     id: number,
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<ApiSuccessResponse<{ count: number }>> {
     const queryString = this.buildQueryParams({
       segmentIds: id.toString(),
@@ -1405,7 +1405,7 @@ class SegmentService {
     // Use offset-based pagination (not page-based)
     const limit = Math.min(request.pageSize || 50, 100); // Max 100
     const offset = request.offset ?? (request.page ? (request.page - 1) * limit : 0);
-    const skipCache = request.skipCache ? "true" : "false";
+    const skipCache = request.skipCache !== false ? "true" : "false";
 
     const queryString = this.buildQueryParams({
       limit,
@@ -1512,7 +1512,7 @@ class SegmentService {
    * This endpoint returns the field configuration that users can use to build segment conditions
    */
   async getSegmentationFields(
-    skipCache: boolean = false,
+    skipCache: boolean = true,
   ): Promise<SegmentationFieldsResponse> {
     const params: Record<string, unknown> = { skipCache };
 

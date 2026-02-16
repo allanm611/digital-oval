@@ -12,6 +12,8 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
 } from "recharts";
 import {
   FileText,
@@ -85,15 +87,44 @@ export default function EtlAnalyticsPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  // Group A: Existing stats
   const [allStats, setAllStats] = useState<StatsRow[]>([]);
   const [cdrStats, setCdrStats] = useState<StatsRow[]>([]);
   const [tdrStats, setTdrStats] = useState<StatsRow[]>([]);
+
+  // Group B: File Registry Monitoring (NEW)
+  const [registryStats, setRegistryStats] = useState<any>(null);
+  const [rowMetrics, setRowMetrics] = useState<any>(null);
+  const [retryAnalysis, setRetryAnalysis] = useState<any>(null);
+  const [fetchDurationAnalytics, setFetchDurationAnalytics] = useState<any>(null);
+  const [processingDurationAnalytics, setProcessingDurationAnalytics] = useState<any>(null);
+  const [processingStatusDist, setProcessingStatusDist] = useState<any>(null);
+  const [formatDist, setFormatDist] = useState<any>(null);
+  const [checksumUsage, setChecksumUsage] = useState<any>(null);
+  const [dataSizeAnalytics, setDataSizeAnalytics] = useState<any>(null);
+  const [fileRegistryTrends, setFileRegistryTrends] = useState<any>(null);
+  const [errorMessages, setErrorMessages] = useState<any[]>([]);
+  const [fileRegistryGranularity, setFileRegistryGranularity] = useState<"day" | "week" | "month">("day");
+  const [isTrendsLoading, setIsTrendsLoading] = useState(false);
+
+  // Group C: Task Queue Monitoring (NEW)
+  const [taskQueueStats, setTaskQueueStats] = useState<any>(null);
+  const [taskStatusDist, setTaskStatusDist] = useState<any>(null);
+  const [taskTypeDist, setTaskTypeDist] = useState<any>(null);
+  const [taskPriorityDist, setTaskPriorityDist] = useState<any>(null);
+  const [taskDurationAnalytics, setTaskDurationAnalytics] = useState<any>(null);
+  const [taskFileCorrelation, setTaskFileCorrelation] = useState<any>(null);
+  const [taskJobCorrelation, setTaskJobCorrelation] = useState<any>(null);
+  const [taskQueueTrends, setTaskQueueTrends] = useState<any>(null);
+  const [taskQueueGranularity, setTaskQueueGranularity] = useState<"day" | "week" | "month">("day");
+
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadAnalytics = async () => {
       setIsLoading(true);
       try {
+        // Load existing data
         const [statsRes, cdrRes, tdrRes] = await Promise.all([
           etlService.getFileStats(),
           etlService.getCategoryFileStats("CDR"),
@@ -103,6 +134,60 @@ export default function EtlAnalyticsPage() {
         setAllStats((statsRes?.data as StatsRow[]) || []);
         setCdrStats((cdrRes?.data as StatsRow[]) || []);
         setTdrStats((tdrRes?.data as StatsRow[]) || []);
+
+        // Load new monitoring data in background
+        try {
+          const [
+            registryStatsRes, rowMetricsRes, retryAnalysisRes, fetchDurationRes, processingDurationRes, processingStatusRes, formatRes,
+            checksumRes, dataSizeRes, errorMessagesRes, fileRegistryTrendsRes,
+            taskStatsRes, taskStatusRes, taskTypeRes, taskPriorityRes, taskDurationRes, taskFileRes, taskJobRes, taskTrendsRes
+          ] = await Promise.all([
+            // File Registry
+            etlService.getFileRegistryStatistics(),
+            etlService.getFileRegistryRowMetrics(),
+            etlService.getFileRegistryRetryAnalysis(),
+            etlService.getFileRegistryFetchDurationAnalytics(),
+            etlService.getFileRegistryProcessingDurationAnalytics(),
+            etlService.getFileRegistryProcessingStatus(),
+            etlService.getFileRegistryFormatDistribution(),
+            etlService.getFileRegistryChecksumUsage(),
+            etlService.getFileRegistryDataSizeAnalytics(),
+            etlService.getFileRegistryErrorMessageDistribution({ offset: 0, limit: 10 }),
+            etlService.getFileRegistryTrends({ granularity: fileRegistryGranularity }),
+            // Task Queue
+            etlService.getTaskQueueStatistics(),
+            etlService.getTaskQueueStatusDistribution(),
+            etlService.getTaskQueueTypeDistribution(),
+            etlService.getTaskQueuePriorityDistribution(),
+            etlService.getTaskQueueDurationAnalytics(),
+            etlService.getTaskQueueFileCorrelation(),
+            etlService.getTaskQueueJobCorrelation(),
+            etlService.getTaskQueueTrends({ granularity: taskQueueGranularity }),
+          ]);
+
+          setRegistryStats(registryStatsRes?.data || null);
+          setRowMetrics(rowMetricsRes?.data || null);
+          setRetryAnalysis(retryAnalysisRes?.data || null);
+          setFetchDurationAnalytics(fetchDurationRes?.data || null);
+          setProcessingDurationAnalytics(processingDurationRes?.data || null);
+          setProcessingStatusDist(processingStatusRes?.data || null);
+          setFormatDist(formatRes?.data || null);
+          setChecksumUsage(checksumRes?.data || null);
+          setDataSizeAnalytics(dataSizeRes?.data || null);
+          setErrorMessages(errorMessagesRes?.data?.error_messages || []);
+          setFileRegistryTrends(fileRegistryTrendsRes?.data || null);
+
+          setTaskQueueStats(taskStatsRes?.data || null);
+          setTaskStatusDist(taskStatusRes?.data || null);
+          setTaskTypeDist(taskTypeRes?.data || null);
+          setTaskPriorityDist(taskPriorityRes?.data || null);
+          setTaskDurationAnalytics(taskDurationRes?.data || null);
+          setTaskFileCorrelation(taskFileRes?.data || null);
+          setTaskJobCorrelation(taskJobRes?.data || null);
+          setTaskQueueTrends(taskTrendsRes?.data || null);
+        } catch (err) {
+          console.error("Failed to load new monitoring data:", err);
+        }
       } catch (err) {
         showError(
           t.etl.failedToLoadStatistics,
@@ -115,6 +200,33 @@ export default function EtlAnalyticsPage() {
 
     loadAnalytics();
   }, [showError, t.etl]);
+
+  // Helper functions for granularity changes
+  const handleFileRegistryGranularityChange = async (gran: "day" | "week" | "month") => {
+    setFileRegistryGranularity(gran);
+    setIsTrendsLoading(true);
+    try {
+      const res = await etlService.getFileRegistryTrends({ granularity: gran });
+      setFileRegistryTrends(res?.data || null);
+    } catch (err) {
+      console.error("Failed to load trends:", err);
+    } finally {
+      setIsTrendsLoading(false);
+    }
+  };
+
+  const handleTaskQueueGranularityChange = async (gran: "day" | "week" | "month") => {
+    setTaskQueueGranularity(gran);
+    setIsTrendsLoading(true);
+    try {
+      const res = await etlService.getTaskQueueTrends({ granularity: gran });
+      setTaskQueueTrends(res?.data || null);
+    } catch (err) {
+      console.error("Failed to load trends:", err);
+    } finally {
+      setIsTrendsLoading(false);
+    }
+  };
 
   // Transform data for charts and summaries
   const fileCountByStatus = useMemo(() => {
@@ -580,6 +692,548 @@ export default function EtlAnalyticsPage() {
           </div>
         </div>
       )}
+
+      {/* NEW SECTION: Overview Stats Row 1 - File Registry */}
+      {registryStats && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
+              <p className="text-sm font-medium text-gray-600">Total Files</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {registryStats.total_files?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
+              <p className="text-sm font-medium text-gray-600">Active Files</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {registryStats.active_files?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
+              <p className="text-sm font-medium text-gray-600">Failed Files</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {registryStats.failed_files?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" style={{ color: color.primary.accent }} />
+              <p className="text-sm font-medium text-gray-600">Skipped Files</p>
+            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {registryStats.skipped_files?.toLocaleString() || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Overview Stats Row 2 - Row Metrics & Retry */}
+      {(rowMetrics || retryAnalysis) && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Total Rows Parsed</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {rowMetrics?.total_rows_parsed?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Total Rows Inserted</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {rowMetrics?.total_rows_inserted?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Total Rows Failed</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {rowMetrics?.total_rows_failed?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Avg Retry Count</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {registryStats?.average_retry_count?.toFixed(2) || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Performance Metrics (2-col grid) */}
+      {(fetchDurationAnalytics || processingDurationAnalytics) && (
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Fetch Analytics</h3>
+            <div className="space-y-4">
+              <div className="pb-4 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-600">Avg Fetch Duration</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {fetchDurationAnalytics?.average_fetch_duration_ms?.toLocaleString() || 0}
+                  <span className="text-sm font-medium text-gray-600 ml-1">ms</span>
+                </p>
+              </div>
+              <div className="pb-4 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-600">Avg Fetch Attempts</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {fetchDurationAnalytics?.average_fetch_attempts?.toFixed(2) || 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Files with Fetch Errors</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {fetchDurationAnalytics?.files_with_fetch_errors?.toLocaleString() || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Processing Analytics</h3>
+            <div className="space-y-4">
+              <div className="pb-4 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-600">Avg Processing Duration</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {processingDurationAnalytics?.average_processing_duration_ms?.toLocaleString() || 0}
+                  <span className="text-sm font-medium text-gray-600 ml-1">ms</span>
+                </p>
+              </div>
+              <div className="pb-4 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-600">Avg Total Batches</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {processingDurationAnalytics?.average_total_batches?.toFixed(2) || 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Avg Processed Batches</p>
+                <p className="mt-2 text-2xl font-bold text-gray-900">
+                  {processingDurationAnalytics?.average_processed_batches?.toFixed(2) || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Data Quality Section */}
+      {(checksumUsage || rowMetrics) && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Files with Checksum</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {checksumUsage?.files_with_checksum?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Unique Checksums</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {checksumUsage?.unique_checksums?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Duplicate Files</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {checksumUsage?.duplicate_files?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Insertion Rate (%)</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {rowMetrics?.insertion_rate?.toFixed(2) || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Failure Rate (%)</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {rowMetrics?.failure_rate?.toFixed(2) || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Reliability Section - Retry Analysis */}
+      {retryAnalysis && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Files with Retries</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {retryAnalysis.files_with_retries?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Avg Retry Count</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {retryAnalysis.average_retry_count?.toFixed(2) || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Max Retry Count</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {retryAnalysis.max_retry_count?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Recent Retries (7d)</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {retryAnalysis.recent_retries_last_7_days?.toLocaleString() || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Data Size Analytics */}
+      {dataSizeAnalytics && (
+        <>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <p className="text-sm font-medium text-gray-600">Total Data Size (MB)</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {dataSizeAnalytics.total_data_size_mb?.toFixed(2) || 0}
+              </p>
+            </div>
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <p className="text-sm font-medium text-gray-600">Avg Data Size (MB)</p>
+              <p className="mt-2 text-3xl font-bold text-gray-900">
+                {dataSizeAnalytics.average_data_size_mb?.toFixed(2) || 0}
+              </p>
+            </div>
+          </div>
+
+          {dataSizeAnalytics.size_distribution && dataSizeAnalytics.size_distribution.length > 0 && (
+            <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Size Distribution (MB)</h3>
+              <div className="h-96 w-full min-h-[384px]">
+                <ResponsiveContainer width="100%" height={384}>
+                  <BarChart
+                    data={dataSizeAnalytics.size_distribution.map((item: any) => ({
+                      range: item.range,
+                      count: item.count,
+                    }))}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="range" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => value.toLocaleString()} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                    <Bar
+                      dataKey="count"
+                      fill={color.charts?.campaigns?.primary || "#3b82f6"}
+                      radius={[4, 4, 0, 0]}
+                      name="File Count"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* NEW SECTION: File Registry Trends */}
+      {fileRegistryTrends?.trends && fileRegistryTrends.trends.length > 0 && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">File Registry Trends</h3>
+            <div className="flex gap-2">
+              {["day", "week", "month"].map((gran) => (
+                <button
+                  key={gran}
+                  onClick={() => handleFileRegistryGranularityChange(gran as "day" | "week" | "month")}
+                  className={`px-3 py-1 text-sm font-medium rounded ${
+                    fileRegistryGranularity === gran
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {gran.charAt(0).toUpperCase() + gran.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-96 w-full min-h-[384px]">
+            <ResponsiveContainer width="100%" height={384}>
+              <LineChart data={fileRegistryTrends.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => value.toLocaleString()} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                <Legend verticalAlign="top" height={36} />
+                <Line type="monotone" dataKey="files_created" stroke={color.charts?.campaigns?.primary || "#3b82f6"} strokeWidth={2} name="Files Created" />
+                <Line type="monotone" dataKey="files_fetched" stroke={color.charts?.campaigns?.secondary || "#10b981"} strokeWidth={2} name="Files Fetched" />
+                <Line type="monotone" dataKey="files_processed" stroke={color.charts?.campaigns?.accent || "#f59e0b"} strokeWidth={2} name="Files Processed" />
+                <Line type="monotone" dataKey="rows_inserted" stroke={color.primary?.accent || "#8b5cf6"} strokeWidth={2} name="Rows Inserted" />
+                <Line type="monotone" dataKey="failures" stroke="#ef4444" strokeWidth={2} name="Failures" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Error Message Distribution Table */}
+      {errorMessages.length > 0 && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Error Message Distribution</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left font-semibold text-gray-900">Error Message</th>
+                  <th className="px-4 py-3 text-right font-semibold text-gray-900">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                {errorMessages.map((item, idx) => (
+                  <tr key={idx} className={`border-b border-gray-200 hover:bg-gray-50 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                    <td className="px-4 py-3 text-gray-900">{item.error_message || "-"}</td>
+                    <td className="px-4 py-3 text-right text-gray-900 font-semibold">{item.count?.toLocaleString() || 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Task Queue Stats */}
+      {taskQueueStats && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Total Tasks</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {taskQueueStats.total_tasks?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Pending Tasks</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {taskQueueStats.pending_tasks?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Completed Tasks</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {taskQueueStats.completed_tasks?.toLocaleString() || 0}
+            </p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Failed Tasks</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {taskQueueStats.failed_tasks?.toLocaleString() || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Task Queue Charts (2-col + 1 full-width) */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+        {/* Task Status Distribution */}
+        {taskStatusDist?.statuses && taskStatusDist.statuses.length > 0 && (
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Status Distribution</h3>
+            <div className="h-64 w-full min-h-[256px]">
+              <ResponsiveContainer width="100%" height={256}>
+                <PieChart>
+                  <Pie data={taskStatusDist.statuses.map((item: any) => ({ name: item.status, value: item.count }))} cx="50%" cy="50%" labelLine={false} label={(props: { name?: string; percent?: number }) => `${props.name || ""}: ${((props.percent || 0) * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
+                    {taskStatusDist.statuses.map((_entry: any, index: number) => {
+                      const pieColors = color.charts?.campaigns?.pieColors || ["#3b8169", "#10b981", "#fbbf24", "#fb7184"];
+                      return <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />;
+                    })}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* Task Type Distribution */}
+        {taskTypeDist?.task_types && taskTypeDist.task_types.length > 0 && (
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Type Distribution</h3>
+            <div className="h-64 w-full min-h-[256px]">
+              <ResponsiveContainer width="100%" height={256}>
+                <PieChart>
+                  <Pie data={taskTypeDist.task_types.map((item: any) => ({ name: item.task_type, value: item.count }))} cx="50%" cy="50%" labelLine={false} label={(props: { name?: string; percent?: number }) => `${props.name || ""}: ${((props.percent || 0) * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
+                    {taskTypeDist.task_types.map((_entry: any, index: number) => {
+                      const pieColors = color.charts?.campaigns?.pieColors || ["#3b8169", "#10b981", "#fbbf24", "#fb7184"];
+                      return <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />;
+                    })}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Task Priority Distribution - Full Width */}
+      {taskPriorityDist?.priorities && taskPriorityDist.priorities.length > 0 && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Priority Distribution</h3>
+          <div className="h-96 w-full min-h-[384px]">
+            <ResponsiveContainer width="100%" height={384}>
+              <BarChart data={taskPriorityDist.priorities.map((item: any) => ({ priority: `P${item.priority}`, count: item.count }))} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="priority" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => value.toLocaleString()} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                <Bar dataKey="count" fill={color.charts?.campaigns?.secondary || "#10b981"} radius={[4, 4, 0, 0]} name="Task Count" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Task Queue Performance (3 metric cards) */}
+      {(taskDurationAnalytics || taskFileCorrelation || taskJobCorrelation) && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Avg Task Duration</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{taskDurationAnalytics?.average_duration_seconds?.toFixed(2) || 0}<span className="text-sm font-medium text-gray-600 ml-1">sec</span></p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Tasks per File</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{taskFileCorrelation?.average_tasks_per_file?.toFixed(2) || 0}</p>
+          </div>
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <p className="text-sm font-medium text-gray-600">Tasks per Job</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{taskJobCorrelation?.average_tasks_per_job?.toFixed(2) || 0}</p>
+          </div>
+        </div>
+      )}
+
+      {/* NEW SECTION: Task Queue Trends */}
+      {taskQueueTrends?.trends && taskQueueTrends.trends.length > 0 && (
+        <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">Task Queue Trends</h3>
+            <div className="flex gap-2">
+              {["day", "week", "month"].map((gran) => (
+                <button key={gran} onClick={() => handleTaskQueueGranularityChange(gran as "day" | "week" | "month")} className={`px-3 py-1 text-sm font-medium rounded ${taskQueueGranularity === gran ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+                  {gran.charAt(0).toUpperCase() + gran.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="h-96 w-full min-h-[384px]">
+            <ResponsiveContainer width="100%" height={384}>
+              <LineChart data={taskQueueTrends.trends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="period" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => value.toLocaleString()} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                <Legend verticalAlign="top" height={36} />
+                <Line type="monotone" dataKey="tasks_created" stroke={color.charts?.campaigns?.primary || "#3b82f6"} strokeWidth={2} name="Tasks Created" />
+                <Line type="monotone" dataKey="tasks_completed" stroke={color.charts?.campaigns?.secondary || "#10b981"} strokeWidth={2} name="Tasks Completed" />
+                <Line type="monotone" dataKey="failures" stroke="#ef4444" strokeWidth={2} name="Failures" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Processing Status & Format Distribution (File Registry) */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+        {/* Processing Status Distribution */}
+        {processingStatusDist?.statuses && processingStatusDist.statuses.length > 0 && (
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Processing Status Distribution</h3>
+            <div className="h-64 w-full min-h-[256px]">
+              <ResponsiveContainer width="100%" height={256}>
+                <PieChart>
+                  <Pie
+                    data={processingStatusDist.statuses.map((item: any) => ({
+                      name: item.processing_status,
+                      value: item.count,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: { name?: string; percent?: number }) =>
+                      `${props.name || ""}: ${((props.percent || 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {processingStatusDist.statuses.map((_entry: any, index: number) => {
+                      const pieColors =
+                        color.charts?.campaigns?.pieColors || [
+                          "#3b8169",
+                          "#10b981",
+                          "#fbbf24",
+                          "#fb7184",
+                        ];
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={pieColors[index % pieColors.length]}
+                        />
+                      );
+                    })}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+
+        {/* File Format Distribution */}
+        {formatDist?.formats && formatDist.formats.length > 0 && (
+          <div className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">File Format Distribution</h3>
+            <div className="h-64 w-full min-h-[256px]">
+              <ResponsiveContainer width="100%" height={256}>
+                <PieChart>
+                  <Pie
+                    data={formatDist.formats.map((item: any) => ({
+                      name: item.file_format,
+                      value: item.count,
+                    }))}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={(props: { name?: string; percent?: number }) =>
+                      `${props.name || ""}: ${((props.percent || 0) * 100).toFixed(0)}%`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {formatDist.formats.map((_entry: any, index: number) => {
+                      const pieColors =
+                        color.charts?.campaigns?.pieColors || [
+                          "#3b8169",
+                          "#10b981",
+                          "#fbbf24",
+                          "#fb7184",
+                        ];
+                      return (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={pieColors[index % pieColors.length]}
+                        />
+                      );
+                    })}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+                  <Legend verticalAlign="bottom" height={36} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

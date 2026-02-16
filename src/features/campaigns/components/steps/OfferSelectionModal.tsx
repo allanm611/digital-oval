@@ -4,11 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   X,
   Search,
-  Plus,
-  Gift,
-  Calendar,
-  CheckCircle,
-  Play,
 } from "lucide-react";
 import { CampaignOffer } from "../../types/campaign";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
@@ -382,10 +377,10 @@ export default function OfferSelectionModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-sm font-semibold text-black">
               {editingOffer ? "Edit Offer" : "Select Campaign Offers"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-black mt-1">
               Choose offers to include in your campaign
             </p>
           </div>
@@ -430,7 +425,6 @@ export default function OfferSelectionModal({
                 color: "white",
               }}
             >
-              <Plus className="w-4 h-4 mr-2" />
               Create New
             </button>
           </div>
@@ -440,11 +434,9 @@ export default function OfferSelectionModal({
         {tempSelectedOffers.length > 0 && (
           <div className="px-6 flex-shrink-0 my-3">
             <div
-              className={`${tw.rounded} p-4 border text-sm`}
+              className={`${tw.rounded} p-4 border text-sm text-black bg-white`}
               style={{
-                backgroundColor: `${color.primary.accent}15`,
-                borderColor: `${color.primary.accent}40`,
-                color: color.primary.accent,
+                borderColor: color.border.default,
               }}
             >
               <div className="flex items-center justify-between">
@@ -454,8 +446,7 @@ export default function OfferSelectionModal({
                 </span>
                 <button
                   onClick={() => setTempSelectedOffers([])}
-                  className="font-medium hover:opacity-80 transition-opacity"
-                  style={{ color: color.primary.accent }}
+                  className="font-medium text-black hover:opacity-70 transition-opacity"
                 >
                   Clear All
                 </button>
@@ -470,16 +461,16 @@ export default function OfferSelectionModal({
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading offers...</p>
+                <p className="text-black">Loading offers...</p>
               </div>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <p className="text-red-600 mb-4">{error}</p>
+                <p className="text-black mb-4">{error}</p>
                 <button
                   onClick={loadOffers}
-                  className={`px-4 py-2 bg-gray-100 text-gray-700 ${tw.rounded} hover:bg-gray-200 transition-colors`}
+                  className={`px-4 py-2 bg-gray-100 text-black ${tw.rounded} hover:bg-gray-200 transition-colors`}
                 >
                   Retry
                 </button>
@@ -488,9 +479,8 @@ export default function OfferSelectionModal({
           ) : filteredOffers.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <Gift className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No offers found</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-black mb-2">No offers found</p>
+                <p className="text-sm text-black">
                   {searchTerm
                     ? "Try adjusting your search terms."
                     : "No offers available at the moment."}
@@ -565,54 +555,27 @@ export default function OfferSelectionModal({
                           />
                         </td>
                         <td className="px-4 py-3">
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {offer.name}
-                            </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {offer.description}
-                            </div>
+                          <div className="text-sm font-medium text-black truncate">
+                            {offer.name}
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`inline-block text-xs px-2 py-1 rounded-full ${
-                              rewardTypeColors[
-                                offer.reward_type as keyof typeof rewardTypeColors
-                              ] || "bg-gray-100 text-gray-700"
-                            }`}
-                          >
+                          <span className="text-xs text-black">
                             {offer.reward_type}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-medium text-black">
                             {offer.reward_value}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs text-gray-600">
-                              {offer.validity_period}d
-                            </span>
-                          </div>
+                          <span className="text-xs text-black">
+                            {offer.validity_period}d
+                          </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`inline-block text-xs px-2 py-1 rounded-full ${
-                              offerStatus === OfferStatusEnum.ACTIVE
-                                ? "bg-green-100 text-green-700"
-                                : offerStatus === OfferStatusEnum.APPROVED
-                                  ? "bg-blue-100 text-blue-700"
-                                  : offerStatus ===
-                                      OfferStatusEnum.PENDING_APPROVAL
-                                    ? "bg-yellow-100 text-yellow-700"
-                                    : offerStatus === OfferStatusEnum.DRAFT
-                                      ? "bg-gray-100 text-gray-700"
-                                      : "bg-gray-100 text-gray-700"
-                            }`}
-                          >
+                          <span className="text-xs text-black">
                             {offerStatus || "Unknown"}
                           </span>
                         </td>
@@ -649,7 +612,6 @@ export default function OfferSelectionModal({
                                       </>
                                     ) : (
                                       <>
-                                        <CheckCircle className="w-3 h-3 mr-1" />
                                         Submit for Approval
                                       </>
                                     )}
@@ -677,7 +639,6 @@ export default function OfferSelectionModal({
                                         </>
                                       ) : (
                                         <>
-                                          <Play className="w-3 h-3 mr-1" />
                                           Activate
                                         </>
                                       )}

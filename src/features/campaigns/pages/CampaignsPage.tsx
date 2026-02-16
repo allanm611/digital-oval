@@ -858,12 +858,7 @@ export default function CampaignsPage() {
   ];
 
   const getStatusBadge = (status: string) => {
-    const badges = {
-      active: `bg-[${color.status.success}]/10 text-[${color.status.success}]`,
-      paused: `bg-[${color.interactive.hover}] text-[${color.text.secondary}]`,
-      completed: `bg-[${color.status.info}]/10 text-[${color.status.info}]`,
-    };
-    return badges[status as keyof typeof badges] || badges.active;
+    return `text-black`;
   };
 
   // Action handlers using service layer
@@ -1239,7 +1234,7 @@ export default function CampaignsPage() {
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div
-                        className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={campaign.name}
                       >
                         {campaign.name}
@@ -1778,7 +1773,7 @@ export default function CampaignsPage() {
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <div
-              className={`text-base ${tw.textSecondary} text-center sm:text-left`}
+              className={`text-sm ${tw.textSecondary} text-center sm:text-left`}
             >
               Showing {(currentPage - 1) * pageSize + 1} to{" "}
               {Math.min(currentPage * pageSize, totalCampaigns)} of{" "}
@@ -1788,17 +1783,17 @@ export default function CampaignsPage() {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className={`text-base ${tw.textSecondary} px-2`}>
+              <span className={`text-sm ${tw.textSecondary} px-2`}>
                 Page {currentPage} of {totalPages || 1}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-base whitespace-nowrap`}
+                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
