@@ -408,6 +408,24 @@ export default function DNDChannelPage() {
                       backgroundColor: color.surface.tableHeader,
                     }}
                   >
+                    Phone
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
                     DND Type
                   </th>
                   <th
@@ -469,23 +487,24 @@ export default function DNDChannelPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div>
-                        <div
-                          className={`text-base font-semibold ${tw.textPrimary}`}
-                        >
-                          {subscription.customer_name || "Unknown"}
-                        </div>
-                        <div className={`text-sm ${tw.textMuted}`}>
-                          {channelValue === "SMS" &&
-                            subscription.customer_phone}
-                          {channelValue === "EMAIL" &&
-                            subscription.customer_email}
-                          {channelValue !== "SMS" &&
-                            channelValue !== "EMAIL" &&
-                            (subscription.customer_email ||
-                              subscription.customer_phone ||
-                              "No contact info")}
-                        </div>
+                      <div className={`text-base font-semibold ${tw.textPrimary}`}>
+                        {subscription.customer_name || "Unknown"}
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="text-sm text-black">
+                        {subscription.customer_phone || "—"}
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="text-sm text-black">
+                        {subscription.customer_email || "—"}
                       </div>
                     </td>
                     <td

@@ -1359,15 +1359,8 @@ export default function TypeConfigurationPage({
                       }}
                     >
                       <div className="flex items-center">
-                        <div>
-                          <div
-                            className={`text-base font-semibold ${tw.textPrimary}`}
-                          >
-                            {item.name}
-                          </div>
-                          <div className={`text-sm ${tw.textMuted}`}>
-                            ID: {item.id}
-                          </div>
+                        <div className={`text-base font-semibold ${tw.textPrimary}`}>
+                          {item.name}
                         </div>
                       </div>
                     </td>
