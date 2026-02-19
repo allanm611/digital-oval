@@ -48,6 +48,7 @@ export default function CreateQuickListModal({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFileProcessing, setIsFileProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isCreateMode = mode === "create";
@@ -143,6 +144,7 @@ export default function CreateQuickListModal({
 
     setUploadedFile(file);
     setErrors((prev) => ({ ...prev, file_text: "" }));
+    setIsFileProcessing(true);
 
     // Extract filename without extension for list name
     const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
@@ -170,12 +172,14 @@ export default function CreateQuickListModal({
           }));
 
           setErrors((prev) => ({ ...prev, file_text: "" }));
+          setIsFileProcessing(false);
         } catch (err) {
           setErrors((prev) => ({
             ...prev,
             file_text:
               "Failed to read XLSX file. Please ensure it's a valid Excel file.",
           }));
+          setIsFileProcessing(false);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -197,11 +201,13 @@ export default function CreateQuickListModal({
           }));
 
           setErrors((prev) => ({ ...prev, file_text: "" }));
+          setIsFileProcessing(false);
         } catch (err) {
           setErrors((prev) => ({
             ...prev,
             file_text: "Failed to read file. Please try again.",
           }));
+          setIsFileProcessing(false);
         }
       };
       reader.readAsText(file);
@@ -728,7 +734,7 @@ export default function CreateQuickListModal({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isFileProcessing}
                   className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
                   style={{
                     backgroundColor: buttonTokens.action.background,
@@ -736,11 +742,14 @@ export default function CreateQuickListModal({
                     borderRadius: buttonTokens.action.borderRadius,
                     padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
                   }}
+                  title={isFileProcessing ? "Processing file, please wait..." : ""}
                 >
-                  {isSubmitting
-                    ? "Creating..."
-                    : submitLabel ||
-                      (isCreateMode ? "Create quick list" : "Save Changes")}
+                  {isFileProcessing
+                    ? "Processing file..."
+                    : isSubmitting
+                      ? "Creating..."
+                      : submitLabel ||
+                        (isCreateMode ? "Create quick list" : "Save Changes")}
                 </button>
             </div>
           </div>
