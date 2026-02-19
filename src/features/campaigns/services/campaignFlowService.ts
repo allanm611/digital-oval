@@ -1,6 +1,5 @@
 import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
 import {
-  CampaignFlowConfig,
   CampaignFlowResponse,
   GetCampaignFlowsResponse,
   CreateCampaignFlowRequest,

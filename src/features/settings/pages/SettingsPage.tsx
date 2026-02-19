@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Moon, Sun } from "lucide-react";
+import { Save } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useTheme } from "../../../contexts/ThemeContext";

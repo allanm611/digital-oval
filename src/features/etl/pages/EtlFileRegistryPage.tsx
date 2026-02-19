@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Upload,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { etlService } from "../services/etlService";
 import { EtlFileRegistryRowType, FileStatsResponse } from "../types/etl";
@@ -48,6 +49,7 @@ export default function EtlFileRegistryPage() {
     rows: Record<string, string>[];
   } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Stats
   const [stats, setStats] = useState<FileStatsResponse | null>(null);
@@ -595,6 +597,7 @@ export default function EtlFileRegistryPage() {
                   setIsUploadModalOpen(false);
                   setUploadFile(null);
                   setUploadPreview(null);
+                  setUploadError(null);
                 }}
                 className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
               >
@@ -630,6 +633,7 @@ export default function EtlFileRegistryPage() {
                 accept=".cdr,.tdr"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
+                  setUploadError(null);
 
                   // Validate file extension
                   if (file) {
@@ -777,6 +781,36 @@ export default function EtlFileRegistryPage() {
               </div>
             )}
 
+            {/* Error Message */}
+            {uploadError && (
+              <div
+                className={`p-3 ${tw.rounded} border flex items-start gap-3`}
+                style={{
+                  backgroundColor: `${color.status.danger}10`,
+                  borderColor: color.status.danger,
+                }}
+              >
+                <AlertTriangle
+                  className="w-5 h-5 flex-shrink-0 mt-0.5"
+                  style={{ color: color.status.danger }}
+                />
+                <div className="flex-1">
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: color.status.danger }}
+                  >
+                    Upload Error
+                  </p>
+                  <p
+                    className="text-sm mt-1"
+                    style={{ color: color.status.danger }}
+                  >
+                    {uploadError}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Buttons */}
             <div className="flex gap-3 pt-4">
               <button
@@ -784,6 +818,7 @@ export default function EtlFileRegistryPage() {
                   setIsUploadModalOpen(false);
                   setUploadFile(null);
                   setUploadPreview(null);
+                  setUploadError(null);
                 }}
                 className={`flex-1 px-4 py-2 ${tw.rounded} border font-medium transition-colors`}
                 style={{
@@ -797,11 +832,12 @@ export default function EtlFileRegistryPage() {
                 disabled={isUploading || !uploadFile}
                 onClick={async () => {
                   if (!uploadFile) {
-                    showError("Error", "Please select a file");
+                    setUploadError("Please select a file");
                     return;
                   }
 
                   setIsUploading(true);
+                  setUploadError(null);
                   try {
                     const response = await etlService.uploadFile(uploadFile);
 
@@ -814,21 +850,27 @@ export default function EtlFileRegistryPage() {
                       setUploadFile(null);
                       setUploadPreview(null);
                       setUploadCategory("CDR");
+                      setUploadError(null);
 
                       // Reload registry and stats to show the new file
                       await loadRegistry();
                       await loadStats();
                     } else {
-                      showError(
-                        t.etl.uploadFailed || "Upload Failed",
-                        response.message || "An error occurred during upload",
-                      );
+                      // Check if it's a duplicate file error
+                      const errorMessage = response.message || response.error || "An error occurred during upload";
+                      if (errorMessage.includes("duplicate key") || errorMessage.includes("unique constraint")) {
+                        setUploadError(`A file with the name "${uploadFile.name}" already exists. Please use a different file name or delete the existing file first.`);
+                      } else {
+                        setUploadError(errorMessage);
+                      }
                     }
                   } catch (err) {
-                    showError(
-                      t.etl.uploadError || "Upload Error",
-                      (err as Error).message || "Failed to upload file",
-                    );
+                    const errorMsg = (err as Error).message || "Failed to upload file";
+                    if (errorMsg.includes("duplicate key") || errorMsg.includes("unique constraint")) {
+                      setUploadError(`A file with the name "${uploadFile.name}" already exists. Please use a different file name or delete the existing file first.`);
+                    } else {
+                      setUploadError(errorMsg);
+                    }
                   } finally {
                     setIsUploading(false);
                   }

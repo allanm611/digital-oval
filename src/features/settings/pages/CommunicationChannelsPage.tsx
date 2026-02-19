@@ -5,7 +5,6 @@ import { communicationChannelsConfig } from "../../../shared/configs/configurati
 
 export default function CommunicationChannelsPage() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   // Handle row click - navigate to SMS routes if SMS channel is clicked
   const handleChannelRowClick = (channelName: string) => {

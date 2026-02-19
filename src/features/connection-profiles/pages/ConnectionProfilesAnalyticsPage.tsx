@@ -5,8 +5,6 @@ import {
   Activity,
   Shield,
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -101,7 +99,7 @@ const COLORS = [
 ];
 
 export default function ConnectionProfilesAnalyticsPage(): JSX.Element {
-  const navigate = useNavigate();
+  
   const { error: showError } = useToast();
   const { t } = useLanguage();
 

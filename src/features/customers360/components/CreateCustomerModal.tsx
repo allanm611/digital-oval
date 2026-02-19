@@ -421,8 +421,6 @@ export default function CreateCustomerModal({
     setIsLoading(true);
     try {
       const text = await importFile.text();
-      setBulkText(text);
-      setActiveTab("bulk");
       // Process file
       const lines = text
         .split("\n")
@@ -608,6 +606,7 @@ export default function CreateCustomerModal({
                     name="msisdn"
                     value={formData.msisdn}
                     onChange={handleInputChange}
+                    placeholder="254712345678"
                     className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
@@ -785,7 +784,7 @@ export default function CreateCustomerModal({
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder=""
+                placeholder="SubID,FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType&#10;1001,Samuel,Kipchoge,254750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF"
                 className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
                 rows={8}
               />
@@ -894,9 +893,9 @@ export default function CreateCustomerModal({
                   type="button"
                   onClick={() => {
                     const sampleData = `SubID,FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType
-1001,Samuel,Kipchoge,0750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
-1002,Mary,Wangari,0712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
-1003,James,Ochieng,0734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
+1001,Samuel,Kipchoge,254750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
+1002,Mary,Wangari,254712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
+1003,James,Ochieng,254734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -927,8 +926,7 @@ export default function CreateCustomerModal({
                     : "Click to select or drag a CSV file"}
                 </p>
                 <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  CSV file with columns: SubID, FirstName, LastName, Phone,
-                  Email, City, CustomerType, Tariff, Status, SimType
+                  CSV file with columns: SubID, FirstName, LastName, Phone (format: 254...), Email, City, CustomerType, Tariff, Status, SimType
                 </p>
               </div>
               <input

@@ -313,7 +313,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : t("scheduledJob.deleteFailed", "Failed to delete scheduled job");
-      showError(t("scheduledJob.unableToDelete", "Unable to delete scheduled job"), message);
+      showError(t("scheduledJob.unableToDelete", "Unable to delete scheduled job"), message, true);
     } finally {
       setIsDeleting(false);
     }

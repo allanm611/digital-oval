@@ -192,7 +192,6 @@ function CategoryModal({
 }
 
 export default function CampaignCategoriesPage() {
-  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -533,10 +532,10 @@ export default function CampaignCategoriesPage() {
         );
       } catch (err) {
         console.error("Failed to toggle category status:", err);
-        // Display full backend error message
+        // Display backend error message and bypass silent mode for important errors
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update category";
-        showError("Deactivation Failed", errorMessage);
+        showError("Deactivation Failed", errorMessage, true);
       } finally {
         setTogglingCategoryId(null);
       }

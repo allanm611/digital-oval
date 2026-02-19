@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { tw } from "../../../shared/utils/utils";
@@ -9,7 +9,6 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 export default function CampaignLifecycleHistoryPage() {
   const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

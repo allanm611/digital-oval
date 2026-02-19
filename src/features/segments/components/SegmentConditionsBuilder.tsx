@@ -105,7 +105,7 @@ export default function SegmentConditionsBuilder({
         {
           id: generateId(),
           conditionType: "360_profile",
-          category: categories.length > 0 ? categories[0].id : undefined,
+          category: categories.length > 0 ? 1 : undefined,
           field: defaultFieldValue,
           field_id: defaultFieldId,
           operator: "equals",
@@ -144,7 +144,7 @@ export default function SegmentConditionsBuilder({
     const newCondition: SegmentCondition = {
       id: generateId(),
       conditionType: "360_profile",
-      category: categories.length > 0 ? categories[0].id : undefined,
+      category: categories.length > 0 ? 1 : undefined,
       field: defaultFieldValue,
       field_id: defaultFieldId,
       operator: "equals",
@@ -273,16 +273,18 @@ export default function SegmentConditionsBuilder({
         {/* Category Selection */}
         <div className="min-w-[150px] max-w-[180px] flex-shrink-0">
           <HeadlessSelect
-            options={categories.map((cat) => ({
-              value: cat.id.toString(),
-              label: cat.name,
+            options={categories.map((cat, index) => ({
+              value: cat.id ? cat.id.toString() : (index + 1).toString(),
+              label: cat.name || cat.category || `Category ${index + 1}`,
             }))}
-            value={condition.category?.toString() || ""}
+            value={condition.category !== undefined ? condition.category.toString() : ""}
             onChange={(value) => {
               const categoryId = parseInt(value as string);
-              const selectedCategory = categories.find(
-                (c) => c.id === categoryId,
-              );
+              // Try to find by ID first, then by index
+              let selectedCategory = categories.find((c) => c.id === categoryId);
+              if (!selectedCategory) {
+                selectedCategory = categories[categoryId - 1];
+              }
               const categoryFields = selectedCategory?.fields || [];
               const firstField =
                 categoryFields.length > 0 ? categoryFields[0] : null;
@@ -306,10 +308,13 @@ export default function SegmentConditionsBuilder({
         <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
           <HeadlessSelect
             options={(() => {
-              if (condition.category) {
-                const selectedCategory = categories.find(
-                  (c) => c.id === condition.category,
-                );
+              if (condition.category !== undefined && condition.category !== null) {
+                const categoryId = condition.category as number;
+                // Try to find by ID first, then by index
+                let selectedCategory = categories.find((c) => c.id === categoryId);
+                if (!selectedCategory) {
+                  selectedCategory = categories[categoryId - 1];
+                }
                 const fieldsToShow = selectedCategory?.fields || [];
                 return fieldsToShow.map((field) => ({
                   value: field.field_value,

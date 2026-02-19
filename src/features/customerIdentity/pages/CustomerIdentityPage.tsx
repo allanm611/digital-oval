@@ -51,7 +51,11 @@ export default function CustomerIdentityPage() {
 
   const availableFieldTypes = useMemo(() => {
     const uniqueTypes = Array.from(
-      new Set(fields.map((field) => field.field_type).filter(Boolean)),
+      new Set(
+        fields
+          .map((field) => (field as any).type || field.field_type)
+          .filter(Boolean),
+      ),
     );
     return uniqueTypes.sort((a, b) => a.localeCompare(b));
   }, [fields]);
@@ -67,9 +71,10 @@ export default function CustomerIdentityPage() {
         (field.description || "").toLowerCase().includes(search) ||
         field.source_table.toLowerCase().includes(search);
 
+      const fieldTypeValue = (field as any).type || field.field_type;
       const matchesType =
         selectedFieldType === "all" ||
-        field.field_type.toLowerCase() === selectedFieldType.toLowerCase();
+        (fieldTypeValue && fieldTypeValue.toLowerCase() === selectedFieldType.toLowerCase());
 
       return matchesSearch && matchesType;
     });
@@ -246,13 +251,13 @@ export default function CustomerIdentityPage() {
                         className="px-6 py-4 text-sm text-gray-700"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {field.field_type}
+                        {(field as any).type || (field as any).field_type || "—"}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-700"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {field.source_table}
+                        {field.source_table || "—"}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-600"

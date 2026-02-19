@@ -319,7 +319,6 @@ function CreateControlGroupModal({
   const handleNext = () => {
     if (currentStep < 3 && canProceedToNextStep()) {
       setCurrentStep(currentStep + 1);
-    } else {
     }
   };
 

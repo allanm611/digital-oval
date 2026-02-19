@@ -126,6 +126,7 @@ export default function EditProductPage() {
         unit_value: productData.unit_value ?? 0,
         validity_hours: productData.validity_hours,
         combo_data: comboDataFromMetadata,
+        tags: productData.tags,
       });
 
       // Set selected category IDs for MultiCategorySelector
@@ -186,9 +187,10 @@ export default function EditProductPage() {
         finalUpdateData.unit_of_measure = unit;
       }
 
-      // Include validity_hours if provided (backend doesn't accept unit_value)
+      // Convert validity_hours to validity_days (backend expects days, not hours)
+      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
       if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_hours = validity_hours;
+        finalUpdateData.validity_days = Math.ceil(validity_hours / 24);
       }
 
       // Include combo_data if provided (for combo products)

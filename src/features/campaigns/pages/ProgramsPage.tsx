@@ -29,7 +29,7 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 const PAGE_SIZE = 20;
 
 export default function ProgramsPage() {
-  const navigate = useNavigate();
+  
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -325,6 +325,7 @@ export default function ProgramsPage() {
           description: programData.description,
           budget_total: programData.budget_total,
           start_date: programData.start_date || null,
+          end_date: programData.end_date || null,
           created_by: userId,
         });
         showToast("Program created successfully!");
@@ -341,12 +342,19 @@ export default function ProgramsPage() {
     }
   };
 
-  const filteredPrograms = (programs || []).filter(
-    (program) =>
-      program?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (program?.description &&
-        program.description.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
+  const filteredPrograms = (programs || [])
+    .filter(
+      (program) =>
+        program?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (program?.description &&
+          program.description.toLowerCase().includes(searchTerm.toLowerCase())),
+    )
+    .sort((a, b) => {
+      // Sort by created_at in descending order (newest first)
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
 
   const paginatedPrograms = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;

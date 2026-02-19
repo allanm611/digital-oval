@@ -118,10 +118,6 @@ export default function CreateCommunicationModal({
             : {}),
           body: messageBody,
         },
-        filters: {
-          column_conditions: [],
-          limit: 1000,
-        },
         batch_size: 500,
         created_by: 1, // TODO: Get from auth context
       });
@@ -301,7 +297,7 @@ export default function CreateCommunicationModal({
               <span className="font-semibold text-gray-700 break-words">
                 {quicklist.name}
               </span>{" "}
-              ({quicklist.row_count || 0} recipients)
+              ({quicklist.rows_imported || 0} recipients)
             </p>
           </div>
           <button
@@ -408,7 +404,7 @@ export default function CreateCommunicationModal({
               <>
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">
-                  Send Now to {quicklist.row_count || 0} Recipients
+                  Send Now to {quicklist.rows_imported || 0} Recipients
                 </span>
                 <span className="sm:hidden">Send Now</span>
               </>

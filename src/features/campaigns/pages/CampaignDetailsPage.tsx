@@ -14,12 +14,8 @@ import {
   Zap,
   Clock,
   MoreHorizontal,
-  Users,
   Send,
   TrendingUp,
-  DollarSign,
-  Package,
-  ChevronDown,
   Eye,
   X,
 } from "lucide-react";
@@ -30,7 +26,6 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
-import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { offerService } from "../../offers/services/offerService";
 import { segmentService } from "../../segments/services/segmentService";
@@ -84,14 +79,6 @@ export default function CampaignDetailsPage() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [isApproveLoading, setIsApproveLoading] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
-  const [performanceData, setPerformanceData] = useState<{
-    sent: number;
-    delivered: number;
-    opened?: number;
-    converted: number;
-    revenue: number;
-  } | null>(null);
-  const [isLoadingPerformance, setIsLoadingPerformance] = useState(false);
   const [segments, setSegments] = useState<CampaignSegmentDetail[]>([]);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -210,9 +197,6 @@ export default function CampaignDetailsPage() {
           }
         }
 
-        setPerformanceData(null);
-        setIsLoadingPerformance(false);
-
         if (campaignData.created_by) {
           try {
             const creatorResponse = await userService.getUserById(
@@ -296,54 +280,6 @@ export default function CampaignDetailsPage() {
       setSegments([]);
     } finally {
       setIsLoadingSegments(false);
-    }
-  };
-
-  const fetchCampaignOffers = async (campaignId: number) => {
-    try {
-      setIsLoadingOffers(true);
-      // Use new endpoint to get offers directly from campaign flows
-      const response = await campaignFlowService.getCampaignOffers(
-        campaignId,
-        true,
-      );
-
-      if (response && response.success && Array.isArray(response.data)) {
-        // Fetch full offer details for each offer in the response
-        const offerPromises = response.data.map(async (offerInfo) => {
-          try {
-            const offerResponse = await offerService.getOfferById(
-              offerInfo.id,
-              true,
-            );
-            // Handle both direct Offer and { success: true, data: Offer } response formats
-            if (offerResponse && typeof offerResponse === "object") {
-              if ("data" in offerResponse && offerResponse.data) {
-                return offerResponse.data as Offer;
-              } else if ("id" in offerResponse) {
-                return offerResponse as unknown as Offer;
-              }
-            }
-            return null;
-          } catch (error) {
-            console.error(`Failed to fetch offer ${offerInfo.id}:`, error);
-            return null;
-          }
-        });
-
-        const fetchedOffers = await Promise.all(offerPromises);
-        const validOffers = fetchedOffers.filter(
-          (offer): offer is Offer => offer !== null,
-        );
-        setOffers(validOffers);
-      } else {
-        setOffers([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch campaign offers:", error);
-      setOffers([]);
-    } finally {
-      setIsLoadingOffers(false);
     }
   };
 
@@ -1029,7 +965,7 @@ export default function CampaignDetailsPage() {
                   Messages Sent
                 </p>
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {executionMetrics.total_messages_sent.toLocaleString()}
+                  {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
                 </p>
               </div>
               <div
@@ -1055,7 +991,7 @@ export default function CampaignDetailsPage() {
                   Failed
                 </p>
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {executionMetrics.total_messages_failed.toLocaleString()}
+                  {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
                 </p>
               </div>
               <div
@@ -1081,11 +1017,11 @@ export default function CampaignDetailsPage() {
                   Success Rate
                 </p>
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {executionMetrics.total_messages_sent + executionMetrics.total_messages_failed > 0
+                  {(executionMetrics?.total_messages_sent || 0) + (executionMetrics?.total_messages_failed || 0) > 0
                     ? (
-                        (executionMetrics.total_messages_sent /
-                          (executionMetrics.total_messages_sent +
-                            executionMetrics.total_messages_failed)) *
+                        ((executionMetrics?.total_messages_sent || 0) /
+                          ((executionMetrics?.total_messages_sent || 0) +
+                            (executionMetrics?.total_messages_failed || 0))) *
                         100
                       ).toFixed(1)
                     : "0.0"}
@@ -1115,8 +1051,8 @@ export default function CampaignDetailsPage() {
                   Broadcasts
                 </p>
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {executionMetrics.broadcasts_completed} /
-                  {executionMetrics.total_broadcasts}
+                  {executionMetrics?.broadcasts_completed || 0} /
+                  {executionMetrics?.total_broadcasts || 0}
                 </p>
               </div>
               <div
@@ -1142,7 +1078,7 @@ export default function CampaignDetailsPage() {
                   Execution Time
                 </p>
                 <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {(executionMetrics.execution_time_ms / 1000).toFixed(2)}s
+                  {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
                 </p>
               </div>
               <div

@@ -134,6 +134,11 @@ export default function SelectCustomersStep({
       // Handle manual input method
       if (inputMethod === "manual") {
         updateData.audienceFileText = manualInput;
+        // Count the number of recipient lines
+        const recipientLines = manualInput
+          .split("\n")
+          .filter((line) => line.trim());
+        updateData.rowCount = recipientLines.length;
       }
 
       onUpdate(updateData);

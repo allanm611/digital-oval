@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { AlertCircle, Package, Coins, Percent, DollarSign } from "lucide-react";
-import { color, tw } from "../../../shared/utils/utils";
+import { useState, useEffect, useRef } from "react";
+import { AlertCircle, Package, Coins, Percent, DollarSign, ChevronDown } from "lucide-react";
+import { color, tw, zIndex, components } from "../../../shared/utils/utils";
 import { ManualRewardData } from "../pages/CreateManualRewardPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
+import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
+import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 
 interface DefineRewardStepProps {
   data: ManualRewardData;
@@ -36,6 +39,42 @@ export default function DefineRewardStep({
   );
   const [description, setDescription] = useState(data.description || "");
   const [error, setError] = useState("");
+
+  // Communication Policy states
+  const [communicationPolicies, setCommunicationPolicies] = useState<
+    CommunicationPolicyConfiguration[]
+  >([]);
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<CommunicationPolicyConfiguration | null>(null);
+  const [isPolicyDropdownOpen, setIsPolicyDropdownOpen] = useState(false);
+  const policyDropdownRef = useRef<HTMLDivElement>(null);
+
+  useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Load Communication Policies
+  useEffect(() => {
+    setCommunicationPolicies(communicationPolicyService.getAllPolicies());
+
+    const unsubscribe = communicationPolicyService.subscribe(
+      (updatedPolicies) => {
+        setCommunicationPolicies(updatedPolicies);
+      },
+    );
+
+    return unsubscribe;
+  }, []);
+
+  // Sync selectedPolicy with parent data
+  useEffect(() => {
+    if (data.selectedCommunicationPolicyId) {
+      const policy = communicationPolicyService.getPolicyById(
+        data.selectedCommunicationPolicyId,
+      );
+      if (policy) {
+        setSelectedPolicy(policy);
+      }
+    }
+  }, [data.selectedCommunicationPolicyId]);
 
   const rewardTypes = [
     {
@@ -98,6 +137,7 @@ export default function DefineRewardStep({
       rewardValue: rewardValue.trim(),
       bundleTrack: rewardType === "bundle" ? bundleTrack : undefined,
       description: description.trim() || undefined,
+      selectedCommunicationPolicyId: selectedPolicy?.id,
     });
 
     // Move to next step
@@ -254,6 +294,103 @@ export default function DefineRewardStep({
             </p>
           </div>
         )}
+
+        {/* Communication Policy (Optional) */}
+        <div>
+          <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
+            Communication Policy{" "}
+            <span className={tw.textMuted}>({t.manualRewards.optional})</span>
+          </label>
+          <div className="relative" ref={policyDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsPolicyDropdownOpen(!isPolicyDropdownOpen)}
+              className={`${
+                components.input.default
+              } w-full px-3 py-2 text-left flex items-center justify-between ${
+                selectedPolicy ? "" : "text-gray-500"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {selectedPolicy && (
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      selectedPolicy.isActive ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                  ></div>
+                )}
+                <span className="text-sm">
+                  {selectedPolicy
+                    ? selectedPolicy.name
+                    : "Choose a communication policy (optional)"}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  isPolicyDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isPolicyDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full mt-1 bg-white border ${tw.rounded} shadow-xl max-h-64 overflow-hidden`}
+                style={{ borderColor: color.border.default }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPolicy(null);
+                    setIsPolicyDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                    No Policy
+                  </div>
+                  <div className={`text-xs ${tw.textSecondary}`}>
+                    Reward will use default communication settings
+                  </div>
+                </button>
+
+                <div className="max-h-48 overflow-y-auto">
+                  {communicationPolicies.map((policy) => (
+                    <button
+                      key={policy.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedPolicy(policy);
+                        setIsPolicyDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b last:border-b-0"
+                      style={{ borderColor: color.border.default }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${
+                            policy.isActive ? "bg-green-500" : "bg-gray-400"
+                          }`}
+                        ></div>
+                        <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                          {policy.name}
+                        </div>
+                      </div>
+                      {policy.description && (
+                        <div className={`text-xs ${tw.textSecondary} mt-1`}>
+                          {policy.description}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <p className={`mt-1 text-xs ${tw.textSecondary}`}>
+            Select a communication policy to control how this reward is delivered to recipients
+          </p>
+        </div>
 
         {/* Description (Optional) */}
         <div>

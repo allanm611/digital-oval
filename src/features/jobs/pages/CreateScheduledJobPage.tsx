@@ -186,7 +186,7 @@ export default function CreateScheduledJobPage() {
       const loadJob = async () => {
         setIsLoading(true);
         try {
-          const job = await scheduledJobService.getScheduledJobById(Number(id));
+          const job = await scheduledJobService.getScheduledJobById(Number(id), true);
           setFormData({
             name: job.name,
             code: job.code,
@@ -234,9 +234,11 @@ export default function CreateScheduledJobPage() {
             });
             setSegmentChannelCodes(channelMap);
 
-            // Load segments for the campaign, preserving existing channel codes
+            // Load segments for the campaign, preserving existing channel codes and segment IDs
             if (meta.campaign_id) {
               await handleCampaignChange(meta.campaign_id, channelMap);
+              // Restore selected segment IDs after campaign change
+              setSelectedSegmentIds(segmentIds);
             }
           }
         } catch (err) {
@@ -267,7 +269,7 @@ export default function CreateScheduledJobPage() {
       setIsLoadingSegments(true);
       try {
         const response: GetCampaignFlowsResponse =
-          await campaignFlowService.getCampaignSegments(campaignId);
+          await campaignFlowService.getCampaignSegments(campaignId, true);
         const segments = response.data || [];
         const uniqueSegments = Array.from(
           new Map(segments.map((s) => [s.segment_id, s])).values(),

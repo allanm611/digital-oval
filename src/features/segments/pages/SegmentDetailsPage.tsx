@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Popover } from "@headlessui/react";
@@ -11,16 +11,12 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   Plus,
   X,
   Search,
-  Calendar,
-  Clock,
   Layers,
   Zap,
   MoreVertical,
-  ChevronUpDown,
 } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
@@ -49,7 +45,6 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ViewMembersModal from "../components/ViewMembersModal";
 import AddMembersModal from "../components/AddMembersModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import type { Customer } from "../../customers360/types/customer";
 
@@ -96,16 +91,6 @@ export default function SegmentDetailsPage() {
 
   // Members state
   const [showMembersModal, setShowMembersModal] = useState(false);
-  const [members, setMembers] = useState<
-    Array<{ customer_id: string | number; [key: string]: unknown }>
-  >([]);
-  const [membersPage, setMembersPage] = useState(1);
-  const [membersTotalPages, setMembersTotalPages] = useState(1);
-  const [isLoadingMembersList, setIsLoadingMembersList] = useState(false);
-  const [customerIdsInput, setCustomerIdsInput] = useState("");
-  const [membersSearchTerm, setMembersSearchTerm] = useState("");
-  const [debouncedMembersSearchTerm, setDebouncedMembersSearchTerm] =
-    useState("");
 
   // Customer selection state
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
@@ -117,7 +102,6 @@ export default function SegmentDetailsPage() {
   >([]);
   const [isLoadingCustomersForSelection, setIsLoadingCustomersForSelection] =
     useState(false);
-  const [isAddingMembers, setIsAddingMembers] = useState(false);
 
   // Action button states
   const [isRecomputingMembers, setIsRecomputingMembers] = useState(false);
@@ -140,9 +124,7 @@ export default function SegmentDetailsPage() {
   const [previewMembers, setPreviewMembers] = useState<Array<{ [key: string]: unknown }>>([]);
   const [previewCount, setPreviewCount] = useState<number>(0);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
-  const [exportFields, setExportFields] = useState<string[]>(["id", "name", "email", "phone"]);
   const [isExportJobRunning, setIsExportJobRunning] = useState(false);
-  const [exportJobId, setExportJobId] = useState<string | null>(null);
 
   // Phase 4 - Advanced Edit
   const [showAdvancedEdit, setShowAdvancedEdit] = useState(false);
@@ -458,44 +440,6 @@ export default function SegmentDetailsPage() {
 
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
-  };
-
-  const handleCustomExport = async () => {
-    if (!segment) return;
-
-    showInfo(
-      "Export unavailable",
-      "Cannot access this functionality right now.",
-    );
-    setShowExportModal(false);
-    return;
-
-    setIsExporting(true);
-    try {
-      const blob = await segmentService.exportSegment(Number(id), {
-        format: exportFormat,
-      });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `segment-${segment.name}-${
-        new Date().toISOString().split("T")[0]
-      }.${exportFormat}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      success(
-        "Export successful",
-        `Segment data has been exported as ${exportFormat.toUpperCase()}`,
-      );
-      setShowExportModal(false);
-    } catch (err) {
-      console.error("Failed to export segment:", err);
-      showError("Export failed", "Please try again later.");
-    } finally {
-      setIsExporting(false);
-    }
   };
 
   const handleAddMembers = async () => {

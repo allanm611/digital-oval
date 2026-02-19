@@ -14,7 +14,6 @@
  * That's it! No changes needed to CreateCampaignPage itself.
  */
 
-import { Suspense } from "react";
 import CreateCampaignPage from "./CreateCampaignPage";
 import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
 import { PermissionGate } from "../../auth/components/PermissionGate";

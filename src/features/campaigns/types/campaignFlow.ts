@@ -74,9 +74,9 @@ export interface GetCampaignFlowsResponse {
   source: string;
 }
 
-export interface CreateCampaignFlowRequest extends CampaignFlowConfig {}
+export type CreateCampaignFlowRequest = CampaignFlowConfig;
 
-export interface UpdateCampaignFlowRequest extends Partial<CampaignFlowConfig> {}
+export type UpdateCampaignFlowRequest = Partial<CampaignFlowConfig>;
 
 // Search Parameters
 export interface SearchCampaignFlowsParams {

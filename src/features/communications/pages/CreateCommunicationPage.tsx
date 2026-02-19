@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, CheckCircle, XCircle } from "lucide-react";
-import BackButton from "../../../shared/components/ui/BackButton";
+
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { tw, color } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -70,7 +70,7 @@ export default function CreateCommunicationPage() {
           setSampleData(cleanData as Record<string, unknown>);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       console.error("Failed to load quicklist:", error);
     } finally {
       setLoading(false);
@@ -107,7 +107,7 @@ export default function CreateCommunicationPage() {
       if (response.success) {
         setResult(response.data);
       }
-    } catch (error) {
+    } catch (_error) {
       // On error, show toast and route immediately
       // Communication continues in background
       showToast("Communication created successfully");

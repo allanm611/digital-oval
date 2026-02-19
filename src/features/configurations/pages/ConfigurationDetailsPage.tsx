@@ -43,9 +43,9 @@ const subConfigRoutes: Record<string, string> = {
 };
 
 export default function ConfigurationDetailsPage() {
-  const navigate = useNavigate();
+  
   const { id } = useParams<{ id: string }>();
-  const { t } = useLanguage();
+  const { _t: t } = useLanguage();
   const [config, setConfig] = useState<ConfigurationItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 

@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import BackButton from "../../../shared/components/ui/BackButton";
 import {
   Search,
   Edit,
   Trash2,
   Users,
-  ArrowLeft,
   Grid,
   List,
   FolderOpen,
@@ -621,10 +619,10 @@ export default function SegmentCategoriesPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
-      // Display full backend error message
+      // Display backend error message and bypass silent mode for important errors
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      showError("Deactivation Failed", errorMessage);
+      showError("Deactivation Failed", errorMessage, true);
     } finally {
       setTogglingCategoryId(null);
     }

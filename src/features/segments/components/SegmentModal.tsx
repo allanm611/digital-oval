@@ -547,19 +547,8 @@ export default function SegmentModal({
                   onSubmit={handleSubmit}
                   className="p-6 space-y-6"
                 >
-                  {/* Error Message */}
-                  {error && (
-                    <div
-                      className={`p-4 bg-red-50 border border-red-300 ${tw.rounded}`}
-                      style={{
-                        borderColor: "#ef4444",
-                      }}
-                    >
-                      <p className="text-sm font-medium text-red-600">
-                        {error}
-                      </p>
-                    </div>
-                  )}
+                  {/* Error Message - Hidden */}
+                  {error && console.error("Segment Modal Error:", error)}
 
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

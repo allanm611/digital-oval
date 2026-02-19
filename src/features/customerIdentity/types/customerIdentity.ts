@@ -26,10 +26,10 @@ export type CustomerIdentityField = {
   field_name: string;
   field_value: string;
   description: string;
-  field_type: string;
+  field_type?: string;
   field_pg_type: string | null;
   field_type_precision: string | number | null;
-  source_table: string;
+  source_table?: string;
   validation: FieldValidation | null;
   ui: FieldUIConfig | null;
   operators: FieldOperator[];

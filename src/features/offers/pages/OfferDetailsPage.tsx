@@ -1001,14 +1001,17 @@ export default function OfferDetailsPage() {
           skipCache: true,
         });
       } else {
-        // Use getAllProducts when there's no search term
-        response = await productService.getAllProducts({
+        // Use getActiveProducts when there's no search term (only active products)
+        response = await productService.getActiveProducts({
           limit: 100,
           skipCache: true,
         });
       }
 
       let products = response.data || [];
+
+      // Filter to only show active products (for search results)
+      products = products.filter((product: Product) => product.is_active);
 
       // Apply category filter if not 'all'
       if (selectedProductCategory !== "all") {
@@ -1408,10 +1411,8 @@ export default function OfferDetailsPage() {
         `"${productName}" is now the primary product for this offer.`,
       );
     } catch (err) {
-      // Failed to set primary product
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to set primary product";
-      showError("Failed to set primary product", errorMessage);
+      // Failed to set primary product - show generic message only
+      showError("Failed to set primary", "Unable to set this product as primary. Please try again.", true);
     } finally {
       setSettingPrimaryId(null);
     }

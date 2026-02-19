@@ -205,11 +205,8 @@ export default function QuickListsPage() {
 
       // Reload stats and quicklists
       await loadStats();
-      // Reload the quicklists list to show the new one
-      // Small delay to allow backend to process the file
-      setTimeout(async () => {
-        await loadQuickLists(1); // Always reload from page 1 to see the new quicklist
-      }, 2000);
+      // Reload the quicklists list to show the new one immediately
+      await loadQuickLists(1); // Always reload from page 1 to see the new quicklist
     } catch (err) {
       console.error("Failed to create quicklist:", err);
       const errorMessage =

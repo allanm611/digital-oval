@@ -95,11 +95,11 @@ export default function ServerStatsCards({
         <p className="mt-2 text-3xl font-bold text-black">
           {isLoading ? "..." : protocolCounts.length}
         </p>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+        <div className="mt-3 flex flex-row flex-wrap gap-3 text-sm">
           {protocolCounts.slice(0, 4).map((protocol) => (
             <div
               key={protocol.protocol}
-              className={`flex items-center justify-between ${tw.rounded} bg-gray-50 px-3 py-2`}
+              className="flex items-center gap-2"
             >
               <span className="font-medium text-black uppercase">
                 {protocol.protocol}
@@ -110,7 +110,7 @@ export default function ServerStatsCards({
             </div>
           ))}
           {protocolCounts.length === 0 && (
-            <p className="col-span-2 text-black">No protocol data</p>
+            <p className="text-black">No protocol data</p>
           )}
         </div>
       </div>
@@ -127,15 +127,15 @@ export default function ServerStatsCards({
         <p className="mt-2 text-3xl font-bold text-black">
           {isLoading ? "..." : regionsCovered}
         </p>
-        <div className="mt-3 space-y-2 text-sm">
+        <div className="mt-3 flex flex-row gap-2 text-xs overflow-hidden">
           {environmentCounts.slice(0, 3).map((env) => (
             <div
               key={`${env.environment}-stat`}
-              className={`flex items-center justify-between ${tw.rounded} bg-gray-50 px-3 py-2`}
+              className="flex items-center gap-1 whitespace-nowrap"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <Activity
-                  size={16}
+                  size={14}
                   style={{ color: color.primary.accent }}
                   aria-hidden
                 />

@@ -38,8 +38,11 @@ class CustomerIdentityService {
     const categories =
       profiles.data?.[0]?.field_selector_config ?? ([] as FieldCategory[]);
 
+    // Support both old structure (value field) and new structure (category field)
     const customerIdentityCategory = categories.find(
-      (category) => category.value === "customer_identity",
+      (category) =>
+        category.value === "customer_identity" ||
+        (category.category && category.category.toLowerCase().includes("customer identity"))
     );
 
     return customerIdentityCategory?.fields ?? [];

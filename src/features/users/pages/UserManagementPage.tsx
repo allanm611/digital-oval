@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
 import { accountService } from "../../account/services/accountService";
+import { userOnboardingService } from "../../users/services/userOnboardingService";
 import { UserType, PaginatedResponse } from "../../users/types/user";
 import { useToast } from "../../../contexts/ToastContext";
 import { useConfirm } from "../../../contexts/ConfirmContext";
@@ -142,6 +143,8 @@ type AccountRequestListItem = {
   created_at?: string;
   created_on?: string;
   department?: string;
+  status?: "pending" | "submitted" | "approved" | "rejected" | "cancelled";
+  rejection_reason?: string;
 };
 
 export default function UserManagementPage() {
@@ -155,12 +158,15 @@ export default function UserManagementPage() {
   const [accountRequests, setAccountRequests] = useState<
     AccountRequestListItem[]
   >([]);
+  const [rejectedRequests, setRejectedRequests] = useState<
+    AccountRequestListItem[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorState, setErrorState] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<
-    "users" | "requests" | "analytics"
+    "users" | "requests" | "rejected" | "analytics"
   >("users");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
@@ -197,6 +203,9 @@ export default function UserManagementPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserType | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectingRequest, setRejectingRequest] = useState<AccountRequestListItem | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const { user: authUser } = useAuth();
   const [roleLookup, setRoleLookup] = useState<Record<number, Role>>({});
   const roleLookupRef = useRef<Record<number, Role>>({});
@@ -272,35 +281,41 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        const usersResponse = await fetchUsers({
-          skipCache,
-          searchTermOverride,
-        });
+        // Fetch both users and account requests in parallel
+        const [usersResponse] = await Promise.allSettled([
+          fetchUsers({
+            skipCache,
+            searchTermOverride,
+          }),
+          // Commented out - pending activation users come from main users endpoint
+          // userOnboardingService.getPendingOnboardingRequests(skipCache),
+        ]);
 
-        if (usersResponse.success) {
-          const pendingActivationUsers = usersResponse.data.filter(
-            (candidate) => {
-              const candidateStatus = (
-                candidate as unknown as { account_status?: string }
-              )?.account_status;
+        // Process active users (from users endpoint)
+        if (usersResponse.status === "fulfilled" && usersResponse.value.success) {
+          const allUsers = usersResponse.value.data;
+
+          // Separate users by account_status
+          const pendingActivationUsers = allUsers.filter(
+            (user) => {
+              const userStatus = (user as unknown as { account_status?: string })?.account_status;
               return (
-                typeof candidateStatus === "string" &&
-                candidateStatus.toLowerCase() === "pending_activation"
+                typeof userStatus === "string" &&
+                userStatus.toLowerCase() === "pending_activation"
               );
-            },
+            }
           );
 
-          const activeUsers = usersResponse.data.filter((candidate) => {
-            const candidateStatus = (
-              candidate as unknown as { account_status?: string }
-            )?.account_status;
+          const activeUsers = allUsers.filter((user) => {
+            const userStatus = (user as unknown as { account_status?: string })?.account_status;
             return !(
-              typeof candidateStatus === "string" &&
-              candidateStatus.toLowerCase() === "pending_activation"
+              typeof userStatus === "string" &&
+              userStatus.toLowerCase() === "pending_activation"
             );
           });
 
           const currentRoleLookup = roleLookupRef.current;
+
           const usersWithResolvedRoles = activeUsers.map((user) => {
             const primaryRoleId = user.primary_role_id ?? user.role_id;
             const resolvedRoleName =
@@ -316,52 +331,54 @@ export default function UserManagementPage() {
             };
           }) as UserWithResolvedRole[];
 
-          setUsers(usersWithResolvedRoles);
-          setAccountRequests(
-            pendingActivationUsers.map((pending) => {
-              const primaryRoleId = (
-                pending as unknown as {
-                  primary_role_id?: number;
-                }
-              )?.primary_role_id;
-              const fallbackRoleName = (
-                pending as unknown as {
-                  role_name?: string;
-                }
-              )?.role_name;
-              const resolvedRoleName =
-                (primaryRoleId != null
-                  ? currentRoleLookup[primaryRoleId]?.name
-                  : undefined) ?? fallbackRoleName;
+          // Deduplicate pending activation users by ID
+          const seenIds = new Set<number>();
+          const uniquePendingUsers = pendingActivationUsers.filter((user) => {
+            if (seenIds.has(user.id)) {
+              return false;
+            }
+            seenIds.add(user.id);
+            return true;
+          });
 
-              return {
-                id: pending.id,
-                requestId: (
-                  pending as unknown as { onboarding_request_id?: number }
-                )?.onboarding_request_id,
-                first_name: pending.first_name,
-                last_name: pending.last_name,
-                email_address:
-                  pending.email_address ||
-                  (pending as { email?: string }).email,
-                department: pending.department || undefined,
-                roleId: primaryRoleId ?? undefined,
-                roleName: resolvedRoleName,
-                created_at: pending.created_at,
-              };
-            }),
-          );
+          const pendingWithResolvedRoles = uniquePendingUsers.map((pending) => {
+            const primaryRoleId = (pending as unknown as { primary_role_id?: number })?.primary_role_id;
+            const currentRoleLookup = roleLookupRef.current;
+            const resolvedRoleName =
+              (primaryRoleId != null
+                ? currentRoleLookup[primaryRoleId]?.name
+                : undefined) ||
+              (pending as unknown as { role_name?: string }).role_name ||
+              "N/A";
+
+            return {
+              id: pending.id,
+              requestId: (pending as unknown as { onboarding_request_id?: number })?.onboarding_request_id,
+              first_name: pending.first_name,
+              last_name: pending.last_name,
+              email_address: pending.email_address || (pending as { email?: string }).email,
+              department: pending.department || undefined,
+              roleId: primaryRoleId,
+              roleName: resolvedRoleName,
+              created_at: pending.created_at,
+            };
+          });
+
+          setUsers(usersWithResolvedRoles);
+          setAccountRequests(pendingWithResolvedRoles);
+
           const totalFromResponse =
-            (usersResponse.meta?.total as number | undefined) ??
-            usersResponse.data.length;
+            (usersResponse.value.meta?.total as number | undefined) ??
+            usersResponse.value.data.length;
 
           setUserSummary({
             total: totalFromResponse,
-            cached: Boolean(usersResponse.meta?.isCachedResponse),
+            cached: Boolean(usersResponse.value.meta?.isCachedResponse),
           });
         }
 
-        // Account requests derived from pending activation users above
+        // Pending activation users already set above from users endpoint
+        // No need to fetch from onboarding service to avoid duplicates
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
@@ -382,9 +399,12 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        // Fetch both users and roles in parallel
-        const [usersResponse, rolesResponse] = await Promise.allSettled([
+        // Fetch users, account requests, rejected requests, and roles in parallel
+        const [usersResponse, rejectedResponse, rolesResponse] = await Promise.allSettled([
           fetchUsers({ skipCache: false }),
+          // Commented out - pending activation users come from main users endpoint
+          // userOnboardingService.getPendingOnboardingRequests(false),
+          userOnboardingService.getRejectedOnboardingRequests(true),
           roleService.listRoles({
             limit: 100,
             offset: 0,
@@ -412,29 +432,29 @@ export default function UserManagementPage() {
         }
         setRolesReady(true);
 
-        // Process users
+        // Process users (active users only)
         if (
           usersResponse.status === "fulfilled" &&
           usersResponse.value.success
         ) {
-          const usersData = usersResponse.value.data;
-          const pendingActivationUsers = usersData.filter((candidate) => {
-            const candidateStatus = (
-              candidate as unknown as { account_status?: string }
-            )?.account_status;
-            return (
-              typeof candidateStatus === "string" &&
-              candidateStatus.toLowerCase() === "pending_activation"
-            );
-          });
+          const allUsers = usersResponse.value.data;
 
-          const activeUsers = usersData.filter((candidate) => {
-            const candidateStatus = (
-              candidate as unknown as { account_status?: string }
-            )?.account_status;
+          // Separate users by account_status
+          const pendingActivationUsers = allUsers.filter(
+            (user) => {
+              const userStatus = (user as unknown as { account_status?: string })?.account_status;
+              return (
+                typeof userStatus === "string" &&
+                userStatus.toLowerCase() === "pending_activation"
+              );
+            }
+          );
+
+          const activeUsers = allUsers.filter((user) => {
+            const userStatus = (user as unknown as { account_status?: string })?.account_status;
             return !(
-              typeof candidateStatus === "string" &&
-              candidateStatus.toLowerCase() === "pending_activation"
+              typeof userStatus === "string" &&
+              userStatus.toLowerCase() === "pending_activation"
             );
           });
 
@@ -454,53 +474,91 @@ export default function UserManagementPage() {
             };
           }) as UserWithResolvedRole[];
 
-          setUsers(usersWithResolvedRoles);
-          setAccountRequests(
-            pendingActivationUsers.map((pending) => {
-              const primaryRoleId = (
-                pending as unknown as {
-                  primary_role_id?: number;
-                }
-              )?.primary_role_id;
-              const fallbackRoleName = (
-                pending as unknown as {
-                  role_name?: string;
-                }
-              )?.role_name;
-              const resolvedRoleName =
-                (primaryRoleId != null
-                  ? currentRoleLookup[primaryRoleId]?.name
-                  : undefined) ?? fallbackRoleName;
+          // Deduplicate pending activation users by ID
+          const seenIds = new Set<number>();
+          const uniquePendingUsers = pendingActivationUsers.filter((user) => {
+            if (seenIds.has(user.id)) {
+              return false;
+            }
+            seenIds.add(user.id);
+            return true;
+          });
 
-              return {
-                id: pending.id,
-                requestId: (
-                  pending as unknown as { onboarding_request_id?: number }
-                )?.onboarding_request_id,
-                first_name: pending.first_name,
-                last_name: pending.last_name,
-                email_address:
-                  pending.email_address ||
-                  (pending as { email?: string }).email,
-                department: pending.department || undefined,
-                roleId: primaryRoleId ?? undefined,
-                roleName: resolvedRoleName,
-                created_at: pending.created_at,
-              };
-            }),
-          );
+          const pendingWithResolvedRoles = uniquePendingUsers.map((pending) => {
+            const primaryRoleId = (pending as unknown as { primary_role_id?: number })?.primary_role_id;
+            const currentRoleLookup = roleLookupRef.current;
+            const resolvedRoleName =
+              (primaryRoleId != null
+                ? currentRoleLookup[primaryRoleId]?.name
+                : undefined) ||
+              (pending as unknown as { role_name?: string }).role_name ||
+              "N/A";
+
+            return {
+              id: pending.id,
+              requestId: (pending as unknown as { onboarding_request_id?: number })?.onboarding_request_id,
+              first_name: pending.first_name,
+              last_name: pending.last_name,
+              email_address: pending.email_address || (pending as { email?: string }).email,
+              department: pending.department || undefined,
+              roleId: primaryRoleId,
+              roleName: resolvedRoleName,
+              created_at: pending.created_at,
+            };
+          });
+
+          setUsers(usersWithResolvedRoles);
+
           const totalFromResponse =
             (usersResponse.value.meta?.total as number | undefined) ??
-            usersData.length;
+            usersResponse.value.data.length;
 
           setUserSummary({
             total: totalFromResponse,
             cached: Boolean(usersResponse.value.meta?.isCachedResponse),
           });
+
+          // Set pending activation users directly
+          setAccountRequests(pendingWithResolvedRoles);
         } else if (usersResponse.status === "rejected") {
           const message = extractErrorMessage(usersResponse.reason);
           setErrorState(message);
           showError("Error loading users", message);
+        }
+
+        // Pending activation users already fetched from main users endpoint
+        // No separate account requests endpoint needed
+
+        // Process rejected account requests
+        if (
+          rejectedResponse.status === "fulfilled" &&
+          rejectedResponse.value.success
+        ) {
+          const rejectedData = rejectedResponse.value.data || [];
+
+          const currentRoleLookup = roleLookupRef.current;
+          setRejectedRequests(
+            rejectedData.map((request) => {
+              const resolvedRoleName =
+                (request.role_id != null
+                  ? currentRoleLookup[request.role_id]?.name
+                  : undefined) || "N/A";
+
+              return {
+                id: request.id,
+                requestId: request.id,
+                first_name: request.first_name,
+                last_name: request.last_name,
+                email_address: request.email,
+                department: request.department || undefined,
+                roleId: request.role_id ?? undefined,
+                roleName: resolvedRoleName,
+                created_at: request.created_at,
+                status: request.status,
+                rejection_reason: request.rejection_reason,
+              };
+            }),
+          );
         }
       } catch (err) {
         const message = extractErrorMessage(err);
@@ -779,19 +837,25 @@ export default function UserManagementPage() {
       return;
     }
 
-    const onboardingRequestId =
-      typeof request.requestId === "number" ? request.requestId : null;
-    const userId = request.id ?? request.user_id ?? null;
+    // Show reject modal to get rejection reason
+    setRejectingRequest(request);
+    setRejectionReason("");
+    setShowRejectModal(true);
+  };
 
-    const confirmed = await confirm({
-      title: "Reject Request",
-      message: `Are you sure you want to reject ${request.first_name} ${request.last_name}'s request?`,
-      type: "danger",
-      confirmText: "Reject",
-      cancelText: "Cancel",
-    });
+  const handleConfirmReject = async () => {
+    if (!rejectingRequest) return;
 
-    if (!confirmed) return;
+    const requestId = resolveAccountRequestId(rejectingRequest);
+    if (!requestId) {
+      showError("Unable to reject request", "Missing request identifier");
+      return;
+    }
+
+    if (!rejectionReason.trim()) {
+      showError("Rejection reason required", "Please provide a reason for rejecting this request");
+      return;
+    }
 
     // Set loading state
     setLoadingActions((prev) => ({
@@ -800,23 +864,36 @@ export default function UserManagementPage() {
     }));
 
     try {
-      if (onboardingRequestId) {
-        await accountService.rejectAccountRequest(onboardingRequestId);
-      } else if (userId) {
-        await userService.deactivateUser(userId, {
-          updated_by: authUser?.user_id ?? undefined,
-        });
+      // Ensure we have the current user's ID
+      if (!authUser?.user_id) {
+        showError(
+          "Unable to reject request",
+          "Current user information not available",
+        );
+        return;
       }
+
+      // Use the reject endpoint with the request ID, approver ID, and rejection reason
+      await userOnboardingService.rejectOnboardingRequest(
+        requestId,
+        authUser.user_id,
+        rejectionReason
+      );
+
+      setShowRejectModal(false);
+      setRejectionReason("");
+      setRejectingRequest(null);
 
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
         t.userManagement.requestRejected,
-        `${t.userManagement.requestRejected} - ${request.first_name} ${request.last_name}`,
+        `${t.userManagement.requestRejected} - ${rejectingRequest.first_name} ${rejectingRequest.last_name}`,
       );
     } catch (err) {
       showError(
         "Error rejecting request",
-        err instanceof Error ? err.message : "Error rejecting request",
+        "Failed to reject request, please try again later",
+        true
       );
     } finally {
       // Clear loading state
@@ -1250,6 +1327,34 @@ export default function UserManagementPage() {
             {accountRequests.length}
           </span>
           {activeTab === "requests" && (
+            <div
+              className="absolute bottom-0 left-0 right-0 h-0.5"
+              style={{ backgroundColor: color.primary.accent }}
+            />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("rejected")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
+            activeTab === "rejected"
+              ? "text-black"
+              : "text-gray-600 hover:text-gray-900"
+          }`}
+        >
+          <UserX className="w-4 h-4 flex-shrink-0" />
+          <span className="whitespace-nowrap">Rejected</span>
+          <span
+            className="px-2 py-0.5 rounded-full text-xs text-white flex-shrink-0"
+            style={{
+              backgroundColor:
+                activeTab === "rejected"
+                  ? color.primary.accent
+                  : color.text.muted,
+            }}
+          >
+            {rejectedRequests.length}
+          </span>
+          {activeTab === "rejected" && (
             <div
               className="absolute bottom-0 left-0 right-0 h-0.5"
               style={{ backgroundColor: color.primary.accent }}
@@ -1718,7 +1823,7 @@ export default function UserManagementPage() {
                         </div>
                         <div className="flex flex-wrap gap-2 mb-3">
                           <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700`}
+                            className={`text-xs font-medium text-gray-700`}
                           >
                             {user.department || "N/A"}
                           </span>
@@ -1858,6 +1963,12 @@ export default function UserManagementPage() {
                         className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
                         style={{ color: color.surface.tableHeaderText }}
                       >
+                        Email
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
                         Requested Role
                       </th>
                       <th
@@ -1915,19 +2026,11 @@ export default function UserManagementPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            <div>
-                              <div
-                                className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                                title={fullName}
-                              >
-                                {fullName}
-                              </div>
-                              <div
-                                className={`text-sm ${tw.textMuted} truncate mt-1`}
-                                title={requestEmail}
-                              >
-                                {requestEmail}
-                              </div>
+                            <div
+                              className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                              title={fullName}
+                            >
+                              {fullName}
                             </div>
                           </td>
                           <td
@@ -1937,7 +2040,20 @@ export default function UserManagementPage() {
                             }}
                           >
                             <span
-                              className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700 whitespace-nowrap`}
+                              className={`text-sm ${tw.textMuted} truncate`}
+                              title={requestEmail}
+                            >
+                              {requestEmail}
+                            </span>
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <span
+                              className={`text-sm font-medium text-gray-700 whitespace-nowrap`}
                             >
                               {requestRole}
                             </span>
@@ -1977,28 +2093,6 @@ export default function UserManagementPage() {
                                   />
                                 ) : (
                                   <UserCheck className="w-4 h-4" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleRejectRequest(request)}
-                                disabled={actionDisabled || rejectingLoading}
-                                className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                                title={
-                                  actionDisabled
-                                    ? "Missing request identifier"
-                                    : rejectingLoading
-                                      ? t.profile.saving
-                                      : t.userManagement.rejectRequest
-                                }
-                              >
-                                {rejectingLoading ? (
-                                  <LoadingSpinner
-                                    variant="modern"
-                                    size="sm"
-                                    color="primary"
-                                  />
-                                ) : (
-                                  <UserX className="w-4 h-4" />
                                 )}
                               </button>
                             </div>
@@ -2110,6 +2204,145 @@ export default function UserManagementPage() {
                     </div>
                   );
                 })}
+              </div>
+            </>
+          )
+        ) : activeTab === "rejected" ? (
+          rejectedRequests.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Rejected Requests
+              </h3>
+              <p className={`${tw.textMuted}`}>
+                No account requests have been rejected.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Table with horizontal scroll */}
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full min-w-[600px]"
+                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                >
+                  <thead style={{ background: color.surface.tableHeader }}>
+                    <tr>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        User
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Email
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Requested Role
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Rejection Reason
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
+                        Rejected
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rejectedRequests.map((request, index) => {
+                      const fullName =
+                        [request.first_name, request.last_name]
+                          .filter(Boolean)
+                          .join(" ")
+                          .trim() || "Unknown";
+                      const requestEmail =
+                        request.email_address ??
+                        request.email ??
+                        "N/A";
+                      const rejectionReason = request.rejection_reason || "No reason provided";
+                      const rejectedDate =
+                        request.created_at ?? request.created_on;
+                      const formattedDate = rejectedDate
+                        ? formatDate(rejectedDate)
+                        : "N/A";
+
+                      return (
+                        <tr key={`${request.id}-${index}`} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <div
+                              className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
+                              title={fullName}
+                            >
+                              {fullName}
+                            </div>
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <span
+                              className={`text-sm ${tw.textMuted} truncate`}
+                              title={requestEmail}
+                            >
+                              {requestEmail}
+                            </span>
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <span
+                              className={`text-sm font-medium text-gray-700 whitespace-nowrap`}
+                            >
+                              {request.roleName}
+                            </span>
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            <span
+                              className={`${tw.textMuted} truncate`}
+                              title={rejectionReason}
+                            >
+                              {rejectionReason}
+                            </span>
+                          </td>
+                          <td
+                            className={`px-4 sm:px-6 py-3 sm:py-4 text-sm ${tw.textMuted} whitespace-nowrap`}
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            {formattedDate}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </>
           )
@@ -2532,6 +2765,86 @@ export default function UserManagementPage() {
         confirmText="Delete User"
         cancelText="Cancel"
       />
+
+      {/* Reject Request Modal */}
+      {showRejectModal && rejectingRequest && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => {
+            if (!loadingActions.rejecting.size) {
+              setShowRejectModal(false);
+              setRejectionReason("");
+              setRejectingRequest(null);
+            }
+          }}
+        >
+          <div
+            className={`bg-white ${tw.rounded} p-6 max-w-md w-full mx-4 shadow-lg`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Reject Request
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to reject{" "}
+              <strong>
+                {rejectingRequest.first_name} {rejectingRequest.last_name}
+              </strong>
+              's request?
+            </p>
+
+            <label className="block mb-4">
+              <span className="text-sm font-medium text-gray-700 mb-2 block">
+                Rejection Reason
+              </span>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Please provide a reason for rejecting this request..."
+                className={`w-full px-3 py-2 border ${tw.rounded} text-sm focus:outline-none focus:ring-2`}
+                rows={4}
+                style={{
+                  borderColor: color.border.default,
+                  "--tw-ring-color": color.primary.accent,
+                } as React.CSSProperties & { "--tw-ring-color": string }}
+                disabled={loadingActions.rejecting.size > 0}
+              />
+            </label>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReason("");
+                  setRejectingRequest(null);
+                }}
+                disabled={loadingActions.rejecting.size > 0}
+                className={`px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReject}
+                disabled={loadingActions.rejecting.size > 0 || !rejectionReason.trim()}
+                className={`px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+              >
+                {loadingActions.rejecting.size > 0 ? (
+                  <>
+                    <LoadingSpinner
+                      variant="modern"
+                      size="sm"
+                      color="primary"
+                    />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Reject"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

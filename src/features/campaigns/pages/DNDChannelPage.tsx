@@ -6,7 +6,6 @@ import {
   Trash2,
   UserX,
   UserCheck,
-  Phone,
   Mail,
   Minus,
 } from "lucide-react";

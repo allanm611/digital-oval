@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Gift, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface RewardRule {
@@ -402,7 +403,10 @@ export default function OfferRewardStep({
       {showRuleModal &&
         editingRule &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{ zIndex: zIndex.modal - 1 }}
+          >
             <div className={`bg-white ${tw.rounded} p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -471,6 +475,7 @@ export default function OfferRewardStep({
                       })
                     }
                     placeholder="Select bundle track"
+                    zIndex={zIndex.popover}
                   />
                 </div>
 
@@ -496,6 +501,7 @@ export default function OfferRewardStep({
                         })
                       }
                       placeholder="Select reward type"
+                      zIndex={zIndex.popover}
                     />
                   </div>
 

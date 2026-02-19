@@ -345,7 +345,7 @@ class SegmentService {
       categoryId: filters?.categoryId,
       type: filters?.type,
       page: filters?.page,
-      pageSize: filters?.pageSize,
+      limit: filters?.pageSize,
       sortBy: filters?.sortBy,
       sortDirection: filters?.sortDirection,
       skipCache: filters?.skipCache,

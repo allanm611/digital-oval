@@ -62,6 +62,24 @@ export default function PreviewRewardStep({
     return data.rewardValue;
   };
 
+  const getRecipientCount = (): number => {
+    // If quicklist is selected, use rowCount from quicklist
+    if (data.inputMethod === "file" && data.quicklistId && data.rowCount) {
+      return data.rowCount;
+    }
+
+    // If manual input is selected, count the lines in audienceFileText
+    if (data.inputMethod === "manual" && data.audienceFileText) {
+      const recipientLines = data.audienceFileText
+        .split("\n")
+        .filter((line) => line.trim());
+      return recipientLines.length;
+    }
+
+    // Fallback to rowCount if available
+    return data.rowCount || 0;
+  };
+
   return (
     <div
       className={`bg-white ${tw.rounded} shadow-sm border`}
@@ -109,7 +127,7 @@ export default function PreviewRewardStep({
                   {data.audienceName || t.manualRewards.summaryNotSet}
                 </p>
                 <p className={`text-xs ${tw.textMuted} mt-1`}>
-                  {data.rowCount || 0} {t.manualRewards.recipients}
+                  {getRecipientCount().toLocaleString()} {t.manualRewards.recipients}
                 </p>
               </div>
             </div>

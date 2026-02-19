@@ -3,9 +3,8 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ConfirmProvider } from "./contexts/ConfirmContext";
@@ -13,67 +12,9 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { NotificationSettingsProvider } from "./contexts/NotificationSettingsContext";
-import { GlobalLoadingProvider, useGlobalLoading } from "./contexts/GlobalLoadingContext";
+import { GlobalLoadingProvider } from "./contexts/GlobalLoadingContext";
 import { color } from "./shared/utils/utils";
 import GlobalLoader from "./shared/components/GlobalLoader";
-
-// RouteChangeHandler component to show loader and scroll on route change
-function RouteChangeHandler() {
-  const { pathname } = useLocation();
-  const { startLoading, stopLoading } = useGlobalLoading();
-
-  useEffect(() => {
-    // Show loader on route change
-    startLoading();
-
-    // Hide loader after a short delay (gives time for page to render)
-    const hideLoaderId = setTimeout(() => {
-      stopLoading();
-    }, 300);
-
-    // Function to perform scroll
-    const performScroll = () => {
-      // Scroll window
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      // Scroll document elements
-      if (document.documentElement) {
-        document.documentElement.scrollTop = 0;
-      }
-      if (document.body) {
-        document.body.scrollTop = 0;
-      }
-      // Scroll any scrollable containers
-      const scrollableContainers = document.querySelectorAll(
-        '[style*="overflow"], [class*="overflow"]',
-      );
-      scrollableContainers.forEach((container) => {
-        if (container instanceof HTMLElement && container.scrollTop > 0) {
-          container.scrollTop = 0;
-        }
-      });
-    };
-
-    // Immediate scroll
-    performScroll();
-
-    // Scroll after render (using requestAnimationFrame)
-    requestAnimationFrame(() => {
-      performScroll();
-    });
-
-    // Also scroll after a delay to catch any delayed renders
-    const timeoutId1 = setTimeout(performScroll, 50);
-    const timeoutId2 = setTimeout(performScroll, 150);
-
-    return () => {
-      clearTimeout(hideLoaderId);
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-    };
-  }, [pathname, startLoading, stopLoading]);
-
-  return null;
-}
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -111,7 +52,6 @@ function AppRoutes() {
 
   return (
     <>
-      {/* <RouteChangeHandler /> */}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route

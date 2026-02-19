@@ -4,17 +4,14 @@ import {
   Search,
   Edit,
   Eye,
-  ChevronLeft,
-  ChevronRight,
-  Settings,
   Trash2,
   Play,
   Pause,
-  XCircle,
   Package,
   TrendingUp,
   BarChart3,
   DollarSign,
+  XCircle,
 } from "lucide-react";
 import { Product } from "../types/product";
 import CreateButton from "../../../shared/components/ui/CreateButton";
@@ -56,7 +53,6 @@ export default function ProductsPage() {
     sortBy: "created_at",
     sortDirection: "DESC",
   });
-  const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [stats, setStats] = useState<{
     totalProducts: number;
@@ -95,39 +91,39 @@ export default function ProductsPage() {
         const limit = filters.pageSize || 10;
         const offset = ((filters.page || 1) - 1) * limit;
 
-        let response;
-        let productsList: Product[] = [];
+        // Always use superSearch to get all products (including inactive when filter is "All Status")
+        const response = await productService.superSearch({
+          ...(filters.search && { name: filters.search }),
+          ...(filters.categoryId && { category_id: filters.categoryId }),
+          ...(filters.isActive !== undefined && {
+            is_active: filters.isActive,
+          }),
+          limit,
+          offset,
+          skipCache: skipCache,
+        });
+        const productsList: Product[] = response.data || [];
 
-        // Use superSearch if we have filters or need inactive products
-        if (
-          filters.search ||
-          filters.categoryId ||
-          filters.isActive !== undefined
-        ) {
-          response = await productService.superSearch({
-            ...(filters.search && { name: filters.search }),
-            ...(filters.categoryId && { category_id: filters.categoryId }),
-            ...(filters.isActive !== undefined && {
-              is_active: filters.isActive,
-            }),
-            limit,
-            offset,
-            skipCache: skipCache,
-          });
-          productsList = response.data || [];
-        } else {
-          response = await productService.getAllProducts({
-            limit,
-            offset,
-            skipCache: skipCache,
-          });
-          productsList = response.data || [];
-        }
+        // Sort based on selected sort option
+        const sortedProducts = [...productsList].sort((a, b) => {
+          let compareResult = 0;
 
-        setProducts(productsList);
+          if (filters.sortBy === "created_at") {
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+            compareResult = dateA - dateB;
+          } else if (filters.sortBy === "name") {
+            compareResult = (a.name || "").localeCompare(b.name || "");
+          } else if (filters.sortBy === "product_id") {
+            compareResult = (a.product_code || "").localeCompare(b.product_code || "");
+          }
+
+          return filters.sortDirection === "DESC" ? -compareResult : compareResult;
+        });
+
+        setProducts(sortedProducts);
         const totalCount = response.pagination?.total || 0;
         setTotal(totalCount);
-        setTotalPages(Math.ceil(totalCount / limit) || 1);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load products";
@@ -137,7 +133,7 @@ export default function ProductsPage() {
         setLoading(false);
       }
     },
-    [filters],
+    [filters, showError],
   );
 
   // Load products and categories when filters change or when navigating back to this page
@@ -203,6 +199,12 @@ export default function ProductsPage() {
 
   const handleToggleStatus = async (product: Product) => {
     try {
+      // Optimistic update - update UI immediately
+      const updatedProduct = { ...product, is_active: !product.is_active };
+      setProducts(
+        products.map((p) => (p.id === product.id ? updatedProduct : p))
+      );
+
       if (product.is_active) {
         await productService.deactivateProduct(Number(product.id));
         showToast(
@@ -216,10 +218,13 @@ export default function ProductsPage() {
           `"${product.name}" has been activated successfully.`,
         );
       }
-      loadProducts();
+      // Reload in background to sync with backend
+      loadProducts(true);
     } catch (err) {
       console.error("Failed to update product status:", err);
       showError("Failed to update product status", "Please try again later.");
+      // Reload to revert the optimistic update if API fails
+      loadProducts(true);
     }
   };
 
@@ -244,12 +249,14 @@ export default function ProductsPage() {
       setProductToDelete(null);
       loadProducts(true); // Skip cache when refetching after delete
       loadStats(); // Refresh stats cards
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to delete product:", err);
       // Extract error message from backend response
       const errorMessage =
-        err?.message ||
-        err?.error ||
+        (err instanceof Error ? err.message : null) ||
+        (typeof err === "object" && err !== null && "error" in err
+          ? String((err as Record<string, unknown>).error)
+          : null) ||
         "Failed to delete product. Please try again.";
       showError("Error", errorMessage);
     } finally {

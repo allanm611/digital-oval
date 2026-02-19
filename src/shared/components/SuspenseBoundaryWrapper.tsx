@@ -85,14 +85,8 @@ class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.error) {
-      return (
-        this.props.fallback?.(this.state.error) || (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
-            <h3 className="text-red-900 font-bold mb-2">Error Loading Data</h3>
-            <p className="text-red-700 text-sm">{this.state.error.message}</p>
-          </div>
-        )
-      );
+      console.error("ErrorBoundary caught error:", this.state.error);
+      return this.props.fallback?.(this.state.error) || null;
     }
 
     return this.props.children;

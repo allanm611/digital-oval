@@ -694,7 +694,7 @@ export default function ProductForm({
                 }
                 placeholder={t.products.form.selectProductType}
                 className="w-full"
-                zIndex={zIndex.dropdown}
+                zIndex={zIndex.popover}
               />
             </div>
 
@@ -765,7 +765,7 @@ export default function ProductForm({
                     }}
                     placeholder="Select a combo type"
                     className="w-full"
-                    zIndex={zIndex.dropdown}
+                    zIndex={zIndex.popover}
                   />
                 </div>
               </>
@@ -933,7 +933,7 @@ export default function ProductForm({
                         }
                         placeholder="Select resource type"
                         className="w-full"
-                        zIndex={zIndex.dropdown}
+                        zIndex={zIndex.popover}
                       />
                     </div>
                     <button
@@ -1026,7 +1026,7 @@ export default function ProductForm({
                                   }}
                                   placeholder="Select type"
                                   className="w-full"
-                                  zIndex={zIndex.dropdown}
+                                  zIndex={zIndex.popover}
                                 />
                               </div>
 
@@ -1168,7 +1168,7 @@ export default function ProductForm({
                   }
                   placeholder="Select scope"
                   className="w-full"
-                  zIndex={zIndex.dropdown}
+                  zIndex={zIndex.popover}
                 />
               </div>
 
@@ -1194,7 +1194,7 @@ export default function ProductForm({
                     }
                     placeholder="Select unit"
                     className="w-full"
-                    zIndex={zIndex.dropdown}
+                    zIndex={zIndex.popover}
                   />
                 </div>
               )}

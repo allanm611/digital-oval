@@ -873,14 +873,13 @@ export type SegmentationField = {
 
 /**
  * Field category from backend
+ * Note: ID is optional - if not provided, use category name or array index
  */
 export type SegmentationFieldCategory = {
-  id: number;
-  name: string; // Display name (e.g., "Customer Identity")
-  value: string; // Backend value (e.g., "customer_identity")
-  description: string;
-  parent_category_id: number | null;
-  display_order: number;
+  id?: number; // Optional ID from backend
+  category?: string; // Display name (e.g., "Customer Identity")
+  name?: string; // Alternative name field
+  value?: string; // Alternative backend value field
   fields: SegmentationField[];
 };
 

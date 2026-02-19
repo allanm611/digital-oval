@@ -471,7 +471,7 @@ export default function SchedulingStep({
                     <input
                       type="time"
                       value="12:00"
-                      onChange={(e) => {
+                      onChange={(_e) => {
                         // Handle time change
                       }}
                       className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}

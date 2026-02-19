@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, BarChart3, Settings, Edit, X } from "lucide-react";
 import { color , tw} from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface TrackingRule {
@@ -445,7 +446,10 @@ export default function OfferTrackingStep({
       {showRuleModal &&
         editingRule &&
         createPortal(
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{ zIndex: zIndex.modal - 1 }}
+          >
             <div className={`bg-white ${tw.rounded} p-6 w-full max-w-md mx-4`}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -512,6 +516,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select parameter"
+                    zIndex={zIndex.popover}
                   />
                 </div>
 
@@ -537,6 +542,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select condition"
+                    zIndex={zIndex.popover}
                   />
                 </div>
 

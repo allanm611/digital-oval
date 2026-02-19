@@ -70,9 +70,10 @@ export default function ExecuteCampaignModal({
     try {
       // Get segments and flows from campaign flows service (Step 2-3 data)
       const segmentsResponse =
-        await campaignFlowService.getCampaignSegments(campaignId);
+        await campaignFlowService.getCampaignSegments(campaignId, true);
       const flowsResponse = await campaignFlowService.getCampaignFlows(
         campaignId,
+        true,
       );
 
       if (
@@ -107,7 +108,7 @@ export default function ExecuteCampaignModal({
       });
 
       setSegments(uniqueSegments);
-    } catch (error) {
+    } catch {
       showToast("error", "Failed to load campaign segments");
     } finally {
       setIsLoading(false);

@@ -203,26 +203,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const refreshPermissions = async (): Promise<void> => {
-    try {
-      const response = await authService.getPermissions();
-      if (response.success && response.permissions) {
-        setPermissions(response.permissions);
-        localStorage.setItem(
-          "auth_permissions",
-          JSON.stringify(response.permissions),
+    const response = await authService.getPermissions();
+    if (response.success && response.permissions) {
+      setPermissions(response.permissions);
+      localStorage.setItem(
+        "auth_permissions",
+        JSON.stringify(response.permissions),
+      );
+    } else {
+      if (
+        response.error?.code === "INVALID_TOKEN" ||
+        response.error?.code === "GET_PERMISSIONS_FAILED"
+      ) {
+        throw new Error(
+          response.error.message || "Failed to refresh permissions",
         );
-      } else {
-        if (
-          response.error?.code === "INVALID_TOKEN" ||
-          response.error?.code === "GET_PERMISSIONS_FAILED"
-        ) {
-          throw new Error(
-            response.error.message || "Failed to refresh permissions",
-          );
-        }
       }
-    } catch (error) {
-      throw error;
     }
   };
 

@@ -106,10 +106,10 @@ export function SMSSmartphonePreview({
             {/* SMS Header */}
             <div className="bg-blue-500 text-white px-4 py-3 flex items-center gap-3 border-b border-blue-600">
               <div className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center text-lg font-semibold">
-                E
+                {title?.[0]?.toUpperCase() || "E"}
               </div>
               <div>
-                <div className="font-semibold">Equitel</div>
+                <div className="font-semibold">{title || "Sender"}</div>
               </div>
             </div>
 
@@ -121,12 +121,9 @@ export function SMSSmartphonePreview({
                   Today
                 </div>
 
-                {/* SMS Message Bubble (from Equitel - left side) */}
+                {/* SMS Message Bubble (from sender - left side) */}
                 <div className="flex justify-start">
                   <div className={`bg-gray-200 text-gray-900 ${tw.rounded} rounded-tl-md px-4 py-2 max-w-[80%] shadow-sm`}>
-                    {title && (
-                      <div className="font-semibold text-sm mb-1">{title}</div>
-                    )}
                     <p className="text-sm whitespace-pre-wrap break-words">
                       {message || "No message content"}
                     </p>

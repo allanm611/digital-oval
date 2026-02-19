@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
 import {
   X,
   Search,
@@ -23,16 +22,7 @@ interface OfferSelectionModalProps {
   selectedOffers: CampaignOffer[];
   editingOffer?: CampaignOffer | null;
   onCreateNew?: () => void;
-  onSaveCampaignData?: () => void;
 }
-
-const rewardTypeColors = {
-  bundle: "bg-blue-100 text-blue-700",
-  points: "bg-purple-100 text-purple-700",
-  discount: "bg-green-100 text-green-700",
-  cashback: "bg-orange-100 text-orange-700",
-  free_service: "bg-indigo-100 text-indigo-700",
-};
 
 export default function OfferSelectionModal({
   isOpen,
@@ -40,9 +30,7 @@ export default function OfferSelectionModal({
   onSelect,
   selectedOffers,
   editingOffer,
-  onSaveCampaignData,
 }: OfferSelectionModalProps) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
@@ -234,6 +222,11 @@ export default function OfferSelectionModal({
     }
   };
 
+  // Define loadOffers as a useCallback to prevent infinite dependencies
+  const memoLoadOffers = useCallback(async () => {
+    await loadOffers();
+  }, []);
+
   // Define callbacks before the early return
   const handleCreateNew = useCallback(() => {
     // Open the create offer modal instead of navigating
@@ -276,11 +269,11 @@ export default function OfferSelectionModal({
       }
 
       // Reload offers to show newly created offer with action buttons
-      loadOffers();
+      memoLoadOffers();
       // Close the create offer modal so you see the created offer in the selection modal
       setCreateOfferModalOpen(false);
     },
-    [loadOffers],
+    [memoLoadOffers],
   );
 
   if (!isOpen) return null;
@@ -493,17 +486,17 @@ export default function OfferSelectionModal({
               </div>
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <p className="text-black mb-4">{error}</p>
-                <button
-                  onClick={loadOffers}
-                  className={`px-4 py-2 bg-gray-100 text-black ${tw.rounded} hover:bg-gray-200 transition-colors`}
-                >
-                  Retry
-                </button>
-              </div>
-            </div>
+            (() => {
+              console.error("OfferSelectionModal Error:", error);
+              return (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <p className="text-black mb-2">No offers found</p>
+                    <p className="text-sm text-black">Please try again later.</p>
+                  </div>
+                </div>
+              );
+            })()
           ) : filteredOffers.length === 0 ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">

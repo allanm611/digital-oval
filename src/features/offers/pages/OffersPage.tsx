@@ -1676,7 +1676,7 @@ export default function OffersPage() {
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
-            style={{ zIndex: zIndexTokens.overlay }}
+            style={{ zIndex: zIndex.overlay }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"

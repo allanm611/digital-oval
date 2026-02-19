@@ -228,7 +228,7 @@ export default function ProgramDetailsPage() {
     try {
       setIsSaving(true);
       // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const _userId = 1;
 
       // Check if dates changed
       const datesChanged =

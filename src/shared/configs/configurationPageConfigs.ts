@@ -1,7 +1,6 @@
 import {
   Flag,
   Building2,
-  Users,
   Briefcase,
   Tag,
   Megaphone,
@@ -2823,85 +2822,85 @@ export function createConfigurationPageConfig(
 
 // Missing functions for pages that expect them
 export function getCampaignTypesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return campaignTypesConfig;
 }
 
 export function getOfferTypesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return offerTypesConfig;
 }
 
 export function getCampaignObjectivesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): ConfigurationPageConfig {
   return campaignObjectivesConfig;
 }
 
 export function getDepartmentsConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): ConfigurationPageConfig {
   return departmentsConfig;
 }
 
 export function getLineOfBusinessConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): ConfigurationPageConfig {
   return lineOfBusinessConfig;
 }
 
 export function getSegmentTypesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return segmentTypesConfig;
 }
 
 export function getProductTypesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return productTypesConfig;
 }
 
 export function getCreativeTemplatesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return creativeTemplatesConfig;
 }
 
 export function getTrackingSourcesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): ConfigurationPageConfig {
   return trackingSourcesConfig;
 }
 
 export function getSenderIdsConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return senderIdsConfig;
 }
 
 export function getLanguagesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return languagesConfig;
 }
 
 export function getRewardTypesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return rewardTypesConfig;
 }
 
 export function getCharacterSetsConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return characterSetsConfig;
 }
 
 export function getSmsRoutesConfig(
-  t: (key: string) => string,
+  _t: (key: string) => string,
 ): TypeConfigurationPageConfig {
   return smsRoutesConfig;
 }

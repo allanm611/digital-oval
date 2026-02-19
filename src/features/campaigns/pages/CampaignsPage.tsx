@@ -27,7 +27,6 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
-import { campaignSegmentOfferService } from "../services/campaignSegmentOfferService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -39,7 +38,6 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
   CampaignCollection,
-  CampaignSegmentDetail,
   CampaignStatsSummary,
   CampaignStatus,
   CampaignSuperSearchQuery,
@@ -347,7 +345,7 @@ export default function CampaignsPage() {
         try {
           // Fetch segments from campaign flows
           const segmentsResponse =
-            await campaignFlowService.getCampaignSegments(campaignId);
+            await campaignFlowService.getCampaignSegments(campaignId, true);
 
           let segmentCount = 0;
           if (
@@ -362,7 +360,7 @@ export default function CampaignsPage() {
 
           // Fetch offers from campaign flows
           const offersResponse =
-            await campaignFlowService.getCampaignOffers(campaignId);
+            await campaignFlowService.getCampaignOffers(campaignId, true);
 
           let offerCount = 0;
           if (
@@ -857,7 +855,7 @@ export default function CampaignsPage() {
     { value: "start_date", label: "Start Date" },
   ];
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (_status: string) => {
     return `text-black`;
   };
 

@@ -1012,7 +1012,7 @@ export default function QuickListDetailsPage() {
                             return (
                               <td
                                 key={column}
-                                className={`px-6 py-4 text-gray-600 text-xs break-all ${
+                                className={`px-6 py-4 text-gray-600 text-sm break-all ${
                                   columnIndex === dataColumns.length - 1
                                     ? "rounded-r-md"
                                     : ""

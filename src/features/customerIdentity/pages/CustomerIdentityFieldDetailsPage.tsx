@@ -153,7 +153,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 items={[
                   {
                     label: t.customerIdentity.fieldType,
-                    value: field.field_type,
+                    value: field.field_type || "—",
                   },
                   { label: "Postgres Type", value: field.field_pg_type || "—" },
                   {
@@ -171,7 +171,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                 items={[
                   {
                     label: t.customerIdentity.sourceTable,
-                    value: field.source_table,
+                    value: field.source_table || "—",
                   },
                   {
                     label: "Validation Strategy",
@@ -285,7 +285,7 @@ export default function CustomerIdentityFieldDetailsPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            {operator.applicable_field_types.join(", ")}
+                            {(operator.applicable_field_types || []).join(", ") || "—"}
                           </td>
                         </tr>
                       ))}

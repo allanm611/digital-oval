@@ -25,12 +25,15 @@ export interface ManualRewardData {
   uploadType?: string;
   quicklistId?: number;
   rowCount?: number;
+  audienceFileText?: string;
+  inputMethod?: "file" | "manual";
 
-  // Step 2: Reward
+  // Step 2: Reward & Communication Policy
   rewardType?: "bundle" | "points" | "discount" | "cashback";
   rewardValue?: string;
   bundleTrack?: string;
   description?: string;
+  selectedCommunicationPolicyId?: number;
 
   // Step 3: Preview
   previewData?: Record<string, unknown>;

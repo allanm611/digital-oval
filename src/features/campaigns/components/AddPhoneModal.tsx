@@ -13,7 +13,6 @@ import {
   getSubscriptionDisplayName,
   formatMsisdn,
 } from "../../customers360/utils/customerSubscriptionHelpers";
-import { DND_CATEGORIES } from "../types/communicationPolicyConfig";
 
 interface AddPhoneModalProps {
   isOpen: boolean;

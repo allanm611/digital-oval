@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { zIndex } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
@@ -873,10 +874,10 @@ function OfferCategoriesPage() {
       );
     } catch (err) {
       console.error("Failed to toggle category status:", err);
-      // Display full backend error message
+      // Display backend error message and bypass silent mode for important errors
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update category";
-      showError("Deactivation Failed", errorMessage);
+      showError("Deactivation Failed", errorMessage, true);
     } finally {
       setTogglingCategoryId(null);
     }
@@ -1565,11 +1566,12 @@ function OfferCategoriesPage() {
       {(showAdvancedFilters || isClosingModal) &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] overflow-hidden ${
+            className={`fixed inset-0 overflow-hidden ${
               isClosingModal
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
+            style={{ zIndex: zIndex.modal - 1 }}
           >
             <div
               className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
@@ -1692,6 +1694,7 @@ function OfferCategoriesPage() {
                         ]}
                         placeholder="All Status"
                         className="w-full"
+                        zIndex={zIndex.popover}
                       />
                     </div>
 

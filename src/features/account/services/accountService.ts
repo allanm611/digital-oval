@@ -5,7 +5,6 @@ import {
   SubmitAccountRequestRequest,
   AssignApproverRequest,
   ApproveAccountRequestRequest,
-  RejectAccountRequestRequest,
   CreateDirectAccountRequest,
   ApiSuccessResponse,
   AccountRequestType,
@@ -98,7 +97,25 @@ class AccountService {
     }
   }
 
-  // ==================== ACCOUNT REQUEST ENDPOINTS (8 endpoints) ====================
+  // ==================== ACCOUNT REQUEST ENDPOINTS (9 endpoints) ====================
+
+  /**
+   * GET /accounts/requests - Get all account requests (with pagination and filtering)
+   */
+  async getAccountRequests(
+    skipCache?: boolean,
+    status?: string,
+    limit?: number,
+    offset?: number
+  ): Promise<{ success: boolean; data: AccountRequestType[]; pagination?: { total: number; limit: number; offset: number } }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (status) params.append("status", status);
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{ success: boolean; data: AccountRequestType[]; pagination?: { total: number; limit: number; offset: number } }>(`/requests${queryString}`);
+  }
 
   /**
    * POST /accounts/request - Create account request
@@ -169,22 +186,6 @@ class AccountService {
   ): Promise<ApiSuccessResponse<AccountRequestType>> {
     return this.request<ApiSuccessResponse<AccountRequestType>>(
       `/request/${id}/approve`,
-      {
-        method: "POST",
-        body: request ? JSON.stringify(request) : undefined,
-      }
-    );
-  }
-
-  /**
-   * POST /accounts/request/:id/reject - Reject account request
-   */
-  async rejectAccountRequest(
-    id: number,
-    request?: RejectAccountRequestRequest
-  ): Promise<ApiSuccessResponse<AccountRequestType>> {
-    return this.request<ApiSuccessResponse<AccountRequestType>>(
-      `/request/${id}/reject`,
       {
         method: "POST",
         body: request ? JSON.stringify(request) : undefined,

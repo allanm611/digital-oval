@@ -225,13 +225,10 @@ export default function ProgramModal({
             </div>
           </div>
 
-          {error && (
-            <div
-              className={`mt-4 p-3 bg-red-50 border border-red-200 ${tw.rounded}`}
-            >
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
+          {error && (() => {
+            console.error("ProgramModal Error:", error);
+            return null;
+          })()}
 
           <div className="flex items-center justify-end space-x-3 mt-6">
             <button

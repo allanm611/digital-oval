@@ -70,7 +70,6 @@ const mapObjectiveLabelToValue = (
 };
 import CampaignDefinitionStep from "../components/steps/CampaignDefinitionStep";
 import AudienceConfigurationStep from "../components/steps/AudienceConfigurationStep";
-import OfferMappingStep from "../components/steps/OfferMappingStep";
 import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
 import SchedulingStep from "../components/steps/SchedulingStep";
 import CampaignPreviewStep from "../components/steps/CampaignPreviewStep";
@@ -148,8 +147,6 @@ export default function CreateCampaignPage() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   // isEditMode: true only when accessing via /campaigns/:id/edit route (editing existing campaign from list)
   const isEditMode = Boolean(id);
-  // isCreateSession: true when user is in create flow (even if campaign was saved as draft)
-  const isCreateSession = !isEditMode; // Only true if no id in route
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
@@ -331,14 +328,6 @@ export default function CreateCampaignPage() {
             priority: campaign?.priority || undefined,
             priority_rank: campaign?.priority_rank || undefined,
           };
-          console.log("💾 Setting FormData with all fields:", {
-            name: newFormData.name,
-            budget_allocated: newFormData.budget_allocated,
-            start_date: newFormData.start_date,
-            end_date: newFormData.end_date,
-            category_id: newFormData.category_id,
-            objective: newFormData.objective,
-          });
           setFormData(newFormData);
         }
 
@@ -595,14 +584,12 @@ export default function CreateCampaignPage() {
 
     // Then handle edit/duplicate mode (only if not returning from offer creation)
     if (id && !hasRestoredDataRef.current) {
-      console.log("✏️  Edit mode detected, id:", id);
       // Edit mode - modifying existing campaign
       // isEditMode already set in state initialization
       setIsDuplicateMode(false);
 
       // Always load from API in edit mode to get COMPLETE data
       // Don't rely on location.state as it may have incomplete campaign data
-      console.log("✏️  Loading complete campaign data from API...");
       loadCampaignData(id, false, false, false);
     } else if (duplicateIdParam && !hasRestoredDataRef.current) {
       // Duplicate mode - creating new campaign from existing one
@@ -1193,11 +1180,6 @@ export default function CreateCampaignPage() {
                     await campaignFlowService.deleteCampaignFlow(
                       (originalFlow as any).id,
                     );
-                    console.log(
-                      "Deleted flow:",
-                      originalFlow.segment_id,
-                      originalFlow.offer_id,
-                    );
                   } catch (deleteError) {
                     console.error("Error deleting flow:", deleteError);
                   }
@@ -1220,11 +1202,6 @@ export default function CreateCampaignPage() {
                     await campaignFlowService.updateCampaignFlow(
                       (originalFlow as any).id,
                       updatedFlow,
-                    );
-                    console.log(
-                      "Updated flow:",
-                      updatedFlow.segment_id,
-                      updatedFlow.offer_id,
                     );
                   } catch (updateError) {
                     console.error("Error updating flow:", updateError);
@@ -1253,7 +1230,6 @@ export default function CreateCampaignPage() {
                 await campaignFlowService.createBatchCampaignFlows(
                   flowsToCreate,
                 );
-                console.log("Created new flows:", newFlows.length);
               }
 
               showToast("success", "Campaign updated successfully");

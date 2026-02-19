@@ -132,9 +132,10 @@ export default function CreateProductPage({
         finalSubmitData.unit_of_measure = unit;
       }
 
-      // Include validity_hours if provided (backend doesn't accept unit_value)
+      // Convert validity_hours to validity_days (backend expects days, not hours)
+      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
       if (validity_hours && validity_hours > 0) {
-        finalSubmitData.validity_hours = validity_hours;
+        finalSubmitData.validity_days = Math.ceil(validity_hours / 24);
       }
 
       // Note: combo_data is kept for frontend only, not sent to backend yet

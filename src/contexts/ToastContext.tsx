@@ -19,7 +19,7 @@ interface ToastContextType {
     duration?: number,
   ) => void;
   success: (title: string, message?: string) => void;
-  error: (title: string, message?: string) => void;
+  error: (title: string, message?: string, bypassSilentMode?: boolean) => void;
   warning: (title: string, message?: string) => void;
   info: (title: string, message?: string) => void;
 }
@@ -54,9 +54,10 @@ export function ToastProvider({ children }: ToastProviderProps) {
     [showToast],
   );
   const error = useCallback(
-    (title: string, message?: string) => {
+    (title: string, message?: string, bypassSilentMode?: boolean) => {
       // Silent mode: suppress error toasts for presentations, but log to console
-      if (import.meta.env.VITE_SILENT_MODE === "true") {
+      // Allow bypassing silent mode for critical operations like deletes
+      if (import.meta.env.VITE_SILENT_MODE === "true" && !bypassSilentMode) {
         console.error(title, message);
         return;
       }

@@ -15,8 +15,7 @@ import { CampaignSegmentDetail } from "../types/campaign";
 import { Offer } from "../../offers/types/offer";
 
 export default function CampaignFlowDetailsPage() {
-  const { campaignId, flowId } = useParams<{
-    campaignId: string;
+  const { flowId } = useParams<{
     flowId: string;
   }>();
   const navigate = useNavigate();
@@ -87,7 +86,7 @@ export default function CampaignFlowDetailsPage() {
     };
 
     loadFlowDetails();
-  }, [flowId, flow]);
+  }, [flowId, flow, showToast]);
 
   const getFlowTypeLabel = (flowType: string): string => {
     const labels: Record<string, string> = {
@@ -98,17 +97,6 @@ export default function CampaignFlowDetailsPage() {
       MULTIPLE_LEVEL: "Multiple Level",
     };
     return labels[flowType] || flowType;
-  };
-
-  const getFlowTypeColor = (flowType: string): string => {
-    const colors: Record<string, string> = {
-      STANDARD: color.primary.accent,
-      AB_TEST: "#F59E0B",
-      CHAMPION_CHALLENGER: "#8B5CF6",
-      ROUND_ROBIN: "#10B981",
-      MULTIPLE_LEVEL: "#3B82F6",
-    };
-    return colors[flowType] || color.primary.accent;
   };
 
   const handleEditClick = async () => {

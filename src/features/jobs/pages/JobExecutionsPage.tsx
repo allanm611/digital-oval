@@ -534,7 +534,7 @@ export default function JobExecutionsPage() {
                 string,
                 unknown
               >
-            )?.scheduledJobs as string) || "Job Executions"}
+            )?.jobExecutions as string) || "Job Executions"}
           </h1>
           <p className={`${tw.textSecondary} mt-2 text-sm`}>
             Monitor and track all job execution records

@@ -101,6 +101,7 @@ const dummyManualRewards: ManualReward[] = [
 ];
 
 export default function ManualRewardsPage() {
+  const navigate = useNavigate();
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
