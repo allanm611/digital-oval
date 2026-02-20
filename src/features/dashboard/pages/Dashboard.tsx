@@ -375,6 +375,9 @@ const SettingsPages = {
   RoutesPage: lazy(
     () => import(/* webpackPrefetch: true */ "../../settings/pages/RoutesPage"),
   ),
+  SMSTestPage: lazy(
+    () => import(/* webpackPrefetch: true */ "../../settings/pages/SMSTestPage"),
+  ),
 };
 
 // Server & Connection Pages - All routes preloaded for instant access
@@ -850,6 +853,10 @@ export default function Dashboard() {
           <Route
             path="/sms-routes/*"
             element={<SettingsPages.SMSRoutesPage />}
+          />
+          <Route
+            path="/sms-test"
+            element={<SettingsPages.SMSTestPage />}
           />
           <Route path="/routes" element={<SettingsPages.RoutesPage />} />
           <Route

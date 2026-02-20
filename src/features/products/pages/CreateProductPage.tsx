@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-// import BackButton from "../../../shared/components/ui/BackButton";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { CreateProductRequest } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
@@ -107,10 +107,9 @@ export default function CreateProductPage({
       setIsLoading(true);
 
       // Map unit to unit_of_measure and exclude frontend-only fields
-      // Backend doesn't accept: scope, unit, unit_value, validity_hours, combo_data, product_type_id
+      // Backend doesn't accept: unit, unit_value, validity_hours, combo_data, product_type_id
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {
-        scope,
         unit,
         unit_value,
         validity_hours,
@@ -228,6 +227,9 @@ export default function CreateProductPage({
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <BackButton fallbackTo={getBackButtonFallback()} />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-4">

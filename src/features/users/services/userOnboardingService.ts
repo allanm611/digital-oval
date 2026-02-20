@@ -159,6 +159,221 @@ class UserOnboardingService {
   }
 
   /**
+   * GET /user-onboarding-requests/status/submitted - Get all submitted onboarding requests (with pagination)
+   */
+  async getSubmittedRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/submitted${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/status/under_review - Get all requests under review (with pagination)
+   */
+  async getUnderReviewRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/under_review${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/status/pending_approval - Get all requests pending approval (with pagination)
+   */
+  async getPendingApprovalRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/pending_approval${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/approver/:approverId/pending - Get pending requests for a specific approver (with pagination)
+   */
+  async getApproverPendingRequests(
+    approverId: number,
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/approver/${approverId}/pending${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/status/approved - Get all approved onboarding requests (with pagination)
+   */
+  async getApprovedRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/approved${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/status/cancelled - Get all cancelled onboarding requests (with pagination)
+   */
+  async getCancelledRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/cancelled${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/status/expired - Get all expired onboarding requests (with pagination)
+   */
+  async getExpiredRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/status/expired${queryString}`);
+  }
+
+  /**
+   * GET /user-onboarding-requests/recently-submitted - Get recently submitted requests (with pagination)
+   */
+  async getRecentlySubmittedRequests(
+    skipCache?: boolean,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    if (skipCache) params.append("skipCache", "true");
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`/recently-submitted${queryString}`);
+  }
+
+  /**
+   * POST /user-onboarding-requests/:id/approve - Approve an onboarding request
+   */
+  async approveOnboardingRequest(
+    id: number,
+    approverId: number,
+    notes?: string,
+    createUserAccount?: boolean
+  ): Promise<ApiSuccessResponse<AccountRequestType>> {
+    return this.request<ApiSuccessResponse<AccountRequestType>>(
+      `/${id}/approve`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          approver_id: approverId,
+          ...(notes && { notes }),
+          ...(createUserAccount !== undefined && { create_user_account: createUserAccount }),
+        }),
+      }
+    );
+  }
+
+  /**
    * POST /user-onboarding-requests/:id/reject - Reject an onboarding request
    */
   async rejectOnboardingRequest(
@@ -173,6 +388,39 @@ class UserOnboardingService {
         body: JSON.stringify({
           approver_id: approverId,
           ...(rejectionReason && { rejection_reason: rejectionReason }),
+        }),
+      }
+    );
+  }
+
+  /**
+   * POST /user-onboarding-requests/:id/move-to-review - Move request to review status
+   */
+  async moveToReview(
+    id: number
+  ): Promise<ApiSuccessResponse<AccountRequestType>> {
+    return this.request<ApiSuccessResponse<AccountRequestType>>(
+      `/${id}/move-to-review`,
+      {
+        method: "POST",
+        body: JSON.stringify({}),
+      }
+    );
+  }
+
+  /**
+   * POST /user-onboarding-requests/:id/move-to-pending-approval - Move request to pending approval status
+   */
+  async moveToPendingApproval(
+    id: number,
+    approverId: number
+  ): Promise<ApiSuccessResponse<AccountRequestType>> {
+    return this.request<ApiSuccessResponse<AccountRequestType>>(
+      `/${id}/move-to-pending-approval`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          approver_id: approverId,
         }),
       }
     );

@@ -91,6 +91,12 @@ export default function SegmentDetailsPage() {
 
   // Members state
   const [showMembersModal, setShowMembersModal] = useState(false);
+  const [membersSearchTerm, setMembersSearchTerm] = useState("");
+  const [debouncedMembersSearchTerm, setDebouncedMembersSearchTerm] = useState("");
+  const [membersPage, setMembersPage] = useState(1);
+  const [isLoadingMembersList, setIsLoadingMembersList] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [membersTotalPages, setMembersTotalPages] = useState(1);
 
   // Customer selection state
   const [showCustomerSelection, setShowCustomerSelection] = useState(false);
@@ -102,6 +108,7 @@ export default function SegmentDetailsPage() {
   >([]);
   const [isLoadingCustomersForSelection, setIsLoadingCustomersForSelection] =
     useState(false);
+  const [customerIdsInput, setCustomerIdsInput] = useState("");
 
   // Action button states
   const [isRecomputingMembers, setIsRecomputingMembers] = useState(false);
@@ -125,6 +132,8 @@ export default function SegmentDetailsPage() {
   const [previewCount, setPreviewCount] = useState<number>(0);
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isExportJobRunning, setIsExportJobRunning] = useState(false);
+  const [exportJobId, setExportJobId] = useState<string | null>(null);
+  const [exportFields, setExportFields] = useState<string[]>(["msisdn", "email", "score"]);
 
   // Phase 4 - Advanced Edit
   const [showAdvancedEdit, setShowAdvancedEdit] = useState(false);
@@ -408,7 +417,10 @@ export default function SegmentDetailsPage() {
   const handleSegmentSaved = (updatedSegment: Segment) => {
     setSegment(updatedSegment);
     setIsEditModalOpen(false);
-    success("Segment updated", "Segment has been updated successfully");
+    success(
+      "Segment updated",
+      `"${updatedSegment.name || 'Unnamed'}" has been updated successfully`
+    );
     // Reload segment data to ensure we have the latest
     loadSegment();
   };

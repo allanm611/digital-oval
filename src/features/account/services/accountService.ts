@@ -3,8 +3,6 @@ import {
   CreateAccountRequestRequest,
   RecordConsentsRequest,
   SubmitAccountRequestRequest,
-  AssignApproverRequest,
-  ApproveAccountRequestRequest,
   CreateDirectAccountRequest,
   ApiSuccessResponse,
   AccountRequestType,
@@ -154,38 +152,6 @@ class AccountService {
   ): Promise<ApiSuccessResponse<AccountRequestType>> {
     return this.request<ApiSuccessResponse<AccountRequestType>>(
       `/request/${id}/submit`,
-      {
-        method: "POST",
-        body: request ? JSON.stringify(request) : undefined,
-      }
-    );
-  }
-
-  /**
-   * POST /accounts/request/:id/assign-approver - Assign approver to request
-   */
-  async assignApprover(
-    id: number,
-    request: AssignApproverRequest
-  ): Promise<ApiSuccessResponse<AccountRequestType>> {
-    return this.request<ApiSuccessResponse<AccountRequestType>>(
-      `/request/${id}/assign-approver`,
-      {
-        method: "POST",
-        body: JSON.stringify(request),
-      }
-    );
-  }
-
-  /**
-   * POST /accounts/request/:id/approve - Approve account request
-   */
-  async approveAccountRequest(
-    id: number,
-    request?: ApproveAccountRequestRequest
-  ): Promise<ApiSuccessResponse<AccountRequestType>> {
-    return this.request<ApiSuccessResponse<AccountRequestType>>(
-      `/request/${id}/approve`,
       {
         method: "POST",
         body: request ? JSON.stringify(request) : undefined,

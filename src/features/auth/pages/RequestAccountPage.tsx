@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowLeft, CheckCircle2, ArrowRight, List } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { accountService } from "../../account/services/accountService";
@@ -101,10 +101,11 @@ export default function RequestAccountPage() {
 
     try {
       await accountService.createAccountRequest({
-        username: formData.email.split("@")[0],
-        email: formData.email,
+        email_address: formData.email,
         first_name: formData.firstName,
         last_name: formData.lastName,
+        business_justification: formData.reason,
+        created_by_source: "online_portal",
         department: formData.department || undefined,
       });
 
@@ -155,10 +156,6 @@ export default function RequestAccountPage() {
     setCurrentStep(1);
     setRequestSubmitted(false);
     setValidationErrors({});
-  };
-
-  const goToRequestsList = () => {
-    // Navigate to requests list if it exists
   };
 
   return (
@@ -518,13 +515,6 @@ export default function RequestAccountPage() {
                   <div className="success-actions">
                     <button className="btn-primary" onClick={resetForm}>
                       {t.auth.requestAccount.submitButton}
-                    </button>
-                    <button
-                      className="btn-secondary"
-                      onClick={goToRequestsList}
-                    >
-                      <List size={18} />
-                      {t.common.select}
                     </button>
                   </div>
                 </div>

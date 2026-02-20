@@ -49,6 +49,8 @@ export default function SegmentModal({
     description?: string;
     conditions?: string;
   }>({});
+  const [existingQuery, setExistingQuery] = useState<string | null>(null);
+  const [existingCountQuery, setExistingCountQuery] = useState<string | null>(null);
   const isUserInteractionRef = useRef(false);
 
   // Update formData.category when selectedCategoryIds changes (use first one)
@@ -88,6 +90,9 @@ export default function SegmentModal({
             type: "dynamic",
             category,
           });
+          // Store existing queries to display in edit mode
+          setExistingQuery(segment.query || null);
+          setExistingCountQuery(segment.count_query || null);
           // Initialize selectedCategoryIds from segment category
           setSelectedCategoryIds(category ? [category] : []);
         } else {
@@ -101,6 +106,9 @@ export default function SegmentModal({
           });
           // Reset selectedCategoryIds for new segment
           setSelectedCategoryIds([]);
+          // Clear existing queries for new segment
+          setExistingQuery(null);
+          setExistingCountQuery(null);
         }
         setFieldErrors({});
         // Reset modal states
@@ -670,7 +678,6 @@ export default function SegmentModal({
                                 key={tag}
                                 className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
                                 style={{
-                                  backgroundColor: `${color.primary.accent}20`,
                                   borderColor: color.primary.accent,
                                   color: color.primary.accent,
                                 }}
@@ -766,6 +773,18 @@ export default function SegmentModal({
                       </div>
                     </div>
 
+                    {segment && existingQuery && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-2">
+                          Query:
+                        </label>
+                        <div
+                          className="bg-gray-50 border border-gray-200 rounded p-3 text-xs font-mono text-gray-700 max-h-40 overflow-y-auto"
+                        >
+                          {existingQuery}
+                        </div>
+                      </div>
+                    )}
                     <div
                       className={`${tw.rounded} p-4`}
                       style={{
@@ -970,7 +989,7 @@ export default function SegmentModal({
               </div>
             )}
 
-            {/* Confirmation Modal (for Create Segment button) */}
+            {/* Confirmation Modal (for Create/Update Segment button) */}
             {showConfirmModal && pendingQueries && (
               <div
                 className="absolute inset-0 z-50 flex items-center justify-center p-4"
@@ -987,10 +1006,10 @@ export default function SegmentModal({
                     <h3
                       className={`text-xl font-semibold ${tw.textPrimary} mb-2`}
                     >
-                      Confirm Segment Creation
+                      {segment ? "Confirm Segment Update" : "Confirm Segment Creation"}
                     </h3>
                     <p className={`text-sm ${tw.textSecondary}`}>
-                      Are you sure you want to create this segment?
+                      {segment ? "Are you sure you want to update this segment?" : "Are you sure you want to create this segment?"}
                     </p>
                   </div>
 
@@ -1020,7 +1039,7 @@ export default function SegmentModal({
                         backgroundColor: color.primary.action,
                       }}
                     >
-                      {isLoading ? "Creating..." : "Confirm & Create"}
+                      {isLoading ? (segment ? "Updating..." : "Creating...") : (segment ? "Confirm & Update" : "Confirm & Create")}
                     </button>
                   </div>
                 </div>

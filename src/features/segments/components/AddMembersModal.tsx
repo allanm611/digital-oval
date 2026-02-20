@@ -5,7 +5,7 @@ import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
 import { customerService } from "../../customers360/services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import { tw, zIndex } from "../../../shared/utils/utils";
+import { tw, zIndex, color } from "../../../shared/utils/utils";
 
 interface Customer {
   id: string | number;
@@ -76,13 +76,18 @@ export default function AddMembersModal({
     });
   }, [customers, customerSearchTerm, customerStatusFilter]);
 
+  const getCustomerId = (customer: Customer) => {
+    return customer.customerId || customer.id;
+  };
+
   const handleToggleCustomer = (customer: Customer) => {
+    const customerId = getCustomerId(customer);
     const isSelected = selectedCustomers.some(
-      (c) => c.customerId === customer.customerId
+      (c) => getCustomerId(c) === customerId
     );
     if (isSelected) {
       setSelectedCustomers(
-        selectedCustomers.filter((c) => c.customerId !== customer.customerId)
+        selectedCustomers.filter((c) => getCustomerId(c) !== customerId)
       );
     } else {
       setSelectedCustomers([...selectedCustomers, customer]);
@@ -174,15 +179,28 @@ export default function AddMembersModal({
         {/* Selected Count */}
         {selectedCustomers.length > 0 && (
           <div className="px-6 flex-shrink-0 my-3">
-            <div className="rounded-lg p-4 border border-blue-200 bg-blue-50">
+            <div
+              className="rounded-lg p-4 border bg-white"
+              style={{
+                borderColor: color.primary.accent,
+              }}
+            >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-blue-800">
+                <span
+                  className="text-sm"
+                  style={{
+                    color: color.primary.accent,
+                  }}
+                >
                   {selectedCustomers.length} customer
                   {selectedCustomers.length !== 1 ? "s" : ""} selected
                 </span>
                 <button
                   onClick={() => setSelectedCustomers([])}
-                  className="text-sm font-medium text-blue-800 hover:opacity-80 transition-opacity"
+                  className="text-sm font-medium hover:opacity-80 transition-opacity"
+                  style={{
+                    color: color.primary.accent,
+                  }}
                 >
                   Clear All
                 </button>
@@ -242,8 +260,9 @@ export default function AddMembersModal({
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredCustomers.map((customer) => {
+                    const customerId = getCustomerId(customer);
                     const isSelected = selectedCustomers.some(
-                      (c) => c.customerId === customer.customerId
+                      (c) => getCustomerId(c) === customerId
                     );
 
                     return (
@@ -309,14 +328,15 @@ export default function AddMembersModal({
             <button
               onClick={handleConfirm}
               disabled={selectedCustomers.length === 0}
-              className={`px-5 py-2 ${tw.rounded} text-sm font-medium ${
-                selectedCustomers.length === 0 ? "cursor-not-allowed" : ""
+              className={`px-5 py-2 ${tw.rounded} text-sm font-medium transition-opacity ${
+                selectedCustomers.length === 0 ? "cursor-not-allowed opacity-50" : ""
               }`}
               style={{
                 backgroundColor:
-                  selectedCustomers.length > 0 ? "#3B82F6" : "#D1D5DB",
-                color:
-                  selectedCustomers.length === 0 ? "#6B7280" : "white",
+                  selectedCustomers.length > 0
+                    ? color.primary.action
+                    : color.text.muted,
+                color: "white",
               }}
             >
               Add {selectedCustomers.length > 0 ? `(${selectedCustomers.length})` : ""}

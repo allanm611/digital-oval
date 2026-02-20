@@ -263,7 +263,7 @@ class SegmentService {
     filters: AdvancedSearchQuery,
     skipCache: boolean = true,
   ): Promise<SegmentCategoriesResponse> {
-    const queryString = this.buildQueryParams({ ...filters, skipCache });
+    const queryString = this.buildQueryParams({ ...filters, skip_cache: skipCache });
     return this.requestCategories<SegmentCategoriesResponse>(
       `/super-search${queryString}`,
     );

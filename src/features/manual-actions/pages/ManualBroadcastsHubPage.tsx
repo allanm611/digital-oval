@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Mail, Gift } from "lucide-react";
+import { Mail, Gift, Send } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -19,6 +19,12 @@ export default function ManualBroadcastsHubPage() {
       description: t.manualActions.distributeRewards,
       icon: Gift,
       onClick: () => navigate("/dashboard/manual-rewards"),
+    },
+    {
+      title: "SMS Test",
+      description: "Test the SMS endpoint by sending a test message",
+      icon: Send,
+      onClick: () => navigate("/dashboard/sms-test"),
     },
   ];
 

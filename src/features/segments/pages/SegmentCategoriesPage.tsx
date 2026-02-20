@@ -144,7 +144,9 @@ function CategoryModal({
       onClose();
     } catch (err) {
       console.error("Failed to save category:", err);
-      showError("Failed to save category", "Please try again later.");
+      // Extract actual backend error message and bypass silent mode
+      const errorMessage = err instanceof Error ? err.message : "Please try again later.";
+      showError("Failed to save category", errorMessage, true);
       setError(""); // Clear error state
     } finally {
       setIsLoading(false);
@@ -440,20 +442,13 @@ export default function SegmentCategoriesPage() {
       setIsLoading(true);
       try {
         let response;
-        // Use searchSegmentCategories when there's a search term, otherwise use getSegmentCategories
         // Always skip cache when explicitly requested, otherwise default to true for fresh data
         const shouldSkipCache = skipCache !== false ? true : false;
-        if (debouncedSearchTerm.trim()) {
-          response = await segmentService.searchSegmentCategories(
-            debouncedSearchTerm,
-            shouldSkipCache,
-          );
-        } else {
-          response = await segmentService.getSegmentCategories(
-            undefined,
-            shouldSkipCache,
-          );
-        }
+        // Use getSegmentCategories endpoint instead of super-search
+        response = await segmentService.getSegmentCategories(
+          debouncedSearchTerm.trim() || undefined,
+          shouldSkipCache,
+        );
         const categoriesData = response.data || [];
 
         // Ensure all category IDs are numbers
@@ -563,9 +558,8 @@ export default function SegmentCategoriesPage() {
       );
       await loadCategories(true); // skipCache = true
     } catch (err) {
-      throw new Error(
-        (err as Error).message || "Failed to create segment catalog",
-      );
+      // Re-throw with actual backend error message
+      throw err;
     }
   };
 
@@ -588,9 +582,8 @@ export default function SegmentCategoriesPage() {
       );
       await loadCategories(true); // skipCache = true
     } catch (err) {
-      throw new Error(
-        (err as Error).message || "Failed to update segment catalog",
-      );
+      // Re-throw with actual backend error message
+      throw err;
     }
   };
 

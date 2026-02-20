@@ -1649,7 +1649,6 @@ Satoshi
   padding: 3rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .form-header {
@@ -1745,7 +1744,6 @@ Satoshi
 .form-group textarea:focus {
   border-color: #10b981;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
   background: rgba(15, 23, 42, 0.8);
 }
 
@@ -1797,7 +1795,6 @@ Satoshi
 .btn-next:hover,
 .btn-submit:hover:not(:disabled) {
   background: #2f4a35;
-  box-shadow: 0 10px 25px rgba(58, 90, 64, 0.3);
   transform: translateY(-2px);
 }
 
@@ -1902,7 +1899,6 @@ Satoshi
 
 .btn-primary:hover {
   background: #2f4a35;
-  box-shadow: 0 10px 25px rgba(58, 90, 64, 0.3);
   transform: translateY(-2px);
 }
 

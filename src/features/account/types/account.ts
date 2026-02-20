@@ -36,11 +36,20 @@ export type ApiSuccessResponse<T> = {
 };
 
 // Request Types
+export type CreatedBySource =
+  | "online_portal"
+  | "print_form"
+  | "hr_system"
+  | "api_integration"
+  | "admin_portal"
+  | "bulk_import";
+
 export type CreateAccountRequestRequest = {
-  username: string;
-  email: string;
+  email_address: string;
   first_name: string;
   last_name: string;
+  business_justification: string;
+  created_by_source?: CreatedBySource;
   employee_id?: string;
   department?: string;
   role_id?: number;

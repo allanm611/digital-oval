@@ -424,7 +424,7 @@ function BasicInfoStep({
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Max Usage Per Customer *
+            Max Usage Per Customer
           </label>
           <input
             type="number"
@@ -450,7 +450,6 @@ function BasicInfoStep({
                 ? "border-red-500"
                 : "border-gray-300"
             }`}
-            required
           />
           {validationErrors?.max_usage_per_customer && (
             <p className="mt-1 text-sm text-red-600">

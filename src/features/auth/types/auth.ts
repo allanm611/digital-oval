@@ -145,6 +145,87 @@ export interface ValidateResponse {
   reason?: string;
 }
 
+// Session Management Types
+export interface UserSession {
+  id: number;
+  user_id: number;
+  session_type: "web" | "mobile" | "api";
+  device_type?: "desktop" | "mobile" | "tablet";
+  token_hash: string;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: string;
+  expires_at: string;
+  last_activity_at?: string;
+  is_active: boolean;
+  mfa_verified?: boolean;
+}
+
+export interface CreateSessionRequest {
+  user_id: number;
+  session_type: "web" | "mobile" | "api";
+  device_type?: "desktop" | "mobile" | "tablet";
+}
+
+export interface CreateSessionResponse {
+  success: boolean;
+  session?: UserSession;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface EndSessionRequest {
+  session_id: number;
+}
+
+export interface EndSessionResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface EndAllSessionsRequest {
+  user_id: number;
+}
+
+export interface EndAllSessionsResponse {
+  success: boolean;
+  ended_count?: number;
+  message?: string;
+}
+
+export interface VerifyMFARequest {
+  mfa_code: string;
+}
+
+export interface VerifyMFAResponse {
+  success: boolean;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+export interface SessionStats {
+  active_count?: number;
+  by_session_type?: Record<string, number>;
+  by_device_type?: Record<string, number>;
+  suspicious_count?: number;
+}
+
+export interface PaginatedSessions {
+  success: boolean;
+  data: UserSession[];
+  pagination?: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
 // Legacy types - keeping for backward compatibility
 export interface CreateUserRequest {
   firstName: string;

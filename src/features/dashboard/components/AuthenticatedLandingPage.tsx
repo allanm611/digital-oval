@@ -74,7 +74,7 @@ export default function AuthenticatedLandingPage() {
       subtitle: t.landing.sentraXMSubtitle,
       description: t.landing.sentraXMDescription,
       icon: "heart",
-      path: "/dashboard/experiences",
+      path: "/dashboard/products",
       color: "from-orange-500 to-red-600",
       iconColor: "emerald",
     },
@@ -96,7 +96,7 @@ export default function AuthenticatedLandingPage() {
       subtitle: t.landing.sentraConnectSubtitle,
       description: t.landing.sentraConnectDescription,
       icon: "send",
-      path: "/dashboard/engagement",
+      path: "/dashboard/jobs",
       color: "from-blue-500 to-cyan-600",
       iconColor: "indigo",
     },
@@ -172,7 +172,9 @@ export default function AuthenticatedLandingPage() {
                   "cm",
                   "analytics",
                   "360",
+                  "xm",
                   "target",
+                  "connect",
                   "config",
                 ];
                 const isClickable = navigableModules.includes(module.id);

@@ -162,14 +162,15 @@ export default function EditProductPage() {
     try {
       setIsLoading(true);
 
-      // Map unit to unit_of_measure
+      // Map unit to unit_of_measure and exclude backend-unsupported fields
+      // Backend doesn't accept: product_type_id, unit, unit_value, validity_hours, combo_data
       const {
         is_active,
-        scope,
         unit,
         unit_value,
         validity_hours,
         combo_data,
+        product_type_id,
         ...updateData
       } = formData;
 

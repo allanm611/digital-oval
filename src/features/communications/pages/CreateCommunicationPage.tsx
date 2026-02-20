@@ -22,7 +22,7 @@ export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { success: showToast } = useToast();
+  const { success: showToast, error: showError } = useToast();
 
   // State
   const [quicklist, setQuickList] = useState<QuickList | null>(null);
@@ -108,10 +108,8 @@ export default function CreateCommunicationPage() {
         setResult(response.data);
       }
     } catch (_error) {
-      // On error, show toast and route immediately
-      // Communication continues in background
-      showToast("Communication created successfully");
-      navigate("/dashboard/manual-communications");
+      // Backend not fixed yet - show error
+      showError("Error", "Failed to create communication");
     } finally {
       setSending(false);
     }

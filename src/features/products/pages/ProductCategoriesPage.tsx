@@ -714,7 +714,24 @@ export default function ProductCatalogsPage() {
       await refreshCategoryProductCounts();
     } catch (err) {
       console.error("Failed to delete category:", err);
-      showError("Failed to delete category", "Please try again later.");
+
+      // Extract actual error message from backend
+      let errorMessage = "Please try again later.";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === "object") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const error = err as any;
+        if (error.response?.data?.error) {
+          errorMessage = error.response.data.error;
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+      }
+
+      showError("Failed to delete category", errorMessage, true);
     } finally {
       setIsDeleting(false);
     }

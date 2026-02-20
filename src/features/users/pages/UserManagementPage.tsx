@@ -281,14 +281,16 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        // Fetch both users and account requests in parallel
-        const [usersResponse] = await Promise.allSettled([
+        // Fetch users and onboarding requests in parallel
+        const [usersResponse, submittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse] = await Promise.allSettled([
           fetchUsers({
             skipCache,
             searchTermOverride,
           }),
-          // Commented out - pending activation users come from main users endpoint
-          // userOnboardingService.getPendingOnboardingRequests(skipCache),
+          userOnboardingService.getSubmittedRequests(skipCache, 100, 0),
+          userOnboardingService.getUnderReviewRequests(skipCache, 100, 0),
+          userOnboardingService.getPendingApprovalRequests(skipCache, 100, 0),
+          userOnboardingService.getRejectedOnboardingRequests(skipCache, 100, 0),
         ]);
 
         // Process active users (from users endpoint)
@@ -296,16 +298,6 @@ export default function UserManagementPage() {
           const allUsers = usersResponse.value.data;
 
           // Separate users by account_status
-          const pendingActivationUsers = allUsers.filter(
-            (user) => {
-              const userStatus = (user as unknown as { account_status?: string })?.account_status;
-              return (
-                typeof userStatus === "string" &&
-                userStatus.toLowerCase() === "pending_activation"
-              );
-            }
-          );
-
           const activeUsers = allUsers.filter((user) => {
             const userStatus = (user as unknown as { account_status?: string })?.account_status;
             return !(
@@ -331,41 +323,7 @@ export default function UserManagementPage() {
             };
           }) as UserWithResolvedRole[];
 
-          // Deduplicate pending activation users by ID
-          const seenIds = new Set<number>();
-          const uniquePendingUsers = pendingActivationUsers.filter((user) => {
-            if (seenIds.has(user.id)) {
-              return false;
-            }
-            seenIds.add(user.id);
-            return true;
-          });
-
-          const pendingWithResolvedRoles = uniquePendingUsers.map((pending) => {
-            const primaryRoleId = (pending as unknown as { primary_role_id?: number })?.primary_role_id;
-            const currentRoleLookup = roleLookupRef.current;
-            const resolvedRoleName =
-              (primaryRoleId != null
-                ? currentRoleLookup[primaryRoleId]?.name
-                : undefined) ||
-              (pending as unknown as { role_name?: string }).role_name ||
-              "N/A";
-
-            return {
-              id: pending.id,
-              requestId: (pending as unknown as { onboarding_request_id?: number })?.onboarding_request_id,
-              first_name: pending.first_name,
-              last_name: pending.last_name,
-              email_address: pending.email_address || (pending as { email?: string }).email,
-              department: pending.department || undefined,
-              roleId: primaryRoleId,
-              roleName: resolvedRoleName,
-              created_at: pending.created_at,
-            };
-          });
-
           setUsers(usersWithResolvedRoles);
-          setAccountRequests(pendingWithResolvedRoles);
 
           const totalFromResponse =
             (usersResponse.value.meta?.total as number | undefined) ??
@@ -377,8 +335,48 @@ export default function UserManagementPage() {
           });
         }
 
-        // Pending activation users already set above from users endpoint
-        // No need to fetch from onboarding service to avoid duplicates
+        // Process onboarding requests (submitted, under_review, pending_approval)
+        const allOnboardingRequests: AccountRequestListItem[] = [];
+        const statusResponses = [submittedResponse, underReviewResponse, pendingApprovalResponse];
+
+        statusResponses.forEach((response) => {
+          if (response.status === "fulfilled" && response.value.success) {
+            const requests = response.value.data || [];
+            requests.forEach((req: any) => {
+              allOnboardingRequests.push({
+                requestId: req.id,
+                first_name: req.first_name,
+                last_name: req.last_name,
+                email_address: req.email_address,
+                department: req.department,
+                created_at: req.created_at,
+                status: req.status || "submitted",
+              });
+            });
+          }
+        });
+
+        setAccountRequests(allOnboardingRequests);
+
+        // Process rejected requests
+        const rejectedList: AccountRequestListItem[] = [];
+        if (rejectedResponse.status === "fulfilled" && rejectedResponse.value.success) {
+          const rejected = rejectedResponse.value.data || [];
+          rejected.forEach((req: any) => {
+            rejectedList.push({
+              requestId: req.id,
+              first_name: req.first_name,
+              last_name: req.last_name,
+              email_address: req.email_address,
+              department: req.department,
+              created_at: req.created_at,
+              status: "rejected",
+              rejection_reason: req.rejection_reason,
+            });
+          });
+        }
+
+        setRejectedRequests(rejectedList);
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
@@ -399,12 +397,13 @@ export default function UserManagementPage() {
         setIsLoading(true);
         setErrorState("");
 
-        // Fetch users, account requests, rejected requests, and roles in parallel
-        const [usersResponse, rejectedResponse, rolesResponse] = await Promise.allSettled([
+        // Fetch users, onboarding requests, and roles in parallel
+        const [usersResponse, submittedResponse, underReviewResponse, pendingApprovalResponse, rejectedResponse, rolesResponse] = await Promise.allSettled([
           fetchUsers({ skipCache: false }),
-          // Commented out - pending activation users come from main users endpoint
-          // userOnboardingService.getPendingOnboardingRequests(false),
-          userOnboardingService.getRejectedOnboardingRequests(true),
+          userOnboardingService.getSubmittedRequests(true, 100, 0),
+          userOnboardingService.getUnderReviewRequests(true, 100, 0),
+          userOnboardingService.getPendingApprovalRequests(true, 100, 0),
+          userOnboardingService.getRejectedOnboardingRequests(true, 100, 0),
           roleService.listRoles({
             limit: 100,
             offset: 0,
@@ -439,17 +438,7 @@ export default function UserManagementPage() {
         ) {
           const allUsers = usersResponse.value.data;
 
-          // Separate users by account_status
-          const pendingActivationUsers = allUsers.filter(
-            (user) => {
-              const userStatus = (user as unknown as { account_status?: string })?.account_status;
-              return (
-                typeof userStatus === "string" &&
-                userStatus.toLowerCase() === "pending_activation"
-              );
-            }
-          );
-
+          // Filter to only active users (exclude pending_activation)
           const activeUsers = allUsers.filter((user) => {
             const userStatus = (user as unknown as { account_status?: string })?.account_status;
             return !(
@@ -474,39 +463,6 @@ export default function UserManagementPage() {
             };
           }) as UserWithResolvedRole[];
 
-          // Deduplicate pending activation users by ID
-          const seenIds = new Set<number>();
-          const uniquePendingUsers = pendingActivationUsers.filter((user) => {
-            if (seenIds.has(user.id)) {
-              return false;
-            }
-            seenIds.add(user.id);
-            return true;
-          });
-
-          const pendingWithResolvedRoles = uniquePendingUsers.map((pending) => {
-            const primaryRoleId = (pending as unknown as { primary_role_id?: number })?.primary_role_id;
-            const currentRoleLookup = roleLookupRef.current;
-            const resolvedRoleName =
-              (primaryRoleId != null
-                ? currentRoleLookup[primaryRoleId]?.name
-                : undefined) ||
-              (pending as unknown as { role_name?: string }).role_name ||
-              "N/A";
-
-            return {
-              id: pending.id,
-              requestId: (pending as unknown as { onboarding_request_id?: number })?.onboarding_request_id,
-              first_name: pending.first_name,
-              last_name: pending.last_name,
-              email_address: pending.email_address || (pending as { email?: string }).email,
-              department: pending.department || undefined,
-              roleId: primaryRoleId,
-              roleName: resolvedRoleName,
-              created_at: pending.created_at,
-            };
-          });
-
           setUsers(usersWithResolvedRoles);
 
           const totalFromResponse =
@@ -517,49 +473,58 @@ export default function UserManagementPage() {
             total: totalFromResponse,
             cached: Boolean(usersResponse.value.meta?.isCachedResponse),
           });
-
-          // Set pending activation users directly
-          setAccountRequests(pendingWithResolvedRoles);
         } else if (usersResponse.status === "rejected") {
           const message = extractErrorMessage(usersResponse.reason);
           setErrorState(message);
           showError("Error loading users", message);
         }
 
-        // Pending activation users already fetched from main users endpoint
-        // No separate account requests endpoint needed
+        // Process onboarding requests (submitted, under_review, pending_approval)
+        const allOnboardingRequests: AccountRequestListItem[] = [];
+        const statusResponses = [submittedResponse, underReviewResponse, pendingApprovalResponse];
+
+        statusResponses.forEach((response) => {
+          if (response.status === "fulfilled" && response.value.success) {
+            const requests = response.value.data || [];
+            requests.forEach((req: any) => {
+              allOnboardingRequests.push({
+                requestId: req.id,
+                first_name: req.first_name,
+                last_name: req.last_name,
+                email_address: req.email_address,
+                department: req.department,
+                created_at: req.created_at,
+                status: req.status || "submitted",
+              });
+            });
+          }
+        });
+
+        setAccountRequests(allOnboardingRequests);
 
         // Process rejected account requests
+        const rejectedList: AccountRequestListItem[] = [];
         if (
           rejectedResponse.status === "fulfilled" &&
           rejectedResponse.value.success
         ) {
           const rejectedData = rejectedResponse.value.data || [];
 
-          const currentRoleLookup = roleLookupRef.current;
-          setRejectedRequests(
-            rejectedData.map((request) => {
-              const resolvedRoleName =
-                (request.role_id != null
-                  ? currentRoleLookup[request.role_id]?.name
-                  : undefined) || "N/A";
-
-              return {
-                id: request.id,
-                requestId: request.id,
-                first_name: request.first_name,
-                last_name: request.last_name,
-                email_address: request.email,
-                department: request.department || undefined,
-                roleId: request.role_id ?? undefined,
-                roleName: resolvedRoleName,
-                created_at: request.created_at,
-                status: request.status,
-                rejection_reason: request.rejection_reason,
-              };
-            }),
-          );
+          rejectedData.forEach((request: any) => {
+            rejectedList.push({
+              requestId: request.id,
+              first_name: request.first_name,
+              last_name: request.last_name,
+              email_address: request.email_address,
+              department: request.department,
+              created_at: request.created_at,
+              status: "rejected",
+              rejection_reason: request.rejection_reason,
+            });
+          });
         }
+
+        setRejectedRequests(rejectedList);
       } catch (err) {
         const message = extractErrorMessage(err);
         setErrorState(message);
@@ -767,6 +732,47 @@ export default function UserManagementPage() {
     return typeof identifier === "number" ? identifier : null;
   };
 
+  const getStatusBadge = (request: AccountRequestListItem) => {
+    const status = request.status || "submitted";
+    const statusConfig: Record<string, { label: string; bgColor: string; textColor: string }> = {
+      submitted: {
+        label: "Submitted",
+        bgColor: "bg-blue-100",
+        textColor: "text-blue-700",
+      },
+      under_review: {
+        label: "Under Review",
+        bgColor: "bg-yellow-100",
+        textColor: "text-yellow-700",
+      },
+      pending_approval: {
+        label: "Pending Approval",
+        bgColor: "bg-orange-100",
+        textColor: "text-orange-700",
+      },
+      approved: {
+        label: "Approved",
+        bgColor: "bg-green-100",
+        textColor: "text-green-700",
+      },
+      rejected: {
+        label: "Rejected",
+        bgColor: "bg-red-100",
+        textColor: "text-red-700",
+      },
+    };
+
+    const config = statusConfig[status] || statusConfig.submitted;
+
+    return (
+      <span
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bgColor} ${config.textColor}`}
+      >
+        {config.label}
+      </span>
+    );
+  };
+
   const handleApproveRequest = async (request: AccountRequestListItem) => {
     const requestId = resolveAccountRequestId(request);
     if (!requestId) {
@@ -776,10 +782,6 @@ export default function UserManagementPage() {
       );
       return;
     }
-
-    const onboardingRequestId =
-      typeof request.requestId === "number" ? request.requestId : null;
-    const userId = request.id ?? request.user_id ?? null;
 
     const confirmed = await confirm({
       title: "Approve Request",
@@ -798,13 +800,11 @@ export default function UserManagementPage() {
     }));
 
     try {
-      if (onboardingRequestId) {
-        await accountService.approveAccountRequest(onboardingRequestId);
-      } else if (userId) {
-        await userService.activateUser(userId, {
-          updated_by: authUser?.user_id ?? undefined,
-        });
-      }
+      // Approve the onboarding request
+      await userOnboardingService.approveOnboardingRequest(
+        requestId,
+        authUser?.user_id ?? 0,
+      );
 
       await loadData({ skipCache: true }); // Skip cache to get fresh data
       success(
@@ -823,6 +823,143 @@ export default function UserManagementPage() {
         approving: new Set(
           [...prev.approving].filter((id) => id !== requestId),
         ),
+      }));
+    }
+  };
+
+  const handleMoveToReview = async (request: AccountRequestListItem) => {
+    const requestId = resolveAccountRequestId(request);
+    if (!requestId) {
+      showError(
+        "Unable to move request",
+        "Missing identifier for the selected request.",
+      );
+      return;
+    }
+
+    setLoadingActions((prev) => ({
+      ...prev,
+      approving: new Set([...prev.approving, requestId]),
+    }));
+
+    try {
+      await userOnboardingService.moveToReview(requestId);
+      await loadData({ skipCache: true });
+      success(
+        "Request moved to review",
+        `${request.first_name} ${request.last_name}'s request is now under review`,
+      );
+    } catch (err) {
+      showError(
+        "Error moving request",
+        err instanceof Error ? err.message : "Error moving request",
+      );
+    } finally {
+      setLoadingActions((prev) => ({
+        ...prev,
+        approving: new Set([...prev.approving].filter((id) => id !== requestId)),
+      }));
+    }
+  };
+
+  const handleMoveToPendingApproval = async (request: AccountRequestListItem) => {
+    const requestId = resolveAccountRequestId(request);
+    if (!requestId) {
+      showError(
+        "Unable to move request",
+        "Missing identifier for the selected request.",
+      );
+      return;
+    }
+
+    // Using current user as approver for now
+    const approverId = authUser?.user_id ?? 0;
+
+    setLoadingActions((prev) => ({
+      ...prev,
+      approving: new Set([...prev.approving, requestId]),
+    }));
+
+    try {
+      await userOnboardingService.moveToPendingApproval(requestId, approverId);
+      await loadData({ skipCache: true });
+      success(
+        "Request sent to approver",
+        `${request.first_name} ${request.last_name}'s request is now pending approval`,
+      );
+    } catch (err) {
+      showError(
+        "Error moving request",
+        err instanceof Error ? err.message : "Error moving request",
+      );
+    } finally {
+      setLoadingActions((prev) => ({
+        ...prev,
+        approving: new Set([...prev.approving].filter((id) => id !== requestId)),
+      }));
+    }
+  };
+
+  const handleCreateUserFromRequest = async (request: AccountRequestListItem) => {
+    const requestId = resolveAccountRequestId(request);
+    if (!requestId) {
+      showError(
+        "Unable to create user",
+        "Missing identifier for the selected request.",
+      );
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: "Create User Account",
+      message: `Create a system user account for ${request.first_name} ${request.last_name}?`,
+      type: "success",
+      confirmText: "Create User",
+      cancelText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    setLoadingActions((prev) => ({
+      ...prev,
+      approving: new Set([...prev.approving, requestId]),
+    }));
+
+    try {
+      // Generate username from email
+      const username = request.email_address
+        ? request.email_address.split("@")[0].toLowerCase()
+        : `${request.first_name?.toLowerCase() || "user"}`;
+
+      // In production, backend should generate password and send via email
+      // For now using a placeholder
+      const tempPassword = `Temp${Date.now()}!`;
+
+      const response = await userService.createUser({
+        username,
+        email: request.email_address || "",
+        first_name: request.first_name || "",
+        last_name: request.last_name || "",
+        password_hash: tempPassword,
+        primary_role_id: 3, // Default role - TODO: get from request
+        department: request.department,
+        created_by: authUser?.user_id ?? 1,
+      });
+
+      await loadData({ skipCache: true });
+      success(
+        "User created",
+        `${request.first_name} ${request.last_name} has been added to the system`,
+      );
+    } catch (err) {
+      showError(
+        "Error creating user",
+        err instanceof Error ? err.message : "Error creating user account",
+      );
+    } finally {
+      setLoadingActions((prev) => ({
+        ...prev,
+        approving: new Set([...prev.approving].filter((id) => id !== requestId)),
       }));
     }
   };
@@ -1975,6 +2112,12 @@ export default function UserManagementPage() {
                         className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
                         style={{ color: color.surface.tableHeaderText }}
                       >
+                        Status
+                      </th>
+                      <th
+                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                        style={{ color: color.surface.tableHeaderText }}
+                      >
                         Requested
                       </th>
                       <th
@@ -2059,6 +2202,14 @@ export default function UserManagementPage() {
                             </span>
                           </td>
                           <td
+                            className="px-4 sm:px-6 py-3 sm:py-4"
+                            style={{
+                              backgroundColor: color.surface.tablebodybg,
+                            }}
+                          >
+                            {getStatusBadge(request)}
+                          </td>
+                          <td
                             className={`px-4 sm:px-6 py-3 sm:py-4 text-sm ${tw.textMuted} whitespace-nowrap`}
                             style={{
                               backgroundColor: color.surface.tablebodybg,
@@ -2072,29 +2223,73 @@ export default function UserManagementPage() {
                               backgroundColor: color.surface.tablebodybg,
                             }}
                           >
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                onClick={() => handleApproveRequest(request)}
-                                disabled={actionDisabled || approvingLoading}
-                                className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
-                                title={
-                                  actionDisabled
-                                    ? "Missing request identifier"
-                                    : approvingLoading
-                                      ? t.profile.saving
-                                      : t.userManagement.approveRequest
-                                }
-                              >
-                                {approvingLoading ? (
-                                  <LoadingSpinner
-                                    variant="modern"
-                                    size="sm"
-                                    color="primary"
-                                  />
-                                ) : (
-                                  <UserCheck className="w-4 h-4" />
-                                )}
-                              </button>
+                            <div className="flex items-center justify-center gap-1 flex-wrap">
+                              {request.status === "submitted" && (
+                                <button
+                                  onClick={() => handleMoveToReview(request)}
+                                  disabled={actionDisabled || approvingLoading}
+                                  className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title="Move to review"
+                                >
+                                  {approvingLoading ? (
+                                    <LoadingSpinner variant="modern" size="sm" color="primary" />
+                                  ) : (
+                                    <UserPlus className="w-4 h-4" />
+                                  )}
+                                </button>
+                              )}
+                              {request.status === "under_review" && (
+                                <button
+                                  onClick={() => handleMoveToPendingApproval(request)}
+                                  disabled={actionDisabled || approvingLoading}
+                                  className={`p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title="Send to approver"
+                                >
+                                  {approvingLoading ? (
+                                    <LoadingSpinner variant="modern" size="sm" color="primary" />
+                                  ) : (
+                                    <UserCheck className="w-4 h-4" />
+                                  )}
+                                </button>
+                              )}
+                              {request.status === "pending_approval" && (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveRequest(request)}
+                                    disabled={actionDisabled || approvingLoading}
+                                    className={`p-2 text-green-600 hover:text-green-700 hover:bg-green-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    title="Approve request"
+                                  >
+                                    {approvingLoading ? (
+                                      <LoadingSpinner variant="modern" size="sm" color="primary" />
+                                    ) : (
+                                      <CheckCircle className="w-4 h-4" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => handleRejectRequest(request)}
+                                    disabled={actionDisabled}
+                                    className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    title="Reject request"
+                                  >
+                                    <Ban className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+                              {request.status === "approved" && (
+                                <button
+                                  onClick={() => handleCreateUserFromRequest(request)}
+                                  disabled={actionDisabled || approvingLoading}
+                                  className={`p-2 text-purple-600 hover:text-purple-700 hover:bg-purple-50 ${tw.rounded} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                                  title="Create user"
+                                >
+                                  {approvingLoading ? (
+                                    <LoadingSpinner variant="modern" size="sm" color="primary" />
+                                  ) : (
+                                    <UserPlus className="w-4 h-4" />
+                                  )}
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
