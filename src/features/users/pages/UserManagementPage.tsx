@@ -293,22 +293,13 @@ export default function UserManagementPage() {
           userOnboardingService.getRejectedOnboardingRequests(skipCache, 100, 0),
         ]);
 
-        // Process active users (from users endpoint)
+        // Process users (from users endpoint)
         if (usersResponse.status === "fulfilled" && usersResponse.value.success) {
           const allUsers = usersResponse.value.data;
 
-          // Separate users by account_status
-          const activeUsers = allUsers.filter((user) => {
-            const userStatus = (user as unknown as { account_status?: string })?.account_status;
-            return !(
-              typeof userStatus === "string" &&
-              userStatus.toLowerCase() === "pending_activation"
-            );
-          });
-
           const currentRoleLookup = roleLookupRef.current;
 
-          const usersWithResolvedRoles = activeUsers.map((user) => {
+          const usersWithResolvedRoles = allUsers.map((user) => {
             const primaryRoleId = user.primary_role_id ?? user.role_id;
             const resolvedRoleName =
               (primaryRoleId != null
@@ -438,17 +429,8 @@ export default function UserManagementPage() {
         ) {
           const allUsers = usersResponse.value.data;
 
-          // Filter to only active users (exclude pending_activation)
-          const activeUsers = allUsers.filter((user) => {
-            const userStatus = (user as unknown as { account_status?: string })?.account_status;
-            return !(
-              typeof userStatus === "string" &&
-              userStatus.toLowerCase() === "pending_activation"
-            );
-          });
-
           const currentRoleLookup = roleLookupRef.current;
-          const usersWithResolvedRoles = activeUsers.map((user) => {
+          const usersWithResolvedRoles = allUsers.map((user) => {
             const primaryRoleId = user.primary_role_id ?? user.role_id;
             const resolvedRoleName =
               (primaryRoleId != null
@@ -664,44 +646,7 @@ export default function UserManagementPage() {
       });
 
       if (searchResponse.success) {
-        const pendingActivationUsers = searchResponse.data.filter(
-          (candidate) => {
-            const candidateStatus = (
-              candidate as unknown as { account_status?: string }
-            )?.account_status;
-            return (
-              typeof candidateStatus === "string" &&
-              candidateStatus.toLowerCase() === "pending_activation"
-            );
-          },
-        );
-
-        const activeUsers = searchResponse.data.filter((candidate) => {
-          const candidateStatus = (
-            candidate as unknown as { account_status?: string }
-          )?.account_status;
-          return !(
-            typeof candidateStatus === "string" &&
-            candidateStatus.toLowerCase() === "pending_activation"
-          );
-        });
-
-        setUsers(activeUsers);
-        setAccountRequests(
-          pendingActivationUsers.map((pending) => ({
-            id: pending.id,
-            requestId: (
-              pending as unknown as { onboarding_request_id?: number }
-            )?.onboarding_request_id,
-            first_name: pending.first_name,
-            last_name: pending.last_name,
-            email_address:
-              pending.email_address || (pending as { email?: string }).email,
-            department: pending.department || undefined,
-            role: (pending as unknown as { role_name?: string }).role_name,
-            created_at: pending.created_at,
-          })),
-        );
+        setUsers(searchResponse.data);
 
         const totalFromResponse =
           (searchResponse.meta?.total as number | undefined) ??
