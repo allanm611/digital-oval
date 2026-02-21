@@ -966,6 +966,7 @@ export default function SegmentDetailsPage() {
                     {isValidatingQuery ? "Validating..." : "Validate Query"}
                   </button>
                 </PermissionGate>
+                {/* Preview and Export disabled - parentId error in backend
                 <PermissionGate permission="segments.read">
                   <button
                     onClick={() => {
@@ -990,6 +991,7 @@ export default function SegmentDetailsPage() {
                     {isExporting || isExportJobRunning ? "Exporting..." : "Export"}
                   </button>
                 </PermissionGate>
+                */}
               </div>
             )}
           </div>
@@ -2090,8 +2092,8 @@ export default function SegmentDetailsPage() {
           document.body,
         )}
 
-      {/* Preview Modal */}
-      {showPreviewModal &&
+      {/* Preview Modal - DISABLED: parentId error in backend */}
+      {/* {showPreviewModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div
@@ -2161,10 +2163,10 @@ export default function SegmentDetailsPage() {
             </div>
           </div>,
           document.body,
-        )}
+        )} */}
 
-      {/* Export Modal */}
-      {showExportModal &&
+      {/* Export Modal - DISABLED: parentId error in backend */}
+      {/* {showExportModal &&
         createPortal(
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
             <div
@@ -2299,7 +2301,7 @@ export default function SegmentDetailsPage() {
             </div>
           </div>,
           document.body,
-        )}
+        )} */}
 
       {/* Edit Segment Modal */}
       <SegmentModal

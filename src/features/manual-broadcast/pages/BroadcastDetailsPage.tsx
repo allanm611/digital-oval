@@ -141,7 +141,7 @@ export default function BroadcastDetailsPage() {
             Broadcast Details
           </h1>
           <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            Broadcast ID: {execution.id}
+            Execution ID: {execution.execution_id || execution.id}
           </p>
         </div>
       </div>

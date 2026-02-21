@@ -109,9 +109,10 @@ export default function EditSegmentPage() {
       };
 
       await segmentService.updateSegment(Number(id), updateData);
+      const displayName = name || segment?.name || "Segment";
       success(
         "Segment updated",
-        `Segment "${name}" has been updated successfully`
+        `"${displayName}" has been updated successfully`
       );
       navigateBack();
     } catch (err) {

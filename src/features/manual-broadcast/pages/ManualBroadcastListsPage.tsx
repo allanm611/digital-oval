@@ -52,7 +52,7 @@ export default function ManualBroadcastListsPage() {
         const broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
-            execution_id: String(exec.id),
+            execution_id: exec.execution_id || String(exec.id),
             source_type: exec.source_type,
             source_id: exec.source_id || null,
             source_name: exec.name || exec.source_name || `Broadcast ${exec.id}`,
