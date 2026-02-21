@@ -565,7 +565,7 @@ export default function EditCustomerModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 justify-end pt-6 border-t mt-6">
+          <div className="flex gap-3 justify-end pt-6 mt-6">
             <button
               type="button"
               onClick={onClose}
