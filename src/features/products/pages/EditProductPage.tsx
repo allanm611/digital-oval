@@ -163,7 +163,7 @@ export default function EditProductPage() {
       setIsLoading(true);
 
       // Map unit to unit_of_measure and exclude backend-unsupported fields
-      // Backend doesn't accept: product_type_id, unit, unit_value, validity_hours, combo_data
+      // Backend doesn't accept: product_type_id, unit, unit_value, combo_data
       const {
         is_active,
         unit,
@@ -188,10 +188,9 @@ export default function EditProductPage() {
         finalUpdateData.unit_of_measure = unit;
       }
 
-      // Convert validity_hours to validity_days (backend expects days, not hours)
-      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
+      // Send validity_hours directly if provided and valid (must be between 1 and 8760)
       if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_days = Math.ceil(validity_hours / 24);
+        finalUpdateData.validity_hours = validity_hours;
       }
 
       // Include combo_data if provided (for combo products)
