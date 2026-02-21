@@ -118,10 +118,7 @@ export default function ScheduleStep({
                   scheduleType === "now"
                     ? color.primary.accent
                     : color.border.default,
-                backgroundColor:
-                  scheduleType === "now"
-                    ? `${color.primary.accent}10`
-                    : "white",
+                backgroundColor: "white",
                 opacity: isSubmitting ? 0.5 : 1,
                 cursor: isSubmitting ? "not-allowed" : "pointer",
               }}
@@ -174,10 +171,7 @@ export default function ScheduleStep({
                   scheduleType === "later"
                     ? color.primary.accent
                     : color.border.default,
-                backgroundColor:
-                  scheduleType === "later"
-                    ? `${color.primary.accent}10`
-                    : "white",
+                backgroundColor: "white",
                 opacity: isSubmitting ? 0.5 : 1,
                 cursor: isSubmitting ? "not-allowed" : "pointer",
               }}
