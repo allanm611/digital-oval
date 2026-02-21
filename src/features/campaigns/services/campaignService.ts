@@ -239,8 +239,6 @@ class CampaignService {
       "programId",
       "startDateFrom",
       "startDateTo",
-      "sortBy",
-      "sortDirection",
       "page",
       "pageSize",
       "skipCache",
