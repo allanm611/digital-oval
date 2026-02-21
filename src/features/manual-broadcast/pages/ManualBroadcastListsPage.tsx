@@ -48,7 +48,8 @@ export default function ManualBroadcastListsPage() {
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
-        const broadcasts: ManualBroadcast[] = response.data.executions.map(
+        const executions = response.data.executions || (Array.isArray(response.data) ? response.data : []);
+        const broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
             execution_id: exec.execution_id,
@@ -102,7 +103,8 @@ export default function ManualBroadcastListsPage() {
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
-        let broadcasts: ManualBroadcast[] = response.data.executions.map(
+        const executions = response.data.executions || (Array.isArray(response.data) ? response.data : []);
+        let broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
             execution_id: exec.execution_id,

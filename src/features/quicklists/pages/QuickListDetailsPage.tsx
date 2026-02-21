@@ -283,7 +283,7 @@ export default function QuickListDetailsPage() {
       await quicklistService.deleteQuickList(quicklist.id);
       showToast(`QuickList "${quicklist.name}" deleted successfully`);
       setShowDeleteModal(false);
-      navigate("/dashboard/quicklists");
+      navigate("/dashboard/quick-lists");
     } catch (err) {
       showError(
         "Error deleting quicklist",
@@ -356,7 +356,7 @@ export default function QuickListDetailsPage() {
     const isManualBroadcast = currentPath.includes("/manual-communication/");
     const fallbackPath = isManualBroadcast
       ? "/dashboard/manual-communications"
-      : "/dashboard/quicklists";
+      : "/dashboard/quick-lists";
     navigateBackOrFallback(navigate, fallbackPath);
   };
 
@@ -426,7 +426,7 @@ export default function QuickListDetailsPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4 flex-wrap">
           <BackButton
-            fallbackTo="/dashboard/quicklists"
+            fallbackTo="/dashboard/quick-lists"
             onClick={navigateBack}
           />
           <div className="min-w-0">

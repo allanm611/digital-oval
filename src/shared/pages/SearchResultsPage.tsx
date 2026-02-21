@@ -778,7 +778,7 @@ export default function SearchResultsPage() {
             name: quicklist.name || "Unnamed Quicklist",
             description:
               quicklist.description || quicklist.upload_type || undefined,
-            url: `/dashboard/quicklists/${quicklist.id}`,
+            url: `/dashboard/quick-lists/${quicklist.id}`,
             metadata: {
               upload_type: quicklist.upload_type,
               rows_imported: quicklist.rows_imported,

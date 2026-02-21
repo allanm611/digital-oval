@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { User, Save, X } from "lucide-react";
 import { userService } from "../services/userService";
 import { UserType, UpdateUserRequest } from "../types/user";
+// import { sessionService } from "../../auth/services/sessionService"; // TODO: Uncomment when backend confirms /user-sessions endpoints
+// import { UserSession } from "../../auth/types/auth"; // TODO: Uncomment when backend confirms /user-sessions endpoints
 import { useAuth } from "../../../contexts/AuthContext";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
@@ -19,6 +21,10 @@ export default function UserProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // const [sessions, setSessions] = useState<UserSession[]>([]);
+  // const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  // const [isEndingSession, setIsEndingSession] = useState<number | null>(null);
+  // const [isEndingAllSessions, setIsEndingAllSessions] = useState(false);
   const [formData, setFormData] = useState<UpdateUserRequest>({
     first_name: "",
     last_name: "",
@@ -33,6 +39,7 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (authUser?.user_id) {
       loadUserProfile();
+      // loadActiveSessions(); // TODO: Uncomment when backend confirms /user-sessions endpoints
     } else {
       setIsLoading(false);
       showError(t.profile.profileUpdated, t.profile.errorUserInfoNotAvailable);
@@ -68,6 +75,76 @@ export default function UserProfilePage() {
       setIsLoading(false);
     }
   };
+
+  // TODO: Uncomment when backend confirms /user-sessions endpoints
+  // const loadActiveSessions = async () => {
+  //   if (!authUser?.user_id) return;
+
+  //   try {
+  //     setIsLoadingSessions(true);
+  //     const response = await sessionService.getAllSessions(authUser.user_id, {
+  //       limit: 100,
+  //       offset: 0,
+  //       skipCache: true,
+  //     });
+
+  //     if (response.success && response.data) {
+  //       setSessions(response.data);
+  //     }
+  //   } catch (err) {
+  //     console.error("Error loading sessions:", err);
+  //   } finally {
+  //     setIsLoadingSessions(false);
+  //   }
+  // };
+
+  // const handleEndSession = async (sessionId: number) => {
+  //   try {
+  //     setIsEndingSession(sessionId);
+  //     const response = await sessionService.endSession(sessionId);
+
+  //     if (response.success) {
+  //       setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+  //       success("Session Ended", "The session has been successfully ended");
+  //     } else {
+  //       showError("Failed to End Session", response.message || "Unable to end session");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error ending session:", err);
+  //     showError("Failed to End Session", "An error occurred while ending the session");
+  //   } finally {
+  //     setIsEndingSession(null);
+  //   }
+  // };
+
+  // const handleEndAllSessions = async () => {
+  //   if (!authUser?.user_id) return;
+
+  //   if (!window.confirm("Are you sure? This will log you out from all devices.")) {
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsEndingAllSessions(true);
+  //     const response = await sessionService.endAllSessions(authUser.user_id);
+
+  //     if (response.success) {
+  //       setSessions([]);
+  //       success("Logged Out", "You have been logged out from all devices");
+  //       // Redirect to login after a short delay
+  //       setTimeout(() => {
+  //         window.location.href = "/auth/login";
+  //       }, 1500);
+  //     } else {
+  //       showError("Failed to Logout", response.message || "Unable to logout from all devices");
+  //     }
+  //   } catch (err) {
+  //     console.error("Error ending all sessions:", err);
+  //     showError("Failed to Logout", "An error occurred while logging out");
+  //   } finally {
+  //     setIsEndingAllSessions(false);
+  //   }
+  // };
 
   const nullableFields = useMemo(
     () =>
@@ -230,6 +307,27 @@ export default function UserProfilePage() {
           </p>
         </div>
         <div className="flex items-center gap-3 w-auto">
+          {/* TODO: Uncomment when backend confirms /user-sessions endpoints */}
+          {/* {!isEditing && (
+            <button
+              onClick={handleEndAllSessions}
+              disabled={isEndingAllSessions || sessions.length === 0}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 ${tw.rounded} hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-auto`}
+              title="Logout from all devices"
+            >
+              {isEndingAllSessions ? (
+                <>
+                  <LoadingSpinner variant="modern" size="sm" color="white" />
+                  <span className="ml-2">Logging out...</span>
+                </>
+              ) : (
+                <>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout All Devices
+                </>
+              )}
+            </button>
+          )} */}
           {isEditing ? (
             <>
               <button
@@ -657,6 +755,81 @@ export default function UserProfilePage() {
             </div>
           </div>
         </div>
+
+        {/* TODO: Uncomment when backend confirms /user-sessions endpoints
+        Active Sessions / Manage Devices
+        <div className="mt-8 pt-6">
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            Active Sessions
+          </h3>
+
+          {isLoadingSessions ? (
+            <div className="flex items-center justify-center py-8">
+              <LoadingSpinner variant="modern" size="md" color="primary" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <p className={`text-sm ${tw.textSecondary} py-4`}>
+              No active sessions found.
+            </p>
+          ) : (
+            <div className="overflow-x-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Device</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Type</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">IP Address</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Last Activity</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sessions.map((session) => (
+                    <tr key={session.id} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900">
+                        {session.device_type ? session.device_type.charAt(0).toUpperCase() + session.device_type.slice(1) : "Unknown"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {session.session_type ? session.session_type.toUpperCase() : "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 font-mono text-xs">
+                        {session.ip_address || "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {session.last_activity_at ? (
+                          <DateFormatter date={session.last_activity_at} includeTime useLocale />
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => handleEndSession(session.id)}
+                          disabled={isEndingSession === session.id}
+                          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="End this session"
+                        >
+                          {isEndingSession === session.id ? (
+                            <>
+                              <LoadingSpinner variant="modern" size="sm" color="red" />
+                              <span className="ml-2">Ending...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4 mr-1" />
+                              End
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+        */}
       </div>
     </div>
   );

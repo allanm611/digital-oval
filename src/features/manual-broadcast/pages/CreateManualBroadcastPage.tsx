@@ -287,11 +287,28 @@ export default function CreateManualBroadcastPage() {
           throw new Error("No valid recipients found in audience data");
         }
 
-        // Show loader for 3 seconds then route (let backend run in background)
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        showToast("Communication created successfully");
-        clearPersistedFormData("broadcast_form_data");
-        navigate("/dashboard/manual-communications");
+        // Send to manual recipient list
+        const response = await communicationService.sendCommunication({
+          source_type: "manual",
+          recipient_list: recipientList,
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle &&
+            broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          created_by: user?.user_id,
+        });
+
+        if (response.success) {
+          showToast(t.manualBroadcast.createdSuccess);
+          clearPersistedFormData("broadcast_form_data");
+          navigate("/dashboard/manual-communications");
+        } else {
+          throw new Error("Communication sending failed");
+        }
       } else {
         throw new Error("No audience selected or provided");
       }

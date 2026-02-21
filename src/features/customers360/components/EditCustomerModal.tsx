@@ -241,9 +241,9 @@ export default function EditCustomerModal({
                 type="text"
                 name="msisdn"
                 value={formData.msisdn}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                disabled={isLoading}
+                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
+                readOnly
+                disabled
               />
               {/* <p className={`${tw.textSecondary} text-xs mt-1`}>
                 10-15 digits, no + prefix
@@ -287,40 +287,22 @@ export default function EditCustomerModal({
             </div>
           </div>
 
-          {/* Email Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="email@example.com"
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Email *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="customer@example.com"
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                disabled={isLoading}
-              />
-            </div>
+          {/* Email */}
+          <div>
+            <label
+              className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
+            >
+              Email *
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              placeholder="customer@example.com"
+              className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
+              readOnly
+              disabled
+            />
           </div>
 
           {/* City */}

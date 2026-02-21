@@ -812,7 +812,7 @@ export default function Dashboard() {
             element={<OtherPages.CreateManualRewardPage />}
           />
           <Route
-            path="/quicklists/:id"
+            path="/quick-lists/:id"
             element={<OtherPages.QuickListDetailsPage />}
           />
           <Route

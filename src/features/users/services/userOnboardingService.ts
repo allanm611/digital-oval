@@ -111,7 +111,32 @@ class UserOnboardingService {
   }
 
   /**
+   * GET /user-onboarding-requests - Get all onboarding requests (with pagination)
+   */
+  async getOnboardingRequests(
+    skipCache: boolean = true,
+    limit?: number,
+    offset?: number
+  ): Promise<{
+    success: boolean;
+    data: AccountRequestType[];
+    pagination?: { total: number; limit: number; offset: number };
+  }> {
+    const params = new URLSearchParams();
+    params.append("skipCache", "true"); // Always skip cache
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{
+      success: boolean;
+      data: AccountRequestType[];
+      pagination?: { total: number; limit: number; offset: number };
+    }>(`${queryString}`);
+  }
+
+  /**
    * GET /user-onboarding-requests - Get all pending onboarding requests (with pagination)
+   * @deprecated Use getOnboardingRequests() instead
    */
   async getPendingOnboardingRequests(
     skipCache?: boolean,

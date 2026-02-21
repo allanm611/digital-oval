@@ -69,7 +69,7 @@ export default function CustomerIdentityPage() {
         field.field_name.toLowerCase().includes(search) ||
         field.field_value.toLowerCase().includes(search) ||
         (field.description || "").toLowerCase().includes(search) ||
-        field.source_table.toLowerCase().includes(search);
+        (field.source_table || "").toLowerCase().includes(search);
 
       const fieldTypeValue = (field as any).type || field.field_type;
       const matchesType =

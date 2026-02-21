@@ -277,7 +277,7 @@ export default function CreateCommunicationPage() {
         <div className="mb-6">
           <button
             onClick={() =>
-              navigateBackOrFallback(navigate, "/dashboard/quicklists")
+              navigateBackOrFallback(navigate, "/dashboard/quick-lists")
             }
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
           >
