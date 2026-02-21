@@ -162,6 +162,8 @@ export const en: Translations = {
       ofTotalSegment: "of total segment",
       selectUniversalControlGroup: "Select Universal Control Group",
       searchControlGroups: "Search control groups...",
+      cancel: "Cancel",
+      saveConfiguration: "Save Configuration",
     },
     campaignTypes: {
       multipleTarget: "Multiple Target Groups",

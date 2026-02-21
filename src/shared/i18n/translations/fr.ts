@@ -149,6 +149,8 @@ export const fr: Translations = {
       ofTotalSegment: "du segment total",
       selectUniversalControlGroup: "Sélectionner le Groupe de Contrôle Universel",
       searchControlGroups: "Rechercher les groupes de contrôle...",
+      cancel: "Annuler",
+      saveConfiguration: "Enregistrer la Configuration",
       selectTargetSegments: "Sélectionnez les segments cibles pour votre campagne",
       createNewSegment: "Créer un Nouveau Segment",
       campaignType: "Type de Campagne",

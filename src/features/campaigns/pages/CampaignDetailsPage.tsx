@@ -956,141 +956,91 @@ export default function CampaignDetailsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Messages Sent Card */}
           <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-            style={{ borderColor: color.border.default }}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                  Messages Sent
-                </p>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <Send
-                  className="w-6 h-6"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <Send
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Messages Sent</p>
             </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
+            </p>
           </div>
 
           {/* Messages Failed Card */}
           <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-            style={{ borderColor: color.border.default }}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                  Failed
-                </p>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `#FEE2E215` }}
-              >
-                <AlertCircle
-                  className="w-6 h-6"
-                  style={{ color: "#DC2626" }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <AlertCircle
+                className="h-5 w-5"
+                style={{ color: "#DC2626" }}
+              />
+              <p className="text-sm font-medium text-gray-600">Failed</p>
             </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
+            </p>
           </div>
 
           {/* Success Rate Card */}
           <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-            style={{ borderColor: color.border.default }}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                  Success Rate
-                </p>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {(executionMetrics?.total_messages_sent || 0) + (executionMetrics?.total_messages_failed || 0) > 0
-                    ? (
-                        ((executionMetrics?.total_messages_sent || 0) /
-                          ((executionMetrics?.total_messages_sent || 0) +
-                            (executionMetrics?.total_messages_failed || 0))) *
-                        100
-                      ).toFixed(1)
-                    : "0.0"}
-                  %
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <CheckCircle
-                  className="w-6 h-6"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Success Rate</p>
             </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {(executionMetrics?.total_messages_sent || 0) + (executionMetrics?.total_messages_failed || 0) > 0
+                ? (
+                    ((executionMetrics?.total_messages_sent || 0) /
+                      ((executionMetrics?.total_messages_sent || 0) +
+                        (executionMetrics?.total_messages_failed || 0))) *
+                    100
+                  ).toFixed(1)
+                : "0.0"}
+              %
+            </p>
           </div>
 
           {/* Broadcasts Card */}
           <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-            style={{ borderColor: color.border.default }}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                  Broadcasts
-                </p>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {executionMetrics?.broadcasts_completed || 0} /
-                  {executionMetrics?.total_broadcasts || 0}
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <TrendingUp
-                  className="w-6 h-6"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Broadcasts</p>
             </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {executionMetrics?.broadcasts_completed || 0} /
+              {executionMetrics?.total_broadcasts || 0}
+            </p>
           </div>
 
           {/* Execution Time Card */}
           <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-            style={{ borderColor: color.border.default }}
+            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                  Execution Time
-                </p>
-                <p className={`text-2xl font-bold ${tw.textPrimary}`}>
-                  {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
-                </p>
-              </div>
-              <div
-                className={`w-12 h-12 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `${color.primary.accent}15` }}
-              >
-                <Clock
-                  className="w-6 h-6"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
+            <div className="flex items-center gap-2">
+              <Clock
+                className="h-5 w-5"
+                style={{ color: color.primary.accent }}
+              />
+              <p className="text-sm font-medium text-gray-600">Execution Time</p>
             </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
+            </p>
           </div>
         </div>
 
@@ -1261,11 +1211,10 @@ export default function CampaignDetailsPage() {
                         key={`${tag}-${index}`}
                         className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
                         style={{
-                          backgroundColor: `${color.primary.accent}19`,
-                          color: color.primary.accent,
+                          backgroundColor: color.primary.accent,
+                          color: "white",
                         }}
                       >
-                        <Tag className="w-3 h-3 mr-1" />
                         {tag.replace("catalog:", "")}
                       </span>
                     ))}

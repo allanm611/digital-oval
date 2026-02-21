@@ -62,7 +62,7 @@ export default function AudienceConfigurationStep({
   const [showUniversalControlGroupModal, setShowUniversalControlGroupModal] =
     useState(false);
   const [editingControlGroup, setEditingControlGroup] = useState<string | null>(
-    null
+    null,
   );
   const [showControlGroupModal, setShowControlGroupModal] = useState(false);
   const [mutuallyExclusive, setMutuallyExclusive] = useState(false);
@@ -76,7 +76,7 @@ export default function AudienceConfigurationStep({
   const campaignTypeDropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(campaignTypeDropdownRef, () =>
-    setIsCampaignTypeDropdownOpen(false)
+    setIsCampaignTypeDropdownOpen(false),
   );
 
   // Campaign type options
@@ -245,10 +245,10 @@ export default function AudienceConfigurationStep({
     if (!draggedSegment || draggedSegment === targetSegmentId) return;
 
     const draggedIndex = selectedSegments.findIndex(
-      (s) => s.id === draggedSegment
+      (s) => s.id === draggedSegment,
     );
     const targetIndex = selectedSegments.findIndex(
-      (s) => s.id === targetSegmentId
+      (s) => s.id === targetSegmentId,
     );
 
     if (draggedIndex === -1 || targetIndex === -1) return;
@@ -273,12 +273,12 @@ export default function AudienceConfigurationStep({
 
   const updateSegmentControlGroup = (
     segmentId: string,
-    config: SegmentControlGroupConfig
+    config: SegmentControlGroupConfig,
   ) => {
     const updatedSegments = selectedSegments.map((segment: CampaignSegment) =>
       segment.id === segmentId
         ? { ...segment, control_group_config: config }
-        : segment
+        : segment,
     );
     setSelectedSegments(updatedSegments);
   };
@@ -296,7 +296,7 @@ export default function AudienceConfigurationStep({
     }
     if (config.type === "multiple_control_group") {
       const selectedGroup = availableControlGroups.find(
-        (g) => g.id === config.selected_control_group_id
+        (g) => g.id === config.selected_control_group_id,
       );
       return selectedGroup
         ? `Universal: ${selectedGroup.name}`
@@ -357,7 +357,7 @@ export default function AudienceConfigurationStep({
             <div className="flex items-center gap-3">
               {(() => {
                 const selectedOption = campaignTypeOptions.find(
-                  (option) => option.value === formData.campaign_type
+                  (option) => option.value === formData.campaign_type,
                 );
                 const IconComponent = selectedOption?.icon || Users;
                 return (
@@ -477,7 +477,10 @@ export default function AudienceConfigurationStep({
                 {t.campaigns.audienceConfiguration.mutuallyExclusiveSegments}
               </div>
               <div className="text-xs text-gray-500">
-                {t.campaigns.audienceConfiguration.mutuallyExclusiveSegmentsDesc}
+                {
+                  t.campaigns.audienceConfiguration
+                    .mutuallyExclusiveSegmentsDesc
+                }
               </div>
             </div>
           </label>
@@ -491,8 +494,10 @@ export default function AudienceConfigurationStep({
             <h3 className={`text-sm font-semibold ${tw.textPrimary}`}>
               {formData.campaign_type === "champion_challenger" &&
                 t.campaigns.audienceConfiguration.championChallengers}
-              {formData.campaign_type === "ab_test" && t.campaigns.audienceConfiguration.abTestVariants}
-              {formData.campaign_type === "round_robin" && t.campaigns.audienceConfiguration.roundRobinTarget}
+              {formData.campaign_type === "ab_test" &&
+                t.campaigns.audienceConfiguration.abTestVariants}
+              {formData.campaign_type === "round_robin" &&
+                t.campaigns.audienceConfiguration.roundRobinTarget}
               {formData.campaign_type === "multiple_level" &&
                 t.campaigns.audienceConfiguration.multipleLevelTarget}
               {formData.campaign_type === "multiple_target_group" &&
@@ -531,8 +536,8 @@ export default function AudienceConfigurationStep({
                 selectedSegments.length === 0
                   ? t.campaigns.audienceConfiguration.champion
                   : formData.campaign_type === "champion_challenger"
-                  ? t.campaigns.audienceConfiguration.challenger
-                  : t.campaigns.audienceConfiguration.addSegment}
+                    ? t.campaigns.audienceConfiguration.challenger
+                    : t.campaigns.audienceConfiguration.addSegment}
               </button>
             )}
             {formData.campaign_type && (
@@ -701,16 +706,18 @@ export default function AudienceConfigurationStep({
                         <div className="text-sm text-gray-900 font-medium">
                           {(segment.customer_count || 0).toLocaleString()}
                         </div>
-                        <div className="text-xs text-gray-500">{t.campaigns.audienceConfiguration.customers}</div>
+                        <div className="text-xs text-gray-500">
+                          {t.campaigns.audienceConfiguration.customers}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getControlGroupColor(
-                            segment.control_group_config
+                            segment.control_group_config,
                           )}`}
                           style={{
                             backgroundColor: getControlGroupBgColor(
-                              segment.control_group_config
+                              segment.control_group_config,
                             ),
                           }}
                         >
@@ -730,8 +737,7 @@ export default function AudienceConfigurationStep({
                             <Settings className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => {
-                            }}
+                            onClick={() => {}}
                             className="p-1.5 text-gray-400 hover:text-[#588157] hover:bg-gray-100 rounded transition-colors"
                             title="Edit Segment"
                           >
@@ -821,15 +827,16 @@ function ControlGroupConfigModal({
   availableControlGroups,
   onSave,
 }: ControlGroupConfigModalProps) {
+  const { t } = useLanguage();
   const [config, setConfig] = useState<SegmentControlGroupConfig>(
-    segment.control_group_config || { type: "none" }
+    segment.control_group_config || { type: "none" },
   );
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredControlGroups = availableControlGroups.filter(
     (group) =>
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase())
+      group.description.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleSave = () => {
@@ -869,12 +876,10 @@ function ControlGroupConfigModal({
       config.selected_control_group_id
     ) {
       const selectedGroup = availableControlGroups.find(
-        (g) => g.id === config.selected_control_group_id
+        (g) => g.id === config.selected_control_group_id,
       );
       if (selectedGroup) {
-        return Math.round(
-          customerCount * (selectedGroup.percentage / 100)
-        );
+        return Math.round(customerCount * (selectedGroup.percentage / 100));
       }
     }
     return 0;
@@ -973,7 +978,10 @@ function ControlGroupConfigModal({
                     {t.campaigns.audienceConfiguration.universalControlGroup}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {t.campaigns.audienceConfiguration.universalControlGroupDesc}
+                    {
+                      t.campaigns.audienceConfiguration
+                        .universalControlGroupDesc
+                    }
                   </div>
                 </div>
               </label>
@@ -1097,7 +1105,11 @@ function ControlGroupConfigModal({
                       className={`w-24 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      {calculateControlGroupSize().toLocaleString()} {t.campaigns.audienceConfiguration.customersInControlGroup}
+                      {calculateControlGroupSize().toLocaleString()}{" "}
+                      {
+                        t.campaigns.audienceConfiguration
+                          .customersInControlGroup
+                      }
                     </p>
                   </div>
 
@@ -1218,7 +1230,9 @@ function ControlGroupConfigModal({
               >
                 <input
                   type="text"
-                  placeholder={t.campaigns.audienceConfiguration.searchControlGroups}
+                  placeholder={
+                    t.campaigns.audienceConfiguration.searchControlGroups
+                  }
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#588157] focus:border-transparent`}
@@ -1333,56 +1347,69 @@ function ControlGroupConfigModal({
           {/* Summary */}
           {config.type !== "none" && (
             <div className={`${tw.rounded} p-4`}>
-              <h4 className="font-medium text-gray-900 mb-2">{t.campaigns.audienceConfiguration.summary}</h4>
+              <h4 className="font-medium text-gray-900 mb-2">
+                {t.campaigns.audienceConfiguration.summary}
+              </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.totalSegmentSize}</span>
+                  <span className="text-gray-500">
+                    {t.campaigns.audienceConfiguration.totalSegmentSize}
+                  </span>
                   <span className="font-medium ml-2">
                     {(segment.customer_count || 0).toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.controlGroupSize}</span>
+                  <span className="text-gray-500">
+                    {t.campaigns.audienceConfiguration.controlGroupSize}
+                  </span>
                   <span className="font-medium ml-2">
                     {calculateControlGroupSize().toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.targetGroupSize}</span>
+                  <span className="text-gray-500">
+                    {t.campaigns.audienceConfiguration.targetGroupSize}
+                  </span>
                   <span className="font-medium ml-2">
                     {(
-                      (segment.customer_count || 0) - calculateControlGroupSize()
+                      (segment.customer_count || 0) -
+                      calculateControlGroupSize()
                     ).toLocaleString()}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">{t.campaigns.audienceConfiguration.controlPercentage}</span>
+                  <span className="text-gray-500">
+                    {t.campaigns.audienceConfiguration.controlPercentage}
+                  </span>
                   <span className="font-medium ml-2">
                     {config.type === "with_control_group" &&
                     config.control_group_method === "fixed_percentage"
                       ? `${config.percentage}%`
                       : config.type === "with_control_group" &&
-                        config.control_group_method === "fixed_number"
-                      ? `${(
-                          ((config.fixed_number || 0) /
-                            (segment.customer_count || 1)) *
-                          100
-                        ).toFixed(1)}%`
-                      : config.type === "with_control_group" &&
-                        config.control_group_method === "advanced_parameters"
-                      ? `${(
-                          (calculateControlGroupSize() /
-                            (segment.customer_count || 1)) *
-                          100
-                        ).toFixed(1)}%`
-                      : config.type === "multiple_control_group" &&
-                        config.selected_control_group_id
-                      ? `${
-                          availableControlGroups.find(
-                            (g) => g.id === config.selected_control_group_id
-                          )?.percentage
-                        }%`
-                      : "0%"}
+                          config.control_group_method === "fixed_number"
+                        ? `${(
+                            ((config.fixed_number || 0) /
+                              (segment.customer_count || 1)) *
+                            100
+                          ).toFixed(1)}%`
+                        : config.type === "with_control_group" &&
+                            config.control_group_method ===
+                              "advanced_parameters"
+                          ? `${(
+                              (calculateControlGroupSize() /
+                                (segment.customer_count || 1)) *
+                              100
+                            ).toFixed(1)}%`
+                          : config.type === "multiple_control_group" &&
+                              config.selected_control_group_id
+                            ? `${
+                                availableControlGroups.find(
+                                  (g) =>
+                                    g.id === config.selected_control_group_id,
+                                )?.percentage
+                              }%`
+                            : "0%"}
                   </span>
                 </div>
               </div>
@@ -1403,6 +1430,6 @@ function ControlGroupConfigModal({
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

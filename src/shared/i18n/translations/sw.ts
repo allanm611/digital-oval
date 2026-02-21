@@ -149,6 +149,8 @@ export const sw: Translations = {
       ofTotalSegment: "ya jumla ya sehemu",
       selectUniversalControlGroup: "Chagua Kikundi cha Udhibiti cha Ulimwengu",
       searchControlGroups: "Tafuta vikundi vya udhibiti...",
+      cancel: "Ghairi",
+      saveConfiguration: "Hifadhi Usanidi",
       selectTargetSegments: "Chagua sehemu za shabaha kwa kampeni yako",
       createNewSegment: "Fungua Sehemu Mpya",
       campaignType: "Aina ya Kampeni",

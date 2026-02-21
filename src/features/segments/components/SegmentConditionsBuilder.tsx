@@ -25,7 +25,12 @@ import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
 import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
-import { SYSTEM_EVENTS, TIME_OPERATOR_OPTIONS, type SystemEvent, type SystemEventTimeOperator } from "../../kpis/types/systemEvent";
+import {
+  SYSTEM_EVENTS,
+  TIME_OPERATOR_OPTIONS,
+  type SystemEvent,
+  type SystemEventTimeOperator,
+} from "../../kpis/types/systemEvent";
 import KPIPickerModal from "../../kpis/components/KPIPickerModal";
 import {
   KPI_CONDITION_CONFIG,
@@ -277,11 +282,17 @@ export default function SegmentConditionsBuilder({
               value: cat.id ? cat.id.toString() : (index + 1).toString(),
               label: cat.name || cat.category || `Category ${index + 1}`,
             }))}
-            value={condition.category !== undefined ? condition.category.toString() : ""}
+            value={
+              condition.category !== undefined
+                ? condition.category.toString()
+                : ""
+            }
             onChange={(value) => {
               const categoryId = parseInt(value as string);
               // Try to find by ID first, then by index
-              let selectedCategory = categories.find((c) => c.id === categoryId);
+              let selectedCategory = categories.find(
+                (c) => c.id === categoryId,
+              );
               if (!selectedCategory) {
                 selectedCategory = categories[categoryId - 1];
               }
@@ -308,10 +319,15 @@ export default function SegmentConditionsBuilder({
         <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
           <HeadlessSelect
             options={(() => {
-              if (condition.category !== undefined && condition.category !== null) {
+              if (
+                condition.category !== undefined &&
+                condition.category !== null
+              ) {
                 const categoryId = condition.category as number;
                 // Try to find by ID first, then by index
-                let selectedCategory = categories.find((c) => c.id === categoryId);
+                let selectedCategory = categories.find(
+                  (c) => c.id === categoryId,
+                );
                 if (!selectedCategory) {
                   selectedCategory = categories[categoryId - 1];
                 }
@@ -365,7 +381,7 @@ export default function SegmentConditionsBuilder({
         </div>
 
         {/* Operator Selection */}
-        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
           <HeadlessSelect
             options={(() => {
               const field = condition.field
@@ -494,7 +510,7 @@ export default function SegmentConditionsBuilder({
         </div>
 
         {/* Operator for Segment */}
-        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
           <HeadlessSelect
             options={[
               { value: "in", label: "Is In" },
@@ -562,7 +578,7 @@ export default function SegmentConditionsBuilder({
         </div>
 
         {/* Operator for List */}
-        <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
           <HeadlessSelect
             options={[
               { value: "in", label: "Is In" },
@@ -598,7 +614,7 @@ export default function SegmentConditionsBuilder({
 
     // Get the selected event to determine available operators
     const selectedEvent = SYSTEM_EVENTS.find(
-      (e) => e.event_name === condition.system_event_name
+      (e) => e.event_name === condition.system_event_name,
     );
 
     // Get available time operators for this event
@@ -655,22 +671,24 @@ export default function SegmentConditionsBuilder({
         )}
 
         {/* Value Input - Only show if event selected and operator requires value */}
-        {selectedEvent && currentOperatorOption && currentOperatorOption.requiresValue && (
-          <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
-            <input
-              type="number"
-              value={condition.value || ""}
-              onChange={(e) => {
-                updateCondition(groupId, condition.id, {
-                  value: e.target.value ? parseInt(e.target.value) : "",
-                });
-              }}
-              placeholder={currentOperatorOption.placeholder || "Enter value"}
-              className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-              style={{ borderColor: color.border.default }}
-            />
-          </div>
-        )}
+        {selectedEvent &&
+          currentOperatorOption &&
+          currentOperatorOption.requiresValue && (
+            <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
+              <input
+                type="number"
+                value={condition.value || ""}
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value ? parseInt(e.target.value) : "",
+                  });
+                }}
+                placeholder={currentOperatorOption.placeholder || "Enter value"}
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                style={{ borderColor: color.border.default }}
+              />
+            </div>
+          )}
 
         {/* Unit Selector (for "Occurred in Last" operator) - Only show if event selected */}
         {selectedEvent && condition.operator === "occurred_in_last" && (
@@ -698,10 +716,7 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render KPI condition fields
-  const renderKPIFields = (
-    groupId: string,
-    condition: SegmentCondition,
-  ) => {
+  const renderKPIFields = (groupId: string, condition: SegmentCondition) => {
     const handleOpenKPIModal = () => {
       setCurrentEditingCondition({
         groupId,
@@ -728,9 +743,7 @@ export default function SegmentConditionsBuilder({
             className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
           >
             <span
-              className={
-                condition.kpi_name ? "text-gray-900" : "text-gray-500"
-              }
+              className={condition.kpi_name ? "text-gray-900" : "text-gray-500"}
             >
               {condition.kpi_name || categoryLabel}
             </span>
@@ -741,7 +754,7 @@ export default function SegmentConditionsBuilder({
         {/* Operator for KPI - Only show if KPI selected */}
         {condition.kpi_name && (
           <>
-            <div className="min-w-[100px] max-w-[150px] flex-shrink-0">
+            <div className="min-w-[180px] max-w-[240px] flex-shrink-0">
               <HeadlessSelect
                 options={[
                   { value: "equals", label: "Equals" },
@@ -756,8 +769,14 @@ export default function SegmentConditionsBuilder({
                   { value: "in_last_days", label: "In Last (Days)" },
                   { value: "in_last_weeks", label: "In Last (Weeks)" },
                   { value: "in_last_months", label: "In Last (Months)" },
-                  { value: "greater_than_in_period", label: "Greater Than In Period" },
-                  { value: "less_than_in_period", label: "Less Than In Period" },
+                  {
+                    value: "greater_than_in_period",
+                    label: "Greater Than In Period",
+                  },
+                  {
+                    value: "less_than_in_period",
+                    label: "Less Than In Period",
+                  },
                 ]}
                 value={condition.operator}
                 onChange={(value) => {
@@ -784,7 +803,7 @@ export default function SegmentConditionsBuilder({
               }}
               placeholder={
                 ["in_last_days", "in_last_weeks", "in_last_months"].includes(
-                  condition.operator
+                  condition.operator,
                 )
                   ? "Enter number"
                   : "Enter value"
@@ -795,7 +814,7 @@ export default function SegmentConditionsBuilder({
 
             {/* Time Unit Selector - For time-based operators */}
             {["in_last_days", "in_last_weeks", "in_last_months"].includes(
-              condition.operator
+              condition.operator,
             ) && (
               <div className="min-w-[80px] max-w-[120px] flex-shrink-0">
                 <HeadlessSelect
@@ -996,7 +1015,10 @@ export default function SegmentConditionsBuilder({
                           { value: "segment", label: "Segment" },
                           { value: "list", label: "QuickList" },
                           { value: "system_event", label: "System Event" },
-                          { value: "revenue_metric_kpi", label: "Revenue Metric" },
+                          {
+                            value: "revenue_metric_kpi",
+                            label: "Revenue Metric",
+                          },
                           { value: "usage_metric_kpi", label: "Usage Metric" },
                         ]}
                         value={condition.conditionType}
@@ -1104,7 +1126,8 @@ export default function SegmentConditionsBuilder({
                               system_event_name: undefined,
                               kpi_id: undefined,
                               kpi_name: undefined,
-                              kpi_category: getKPICategoryForConditionType(condType),
+                              kpi_category:
+                                getKPICategoryForConditionType(condType),
                             });
                           }
                         }}
@@ -1237,8 +1260,14 @@ export default function SegmentConditionsBuilder({
           if (currentEditingCondition && response) {
             // Extract the quicklist data from response
             const quicklistData = response.data || response;
-            const quicklistId = quicklistData.id || (Array.isArray(quicklistData) ? quicklistData[0]?.id : undefined);
-            const quicklistName = quicklistData.name || (Array.isArray(quicklistData) ? quicklistData[0]?.name : undefined);
+            const quicklistId =
+              quicklistData.id ||
+              (Array.isArray(quicklistData) ? quicklistData[0]?.id : undefined);
+            const quicklistName =
+              quicklistData.name ||
+              (Array.isArray(quicklistData)
+                ? quicklistData[0]?.name
+                : undefined);
 
             if (quicklistId && quicklistName) {
               updateCondition(
@@ -1247,7 +1276,7 @@ export default function SegmentConditionsBuilder({
                 {
                   list_id: quicklistId,
                   list_name: quicklistName,
-                }
+                },
               );
             }
           }
@@ -1307,9 +1336,11 @@ export default function SegmentConditionsBuilder({
             setCurrentEditingCondition(null);
           }}
           kpis={allKPIs}
-          category={getKPICategoryForConditionType(
-            currentKPIModalType,
-          ) as KPI["category"]}
+          category={
+            getKPICategoryForConditionType(
+              currentKPIModalType,
+            ) as KPI["category"]
+          }
           title={KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory}
           searchPlaceholder={`Search ${KPI_CONDITION_CONFIG[currentKPIModalType].kpiCategory.toLowerCase()}...`}
           hasSubcategories={true}
@@ -1324,15 +1355,15 @@ export default function SegmentConditionsBuilder({
                   { value: "other_revenue", label: "Other Revenue" },
                 ]
               : currentKPIModalType === "usage_metric_kpi"
-              ? [
-                  { value: "all", label: "All Usage Metrics" },
-                  { value: "data_usage", label: "Data Usage" },
-                  { value: "voice_usage", label: "Voice Usage" },
-                  { value: "sms_usage", label: "SMS Usage" },
-                  { value: "bundle_usage", label: "Bundle Usage" },
-                  { value: "dou_metrics", label: "DOU Metrics" },
-                ]
-              : undefined
+                ? [
+                    { value: "all", label: "All Usage Metrics" },
+                    { value: "data_usage", label: "Data Usage" },
+                    { value: "voice_usage", label: "Voice Usage" },
+                    { value: "sms_usage", label: "SMS Usage" },
+                    { value: "bundle_usage", label: "Bundle Usage" },
+                    { value: "dou_metrics", label: "DOU Metrics" },
+                  ]
+                : undefined
           }
         />
       )}

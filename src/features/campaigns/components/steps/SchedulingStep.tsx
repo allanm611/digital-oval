@@ -54,6 +54,7 @@ export default function SchedulingStep({
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
   const [atTime, setAtTime] = useState("12:00");
   const [startTime, setStartTime] = useState("08:00");
+  const [endTime, setEndTime] = useState("23:59");
 
   // Initialize formData with default scheduling if not present
   useEffect(() => {
@@ -164,7 +165,8 @@ export default function SchedulingStep({
                         start_date: date + "T" + e.target.value,
                       });
                     }}
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
+                    disabled={false}
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900 cursor-pointer`}
                     style={{ minWidth: "100px", backgroundColor: "white" }}
                   />
                 </div>
@@ -231,16 +233,18 @@ export default function SchedulingStep({
                 <div className="relative">
                   <input
                     type="time"
-                    value="23:59"
-                    onChange={(e) =>
+                    value={endTime}
+                    onChange={(e) => {
+                      setEndTime(e.target.value);
                       updateScheduling({
                         end_date:
                           scheduling.end_date?.split("T")[0] +
                             "T" +
                             e.target.value || "2025-12-31T" + e.target.value,
                       })
-                    }
-                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
+                    }}
+                    disabled={false}
+                    className={`px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900 cursor-pointer`}
                     style={{ minWidth: "100px", backgroundColor: "white" }}
                   />
                 </div>
@@ -331,7 +335,8 @@ export default function SchedulingStep({
                 type="time"
                 value={defaultStartTime}
                 onChange={(e) => setDefaultStartTime(e.target.value)}
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
+                disabled={false}
+                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white cursor-pointer`}
               />
             </div>
           </div>
@@ -478,7 +483,8 @@ export default function SchedulingStep({
                         const date = scheduling.start_date?.split("T")[0] || new Date().toISOString().split("T")[0];
                         updateScheduling({ start_date: date + "T" + e.target.value });
                       }}
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white`}
+                      disabled={false}
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white cursor-pointer`}
                     />
                   </div>
                 ) : (

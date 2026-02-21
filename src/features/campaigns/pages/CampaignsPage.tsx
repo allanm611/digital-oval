@@ -450,6 +450,14 @@ export default function CampaignsPage() {
           searchParams.startDateTo = filters.startDateTo;
         }
 
+        if (filters.sortBy) {
+          searchParams.sortBy = filters.sortBy;
+        }
+
+        if (filters.sortDirection) {
+          searchParams.sortDirection = filters.sortDirection;
+        }
+
         response = await campaignService.superSearchCampaigns(searchParams);
       } else {
         // Use regular getCampaigns when no filters applied (more efficient)
@@ -457,6 +465,8 @@ export default function CampaignsPage() {
           limit: LIMIT,
           offset: chunkOffset,
           skipCache: true,
+          sortBy: filters.sortBy,
+          sortDirection: filters.sortDirection,
         });
       }
 
