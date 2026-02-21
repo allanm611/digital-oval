@@ -48,7 +48,7 @@ export default function ManualBroadcastListsPage() {
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
-        const executions = response.data.executions || (Array.isArray(response.data) ? response.data : []);
+        const executions = response.data.data || response.data.executions || (Array.isArray(response.data) ? response.data : []);
         const broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
@@ -71,11 +71,13 @@ export default function ManualBroadcastListsPage() {
         );
 
         setBroadcasts(broadcasts);
-        if (response.data.pagination) {
+        // Handle pagination - can be nested under .pagination or at root level
+        const paginationData = response.data.pagination || response.data;
+        if (paginationData && paginationData.page !== undefined) {
           setPagination({
-            page: response.data.pagination.page,
-            limit: response.data.pagination.limit,
-            total: response.data.pagination.total,
+            page: paginationData.page,
+            limit: paginationData.limit,
+            total: paginationData.total,
           });
         }
       }
@@ -103,7 +105,7 @@ export default function ManualBroadcastListsPage() {
 
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
-        const executions = response.data.executions || (Array.isArray(response.data) ? response.data : []);
+        const executions = response.data.data || response.data.executions || (Array.isArray(response.data) ? response.data : []);
         let broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
