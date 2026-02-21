@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -44,7 +44,6 @@ const GENDER_OPTIONS = [
   { value: "", label: "Select Gender" },
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" },
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -132,6 +131,16 @@ export default function CreateCustomerModal({
   const [bulkText, setBulkText] = useState("");
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importFileDelimiter, setImportFileDelimiter] = useState(",");
+  const [phoneError, setPhoneError] = useState("");
+  const [alternatePhoneError, setAlternatePhoneError] = useState("");
+  const [formErrors, setFormErrors] = useState<{
+    subscriptionId?: string;
+    firstName?: string;
+    lastName?: string;
+    msisdn?: string;
+    email?: string;
+  }>({});
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const [importPreview, setImportPreview] = useState<{
     valid: number;
     invalid: number;
@@ -255,6 +264,32 @@ export default function CreateCustomerModal({
     let sanitizedValue = value;
     if (name === "msisdn") {
       sanitizedValue = value.replace(/^\+/, "").replace(/\D/g, "");
+
+      // Validate phone number in real-time
+      if (sanitizedValue && !isValidCountryCodePhone(sanitizedValue)) {
+        setPhoneError("Phone number must begin with country code");
+      } else {
+        setPhoneError("");
+      }
+    }
+
+    if (name === "alternatemsisdns") {
+      sanitizedValue = value.replace(/^\+/, "").replace(/\D/g, "");
+
+      // Validate alternate phone number in real-time (only if not empty)
+      if (sanitizedValue && !isValidCountryCodePhone(sanitizedValue)) {
+        setAlternatePhoneError("Phone number must begin with country code");
+      } else {
+        setAlternatePhoneError("");
+      }
+    }
+
+    // Clear field error when user starts typing
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
     }
 
     setFormData((prev) => ({
@@ -264,33 +299,42 @@ export default function CreateCustomerModal({
   };
 
   const validateSingleCustomer = (): boolean => {
+    const errors: typeof formErrors = {};
+
     if (!formData.subscriptionId.trim()) {
-      error("Validation Error", "Subscription ID is required");
-      return false;
+      errors.subscriptionId = "Subscription ID is required";
+    } else if (!/^\d+$/.test(formData.subscriptionId)) {
+      errors.subscriptionId = "Subscription ID must be numeric";
     }
-    if (!/^\d+$/.test(formData.subscriptionId)) {
-      error("Validation Error", "Subscription ID must be numeric");
-      return false;
-    }
+
     if (!formData.firstName.trim()) {
-      error("Validation Error", "First name is required");
-      return false;
+      errors.firstName = "First name is required";
     }
+
     if (!formData.lastName.trim()) {
-      error("Validation Error", "Last name is required");
-      return false;
+      errors.lastName = "Last name is required";
     }
+
     if (!formData.msisdn.trim()) {
-      error("Validation Error", "Phone number is required");
+      errors.msisdn = "Phone number is required";
+    } else if (!isValidCountryCodePhone(formData.msisdn)) {
+      errors.msisdn = "Phone number must begin with country code";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      // Scroll to the form container to show errors
+      setTimeout(() => {
+        formContainerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 0);
       return false;
     }
-    if (!isValidCountryCodePhone(formData.msisdn)) {
-      error(
-        "Validation Error",
-        "Phone number must begin with country code",
-      );
-      return false;
-    }
+
+    setFormErrors({});
     return true;
   };
 
@@ -314,7 +358,9 @@ export default function CreateCustomerModal({
           last_name: formData.lastName,
           email: formData.email || undefined,
           alternate_email: formData.alternateEmail || undefined,
-          alternate_msisdns: formData.alternatemsisdns || undefined,
+          alternate_msisdns: formData.alternatemsisdns
+            ? [formData.alternatemsisdns]
+            : undefined,
           gender: formData.gender || undefined,
           date_of_birth: formData.dateOfBirth || undefined,
           language_preference: formData.languagePreference || "en",
@@ -324,7 +370,7 @@ export default function CreateCustomerModal({
           country_code: formData.countryCode || undefined,
           physical_address: formData.physicalAddress || undefined,
           customer_tier: formData.customerTier || undefined,
-          preferred_channel: formData.preferredChannel || "SMS",
+          // preferred_channel: formData.preferredChannel || "SMS", // TODO: Fix enum values with backend
           timezone: formData.timezone || "Africa/Kampala",
           device_type: "unknown",
           premium_user: false,
@@ -332,14 +378,17 @@ export default function CreateCustomerModal({
       });
 
       // Create local customer record for display (includes form-specific fields)
-      // API returns subscriber_id as string, convert to number for consistency
-      const apiSubscriberId =
-        typeof apiResponse.data.subscriber_id === "string"
-          ? parseInt(apiResponse.data.subscriber_id, 10)
-          : apiResponse.data.subscriber_id;
+      // API returns id as string, convert to number for consistency
+      const apiCustomerId =
+        typeof apiResponse.data.id === "string"
+          ? parseInt(apiResponse.data.id, 10)
+          : apiResponse.data.id;
+
+      console.log("API Response:", apiResponse.data);
+      console.log("Customer ID being set:", apiCustomerId);
 
       const newCustomer: CustomerSubscriptionRecord = {
-        customerId: apiSubscriberId,
+        customerId: apiCustomerId || subscriberId, // Fallback to subscriberId if id is undefined
         subscriptionId: subscriberId,
         // Use API response attributes where available
         firstName:
@@ -357,12 +406,30 @@ export default function CreateCustomerModal({
 
       // Reset form
       setFormData(initialFormData);
+      setPhoneError("");
+      setAlternatePhoneError("");
+      setFormErrors({});
       onClose();
     } catch (err) {
-      error(
-        "Error",
-        err instanceof Error ? err.message : "Failed to create customer",
-      );
+      // Extract backend error message
+      let errorMessage = "Failed to create customer";
+
+      if (err instanceof Error) {
+        const message = err.message;
+        // Try to parse backend error from API response
+        try {
+          const match = message.match(/"error":"([^"]+)"/);
+          if (match && match[1]) {
+            errorMessage = match[1];
+          } else {
+            errorMessage = message;
+          }
+        } catch {
+          errorMessage = message;
+        }
+      }
+
+      error("Error", errorMessage, true);
     } finally {
       setIsLoading(false);
     }
@@ -438,12 +505,30 @@ export default function CreateCustomerModal({
 
       // Reset
       setBulkText("");
+      setPhoneError("");
+      setAlternatePhoneError("");
+      setFormErrors({});
       onClose();
     } catch (err) {
-      error(
-        "Error",
-        err instanceof Error ? err.message : "Failed to import customers",
-      );
+      // Extract backend error message
+      let errorMessage = "Failed to import customers";
+
+      if (err instanceof Error) {
+        const message = err.message;
+        // Try to parse backend error from API response
+        try {
+          const match = message.match(/"error":"([^"]+)"/);
+          if (match && match[1]) {
+            errorMessage = match[1];
+          } else {
+            errorMessage = message;
+          }
+        } catch {
+          errorMessage = message;
+        }
+      }
+
+      error("Error", errorMessage, true);
     } finally {
       setIsLoading(false);
     }
@@ -524,12 +609,30 @@ export default function CreateCustomerModal({
 
       // Reset
       setImportFile(null);
+      setPhoneError("");
+      setAlternatePhoneError("");
+      setFormErrors({});
       onClose();
     } catch (err) {
-      error(
-        "Error",
-        err instanceof Error ? err.message : "Failed to import file",
-      );
+      // Extract backend error message
+      let errorMessage = "Failed to import file";
+
+      if (err instanceof Error) {
+        const message = err.message;
+        // Try to parse backend error from API response
+        try {
+          const match = message.match(/"error":"([^"]+)"/);
+          if (match && match[1]) {
+            errorMessage = match[1];
+          } else {
+            errorMessage = message;
+          }
+        } catch {
+          errorMessage = message;
+        }
+      }
+
+      error("Error", errorMessage, true);
     } finally {
       setIsLoading(false);
     }
@@ -565,7 +668,12 @@ export default function CreateCustomerModal({
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              setPhoneError("");
+              setAlternatePhoneError("");
+              setFormErrors({});
+              onClose();
+            }}
             disabled={isLoading}
             className={`p-2 hover:bg-gray-50 ${tw.rounded} transition-colors disabled:opacity-50`}
           >
@@ -585,7 +693,12 @@ export default function CreateCustomerModal({
               return (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id as TabType)}
+                  onClick={() => {
+                    setActiveTab(id as TabType);
+                    setPhoneError("");
+                    setAlternatePhoneError("");
+                    setFormErrors({});
+                  }}
                   className={`flex items-center gap-2 px-4 py-3 font-medium text-sm transition-colors relative flex-shrink-0 ${
                     isActive
                       ? "text-black"
@@ -607,7 +720,7 @@ export default function CreateCustomerModal({
         </div>
 
         {/* Content */}
-        <form className="p-6 space-y-4">
+        <form className="p-6 space-y-4" ref={formContainerRef}>
           {/* Single Customer Tab */}
           {activeTab === "single" && (
             <>
@@ -624,8 +737,17 @@ export default function CreateCustomerModal({
                     value={formData.subscriptionId}
                     onChange={handleInputChange}
                     placeholder="Enter Subscription ID"
-                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                      formErrors.subscriptionId
+                        ? "border-red-500"
+                        : tw.borderDefault
+                    }`}
                   />
+                  {formErrors.subscriptionId && (
+                    <p className="text-red-600 text-sm mt-1">
+                      {formErrors.subscriptionId}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label
@@ -638,8 +760,17 @@ export default function CreateCustomerModal({
                     name="msisdn"
                     value={formData.msisdn}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                      formErrors.msisdn
+                        ? "border-red-500"
+                        : tw.borderDefault
+                    }`}
                   />
+                  {formErrors.msisdn && (
+                    <p className="text-red-600 text-sm mt-1">
+                      {formErrors.msisdn}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -662,8 +793,17 @@ export default function CreateCustomerModal({
                       value={formData.firstName}
                       onChange={handleInputChange}
                       placeholder="First Name"
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                        formErrors.firstName
+                          ? "border-red-500"
+                          : tw.borderDefault
+                      }`}
                     />
+                    {formErrors.firstName && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {formErrors.firstName}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -677,8 +817,17 @@ export default function CreateCustomerModal({
                       value={formData.lastName}
                       onChange={handleInputChange}
                       placeholder="Last Name"
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                        formErrors.lastName
+                          ? "border-red-500"
+                          : tw.borderDefault
+                      }`}
                     />
+                    {formErrors.lastName && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {formErrors.lastName}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -694,8 +843,17 @@ export default function CreateCustomerModal({
                       name="alternatemsisdns"
                       value={formData.alternatemsisdns}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                        alternatePhoneError
+                          ? "border-red-500"
+                          : tw.borderDefault
+                      }`}
                     />
+                    {alternatePhoneError && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {alternatePhoneError}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -729,8 +887,17 @@ export default function CreateCustomerModal({
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
+                        formErrors.email
+                          ? "border-red-500"
+                          : tw.borderDefault
+                      }`}
                     />
+                    {formErrors.email && (
+                      <p className="text-red-600 text-sm mt-1">
+                        {formErrors.email}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label

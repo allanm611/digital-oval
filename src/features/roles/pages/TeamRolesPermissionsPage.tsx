@@ -58,34 +58,7 @@ const tabs: TabConfig[] = [
   { id: "assign", label: "Assign Permissions", icon: Lock },
 ];
 
-const ROLE_LEVELS = [
-  { value: "1", label: "Level 1" },
-  { value: "2", label: "Level 2" },
-  { value: "3", label: "Level 3" },
-  { value: "4", label: "Level 4" },
-  { value: "5", label: "Level 5" },
-  { value: "6", label: "Level 6" },
-  { value: "7", label: "Level 7" },
-  { value: "8", label: "Level 8" },
-  { value: "9", label: "Level 9" },
-  { value: "10", label: "Level 10" },
-];
 
-const DATA_ACCESS_LEVELS = [
-  { value: "public", label: "Public" },
-  { value: "internal", label: "Internal" },
-  { value: "confidential", label: "Confidential" },
-  { value: "restricted", label: "Restricted" },
-];
-
-const PERMISSION_ACTIONS = [
-  { value: "create", label: "Create" },
-  { value: "read", label: "Read" },
-  { value: "update", label: "Update" },
-  { value: "delete", label: "Delete" },
-  { value: "execute", label: "Execute" },
-  { value: "manage", label: "Manage" },
-];
 
 export default function TeamRolesPermissionsPage() {
   const { success, error: showError } = useToast();
@@ -225,6 +198,36 @@ export default function TeamRolesPermissionsPage() {
     const end = start + rolesPaginationModel.pageSize;
     return filteredRoles.slice(start, end);
   }, [filteredRoles, rolesPaginationModel]);
+
+  const roleLevelOptions = useMemo(() => {
+    const uniqueLevels = Array.from(new Set(roles.map((r) => r.role_level))).sort(
+      (a, b) => a - b,
+    );
+    return uniqueLevels.map((level) => ({
+      value: String(level),
+      label: `Level ${level}`,
+    }));
+  }, [roles]);
+
+  const dataAccessLevelOptions = useMemo(() => {
+    const uniqueLevels = Array.from(
+      new Set(roles.map((r) => r.data_access_level).filter(Boolean)),
+    );
+    return uniqueLevels.map((level) => ({
+      value: level,
+      label: level.charAt(0).toUpperCase() + level.slice(1),
+    }));
+  }, [roles]);
+
+  const permissionActionOptions = useMemo(() => {
+    const uniqueActions = Array.from(
+      new Set(permissions.map((p) => p.action).filter(Boolean)),
+    );
+    return uniqueActions.map((action) => ({
+      value: action,
+      label: action.charAt(0).toUpperCase() + action.slice(1),
+    }));
+  }, [permissions]);
 
   const handleCreateRole = () => {
     setEditingRole(undefined);
@@ -596,7 +599,7 @@ export default function TeamRolesPermissionsPage() {
 
             <div className="w-48">
               <HeadlessSelect
-                options={[{ value: "", label: "All Levels" }, ...ROLE_LEVELS]}
+                options={[{ value: "", label: "All Levels" }, ...roleLevelOptions]}
                 value={rolesLevelFilter}
                 onChange={(value) => setRolesLevelFilter(String(value))}
                 placeholder="Filter by level"
@@ -607,7 +610,7 @@ export default function TeamRolesPermissionsPage() {
               <HeadlessSelect
                 options={[
                   { value: "", label: "All Data Access" },
-                  ...DATA_ACCESS_LEVELS,
+                  ...dataAccessLevelOptions,
                 ]}
                 value={rolesDataAccessFilter}
                 onChange={(value) => setRolesDataAccessFilter(String(value))}
@@ -733,7 +736,7 @@ export default function TeamRolesPermissionsPage() {
                               // role.is_system_role
                               //   ? "opacity-50 cursor-not-allowed text-gray-400"
                               //   :
-                              "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+                              "text-gray-600"
                             }`}
                             title={
                               // role.is_system_role
@@ -746,7 +749,7 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleCloneRole(role)}
-                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-1.5 text-gray-600 rounded transition-colors"
                             title="Clone"
                           >
                             <Copy className="w-4 h-4" />
@@ -763,9 +766,7 @@ export default function TeamRolesPermissionsPage() {
                               (role.is_active &&
                                 (role.is_system_role || role.is_default))
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : role.is_active
-                                  ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
-                                  : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                                : "text-gray-600"
                             }`}
                             title={
                               role.is_active
@@ -792,7 +793,7 @@ export default function TeamRolesPermissionsPage() {
                               // role.is_system_role
                               //   ? "opacity-50 cursor-not-allowed text-gray-400"
                               //   :
-                              "text-red-600 hover:text-red-700 hover:bg-red-50"
+                              "text-red-600"
                             }`}
                             title={
                               // role.is_system_role
@@ -854,7 +855,7 @@ export default function TeamRolesPermissionsPage() {
               <HeadlessSelect
                 options={[
                   { value: "", label: "All Actions" },
-                  ...PERMISSION_ACTIONS,
+                  ...permissionActionOptions,
                 ]}
                 value={permissionsActionFilter}
                 onChange={(value) => setPermissionsActionFilter(String(value))}
@@ -975,7 +976,7 @@ export default function TeamRolesPermissionsPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleEditPermission(permission)}
-                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-1.5 text-gray-600 rounded transition-colors"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -988,9 +989,7 @@ export default function TeamRolesPermissionsPage() {
                             className={`p-1.5 rounded transition-colors ${
                               isDeleting
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
-                                : permission.is_active
-                                  ? "text-gray-600 hover:text-amber-600 hover:bg-amber-50"
-                                  : "text-gray-600 hover:text-green-600 hover:bg-green-50"
+                                : "text-gray-600"
                             }`}
                             title={
                               permission.is_active ? "Deactivate" : "Reactivate"

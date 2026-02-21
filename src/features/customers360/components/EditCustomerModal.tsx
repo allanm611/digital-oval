@@ -23,7 +23,6 @@ const GENDER_OPTIONS = [
   { value: "", label: "Select Gender" },
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" },
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -93,31 +92,72 @@ export default function EditCustomerModal({
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  // Initialize form data when customer changes
+  // Initialize form data when customer changes - fetch full details from API
   useEffect(() => {
-    if (customer) {
-      setFormData({
-        subscriptionId: String(customer.subscriptionId || ""),
-        firstName: customer.firstName || "",
-        lastName: customer.lastName || "",
-        msisdn: customer.msisdn || "",
-        alternatemsisdns: "",
-        email: customer.email || "",
-        alternateEmail: "",
-        gender: "",
-        dateOfBirth: "",
-        languagePreference: "en",
-        city: customer.city || "",
-        physicalAddress: "",
-        region: "",
-        postalCode: "",
-        countryCode: "",
-        customerTier: "",
-        preferredChannel: "SMS",
-        timezone: "Africa/Kampala",
-      });
+    if (customer && customer.customerId) {
+      const fetchCustomerDetails = async () => {
+        setIsLoading(true);
+        try {
+          const response = await customerService.getCustomerById(customer.customerId);
+          if (response.success && response.data) {
+            const customerData = response.data;
+            setFormData({
+              subscriptionId: String(customer.subscriptionId || ""),
+              firstName: customerData.first_name || customer.firstName || "",
+              lastName: customerData.last_name || customer.lastName || "",
+              msisdn: customerData.msisdn || customer.msisdn || "",
+              alternatemsisdns: Array.isArray(customerData.alternate_msisdns)
+                ? customerData.alternate_msisdns.join(", ")
+                : "",
+              email: customerData.email || customer.email || "",
+              alternateEmail: customerData.alternate_email || "",
+              gender: customerData.gender || "",
+              dateOfBirth: customerData.date_of_birth
+                ? new Date(customerData.date_of_birth).toISOString().split("T")[0]
+                : "",
+              languagePreference: customerData.language_preference || "en",
+              city: customerData.city || customer.city || "",
+              physicalAddress: customerData.physical_address || "",
+              region: customerData.region || "",
+              postalCode: customerData.postal_code || "",
+              countryCode: customerData.country_code || "",
+              customerTier: customerData.customer_tier || "",
+              preferredChannel: customerData.preferred_channel || "SMS",
+              timezone: customerData.timezone || "Africa/Kampala",
+            });
+          }
+        } catch (err) {
+          console.error("Failed to fetch customer details:", err);
+          error("Error", "Failed to load customer details");
+          // Fallback to local data
+          setFormData({
+            subscriptionId: String(customer.subscriptionId || ""),
+            firstName: customer.firstName || "",
+            lastName: customer.lastName || "",
+            msisdn: customer.msisdn || "",
+            alternatemsisdns: "",
+            email: customer.email || "",
+            alternateEmail: "",
+            gender: "",
+            dateOfBirth: "",
+            languagePreference: "en",
+            city: customer.city || "",
+            physicalAddress: "",
+            region: "",
+            postalCode: "",
+            countryCode: "",
+            customerTier: "",
+            preferredChannel: "SMS",
+            timezone: "Africa/Kampala",
+          });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchCustomerDetails();
     }
-  }, [customer, isOpen]);
+  }, [customer, error]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -218,8 +258,13 @@ export default function EditCustomerModal({
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="p-12 flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Subscription ID & Phone */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -539,7 +584,8 @@ export default function EditCustomerModal({
               {isLoading ? "Updating..." : "Update Customer"}
             </button>
           </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>,
     document.body,

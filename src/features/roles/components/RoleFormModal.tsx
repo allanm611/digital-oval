@@ -104,8 +104,6 @@ export default function RoleFormModal({
 
     if (!formData.name.trim()) {
       newErrors.name = "Role name is required";
-    } else if (formData.name.length > 15) {
-      newErrors.name = "Role name must be at most 15 characters";
     }
 
     if (!formData.code.trim()) {
@@ -289,7 +287,6 @@ export default function RoleFormModal({
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                maxLength={15}
                 placeholder="e.g., Administrator"
                 className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 ${
                   errors.name

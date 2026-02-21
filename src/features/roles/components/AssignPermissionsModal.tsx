@@ -820,7 +820,7 @@ export default function AssignPermissionsModal({
                             <button
                               onClick={() => handleTogglePermission(permission)}
                               disabled={isToggling || !isAssigned}
-                              className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 hover:text-white"
+                              className="px-4 py-2 text-sm font-medium rounded-md border transition-colors bg-transparent disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                               style={{
                                 borderColor: isAssigned
                                   ? color.primary.action
