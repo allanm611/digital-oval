@@ -96,8 +96,15 @@ export default function GlobalSearch({ onClose }: GlobalSearchProps) {
 
   // Load recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    const stored = localStorage.getItem("recentSearches");
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem("recentSearches");
+      return stored ? JSON.parse(stored) : [];
+    } catch (error) {
+      console.warn("Failed to parse recentSearches from localStorage:", error);
+      // Clear corrupted data
+      localStorage.removeItem("recentSearches");
+      return [];
+    }
   });
 
   // Fetch suggestions

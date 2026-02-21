@@ -534,7 +534,9 @@ export default function OfferCreativeStep({
       title: "",
       text_body: "",
       html_body: "",
-      variables: {} as Record<string, string | number | boolean>,
+      variables: {
+        sms_route: "Effortel SMS Gateway", // Default to Effortel SMS Gateway
+      } as Record<string, string | number | boolean>,
       is_active: true,
     };
 
