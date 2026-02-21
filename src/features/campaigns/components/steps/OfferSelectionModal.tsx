@@ -197,7 +197,21 @@ export default function OfferSelectionModal({
       // Convert Offer objects to CampaignOffer format
       const uniqueOffers = Array.from(offersMap.values());
 
-      const campaignOffers: CampaignOffer[] = uniqueOffers.map(
+      // Sort offers: campaign flow created offers first (in reverse order, newest first), then others
+      const sortedOffers = uniqueOffers.sort((a, b) => {
+        const aIsCreated = campaignFlowOfferIds.includes(a.id);
+        const bIsCreated = campaignFlowOfferIds.includes(b.id);
+
+        // If both are created or both are not created, maintain order
+        if (aIsCreated === bIsCreated) {
+          return 0;
+        }
+
+        // Created offers come first
+        return aIsCreated ? -1 : 1;
+      });
+
+      const campaignOffers: CampaignOffer[] = sortedOffers.map(
         (offer: Offer) => ({
           id: offer.id?.toString() || "",
           name: offer.name,
