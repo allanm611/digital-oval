@@ -7,13 +7,16 @@ import ProductForm from "../components/ProductForm";
 import { tw, color } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { X } from "lucide-react";
 
 interface CreateProductPageProps {
   onSuccess?: (productId: number) => void;
+  onClose?: () => void;
 }
 
 export default function CreateProductPage({
   onSuccess,
+  onClose,
 }: CreateProductPageProps = {}) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -227,21 +230,27 @@ export default function CreateProductPage({
 
   return (
     <div className="space-y-6">
-      {/* Back Button */}
-      <BackButton fallbackTo={getBackButtonFallback()} />
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
+      {/* Header with Back Button, Title, and Close Button */}
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center gap-4">
+          <BackButton fallbackTo={getBackButtonFallback()} />
           <div>
             <h1 className={`text-xl font-bold ${tw.textPrimary}`}>
               {t.products.createNewProduct}
             </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
+            <p className={`${tw.textSecondary} text-sm`}>
               {t.products.addNewProduct}
             </p>
           </div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors flex-shrink-0`}
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        )}
       </div>
 
       {/* Form */}

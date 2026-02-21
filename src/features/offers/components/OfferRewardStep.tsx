@@ -159,6 +159,11 @@ export default function OfferRewardStep({
 
   const selectedRewardData = rewards.find((r) => r.id === selectedReward);
 
+  // Ensure selectedRewardData exists before rendering - reset if it doesn't match
+  if (selectedReward && !selectedRewardData && rewards.length > 0) {
+    setSelectedReward(rewards[0].id);
+  }
+
   return (
     <div className="space-y-6">
       {rewards.length === 0 ? (

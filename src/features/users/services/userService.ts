@@ -175,7 +175,7 @@ class UserService {
   // ==================== REPORTS & ANALYTICS (3 endpoints) ====================
 
   /**
-   * GET /system-users/reports/status-counts - Get status counts
+   * GET /reports/status-counts - Get status counts
    */
   async getStatusCounts(
     query?: UserReportsQuery
@@ -183,7 +183,7 @@ class UserService {
     const queryParams = { ...query, skipCache: true };
     const queryString = this.buildQueryParams(queryParams || {});
     return this.request<ApiSuccessResponse<Record<string, number>>>(
-      `/system-users/reports/status-counts${queryString}`
+      `/reports/status-counts${queryString}`
     );
   }
 

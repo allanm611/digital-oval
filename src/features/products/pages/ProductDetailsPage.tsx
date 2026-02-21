@@ -252,7 +252,15 @@ export default function ProductDetailsPage() {
           </button>
           <PermissionGate permission="products.update">
             <button
-              onClick={() => navigate(`/dashboard/products/${id}/edit`)}
+              onClick={() =>
+                navigate(`/dashboard/products/${id}/edit`, {
+                  state: {
+                    returnTo: returnTo || {
+                      pathname: `/dashboard/products/${id}`,
+                    },
+                  },
+                })
+              }
               className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}
               style={{ backgroundColor: button.action.background }}
               onMouseEnter={(e) => {

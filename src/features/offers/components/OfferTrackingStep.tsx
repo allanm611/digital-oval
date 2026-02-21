@@ -159,6 +159,11 @@ export default function OfferTrackingStep({
     (s) => s.id === selectedSource
   );
 
+  // Ensure selectedSourceData exists before rendering - reset if it doesn't match
+  if (selectedSource && !selectedSourceData && trackingSources.length > 0) {
+    setSelectedSource(trackingSources[0].id);
+  }
+
   return (
     <div className="space-y-6">
       {trackingSources.length === 0 ? (

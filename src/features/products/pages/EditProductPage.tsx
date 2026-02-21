@@ -188,9 +188,10 @@ export default function EditProductPage() {
         finalUpdateData.unit_of_measure = unit;
       }
 
-      // Send validity_hours directly if provided and valid (must be between 1 and 8760)
+      // Convert validity_hours to validity_days (backend expects days, not hours)
+      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
       if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_hours = validity_hours;
+        finalUpdateData.validity_days = Math.ceil(validity_hours / 24);
       }
 
       // Include combo_data if provided (for combo products)
@@ -204,7 +205,7 @@ export default function EditProductPage() {
         t.products.productUpdated,
         t.products.productUpdateSuccess.replace("{name}", formData.name)
       );
-      navigate("/dashboard/products");
+      navigateBack();
     } catch (err) {
       // Extract detailed error message from backend response
       let errorMessage = t.products.failedToUpdateProduct;

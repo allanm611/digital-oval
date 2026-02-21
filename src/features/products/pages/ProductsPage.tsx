@@ -652,6 +652,13 @@ export default function ProductsPage() {
                               onClick={() =>
                                 navigate(
                                   `/dashboard/products/${product.id}/edit`,
+                                  {
+                                    state: {
+                                      returnTo: {
+                                        pathname: "/dashboard/products",
+                                      },
+                                    },
+                                  }
                                 )
                               }
                               className={`p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${tw.rounded} transition-all duration-200`}

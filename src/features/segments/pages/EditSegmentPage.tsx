@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Save, X, Plus, Activity } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
@@ -19,8 +19,21 @@ import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 export default function EditSegmentPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: showError } = useToast();
   const { t } = useLanguage();
+
+  const returnTo = (
+    location.state as { returnTo?: { pathname: string } }
+  )?.returnTo;
+
+  const navigateBack = () => {
+    if (returnTo) {
+      navigate(returnTo.pathname, { replace: true });
+      return;
+    }
+    navigateBackOrFallback(navigate, "/dashboard/segments");
+  };
 
   const [segment, setSegment] = useState<Segment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -100,7 +113,7 @@ export default function EditSegmentPage() {
         "Segment updated",
         `Segment "${name}" has been updated successfully`
       );
-      navigate(`/dashboard/segments/${id}`);
+      navigateBack();
     } catch (err) {
       console.error("Failed to update segment:", err);
       showError("Error updating segment", "Please try again later.");
