@@ -107,8 +107,11 @@ export default function CampaignFlowsStep({
           return "ROUND_ROBIN";
         case "multiple_level":
           return "MULTIPLE_LEVEL";
+        case "standard":
+        case "multiple_target_group":
+          return "MULTIPLE_TARGET";
         default:
-          return "STANDARD";
+          return "MULTIPLE_TARGET";
       }
     };
 
