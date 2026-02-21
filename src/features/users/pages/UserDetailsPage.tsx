@@ -232,21 +232,10 @@ export default function UserDetailsPage() {
         text: color.tertiary.active.text,
       };
     }
-    if (status === "pending_activation" || status === "deactivated") {
-      return {
-        background: "transparent",
-        text: "#dc2626",
-      };
-    }
-    if (status === "suspended" || status === "locked") {
-      return {
-        background: `${color.status.warning}20`,
-        text: color.status.warning,
-      };
-    }
+    // All non-active statuses: text-only, no background
     return {
-      background: `${color.status.danger}20`,
-      text: color.status.danger,
+      background: "transparent",
+      text: "#dc2626",
     };
   };
 
