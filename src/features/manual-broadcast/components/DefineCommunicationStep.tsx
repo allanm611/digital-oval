@@ -266,14 +266,15 @@ export default function DefineCommunicationStep({
         sampleData[col] = `[${col}]`;
       });
     }
-    selectedVariables.forEach((variable) => {
-      const key = `${variable.sourceName.toLowerCase().replace(/\s+/g, "_")}.${variable.value}`;
+    (selectedVariables || []).forEach((variable) => {
+      const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
       switch (variable.fieldType) {
         case "text":
-          if (variable.value.includes("name")) sampleData[key] = "John Doe";
-          else if (variable.value.includes("email"))
+          if ((variable.value || "").includes("name"))
+            sampleData[key] = "John Doe";
+          else if ((variable.value || "").includes("email"))
             sampleData[key] = "john@example.com";
-          else if (variable.value.includes("phone"))
+          else if ((variable.value || "").includes("phone"))
             sampleData[key] = "+1234567890";
           else sampleData[key] = `Sample ${variable.name}`;
           break;
@@ -340,7 +341,6 @@ export default function DefineCommunicationStep({
       </div>
 
       <div className="p-5">
-        {/* Channel Selection - Compact horizontal tabs */}
         <div className="mb-6">
           <label className={`block text-sm font-medium ${tw.textPrimary} mb-3`}>
             {t.manualBroadcast.channelLabel}
@@ -658,13 +658,19 @@ export default function DefineCommunicationStep({
               {/* Info bar */}
               <div className="mt-2 flex items-center justify-between">
                 {selectedChannel === "SMS" || selectedChannel === "WHATSAPP" ? (
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{getCharacterInfo().charCount} characters</span>
-                    <span>{getCharacterInfo().segments} segment(s)</span>
-                    {getCharacterInfo().isUnicode && (
-                      <span className="text-amber-600">Unicode</span>
-                    )}
-                  </div>
+                  messageBody.trim() ? (
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{getCharacterInfo().charCount} characters</span>
+                      <span>{getCharacterInfo().segments} SMS</span>
+                      {getCharacterInfo().isUnicode && (
+                        <span className="text-amber-600">Unicode</span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-500">
+                      Enter your message to see character and SMS count
+                    </span>
+                  )
                 ) : (
                   <span className="text-xs text-gray-500">
                     Variables like {"{{field}}"} will be replaced with customer

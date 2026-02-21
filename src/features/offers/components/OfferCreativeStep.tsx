@@ -1296,9 +1296,9 @@ export default function OfferCreativeStep({
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t.offers.messageBody.label}
-                        {selectedCreativeData.channel === "SMS" && (
+                        {selectedCreativeData.channel === "SMS" && selectedCreativeData.text_body?.trim() && (
                           <span className="text-xs font-normal text-gray-500 ml-2">
-                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments > 1 ? `, ${getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} segments` : ''})
+                            ({getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").charCount} characters{getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments > 1 ? `, ${getCharacterInfo(selectedCreativeData.title ? `${selectedCreativeData.title}: ${selectedCreativeData.text_body || ""}` : selectedCreativeData.text_body || "").segments} SMS` : ''})
                           </span>
                         )}
                       </label>
