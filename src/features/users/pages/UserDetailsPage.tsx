@@ -232,7 +232,7 @@ export default function UserDetailsPage() {
         text: color.tertiary.active.text,
       };
     }
-    if (status === "pending_activation") {
+    if (status === "pending_activation" || status === "deactivated") {
       return {
         background: "transparent",
         text: "#dc2626",
