@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface Option {
   id: string | number;
   label: string;
@@ -37,7 +37,7 @@ export default function Select({
 
   const filteredOptions = searchable
     ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+        (option.label || "").toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : options;
 
@@ -101,7 +101,9 @@ export default function Select({
         </div>
 
         {isOpen && (
-          <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
+          <div
+            className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+          >
             {searchable && (
               <div className="p-2 border-b border-gray-100">
                 <input

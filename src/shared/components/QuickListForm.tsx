@@ -1,11 +1,5 @@
 import { useState, useRef, useMemo, useEffect } from "react";
-import {
-  Upload,
-  FileText,
-  AlertCircle,
-  Download,
-  Edit3,
-} from "lucide-react";
+import { Upload, FileText, AlertCircle, Download, Edit3 } from "lucide-react";
 import { color, tw } from "../utils/utils";
 import { UploadType } from "../../features/quicklists/types/quicklist";
 import HeadlessSelect from "./ui/HeadlessSelect";
@@ -45,18 +39,18 @@ export default function QuickListForm({
   className = "",
 }: QuickListFormProps) {
   const [inputMode, setInputMode] = useState<InputMode>(
-    initialData?.inputMode || "file"
+    initialData?.inputMode || "file",
   );
   const [file, setFile] = useState<File | null>(initialData?.file || null);
   const [uploadType, setUploadType] = useState<string>(
-    initialData?.uploadType || ""
+    initialData?.uploadType || "",
   );
   const [name, setName] = useState(initialData?.name || "");
   const [description, setDescription] = useState(
-    initialData?.description || ""
+    initialData?.description || "",
   );
   const [manualInput, setManualInput] = useState(
-    initialData?.manualInput || ""
+    initialData?.manualInput || "",
   );
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -114,7 +108,7 @@ export default function QuickListForm({
 
       // Validate file size (get max from selected upload type)
       const selectedUploadType = uploadTypes.find(
-        (t) => t.upload_type === uploadType
+        (t) => t.upload_type === uploadType,
       );
       if (!selectedUploadType) {
         setError("Please select an upload type first");
@@ -220,20 +214,24 @@ export default function QuickListForm({
     if (!uploadType) return;
 
     const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
-    if (!selectedType) return;
+    if (!selectedType) {
+      console.error("Upload type not found");
+      return;
+    }
 
     // Get expected columns
     let columns: string[] = [];
     if (Array.isArray(selectedType.expected_columns)) {
-      columns = selectedType.expected_columns;
+      columns = selectedType.expected_columns || [];
     } else if (
       typeof selectedType.expected_columns === "object" &&
       selectedType.expected_columns !== null
     ) {
-      columns = Object.keys(selectedType.expected_columns);
+      columns = Object.keys(selectedType.expected_columns || {});
     }
 
-    if (columns.length === 0) {
+    if (!columns || columns.length === 0) {
+      console.warn("No columns found for upload type");
       return;
     }
 
@@ -289,14 +287,14 @@ export default function QuickListForm({
         {uploadType &&
           (() => {
             const selectedType = uploadTypes.find(
-              (t) => t.upload_type === uploadType
+              (t) => t.upload_type === uploadType,
             );
             const expectedColumns = selectedType?.expected_columns;
             const columnsDisplay = Array.isArray(expectedColumns)
               ? expectedColumns.join(", ")
               : typeof expectedColumns === "object" && expectedColumns !== null
-              ? Object.keys(expectedColumns).join(", ")
-              : "N/A";
+                ? Object.keys(expectedColumns).join(", ")
+                : "N/A";
 
             return (
               <div
@@ -795,7 +793,7 @@ export default function QuickListForm({
 export function createExcelFileFromManualInput(
   manualInput: string,
   uploadTypes: UploadType[],
-  uploadType: string
+  uploadType: string,
 ): File {
   const selectedType = uploadTypes.find((t) => t.upload_type === uploadType);
   if (!selectedType) {
@@ -830,12 +828,12 @@ export function createExcelFileFromManualInput(
   const worksheetData: string[][] = [columns];
 
   const emailColumnIndex = columns.findIndex((col) =>
-    col.toLowerCase().includes("email")
+    col.toLowerCase().includes("email"),
   );
   const phoneColumnIndex = columns.findIndex(
     (col) =>
       col.toLowerCase().includes("phone") ||
-      col.toLowerCase().includes("mobile")
+      col.toLowerCase().includes("mobile"),
   );
 
   validContacts.forEach((contact) => {
@@ -871,4 +869,3 @@ export function createExcelFileFromManualInput(
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 }
-

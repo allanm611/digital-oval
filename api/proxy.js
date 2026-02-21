@@ -1,10 +1,22 @@
 // Vercel serverless function to proxy API requests
+// Critical: Disable Vercel's default body parser for multipart/form-data
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   // Enable CORS with more specific headers
   const origin = req.headers.origin;
   const allowedOrigins = [
+    "http://localhost:3000",
     "http://localhost:5173",
-process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    "https://sentra-wheat.vercel.app",
+    "https://sentra-uat.vercel.app",
+
+    // Replace with your actual Vercel domain
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   ].filter(Boolean);
 
   if (
@@ -36,6 +48,7 @@ process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
+    // Use environment variable or default to the backend URL
     const API_BASE_URL =
       process.env.VITE_API_BASE_URL ||
       process.env.API_BASE_URL ||
@@ -57,6 +70,15 @@ process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
     const targetUrl =
       `${API_BASE_URL}/${apiPath}` + (queryString ? `?${queryString}` : "");
 
+    // Log for debugging in production
+    // console.log("Proxy request:", {
+    //   method: req.method,
+    //   apiPath,
+    //   queryString,
+    //   targetUrl,
+    //   hasApiBaseUrl: !!process.env.API_BASE_URL,
+    // });
+
     // Prepare headers for the backend request
     const headers = {};
 
@@ -65,38 +87,42 @@ process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
       headers["Authorization"] = req.headers.authorization;
     }
 
-    // For multipart/form-data, forward Content-Type as-is (with boundary)
-    const isFormData = req.headers["content-type"]?.includes("multipart/form-data");
-    if (isFormData && req.headers["content-type"]) {
-      headers["Content-Type"] = req.headers["content-type"];
-    } else if (req.method !== "GET" && req.method !== "HEAD") {
-      headers["Content-Type"] = "application/json";
-    }
+    // Check if this is a multipart form data request
+    const isMultipart =
+      req.headers["content-type"] &&
+      req.headers["content-type"].includes("multipart/form-data");
 
     // Prepare request body
     let body = undefined;
     if (req.method !== "GET" && req.method !== "HEAD") {
-      if (isFormData) {
-        // For multipart, use the raw body buffer (don't parse or modify)
-        body = req.body;
+      const isMultipart =
+        req.headers["content-type"] &&
+        req.headers["content-type"].includes("multipart/form-data");
+
+      // Read the request stream into a buffer
+      const chunks = [];
+      for await (const chunk of req) {
+        chunks.push(chunk);
+      }
+      const buffer = Buffer.concat(chunks);
+
+      if (isMultipart) {
+        // For multipart, send the raw buffer with original content-type
+        body = buffer;
+        headers["Content-Type"] = req.headers["content-type"];
       } else {
-        // For JSON, stringify the body
-        body = JSON.stringify(req.body);
+        // For JSON, convert to string
+        body = buffer.toString();
+        headers["Content-Type"] = "application/json";
       }
     }
 
-    // Forward the request with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
+    // Forward the request
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body,
-      signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     // Handle different response types
     let data;

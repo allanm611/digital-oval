@@ -1,7 +1,7 @@
 import React, { useState, useRef, KeyboardEvent } from "react";
 import { X, Plus } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface TagInputProps {
   value: string[];
   onChange: (value: string[]) => void;
@@ -74,9 +74,9 @@ export default function TagInput({
         onClick={() => inputRef.current?.focus()}
       >
         <div className="flex flex-wrap gap-2 items-center">
-          {value.map((tag, index) => (
+          {value.map((tag) => (
             <span
-              key={index}
+              key={tag}
               className={`inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 ${tw.rounded} animate-scale-in`}
             >
               {tag}

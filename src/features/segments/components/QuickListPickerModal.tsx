@@ -16,6 +16,7 @@ interface QuickListItem {
   upload_type: string;
   row_count: number;
   created_at: string;
+  status?: string;
 }
 
 interface QuickListPickerModalProps {
@@ -54,15 +55,18 @@ export default function QuickListPickerModal({
         limit: 100,
       });
       if (response.success && response.data) {
-        // Map backend response to QuickListItem format
-        const lists = response.data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          upload_type: item.processing_status || "multi",
-          row_count: item.rows_imported || 0,
-          created_at: item.created_at,
-        }));
+        // Map backend response to QuickListItem format and filter only completed quicklists
+        const lists = response.data
+          .filter((item: any) => item.status === "completed" || item.processing_status === "completed")
+          .map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            upload_type: item.processing_status || "multi",
+            row_count: item.rows_imported || 0,
+            created_at: item.created_at,
+            status: item.status || item.processing_status,
+          }));
         setQuickLists(lists);
       }
     } catch (err) {

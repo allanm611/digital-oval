@@ -1,6 +1,6 @@
 /**
  * CascadingVariableSelector Component
- * 
+ *
  * A cascading dropdown selector for template variables.
  * Shows sources in the first level, fields in the second level (submenu).
  * More ergonomic than the hierarchical panel approach.
@@ -35,20 +35,26 @@ export default function CascadingVariableSelector({
 
   // Transform categories to ProfileSource format
   const profileSources: ProfileSource[] = useMemo(() => {
-    return categories.map((category) => ({
-      id: category.id,
-      name: category.name,
-      value: category.value,
-      description: category.description,
-      fieldCount: category.fields?.length || 0,
-    }));
+    return categories
+      .map((category, index) => ({
+        id: index, // Use index as stable ID
+        name: category.category || category.name || "Unknown",
+        value:
+          category.value ||
+          category.category?.toLowerCase().replace(/\s+/g, "_") ||
+          "",
+        description: "",
+        fieldCount: category.fields?.length || 0,
+      }))
+      .filter((source) => source.name); // Filter out any sources without names
   }, [categories]);
 
   // Get fields for hovered source
   const hoveredSourceFields: ProfileField[] = useMemo(() => {
-    if (hoveredSourceId === null) return [];
-    
-    const category = categories.find((c) => c.id === hoveredSourceId);
+    if (hoveredSourceId === null || hoveredSourceId >= categories.length)
+      return [];
+
+    const category = categories[hoveredSourceId];
     if (!category || !category.fields) return [];
 
     return category.fields.map((field) => ({
@@ -68,14 +74,17 @@ export default function CascadingVariableSelector({
     return hoveredSourceFields.filter(
       (field) =>
         field.name.toLowerCase().includes(query) ||
-        field.description.toLowerCase().includes(query)
+        field.description.toLowerCase().includes(query),
     );
   }, [hoveredSourceFields, searchQuery]);
 
   // Close on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
@@ -93,12 +102,12 @@ export default function CascadingVariableSelector({
 
     const templateVariable: TemplateVariable = {
       id: field.id,
-      name: field.name,
-      value: field.value,
+      name: field.name || "Unknown",
+      value: field.value || "",
       sourceId: source.id,
-      sourceName: source.name,
-      description: field.description,
-      fieldType: field.fieldType,
+      sourceName: source.name || "Unknown",
+      description: field.description || "",
+      fieldType: field.fieldType || "text",
     };
 
     onVariableSelect(templateVariable);
@@ -125,7 +134,7 @@ export default function CascadingVariableSelector({
             {t.manualBroadcast.selectProfileSource}
           </p>
         </div>
-        
+
         {isLoading ? (
           <div className="p-4 text-center">
             <div className="animate-spin w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full mx-auto" />
@@ -137,26 +146,41 @@ export default function CascadingVariableSelector({
                 key={source.id}
                 onMouseEnter={() => setHoveredSourceId(source.id)}
                 className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${
-                  hoveredSourceId === source.id ? "bg-blue-50" : "hover:bg-gray-50"
+                  hoveredSourceId === source.id
+                    ? "bg-blue-50"
+                    : "hover:bg-gray-50"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <Database 
-                    className="w-4 h-4" 
-                    style={{ color: hoveredSourceId === source.id ? PRIMARY_COLOR : "#9CA3AF" }}
+                  <Database
+                    className="w-4 h-4"
+                    style={{
+                      color:
+                        hoveredSourceId === source.id
+                          ? PRIMARY_COLOR
+                          : "#9CA3AF",
+                    }}
                   />
                   <div>
-                    <p className={`text-sm font-medium ${hoveredSourceId === source.id ? "text-blue-600" : tw.textPrimary}`}>
+                    <p
+                      className={`text-sm font-medium ${hoveredSourceId === source.id ? "text-blue-600" : tw.textPrimary}`}
+                    >
                       {source.name}
                     </p>
                     <p className="text-xs text-gray-400">
-                      {source.fieldCount} {source.fieldCount === 1 ? t.manualBroadcast.fieldSingular : t.manualBroadcast.fieldPlural}
+                      {source.fieldCount}{" "}
+                      {source.fieldCount === 1
+                        ? t.manualBroadcast.fieldSingular
+                        : t.manualBroadcast.fieldPlural}
                     </p>
                   </div>
                 </div>
-                <ChevronRight 
-                  className="w-4 h-4" 
-                  style={{ color: hoveredSourceId === source.id ? PRIMARY_COLOR : "#D1D5DB" }}
+                <ChevronRight
+                  className="w-4 h-4"
+                  style={{
+                    color:
+                      hoveredSourceId === source.id ? PRIMARY_COLOR : "#D1D5DB",
+                  }}
                 />
               </div>
             ))}
@@ -186,7 +210,7 @@ export default function CascadingVariableSelector({
               />
             </div>
           </div>
-          
+
           <div className="max-h-64 overflow-y-auto">
             {filteredFields.length === 0 ? (
               <div className="p-4 text-center text-sm text-gray-500">

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X, Check } from "lucide-react";
 
-import { tw } from '../../../shared/utils/utils';
+import { tw } from "../../../shared/utils/utils";
 interface Option {
   id: string | number;
   label: string;
@@ -35,11 +35,11 @@ export default function MultiSelect({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    (option.label || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const selectedOptions = options.filter((option) =>
-    value.includes(option.value)
+    value.includes(option.value),
   );
 
   useEffect(() => {
@@ -142,7 +142,9 @@ export default function MultiSelect({
         </div>
 
         {isOpen && (
-          <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}>
+          <div
+            className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 ${tw.rounded} shadow-lg max-h-60 overflow-hidden`}
+          >
             <div className="p-2 border-b border-gray-100">
               <input
                 ref={inputRef}

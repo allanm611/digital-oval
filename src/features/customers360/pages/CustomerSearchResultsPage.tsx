@@ -668,11 +668,6 @@ export default function CustomerSearchResultsPage() {
             },
             { label: "Email", value: selectedSubscription.email ?? email },
             {
-              label: "Customer Type",
-              value: selectedSubscription.customerType ?? "—",
-            },
-            { label: "Tariff", value: selectedSubscription.tariff ?? "—" },
-            {
               label: "Banking Services",
               value: selectedSubscription.bankingServices ?? "—",
             },
@@ -685,12 +680,10 @@ export default function CustomerSearchResultsPage() {
         {
           title: "Network & SIM",
           items: [
-            { label: "SIM Type", value: selectedSubscription.simType ?? "—" },
             {
               label: "Activation Date",
               value: formatDateTime(selectedSubscription.activationDate),
             },
-            { label: "Status", value: selectedSubscription.status ?? "—" },
             { label: "SMS", value: selectedSubscription.sms ?? "—" },
             {
               label: "Data Services",

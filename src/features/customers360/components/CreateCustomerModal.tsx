@@ -6,9 +6,10 @@ import {
   Upload,
   Users,
   Download,
-  
+
 } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
+import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -39,41 +40,47 @@ function formatPhoneNumber(msisdn: string): string {
 type TabType = "single" | "bulk" | "import";
 
 // Options from actual dummy data
-const CUSTOMER_TYPE_OPTIONS = [
-  { value: "Non-member", label: "Non-member" },
-  { value: "Equity Member", label: "Equity Member" },
-  { value: "Equity Corporate/Business", label: "Equity Corporate/Business" },
+const GENDER_OPTIONS = [
+  { value: "", label: "Select Gender" },
+  { value: "Male", label: "Male" },
+  { value: "Female", label: "Female" },
+  { value: "Other", label: "Other" },
 ];
 
-const TARIFF_OPTIONS = [
-  { value: "Businesses & Corporate", label: "Businesses & Corporate" },
-  { value: "Data SIMs", label: "Data SIMs" },
-  {
-    value: "Equity Group Employees & Partners",
-    label: "Equity Group Employees & Partners",
-  },
-  { value: "Gumzo", label: "Gumzo" },
-  { value: "Gumzo DATA", label: "Gumzo DATA" },
-  { value: "High Value Customers", label: "High Value Customers" },
-  { value: "Infrastructure SIM", label: "Infrastructure SIM" },
-  { value: "Member", label: "Member" },
-  { value: "Non-member", label: "Non-member" },
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "sw", label: "Swahili" },
+  { value: "fr", label: "French" },
 ];
 
-const SIM_TYPE_OPTIONS = [
-  { value: "2/3/4FF Normal", label: "2/3/4FF Normal" },
-  { value: "2/3FF", label: "2/3FF" },
-  { value: "2FF", label: "2FF" },
-  { value: "4FF", label: "4FF" },
-  { value: "4G", label: "4G" },
+const COUNTRY_OPTIONS = [
+  { value: "UGA", label: "Uganda" },
+  { value: "KEN", label: "Kenya" },
+  { value: "TZA", label: "Tanzania" },
+  { value: "RWA", label: "Rwanda" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "Active", label: "Active" },
-  { value: "Pending", label: "Pending" },
-  { value: "Suspending", label: "Suspending" },
-  { value: "Deactivating", label: "Deactivating" },
-  { value: "Deactivation", label: "Deactivation" },
+const CUSTOMER_TIER_OPTIONS = [
+  { value: "", label: "Select Tier" },
+  { value: "Regular", label: "Regular" },
+  { value: "VIP", label: "VIP" },
+  { value: "Gold", label: "Gold" },
+  { value: "Platinum", label: "Platinum" },
+];
+
+const PREFERRED_CHANNEL_OPTIONS = [
+  { value: "SMS", label: "SMS" },
+  { value: "USSD", label: "USSD" },
+  { value: "APP", label: "APP" },
+  { value: "EMAIL", label: "EMAIL" },
+  { value: "WHATSAPP", label: "WhatsApp" },
+];
+
+const TIMEZONE_OPTIONS = [
+  { value: "Africa/Kampala", label: "Africa/Kampala" },
+  { value: "Africa/Nairobi", label: "Africa/Nairobi" },
+  { value: "Africa/Dar_es_Salaam", label: "Africa/Dar es Salaam" },
+  { value: "Africa/Kigali", label: "Africa/Kigali" },
 ];
 
 const initialFormData: FormData = {
@@ -81,12 +88,20 @@ const initialFormData: FormData = {
   firstName: "",
   lastName: "",
   msisdn: "",
+  alternatemsisdns: "",
   email: "",
+  alternateEmail: "",
+  gender: "",
+  dateOfBirth: "",
+  languagePreference: "en",
   city: "",
-  customerType: "Non-member",
-  tariff: "Non-member",
-  status: "Active",
-  simType: "2FF",
+  physicalAddress: "",
+  region: "",
+  postalCode: "",
+  countryCode: "",
+  customerTier: "",
+  preferredChannel: "SMS",
+  timezone: "Africa/Kampala",
 };
 
 /**
@@ -156,6 +171,16 @@ export default function CreateCustomerModal({
         };
       }
 
+      // Validate phone number has country code
+      if (!isValidCountryCodePhone(parts[3])) {
+        return {
+          rowNum: index + 1,
+          valid: false,
+          error: "Phone number must begin with country code",
+          data: parts,
+        };
+      }
+
       // Successfully mapped customer
       return {
         rowNum: index + 1,
@@ -167,22 +192,30 @@ export default function CreateCustomerModal({
           parts[3],
           parts[4] || "—",
           parts[5] || "—",
-          parts[6] || "Non-member",
-          parts[7] || "Non-member",
-          parts[8] || "Active",
-          parts[9] || "2FF",
+          parts[6] || "—",
+          parts[7] || "—",
+          parts[8] || "—",
+          parts[9] || "—",
+          parts[10] || "—",
+          parts[11] || "—",
+          parts[12] || "—",
+          parts[13] || "—",
         ],
         customer: {
           subscriptionId: parts[0],
           firstName: parts[1],
           lastName: parts[2],
           msisdn: parts[3],
-          email: parts[4] || undefined,
-          city: parts[5] || undefined,
-          customerType: parts[6] || "Non-member",
-          tariff: parts[7] || "Non-member",
-          status: parts[8] || "Active",
-          simType: parts[9] || "2FF",
+          alternatemsisdns: parts[4] || undefined,
+          email: parts[5] || undefined,
+          alternateEmail: parts[6] || undefined,
+          gender: parts[7] || undefined,
+          dateOfBirth: parts[8] || undefined,
+          languagePreference: parts[9] || "en",
+          city: parts[10] || undefined,
+          physicalAddress: parts[11] || undefined,
+          region: parts[12] || undefined,
+          postalCode: parts[13] || undefined,
         },
       };
     });
@@ -199,12 +232,16 @@ export default function CreateCustomerModal({
         "FirstName",
         "LastName",
         "Phone",
+        "AlternatePhone",
         "Email",
+        "AlternateEmail",
+        "Gender",
+        "DateOfBirth",
+        "LanguagePreference",
         "City",
-        "CustomerType",
-        "Tariff",
-        "Status",
-        "SimType",
+        "PhysicalAddress",
+        "Region",
+        "PostalCode",
       ],
     };
   }, [bulkText]);
@@ -247,10 +284,10 @@ export default function CreateCustomerModal({
       error("Validation Error", "Phone number is required");
       return false;
     }
-    if (formData.msisdn.length < 10 || formData.msisdn.length > 15) {
+    if (!isValidCountryCodePhone(formData.msisdn)) {
       error(
         "Validation Error",
-        "Phone number must be between 10 and 15 digits",
+        "Phone number must begin with country code",
       );
       return false;
     }
@@ -300,12 +337,6 @@ export default function CreateCustomerModal({
         msisdn: msisdnForApi,
         email:
           apiResponse.data.attributes?.email || formData.email || undefined,
-        // Frontend-only fields (not in API)
-        city: formData.city || undefined,
-        customerType: formData.customerType,
-        tariff: formData.tariff,
-        status: formData.status,
-        simType: formData.simType,
         activationDate: apiResponse.data.created_at || new Date().toISOString(),
       };
 
@@ -363,7 +394,7 @@ export default function CreateCustomerModal({
           attributes: {
             first_name: parts[1] || "Unknown",
             last_name: parts[2] || "Customer",
-            email: parts[4] || undefined,
+            email: parts[5] || undefined,
             device_type: "unknown",
             premium_user: false,
           },
@@ -376,12 +407,7 @@ export default function CreateCustomerModal({
           firstName: parts[1] || "Unknown",
           lastName: parts[2] || "Customer",
           msisdn: msisdnForApi,
-          email: parts[4] || undefined,
-          city: parts[5] || undefined,
-          customerType: parts[6] || "Non-member",
-          tariff: parts[7] || "Non-member",
-          status: parts[8] || "Active",
-          simType: parts[9] || "2FF",
+          email: parts[5] || undefined,
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
@@ -451,7 +477,7 @@ export default function CreateCustomerModal({
           attributes: {
             first_name: parts[1] || "Unknown",
             last_name: parts[2] || "Customer",
-            email: parts[4] || undefined,
+            email: parts[5] || undefined,
             device_type: "unknown",
             premium_user: false,
           },
@@ -464,12 +490,7 @@ export default function CreateCustomerModal({
           firstName: parts[1] || "Unknown",
           lastName: parts[2] || "Customer",
           msisdn: msisdnForApi,
-          email: parts[4] || undefined,
-          city: parts[5] || undefined,
-          customerType: parts[6] || "Non-member",
-          tariff: parts[7] || "Non-member",
-          status: parts[8] || "Active",
-          simType: parts[9] || "2FF",
+          email: parts[5] || undefined,
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
@@ -606,7 +627,6 @@ export default function CreateCustomerModal({
                     name="msisdn"
                     value={formData.msisdn}
                     onChange={handleInputChange}
-                    placeholder="254712345678"
                     className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
@@ -645,20 +665,66 @@ export default function CreateCustomerModal({
                 </div>
               </div>
 
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="email@example.com"
-                  className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Phone Number (MSISDN) *
+                  </label>
+                  <input
+                    type="text"
+                    name="msisdn"
+                    value={formData.msisdn}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Alternate Phone Numbers (MSISDN)
+                  </label>
+                  <input
+                    type="text"
+                    name="alternatemsisdns"
+                    value={formData.alternatemsisdns}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                  >
+                    Alternate Email
+                  </label>
+                  <input
+                    type="email"
+                    name="alternateEmail"
+                    value={formData.alternateEmail}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                  />
+                </div>
               </div>
 
               <div>
@@ -677,38 +743,137 @@ export default function CreateCustomerModal({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* Personal Information Section */}
+              <div className="mt-6">
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Personal Information
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Gender
+                    </label>
+                    <HeadlessSelect
+                      options={GENDER_OPTIONS}
+                      value={formData.gender}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          gender: String(value),
+                        }))
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleInputChange}
+                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Language Preference
+                    </label>
+                    <HeadlessSelect
+                      options={LANGUAGE_OPTIONS}
+                      value={formData.languagePreference}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          languagePreference: String(value),
+                        }))
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Section */}
+              <div className="mt-6">
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Address Information
+                </h3>
+
                 <div>
                   <label
                     className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
-                    Customer Type
+                    Physical Address
                   </label>
-                  <HeadlessSelect
-                    options={CUSTOMER_TYPE_OPTIONS}
-                    value={formData.customerType}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        customerType: String(value),
-                      }))
-                    }
-                    zIndex={zIndex.popover}
+                  <textarea
+                    name="physicalAddress"
+                    value={formData.physicalAddress}
+                    onChange={handleInputChange}
+                    placeholder="Street address"
+                    rows={2}
+                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
-                <div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Region
+                    </label>
+                    <input
+                      type="text"
+                      name="region"
+                      value={formData.region}
+                      onChange={handleInputChange}
+                      placeholder="Region/State"
+                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Postal Code
+                    </label>
+                    <input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleInputChange}
+                      placeholder="Postal code"
+                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
                   <label
                     className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                   >
-                    Tariff
+                    Country
                   </label>
                   <HeadlessSelect
-                    options={TARIFF_OPTIONS}
-                    value={formData.tariff}
+                    options={COUNTRY_OPTIONS}
+                    value={formData.countryCode}
                     onChange={(value) =>
                       setFormData((prev) => ({
                         ...prev,
-                        tariff: String(value),
+                        countryCode: String(value),
                       }))
                     }
                     zIndex={zIndex.popover}
@@ -716,42 +881,70 @@ export default function CreateCustomerModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    SIM Type
-                  </label>
-                  <HeadlessSelect
-                    options={SIM_TYPE_OPTIONS}
-                    value={formData.simType}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        simType: String(value),
-                      }))
-                    }
-                    zIndex={zIndex.popover}
-                  />
+              {/* Account Details Section */}
+              <div className="mt-6">
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Account Details
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Customer Tier
+                    </label>
+                    <HeadlessSelect
+                      options={CUSTOMER_TIER_OPTIONS}
+                      value={formData.customerTier}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          customerTier: String(value),
+                        }))
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Preferred Channel
+                    </label>
+                    <HeadlessSelect
+                      options={PREFERRED_CHANNEL_OPTIONS}
+                      value={formData.preferredChannel}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          preferredChannel: String(value),
+                        }))
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Status
-                  </label>
-                  <HeadlessSelect
-                    options={STATUS_OPTIONS}
-                    value={formData.status}
-                    onChange={(value) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        status: String(value),
-                      }))
-                    }
-                    zIndex={zIndex.popover}
-                  />
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Timezone
+                    </label>
+                    <HeadlessSelect
+                      options={TIMEZONE_OPTIONS}
+                      value={formData.timezone}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          timezone: String(value),
+                        }))
+                      }
+                      zIndex={zIndex.popover}
+                    />
+                  </div>
                 </div>
               </div>
             </>
@@ -784,7 +977,7 @@ export default function CreateCustomerModal({
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder="SubID,FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType&#10;1001,Samuel,Kipchoge,254750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF"
+                placeholder="SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode&#10;1001,Samuel,Kipchoge,254750902921,254712345679,samuel@example.com,,Male,1990-05-15,en,Nairobi,123 Main St,Nairobi,00100"
                 className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
                 rows={8}
               />
@@ -892,10 +1085,11 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `SubID,FirstName,LastName,Phone,Email,City,CustomerType,Tariff,Status,SimType
-1001,Samuel,Kipchoge,254750902921,samuel@example.com,Nairobi,Non-member,Non-member,Active,2FF
-1002,Mary,Wangari,254712345678,mary@example.com,Mombasa,Equity Member,Member,Active,4FF
-1003,James,Ochieng,254734567890,james@example.com,Kisumu,Equity Corporate/Business,Gumzo,Pending,2/3FF`;
+                    const sampleData = `SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode
+1001,Samuel,Kipchoge,254750902921,254712345679,samuel@example.com,,Male,1990-05-15,en,Nairobi,123 Main St,Nairobi,00100
+1002,Mary,Wangari,254712345678,254712345680,mary@example.com,,Female,1992-03-20,sw,Mombasa,456 Coast Rd,Mombasa,80100
+1003,James,Ochieng,254734567890,254734567891,james@example.com,,Male,1988-12-10,en,Kisumu,789 Lake View,Kisumu,40100
+1004,Ahmed,Hassan,254720123456,,ahmed@example.com,,Male,1995-07-25,en,Mombasa,321 Beach St,Mombasa,80200`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -926,7 +1120,7 @@ export default function CreateCustomerModal({
                     : "Click to select or drag a CSV file"}
                 </p>
                 <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  CSV file with columns: SubID, FirstName, LastName, Phone (format: 254...), Email, City, CustomerType, Tariff, Status, SimType
+                  CSV file with columns: SubID*, FirstName*, LastName*, Phone* (country code 254, etc), AlternatePhone, Email, AlternateEmail, Gender, DateOfBirth, LanguagePreference, City, PhysicalAddress, Region, PostalCode (* = required)
                 </p>
               </div>
               <input
@@ -950,12 +1144,16 @@ export default function CreateCustomerModal({
                         "FirstName",
                         "LastName",
                         "Phone",
+                        "AlternatePhone",
                         "Email",
+                        "AlternateEmail",
+                        "Gender",
+                        "DateOfBirth",
+                        "LanguagePreference",
                         "City",
-                        "CustomerType",
-                        "Tariff",
-                        "Status",
-                        "SimType",
+                        "PhysicalAddress",
+                        "Region",
+                        "PostalCode",
                       ];
 
                       const rows = lines.slice(1).map((line, index) => {
@@ -988,6 +1186,16 @@ export default function CreateCustomerModal({
                           };
                         }
 
+                        // Validate phone number has country code
+                        if (!isValidCountryCodePhone(parts[3])) {
+                          return {
+                            rowNum: index + 1,
+                            valid: false,
+                            error: "Phone number must begin with country code",
+                            data: parts,
+                          };
+                        }
+
                         return {
                           rowNum: index + 1,
                           valid: true,
@@ -998,10 +1206,14 @@ export default function CreateCustomerModal({
                             parts[3],
                             parts[4] || "—",
                             parts[5] || "—",
-                            parts[6] || "Non-member",
-                            parts[7] || "Non-member",
-                            parts[8] || "Active",
-                            parts[9] || "2FF",
+                            parts[6] || "—",
+                            parts[7] || "—",
+                            parts[8] || "—",
+                            parts[9] || "en",
+                            parts[10] || "—",
+                            parts[11] || "—",
+                            parts[12] || "—",
+                            parts[13] || "—",
                           ],
                         };
                       });

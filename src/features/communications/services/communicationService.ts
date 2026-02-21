@@ -249,20 +249,46 @@ class CommunicationService {
   }
 
   /**
-   * Get manual broadcasts list
+   * Get manual broadcasts list - uses dedicated endpoint
    */
   async getManualBroadcasts(
-    page?: number,
-    limit?: number,
+    params?: { page?: number; limit?: number; offset?: number },
   ): Promise<ManualBroadcastsResponse> {
     const queryParams = new URLSearchParams();
-    if (page) queryParams.append("page", page.toString());
-    if (limit) queryParams.append("limit", limit.toString());
+
+    if (params) {
+      if (params.offset !== undefined) queryParams.append("offset", params.offset.toString());
+      if (params.limit !== undefined) queryParams.append("limit", params.limit.toString());
+    }
 
     const queryString = queryParams.toString();
-    const endpoint = `/manual-broadcasts${queryString ? `?${queryString}` : ""}`;
+    const url = `${API_CONFIG.BASE_URL}/communications/manual-broadcasts${queryString ? `?${queryString}` : ""}`;
 
-    return this.request<ManualBroadcastsResponse>(endpoint);
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error("Manual Broadcasts API Error:", {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorBody,
+          url,
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Failed to fetch manual broadcasts:", error);
+      throw error;
+    }
   }
 
   // ========================

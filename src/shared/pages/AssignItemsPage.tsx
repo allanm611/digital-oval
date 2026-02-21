@@ -48,10 +48,10 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
     (Offer | Product | Segment | BackendCampaignType)[]
   >([]);
   const [assignedItemIds, setAssignedItemIds] = useState<(number | string)[]>(
-    []
+    [],
   );
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number | string>>(
-    new Set()
+    new Set(),
   );
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
@@ -115,21 +115,21 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
           case "offers":
             catalog = await offerCategoryService.getCategoryById(
               Number(catalogId),
-              true
+              true,
             );
             setCatalogName(catalog.data?.name || "");
             break;
           case "products":
             catalog = await productCategoryService.getCategoryById(
               Number(catalogId),
-              true
+              true,
             );
             setCatalogName(catalog.data?.name || "");
             break;
           case "segments":
             catalog = await segmentService.getSegmentCategoryById(
               Number(catalogId),
-              true
+              true,
             );
             setCatalogName(catalog.data?.name || "");
             break;
@@ -137,11 +137,11 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
             const campaignCatalog =
               await campaignService.getCampaignCategoryById(
                 Number(catalogId),
-                true
+                true,
               );
             setCatalogName(
               (campaignCatalog as { data?: { name?: string } })?.data?.name ||
-                ""
+                "",
             );
             break;
         }
@@ -239,11 +239,11 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                 const offersResponse =
                   await offerCategoryService.getCategoryOffers(
                     Number(catalogId),
-                    { limit: 100, skipCache: true }
+                    { limit: 100, skipCache: true },
                   );
                 const offers = (offersResponse.data || []) as Offer[];
                 const assignedSet = new Set<number | string>(
-                  offers.map((offer) => offer.id)
+                  offers.map((offer) => offer.id),
                 );
                 const catalogTag = buildCatalogTag(catalogId);
                 (itemsData as Offer[]).forEach((offer) => {
@@ -292,7 +292,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                   const segmentsResponse =
                     await segmentService.getSegmentsByCategory(
                       Number(catalogId),
-                      { skipCache: true }
+                      { skipCache: true },
                     );
                   // Handle PaginatedResponse structure
                   let categorySegments: Segment[] = [];
@@ -308,11 +308,12 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                     categorySegments = segmentsResponse as Segment[];
                   }
                   const assignedSet = new Set<number | string>(
-                    categorySegments.map((s: Segment) => s.id)
+                    categorySegments.map((s: Segment) => s.id),
                   );
                   const catalogTag = buildCatalogTag(catalogId);
-                  (itemsData as Segment[]).forEach((segment) => {
+                  ((itemsData as Segment[]) || []).forEach((segment) => {
                     if (
+                      segment?.tags &&
                       Array.isArray(segment.tags) &&
                       segment.tags.includes(catalogTag)
                     ) {
@@ -345,7 +346,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                           (s.category &&
                             String(s.category) === String(catalogId)) ||
                           (Array.isArray(s.tags) &&
-                            s.tags.includes(buildCatalogTag(catalogId)))
+                            s.tags.includes(buildCatalogTag(catalogId))),
                       )
                       .map((s: Segment) => s.id);
                   } catch {
@@ -359,29 +360,32 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                   const campaignsResponse =
                     await campaignService.getCampaignsByCategory(
                       Number(catalogId),
-                      { limit: 100, skipCache: true }
+                      { limit: 100, skipCache: true },
                     );
                   const campaigns = (campaignsResponse.data ||
                     []) as BackendCampaignType[];
                   const assignedSet = new Set<number | string>(
-                    campaigns.map((campaign) => campaign.id)
+                    campaigns.map((campaign) => campaign.id),
                   );
                   const catalogTag = buildCatalogTag(catalogId);
-                  (itemsData as BackendCampaignType[]).forEach((campaign) => {
-                    if (
-                      Array.isArray(campaign.tags) &&
-                      campaign.tags.includes(catalogTag)
-                    ) {
-                      assignedSet.add(campaign.id);
-                    }
-                    // Also check if category_id matches
-                    if (
-                      campaign.category_id &&
-                      Number(campaign.category_id) === Number(catalogId)
-                    ) {
-                      assignedSet.add(campaign.id);
-                    }
-                  });
+                  ((itemsData as BackendCampaignType[]) || []).forEach(
+                    (campaign) => {
+                      if (
+                        campaign?.tags &&
+                        Array.isArray(campaign.tags) &&
+                        campaign.tags.includes(catalogTag)
+                      ) {
+                        assignedSet.add(campaign.id);
+                      }
+                      // Also check if category_id matches
+                      if (
+                        campaign.category_id &&
+                        Number(campaign.category_id) === Number(catalogId)
+                      ) {
+                        assignedSet.add(campaign.id);
+                      }
+                    },
+                  );
                   assigned = Array.from(assignedSet);
                 } catch {
                   // Fallback: check tags on all campaigns
@@ -392,7 +396,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                         (campaign.category_id &&
                           Number(campaign.category_id) === Number(catalogId)) ||
                         (Array.isArray(campaign.tags) &&
-                          campaign.tags.includes(catalogTag))
+                          campaign.tags.includes(catalogTag)),
                     )
                     .map((campaign) => campaign.id);
                 }
@@ -412,7 +416,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       } catch (err) {
         showError(
           `Failed to load ${typeInfo.plural}`,
-          err instanceof Error ? err.message : "Unknown error"
+          err instanceof Error ? err.message : "Unknown error",
         );
         setItems([]); // Set empty array on error
       } finally {
@@ -431,9 +435,10 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
     if (searchTerm.trim()) {
       filtered = filtered.filter(
         (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (item.description &&
-            item.description.toLowerCase().includes(searchTerm.toLowerCase()))
+          (item.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (item.description || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -441,29 +446,29 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
     if (itemType === "offers") {
       if (filters.status) {
         filtered = filtered.filter(
-          (item) => (item as Offer).status === filters.status
+          (item) => (item as Offer).status === filters.status,
         );
       }
       if (filters.type) {
         filtered = filtered.filter(
-          (item) => (item as Offer).offer_type === filters.type
+          (item) => (item as Offer).offer_type === filters.type,
         );
       }
     } else if (itemType === "segments") {
       if (filters.type) {
         filtered = filtered.filter(
-          (item) => (item as Segment).type === filters.type
+          (item) => (item as Segment).type === filters.type,
         );
       }
       if (filters.isActive !== null && filters.isActive !== undefined) {
         filtered = filtered.filter(
-          (item) => (item as Segment).is_active === filters.isActive
+          (item) => (item as Segment).is_active === filters.isActive,
         );
       }
     } else if (itemType === "products") {
       if (filters.isActive !== null && filters.isActive !== undefined) {
         filtered = filtered.filter(
-          (item) => (item as Product).is_active === filters.isActive
+          (item) => (item as Product).is_active === filters.isActive,
         );
       }
     }
@@ -474,7 +479,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
   // Handle select all
   const handleSelectAll = () => {
     const availableItems = filteredItems.filter(
-      (item) => !assignedItemIds.includes(item.id)
+      (item) => !assignedItemIds.includes(item.id),
     );
 
     if (selectedItemIds.size === availableItems.length) {
@@ -523,7 +528,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       const successfulAssignments: (number | string)[] = [];
       const catalogIdNumber = Number(catalogId);
       const catalogTag = buildCatalogTag(
-        Number.isNaN(catalogIdNumber) ? catalogId || "" : catalogIdNumber
+        Number.isNaN(catalogIdNumber) ? catalogId || "" : catalogIdNumber,
       );
 
       // Assign each item individually
@@ -534,9 +539,11 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               const offer = items.find((item) => item.id === itemId) as
                 | Offer
                 | undefined;
-              const existingTags = Array.isArray(offer?.tags)
-                ? offer?.tags ?? []
-                : [];
+              if (!offer) {
+                console.error("Offer not found");
+                break;
+              }
+              const existingTags = Array.isArray(offer.tags) ? offer.tags : [];
               const updatedTagsSet = new Set(existingTags);
               updatedTagsSet.add(catalogTag);
               const updatedTags = Array.from(updatedTagsSet);
@@ -567,26 +574,30 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               const product = items.find((item) => item.id === itemId) as
                 | Product
                 | undefined;
+              if (!product) {
+                console.error("Product not found");
+                break;
+              }
               const operations: Promise<unknown>[] = [];
 
               if (
-                (!product?.category_id || product.category_id === null) &&
+                (!product.category_id || product.category_id === null) &&
                 !Number.isNaN(catalogIdNumber)
               ) {
                 operations.push(
                   productService.updateProduct(Number(itemId), {
                     category_id: catalogIdNumber,
-                  })
+                  }),
                 );
               }
 
               const hasTag =
-                Array.isArray(product?.tags) &&
-                product.tags?.includes(catalogTag);
+                Array.isArray(product.tags) &&
+                product.tags.includes(catalogTag);
 
               if (!hasTag) {
                 operations.push(
-                  productService.addProductTag(Number(itemId), catalogTag)
+                  productService.addProductTag(Number(itemId), catalogTag),
                 );
               }
 
@@ -599,8 +610,12 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               const segment = items.find((item) => item.id === itemId) as
                 | Segment
                 | undefined;
-              const existingTags = Array.isArray(segment?.tags)
-                ? segment?.tags ?? []
+              if (!segment) {
+                console.error("Segment not found");
+                break;
+              }
+              const existingTags = Array.isArray(segment.tags)
+                ? segment.tags
                 : [];
               const updatedTagsSet = new Set(existingTags);
               updatedTagsSet.add(catalogTag);
@@ -633,8 +648,12 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
               const campaign = items.find((item) => item.id === itemId) as
                 | BackendCampaignType
                 | undefined;
-              const existingTags = Array.isArray(campaign?.tags)
-                ? campaign?.tags ?? []
+              if (!campaign) {
+                console.error("Campaign not found");
+                break;
+              }
+              const existingTags = Array.isArray(campaign.tags)
+                ? campaign.tags
                 : [];
               const updatedTagsSet = new Set(existingTags);
               updatedTagsSet.add(catalogTag);
@@ -663,7 +682,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
 
               await campaignService.updateCampaign(
                 Number(itemId),
-                updatePayload
+                updatePayload,
               );
               break;
             }
@@ -676,10 +695,10 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
             err instanceof Error
               ? err.message
               : typeof err === "object" && err !== null && "error" in err
-              ? String((err as { error: unknown }).error)
-              : typeof err === "object" && err !== null && "message" in err
-              ? String((err as { message: unknown }).message)
-              : `Failed to assign ${typeInfo.singular}`;
+                ? String((err as { error: unknown }).error)
+                : typeof err === "object" && err !== null && "message" in err
+                  ? String((err as { message: unknown }).message)
+                  : `Failed to assign ${typeInfo.singular}`;
 
           // Show specific error for the first failed item
           if (failed === 1) {
@@ -691,14 +710,14 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       if (success > 0) {
         if (failed > 0) {
           showError(
-            `${success} ${typeInfo.plural} assigned successfully, ${failed} failed.`
+            `${success} ${typeInfo.plural} assigned successfully, ${failed} failed.`,
           );
         } else {
           showSuccess(`${success} ${typeInfo.plural} assigned successfully`);
         }
         if (successfulAssignments.length > 0) {
           setAssignedItemIds((prev) =>
-            Array.from(new Set([...prev, ...successfulAssignments]))
+            Array.from(new Set([...prev, ...successfulAssignments])),
           );
         }
         // Navigate back to catalog page
@@ -710,7 +729,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
       showError(
         err instanceof Error
           ? err.message
-          : `Failed to assign ${typeInfo.plural}. Please try again.`
+          : `Failed to assign ${typeInfo.plural}. Please try again.`,
       );
     } finally {
       setAssigning(false);
@@ -719,7 +738,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
 
   // Get status display
   const getStatusDisplay = (
-    item: Offer | Product | Segment | BackendCampaignType
+    item: Offer | Product | Segment | BackendCampaignType,
   ) => {
     if (itemType === "offers") {
       const offer = item as Offer;
@@ -738,7 +757,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
 
   // Get type display
   const getTypeDisplay = (
-    item: Offer | Product | Segment | BackendCampaignType
+    item: Offer | Product | Segment | BackendCampaignType,
   ) => {
     if (itemType === "offers") {
       const offer = item as Offer;
@@ -756,7 +775,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
 
   // Get created at display
   const getCreatedAtDisplay = (
-    item: Offer | Product | Segment | BackendCampaignType
+    item: Offer | Product | Segment | BackendCampaignType,
   ) => {
     const createdAt =
       (item as Offer).created_at ||
@@ -809,7 +828,7 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
   };
 
   const availableItems = filteredItems.filter(
-    (item) => !assignedItemIds.includes(item.id)
+    (item) => !assignedItemIds.includes(item.id),
   );
   const allSelected =
     availableItems.length > 0 &&
@@ -921,8 +940,8 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                   filters.isActive === null || filters.isActive === undefined
                     ? ""
                     : filters.isActive
-                    ? "active"
-                    : "inactive"
+                      ? "active"
+                      : "inactive"
                 }
                 onChange={(value) =>
                   setFilters({
@@ -947,8 +966,8 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                 filters.isActive === null || filters.isActive === undefined
                   ? ""
                   : filters.isActive
-                  ? "active"
-                  : "inactive"
+                    ? "active"
+                    : "inactive"
               }
               onChange={(value) =>
                 setFilters({
@@ -1103,15 +1122,15 @@ function AssignItemsPage({ itemType }: AssignItemsPageProps) {
                             isAssigned
                               ? "border-gray-300 bg-gray-100 cursor-not-allowed"
                               : isSelected
-                              ? "border-blue-600 bg-blue-600"
-                              : "border-gray-300 hover:border-gray-400"
+                                ? "border-blue-600 bg-blue-600"
+                                : "border-gray-300 hover:border-gray-400"
                           }`}
                           title={
                             isAssigned
                               ? "Already in catalog"
                               : isSelected
-                              ? "Deselect"
-                              : "Select"
+                                ? "Deselect"
+                                : "Select"
                           }
                         >
                           {isSelected && (

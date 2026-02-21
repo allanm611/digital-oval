@@ -49,12 +49,20 @@ export interface CustomerFormData {
   firstName: string;
   lastName: string;
   msisdn: string;
+  alternatemsisdns: string;
   email: string;
+  alternateEmail: string;
+  gender: string;
+  dateOfBirth: string;
+  languagePreference: string;
   city: string;
-  customerType: string;
-  tariff: string;
-  status: string;
-  simType: string;
+  physicalAddress: string;
+  region: string;
+  postalCode: string;
+  countryCode: string;
+  customerTier: string;
+  preferredChannel: string;
+  timezone: string;
 }
 
 export interface CreateCustomerRequest {

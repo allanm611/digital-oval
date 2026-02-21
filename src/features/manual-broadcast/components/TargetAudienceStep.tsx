@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { AlertCircle, Loader2, Plus, List } from "lucide-react";
 import { color, tw, button as buttonTokens } from "../../../shared/utils/utils";
+import { isValidCountryCodePhone, validateContacts } from "../../../shared/utils/validation";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -43,6 +44,7 @@ export default function TargetAudienceStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPickerModal, setShowPickerModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [manualInputError, setManualInputError] = useState("");
 
   // Sync local state with data prop whenever component mounts or data changes
   useEffect(() => {
@@ -100,10 +102,25 @@ export default function TargetAudienceStep({
   const validateManualInput = () => {
     if (!manualInput.trim()) return false;
     const lines = manualInput.split("\n").filter((line) => line.trim());
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[\d+\-() \s]{5,}$/;
+    const validation = validateContacts(lines);
+    return validation.valid;
+  };
 
-    return lines.some((line) => emailRegex.test(line) || phoneRegex.test(line));
+  // Check for invalid phone numbers in real-time
+  const checkManualInputErrors = () => {
+    if (!manualInput.trim()) {
+      setManualInputError("");
+      return;
+    }
+
+    const lines = manualInput.split("\n").filter((line) => line.trim());
+    const validation = validateContacts(lines);
+
+    if (!validation.valid) {
+      setManualInputError("Phone numbers begin with country code");
+    } else {
+      setManualInputError("");
+    }
   };
 
   const isFormValid =
@@ -185,6 +202,17 @@ export default function TargetAudienceStep({
 
       // Handle manual input method
       if (inputMethod === "manual") {
+        // Validate that all entries are valid emails or phone numbers with country code
+        const lines = manualInput.split("\n").filter((line) => line.trim());
+        const validation = validateContacts(lines);
+
+        if (!validation.valid) {
+          setError(
+            `Phone number must begin with country code. Invalid: ${validation.invalidLines.slice(0, 3).join(", ")}${validation.invalidLines.length > 3 ? ", ..." : ""}`
+          );
+          return;
+        }
+
         updateData.audienceFileText = manualInput;
         // Calculate the number of recipients from manual input
         const recipientLines = manualInput
@@ -361,15 +389,43 @@ export default function TargetAudienceStep({
             <textarea
               value={manualInput}
               onChange={(e) => {
-                setManualInput(e.target.value);
+                // Only allow numbers, newlines, and @ . for emails
+                const value = e.target.value;
+                // Allow digits, newlines, @, and . (for emails)
+                const filtered = value.replace(/[^0-9\n@.]/g, "");
+                setManualInput(filtered);
                 setError("");
+                // Check for validation errors in real-time
+                setTimeout(() => {
+                  const lines = filtered.split("\n").filter((line) => line.trim());
+                  if (lines.length > 0) {
+                    const validation = validateContacts(lines);
+                    if (!validation.valid) {
+                      setManualInputError("Phone numbers begin with country code");
+                    } else {
+                      setManualInputError("");
+                    }
+                  } else {
+                    setManualInputError("");
+                  }
+                }, 0);
               }}
-              placeholder="Enter emails or phone numbers (one per line)&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;+33612345678&#10;+1234567890"
+              placeholder="Enter emails or phone numbers (one per line)&#10;Phone numbers must begin with country code&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;254764555247&#10;254750902921"
               rows={10}
               disabled={isSubmitting}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--primary-color,#5EC6B1)] disabled:opacity-50 font-mono"
+              className={`w-full px-3 py-2 text-sm border ${
+                manualInputError ? "border-red-400" : "border-gray-300"
+              } rounded-md focus:outline-none focus:ring-2 ${
+                manualInputError ? "focus:ring-red-400" : "focus:ring-[var(--primary-color,#5EC6B1)]"
+              } disabled:opacity-50 font-mono`}
             />
-            {manualInput.trim() && (
+
+            {/* Inline Error Message */}
+            {manualInputError && (
+              <p className="mt-2 text-sm text-red-600">{manualInputError}</p>
+            )}
+
+            {manualInput.trim() && !manualInputError && (
               <div className="mt-3 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div
@@ -418,18 +474,18 @@ export default function TargetAudienceStep({
         )}
 
         {/* Actions */}
-        <div className="flex items-center justify-end space-x-3 pt-4">
+        <div className="sticky bottom-12 z-40 bg-white flex items-center justify-end space-x-3 py-4">
           <button
             type="button"
             onClick={handleNext}
-            disabled={isSubmitting || !isFormValid}
+            disabled={isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "")}
             className="px-4 py-2 rounded-md transition-colors text-sm font-medium text-white flex items-center justify-center"
             style={{
               backgroundColor:
-                isSubmitting || !isFormValid
+                isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "")
                   ? color.text.muted
                   : color.primary.action,
-              cursor: isSubmitting || !isFormValid ? "not-allowed" : "pointer",
+              cursor: isSubmitting || !isFormValid || (inputMethod === "manual" && manualInputError !== "") ? "not-allowed" : "pointer",
             }}
           >
             {isSubmitting ? (

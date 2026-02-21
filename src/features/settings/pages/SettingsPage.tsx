@@ -139,11 +139,7 @@ const senderIds = [
 
 // Routes - Using actual hardcoded data from configurationPageConfigs
 const routes = [
-  { value: "Route 1", label: "Route 1" },
-  { value: "Route 2", label: "Route 2" },
-  { value: "Route 3", label: "Route 3" },
-  { value: "Route 4", label: "Route 4" },
-  { value: "Route 5", label: "Route 5" },
+  { value: "Effortel SMS Gateway", label: "Effortel SMS Gateway" },
 ];
 
 // DND Days
@@ -211,7 +207,7 @@ export default function SettingsPage() {
           default_communication_channel:
             parsed.default_communication_channel || "sms",
           default_sender_id: parsed.default_sender_id || "Effortel",
-          default_route: parsed.default_route || "Route 1",
+          default_route: parsed.default_route || "Effortel SMS Gateway",
           dnd_enabled:
             parsed.dnd_enabled !== undefined ? parsed.dnd_enabled : true,
           dnd_start_time: parsed.dnd_start_time || "21:00",
@@ -235,7 +231,7 @@ export default function SettingsPage() {
       character_set: "gsm-7",
       default_communication_channel: "sms",
       default_sender_id: "Effortel",
-      default_route: "Route 1",
+      default_route: "Effortel SMS Gateway",
       dnd_enabled: true,
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",

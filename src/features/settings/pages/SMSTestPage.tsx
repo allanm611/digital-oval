@@ -1,16 +1,22 @@
 import { useState } from "react";
-import { Send, AlertCircle, CheckCircle, Loader } from "lucide-react";
+import {  AlertCircle, CheckCircle, Loader } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { useToast } from "../../../contexts/ToastContext";
 import { smsTestService } from "../../routes/services/smsTestService";
 
+interface MessageResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
 export default function SMSTestPage() {
   const { success, error: showError } = useToast();
   const [msisdn, setMsisdn] = useState("254764555247");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [response, setResponse] = useState<any>(null);
+  const [response, setResponse] = useState<MessageResponse | null>(null);
+  const [messageError, setMessageError] = useState("");
 
   const handleSendTest = async () => {
     // Validation
@@ -19,9 +25,11 @@ export default function SMSTestPage() {
       return;
     }
     if (!message.trim()) {
-      showError("Validation Error", "Please enter a message");
+      setMessageError("Please enter a message");
       return;
     }
+
+    setMessageError("");
 
     setIsLoading(true);
     setResponse(null);
@@ -97,21 +105,35 @@ export default function SMSTestPage() {
                 </label>
                 <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    setMessageError("");
+                  }}
                   placeholder="Enter your test message..."
                   rows={5}
-                  className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm`}
+                  className={`w-full px-4 py-2 border ${
+                    messageError ? "border-red-400" : "border-gray-300"
+                  } ${tw.rounded} focus:ring-2 ${
+                    messageError ? "focus:ring-red-400" : "focus:ring-blue-500"
+                  } focus:border-transparent text-sm`}
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Message length: {message.length} characters
-                </p>
+                {messageError ? (
+                  <p className="mt-2 flex items-center gap-1.5 text-sm text-red-600">
+                    <AlertCircle className="w-4 h-4" />
+                    {messageError}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Message length: {message.length} characters
+                  </p>
+                )}
               </div>
 
               {/* Send Button */}
               <button
                 onClick={handleSendTest}
                 disabled={isLoading}
-                className="inline-flex items-center justify-center px-4 py-2 text-white font-medium rounded transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                className="inline-flex items-center justify-center px-4 py-2 text-white font-medium rounded transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: color.primary.action,
                 }}
@@ -122,18 +144,16 @@ export default function SMSTestPage() {
                     Sending...
                   </>
                 ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Send Test SMS
-                  </>
+                  "Send Test SMS"
                 )}
               </button>
             </div>
 
             {/* Response */}
             {response && (
+              <div className = "pl-4">
               <div
-                className={`bg-white border ${tw.rounded} p-6 ${
+                className={`bg-white border ${tw.rounded} p-6  ${
                   response.success ? "border-green-300" : "border-red-300"
                 }`}
               >
@@ -171,6 +191,7 @@ export default function SMSTestPage() {
                 >
                   Copy Response
                 </button>
+              </div>
               </div>
             )}
           </div>

@@ -50,7 +50,7 @@ export default function HeadlessSelect({
 
   const filteredOptions = searchable
     ? options.filter((option) =>
-        option.label.toLowerCase().includes(searchTerm.toLowerCase()),
+        (option.label || "").toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : options;
 
@@ -80,9 +80,13 @@ export default function HeadlessSelect({
 
   return (
     <div className={`relative ${className}`}>
-      <Listbox value={value} onChange={(newValue) => {
-        onChange(newValue);
-      }} disabled={disabled}>
+      <Listbox
+        value={value}
+        onChange={(newValue) => {
+          onChange(newValue);
+        }}
+        disabled={disabled}
+      >
         <div className="relative w-full" ref={buttonRef}>
           <Listbox.Button
             onClick={() => {
@@ -130,55 +134,55 @@ export default function HeadlessSelect({
                 zIndex: effectiveZIndex,
               }}
             >
-            {searchable && (
-              <div
-                className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search options..."
-                  className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            )}
-
-            {filteredOptions.length === 0 ? (
-              <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
-                No options found.
-              </div>
-            ) : (
-              filteredOptions.map((option) => (
+              {searchable && (
                 <div
-                  key={option.value}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
-                    value === option.value
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-900 hover:bg-gray-50"
-                  } ${
-                    option.disabled
-                      ? "opacity-50 cursor-not-allowed"
-                      : "cursor-pointer"
-                  }`}
+                  className="sticky top-0 bg-white z-10 px-3 py-2 border-b border-gray-200"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  <span
-                    className={`block ${
-                      value === option.value ? "font-medium" : "font-normal"
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search options..."
+                    className={`w-full px-2 py-1 text-sm border border-gray-200 ${tw.rounded} focus:outline-none focus:ring-0 focus:border-gray-200`}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
+
+              {filteredOptions.length === 0 ? (
+                <div className="relative cursor-default select-none py-2.5 pl-10 pr-6 text-gray-500 whitespace-nowrap">
+                  No options found.
+                </div>
+              ) : (
+                filteredOptions.map((option) => (
+                  <div
+                    key={option.value}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(option.value);
+                      setIsOpen(false);
+                    }}
+                    className={`relative cursor-default select-none py-2.5 pl-3 pr-6 transition-colors duration-150 whitespace-nowrap ${
+                      value === option.value
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-900 hover:bg-gray-50"
+                    } ${
+                      option.disabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
                     }`}
                   >
-                    {option.label}
-                  </span>
-                </div>
-              ))
-            )}
+                    <span
+                      className={`block ${
+                        value === option.value ? "font-medium" : "font-normal"
+                      }`}
+                    >
+                      {option.label}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>,
             document.body,
           )}
