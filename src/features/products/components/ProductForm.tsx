@@ -1237,6 +1237,7 @@ export default function ProductForm({
                   <input
                     type="number"
                     min="1"
+                    max="8760"
                     step="1"
                     value={formData.validity_hours ?? ""}
                     onChange={(e) =>
@@ -1247,7 +1248,7 @@ export default function ProductForm({
                     }
                     className={`w-full px-4 py-2.5 border ${tw.rounded} text-sm transition-all`}
                     style={{ borderColor: color.border.default }}
-                    placeholder="e.g., 72"
+                    placeholder="1-8760 hours"
                     onFocus={(e) => {
                       e.target.style.borderColor = color.primary.accent;
                       e.target.style.boxShadow = `0 0 0 3px ${color.primary.accent}20`;
