@@ -55,7 +55,7 @@ export default function ManualBroadcastListsPage() {
             execution_id: String(exec.id),
             source_type: exec.source_type,
             source_id: exec.source_id || null,
-            source_name: exec.source_name || exec.name || `Broadcast ${exec.id}`,
+            source_name: exec.name || exec.source_name || `Broadcast ${exec.id}`,
             channels: exec.channels || [],
             total_recipients: exec.total_recipients || 0,
             messages_sent: exec.messages_sent || 0,
