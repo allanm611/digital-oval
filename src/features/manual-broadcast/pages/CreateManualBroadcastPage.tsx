@@ -232,13 +232,17 @@ export default function CreateManualBroadcastPage() {
     try {
       setIsLoading(true);
 
-      // Check if error is a 503 gateway error
-      const is503Error = (err: unknown): boolean => {
+      // Check if error is a gateway timeout error (504/503)
+      const isGatewayError = (err: unknown): boolean => {
         if (err instanceof Error) {
+          const message = err.message.toLowerCase();
           return (
-            err.message.includes("503") ||
-            err.message.includes("Service temporarily unavailable") ||
-            err.message.includes("gateway")
+            message.includes("504") ||
+            message.includes("503") ||
+            message.includes("gateway timeout") ||
+            message.includes("service temporarily unavailable") ||
+            message.includes("gateway") ||
+            message.includes("timeout")
           );
         }
         return false;
@@ -246,37 +250,31 @@ export default function CreateManualBroadcastPage() {
 
       // Case 1: QuickList-based submission (selected or created quicklist)
       if (broadcastData.quicklistId) {
-        try {
-          const response = await communicationService.sendCommunication({
-            source_type: "quicklist",
-            source_id: broadcastData.quicklistId,
-            channels: broadcastData.channel ? [broadcastData.channel] : [],
-            message_template: {
-              ...(broadcastData.messageTitle &&
-              broadcastData.channel === "EMAIL"
-                ? { title: broadcastData.messageTitle }
-                : {}),
-              body: broadcastData.messageBody || "",
-            },
-            filters: {
-              column_conditions: [],
-              limit: 1000,
-            },
-            batch_size: user?.user_id,
-          });
+        const response = await communicationService.sendCommunication({
+          source_type: "quicklist",
+          source_id: broadcastData.quicklistId,
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle &&
+            broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          filters: {
+            column_conditions: [],
+            limit: 1000,
+          },
+          batch_size: user?.user_id,
+        });
 
-          if (response.success) {
-            showToast(t.manualBroadcast.createdSuccess);
-            clearPersistedFormData("broadcast_form_data");
-            navigate("/dashboard/manual-communications");
-          } else {
-            throw new Error("Communication sending failed");
-          }
-        } catch (err) {
-          // For quicklist, show toast and route immediately
-          showToast("Communication created successfully");
+        if (response.success) {
+          showToast(t.manualBroadcast.createdSuccess);
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
+        } else {
+          // Show actual error from backend
+          throw new Error(response.error || "Communication sending failed");
         }
       }
       // Case 2: Manual input submission
@@ -307,17 +305,33 @@ export default function CreateManualBroadcastPage() {
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
         } else {
-          throw new Error("Communication sending failed");
+          // Show actual error from backend
+          throw new Error(response.error || "Communication sending failed");
         }
       } else {
         throw new Error("No audience selected or provided");
       }
     } catch (err) {
       console.error("Failed to create manual broadcast:", err);
-      showError(
-        t.manualBroadcast.createFailed,
-        (err as Error).message || "An error occurred",
-      );
+
+      // Detect gateway timeout errors specifically
+      const errorMessage = (err as Error).message || "An error occurred";
+      const isGatewayTimeout =
+        errorMessage.toLowerCase().includes("504") ||
+        errorMessage.toLowerCase().includes("gateway timeout") ||
+        errorMessage.toLowerCase().includes("timeout");
+
+      if (isGatewayTimeout) {
+        showError(
+          "Failed to create manual communication",
+          "The request timed out. Please try again.",
+        );
+      } else {
+        showError(
+          t.manualBroadcast.createFailed,
+          errorMessage,
+        );
+      }
     } finally {
       setIsLoading(false);
     }
