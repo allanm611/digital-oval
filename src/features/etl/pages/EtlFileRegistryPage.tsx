@@ -784,7 +784,7 @@ export default function EtlFileRegistryPage() {
             {/* Error Message */}
             {uploadError && (
               <div
-                className={`p-3 ${tw.rounded} border flex items-start gap-3`}
+                className={`p-4 ${tw.rounded} border flex items-start gap-3`}
                 style={{
                   backgroundColor: `${color.status.danger}10`,
                   borderColor: color.status.danger,
@@ -796,17 +796,17 @@ export default function EtlFileRegistryPage() {
                 />
                 <div className="flex-1">
                   <p
-                    className="text-sm font-medium"
+                    className="text-sm font-medium mb-2"
                     style={{ color: color.status.danger }}
                   >
                     Upload Error
                   </p>
-                  <p
-                    className="text-sm mt-1"
+                  <div
+                    className="text-sm whitespace-pre-wrap"
                     style={{ color: color.status.danger }}
                   >
                     {uploadError}
-                  </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -866,9 +866,14 @@ export default function EtlFileRegistryPage() {
                     }
                   } catch (err) {
                     const errorMsg = (err as Error).message || "Failed to upload file";
-                    if (errorMsg.includes("duplicate key") || errorMsg.includes("unique constraint")) {
-                      setUploadError(`A file with the name "${uploadFile.name}" already exists. Please use a different file name or delete the existing file first.`);
+
+                    // Check for duplicate file error
+                    if (errorMsg.includes("duplicate key") ||
+                        errorMsg.includes("unique constraint") ||
+                        errorMsg.includes("file_category_file_name")) {
+                      setUploadError(`📁 File Already Exists\n\nA ${uploadCategory} file named "${uploadFile.name}" has already been uploaded. You can:\n\n• Upload a file with a different name\n• Delete the existing file and re-upload\n• View existing files in the registry`);
                     } else {
+                      // Show backend error message directly
                       setUploadError(errorMsg);
                     }
                   } finally {

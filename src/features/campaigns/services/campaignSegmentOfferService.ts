@@ -140,9 +140,7 @@ class CampaignSegmentOfferService {
       method: "GET",
       headers: {
         ...getAuthHeaders(),
-        ...(skipCache && { "Cache-Control": "no-cache, no-store, must-revalidate" }),
       },
-      ...(skipCache && { cache: "no-store" }),
     });
 
     if (!response.ok) {

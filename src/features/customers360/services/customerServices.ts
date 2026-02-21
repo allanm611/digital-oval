@@ -22,9 +22,6 @@ class CustomerService {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
         ...options.headers,
       },
     });
@@ -146,9 +143,6 @@ class CustomerService {
       const response = await fetch(url, {
         headers: {
           ...getAuthHeaders(),
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
         },
       });
 

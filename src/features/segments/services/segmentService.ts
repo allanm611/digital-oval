@@ -1529,13 +1529,6 @@ class SegmentService {
       "Content-Type": "application/json",
     };
 
-    // Add cache-busting headers when skipCache is true
-    if (skipCache) {
-      headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
-      headers["Pragma"] = "no-cache";
-      headers["Expires"] = "0";
-    }
-
     const response = await fetch(url, {
       headers,
     });

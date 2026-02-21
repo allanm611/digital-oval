@@ -215,14 +215,14 @@ export default function CreateQuickListModal({
   };
 
   const downloadSampleFile = async () => {
-    // Create sample data
+    // Create sample data with Kenyan names
     const sampleData = [
-      ["subscription_id", "email", "first_name", "last_name", "country"],
-      ["SUB001", "john.doe@example.com", "John", "Doe", "USA"],
-      ["SUB002", "jane.smith@example.com", "Jane", "Smith", "UK"],
-      ["SUB003", "bob.wilson@example.com", "Bob", "Wilson", "Canada"],
-      ["SUB004", "alice.johnson@example.com", "Alice", "Johnson", "Australia"],
-      ["SUB005", "charlie.brown@example.com", "Charlie", "Brown", "USA"],
+      ["SUBSCRIPTION ID", "EMAIL", "FIRST NAME", "LAST NAME", "COUNTRY"],
+      ["SUB001", "kamau.james@example.com", "James", "Kamau", "Kenya"],
+      ["SUB002", "achieng.mary@example.com", "Mary", "Achieng", "Kenya"],
+      ["SUB003", "kipchoge.david@example.com", "David", "Kipchoge", "Kenya"],
+      ["SUB004", "mueni.susan@example.com", "Susan", "Mueni", "Kenya"],
+      ["SUB005", "okonkwo.peter@example.com", "Peter", "Okonkwo", "Kenya"],
     ];
 
     // Dynamic import - XLSX only loads when download is triggered
@@ -263,6 +263,47 @@ export default function CreateQuickListModal({
     if (files && files.length > 0) {
       processFile(files[0]);
     }
+  };
+
+  // Validate data rows for missing fields
+  const validateDataRows = (fileText: string, delimiter: string, headers: string[]): { validRows: number; invalidRows: Array<{ rowNumber: number; missingFields: string[] }> } => {
+    if (!fileText || !delimiter || headers.length === 0) {
+      return { validRows: 0, invalidRows: [] };
+    }
+
+    let delim = delimiter;
+    if (delim === "\\t" || delim === "\t") {
+      delim = "\t";
+    }
+
+    const lines = fileText.split(/\r?\n/).filter((line) => line.trim().length > 0);
+    const dataLines = lines.slice(1); // Skip header row
+
+    let validRows = 0;
+    const invalidRows: Array<{ rowNumber: number; missingFields: string[] }> = [];
+
+    dataLines.forEach((line, index) => {
+      const values = line
+        .split(delim)
+        .map((v) => v.trim().replace(/^["']|["']$/g, ""));
+
+      const missingFields: string[] = [];
+
+      // Check each column has a value
+      headers.forEach((header, colIndex) => {
+        if (!values[colIndex] || values[colIndex].length === 0) {
+          missingFields.push(header);
+        }
+      });
+
+      if (missingFields.length === 0) {
+        validRows++;
+      } else {
+        invalidRows.push({ rowNumber: index + 2, missingFields }); // +2 because index is 0-based and row 1 is header
+      }
+    });
+
+    return { validRows, invalidRows };
   };
 
   const validateForm = () => {
@@ -623,11 +664,67 @@ export default function CreateQuickListModal({
                           .split(/\r?\n/)
                           .filter((line) => line.trim().length > 0).length - 1;
 
+                      // Validate for missing fields
+                      const validation = validateDataRows(
+                        form.file_text,
+                        form.file_delimiter,
+                        preview.headers,
+                      );
+
                       return (
-                        <div className="mt-4">
+                        <div className="mt-4 space-y-3">
                           <label className="text-sm font-medium text-black mb-2 block">
-                            File Preview
+                            File Preview & Validation
                           </label>
+
+                          {/* Validation Summary */}
+                          <div className="flex gap-4 text-xs">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                              <span>
+                                <strong>{validation.validRows}</strong> valid{" "}
+                                {validation.validRows === 1 ? "row" : "rows"}
+                              </span>
+                            </div>
+                            {validation.invalidRows.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <span>
+                                  <strong>{validation.invalidRows.length}</strong>{" "}
+                                  {validation.invalidRows.length === 1
+                                    ? "row"
+                                    : "rows"}{" "}
+                                  with missing fields
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Missing Fields Error */}
+                          {validation.invalidRows.length > 0 && (
+                            <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                              <p className="text-sm font-medium text-red-800 mb-2">
+                                Rows with missing fields:
+                              </p>
+                              <ul className="text-xs text-red-700 space-y-1">
+                                {validation.invalidRows
+                                  .slice(0, 5)
+                                  .map((item, idx) => (
+                                    <li key={idx}>
+                                      Row {item.rowNumber}:{" "}
+                                      {item.missingFields.join(", ")}
+                                    </li>
+                                  ))}
+                                {validation.invalidRows.length > 5 && (
+                                  <li>
+                                    ... and {validation.invalidRows.length - 5}{" "}
+                                    more rows
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+
                           <div
                             className={`overflow-x-auto border border-gray-200 ${tw.rounded}`}
                           >
@@ -668,8 +765,8 @@ export default function CreateQuickListModal({
                                           className="px-4 py-2 text-xs whitespace-nowrap"
                                         >
                                           {cell || (
-                                            <span className="text-gray-400">
-                                              —
+                                            <span className="text-red-500 font-medium">
+                                              MISSING
                                             </span>
                                           )}
                                         </td>

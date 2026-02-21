@@ -1,4 +1,4 @@
-import { API_CONFIG, getAuthHeaders } from "../../../shared/services/api";
+import { API_CONFIG, getAuthHeaders, buildDirectBackendUrl } from "../../../shared/services/api";
 import {
   QuickListResponse,
   SingleQuickListResponse,
@@ -146,7 +146,8 @@ class QuickListService {
     if (request.created_by)
       formData.append("created_by", String(request.created_by));
 
-    const url = `${BASE_URL}/upload`;
+    // Use buildDirectBackendUrl which routes through proxy on Vercel (same domain, avoids CORS/SSL issues)
+    const url = `${buildDirectBackendUrl("/quicklists")}/upload`;
 
     // Get auth headers but remove Content-Type for multipart/form-data
     const authHeaders = getAuthHeaders();

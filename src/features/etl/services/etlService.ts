@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from "../../../shared/services/api";
+import { buildApiUrl, buildDirectBackendUrl, getAuthHeaders } from "../../../shared/services/api";
 import {
   CategoryFileStatsResponse,
   ETLCategoryDistributionResponse,
@@ -240,7 +240,8 @@ class EtlService {
     const formData = new FormData();
     formData.append("file", file);
 
-    const url = buildApiUrl("/files/upload/etl");
+    // Use buildDirectBackendUrl which routes through proxy on Vercel (same domain, avoids CORS/SSL issues)
+    const url = buildDirectBackendUrl("/files/upload/etl");
 
     // Get auth headers but exclude Content-Type for FormData
     const authHeaders = getAuthHeaders();

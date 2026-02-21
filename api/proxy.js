@@ -36,7 +36,6 @@ process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
     const apiPath = Array.isArray(path) ? path.join("/") : path || "";
 
     // Construct the target URL
-    // Use environment variable or default to the backend URL
     const API_BASE_URL =
       process.env.VITE_API_BASE_URL ||
       process.env.API_BASE_URL ||
@@ -58,37 +57,46 @@ process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
     const targetUrl =
       `${API_BASE_URL}/${apiPath}` + (queryString ? `?${queryString}` : "");
 
-    // Log for debugging in production
-    // console.log("Proxy request:", {
-    //   method: req.method,
-    //   apiPath,
-    //   queryString,
-    //   targetUrl,
-    //   hasApiBaseUrl: !!process.env.API_BASE_URL,
-    // });
-
     // Prepare headers for the backend request
-    const headers = {
-      "Content-Type": "application/json",
-    };
+    const headers = {};
 
     // Forward authorization header if present
     if (req.headers.authorization) {
       headers["Authorization"] = req.headers.authorization;
     }
 
+    // For multipart/form-data, forward Content-Type as-is (with boundary)
+    const isFormData = req.headers["content-type"]?.includes("multipart/form-data");
+    if (isFormData && req.headers["content-type"]) {
+      headers["Content-Type"] = req.headers["content-type"];
+    } else if (req.method !== "GET" && req.method !== "HEAD") {
+      headers["Content-Type"] = "application/json";
+    }
+
     // Prepare request body
     let body = undefined;
     if (req.method !== "GET" && req.method !== "HEAD") {
-      body = JSON.stringify(req.body);
+      if (isFormData) {
+        // For multipart, use the raw body buffer (don't parse or modify)
+        body = req.body;
+      } else {
+        // For JSON, stringify the body
+        body = JSON.stringify(req.body);
+      }
     }
 
-    // Forward the request
+    // Forward the request with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body,
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     // Handle different response types
     let data;

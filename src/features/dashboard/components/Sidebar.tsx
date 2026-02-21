@@ -1985,7 +1985,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2014,7 +2014,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2028,7 +2028,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2080,7 +2080,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2109,7 +2109,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2123,7 +2123,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2175,7 +2175,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2204,7 +2204,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2218,7 +2218,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2270,7 +2270,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2299,7 +2299,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2313,7 +2313,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2396,7 +2396,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2425,7 +2425,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2439,7 +2439,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2523,7 +2523,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2552,7 +2552,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2566,7 +2566,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2650,7 +2650,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2679,7 +2679,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2693,7 +2693,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2780,7 +2780,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2809,7 +2809,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2823,7 +2823,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -2907,7 +2907,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -2936,7 +2936,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -2950,7 +2950,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
@@ -3034,7 +3034,7 @@ export default function Sidebar({
                                 : "md:justify-center xl:justify-between"
                             } ${
                               tw.rounded
-                            } md:p-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
+                            } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-300 ease-out ${
                               !isActive ? "hover:scale-105 hover:shadow-lg" : ""
                             } ${getItemClasses(isExpanded)}`}
                             title={item.name}
@@ -3063,7 +3063,7 @@ export default function Sidebar({
                           </button>
 
                           {isExpanded && (
-                            <ul className="mt-2 md:space-y-2 xl:space-y-2 xl:ml-7 ">
+                            <ul className={`mt-2 md:space-y-2 xl:space-y-2 md:ml-0 ${isMinimized ? "" : "xl:ml-7"}`}>
                               {item.children?.map((child) => {
                                 const ChildIcon = child.icon;
                                 const isChildActive =
@@ -3077,7 +3077,7 @@ export default function Sidebar({
                                       to={child.href}
                                       className={`group flex items-center md:justify-center xl:justify-start gap-x-3 ${
                                         tw.rounded
-                                      } md:p-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
+                                      } md:pl-0 md:pr-0 md:py-3 xl:p-3 text-sm transition-all duration-200 ${getItemClasses(
                                         isChildActive,
                                       )}`}
                                       title={child.name}
