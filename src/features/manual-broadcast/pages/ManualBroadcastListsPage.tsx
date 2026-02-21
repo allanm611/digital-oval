@@ -52,10 +52,10 @@ export default function ManualBroadcastListsPage() {
         const broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
-            execution_id: exec.execution_id,
+            execution_id: String(exec.id),
             source_type: exec.source_type,
             source_id: exec.source_id || null,
-            source_name: exec.source_name || `Execution ${exec.execution_id}`,
+            source_name: exec.source_name || exec.name || `Broadcast ${exec.id}`,
             channels: exec.channels || [],
             total_recipients: exec.total_recipients || 0,
             messages_sent: exec.messages_sent || 0,
@@ -63,8 +63,8 @@ export default function ManualBroadcastListsPage() {
             status: "completed" as const,
             created_at: exec.created_at,
             created_by: exec.created_by || null,
-            message_template: { body: "" },
-            messages_attempted: exec.total_recipients,
+            message_template: exec.message_template || { body: "" },
+            messages_attempted: exec.total_recipients || 0,
             channel_summaries: [],
             execution_time_ms: 0,
           }),
