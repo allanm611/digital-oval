@@ -87,8 +87,6 @@ export default function CampaignsPage() {
     approvalStatus: "all",
     startDateFrom: "",
     startDateTo: "",
-    sortBy: "created_at",
-    sortDirection: "DESC" as "ASC" | "DESC",
   });
   const filterRef = useRef<HTMLDivElement>(null);
   const [showActionMenu, setShowActionMenu] = useState<number | null>(null);
@@ -450,14 +448,6 @@ export default function CampaignsPage() {
           searchParams.startDateTo = filters.startDateTo;
         }
 
-        if (filters.sortBy) {
-          searchParams.sortBy = filters.sortBy;
-        }
-
-        if (filters.sortDirection) {
-          searchParams.sortDirection = filters.sortDirection;
-        }
-
         response = await campaignService.superSearchCampaigns(searchParams);
       } else {
         // Use regular getCampaigns when no filters applied (more efficient)
@@ -465,8 +455,6 @@ export default function CampaignsPage() {
           limit: LIMIT,
           offset: chunkOffset,
           skipCache: true,
-          sortBy: filters.sortBy,
-          sortDirection: filters.sortDirection,
         });
       }
 
@@ -854,15 +842,6 @@ export default function CampaignsPage() {
     { value: "pending", label: "Pending Approval" },
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
-  ];
-
-  const sortOptions = [
-    { value: "created_at", label: "Date Created" },
-    { value: "updated_at", label: "Date Updated" },
-    { value: "name", label: "Campaign Name" },
-    { value: "status", label: "Status" },
-    { value: "approval_status", label: "Approval Status" },
-    { value: "start_date", label: "Start Date" },
   ];
 
   const getStatusBadge = (_status: string) => {
@@ -1938,52 +1917,6 @@ export default function CampaignsPage() {
                       </div>
                     </div>
 
-                    {/* Sorting */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Sort By
-                      </label>
-                      <div className="space-y-3">
-                        <HeadlessSelect
-                          options={sortOptions}
-                          value={filters.sortBy}
-                          onChange={(value) =>
-                            setFilters({ ...filters, sortBy: value as string })
-                          }
-                          placeholder="Select sort field..."
-                        />
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() =>
-                              setFilters({ ...filters, sortDirection: "ASC" })
-                            }
-                            className={`flex-1 px-4 py-2 ${
-                              tw.rounded
-                            } border transition-colors ${
-                              filters.sortDirection === "ASC"
-                                ? `${tw.button} border-transparent`
-                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                            }`}
-                          >
-                            ↑ Ascending
-                          </button>
-                          <button
-                            onClick={() =>
-                              setFilters({ ...filters, sortDirection: "DESC" })
-                            }
-                            className={`flex-1 px-4 py-2 ${
-                              tw.rounded
-                            } border transition-colors ${
-                              filters.sortDirection === "DESC"
-                                ? `${tw.button} border-transparent`
-                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                            }`}
-                          >
-                            ↓ Descending
-                          </button>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -1997,8 +1930,6 @@ export default function CampaignsPage() {
                           approvalStatus: "all",
                           startDateFrom: "",
                           startDateTo: "",
-                          sortBy: "created_at",
-                          sortDirection: "DESC",
                         });
                         setSearchQuery("");
                       }}
