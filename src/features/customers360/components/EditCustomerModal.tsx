@@ -5,6 +5,7 @@ import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { customerService } from "../services/customerServices";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerFormData } from "../types/customer";
@@ -18,42 +19,69 @@ interface EditCustomerModalProps {
 
 type FormData = CustomerFormData;
 
-const CUSTOMER_TYPE_OPTIONS = [
-  { value: "Non-member", label: "Non-member" },
-  { value: "Equity Member", label: "Equity Member" },
-  { value: "Equity Corporate/Business", label: "Equity Corporate/Business" },
+const GENDER_OPTIONS = [
+  { value: "", label: "Select Gender" },
+  { value: "Male", label: "Male" },
+  { value: "Female", label: "Female" },
+  { value: "Other", label: "Other" },
 ];
 
-const TARIFF_OPTIONS = [
-  { value: "Businesses & Corporate", label: "Businesses & Corporate" },
-  { value: "Data SIMs", label: "Data SIMs" },
-  {
-    value: "Equity Group Employees & Partners",
-    label: "Equity Group Employees & Partners",
-  },
-  { value: "Gumzo", label: "Gumzo" },
-  { value: "Gumzo DATA", label: "Gumzo DATA" },
-  { value: "High Value Customers", label: "High Value Customers" },
-  { value: "Infrastructure SIM", label: "Infrastructure SIM" },
-  { value: "Member", label: "Member" },
-  { value: "Non-member", label: "Non-member" },
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "sw", label: "Swahili" },
+  { value: "fr", label: "French" },
 ];
 
-const SIM_TYPE_OPTIONS = [
-  { value: "2/3/4FF Normal", label: "2/3/4FF Normal" },
-  { value: "2/3FF", label: "2/3FF" },
-  { value: "2FF", label: "2FF" },
-  { value: "4FF", label: "4FF" },
-  { value: "4G", label: "4G" },
+const COUNTRY_OPTIONS = [
+  { value: "UGA", label: "Uganda" },
+  { value: "KEN", label: "Kenya" },
+  { value: "TZA", label: "Tanzania" },
+  { value: "RWA", label: "Rwanda" },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "Active", label: "Active" },
-  { value: "Pending", label: "Pending" },
-  { value: "Suspending", label: "Suspending" },
-  { value: "Deactivating", label: "Deactivating" },
-  { value: "Deactivation", label: "Deactivation" },
+const CUSTOMER_TIER_OPTIONS = [
+  { value: "", label: "Select Tier" },
+  { value: "Regular", label: "Regular" },
+  { value: "VIP", label: "VIP" },
+  { value: "Gold", label: "Gold" },
+  { value: "Platinum", label: "Platinum" },
 ];
+
+const PREFERRED_CHANNEL_OPTIONS = [
+  { value: "SMS", label: "SMS" },
+  { value: "USSD", label: "USSD" },
+  { value: "APP", label: "APP" },
+  { value: "EMAIL", label: "EMAIL" },
+  { value: "WHATSAPP", label: "WhatsApp" },
+];
+
+const TIMEZONE_OPTIONS = [
+  { value: "Africa/Kampala", label: "Africa/Kampala" },
+  { value: "Africa/Nairobi", label: "Africa/Nairobi" },
+  { value: "Africa/Dar_es_Salaam", label: "Africa/Dar es Salaam" },
+  { value: "Africa/Kigali", label: "Africa/Kigali" },
+];
+
+const initialFormData: FormData = {
+  subscriptionId: "",
+  firstName: "",
+  lastName: "",
+  msisdn: "",
+  alternatemsisdns: "",
+  email: "",
+  alternateEmail: "",
+  gender: "",
+  dateOfBirth: "",
+  languagePreference: "en",
+  city: "",
+  physicalAddress: "",
+  region: "",
+  postalCode: "",
+  countryCode: "",
+  customerTier: "",
+  preferredChannel: "SMS",
+  timezone: "Africa/Kampala",
+};
 
 export default function EditCustomerModal({
   isOpen,
@@ -63,18 +91,7 @@ export default function EditCustomerModal({
 }: EditCustomerModalProps) {
   const { success, error } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    subscriptionId: "",
-    firstName: "",
-    lastName: "",
-    msisdn: "",
-    email: "",
-    city: "",
-    customerType: "Non-member",
-    tariff: "Non-member",
-    status: "Active",
-    simType: "2FF",
-  });
+  const [formData, setFormData] = useState<FormData>(initialFormData);
 
   // Initialize form data when customer changes
   useEffect(() => {
@@ -84,49 +101,50 @@ export default function EditCustomerModal({
         firstName: customer.firstName || "",
         lastName: customer.lastName || "",
         msisdn: customer.msisdn || "",
+        alternatemsisdns: "",
         email: customer.email || "",
+        alternateEmail: "",
+        gender: "",
+        dateOfBirth: "",
+        languagePreference: "en",
         city: customer.city || "",
-        customerType: customer.customerType || "Non-member",
-        tariff: customer.tariff || "Non-member",
-        status: customer.status || "Active",
-        simType: customer.simType || "2FF",
+        physicalAddress: "",
+        region: "",
+        postalCode: "",
+        countryCode: "",
+        customerTier: "",
+        preferredChannel: "SMS",
+        timezone: "Africa/Kampala",
       });
     }
   }, [customer, isOpen]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-
-    // MSISDN sanitization - remove '+' and limit to 10-15 digits
-    if (name === "msisdn") {
-      const cleaned = value.replace(/[^\d]/g, ""); // Remove all non-digits
-      if (cleaned.length <= 15) {
-        setFormData((prev) => ({ ...prev, [name]: cleaned }));
-      }
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      error("Error", "First and Last names are required");
+    // Validation
+    if (!formData.firstName.trim()) {
+      error("Error", "First name is required");
       return;
     }
 
-    if (
-      !formData.msisdn ||
-      formData.msisdn.length < 10 ||
-      formData.msisdn.length > 15
-    ) {
-      error("Error", "Phone number must be 10-15 digits (no + prefix)");
+    if (!formData.lastName.trim()) {
+      error("Error", "Last name is required");
+      return;
+    }
+
+    if (!formData.msisdn) {
+      error("Error", "Phone number is required");
+      return;
+    }
+
+    if (!isValidCountryCodePhone(formData.msisdn)) {
+      error("Error", "Phone number must begin with country code");
       return;
     }
 
@@ -137,20 +155,14 @@ export default function EditCustomerModal({
 
     setIsLoading(true);
     try {
-      // Call update API
       if (customer) {
         await customerService.updateCustomer(customer.customerId, {
           first_name: formData.firstName,
           last_name: formData.lastName,
-          msisdn: formData.msisdn,
           email: formData.email,
           city: formData.city,
-          subscriber_type: formData.customerType,
-          preferred_channel: formData.tariff,
-          subscriber_status: formData.status,
         });
 
-        // Update local state
         const updatedCustomer: CustomerSubscriptionRecord = {
           ...customer,
           firstName: formData.firstName,
@@ -158,10 +170,6 @@ export default function EditCustomerModal({
           msisdn: formData.msisdn,
           email: formData.email,
           city: formData.city,
-          customerType: formData.customerType,
-          tariff: formData.tariff,
-          status: formData.status,
-          simType: formData.simType,
         };
 
         onCustomerUpdated(updatedCustomer);
@@ -169,7 +177,7 @@ export default function EditCustomerModal({
         onClose();
       }
     } catch (err) {
-      error("Error", "Failed to update customer");
+      error("Error", err instanceof Error ? err.message : "Failed to update customer");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -185,7 +193,7 @@ export default function EditCustomerModal({
       onClick={onClose}
     >
       <div
-        className={`bg-white ${tw.rounded} max-w-xl w-full max-h-[90vh] overflow-y-auto`}
+        className={`bg-white ${tw.rounded} max-w-2xl w-full max-h-[90vh] overflow-y-auto`}
         style={{ zIndex: zIndex.modal + 1 }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -212,51 +220,38 @@ export default function EditCustomerModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {/* Subscription ID and Phone Row */}
+          {/* Subscription ID & Phone */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Subscriber ID
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Subscription ID
               </label>
               <input
                 type="text"
-                name="subscriptionId"
                 value={formData.subscriptionId}
                 disabled
                 className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
               />
-              {/* <p className={`${tw.textSecondary} text-xs mt-1`}>
-                System-generated ID (read-only)
-              </p> */}
             </div>
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Phone (MSISDN) *
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Phone Number (MSISDN) *
               </label>
               <input
                 type="text"
                 name="msisdn"
                 value={formData.msisdn}
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
-                readOnly
-                disabled
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
               />
-              {/* <p className={`${tw.textSecondary} text-xs mt-1`}>
-                10-15 digits, no + prefix
-              </p> */}
             </div>
           </div>
 
-          {/* Name Row */}
+          {/* First Name & Last Name */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 First Name *
               </label>
               <input
@@ -264,15 +259,12 @@ export default function EditCustomerModal({
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
-                placeholder="Enter first name"
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
                 disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
               />
             </div>
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
                 Last Name *
               </label>
               <input
@@ -280,36 +272,78 @@ export default function EditCustomerModal({
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
-                placeholder="Enter last name"
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
                 disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
               />
             </div>
           </div>
 
-          {/* Email */}
-          <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-            >
-              Email *
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              placeholder="customer@example.com"
-              className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm bg-gray-100 text-gray-600 cursor-not-allowed`}
-              readOnly
-              disabled
-            />
+          {/* Alternate Phone & Gender */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Alternate Phone Numbers (MSISDN)
+              </label>
+              <input
+                type="text"
+                name="alternatemsisdns"
+                value={formData.alternatemsisdns}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Gender
+              </label>
+              <HeadlessSelect
+                options={GENDER_OPTIONS}
+                value={formData.gender}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    gender: String(value),
+                  }))
+                }
+                zIndex={zIndex.popover}
+              />
+            </div>
+          </div>
+
+          {/* Email & Alternate Email */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Email *
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+              />
+            </div>
+            <div>
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Alternate Email
+              </label>
+              <input
+                type="email"
+                name="alternateEmail"
+                value={formData.alternateEmail}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+              />
+            </div>
           </div>
 
           {/* City */}
           <div>
-            <label
-              className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-            >
+            <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
               City
             </label>
             <input
@@ -317,89 +351,189 @@ export default function EditCustomerModal({
               name="city"
               value={formData.city}
               onChange={handleInputChange}
-              placeholder="Enter city"
-              className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
               disabled={isLoading}
+              className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
             />
           </div>
 
-          {/* Dropdowns Row */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Personal Information Section */}
+          <div className="mt-6">
+            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+              Personal Information
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Language Preference
+                </label>
+                <HeadlessSelect
+                  options={LANGUAGE_OPTIONS}
+                  value={formData.languagePreference}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      languagePreference: String(value),
+                    }))
+                  }
+                  zIndex={zIndex.popover}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Address Section */}
+          <div className="mt-6">
+            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+              Address Information
+            </h3>
             <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Customer Type
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Physical Address
               </label>
-              <HeadlessSelect
-                value={formData.customerType}
-                onChange={(value) => handleSelectChange("customerType", value)}
-                options={CUSTOMER_TYPE_OPTIONS}
+              <textarea
+                name="physicalAddress"
+                value={formData.physicalAddress}
+                onChange={handleInputChange}
                 disabled={isLoading}
+                rows={2}
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
               />
             </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Status
+
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Region
+                </label>
+                <input
+                  type="text"
+                  name="region"
+                  value={formData.region}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Country
               </label>
               <HeadlessSelect
-                value={formData.status}
-                onChange={(value) => handleSelectChange("status", value)}
-                options={STATUS_OPTIONS}
-                disabled={isLoading}
+                options={COUNTRY_OPTIONS}
+                value={formData.countryCode}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    countryCode: String(value),
+                  }))
+                }
+                zIndex={zIndex.popover}
               />
             </div>
           </div>
 
-          {/* Tariff and SIM Type Row */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                Tariff
-              </label>
-              <HeadlessSelect
-                value={formData.tariff}
-                onChange={(value) => handleSelectChange("tariff", value)}
-                options={TARIFF_OPTIONS}
-                disabled={isLoading}
-              />
+          {/* Account Details Section */}
+          <div className="mt-6">
+            <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+              Account Details
+            </h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Customer Tier
+                </label>
+                <HeadlessSelect
+                  options={CUSTOMER_TIER_OPTIONS}
+                  value={formData.customerTier}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      customerTier: String(value),
+                    }))
+                  }
+                  zIndex={zIndex.popover}
+                />
+              </div>
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                  Preferred Channel
+                </label>
+                <HeadlessSelect
+                  options={PREFERRED_CHANNEL_OPTIONS}
+                  value={formData.preferredChannel}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      preferredChannel: String(value),
+                    }))
+                  }
+                  zIndex={zIndex.popover}
+                />
+              </div>
             </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-1`}
-              >
-                SIM Type
+
+            <div className="mt-4">
+              <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                Timezone
               </label>
               <HeadlessSelect
-                value={formData.simType}
-                onChange={(value) => handleSelectChange("simType", value)}
-                options={SIM_TYPE_OPTIONS}
-                disabled={isLoading}
+                options={TIMEZONE_OPTIONS}
+                value={formData.timezone}
+                onChange={(value) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    timezone: String(value),
+                  }))
+                }
+                zIndex={zIndex.popover}
               />
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 justify-end pt-4 border-t">
+          <div className="flex gap-3 justify-end pt-6 border-t mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className={`px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 ${tw.rounded} transition-colors disabled:opacity-50`}
+              className={`px-4 py-2 text-sm font-medium border ${tw.borderDefault} ${tw.textSecondary} ${tw.rounded} hover:bg-gray-50 transition-colors disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-4 py-2 text-sm text-white ${tw.rounded} transition-all disabled:opacity-50 flex items-center gap-2`}
-              style={{
-                backgroundColor: isLoading ? "#ccc" : color.primary.action,
-              }}
+              className={`px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-all disabled:opacity-50 flex items-center gap-2`}
+              style={{ backgroundColor: color.primary.action }}
             >
               {isLoading && <LoadingSpinner variant="modern" size="sm" />}
               {isLoading ? "Updating..." : "Update Customer"}

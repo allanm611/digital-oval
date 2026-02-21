@@ -3,6 +3,7 @@ export interface CustomerSubscriptionRecord {
   subscriptionId: number;
   amdocsSubsId?: number | null;
   msisdn?: string | number | null;
+  alternatemsisdns?: string | null;
   iccid?: string | null;
   imsi?: string | number | null;
   activationDate?: string | null;
@@ -21,9 +22,18 @@ export interface CustomerSubscriptionRecord {
   birthDate?: string | null;
   gender?: string | number | null;
   email?: string | null;
+  alternateEmail?: string | null;
   birthPlaceOther?: string | null;
   preferredLanguage?: string | null;
+  languagePreference?: string | null;
   city?: string | null;
+  region?: string | null;
+  postalCode?: string | null;
+  countryCode?: string | null;
+  physicalAddress?: string | null;
+  customerTier?: string | null;
+  preferredChannel?: string | null;
+  timezone?: string | null;
   branchCode?: string | number | null;
   customerCountyId?: number | null;
   building?: string | number | null;

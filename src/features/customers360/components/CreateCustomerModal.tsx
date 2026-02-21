@@ -305,7 +305,7 @@ export default function CreateCustomerModal({
       // Use user-provided subscription ID (converted to number)
       const subscriberId = parseInt(formData.subscriptionId, 10);
 
-      // Call API to create customer
+      // Call API to create customer with all fields
       const apiResponse = await customerService.createCustomer({
         subscriber_id: subscriberId,
         msisdn: msisdnForApi,
@@ -313,8 +313,19 @@ export default function CreateCustomerModal({
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email || undefined,
-          // Provide defaults for API fields not in form
-          age: undefined,
+          alternate_email: formData.alternateEmail || undefined,
+          alternate_msisdns: formData.alternatemsisdns || undefined,
+          gender: formData.gender || undefined,
+          date_of_birth: formData.dateOfBirth || undefined,
+          language_preference: formData.languagePreference || "en",
+          city: formData.city || undefined,
+          region: formData.region || undefined,
+          postal_code: formData.postalCode || undefined,
+          country_code: formData.countryCode || undefined,
+          physical_address: formData.physicalAddress || undefined,
+          customer_tier: formData.customerTier || undefined,
+          preferred_channel: formData.preferredChannel || "SMS",
+          timezone: formData.timezone || "Africa/Kampala",
           device_type: "unknown",
           premium_user: false,
         },
@@ -613,7 +624,7 @@ export default function CreateCustomerModal({
                     value={formData.subscriptionId}
                     onChange={handleInputChange}
                     placeholder="Enter Subscription ID"
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
                 <div>
@@ -627,120 +638,9 @@ export default function CreateCustomerModal({
                     name="msisdn"
                     value={formData.msisdn}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="First Name"
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Last Name"
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Phone Number (MSISDN) *
-                  </label>
-                  <input
-                    type="text"
-                    name="msisdn"
-                    value={formData.msisdn}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Alternate Phone Numbers (MSISDN)
-                  </label>
-                  <input
-                    type="text"
-                    name="alternatemsisdns"
-                    value={formData.alternatemsisdns}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Alternate Email
-                  </label>
-                  <input
-                    type="email"
-                    name="alternateEmail"
-                    value={formData.alternateEmail}
-                    onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                >
-                  City
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="Nairobi"
-                  className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
-                />
               </div>
 
               {/* Personal Information Section */}
@@ -750,6 +650,53 @@ export default function CreateCustomerModal({
                 </h3>
 
                 <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="First Name"
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Last Name"
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Alternate Phone Numbers (MSISDN)
+                    </label>
+                    <input
+                      type="text"
+                      name="alternatemsisdns"
+                      value={formData.alternatemsisdns}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -768,6 +715,40 @@ export default function CreateCustomerModal({
                       zIndex={zIndex.popover}
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Email *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                    >
+                      Alternate Email
+                    </label>
+                    <input
+                      type="email"
+                      name="alternateEmail"
+                      value={formData.alternateEmail}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -779,12 +760,9 @@ export default function CreateCustomerModal({
                       name="dateOfBirth"
                       value={formData.dateOfBirth}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -806,6 +784,21 @@ export default function CreateCustomerModal({
                 </div>
               </div>
 
+              <div>
+                <label
+                  className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
+                >
+                  City
+                </label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                />
+              </div>
+
               {/* Address Section */}
               <div className="mt-6">
                 <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
@@ -824,7 +817,7 @@ export default function CreateCustomerModal({
                     onChange={handleInputChange}
                     placeholder="Street address"
                     rows={2}
-                    className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                    className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                   />
                 </div>
 
@@ -841,7 +834,7 @@ export default function CreateCustomerModal({
                       value={formData.region}
                       onChange={handleInputChange}
                       placeholder="Region/State"
-                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                     />
                   </div>
                   <div>
@@ -856,7 +849,7 @@ export default function CreateCustomerModal({
                       value={formData.postalCode}
                       onChange={handleInputChange}
                       placeholder="Postal code"
-                      className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
+                      className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm`}
                     />
                   </div>
                 </div>
@@ -977,8 +970,8 @@ export default function CreateCustomerModal({
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder="SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode&#10;1001,Samuel,Kipchoge,254750902921,254712345679,samuel@example.com,,Male,1990-05-15,en,Nairobi,123 Main St,Nairobi,00100"
-                className={`w-full px-3 py-2 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
+                placeholder="SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone&#10;1001,David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi"
+                className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
                 rows={8}
               />
 
@@ -1085,11 +1078,11 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode
-1001,Samuel,Kipchoge,254750902921,254712345679,samuel@example.com,,Male,1990-05-15,en,Nairobi,123 Main St,Nairobi,00100
-1002,Mary,Wangari,254712345678,254712345680,mary@example.com,,Female,1992-03-20,sw,Mombasa,456 Coast Rd,Mombasa,80100
-1003,James,Ochieng,254734567890,254734567891,james@example.com,,Male,1988-12-10,en,Kisumu,789 Lake View,Kisumu,40100
-1004,Ahmed,Hassan,254720123456,,ahmed@example.com,,Male,1995-07-25,en,Mombasa,321 Beach St,Mombasa,80200`;
+                    const sampleData = `SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone
+1001,David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi
+1002,Grace,Wanjiru,254712345678,254712345680,grace.wanjiru@email.com,grace.alt@email.com,Female,1992-03-20,en,Mombasa,456 Nkrumah Rd,Mombasa,80100,KEN,VIP,EMAIL,Africa/Nairobi
+1003,Peter,Ochieng,254734567890,254734567891,peter.ochieng@email.com,,Male,1988-12-10,en,Kisumu,789 Oginga Odinga,Kisumu,40100,KEN,Regular,USSD,Africa/Nairobi
+1004,Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,1995-07-25,en,Mombasa,321 Abdel Nasser,Mombasa,80200,KEN,Gold,SMS,Africa/Nairobi`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -1120,7 +1113,7 @@ export default function CreateCustomerModal({
                     : "Click to select or drag a CSV file"}
                 </p>
                 <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  CSV file with columns: SubID*, FirstName*, LastName*, Phone* (country code 254, etc), AlternatePhone, Email, AlternateEmail, Gender, DateOfBirth, LanguagePreference, City, PhysicalAddress, Region, PostalCode (* = required)
+                  CSV file with columns: SubID*, FirstName*, LastName*, Phone* (country code 254, etc), AlternatePhone, Email, AlternateEmail, Gender, DateOfBirth, LanguagePreference, City, PhysicalAddress, Region, PostalCode, CountryCode, CustomerTier, PreferredChannel, Timezone (* = required)
                 </p>
               </div>
               <input

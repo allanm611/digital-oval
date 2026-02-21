@@ -783,7 +783,7 @@ export default function EtlFileRegistryPage() {
 
             {/* Error Message */}
             {uploadError && (
-              <p className="text-sm" style={{ color: color.status.danger }}>
+              <p className="text-sm text-red-600">
                 {uploadError}
               </p>
             )}
@@ -834,10 +834,10 @@ export default function EtlFileRegistryPage() {
                       await loadStats();
                     } else {
                       // Display user-friendly error for duplicate file
-                      const errorMessage = response.message || response.error || "An error occurred during upload";
-                      if (errorMessage.includes("duplicate key") || errorMessage.includes("unique constraint")) {
+                      if (response.message && (response.message.includes("duplicate key") || response.message.includes("unique constraint"))) {
                         setUploadError(`A file named "${uploadFile.name}" already exists in the ${uploadCategory} category.`);
                       } else {
+                        const errorMessage = response.error || response.message || "An error occurred during upload";
                         setUploadError(errorMessage);
                       }
                     }

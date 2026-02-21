@@ -639,93 +639,78 @@ export default function CustomerSearchResultsPage() {
           items: [
             { label: "Customer ID", value: customer.id },
             {
-              label: "Subscription ID",
-              value: selectedSubscription.subscriptionId ?? "—",
-            },
-            {
               label: "First Name",
               value: selectedSubscription.firstName ?? "—",
             },
             { label: "Last Name", value: selectedSubscription.lastName ?? "—" },
             {
-              label: "Birth Date",
+              label: "Gender",
+              value: selectedSubscription.gender ?? "—",
+            },
+            {
+              label: "Date of Birth",
               value: selectedSubscription.birthDate
                 ? selectedSubscription.birthDate.split(" ")[0]
                 : "—",
             },
-            {
-              label: "Birth Place",
-              value: selectedSubscription.birthPlaceOther ?? "—",
-            },
           ],
         },
         {
-          title: "Contact & Service",
+          title: "Contact Information",
           items: [
             {
               label: "MSISDN",
               value: formatMsisdn(selectedSubscription.msisdn),
             },
+            {
+              label: "Alternate MSISDN",
+              value: selectedSubscription.alternatemsisdns ?? "—",
+            },
             { label: "Email", value: selectedSubscription.email ?? email },
             {
-              label: "Banking Services",
-              value: selectedSubscription.bankingServices ?? "—",
+              label: "Alternate Email",
+              value: selectedSubscription.alternateEmail ?? "—",
             },
             {
               label: "Preferred Language",
               value: selectedSubscription.preferredLanguage ?? "—",
             },
+            {
+              label: "Preferred Channel",
+              value: selectedSubscription.preferredChannel ?? "—",
+            },
           ],
         },
         {
-          title: "Network & SIM",
+          title: "Address Information",
           items: [
+            { label: "City", value: selectedSubscription.city ?? "—" },
+            { label: "Region", value: selectedSubscription.region ?? "—" },
+            { label: "Postal Code", value: selectedSubscription.postalCode ?? "—" },
+            { label: "Country", value: selectedSubscription.countryCode ?? "—" },
+            {
+              label: "Physical Address",
+              value: selectedSubscription.physicalAddress ?? "—",
+            },
+          ],
+        },
+        {
+          title: "Account Details",
+          items: [
+            {
+              label: "Customer Tier",
+              value: selectedSubscription.customerTier ?? "—",
+            },
+            {
+              label: "Timezone",
+              value: selectedSubscription.timezone ?? "—",
+            },
             {
               label: "Activation Date",
               value: formatDateTime(selectedSubscription.activationDate),
             },
-            { label: "SMS", value: selectedSubscription.sms ?? "—" },
-            {
-              label: "Data Services",
-              value: selectedSubscription.dataServices ?? "—",
-            },
             { label: "ICCID", value: selectedSubscription.iccid ?? "—" },
             { label: "IMSI", value: selectedSubscription.imsi ?? "—" },
-          ],
-        },
-        {
-          title: "Out of Bundle Limits",
-          items: [
-            {
-              label: "Limit OOB Data",
-              value: selectedSubscription.limitOutOfBundleData ?? "—",
-            },
-            {
-              label: "Limit OOB Voice",
-              value: selectedSubscription.limitOutOfBundleVoice ?? "—",
-            },
-            {
-              label: "Limit OOB SMS",
-              value: selectedSubscription.limitOutOfBundleSms ?? "—",
-            },
-          ],
-        },
-        {
-          title: "Location",
-          items: [
-            { label: "City", value: selectedSubscription.city ?? "—" },
-            { label: "Estate", value: selectedSubscription.estate ?? "—" },
-            { label: "Road", value: selectedSubscription.road ?? "—" },
-            { label: "Building", value: selectedSubscription.building ?? "—" },
-            {
-              label: "Branch Code",
-              value: selectedSubscription.branchCode ?? "—",
-            },
-            {
-              label: "County ID",
-              value: selectedSubscription.customerCountyId ?? "—",
-            },
-            { label: "Ward", value: selectedSubscription.ward ?? "—" },
           ],
         },
       ];

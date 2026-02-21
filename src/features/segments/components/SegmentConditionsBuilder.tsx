@@ -741,7 +741,7 @@ export default function SegmentConditionsBuilder({
         {/* Operator for KPI - Only show if KPI selected */}
         {condition.kpi_name && (
           <>
-            <div className="min-w-[100px] max-w-[130px] flex-shrink-0">
+            <div className="min-w-[100px] max-w-[150px] flex-shrink-0">
               <HeadlessSelect
                 options={[
                   { value: "equals", label: "Equals" },
@@ -752,12 +752,19 @@ export default function SegmentConditionsBuilder({
                   { value: "not_contains", label: "Not Contains" },
                   { value: "in", label: "In" },
                   { value: "not_in", label: "Not In" },
+                  // Time-based operators for metrics
+                  { value: "in_last_days", label: "In Last (Days)" },
+                  { value: "in_last_weeks", label: "In Last (Weeks)" },
+                  { value: "in_last_months", label: "In Last (Months)" },
+                  { value: "greater_than_in_period", label: "Greater Than In Period" },
+                  { value: "less_than_in_period", label: "Less Than In Period" },
                 ]}
                 value={condition.operator}
                 onChange={(value) => {
                   updateCondition(groupId, condition.id, {
                     operator: value as SegmentCondition["operator"],
                     value: "",
+                    time_unit: undefined,
                   });
                 }}
                 placeholder="Select operator"
@@ -766,7 +773,7 @@ export default function SegmentConditionsBuilder({
               />
             </div>
 
-            {/* Value Input - Only show if operator selected */}
+            {/* Value Input */}
             <input
               type="text"
               value={condition.value as string}
@@ -775,10 +782,40 @@ export default function SegmentConditionsBuilder({
                   value: e.target.value,
                 });
               }}
-              placeholder="Enter value"
-              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
+              placeholder={
+                ["in_last_days", "in_last_weeks", "in_last_months"].includes(
+                  condition.operator
+                )
+                  ? "Enter number"
+                  : "Enter value"
+              }
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
               style={{ borderColor: color.border.default }}
             />
+
+            {/* Time Unit Selector - For time-based operators */}
+            {["in_last_days", "in_last_weeks", "in_last_months"].includes(
+              condition.operator
+            ) && (
+              <div className="min-w-[80px] max-w-[120px] flex-shrink-0">
+                <HeadlessSelect
+                  options={[
+                    { value: "days", label: "Days" },
+                    { value: "weeks", label: "Weeks" },
+                    { value: "months", label: "Months" },
+                  ]}
+                  value={condition.time_unit || "days"}
+                  onChange={(value) => {
+                    updateCondition(groupId, condition.id, {
+                      time_unit: value as string,
+                    });
+                  }}
+                  placeholder="Select unit"
+                  className="text-sm"
+                  zIndex={zIndex.popover}
+                />
+              </div>
+            )}
           </>
         )}
       </>

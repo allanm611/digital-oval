@@ -16,7 +16,6 @@ import {
   UpdateQuickListResponseUnion,
   DeleteQuickListResponseUnion,
 } from "../types/quicklist";
-import * as XLSX from "xlsx";
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/quicklists`;
 
@@ -138,37 +137,11 @@ class QuickListService {
   async createQuickList(
     request: CreateQuickListRequest,
   ): Promise<CreateQuickListResponseUnion> {
-    // Parse CSV text into rows
+    // Create CSV file from the text content
     const fileContent = request.file_text || "";
-    const lines = fileContent
-      .split("\n")
-      .filter((line) => line.trim().length > 0);
-    const rows = lines.map((line) =>
-      line
-        .split(",")
-        .map((cell) => cell.trim().replace(/^"|"$/g, "")),
-    );
-
-    // Create XLSX workbook from CSV data
-    const workbook = XLSX.utils.book_new();
-    const worksheet = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-
-    // Convert to XLSX binary format
-    const xlsxBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-    const blob = new Blob([new Uint8Array(xlsxBuffer)], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const fileName = (request.file_name || "quicklist").replace(
-      /\.(csv|xlsx)$/i,
-      "",
-    );
-    const file = new File([blob], `${fileName}.xlsx`, {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
+    const blob = new Blob([fileContent], { type: "text/csv" });
+    const fileName = request.file_name || "quicklist.csv";
+    const file = new File([blob], fileName, { type: "text/csv" });
 
     const formData = new FormData();
     formData.append("file", file);
