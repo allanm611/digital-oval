@@ -105,9 +105,6 @@ export default function CampaignFlowsStep({
           return "CHAMPION_CHALLENGER";
         case "round_robin":
           return "ROUND_ROBIN";
-        case "multiple_level":
-          return "MULTIPLE_LEVEL";
-        case "standard":
         case "multiple_target_group":
           return "MULTIPLE_TARGET";
         default:

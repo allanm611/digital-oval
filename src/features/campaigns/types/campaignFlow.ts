@@ -2,11 +2,10 @@
 // Backend Campaign Flow structure for executing campaigns
 
 export type CampaignFlowType =
-  | "STANDARD"
   | "AB_TEST"
   | "CHAMPION_CHALLENGER"
-  | "MULTIPLE_LEVEL"
-  | "ROUND_ROBIN";
+  | "ROUND_ROBIN"
+  | "MULTIPLE_TARGET";
 
 export interface CampaignFlowConfig {
   campaign_id: number;
