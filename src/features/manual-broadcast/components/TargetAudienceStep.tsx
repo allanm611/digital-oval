@@ -474,7 +474,7 @@ export default function TargetAudienceStep({
         )}
 
         {/* Actions */}
-        <div className="sticky bottom-12 bg-white flex items-center justify-end space-x-3 py-4 shadow-sm">
+        <div className="sticky bottom-12 z-40 bg-white border-t flex items-center justify-end space-x-3 py-4 shadow-sm" style={{ borderColor: color.border.default }}>
           <button
             type="button"
             onClick={handleNext}

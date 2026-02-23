@@ -324,6 +324,16 @@ class CommunicationService {
   async getCommunications(): Promise<GetCommunicationsResponse> {
     return this.request<GetCommunicationsResponse>("");
   }
+
+  /**
+   * Delete a communication execution
+   */
+  async deleteExecution(executionId: string | number): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(
+      `/${executionId}`,
+      { method: "DELETE" },
+    );
+  }
 }
 
 export const communicationService = new CommunicationService();

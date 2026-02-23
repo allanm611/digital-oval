@@ -156,6 +156,47 @@ class CustomerService {
       throw error;
     }
   }
+
+  /**
+   * Search customers by query term
+   * GET /subscribers/search
+   */
+  async searchCustomers(params?: {
+    q?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+    skipCache?: boolean;
+  }): Promise<CustomersListResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+      if (params) {
+        if (params.q) queryParams.append("q", params.q);
+        if (params.search) queryParams.append("search", params.search);
+        if (params.limit) queryParams.append("limit", String(params.limit));
+        if (params.offset) queryParams.append("offset", String(params.offset));
+        if (params.skipCache) queryParams.append("skipCache", "true");
+      }
+
+      const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+      const url = `${BASE_URL}/search${query}`;
+
+      const response = await fetch(url, {
+        headers: {
+          ...getAuthHeaders(),
+        },
+      });
+
+      if (!response.ok && response.status !== 304) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Failed to search customers:", error);
+      throw error;
+    }
+  }
 }
 
 export const customerService = new CustomerService();

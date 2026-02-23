@@ -790,6 +790,10 @@ export default function Dashboard() {
             element={<OtherPages.CreateManualBroadcastPage />}
           />
           <Route
+            path="/manual-communications/:id/edit"
+            element={<OtherPages.CreateManualBroadcastPage />}
+          />
+          <Route
             path="/manual-communications/:id"
             element={<OtherPages.BroadcastDetailsPage />}
           />

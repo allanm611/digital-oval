@@ -430,8 +430,7 @@ export default function ServersPage() {
   const renderHealthBadge = (server: ServerType) => {
     if (!server.health_check_enabled) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-black">
-          <Shield size={14} />
+        <span className="text-xs font-medium text-black">
           Disabled
         </span>
       );
@@ -443,8 +442,7 @@ export default function ServersPage() {
       server.last_health_check_status === null
     ) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-black">
-          <Shield size={14} />
+        <span className="text-xs font-medium text-black">
           null
         </span>
       );
@@ -452,13 +450,7 @@ export default function ServersPage() {
 
     if (server.last_health_check_status === "unhealthy") {
       return (
-        <span
-          className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-black"
-          style={{
-            backgroundColor: "rgba(251,113,133,0.12)",
-          }}
-        >
-          <AlertTriangle size={14} className="text-black" />
+        <span className="text-xs font-medium text-black">
           Unhealthy
         </span>
       );
@@ -466,13 +458,7 @@ export default function ServersPage() {
 
     if (server.last_health_check_status === "healthy") {
       return (
-        <span
-          className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-black"
-          style={{
-            backgroundColor: "rgba(16,185,129,0.12)",
-          }}
-        >
-          <Shield size={14} className="text-black" />
+        <span className="text-xs font-medium text-black">
           Healthy
         </span>
       );
@@ -480,8 +466,7 @@ export default function ServersPage() {
 
     // Fallback for any other status values
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-black">
-        <Shield size={14} />
+      <span className="text-xs font-medium text-black">
         {server.last_health_check_status || "Unknown"}
       </span>
     );
@@ -1003,11 +988,6 @@ export default function ServersPage() {
                             ? String(server.environment).replace(/_/g, " ")
                             : "—"}
                         </div>
-                        {server.region && (
-                          <p className="text-xs text-black whitespace-nowrap">
-                            {String(server.region).replace(/_/g, " ")}
-                          </p>
-                        )}
                       </td>
                       <td
                         className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-black whitespace-nowrap"
@@ -1017,10 +997,6 @@ export default function ServersPage() {
                           {`${server.protocol}://${server.host}${
                             server.port ? `:${server.port}` : ""
                           }${server.base_path || ""}`.replace(/\/+$/, "")}
-                        </p>
-                        <p className="text-xs text-black whitespace-nowrap">
-                          Timeout {server.timeout_seconds}s · Retries{" "}
-                          {server.max_retries}
                         </p>
                       </td>
                       <td

@@ -127,6 +127,7 @@ export interface CreateQuickListRequest {
   file_delimiter: string; // Delimiter used in file (comma, semicolon, tab, pipe)
   subscriber_id_col_name: string; // Column name that contains subscriber IDs
   list_headers?: string; // CSV headers line
+  upload_type?: string; // Type of upload (e.g., "generic")
 }
 
 export interface UpdateQuickListRequest {

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
@@ -60,6 +60,9 @@ export interface ManualBroadcastData {
 
 export default function CreateManualBroadcastPage() {
   const navigate = useNavigate();
+  const { id: executionId } = useParams<{ id: string }>();
+  const location = useLocation();
+  const isEditMode = !!executionId && location.pathname.includes("/edit");
   const { success: showToast, error: showError } = useToast();
   const { t } = useLanguage();
   const { user } = useAuth();
@@ -92,6 +95,65 @@ export default function CreateManualBroadcastPage() {
   ];
   const [currentStep, setCurrentStep] = useState(1);
   const [broadcastData, setBroadcastData] = useState<ManualBroadcastData>({});
+  const [isLoading, setIsLoading] = useState(isEditMode);
+
+  // Load execution data in edit mode
+  useEffect(() => {
+    if (isEditMode && executionId) {
+      const loadExecutionData = async () => {
+        try {
+          setIsLoading(true);
+          const response = await communicationService.getExecutionDetails(executionId);
+          if (response.success && response.data) {
+            const exec = response.data.execution as any;
+            const logs = response.data.recent_logs || [];
+
+            // Extract channel from logs if available
+            const channel = logs.length > 0 ? logs[0].channel : exec.channel || "EMAIL";
+
+            // Extract message template from logs or execution
+            const messageTemplate = logs.length > 0
+              ? {
+                  title: logs[0].title || "",
+                  body: logs[0].body_preview || exec.message_template?.body || "",
+                }
+              : {
+                  title: exec.message_template?.title || "",
+                  body: exec.message_template?.body || "",
+                };
+
+            // Prefill form data based on source type
+            const prefillData: Partial<ManualBroadcastData> = {
+              audienceName: exec.source_name || exec.name || `Broadcast ${exec.execution_id}`,
+              channel: channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH",
+              messageTitle: messageTemplate.title,
+              messageBody: messageTemplate.body,
+              isRichText: (exec.message_template as any)?.is_rich_text || false,
+              scheduleType: "now",
+            };
+
+            // Handle source type specific prefilling
+            if (exec.source_type === "quicklist" && exec.source_id) {
+              prefillData.quicklistId = exec.source_id;
+              prefillData.audienceName = exec.source_name || `Quicklist ${exec.source_id}`;
+            } else if (exec.source_type === "manual") {
+              prefillData.inputMethod = "manual";
+              prefillData.audienceName = exec.source_name || "Manual Audience";
+            }
+
+            setBroadcastData(prefillData);
+          }
+        } catch (err) {
+          console.error("Failed to load execution details:", err);
+          showError("Failed to load broadcast details");
+          navigate("/dashboard/manual-communications");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      loadExecutionData();
+    }
+  }, [isEditMode, executionId, showError, navigate]);
 
   // Persist form data to localStorage
   useFormDataPersistence(
@@ -226,11 +288,40 @@ export default function CreateManualBroadcastPage() {
     return recipients;
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
+
+      // In edit mode, resend the communication with updated message content
+      if (isEditMode && executionId) {
+        // For edit mode, resend the broadcast with the same audience but updated message
+        const response = await communicationService.sendCommunication({
+          source_type: broadcastData.quicklistId ? "quicklist" : "manual",
+          ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
+          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle &&
+            broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          ...(broadcastData.audienceFileText && !broadcastData.quicklistId
+            ? { recipient_list: parseRecipientList() }
+            : {}),
+          created_by: user?.user_id,
+        });
+
+        if (response.success) {
+          showToast(t.manualBroadcast.updatedSuccess || "Broadcast resent successfully!");
+          clearPersistedFormData("broadcast_form_data");
+          navigate("/dashboard/manual-communications");
+          return;
+        } else {
+          throw new Error(response.error || "Communication resending failed");
+        }
+      }
 
       // Check if error is a gateway timeout error (504/503)
       const isGatewayError = (err: unknown): boolean => {
@@ -253,6 +344,7 @@ export default function CreateManualBroadcastPage() {
         const response = await communicationService.sendCommunication({
           source_type: "quicklist",
           source_id: broadcastData.quicklistId,
+          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
             ...(broadcastData.messageTitle &&
@@ -289,6 +381,7 @@ export default function CreateManualBroadcastPage() {
         const response = await communicationService.sendCommunication({
           source_type: "manual",
           recipient_list: recipientList,
+          ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
           channels: broadcastData.channel ? [broadcastData.channel] : [],
           message_template: {
             ...(broadcastData.messageTitle &&
@@ -379,6 +472,22 @@ export default function CreateManualBroadcastPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <LoadingSpinner
+          variant="modern"
+          size="xl"
+          color="primary"
+          className="mb-4"
+        />
+        <p className={`${tw.textMuted} font-medium text-sm`}>
+          {t.manualBroadcast.loading || "Loading broadcast..."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <div
@@ -396,7 +505,7 @@ export default function CreateManualBroadcastPage() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {t.manualBroadcast.title}
+                {isEditMode ? t.manualBroadcast.editTitle || "Edit Broadcast" : t.manualBroadcast.title}
               </h1>
             </div>
           </div>

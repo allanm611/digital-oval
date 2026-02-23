@@ -13,6 +13,7 @@ import {
   Eye,
   Edit,
   X,
+  Filter,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import {
@@ -26,6 +27,7 @@ import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
@@ -61,6 +63,9 @@ export default function CustomersPage() {
   const { t } = useLanguage();
   const { success: showSuccess, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [selectedPreferredChannel, setSelectedPreferredChannel] = useState<string | "all">("all");
+  const [selectedCustomerType, setSelectedCustomerType] = useState<string | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isTimeout, setIsTimeout] = useState(false);
@@ -172,6 +177,15 @@ export default function CustomersPage() {
 
   const dataset = customers;
 
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     setPage(1);
   }, [searchTerm]);
@@ -187,12 +201,27 @@ export default function CustomersPage() {
   const filteredCustomers = useMemo(() => {
     let results = customers;
 
-    if (searchTerm.trim()) {
-      results = searchCustomers(searchTerm, results);
+    // Filter by search term
+    if (debouncedSearchTerm.trim()) {
+      results = searchCustomers(debouncedSearchTerm, results);
+    }
+
+    // Filter by preferred channel
+    if (selectedPreferredChannel && selectedPreferredChannel !== "all") {
+      results = results.filter(
+        (customer) => customer.tariff === selectedPreferredChannel
+      );
+    }
+
+    // Filter by customer type
+    if (selectedCustomerType && selectedCustomerType !== "all") {
+      results = results.filter(
+        (customer) => customer.customerType === selectedCustomerType
+      );
     }
 
     return results;
-  }, [searchTerm, searchCustomers, customers]);
+  }, [debouncedSearchTerm, selectedPreferredChannel, selectedCustomerType, searchCustomers, customers]);
 
   // Debounced search results for modal
   const [modalSearchResults, setModalSearchResults] = useState<
@@ -212,18 +241,60 @@ export default function CustomersPage() {
     }
 
     setIsSearching(true);
-    const debounceTimer = setTimeout(() => {
-      const results = searchCustomers(modalSearchTerm, dataset);
-      // Limit to top 50 results for performance
-      setModalSearchResults(results.slice(0, 50));
-      setIsSearching(false);
+    const debounceTimer = setTimeout(async () => {
+      try {
+        const response = await customerService.searchCustomers({
+          search: modalSearchTerm,
+          limit: 50,
+          skipCache: true,
+        });
+
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // Convert API response to CustomerSubscriptionRecord format
+          const convertedResults = response.data.map((apiCustomer) => {
+            const customerId =
+              typeof apiCustomer.id === "string"
+                ? parseInt(apiCustomer.id, 10)
+                : apiCustomer.id;
+
+            const subscriberId = (apiCustomer as any).subscriber_id
+              ? typeof (apiCustomer as any).subscriber_id === "string"
+                ? parseInt((apiCustomer as any).subscriber_id, 10)
+                : (apiCustomer as any).subscriber_id
+              : customerId;
+
+            return {
+              customerId: customerId,
+              subscriptionId: subscriberId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              city: apiCustomer.city,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+              status: apiCustomer.subscriber_status || "active",
+              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+          });
+          setModalSearchResults(convertedResults);
+        } else {
+          setModalSearchResults([]);
+        }
+      } catch (err) {
+        console.error("Search error:", err);
+        setModalSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
     }, 400); // 400ms debounce
 
     return () => {
       clearTimeout(debounceTimer);
       setIsSearching(false);
     };
-  }, [modalSearchTerm, dataset, isSearchModalOpen, searchCustomers]);
+  }, [modalSearchTerm, isSearchModalOpen]);
 
   const totalResults = filteredCustomers.length;
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
@@ -503,32 +574,14 @@ export default function CustomersPage() {
             disabled={filteredCustomers.length === 0}
             className={`${tw.button} inline-flex items-center gap-2`}
           />
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenSearchModal}
-              className={`${tw.button} inline-flex items-center gap-2`}
-            >
-              <Search className="h-4 w-4" />
-              {searchTerm ? (
-                <span className="truncate max-w-[140px]">
-                  {t.customer360.searchCustomer}: {searchTerm}
-                </span>
-              ) : (
-                t.customer360.searchCustomer
-              )}
-            </button>
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm("")}
-                className={`p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-                title={t.customer360.clearSearch}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={handleOpenSearchModal}
+            className={`${tw.button} inline-flex items-center gap-2`}
+          >
+            <Search className="h-4 w-4" />
+            {t.customer360.searchCustomer}
+          </button>
           <PermissionGate permission="customer.create">
             <button
               type="button"
@@ -559,6 +612,62 @@ export default function CustomersPage() {
             <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5`}
+            style={{ color: color.text.muted }}
+          />
+          <input
+            type="text"
+            placeholder="Search customers..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
+            className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400 text-sm placeholder:text-sm`}
+          />
+        </div>
+
+        <HeadlessSelect
+          options={[
+            { value: "all", label: "All Channels" },
+            { value: "NORMAL_SMS", label: "Normal SMS" },
+            { value: "FLASH_SMS", label: "Flash SMS" },
+            { value: "EMAIL", label: "Email" },
+            { value: "WHATSAPP", label: "WhatsApp" },
+            { value: "PUSH", label: "Push" },
+            { value: "USSD", label: "USSD" },
+            { value: "INTERACTIVE_USSD", label: "Interactive USSD" },
+            { value: "INAPP", label: "In-App" },
+            { value: "IVR", label: "IVR" },
+            { value: "OBD", label: "OBD" },
+            { value: "SHORT_CODE", label: "Short Code" },
+          ]}
+          value={selectedPreferredChannel}
+          onChange={(value) =>
+            setSelectedPreferredChannel((value as string | "all") || "all")
+          }
+          placeholder="All Channels"
+          className=""
+        />
+
+        <HeadlessSelect
+          options={[
+            { value: "all", label: "All Types" },
+            { value: "prepaid", label: "Prepaid" },
+            { value: "postpaid", label: "Postpaid" },
+            { value: "enterprise", label: "Enterprise" },
+          ]}
+          value={selectedCustomerType}
+          onChange={(value) =>
+            setSelectedCustomerType((value as string | "all") || "all")
+          }
+          placeholder="All Types"
+          className=""
+        />
       </div>
 
       {/* Table card */}

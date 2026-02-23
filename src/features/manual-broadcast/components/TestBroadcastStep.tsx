@@ -396,7 +396,7 @@ export default function TestBroadcastStep({
 
       {/* Footer */}
       <div
-        className="sticky bottom-12 bg-white p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-sm"
+        className="sticky bottom-12 z-40 bg-white border-t p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-sm"
         style={{ borderColor: color.border.default }}
       >
         <button

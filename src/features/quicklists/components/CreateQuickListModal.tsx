@@ -702,11 +702,11 @@ export default function CreateQuickListModal({
 
                           {/* Missing Fields Error */}
                           {validation.invalidRows.length > 0 && (
-                            <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                              <p className="text-sm font-medium text-red-800 mb-2">
+                            <div>
+                              <p className="text-sm font-medium text-red-600 mb-2">
                                 Rows with missing fields:
                               </p>
-                              <ul className="text-xs text-red-700 space-y-1">
+                              <ul className="text-xs text-red-600 space-y-1">
                                 {validation.invalidRows
                                   .slice(0, 5)
                                   .map((item, idx) => (
@@ -812,9 +812,7 @@ export default function CreateQuickListModal({
             </div>
 
             {errors.submit && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600">{errors.submit}</p>
-              </div>
+              <p className="text-sm text-red-600">{errors.submit}</p>
             )}
           </div>
 
@@ -831,7 +829,7 @@ export default function CreateQuickListModal({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || isFileProcessing}
+                  disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.file_delimiter}
                   className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
                   style={{
                     backgroundColor: buttonTokens.action.background,
@@ -839,7 +837,14 @@ export default function CreateQuickListModal({
                     borderRadius: buttonTokens.action.borderRadius,
                     padding: `${buttonTokens.action.paddingY} ${buttonTokens.action.paddingX}`,
                   }}
-                  title={isFileProcessing ? "Processing file, please wait..." : ""}
+                  title={
+                    isFileProcessing ? "Processing file, please wait..." :
+                    !form.name.trim() ? "Please enter a list name" :
+                    (isCreateMode && !form.file_text) ? "Please upload a file" :
+                    !form.subscriber_id_col_name.trim() ? "Please select subscriber ID column" :
+                    !form.file_delimiter ? "Please select a delimiter" :
+                    ""
+                  }
                 >
                   {isFileProcessing
                     ? "Processing file..."

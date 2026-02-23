@@ -278,9 +278,7 @@ export default function QuickListPage() {
     <div className="space-y-6">
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+        <p className="text-sm text-red-600">{error}</p>
       )}
 
       {/* Header */}

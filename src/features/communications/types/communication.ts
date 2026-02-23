@@ -33,6 +33,7 @@ export interface PaginationMeta {
 export interface SendCommunicationRequest {
   source_type: 'quicklist' | 'segment' | 'manual';
   source_id?: number; // Required for quicklist/segment
+  name?: string; // Broadcast name
   channels: CommunicationChannel[];
   message_template: MessageTemplate;
   recipient_list?: RecipientData[]; // Required for manual source_type

@@ -150,9 +150,11 @@ class QuickListService {
       formData.append("description", request.description);
     if (request.created_by)
       formData.append("created_by", String(request.created_by));
+    // Hardcode upload_type as "generic"
+    formData.append("upload_type", "generic");
 
     // Use buildDirectBackendUrl which routes through proxy on Vercel (same domain, avoids CORS/SSL issues)
-    const url = `${buildDirectBackendUrl("/quicklists")}/upload`;
+    const url = `${buildDirectBackendUrl("/quicklists")}`;
 
     // Get auth headers but remove Content-Type for multipart/form-data
     const authHeaders = getAuthHeaders();

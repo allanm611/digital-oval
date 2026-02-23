@@ -28,7 +28,7 @@ export default function ManualBroadcastListsPage() {
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 100,
     total: 0,
   });
 
@@ -43,7 +43,7 @@ export default function ManualBroadcastListsPage() {
       // Load all executions (broadcasts) from the communications API
       const response = await communicationService.getExecutions({
         page: 1,
-        limit: 10,
+        limit: 100,
       });
 
       if (response.success && response.data) {
@@ -142,12 +142,14 @@ export default function ManualBroadcastListsPage() {
         }
 
         setBroadcasts(broadcasts);
-        if (response.data.pagination) {
-          setPagination((prev) => ({
-            ...prev,
-            page: response.data!.pagination!.page,
-            total: response.data!.pagination!.total,
-          }));
+        // Handle pagination - can be nested under .pagination or at root level
+        const paginationData = response.data.pagination || response.data;
+        if (paginationData && paginationData.page !== undefined) {
+          setPagination({
+            page: paginationData.page,
+            limit: paginationData.limit,
+            total: paginationData.total,
+          });
         }
       } else {
         showError("Failed to load broadcasts", "Please try again");
@@ -179,7 +181,7 @@ export default function ManualBroadcastListsPage() {
 
     try {
       setIsDeleting(true);
-      // Note: Delete functionality would need a delete endpoint in communicationService
+      await communicationService.deleteExecution(broadcastToDelete.execution_id);
       showToast(
         `Broadcast "${broadcastToDelete.source_name}" deleted successfully!`,
       );

@@ -45,6 +45,8 @@ import {
   convertSubscriptionToCustomerRow,
 } from "../../customers360/utils/customerSubscriptionHelpers";
 import { customerSubscriptions } from "../../customers360/utils/customerDataService";
+import { customerService } from "../../customers360/services/customerServices";
+import { useToast } from "../../../contexts/ToastContext";
 
 // Extract types from API response type
 type ValueMatrixPoint = CustomerProfileReportsResponse["valueMatrix"][number];
@@ -512,16 +514,20 @@ export default function CustomerProfileReportsPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { t } = useLanguage();
+  const { success: showSuccess, error: showError } = useToast();
   const [selectedRange, setSelectedRange] = useState<RangeOption>("90d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
     start: "",
     end: "",
   });
-  const [tableSegment, setTableSegment] = useState("All");
-  const [tableRiskFilter, setTableRiskFilter] = useState("All");
+  const [tableSearchTerm, setTableSearchTerm] = useState("");
+  const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
-  const [useDummyData, setUseDummyData] = useState(true);
+  const [apiCustomers, setApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+  const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
+  const [isSearchingTable, setIsSearchingTable] = useState(false);
+  const [useDummyData] = useState(true); // Charts use dummy data, table uses API data
   const locationState = location.state as
     | { subscription?: CustomerSubscriptionRecord }
     | undefined;
@@ -541,11 +547,84 @@ export default function CustomerProfileReportsPage() {
     return undefined;
   }, [locationState, subscriptionIdParam]);
 
+  // Fetch customers from API
+  useEffect(() => {
+    const loadCustomersFromAPI = async () => {
+      try {
+        setIsLoadingCustomers(true);
+        const response = await customerService.getAllCustomers({
+          limit: 100,
+          offset: 0,
+        });
+
+        if (response.success && response.data && Array.isArray(response.data)) {
+          const convertedCustomers = response.data.map((apiCustomer) => {
+            const customerId =
+              typeof apiCustomer.id === "string"
+                ? parseInt(apiCustomer.id, 10)
+                : apiCustomer.id;
+
+            const subscriberId = (apiCustomer as any).subscriber_id
+              ? typeof (apiCustomer as any).subscriber_id === "string"
+                ? parseInt((apiCustomer as any).subscriber_id, 10)
+                : (apiCustomer as any).subscriber_id
+              : customerId;
+
+            return {
+              customerId: customerId,
+              subscriptionId: subscriberId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              city: apiCustomer.city,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+              status: apiCustomer.subscriber_status || "active",
+              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+          });
+          setApiCustomers(convertedCustomers);
+        }
+      } catch (error) {
+        console.error("Failed to load customers from API:", error);
+        showError(
+          "Failed to Load Customers",
+          "Unable to retrieve customers. Please try again.",
+        );
+      } finally {
+        setIsLoadingCustomers(false);
+      }
+    };
+
+    loadCustomersFromAPI();
+  }, [showError]);
+
   // Customer search state
   const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
   const [isSearchingCustomer, setIsSearchingCustomer] =
     useState<boolean>(false);
   const [customerError, setCustomerError] = useState<string | null>(null);
+
+  // Convert API customers to CustomerRow format for table display (includes searched customers)
+  const apiCustomerRows = useMemo(() => {
+    const allCustomers = searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+    return allCustomers.map((subscription) =>
+      convertSubscriptionToCustomerRow(subscription),
+    );
+  }, [apiCustomers, searchedApiCustomers]);
+
+  // Build subscription lookup from API customers (includes searched customers)
+  const apiSubscriptionLookup = useMemo(() => {
+    const lookup: Record<string, CustomerSubscriptionRecord> = {};
+    const allCustomers = searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+    allCustomers.forEach((subscription) => {
+      const row = convertSubscriptionToCustomerRow(subscription);
+      lookup[row.id] = subscription;
+    });
+    return lookup;
+  }, [apiCustomers, searchedApiCustomers]);
 
   const subscriptionDetailItems = useMemo(() => {
     if (!selectedSubscription) return [];
@@ -633,7 +712,7 @@ export default function CustomerProfileReportsPage() {
         return;
       }
 
-      const linkedSubscription = subscriptionLookup[foundCustomer.id];
+      const linkedSubscription = apiSubscriptionLookup[foundCustomer.id];
 
       navigate(
         `/dashboard/reports/customer-profiles/search?customerId=${foundCustomer.id}&source=reports`,
@@ -658,7 +737,7 @@ export default function CustomerProfileReportsPage() {
   };
 
   const handleOpenCustomerProfile = (customer: CustomerRow) => {
-    const subscription = subscriptionLookup[customer.id];
+    const subscription = apiSubscriptionLookup[customer.id];
     const params = new URLSearchParams();
     params.set("customerId", customer.id);
     params.set("source", "reports");
@@ -700,11 +779,19 @@ export default function CustomerProfileReportsPage() {
     activeRangeKey,
   ]);
 
+  // Debounce table search term (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTableSearchTerm(tableSearchTerm);
+      setTablePage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [tableSearchTerm]);
+
   useEffect(() => {
     setTablePage(1);
   }, [
-    tableSegment,
-    tableRiskFilter,
+    debouncedTableSearchTerm,
     activeRangeKey,
     appliedCustomRange.start,
     appliedCustomRange.end,
@@ -831,24 +918,68 @@ export default function CustomerProfileReportsPage() {
     });
   }, [cohortSeries]);
 
-  // Customers for table: Show ALL customers regardless of date filter (date filter only applies to charts)
+  // Fetch customers for table: Use API search when search term provided, otherwise use loaded customers
+  const [searchedApiCustomers, setSearchedApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+
+  useEffect(() => {
+    const loadTableCustomers = async () => {
+      if (!debouncedTableSearchTerm.trim()) {
+        setSearchedApiCustomers(apiCustomers);
+        return;
+      }
+
+      try {
+        setIsSearchingTable(true);
+        const response = await customerService.searchCustomers({
+          search: debouncedTableSearchTerm,
+          limit: 100,
+          offset: 0,
+        });
+
+        if (response.success && response.data && Array.isArray(response.data)) {
+          const convertedCustomers = response.data.map((apiCustomer) => {
+            const customerId =
+              typeof apiCustomer.id === "string"
+                ? parseInt(apiCustomer.id, 10)
+                : apiCustomer.id;
+
+            const subscriberId = (apiCustomer as any).subscriber_id
+              ? typeof (apiCustomer as any).subscriber_id === "string"
+                ? parseInt((apiCustomer as any).subscriber_id, 10)
+                : (apiCustomer as any).subscriber_id
+              : customerId;
+
+            return {
+              customerId: customerId,
+              subscriptionId: subscriberId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              city: apiCustomer.city,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+              status: apiCustomer.subscriber_status || "active",
+              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+          });
+          setSearchedApiCustomers(convertedCustomers);
+        }
+      } catch (error) {
+        console.error("Failed to search customers:", error);
+        setSearchedApiCustomers([]);
+      } finally {
+        setIsSearchingTable(false);
+      }
+    };
+
+    loadTableCustomers();
+  }, [debouncedTableSearchTerm]);
+
   const tableCustomers = useMemo(() => {
-    return baseCustomerRows.filter((row) => {
-      const subscription = subscriptionLookup[row.id];
-      const segmentValue = subscription?.customerType ?? row.segment;
-      const matchesSegment =
-        tableSegment === "All" ? true : segmentValue === tableSegment;
-      const matchesRisk =
-        tableRiskFilter === "All"
-          ? true
-          : tableRiskFilter === "High"
-            ? row.churnRisk >= 60
-            : tableRiskFilter === "Medium"
-              ? row.churnRisk >= 30 && row.churnRisk < 60
-              : row.churnRisk < 30;
-      return matchesSegment && matchesRisk;
-    });
-  }, [tableSegment, tableRiskFilter, baseCustomerRows]);
+    return searchedApiCustomers.length > 0 ? searchedApiCustomers : apiCustomers;
+  }, [searchedApiCustomers, apiCustomers]);
 
   // Customers for charts: Apply date range filter
   const filteredCustomers = useMemo(() => {
@@ -864,29 +995,15 @@ export default function CustomerProfileReportsPage() {
       : null;
 
     return baseCustomerRows.filter((row) => {
-      const subscription = subscriptionLookup[row.id];
-      const segmentValue = subscription?.customerType ?? row.segment;
-      const matchesSegment =
-        tableSegment === "All" ? true : segmentValue === tableSegment;
-      const matchesRisk =
-        tableRiskFilter === "All"
-          ? true
-          : tableRiskFilter === "High"
-            ? row.churnRisk >= 60
-            : tableRiskFilter === "Medium"
-              ? row.churnRisk >= 30 && row.churnRisk < 60
-              : row.churnRisk < 30;
       const rowDate = new Date(row.lastInteractionDate).getTime();
       const now = referenceTime;
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
-      return matchesSegment && matchesRisk && matchesRange;
+      return matchesRange;
     });
   }, [
-    tableSegment,
-    tableRiskFilter,
     customRange,
     customDays,
     activeRangeKey,
@@ -929,7 +1046,7 @@ export default function CustomerProfileReportsPage() {
   ];
 
   const csvRows = tableCustomers.map((row) => {
-    const subscription = subscriptionLookup[row.id];
+    const subscription = apiSubscriptionLookup[row.id];
     return [
       row.name,
       formatMsisdn(subscription?.msisdn),
@@ -1016,35 +1133,6 @@ export default function CustomerProfileReportsPage() {
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div
-              className={`flex items-center gap-2 ${tw.rounded} border border-gray-200 bg-white px-3 py-1.5`}
-            >
-              <label
-                htmlFor="customer-data-toggle"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap mr-2"
-              >
-                {t.customerProfileReports.dataMode}
-              </label>
-              <button
-                id="customer-data-toggle"
-                type="button"
-                onClick={() => setUseDummyData(!useDummyData)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#252829] focus:ring-offset-2 ${
-                  useDummyData ? "bg-[#252829]" : "bg-gray-300"
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    useDummyData ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-              <span className="ml-2 text-xs text-gray-600 whitespace-nowrap">
-                {useDummyData
-                  ? t.customerProfileReports.dummyData
-                  : t.customerProfileReports.realData}
-              </span>
-            </div>
             <div className="flex items-center gap-2">
               <label
                 htmlFor="customer-date-start"
@@ -1627,7 +1715,7 @@ export default function CustomerProfileReportsPage() {
       </section>
 
       <section className="space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
               {t.customerProfileReports.customerDetailTable}
@@ -1637,28 +1725,21 @@ export default function CustomerProfileReportsPage() {
             </p>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <HeadlessSelect
-              value={tableSegment}
-              onChange={(value) => setTableSegment(value as string)}
-              options={customerTypeOptions.map((segment) => ({
-                label: segment,
-                value: segment,
-              }))}
-              placeholder={t.customerProfileReports.allSegments}
-              className="w-full md:w-48"
-            />
-            <HeadlessSelect
-              value={tableRiskFilter}
-              onChange={(value) => setTableRiskFilter(value as string)}
-              options={[
-                { label: t.customerProfileReports.allRiskLevels, value: "All" },
-                { label: t.customerProfileReports.highRisk, value: "High" },
-                { label: t.customerProfileReports.mediumRisk, value: "Medium" },
-                { label: t.customerProfileReports.lowRisk, value: "Low" },
-              ]}
-              placeholder={t.customerProfileReports.allRiskLevels}
-              className="w-full md:w-48"
-            />
+            <div className="relative flex-1 md:flex-none md:w-64">
+              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${
+                isSearchingTable ? "text-gray-300" : "text-gray-400"
+              }`} />
+              <input
+                type="text"
+                value={tableSearchTerm}
+                onChange={(e) => {
+                  setTableSearchTerm(e.target.value);
+                }}
+                disabled={isSearchingTable}
+                placeholder="Search by name, email, or MSISDN..."
+                className={`w-full pl-10 pr-4 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-gray-900 disabled:bg-gray-50 disabled:cursor-wait`}
+              />
+            </div>
             <CsvDownloadButton
               headers={csvHeaders}
               rows={csvRows}
@@ -1669,12 +1750,20 @@ export default function CustomerProfileReportsPage() {
           </div>
         </div>
 
-        <div>
-          <div className="overflow-x-auto">
-            <table
-              className="w-full text-sm"
-              style={{ borderCollapse: "separate", borderSpacing: "0 12px" }}
-            >
+        {isLoadingCustomers ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4" />
+              <p className="text-sm text-gray-600">Loading customers...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table
+                className="w-full"
+                style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+              >
               <thead
                 className="text-xs uppercase tracking-wide"
                 style={{ background: color.surface.tableHeader }}
@@ -1685,7 +1774,7 @@ export default function CustomerProfileReportsPage() {
                     t.customer360.msisdn,
                     t.customer360.subscriptionId,
                     t.customer360.customerType,
-                    t.customer360.tariff,
+                    t.customer360.preferredChannel,
                     t.customer360.simType,
                     t.customer360.status,
                     t.customer360.activationDate,
@@ -1694,7 +1783,7 @@ export default function CustomerProfileReportsPage() {
                   ].map((header) => (
                     <th
                       key={header}
-                      className="px-6 py-3 text-left font-semibold text-gray-900"
+                      className="px-6 py-3 text-left font-semibold text-sm text-gray-900"
                     >
                       {header}
                     </th>
@@ -1703,7 +1792,7 @@ export default function CustomerProfileReportsPage() {
               </thead>
               <tbody>
                 {paginatedCustomers.map((customer) => {
-                  const subscription = subscriptionLookup[customer.id];
+                  const subscription = apiSubscriptionLookup[customer.id];
                   const status = subscription?.status ?? "Unknown";
                   const statusLower = status.toLowerCase();
                   const statusStyles =
@@ -1716,7 +1805,7 @@ export default function CustomerProfileReportsPage() {
                   return (
                     <tr key={customer.id}>
                       <td
-                        className="rounded-l-md px-6 py-5"
+                        className="rounded-l-md px-6 py-5 text-sm"
                         style={tableCellBackground}
                       >
                         <button
@@ -1724,7 +1813,7 @@ export default function CustomerProfileReportsPage() {
                           onClick={() => handleOpenCustomerProfile(customer)}
                           className="text-left"
                         >
-                          <p className="font-semibold text-gray-900 hover:underline">
+                          <p className="font-semibold text-gray-900 hover:underline text-sm">
                             {customer.name}
                           </p>
                           {/* <p className="mt-1 text-xs text-gray-500">
@@ -1738,50 +1827,46 @@ export default function CustomerProfileReportsPage() {
                         </button>
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {formatMsisdn(subscription?.msisdn ?? customer.msisdn)}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {subscription?.subscriptionId ?? "—"}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {subscription?.customerType ?? customer.segment ?? "—"}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {subscription?.tariff ?? "—"}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {subscription?.simType ?? "—"}
                       </td>
-                      <td className="px-6 py-5" style={tableCellBackground}>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${statusStyles}`}
-                        >
-                          {status}
-                        </span>
+                      <td className="px-6 py-5 text-sm text-gray-900" style={tableCellBackground}>
+                        {status}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {formatDateTime(subscription?.activationDate)}
                       </td>
                       <td
-                        className="px-6 py-5 text-gray-900"
+                        className="px-6 py-5 text-sm text-gray-900"
                         style={tableCellBackground}
                       >
                         {subscription?.city ?? customer.location ?? "—"}
@@ -1802,21 +1887,22 @@ export default function CustomerProfileReportsPage() {
                   );
                 })}
               </tbody>
-            </table>
-          </div>
-          {!tableCustomers.length && (
-            <div className="px-6 py-10 text-center text-sm text-gray-500">
-              {t.customerProfileReports.noCustomersMatchFilters}
+              </table>
             </div>
-          )}
-        </div>
-        {tableCustomers.length > 0 && (
-          <Pagination
-            currentPage={tablePage}
-            pageSize={CUSTOMER_TABLE_PAGE_SIZE}
-            totalItems={tableCustomers.length}
-            onPageChange={setTablePage}
-          />
+            {!tableCustomers.length && (
+              <div className="px-6 py-10 text-center text-sm text-gray-500">
+                {t.customerProfileReports.noCustomersMatchFilters}
+              </div>
+            )}
+            {tableCustomers.length > 0 && (
+              <Pagination
+                currentPage={tablePage}
+                pageSize={CUSTOMER_TABLE_PAGE_SIZE}
+                totalItems={tableCustomers.length}
+                onPageChange={setTablePage}
+              />
+            )}
+          </div>
         )}
       </section>
     </div>
