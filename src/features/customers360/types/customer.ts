@@ -1,13 +1,43 @@
 // Customer (Subscriber-360) Type Definitions
 
+// Notification Channel Types
+export enum NotificationChannel {
+  NORMAL_SMS = "NORMAL_SMS",
+  FLASH_SMS = "FLASH_SMS",
+  EMAIL = "EMAIL",
+  WHATSAPP = "WHATSAPP",
+  PUSH = "PUSH",
+  USSD = "USSD",
+  INTERACTIVE_USSD = "INTERACTIVE_USSD",
+  INAPP = "INAPP",
+  IVR = "IVR",
+  OBD = "OBD",
+  SHORT_CODE = "SHORT_CODE",
+}
+
+export type NotificationChannelType = keyof typeof NotificationChannel;
+
 export interface CustomerAttributes {
   first_name?: string;
   last_name?: string;
   email?: string;
+  alternate_email?: string;
+  gender?: string;
+  date_of_birth?: string;
+  language_preference?: string;
+  city?: string;
+  physical_address?: string;
+  region?: string;
+  postal_code?: string;
+  country_code?: string;
+  customer_tier?: string;
+  preferred_channel?: NotificationChannelType | string;
+  timezone?: string;
+  alternate_msisdns?: string[];
   age?: number;
   device_type?: string;
   premium_user?: boolean;
-  [key: string]: string | number | boolean | undefined; // Allow dynamic attributes
+  [key: string]: string | number | boolean | string[] | undefined; // Allow dynamic attributes
 }
 
 export interface Customer {
@@ -36,7 +66,7 @@ export interface Subscriber {
   kyc_verified?: boolean;
   fraud_flag?: boolean;
   language_preference?: string | null;
-  preferred_channel?: string | null;
+  preferred_channel?: NotificationChannelType | string | null;
   metadata?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;

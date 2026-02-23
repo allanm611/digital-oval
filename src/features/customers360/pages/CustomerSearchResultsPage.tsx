@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import { colors } from "../../../shared/utils/tokens";
 import { color, tw } from "../../../shared/utils/utils";
+import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
@@ -399,57 +400,54 @@ export default function CustomerSearchResultsPage() {
 
   // Fetch full customer details from API when customerId is available
   useEffect(() => {
-    if (customerIdFromUrl && !selectedSubscription) {
-      const fetchCustomerDetails = async () => {
-        try {
-          const customerId = parseInt(customerIdFromUrl, 10);
-          if (!isNaN(customerId)) {
-            const response = await customerService.getCustomerById(customerId);
-            if (response.success && response.data) {
-              // Convert API response to subscription format
-              const apiCustomer = response.data;
-              const convertedSubscription: CustomerSubscriptionRecord = {
-                customerId: customerId,
-                subscriptionId: (apiCustomer as any).subscriber_id || customerId,
-                firstName: apiCustomer.first_name || "Unknown",
-                lastName: apiCustomer.last_name || "Customer",
-                msisdn: apiCustomer.msisdn,
-                email: apiCustomer.email,
-                alternateEmail: (apiCustomer as any).alternate_email,
-                gender: apiCustomer.gender,
-                birthDate: apiCustomer.date_of_birth,
-                city: apiCustomer.city,
-                region: (apiCustomer as any).region,
-                postalCode: (apiCustomer as any).postal_code,
-                countryCode: (apiCustomer as any).country_code,
-                physicalAddress: (apiCustomer as any).physical_address,
-                customerType: apiCustomer.subscriber_type || "prepaid",
-                preferredChannel: apiCustomer.preferred_channel,
-                preferredLanguage: (apiCustomer as any).language_preference,
-                customerTier: (apiCustomer as any).customer_tier,
-                timezone: (apiCustomer as any).timezone,
-                status: apiCustomer.subscriber_status || "active",
-                activationDate: apiCustomer.created_at,
-                alternatemsisdns: (apiCustomer as any).alternate_msisdns?.join(", "),
-                iccid: (apiCustomer as any).iccid,
-                imsi: (apiCustomer as any).imsi,
-              };
-              setSelectedSubscription(convertedSubscription);
-            }
+    const fetchCustomerDetails = async () => {
+      if (!customerIdFromUrl) return;
+
+      try {
+        const customerId = parseInt(customerIdFromUrl, 10);
+        if (!isNaN(customerId)) {
+          const response = await customerService.getCustomerById(customerId);
+          if (response.success && response.data) {
+            // Convert API response to subscription format
+            const apiCustomer = response.data;
+            const convertedSubscription: CustomerSubscriptionRecord = {
+              customerId: customerId,
+              subscriptionId: (apiCustomer as any).subscriber_id || customerId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              alternateEmail: (apiCustomer as any).alternate_email,
+              gender: apiCustomer.gender,
+              birthDate: apiCustomer.date_of_birth,
+              city: apiCustomer.city,
+              region: (apiCustomer as any).region,
+              postalCode: (apiCustomer as any).postal_code,
+              countryCode: (apiCustomer as any).country_code,
+              physicalAddress: (apiCustomer as any).physical_address,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              preferredChannel: apiCustomer.preferred_channel,
+              preferredLanguage: (apiCustomer as any).language_preference,
+              customerTier: (apiCustomer as any).customer_tier,
+              timezone: (apiCustomer as any).timezone,
+              status: apiCustomer.subscriber_status || "active",
+              activationDate: apiCustomer.created_at,
+              alternatemsisdns: (apiCustomer as any).alternate_msisdns?.join(", "),
+              iccid: (apiCustomer as any).iccid,
+              imsi: (apiCustomer as any).imsi,
+            };
+            setSelectedSubscription(convertedSubscription);
           }
-        } catch (error) {
-          console.error("Failed to fetch customer details:", error);
         }
-      };
-      fetchCustomerDetails();
-    }
-  }, [customerIdFromUrl, selectedSubscription]);
+      } catch (error) {
+        console.error("Failed to fetch customer details:", error);
+      }
+    };
+
+    fetchCustomerDetails();
+  }, [customerIdFromUrl]);
 
   const customer = selectedCustomer || derivedCustomerFromSubscription;
-
-  const handleBackNavigation = () => {
-    navigate(-1);
-  };
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");
   const [eventSearchTerm, setEventSearchTerm] = useState<string>("");
@@ -647,7 +645,11 @@ export default function CustomerSearchResultsPage() {
             {
               label: "Date of Birth",
               value: selectedSubscription.birthDate
-                ? selectedSubscription.birthDate.split(" ")[0]
+                ? new Date(selectedSubscription.birthDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
                 : "—",
             },
           ],
@@ -739,17 +741,6 @@ export default function CustomerSearchResultsPage() {
             ? "We couldn't load that customer profile. Please return to Customer Reports and run your search again."
             : "We couldn't load that customer profile. Please return to the Customers list and select a profile to view its insights."}
         </div>
-        {origin && (
-          <button
-            onClick={handleBackNavigation}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {origin === "reports"
-              ? "Go to Customer Reports"
-              : "Go to Customers"}
-          </button>
-        )}
       </div>
     );
   }
@@ -759,19 +750,10 @@ export default function CustomerSearchResultsPage() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          {origin && (
-            <button
-              onClick={handleBackNavigation}
-              className={`inline-flex items-center justify-center ${tw.rounded} border border-gray-200 p-2 text-gray-600 hover:text-gray-900 transition-colors`}
-              aria-label={
-                origin === "customers"
-                  ? "Back to customers"
-                  : "Back to customer reports"
-              }
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </button>
-          )}
+          <BackButton
+            fallbackTo="/dashboard/customers"
+            className={`inline-flex items-center justify-center ${tw.rounded} border border-gray-200 p-2 text-gray-600 hover:text-gray-900`}
+          />
           <div>
             <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
               {customer.name}

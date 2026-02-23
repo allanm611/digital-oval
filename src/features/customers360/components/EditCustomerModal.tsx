@@ -47,11 +47,17 @@ const CUSTOMER_TIER_OPTIONS = [
 ];
 
 const PREFERRED_CHANNEL_OPTIONS = [
-  { value: "SMS", label: "SMS" },
-  { value: "USSD", label: "USSD" },
-  { value: "APP", label: "APP" },
-  { value: "EMAIL", label: "EMAIL" },
+  { value: "NORMAL_SMS", label: "Normal SMS" },
+  { value: "FLASH_SMS", label: "Flash SMS" },
+  { value: "EMAIL", label: "Email" },
   { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "PUSH", label: "Push" },
+  { value: "USSD", label: "USSD" },
+  { value: "INTERACTIVE_USSD", label: "Interactive USSD" },
+  { value: "INAPP", label: "In-App" },
+  { value: "IVR", label: "IVR" },
+  { value: "OBD", label: "OBD" },
+  { value: "SHORT_CODE", label: "Short Code" },
 ];
 
 const TIMEZONE_OPTIONS = [
@@ -78,7 +84,7 @@ const initialFormData: FormData = {
   postalCode: "",
   countryCode: "",
   customerTier: "",
-  preferredChannel: "SMS",
+  preferredChannel: "NORMAL_SMS",
   timezone: "Africa/Kampala",
 };
 
@@ -122,7 +128,7 @@ export default function EditCustomerModal({
               postalCode: customerData.postal_code || "",
               countryCode: customerData.country_code || "",
               customerTier: customerData.customer_tier || "",
-              preferredChannel: customerData.preferred_channel || "SMS",
+              preferredChannel: customerData.preferred_channel || "NORMAL_SMS",
               timezone: customerData.timezone || "Africa/Kampala",
             });
           }
@@ -147,7 +153,7 @@ export default function EditCustomerModal({
             postalCode: "",
             countryCode: "",
             customerTier: "",
-            preferredChannel: "SMS",
+            preferredChannel: "NORMAL_SMS",
             timezone: "Africa/Kampala",
           });
         } finally {
@@ -200,7 +206,18 @@ export default function EditCustomerModal({
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email,
-          city: formData.city,
+          alternate_email: formData.alternateEmail || undefined,
+          gender: formData.gender || undefined,
+          date_of_birth: formData.dateOfBirth || undefined,
+          language_preference: formData.languagePreference || "en",
+          city: formData.city || undefined,
+          physical_address: formData.physicalAddress || undefined,
+          region: formData.region || undefined,
+          postal_code: formData.postalCode || undefined,
+          country_code: formData.countryCode || undefined,
+          customer_tier: formData.customerTier || undefined,
+          preferred_channel: formData.preferredChannel || "NORMAL_SMS",
+          timezone: formData.timezone || "Africa/Kampala",
         });
 
         const updatedCustomer: CustomerSubscriptionRecord = {

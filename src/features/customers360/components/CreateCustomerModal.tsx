@@ -68,11 +68,17 @@ const CUSTOMER_TIER_OPTIONS = [
 ];
 
 const PREFERRED_CHANNEL_OPTIONS = [
-  { value: "SMS", label: "SMS" },
-  { value: "USSD", label: "USSD" },
-  { value: "APP", label: "APP" },
-  { value: "EMAIL", label: "EMAIL" },
+  { value: "NORMAL_SMS", label: "Normal SMS" },
+  { value: "FLASH_SMS", label: "Flash SMS" },
+  { value: "EMAIL", label: "Email" },
   { value: "WHATSAPP", label: "WhatsApp" },
+  { value: "PUSH", label: "Push" },
+  { value: "USSD", label: "USSD" },
+  { value: "INTERACTIVE_USSD", label: "Interactive USSD" },
+  { value: "INAPP", label: "In-App" },
+  { value: "IVR", label: "IVR" },
+  { value: "OBD", label: "OBD" },
+  { value: "SHORT_CODE", label: "Short Code" },
 ];
 
 const TIMEZONE_OPTIONS = [
@@ -99,7 +105,7 @@ const initialFormData: FormData = {
   postalCode: "",
   countryCode: "",
   customerTier: "",
-  preferredChannel: "SMS",
+  preferredChannel: "NORMAL_SMS",
   timezone: "Africa/Kampala",
 };
 
@@ -158,14 +164,15 @@ export default function CreateCustomerModal({
 
     const rows = lines.slice(1).map((line, index) => {
       const parts = line.split(",").map((p) => p.trim());
+      // Required: SubID, FirstName, LastName, Phone, Email
       const hasMinimumFields =
-        parts.length >= 4 && parts[0] && parts[1] && parts[2] && parts[3];
+        parts.length >= 6 && parts[0] && parts[1] && parts[2] && parts[3] && parts[5];
 
       if (!hasMinimumFields) {
         return {
           rowNum: index + 1,
           valid: false,
-          error: "Missing required fields (SubID, FirstName, LastName, Phone)",
+          error: "Missing required fields (SubID, FirstName, LastName, Phone, Email)",
           data: parts,
         };
       }
@@ -186,6 +193,26 @@ export default function CreateCustomerModal({
           rowNum: index + 1,
           valid: false,
           error: "Phone number must begin with country code",
+          data: parts,
+        };
+      }
+
+      // Validate alternate phone number if provided (must start with country code)
+      if (parts[4] && !isValidCountryCodePhone(parts[4])) {
+        return {
+          rowNum: index + 1,
+          valid: false,
+          error: "Alternate phone number must begin with country code",
+          data: parts,
+        };
+      }
+
+      // Validate gender if provided (only Male or Female)
+      if (parts[7] && !["Male", "Female"].includes(parts[7])) {
+        return {
+          rowNum: index + 1,
+          valid: false,
+          error: "Gender must be Male or Female",
           data: parts,
         };
       }
@@ -370,7 +397,7 @@ export default function CreateCustomerModal({
           country_code: formData.countryCode || undefined,
           physical_address: formData.physicalAddress || undefined,
           customer_tier: formData.customerTier || undefined,
-          // preferred_channel: formData.preferredChannel || "SMS", // TODO: Fix enum values with backend
+          preferred_channel: formData.preferredChannel || "NORMAL_SMS",
           timezone: formData.timezone || "Africa/Kampala",
           device_type: "unknown",
           premium_user: false,
@@ -1118,7 +1145,7 @@ export default function CreateCustomerModal({
                   Required Fields
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {["SubID", "FirstName", "LastName", "Phone"].map((field) => (
+                  {["SubID", "FirstName", "LastName", "Phone", "Email"].map((field) => (
                     <span
                       key={field}
                       className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium"
@@ -1320,18 +1347,20 @@ export default function CreateCustomerModal({
                         const parts = line
                           .split(importFileDelimiter)
                           .map((p) => p.trim());
+                        // Required: SubID, FirstName, LastName, Phone, Email
                         const hasMinimumFields =
-                          parts.length >= 4 &&
+                          parts.length >= 6 &&
                           parts[0] &&
                           parts[1] &&
                           parts[2] &&
-                          parts[3];
+                          parts[3] &&
+                          parts[5];
 
                         if (!hasMinimumFields) {
                           return {
                             rowNum: index + 1,
                             valid: false,
-                            error: "Missing required fields",
+                            error: "Missing required fields (SubID, FirstName, LastName, Phone, Email)",
                             data: parts,
                           };
                         }
@@ -1352,6 +1381,26 @@ export default function CreateCustomerModal({
                             rowNum: index + 1,
                             valid: false,
                             error: "Phone number must begin with country code",
+                            data: parts,
+                          };
+                        }
+
+                        // Validate alternate phone number if provided (must start with country code)
+                        if (parts[4] && !isValidCountryCodePhone(parts[4])) {
+                          return {
+                            rowNum: index + 1,
+                            valid: false,
+                            error: "Alternate phone number must begin with country code",
+                            data: parts,
+                          };
+                        }
+
+                        // Validate gender if provided (only Male or Female)
+                        if (parts[7] && !["Male", "Female"].includes(parts[7])) {
+                          return {
+                            rowNum: index + 1,
+                            valid: false,
+                            error: "Gender must be Male or Female",
                             data: parts,
                           };
                         }

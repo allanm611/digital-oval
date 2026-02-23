@@ -778,7 +778,7 @@ export interface Translations {
     msisdn: string;
     subscriptionId: string;
     customerType: string;
-    tariff: string;
+    preferredChannel: string;
     simType: string;
     status: string;
     activationDate: string;
