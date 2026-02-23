@@ -57,7 +57,7 @@ export const convertSubscriptionToCustomerRow = (
     : new Date().toISOString().split("T")[0];
 
   return {
-    id: `CUST-${record.customerId}-${record.subscriptionId ?? "0"}`,
+    id: record.customerId.toString(),
     name,
     segment: record.customerType ?? "General",
     lifetimeValue: 0,
