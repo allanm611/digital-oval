@@ -45,6 +45,7 @@ import {
   formatMsisdn,
 } from "../utils/customerSubscriptionHelpers";
 import { customerSubscriptions } from "../utils/customerDataService";
+import { customerService } from "../services/customerServices";
 
 // Extract types from API response
 type CustomerSegment = CustomerSearchResultsResponse["segments"][number];
@@ -416,6 +417,54 @@ export default function CustomerSearchResultsPage() {
       }
     }
   }, [selectedCustomer, selectedSubscription]);
+
+  // Fetch full customer details from API when customerId is available
+  useEffect(() => {
+    if (customerIdFromUrl && !selectedSubscription) {
+      const fetchCustomerDetails = async () => {
+        try {
+          const customerId = parseInt(customerIdFromUrl, 10);
+          if (!isNaN(customerId)) {
+            const response = await customerService.getCustomerById(customerId);
+            if (response.success && response.data) {
+              // Convert API response to subscription format
+              const apiCustomer = response.data;
+              const convertedSubscription: CustomerSubscriptionRecord = {
+                customerId: customerId,
+                subscriptionId: (apiCustomer as any).subscriber_id || customerId,
+                firstName: apiCustomer.first_name || "Unknown",
+                lastName: apiCustomer.last_name || "Customer",
+                msisdn: apiCustomer.msisdn,
+                email: apiCustomer.email,
+                alternateEmail: (apiCustomer as any).alternate_email,
+                gender: apiCustomer.gender,
+                birthDate: apiCustomer.date_of_birth,
+                city: apiCustomer.city,
+                region: (apiCustomer as any).region,
+                postalCode: (apiCustomer as any).postal_code,
+                countryCode: (apiCustomer as any).country_code,
+                physicalAddress: (apiCustomer as any).physical_address,
+                customerType: apiCustomer.subscriber_type || "prepaid",
+                preferredChannel: apiCustomer.preferred_channel,
+                preferredLanguage: (apiCustomer as any).language_preference,
+                customerTier: (apiCustomer as any).customer_tier,
+                timezone: (apiCustomer as any).timezone,
+                status: apiCustomer.subscriber_status || "active",
+                activationDate: apiCustomer.created_at,
+                alternatemsisdns: (apiCustomer as any).alternate_msisdns?.join(", "),
+                iccid: (apiCustomer as any).iccid,
+                imsi: (apiCustomer as any).imsi,
+              };
+              setSelectedSubscription(convertedSubscription);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch customer details:", error);
+        }
+      };
+      fetchCustomerDetails();
+    }
+  }, [customerIdFromUrl, selectedSubscription]);
 
   const customer = selectedCustomer || derivedCustomerFromSubscription;
 
