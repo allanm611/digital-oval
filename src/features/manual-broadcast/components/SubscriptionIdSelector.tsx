@@ -54,11 +54,11 @@ export default function SubscriptionIdSelector({
 
   return (
     <div className="space-y-2">
-      <label className={`block text-sm font-medium ${tw.textPrimary}`}>
+      <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
         {t.manualBroadcast.subscriptionIdLabel || "Subscription ID Field *"}
       </label>
       <p className={`text-xs ${tw.textSecondary} mb-2`}>
-        {t.manualBroadcast.subscriptionIdHelper || 
+        {t.manualBroadcast.subscriptionIdHelper ||
           "Select the column that contains the unique identifier for each customer"}
       </p>
       
@@ -85,12 +85,6 @@ export default function SubscriptionIdSelector({
         </div>
       )}
 
-      {/* Info message when no columns available */}
-      {fileColumns.length === 0 && !disabled && (
-        <p className={`text-xs ${tw.textMuted} mt-1`}>
-          {t.manualBroadcast.uploadFileFirst || "Upload a file to see available columns"}
-        </p>
-      )}
     </div>
   );
 }

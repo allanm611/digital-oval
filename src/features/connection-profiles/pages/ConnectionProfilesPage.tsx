@@ -163,35 +163,44 @@ export default function ConnectionProfilesPage() {
       );
 
       if (filters.connectionType !== "all") {
-        data =
-          (await connectionProfileService.getProfilesByConnectionType(
+        const response =
+          await connectionProfileService.getProfilesByConnectionType(
             filters.connectionType,
             { limit: pageSize, offset, skipCache: true },
-          )) || [];
+          );
+        data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+        paginationMetadata = response?.pagination;
       } else if (
         filters.environment !== "all" &&
         VALID_ENVIRONMENTS.includes(filters.environment)
       ) {
-        data =
-          (await connectionProfileService.getProfilesByEnvironment(
+        const response =
+          await connectionProfileService.getProfilesByEnvironment(
             filters.environment,
             { limit: pageSize, offset, skipCache: true },
-          )) || [];
+          );
+        data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+        paginationMetadata = response?.pagination;
       } else if (filters.classification !== "all") {
-        data =
-          (await connectionProfileService.getProfilesByClassification(
+        const response =
+          await connectionProfileService.getProfilesByClassification(
             filters.classification,
             { limit: pageSize, offset, skipCache: true },
-          )) || [];
+          );
+        data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+        paginationMetadata = response?.pagination;
       } else if (serverId) {
-        data =
-          (await connectionProfileService.getProfilesByServer(serverId, {
+        const response =
+          await connectionProfileService.getProfilesByServer(serverId, {
             limit: pageSize,
             offset,
             skipCache: true,
-          })) || [];
+          });
+        data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
+        paginationMetadata = response?.pagination;
       } else if (filters.status === "expired") {
-        data = (await connectionProfileService.getExpiredProfiles(true)) || [];
+        const response = await connectionProfileService.getExpiredProfiles(true);
+        data = Array.isArray(response?.data) ? response.data : Array.isArray(response) ? response : [];
       } else if (shouldUseSearch) {
         const searchPayload: ConnectionProfileSearchQuery = {
           limit: pageSize,
@@ -234,7 +243,7 @@ export default function ConnectionProfilesPage() {
         }
         const response =
           await connectionProfileService.searchProfiles(searchPayload);
-        data = response.data || [];
+        data = Array.isArray(response.data) ? response.data : [];
         paginationMetadata = response.pagination;
       } else {
         const response = await connectionProfileService.listProfiles({
@@ -242,7 +251,7 @@ export default function ConnectionProfilesPage() {
           offset,
           skipCache: true,
         });
-        data = response.data || [];
+        data = Array.isArray(response.data) ? response.data : [];
         paginationMetadata = response.pagination;
       }
 

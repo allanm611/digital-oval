@@ -212,6 +212,7 @@ export default function QuickListPage() {
       name: list.name,
       description: list.description || "",
       subscriber_id_col_name: "",
+      subscriber_id_field_mapping: "",
       file_delimiter: ",",
       list_headers: "",
       file_text: "",

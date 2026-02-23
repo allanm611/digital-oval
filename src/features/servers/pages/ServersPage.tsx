@@ -430,7 +430,7 @@ export default function ServersPage() {
   const renderHealthBadge = (server: ServerType) => {
     if (!server.health_check_enabled) {
       return (
-        <span className="text-xs font-medium text-black">
+        <span className="text-sm font-medium text-black">
           Disabled
         </span>
       );
@@ -442,7 +442,7 @@ export default function ServersPage() {
       server.last_health_check_status === null
     ) {
       return (
-        <span className="text-xs font-medium text-black">
+        <span className="text-sm font-medium text-black">
           null
         </span>
       );
@@ -450,7 +450,7 @@ export default function ServersPage() {
 
     if (server.last_health_check_status === "unhealthy") {
       return (
-        <span className="text-xs font-medium text-black">
+        <span className="text-sm font-medium text-black">
           Unhealthy
         </span>
       );
@@ -458,7 +458,7 @@ export default function ServersPage() {
 
     if (server.last_health_check_status === "healthy") {
       return (
-        <span className="text-xs font-medium text-black">
+        <span className="text-sm font-medium text-black">
           Healthy
         </span>
       );
@@ -466,7 +466,7 @@ export default function ServersPage() {
 
     // Fallback for any other status values
     return (
-      <span className="text-xs font-medium text-black">
+      <span className="text-sm font-medium text-black">
         {server.last_health_check_status || "Unknown"}
       </span>
     );
@@ -862,7 +862,7 @@ export default function ServersPage() {
               style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
             >
               <thead style={{ background: color.surface.tableHeader }}>
-                <tr className="text-left text-xs uppercase tracking-wide text-black">
+                <tr className="text-left text-sm uppercase tracking-wide text-black">
                   {isSelectionMode && (
                     <th
                       className="px-3 py-3 text-sm font-medium"
@@ -966,7 +966,7 @@ export default function ServersPage() {
                           onClick={() =>
                             navigate(`/dashboard/servers/${server.id}`)
                           }
-                          className="font-semibold text-black whitespace-nowrap"
+                          className={`${tw.tableFirstColumn} text-black whitespace-nowrap`}
                         >
                           {server.name}
                         </button>
@@ -1011,7 +1011,7 @@ export default function ServersPage() {
                       >
                         <div className="flex flex-wrap gap-2">
                           <span
-                            className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"
+                            className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
                             style={{
                               backgroundColor: color.primary.accent,
                             }}
@@ -1020,7 +1020,7 @@ export default function ServersPage() {
                           </span>
                           {server.is_deprecated && (
                             <span
-                              className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white"
+                              className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
                               style={{
                                 backgroundColor: color.primary.accent,
                               }}

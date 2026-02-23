@@ -4,12 +4,15 @@ import { button as buttonTokens, color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import SubscriptionIdSelector from "../../manual-broadcast/components/SubscriptionIdSelector";
 import { CreateQuickListRequest } from "../types/quicklist";
+import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
+import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
 
 export type QuickListFormValues = {
   list_id?: number;
   name: string;
   description: string;
   subscriber_id_col_name: string;
+  subscriber_id_field_mapping: string;
   file_delimiter: string;
   file_text?: string;
   list_headers?: string;
@@ -30,6 +33,7 @@ const defaultForm: QuickListFormValues = {
   name: "",
   description: "",
   subscriber_id_col_name: "",
+  subscriber_id_field_mapping: "",
   file_delimiter: ",",
   list_headers: "",
   file_text: "",
@@ -49,6 +53,10 @@ export default function CreateQuickListModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFileProcessing, setIsFileProcessing] = useState(false);
+  const [customerIdentityFields, setCustomerIdentityFields] = useState<
+    CustomerIdentityField[]
+  >([]);
+  const [isLoadingFields, setIsLoadingFields] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isCreateMode = mode === "create";
@@ -64,6 +72,7 @@ export default function CreateQuickListModal({
       name: initialData?.name || "",
       description: initialData?.description || "",
       subscriber_id_col_name: initialData?.subscriber_id_col_name || "",
+      subscriber_id_field_mapping: "",
       file_delimiter: initialData?.file_delimiter || ",",
       list_headers: initialData?.list_headers || "",
       file_text: initialData?.file_text || "",
@@ -78,6 +87,30 @@ export default function CreateQuickListModal({
       fileInputRef.current.value = "";
     }
   }, [initialData, isOpen]);
+
+  // Load customer identity fields when modal opens
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loadCustomerIdentityFields = async () => {
+      try {
+        setIsLoadingFields(true);
+        const fields = await customerIdentityService.getCustomerIdentityFields(
+          true
+        );
+        setCustomerIdentityFields(fields);
+      } catch (err) {
+        console.error("Failed to load customer identity fields:", err);
+        setCustomerIdentityFields([]);
+      } finally {
+        setIsLoadingFields(false);
+      }
+    };
+
+    loadCustomerIdentityFields();
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -316,6 +349,10 @@ export default function CreateQuickListModal({
       validationErrors.subscriber_id_col_name =
         "Subscriber identifier column is required.";
     }
+    if (!form.subscriber_id_field_mapping.trim()) {
+      validationErrors.subscriber_id_field_mapping =
+        "Customer identity field mapping is required.";
+    }
     if (!form.file_delimiter) {
       validationErrors.file_delimiter = "Select a delimiter.";
     }
@@ -341,6 +378,7 @@ export default function CreateQuickListModal({
         file_size: form.file_size,
         file_delimiter: form.file_delimiter,
         subscriber_id_col_name: form.subscriber_id_col_name.trim(),
+        subscriber_id_field_mapping: form.subscriber_id_field_mapping.trim() || undefined,
         list_headers: form.list_headers,
       });
       handleClose();
@@ -463,16 +501,55 @@ export default function CreateQuickListModal({
               const headerOptions = parseHeaders();
 
               return (
-                <SubscriptionIdSelector
-                  fileColumns={headerOptions}
-                  selectedColumn={form.subscriber_id_col_name || null}
-                  onColumnSelect={(column) =>
-                    handleInputChange("subscriber_id_col_name", column)
-                  }
-                  disabled={isSubmitting}
-                  error={!!errors.subscriber_id_col_name}
-                  errorMessage={errors.subscriber_id_col_name}
-                />
+                <>
+                  <SubscriptionIdSelector
+                    fileColumns={headerOptions}
+                    selectedColumn={form.subscriber_id_col_name || null}
+                    onColumnSelect={(column) =>
+                      handleInputChange("subscriber_id_col_name", column)
+                    }
+                    disabled={isSubmitting}
+                    error={!!errors.subscriber_id_col_name}
+                    errorMessage={errors.subscriber_id_col_name}
+                  />
+
+                  {/* Customer Identity Field Mapping Dropdown */}
+                  <div className="mt-4">
+                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
+                      Map to Customer Identity Field *
+                    </label>
+                    <p className={`text-xs ${tw.textSecondary} mb-2`}>
+                      Select which customer field this column represents
+                    </p>
+                    <HeadlessSelect
+                      options={customerIdentityFields.map((field) => ({
+                        value: field.field_value,
+                        label: field.field_name,
+                      }))}
+                      value={form.subscriber_id_field_mapping || ""}
+                      onChange={(value) =>
+                        handleInputChange(
+                          "subscriber_id_field_mapping",
+                          String(value)
+                        )
+                      }
+                      placeholder={
+                        !form.subscriber_id_col_name.trim()
+                          ? "Select subscriber ID column first..."
+                          : "Select identity field..."
+                      }
+                      placeholderClassName="text-sm"
+                      disabled={isSubmitting || isLoadingFields || customerIdentityFields.length === 0 || !form.subscriber_id_col_name.trim()}
+                      error={!!errors.subscriber_id_field_mapping}
+                      zIndex={10100}
+                    />
+                    {errors.subscriber_id_field_mapping && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {errors.subscriber_id_field_mapping}
+                      </p>
+                    )}
+                  </div>
+                </>
               );
             })()}
 
@@ -829,7 +906,7 @@ export default function CreateQuickListModal({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.file_delimiter}
+                  disabled={isSubmitting || isFileProcessing || !form.name.trim() || (isCreateMode && !form.file_text) || !form.subscriber_id_col_name.trim() || !form.subscriber_id_field_mapping.trim() || !form.file_delimiter}
                   className="text-sm font-semibold shadow-sm disabled:opacity-50 sm:order-2"
                   style={{
                     backgroundColor: buttonTokens.action.background,
@@ -842,6 +919,7 @@ export default function CreateQuickListModal({
                     !form.name.trim() ? "Please enter a list name" :
                     (isCreateMode && !form.file_text) ? "Please upload a file" :
                     !form.subscriber_id_col_name.trim() ? "Please select subscriber ID column" :
+                    !form.subscriber_id_field_mapping.trim() ? "Please select customer identity field mapping" :
                     !form.file_delimiter ? "Please select a delimiter" :
                     ""
                   }
