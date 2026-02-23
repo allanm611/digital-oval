@@ -821,6 +821,10 @@ export default function Dashboard() {
           />
           <Route path="/customers" element={<AnalyticsPages.CustomersPage />} />
           <Route
+            path="/customers/details/:customerId"
+            element={<AnalyticsPages.CustomerSearchResultsPage />}
+          />
+          <Route
             path="/configuration"
             element={<SettingsPages.ConfigurationPage />}
           />

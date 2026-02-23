@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Search,
@@ -308,17 +308,11 @@ type TabType =
 export default function CustomerSearchResultsPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { customerId: customerIdFromParams } = useParams<{ customerId: string }>();
 
   const stateSource = location.state?.source as OriginSource | undefined;
-  const sourceParam = searchParams.get("source");
-  const urlSource =
-    sourceParam === "customers" || sourceParam === "reports"
-      ? (sourceParam as OriginSource)
-      : undefined;
-
   const [origin, setOrigin] = useState<OriginSource | undefined>(
-    stateSource ?? urlSource,
+    stateSource ?? "customers",
   );
 
   useEffect(() => {
@@ -327,19 +321,12 @@ export default function CustomerSearchResultsPage() {
     }
   }, [stateSource, origin]);
 
-  useEffect(() => {
-    if (urlSource && urlSource !== origin) {
-      setOrigin(urlSource);
-    }
-  }, [urlSource, origin]);
-
   // Get customer from state (initial navigation) or from URL params (on refresh)
   const customerFromState = location.state?.customer as CustomerRow | undefined;
   const subscriptionFromState = location.state?.subscription as
     | CustomerSubscriptionRecord
     | undefined;
-  const customerIdFromUrl = searchParams.get("customerId");
-  const subscriptionIdFromUrl = searchParams.get("subscriptionId");
+  const customerIdFromUrl = customerIdFromParams;
 
   const customerFromUrl = useMemo(() => {
     if (!customerIdFromUrl) return undefined;
@@ -352,23 +339,15 @@ export default function CustomerSearchResultsPage() {
     if (subscriptionFromState) {
       return subscriptionFromState;
     }
-    if (subscriptionIdFromUrl) {
-      return customerSubscriptions.find(
-        (record) =>
-          record.subscriptionId?.toString() === subscriptionIdFromUrl ||
-          record.customerId?.toString() === subscriptionIdFromUrl,
-      );
-    }
     if (customerIdFromUrl) {
-      const numericId = customerIdFromUrl.replace("CUST-", "");
+      const numericId = parseInt(customerIdFromUrl, 10);
       return customerSubscriptions.find(
         (record) =>
-          record.customerId?.toString() === numericId ||
-          `CUST-${record.customerId}` === customerIdFromUrl,
+          record.customerId?.toString() === numericId.toString(),
       );
     }
     return undefined;
-  }, [subscriptionFromState, subscriptionIdFromUrl, customerIdFromUrl]);
+  }, [subscriptionFromState, customerIdFromUrl]);
 
   const derivedCustomerFromSubscription = useMemo(() => {
     if (!subscriptionFromDataset) return undefined;
@@ -468,39 +447,8 @@ export default function CustomerSearchResultsPage() {
 
   const customer = selectedCustomer || derivedCustomerFromSubscription;
 
-  // Update URL when customer changes to persist on refresh
-  useEffect(() => {
-    if (customer && customer.id !== customerIdFromUrl) {
-      const params = new URLSearchParams();
-      params.set("customerId", customer.id);
-      if (selectedSubscription?.subscriptionId) {
-        params.set(
-          "subscriptionId",
-          selectedSubscription.subscriptionId.toString(),
-        );
-      }
-      if (origin) {
-        params.set("source", origin);
-      }
-
-      navigate(
-        `/dashboard/reports/customer-profiles/search?${params.toString()}`,
-        {
-          replace: true,
-          state: origin
-            ? { customer, subscription: selectedSubscription, source: origin }
-            : { customer, subscription: selectedSubscription },
-        },
-      );
-    }
-  }, [customer, customerIdFromUrl, origin, navigate, selectedSubscription]);
-
   const handleBackNavigation = () => {
-    if (origin === "customers") {
-      navigate("/dashboard/customers");
-    } else if (origin === "reports") {
-      navigate("/dashboard/reports/customer-profiles");
-    }
+    navigate(-1);
   };
 
   const [activeTab, setActiveTab] = useState<TabType>("overview");

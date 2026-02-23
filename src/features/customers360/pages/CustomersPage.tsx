@@ -36,6 +36,26 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const pageSize = 20;
 
+// Channel display label mapping
+const CHANNEL_LABELS: Record<string, string> = {
+  NORMAL_SMS: "Normal SMS",
+  FLASH_SMS: "Flash SMS",
+  EMAIL: "Email",
+  WHATSAPP: "WhatsApp",
+  PUSH: "Push",
+  USSD: "USSD",
+  INTERACTIVE_USSD: "Interactive USSD",
+  INAPP: "In-App",
+  IVR: "IVR",
+  OBD: "OBD",
+  SHORT_CODE: "Short Code",
+};
+
+const getChannelLabel = (channel: string | undefined): string => {
+  if (!channel) return "—";
+  return CHANNEL_LABELS[channel] || channel;
+};
+
 export default function CustomersPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -118,7 +138,7 @@ export default function CustomersPage() {
                 customerType: apiCustomer.subscriber_type || "prepaid",
                 tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
                 status: apiCustomer.subscriber_status || "active",
-                simType: "2FF",
+                simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
                 activationDate: apiCustomer.created_at,
               };
             });
@@ -325,12 +345,9 @@ export default function CustomersPage() {
     customerToSelect: CustomerSubscriptionRecord,
   ) => {
     const derivedCustomer = convertSubscriptionToCustomerRow(customerToSelect);
-    const params = new URLSearchParams();
-    params.set("customerId", derivedCustomer.id);
-    params.set("source", "customers");
 
     navigate(
-      `/dashboard/reports/customer-profiles/search?${params.toString()}`,
+      `/dashboard/customers/details/${derivedCustomer.id}`,
       {
         state: {
           customer: derivedCustomer,
@@ -467,7 +484,7 @@ export default function CustomersPage() {
               t.customer360.customer,
               t.customer360.customerType,
               t.customer360.status,
-              t.customer360.tariff,
+              t.customer360.preferredChannel,
               t.customer360.simType,
               t.customer360.activationDate,
             ]}
@@ -477,7 +494,7 @@ export default function CustomersPage() {
               getSubscriptionDisplayName(row, `Customer ${row.customerId}`),
               row.customerType || "—",
               row.status || "Unknown",
-              row.tariff || "—",
+              getChannelLabel(row.tariff),
               row.simType || "—",
               row.activationDate || "—",
             ])}
@@ -607,7 +624,7 @@ export default function CustomersPage() {
                     t.customer360.customerType,
                     // t.customer360.city,
                     t.customer360.status,
-                    t.customer360.tariff,
+                    t.customer360.preferredChannel,
                     t.customer360.simType,
                     t.customer360.activationDate,
                     t.customer360.actions,
@@ -678,7 +695,7 @@ export default function CustomersPage() {
                         className="px-6 py-5 text-sm text-gray-900"
                         style={cellBackground}
                       >
-                        {row.tariff ?? "—"}
+                        {getChannelLabel(row.tariff)}
                       </td>
                       <td
                         className="px-6 py-5 text-sm text-gray-900"
@@ -857,7 +874,7 @@ export default function CustomersPage() {
                           {customer.msisdn && (
                             <span>MSISDN: {formatMsisdn(customer.msisdn)}</span>
                           )}
-                          {customer.tariff && <span>{customer.tariff}</span>}
+                          {customer.tariff && <span>{getChannelLabel(customer.tariff)}</span>}
                           {customer.city && <span>{customer.city}</span>}
                         </div>
                       </div>
