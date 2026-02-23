@@ -43,7 +43,7 @@ interface CampaignFormData extends CreateCampaignRequest {
 }
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
-import { CampaignFlowConfig } from "../types/campaignFlow";
+import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
 import { departmentsConfig } from "../../../shared/configs/configurationPageConfigs";
 
 // Objective options mapping
@@ -222,8 +222,8 @@ export default function CreateCampaignPage() {
   const [segmentOfferMappings, setSegmentOfferMappings] = useState<
     SegmentOfferMapping[]
   >([]);
-  const [campaignFlows, setCampaignFlows] = useState<CampaignFlowConfig[]>([]);
-  const [originalFlows, setOriginalFlows] = useState<CampaignFlowConfig[]>([]); // Track original flows for edit mode
+  const [campaignFlows, setCampaignFlows] = useState<CampaignFlowResponseData[]>([]);
+  const [originalFlows, setOriginalFlows] = useState<CampaignFlowResponseData[]>([]); // Track original flows for edit mode
   const [controlGroup, setControlGroup] = useState<ControlGroup>({
     enabled: false,
     percentage: 5,
@@ -342,7 +342,7 @@ export default function CreateCampaignPage() {
           // Process segments from campaign flows
           if (segmentsResponse.success && segmentsResponse.data?.length > 0) {
             const validSegments: CampaignSegment[] = segmentsResponse.data
-              .map((segment: any) => {
+              .map((segment) => {
                 if (!segment || !segment.segment_id) {
                   console.warn("Segment data invalid:", segment);
                   return null;
@@ -427,9 +427,10 @@ export default function CreateCampaignPage() {
           );
 
           if (flowsResponse.success && flowsResponse.data.length > 0) {
-            // Convert API response to CampaignFlowConfig format
-            const flows: CampaignFlowConfig[] = flowsResponse.data.map(
+            // Convert API response to CampaignFlowResponseData format (includes id)
+            const flows: CampaignFlowResponseData[] = flowsResponse.data.map(
               (flow) => ({
+                id: flow.id,
                 campaign_id: flow.campaign_id,
                 segment_id:
                   typeof flow.segment_id === "string"
@@ -444,7 +445,10 @@ export default function CreateCampaignPage() {
                 bucket_allocation: flow.bucket_allocation || undefined,
                 condition_rule: flow.condition_rule || undefined,
                 is_active: flow.is_active,
+                created_at: flow.created_at,
+                updated_at: flow.updated_at,
                 created_by: flow.created_by,
+                updated_by: flow.updated_by,
               }),
             );
 
@@ -888,10 +892,10 @@ export default function CreateCampaignPage() {
                     f.segment_id === originalFlow.segment_id &&
                     f.offer_id === originalFlow.offer_id,
                 );
-                if (!stillExists && (originalFlow as any).id) {
+                if (!stillExists && originalFlow.id) {
                   try {
                     await campaignFlowService.deleteCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                     );
                   } catch (deleteError) {
                     console.error("Error deleting flow:", deleteError);
@@ -908,12 +912,12 @@ export default function CreateCampaignPage() {
                 );
                 if (
                   originalFlow &&
-                  (originalFlow as any).id &&
+                  originalFlow.id &&
                   JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
                 ) {
                   try {
                     await campaignFlowService.updateCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                       updatedFlow,
                     );
                   } catch (updateError) {
@@ -998,10 +1002,10 @@ export default function CreateCampaignPage() {
                     f.segment_id === originalFlow.segment_id &&
                     f.offer_id === originalFlow.offer_id,
                 );
-                if (!stillExists && (originalFlow as any).id) {
+                if (!stillExists && originalFlow.id) {
                   try {
                     await campaignFlowService.deleteCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                     );
                   } catch (deleteError) {
                     console.error("Error deleting flow:", deleteError);
@@ -1018,12 +1022,12 @@ export default function CreateCampaignPage() {
                 );
                 if (
                   originalFlow &&
-                  (originalFlow as any).id &&
+                  originalFlow.id &&
                   JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
                 ) {
                   try {
                     await campaignFlowService.updateCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                       updatedFlow,
                     );
                   } catch (updateError) {
@@ -1175,10 +1179,10 @@ export default function CreateCampaignPage() {
                     f.segment_id === originalFlow.segment_id &&
                     f.offer_id === originalFlow.offer_id,
                 );
-                if (!stillExists && (originalFlow as any).id) {
+                if (!stillExists && originalFlow.id) {
                   try {
                     await campaignFlowService.deleteCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                     );
                   } catch (deleteError) {
                     console.error("Error deleting flow:", deleteError);
@@ -1195,12 +1199,12 @@ export default function CreateCampaignPage() {
                 );
                 if (
                   originalFlow &&
-                  (originalFlow as any).id &&
+                  originalFlow.id &&
                   JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
                 ) {
                   try {
                     await campaignFlowService.updateCampaignFlow(
-                      (originalFlow as any).id,
+                      originalFlow.id,
                       updatedFlow,
                     );
                   } catch (updateError) {

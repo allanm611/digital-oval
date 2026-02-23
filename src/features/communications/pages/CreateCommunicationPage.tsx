@@ -71,7 +71,7 @@ export default function CreateCommunicationPage() {
         }
       }
     } catch (_error) {
-      console.error("Failed to load quicklist:", error);
+      console.error("Failed to load quicklist:", _error);
     } finally {
       setLoading(false);
     }

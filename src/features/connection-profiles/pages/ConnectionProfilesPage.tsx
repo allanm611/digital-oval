@@ -29,7 +29,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CreateButton from "../../../shared/components/ui/CreateButton";
-import { color, tw } from "../../../shared/utils/utils";
+import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { connectionProfileService } from "../services/connectionProfileService";
 import {
   ConnectionProfileEnvironmentStatsItem,
@@ -52,9 +52,9 @@ const CLASSIFICATION_OPTIONS = [
   "restricted",
 ];
 
-const ENVIRONMENT_FALLBACKS = ["development", "staging", "production"];
+const ENVIRONMENT_FALLBACKS = ["dev", "staging", "production"];
 
-const VALID_ENVIRONMENTS = ["development", "staging", "production"];
+const VALID_ENVIRONMENTS = ["dev", "staging", "production"];
 
 const DEFAULT_FILTERS = {
   connectionType: "all",
@@ -1015,7 +1015,7 @@ export default function ConnectionProfilesPage() {
 
       {(showFiltersPanel || closingFiltersPanel) &&
         createPortal(
-          <div className="fixed inset-0 z-[9999]">
+          <div style={{ position: "fixed", inset: 0, zIndex: zIndex.modal }}>
             <div
               className="absolute inset-0 bg-black bg-opacity-50"
               onClick={closeFiltersPanel}
@@ -1024,6 +1024,7 @@ export default function ConnectionProfilesPage() {
               className={`absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ${
                 closingFiltersPanel ? "translate-x-full" : "translate-x-0"
               }`}
+              style={{ zIndex: zIndex.popover }}
             >
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -1037,8 +1038,8 @@ export default function ConnectionProfilesPage() {
                   <X size={24} />
                 </button>
               </div>
-              <div className="p-4 space-y-4 overflow-y-auto h-[calc(100%-120px)]">
-                <div>
+              <div className="p-4 space-y-4 overflow-y-auto h-[calc(100%-120px)]" style={{ position: "relative", zIndex: zIndex.popover }}>
+                <div style={{ position: "relative", zIndex: zIndex.popover }}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Status
                   </label>
@@ -1058,7 +1059,7 @@ export default function ConnectionProfilesPage() {
                     }
                   />
                 </div>
-                <div>
+                <div style={{ position: "relative", zIndex: zIndex.popover }}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Connection Type
                   </label>
@@ -1079,7 +1080,7 @@ export default function ConnectionProfilesPage() {
                     }
                   />
                 </div>
-                <div>
+                <div style={{ position: "relative", zIndex: zIndex.popover }}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Environment
                   </label>
@@ -1100,7 +1101,7 @@ export default function ConnectionProfilesPage() {
                     }
                   />
                 </div>
-                <div>
+                <div style={{ position: "relative", zIndex: zIndex.popover }}>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Data Classification
                   </label>
@@ -1135,7 +1136,7 @@ export default function ConnectionProfilesPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                  <div style={{ position: "relative", zIndex: zIndex.popover }}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       PII
                     </label>
@@ -1154,7 +1155,7 @@ export default function ConnectionProfilesPage() {
                       }
                     />
                   </div>
-                  <div>
+                  <div style={{ position: "relative", zIndex: zIndex.popover }}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Health Checks
                     </label>

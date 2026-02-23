@@ -298,7 +298,6 @@ class ConnectionProfileService {
   ): Promise<ConnectionProfileListResponse> {
     const queryString = this.buildQueryParams({
       limit: query?.limit,
-      offset: query?.offset,
       skipCache: query?.skipCache,
     });
     const endpoint = this.withSkipCache(

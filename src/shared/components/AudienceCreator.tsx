@@ -208,7 +208,7 @@ export default function AudienceCreator({
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
-          }) as any[][];
+          }) as (string | number | boolean | null)[][];
 
           if (jsonData.length === 0) {
             resolve([]);
@@ -303,7 +303,7 @@ export default function AudienceCreator({
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json(worksheet, {
             header: 1,
-          }) as any[][];
+          }) as (string | number | boolean | null)[][];
 
           if (jsonData.length === 0) {
             resolve({ headers: columns, rows: [], totalRows: 0 });

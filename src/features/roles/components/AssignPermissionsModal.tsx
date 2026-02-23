@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import { Role, Permission } from "../types/role";
+import { Role, Permission, PermissionListResult, RolePermissionListResult } from "../types/role";
 import { rolePermissionService } from "../services/rolePermissionService";
 import { permissionService } from "../services/permissionService";
 import { color, tw } from "../../../shared/utils/utils";
@@ -136,17 +136,21 @@ export default function AssignPermissionsModal({
       );
 
       // Handle both 'permissions' and 'rolePermissions' keys from API
-      let rolePerms = [];
+      let rolePerms: (Permission | any)[] = [];
       if (Array.isArray(rolePermsResponse)) {
         rolePerms = rolePermsResponse;
       } else if (rolePermsResponse && typeof rolePermsResponse === "object") {
+        const permResult = rolePermsResponse as PermissionListResult;
         // Try 'permissions' key first (what the API returns)
-        if ((rolePermsResponse as any)?.permissions) {
-          rolePerms = (rolePermsResponse as any).permissions;
+        if (permResult?.permissions) {
+          rolePerms = permResult.permissions;
         }
-        // Fall back to 'rolePermissions' key
-        else if ((rolePermsResponse as any)?.rolePermissions) {
-          rolePerms = (rolePermsResponse as any).rolePermissions;
+        // Fall back to 'rolePermissions' key (for backward compatibility)
+        else {
+          const rolePermResult = rolePermsResponse as RolePermissionListResult;
+          if (rolePermResult?.rolePermissions) {
+            rolePerms = rolePermResult.rolePermissions;
+          }
         }
       }
 

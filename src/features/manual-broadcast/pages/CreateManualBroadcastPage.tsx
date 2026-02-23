@@ -105,7 +105,7 @@ export default function CreateManualBroadcastPage() {
           setIsLoading(true);
           const response = await communicationService.getExecutionDetails(executionId);
           if (response.success && response.data) {
-            const exec = response.data.execution as any;
+            const exec = response.data.execution as { channel?: string; name?: string; execution_id?: string; source_name?: string; message_template?: { title?: string; body?: string; is_rich_text?: boolean }; source_type?: string; source_id?: string; source_name?: string };
             const logs = response.data.recent_logs || [];
 
             // Extract channel from logs if available
@@ -128,7 +128,7 @@ export default function CreateManualBroadcastPage() {
               channel: channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH",
               messageTitle: messageTemplate.title,
               messageBody: messageTemplate.body,
-              isRichText: (exec.message_template as any)?.is_rich_text || false,
+              isRichText: exec.message_template?.is_rich_text || false,
               scheduleType: "now",
             };
 

@@ -795,8 +795,7 @@ export default function OfferCreativeStep({
           true, // Skip cache
         );
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rendered = (response as any).data || response;
+        const rendered = response.data;
         setPreviewResult(rendered);
       } catch (err) {
         // Failed to render creative
@@ -1195,8 +1194,7 @@ export default function OfferCreativeStep({
                         </label>
                         <HeadlessSelect
                           value={
-                            (selectedCreativeData.variables as any)
-                              ?.sms_route || ""
+                            (selectedCreativeData.variables?.sms_route as string) || ""
                           }
                           onChange={(value) =>
                             updateCreative(selectedCreativeData.id, {

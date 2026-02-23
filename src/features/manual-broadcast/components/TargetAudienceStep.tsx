@@ -142,8 +142,9 @@ export default function TargetAudienceStep({
       const response = await quicklistService.createQuickList(request);
       if (response.success && response.data) {
         // Get rows_imported from the response
-        const rowsImported = (response.data as any).rows_imported || 0;
-        const quicklistId = (response.data as any).quicklist_id || (response.data as any).id;
+        const data = response.data as { rows_imported?: number; quicklist_id?: number; id?: number };
+        const rowsImported = data.rows_imported || 0;
+        const quicklistId = data.quicklist_id || data.id;
 
         const newQuickList: QuickListItem = {
           id: quicklistId,
@@ -451,13 +452,11 @@ export default function TargetAudienceStep({
             )}
           </div>
         )}
-      </div>
 
-      <div className="px-6 pb-6">
         {/* Error Message */}
         {error && (
           <div
-            className="p-3 rounded-md flex items-start space-x-2 mb-4"
+            className="p-3 rounded-md flex items-start space-x-2"
             style={{
               backgroundColor: `${color.status.danger}10`,
               border: `1px solid ${color.status.danger}30`,
@@ -472,9 +471,10 @@ export default function TargetAudienceStep({
             </p>
           </div>
         )}
+      </div>
 
-        {/* Actions */}
-        <div className="sticky bottom-12 z-40 bg-white border-t flex items-center justify-end space-x-3 py-4 shadow-sm" style={{ borderColor: color.border.default }}>
+      {/* Actions */}
+      <div className="sticky bottom-12 z-40 bg-white flex items-center justify-end space-x-3 py-4">
           <button
             type="button"
             onClick={handleNext}
@@ -497,7 +497,6 @@ export default function TargetAudienceStep({
               "Next: Define Communication"
             )}
           </button>
-        </div>
       </div>
 
       {/* QuickList Picker Modal */}

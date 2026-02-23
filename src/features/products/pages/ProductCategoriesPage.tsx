@@ -720,8 +720,7 @@ export default function ProductCatalogsPage() {
       if (err instanceof Error) {
         errorMessage = err.message;
       } else if (err && typeof err === "object") {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const error = err as any;
+        const error = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
         if (error.response?.data?.error) {
           errorMessage = error.response.data.error;
         } else if (error.response?.data?.message) {

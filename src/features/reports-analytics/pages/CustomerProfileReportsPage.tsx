@@ -564,10 +564,10 @@ export default function CustomerProfileReportsPage() {
                 ? parseInt(apiCustomer.id, 10)
                 : apiCustomer.id;
 
-            const subscriberId = (apiCustomer as any).subscriber_id
-              ? typeof (apiCustomer as any).subscriber_id === "string"
-                ? parseInt((apiCustomer as any).subscriber_id, 10)
-                : (apiCustomer as any).subscriber_id
+            const subscriberId = apiCustomer.subscriber_id
+              ? typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id
               : customerId;
 
             return {
@@ -943,10 +943,10 @@ export default function CustomerProfileReportsPage() {
                 ? parseInt(apiCustomer.id, 10)
                 : apiCustomer.id;
 
-            const subscriberId = (apiCustomer as any).subscriber_id
-              ? typeof (apiCustomer as any).subscriber_id === "string"
-                ? parseInt((apiCustomer as any).subscriber_id, 10)
-                : (apiCustomer as any).subscriber_id
+            const subscriberId = apiCustomer.subscriber_id
+              ? typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id
               : customerId;
 
             return {

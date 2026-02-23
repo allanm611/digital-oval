@@ -541,9 +541,8 @@ export default function OfferDetailsPage() {
 
         const response = await offerService.getOfferById(Number(id), skipCache);
 
-        // Extract offer from response.data if wrapped, otherwise use response directly
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const offerData = (response as any).data || response;
+        // Extract offer from response.data
+        const offerData = response.data;
         setOffer(offerData);
 
         // Fetch category name if category_id exists
@@ -637,10 +636,8 @@ export default function OfferDetailsPage() {
           skipCache,
         );
 
-        // Extract products from response.data if wrapped, otherwise use response directly
-        const productsData =
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (response as any).data || productsResponse.data || response;
+        // Extract products from response.data
+        const productsData = response.data;
 
         if (Array.isArray(productsData) && productsData.length > 0) {
           // Deduplicate links by product_id - if multiple links exist for same product,
@@ -729,8 +726,7 @@ export default function OfferDetailsPage() {
           limit: 100,
           skipCache,
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const creativesData = (response as any).data || [];
+        const creativesData = response.data || [];
         setOfferCreatives(creativesData);
       } catch {
         setOfferCreatives([]);
@@ -2657,7 +2653,7 @@ export default function OfferDetailsPage() {
                     SMS Route
                   </label>
                   <HeadlessSelect
-                    value={(newCreativeForm.variables as any)?.sms_route || ""}
+                    value={(newCreativeForm.variables?.sms_route as string) || ""}
                     onChange={(value) =>
                       setNewCreativeForm((prev) => ({
                         ...prev,

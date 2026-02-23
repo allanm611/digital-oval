@@ -992,7 +992,7 @@ export default function SettingsPage() {
                     value={notificationSettings.email_digest_frequency}
                     onChange={(value) =>
                       updateNotificationSettings({
-                        email_digest_frequency: value as any,
+                        email_digest_frequency: value as "instant" | "daily" | "weekly" | "never",
                       })
                     }
                     options={[
@@ -1070,7 +1070,7 @@ export default function SettingsPage() {
                         }
                         onChange={(value) =>
                           updateNotificationSettings({
-                            notification_sound: value as any,
+                            notification_sound: value as "default" | "chime" | "ding" | "pop" | "tone",
                           })
                         }
                         options={[

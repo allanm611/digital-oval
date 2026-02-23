@@ -180,10 +180,12 @@ export default function JobExecutionsAnalyticsPage() {
         if (
           data &&
           typeof data === "object" &&
-          "data" in data &&
-          Array.isArray((data as any).data)
+          "data" in data
         ) {
-          return (data as any).data as T[];
+          const wrapped = data as { data?: unknown };
+          if (Array.isArray(wrapped.data)) {
+            return wrapped.data as T[];
+          }
         }
         return [];
       }
@@ -235,8 +237,9 @@ export default function JobExecutionsAnalyticsPage() {
         // Handle paginated response
         if (response && typeof response === "object" && "data" in response) {
           setWorkers(response.data || []);
+          const paginatedResponse = response as { pagination?: { total?: number }; count?: number };
           setWorkerTotalCount(
-            response.pagination?.total || (response as any).count || 0
+            paginatedResponse.pagination?.total || paginatedResponse.count || 0
           );
         } else if (Array.isArray(response)) {
           // Legacy response

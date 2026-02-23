@@ -140,7 +140,7 @@ export default function CreateScheduledJobPage() {
   // Detect if this is a campaign job
   const isCampaignJob =
     searchParams.get("type") === "campaign" ||
-    (formData.metadata as any)?.job_type === "campaign";
+    (formData.metadata?.job_type as string | undefined) === "campaign";
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newTag, setNewTag] = useState("");
@@ -215,15 +215,15 @@ export default function CreateScheduledJobPage() {
 
           // Handle campaign job metadata in edit mode
           if (job.metadata?.job_type === "campaign") {
-            const meta = job.metadata as any;
+            const meta = job.metadata;
             setCampaignMeta({
-              campaign_id: meta.campaign_id || 0,
-              mode: meta.mode || "immediate",
-              batch_size: meta.batch_size || 1000,
-              max_parallel_broadcasts: meta.max_parallel_broadcasts || 3,
+              campaign_id: (meta.campaign_id as number) || 0,
+              mode: (meta.mode as string) || "immediate",
+              batch_size: (meta.batch_size as number) || 1000,
+              max_parallel_broadcasts: (meta.max_parallel_broadcasts as number) || 3,
             });
-            const segmentIds = (meta.segments || []).map(
-              (s: any) => s.segment_id,
+            const segmentIds = ((meta.segments as Array<{ segment_id: number; channel_codes?: string[] }>) || []).map(
+              (s) => s.segment_id,
             );
             setSelectedSegmentIds(segmentIds);
 
@@ -275,9 +275,9 @@ export default function CreateScheduledJobPage() {
           new Map(segments.map((s) => [s.segment_id, s])).values(),
         );
         setAvailableSegments(
-          uniqueSegments.map((s) => ({
+          uniqueSegments.map((s: any) => ({
             segment_id: s.segment_id,
-            name: (s as any).segment_name || `Segment ${s.segment_id}`,
+            name: s.segment_name || `Segment ${s.segment_id}`,
           })),
         );
         // Initialize each segment with existing channels or default EMAIL
@@ -469,7 +469,7 @@ export default function CreateScheduledJobPage() {
 
       // Also check if err has a data property with error details (common in axios responses)
       if (err && typeof err === 'object' && 'data' in err) {
-        const errData = err.data as any;
+        const errData = (err as { data?: unknown }).data as { error?: string } | undefined;
         if (errData?.error && typeof errData.error === 'string') {
           errorMessage = errData.error;
         }

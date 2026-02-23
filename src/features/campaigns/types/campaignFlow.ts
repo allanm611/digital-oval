@@ -22,6 +22,15 @@ export interface CampaignFlowConfig {
   created_by?: number;
 }
 
+// Flow object as returned from API responses - includes id and timestamps
+export interface CampaignFlowResponseData extends CampaignFlowConfig {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  created_by: number;
+  updated_by: number;
+}
+
 export interface CampaignFlowResponse {
   success: boolean;
   data: {

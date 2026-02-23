@@ -367,7 +367,7 @@ export default function OffersPage() {
             const offersResponse = await offerService.getStats();
             if (offersResponse.success && offersResponse.data) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = offersResponse.data as any;
+              const data = offersResponse.data as { total_offers?: string | number; totalOffers?: string | number; total?: string | number };
               total =
                 parseInt(data.total_offers as string) ||
                 parseInt(data.totalOffers as string) ||
@@ -384,8 +384,7 @@ export default function OffersPage() {
         try {
           const offersResponse = await offerService.getStats();
           if (offersResponse.success && offersResponse.data) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const data = offersResponse.data as any;
+            const data = offersResponse.data as { total_offers?: string | number; totalOffers?: string | number; total?: string | number };
             total =
               parseInt(data.total_offers as string) ||
               parseInt(data.totalOffers as string) ||

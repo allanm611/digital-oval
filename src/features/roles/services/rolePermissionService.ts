@@ -424,7 +424,8 @@ class RolePermissionService {
             permission_id: i,
             created_at: new Date().toISOString(),
             created_by: body.createdBy,
-          } as any));
+            is_active: true,
+          } as RolePermission));
         } else {
           return [];
         }

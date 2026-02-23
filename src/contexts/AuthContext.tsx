@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Get full user info to find their primary role
         const userResponse = await userService.getUserById(response.user.id);
         if (userResponse.success && userResponse.data) {
-          const fullUser = userResponse.data as any;
+          const fullUser = userResponse.data as { primary_role_id?: number; role_id?: number };
           const primaryRoleId = fullUser.primary_role_id ?? fullUser.role_id;
           if (primaryRoleId && mappedRoles[primaryRoleId]) {
             userRole = mappedRoles[primaryRoleId].name;

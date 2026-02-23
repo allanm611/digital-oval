@@ -88,8 +88,7 @@ export default function ExecuteCampaignModal({
 
       // Create segment list with their first associated offer from flows
       const uniqueSegments = segmentsResponse.data.map((segment) => {
-        // API returns segment_id (not id), so use that for matching
-        const segmentId = (segment as any)?.segment_id || segment.id;
+        const segmentId = segment.id;
 
         // Find the first flow for this segment to get offer_id
         const flow = flowsResponse.data.find(
@@ -98,10 +97,10 @@ export default function ExecuteCampaignModal({
 
         return {
           id: segmentId,
-          segment_id: String(segmentId), // Use the actual segment_id from API
-          segment_name: (segment as any)?.segment_name || (segment as any)?.name,
+          segment_id: String(segmentId),
+          segment_name: segment.name,
           offer_id: flow?.offer_id || 0,
-          offer_name: (flow as any)?.offer_name, // Will try to get from flow
+          offer_name: undefined,
           selected: true,
           channels: ["EMAIL"], // Default channel
         };

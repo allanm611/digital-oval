@@ -488,6 +488,7 @@ interface CampaignBase {
   budget_allocated?: string | number | null;
   budget_spent?: string | number | null;
   rejection_reason?: string | null;
+  is_active?: boolean; // Flag indicating if campaign is active
 }
 
 // Multiple Target Group Campaign
@@ -580,6 +581,8 @@ export interface CampaignOffer {
   validity_period: number;
   terms_conditions?: string;
   personalization?: OfferPersonalization;
+  code?: string;
+  category_id?: number;
 }
 
 export interface OfferPersonalization {

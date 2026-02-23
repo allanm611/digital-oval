@@ -53,7 +53,7 @@ export default function CustomerIdentityPage() {
     const uniqueTypes = Array.from(
       new Set(
         fields
-          .map((field) => (field as any).type || field.field_type)
+          .map((field) => field.field_type)
           .filter(Boolean),
       ),
     );
@@ -71,7 +71,7 @@ export default function CustomerIdentityPage() {
         (field.description || "").toLowerCase().includes(search) ||
         (field.source_table || "").toLowerCase().includes(search);
 
-      const fieldTypeValue = (field as any).type || field.field_type;
+      const fieldTypeValue = field.field_type;
       const matchesType =
         selectedFieldType === "all" ||
         (fieldTypeValue && fieldTypeValue.toLowerCase() === selectedFieldType.toLowerCase());
@@ -251,7 +251,7 @@ export default function CustomerIdentityPage() {
                         className="px-6 py-4 text-sm text-gray-700"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {(field as any).type || (field as any).field_type || "—"}
+                        {field.field_type || "—"}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-700"

@@ -1780,7 +1780,7 @@ export const es: Translations = {
       deleteErrorMessage: "Error al eliminar la ruta SMS",
       saveErrorMessage: "Por favor, intente nuevamente más tarde.",
       routeNameLabel: "Nombre de la Ruta",
-      routeNamePlaceholder: "ej: Ruta 1, Ruta 2",
+      routeNamePlaceholder: "Effortel SMS Gateway",
       statusLabel: "Estado",
     },
     languages: {

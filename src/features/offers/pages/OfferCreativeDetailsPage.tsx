@@ -48,8 +48,7 @@ export default function OfferCreativeDetailsPage() {
         setLoading(true);
         setError(null);
         const response = await offerCreativeService.getById(Number(id), true);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const creativeData = (response as any).data || response;
+        const creativeData = response.data;
         setCreative(creativeData);
       } catch (err) {
         const message =

@@ -1819,7 +1819,7 @@ export const en: Translations = {
       deleteErrorMessage: "Failed to delete SMS route",
       saveErrorMessage: "Please try again later.",
       routeNameLabel: "Route Name",
-      routeNamePlaceholder: "e.g., Route 1, Route 2",
+      routeNamePlaceholder: "Effortel SMS Gateway",
       statusLabel: "Status",
     },
     languages: {

@@ -49,24 +49,24 @@ export default function ManualBroadcastListsPage() {
       if (response.success && response.data) {
         // Map executions to ManualBroadcast format
         const executions = response.data.data || response.data.executions || (Array.isArray(response.data) ? response.data : []);
-        const broadcasts: ManualBroadcast[] = executions.map(
+        const broadcasts: ManualBroadcast[] = (executions || []).filter(Boolean).map(
           (exec: any) => ({
-            id: exec.id,
-            execution_id: exec.execution_id || String(exec.id),
-            source_type: exec.source_type,
-            source_id: exec.source_id || null,
-            source_name: exec.name || exec.source_name || `Broadcast ${exec.id}`,
-            channels: exec.channels || [],
-            total_recipients: exec.total_recipients || 0,
-            messages_sent: exec.messages_sent || 0,
-            messages_failed: exec.messages_failed || 0,
+            id: exec?.id,
+            execution_id: exec?.execution_id,
+            source_type: exec?.source_type,
+            source_id: exec?.source_id ?? null,
+            source_name: exec?.name ?? exec?.source_name ?? `Broadcast ${exec?.id ?? 'Unknown'}`,
+            channels: Array.isArray(exec?.channels) ? exec.channels : [],
+            total_recipients: typeof exec?.total_recipients === 'number' ? exec.total_recipients : 0,
+            messages_sent: typeof exec?.messages_sent === 'number' ? exec.messages_sent : 0,
+            messages_failed: typeof exec?.messages_failed === 'number' ? exec.messages_failed : 0,
             status: "completed" as const,
-            created_at: exec.created_at,
-            created_by: exec.created_by || null,
-            message_template: exec.message_template || { body: "" },
-            messages_attempted: exec.total_recipients || 0,
-            channel_summaries: [],
-            execution_time_ms: 0,
+            created_at: exec?.created_at ?? new Date().toISOString(),
+            created_by: exec?.created_by ?? null,
+            message_template: exec?.message_template ?? { body: "" },
+            messages_attempted: typeof exec?.total_recipients === 'number' ? exec.total_recipients : 0,
+            channel_summaries: Array.isArray(exec?.channel_summaries) ? exec.channel_summaries : [],
+            execution_time_ms: typeof exec?.execution_time_ms === 'number' ? exec.execution_time_ms : 0,
           }),
         );
 
@@ -450,13 +450,15 @@ export default function ManualBroadcastListsPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleViewDetails(broadcast)}
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                            title="View Details"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          {broadcast.execution_id && (
+                            <button
+                              onClick={() => handleViewDetails(broadcast)}
+                              className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() =>
                               navigate(

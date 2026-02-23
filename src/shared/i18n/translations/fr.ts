@@ -1860,7 +1860,7 @@ export const fr: Translations = {
       deleteErrorMessage: "Échec de la suppression de la route SMS",
       saveErrorMessage: "Veuillez réessayer plus tard.",
       routeNameLabel: "Nom de la Route",
-      routeNamePlaceholder: "ex: Route 1, Route 2",
+      routeNamePlaceholder: "Effortel SMS Gateway",
       statusLabel: "Statut",
     },
     languages: {

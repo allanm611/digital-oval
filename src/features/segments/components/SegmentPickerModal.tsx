@@ -44,7 +44,7 @@ export default function SegmentPickerModal({
         try {
           const response = await segmentService.getSegments({
             search: searchTerm || undefined,
-            type: selectedFilter !== "all" ? (selectedFilter as any) : undefined,
+            type: selectedFilter !== "all" ? (selectedFilter as "static" | "dynamic" | "trigger") : undefined,
             page: currentPage,
             pageSize: pageSize,
             skipCache: false,

@@ -10,9 +10,10 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { campaignFlowService } from "../services/campaignFlowService";
 import { segmentService } from "../../segments/services/segmentService";
 import { offerService } from "../../offers/services/offerService";
-import { CampaignFlowConfig } from "../types/campaignFlow";
+import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
 import { CampaignSegmentDetail } from "../types/campaign";
 import { Offer } from "../../offers/types/offer";
+import { SegmentType } from "../../segments/types/segment";
 
 export default function CampaignFlowDetailsPage() {
   const { flowId } = useParams<{
@@ -22,8 +23,8 @@ export default function CampaignFlowDetailsPage() {
   const location = useLocation();
   const { showToast } = useToast();
 
-  const [flow, setFlow] = useState<CampaignFlowConfig | null>(
-    (location.state as any)?.flow || null
+  const [flow, setFlow] = useState<CampaignFlowResponseData | null>(
+    (location.state as { flow?: CampaignFlowResponseData })?.flow || null
   );
   const [isLoading, setIsLoading] = useState(!flow);
   const [segment, setSegment] = useState<CampaignSegmentDetail | null>(null);
@@ -31,7 +32,7 @@ export default function CampaignFlowDetailsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
-  const [activeSegments, setActiveSegments] = useState<CampaignSegmentDetail[]>([]);
+  const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -52,25 +53,25 @@ export default function CampaignFlowDetailsPage() {
               numericId
             );
             if (flowResponse?.data) {
-              flowData = flowResponse.data as any;
+              flowData = flowResponse.data;
               setFlow(flowData);
             }
           }
         }
 
         if (flowData) {
-          if ((flowData as any).segment_id) {
+          if (flowData.segment_id) {
             const segmentResponse = await segmentService.getSegmentById(
-              String((flowData as any).segment_id)
+              String(flowData.segment_id)
             );
             if (segmentResponse?.data) {
               setSegment(segmentResponse.data as CampaignSegmentDetail);
             }
           }
 
-          if ((flowData as any).offer_id) {
+          if (flowData.offer_id) {
             const offerResponse = await offerService.getOfferById(
-              String((flowData as any).offer_id)
+              String(flowData.offer_id)
             );
             if (offerResponse?.data) {
               setOffer(offerResponse.data as Offer);
@@ -106,11 +107,11 @@ export default function CampaignFlowDetailsPage() {
       flow_type: flow.flow_type,
       segment_id: flow.segment_id,
       offer_id: flow.offer_id,
-      offer_creative_id: (flow as any).offer_creative_id,
-      template_id: (flow as any).template_id,
-      condition_rule: (flow as any).condition_rule,
+      offer_creative_id: flow.offer_creative_id,
+      template_id: flow.template_id,
+      condition_rule: flow.condition_rule,
       bucket_allocation: flow.bucket_allocation,
-      step_order: (flow as any).step_order,
+      step_order: flow.step_order,
       wait_interval_hours: flow.wait_interval_hours,
       is_active: flow.is_active,
     });
@@ -175,7 +176,7 @@ export default function CampaignFlowDetailsPage() {
       // Reload flow details
       const flowResponse = await campaignFlowService.getCampaignFlowById(flow.id);
       if (flowResponse?.data) {
-        setFlow(flowResponse.data as any);
+        setFlow(flowResponse.data);
       }
     } catch (error) {
       console.error("Error updating flow:", error);
@@ -352,22 +353,23 @@ export default function CampaignFlowDetailsPage() {
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
               Segment
             </label>
-            <p
-              className={`text-base ${tw.textPrimary} font-semibold`}
+            <button
+              onClick={() => navigate(`/dashboard/segments/${flow.segment_id}`)}
+              className={`text-base font-semibold hover:underline transition-colors`}
               style={{ color: color.primary.accent }}
             >
               {segment?.name || `Segment ${flow.segment_id}`}
-            </p>
+            </button>
           </div>
 
           {/* Condition Rule */}
-          {(flow as any).condition_rule && (
+          {flow?.condition_rule && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
                 Condition Rule
               </label>
               <pre className={`text-sm ${tw.textSecondary} bg-gray-50 p-3 ${tw.rounded} overflow-auto max-h-40`}>
-                {JSON.stringify((flow as any).condition_rule, null, 2)}
+                {JSON.stringify(flow.condition_rule, null, 2)}
               </pre>
             </div>
           )}
@@ -388,34 +390,35 @@ export default function CampaignFlowDetailsPage() {
             <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
               Offer
             </label>
-            <p
-              className={`text-base ${tw.textPrimary} font-semibold`}
+            <button
+              onClick={() => navigate(`/dashboard/offers/${flow.offer_id}`)}
+              className={`text-base font-semibold hover:underline transition-colors`}
               style={{ color: color.primary.accent }}
             >
               {offer?.name || `Offer ${flow.offer_id}`}
-            </p>
+            </button>
           </div>
 
           {/* Offer Creative ID */}
-          {(flow as any).offer_creative_id && (
+          {flow?.offer_creative_id && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
                 Offer Creative ID
               </label>
               <p className={`text-base ${tw.textPrimary} font-semibold`}>
-                {(flow as any).offer_creative_id}
+                {flow.offer_creative_id}
               </p>
             </div>
           )}
 
           {/* Template ID */}
-          {(flow as any).template_id && (
+          {flow?.template_id && (
             <div>
               <label className={`text-xs font-medium ${tw.textMuted} uppercase tracking-wide block mb-2`}>
                 Template ID
               </label>
               <p className={`text-base ${tw.textPrimary} font-semibold`}>
-                {(flow as any).template_id}
+                {flow.template_id}
               </p>
             </div>
           )}
@@ -455,37 +458,37 @@ export default function CampaignFlowDetailsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <tbody>
-              {(flow as any).created_at && (
+              {flow?.created_at && (
                 <tr style={{ borderBottom: `1px solid ${color.border.default}` }}>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Created At
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
-                    {new Date((flow as any).created_at).toLocaleString()}
+                    {new Date(flow.created_at).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Updated At
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textSecondary}`}>
-                    {(flow as any).updated_at
-                      ? new Date((flow as any).updated_at).toLocaleString()
+                    {flow.updated_at
+                      ? new Date(flow.updated_at).toLocaleString()
                       : "—"}
                   </td>
                 </tr>
               )}
-              {(flow as any).created_by && (
+              {flow?.created_by && (
                 <tr>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Created By
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textPrimary}`}>
-                    {(flow as any).created_by}
+                    {flow.created_by}
                   </td>
                   <td className="px-6 py-4 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap w-1/4">
                     Updated By
                   </td>
                   <td className={`px-6 py-4 text-sm ${tw.textPrimary}`}>
-                    {(flow as any).updated_by || "—"}
+                    {flow.updated_by || "—"}
                   </td>
                 </tr>
               )}
@@ -540,12 +543,15 @@ export default function CampaignFlowDetailsPage() {
                     </label>
                     <HeadlessSelect
                       value={editedFlow.flow_type || ""}
-                      onChange={(value) =>
-                        setEditedFlow({
-                          ...editedFlow,
-                          flow_type: value as any,
-                        })
-                      }
+                      onChange={(value) => {
+                        const validFlowTypes = ["STANDARD", "AB_TEST", "CHAMPION_CHALLENGER", "ROUND_ROBIN", "MULTIPLE_LEVEL", "MULTIPLE_TARGET"];
+                        if (validFlowTypes.includes(String(value))) {
+                          setEditedFlow({
+                            ...editedFlow,
+                            flow_type: value as CampaignFlowConfig["flow_type"],
+                          });
+                        }
+                      }}
                       options={[
                         { value: "", label: "Select Flow Type" },
                         { value: "STANDARD", label: "Standard" },
@@ -577,8 +583,8 @@ export default function CampaignFlowDetailsPage() {
                         options={[
                           { value: "", label: "Select Segment" },
                           ...activeSegments.map((seg) => ({
-                            value: String((seg as any).segment_id || seg.id),
-                            label: (seg as any).segment_name || seg.name,
+                            value: String(seg.id),
+                            label: seg.name,
                           })),
                         ]}
                         disabled={isLoadingActiveData}
@@ -729,7 +735,7 @@ export default function CampaignFlowDetailsPage() {
         onConfirm={handleDeleteConfirm}
         title="Delete Flow"
         description="Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."
-        itemName={`Flow ${flow ? (flow as any).step_order || "" : ""}`}
+        itemName={`Flow ${flow?.step_order || ""}`}
         isLoading={isActionLoading}
         confirmText="Delete Flow"
         cancelText="Cancel"

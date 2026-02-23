@@ -215,8 +215,7 @@ export default function EditProductPage() {
         errorMessage = err.message;
       } else if (err && typeof err === "object") {
         // Fallback for axios-style errors or other error formats
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const error = err as any;
+        const error = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
         if (error.response?.data?.error) {
           errorMessage = error.response.data.error;
         } else if (error.response?.data?.message) {
@@ -237,7 +236,7 @@ export default function EditProductPage() {
     field: keyof UpdateProductRequest,
     value: string | number | boolean | undefined | UpdateProductRequest["combo_data"]
   ) => {
-    setFormData({ ...formData, [field]: value as any });
+    setFormData({ ...formData, [field]: value });
   };
 
   const handleCategoryCreated = (categoryId: number) => {

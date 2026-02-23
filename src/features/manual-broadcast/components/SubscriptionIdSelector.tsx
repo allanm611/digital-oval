@@ -70,6 +70,7 @@ export default function SubscriptionIdSelector({
         disabled={disabled || fileColumns.length === 0}
         error={error}
         zIndex={10100}
+        placeholderClassName="text-sm"
       />
 
       {/* Error message display */}

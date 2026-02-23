@@ -16,6 +16,7 @@ import {
   Filter,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
+import type { Subscriber } from "../types/customer";
 import {
   convertSubscriptionToCustomerRow,
   formatDateTime,
@@ -118,7 +119,7 @@ export default function CustomersPage() {
             Array.isArray(apiResponse.data)
           ) {
             // Convert API customers to local format
-            const apiCustomers = apiResponse.data.map((apiCustomer) => {
+            const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
               const customerId =
                 typeof apiCustomer.id === "string"
                   ? parseInt(apiCustomer.id, 10)
@@ -126,10 +127,10 @@ export default function CustomersPage() {
 
               // Try to get subscriber_id from API response, fallback to id
               // This allows for future backend update without frontend change
-              const subscriberId = (apiCustomer as any).subscriber_id
-                ? typeof (apiCustomer as any).subscriber_id === "string"
-                  ? parseInt((apiCustomer as any).subscriber_id, 10)
-                  : (apiCustomer as any).subscriber_id
+              const subscriberId = apiCustomer.subscriber_id
+                ? typeof apiCustomer.subscriber_id === "string"
+                  ? parseInt(apiCustomer.subscriber_id, 10)
+                  : apiCustomer.subscriber_id
                 : customerId;
 
               return {
@@ -251,16 +252,16 @@ export default function CustomersPage() {
 
         if (response.success && response.data && Array.isArray(response.data)) {
           // Convert API response to CustomerSubscriptionRecord format
-          const convertedResults = response.data.map((apiCustomer) => {
+          const convertedResults = response.data.map((apiCustomer: Subscriber) => {
             const customerId =
               typeof apiCustomer.id === "string"
                 ? parseInt(apiCustomer.id, 10)
                 : apiCustomer.id;
 
-            const subscriberId = (apiCustomer as any).subscriber_id
-              ? typeof (apiCustomer as any).subscriber_id === "string"
-                ? parseInt((apiCustomer as any).subscriber_id, 10)
-                : (apiCustomer as any).subscriber_id
+            const subscriberId = apiCustomer.subscriber_id
+              ? typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id
               : customerId;
 
             return {
@@ -685,6 +686,25 @@ export default function CustomersPage() {
                 ? "Deleting customer..."
                 : t.customer360.preparingCustomerData}
             </p>
+          </div>
+        ) : error || isTimeout ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+            <p className="text-red-600 font-medium text-center mb-4">
+              {isTimeout ? "Network Timeout" : "Failed to Load Customers"}
+            </p>
+            <p className={`${tw.textSecondary} text-sm text-center mb-6 max-w-md`}>
+              {isTimeout
+                ? "The backend server may be unresponsive. Please try again."
+                : error || "Unable to retrieve customers. Please try again."}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className={`${tw.button} flex items-center gap-2`}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retry
+            </button>
           </div>
         ) : customers.length === 0 && !hasSearchFilters ? (
           <div className="flex items-center justify-center h-64">

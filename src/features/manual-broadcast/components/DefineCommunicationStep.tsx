@@ -738,8 +738,7 @@ export default function DefineCommunicationStep({
 
       {/* Footer */}
       <div
-        className="sticky bottom-12 z-40 bg-white border-t p-5 flex items-center justify-between shadow-sm"
-        style={{ borderColor: color.border.default }}
+        className="sticky bottom-12 z-40 bg-white p-5 flex items-center justify-between"
       >
         <button
           onClick={onPrevious}

@@ -41,8 +41,9 @@ import {
   CampaignSegmentDetail,
   CampaignBudgetUtilisation,
 } from "../types/campaign";
-import { CampaignFlowConfig } from "../types/campaignFlow";
+import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
+import { SegmentType } from "../../segments/types/segment";
 
 export default function CampaignDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -83,7 +84,7 @@ export default function CampaignDetailsPage() {
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoadingOffers, setIsLoadingOffers] = useState(false);
-  const [flows, setFlows] = useState<CampaignFlowConfig[]>([]);
+  const [flows, setFlows] = useState<CampaignFlowResponseData[]>([]);
   const [isLoadingFlows, setIsLoadingFlows] = useState(false);
   const [budgetUtilisation, setBudgetUtilisation] =
     useState<CampaignBudgetUtilisation | null>(null);
@@ -91,12 +92,12 @@ export default function CampaignDetailsPage() {
   const [createdByName, setCreatedByName] = useState<string>("");
   const [showFlowEditModal, setShowFlowEditModal] = useState(false);
   const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
-  const [selectedFlow, setSelectedFlow] = useState<CampaignFlowConfig | null>(
+  const [selectedFlow, setSelectedFlow] = useState<CampaignFlowResponseData | null>(
     null,
   );
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
   const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
-  const [activeSegments, setActiveSegments] = useState<CampaignSegmentDetail[]>([]);
+  const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
   const [showExecuteModal, setShowExecuteModal] = useState(false);
@@ -285,13 +286,14 @@ export default function CampaignDetailsPage() {
 
   const fetchCampaignFlows = async (
     campaignId: number,
-  ): Promise<CampaignFlowConfig[]> => {
+  ): Promise<CampaignFlowResponseData[]> => {
     try {
       setIsLoadingFlows(true);
       const response = await campaignFlowService.getCampaignFlows(campaignId);
       if (response && response.success && Array.isArray(response.data)) {
-        // Convert API response to CampaignFlowConfig format
-        const flowsData: CampaignFlowConfig[] = response.data.map((flow) => ({
+        // Convert API response to CampaignFlowResponseData format (includes id)
+        const flowsData: CampaignFlowResponseData[] = response.data.map((flow) => ({
+          id: flow.id,
           campaign_id: flow.campaign_id,
           segment_id:
             typeof flow.segment_id === "string"
@@ -306,7 +308,10 @@ export default function CampaignDetailsPage() {
           bucket_allocation: flow.bucket_allocation || undefined,
           condition_rule: flow.condition_rule || undefined,
           is_active: flow.is_active,
+          created_at: flow.created_at,
+          updated_at: flow.updated_at,
           created_by: flow.created_by,
+          updated_by: flow.updated_by,
         }));
         setFlows(flowsData);
         return flowsData;
@@ -323,7 +328,7 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const fetchOffersFromFlows = async (flowsData: CampaignFlowConfig[]) => {
+  const fetchOffersFromFlows = async (flowsData: CampaignFlowResponseData[]) => {
     try {
       setIsLoadingOffers(true);
       // Extract unique offer IDs from flows data
@@ -558,17 +563,17 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const handleFlowEdit = async (flow: CampaignFlowConfig) => {
+  const handleFlowEdit = async (flow: CampaignFlowResponseData) => {
     setSelectedFlow(flow);
     setEditedFlow({
       flow_type: flow.flow_type,
       segment_id: flow.segment_id,
       offer_id: flow.offer_id,
-      offer_creative_id: (flow as any).offer_creative_id,
-      template_id: (flow as any).template_id,
-      condition_rule: (flow as any).condition_rule,
+      offer_creative_id: flow.offer_creative_id,
+      template_id: flow.template_id,
+      condition_rule: flow.condition_rule,
       bucket_allocation: flow.bucket_allocation,
-      step_order: (flow as any).step_order,
+      step_order: flow.step_order,
       wait_interval_hours: flow.wait_interval_hours,
       is_active: flow.is_active,
     });
@@ -627,7 +632,7 @@ export default function CampaignDetailsPage() {
       };
 
       // Get flow ID - must be numeric
-      let flowId = (selectedFlow as any).id;
+      let flowId = selectedFlow?.id;
       if (!flowId) {
         showToast("error", "Flow ID not found - cannot update");
         return;
@@ -668,7 +673,7 @@ export default function CampaignDetailsPage() {
       setIsFlowActionLoading(true);
 
       // Get flow ID - must be numeric
-      let flowId = (selectedFlow as any).id;
+      let flowId = selectedFlow?.id;
       if (!flowId) {
         showToast("error", "Flow ID not found - cannot delete");
         return;
@@ -698,10 +703,9 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const handleFlowView = (flow: CampaignFlowConfig) => {
+  const handleFlowView = (flow: CampaignFlowResponseData) => {
     // Navigate to flow details page using flow ID
-    // If flow has an id property, use it; otherwise use composite key
-    const flowId = (flow as any).id || `${flow.segment_id}-${flow.offer_id}-${flow.step_order}`;
+    const flowId = flow.id;
     navigate(`/dashboard/campaigns/${id}/flows/${flowId}`, {
       state: { flow }, // Pass flow data via state for immediate display
     });
@@ -819,7 +823,7 @@ export default function CampaignDetailsPage() {
                         </button>
                     )} */}
 
-          {(campaign as any).is_active === true && campaign.status !== "paused" && (
+          {campaign?.is_active === true && campaign.status !== "paused" && (
             <button
               onClick={handlePauseCampaign}
               disabled={isActionLoading}
@@ -866,7 +870,7 @@ export default function CampaignDetailsPage() {
           )}
 
           {/* Execute Campaign Button */}
-          {campaign.approval_status === "approved" && (campaign as any).is_active === true && (
+          {campaign.approval_status === "approved" && campaign?.is_active === true && (
             <PermissionGate permission="campaigns.execute">
               <button
                 onClick={() => setShowExecuteModal(true)}
@@ -1757,9 +1761,7 @@ export default function CampaignDetailsPage() {
                   // Match on segment_id (not id which is the association ID)
                   // Name is in segment_name (not name)
                   const segment = segments.find(
-                    (s) =>
-                      parseInt((s as any).segment_id || s.id) ===
-                      flow.segment_id,
+                    (s) => s.segment_id === flow.segment_id
                   );
                   const offer = offers.find(
                     (o) => parseInt(o.id) === flow.offer_id,
@@ -1787,15 +1789,13 @@ export default function CampaignDetailsPage() {
                         <button
                           onClick={() =>
                             navigate(
-                              `/dashboard/segments/${(segment as any)?.segment_id || flow.segment_id}`,
+                              `/dashboard/segments/${segment?.segment_id || flow.segment_id}`,
                             )
                           }
                           className="text-sm font-medium hover:underline"
                           style={{ color: color.primary.accent }}
                         >
-                          {(segment as any)?.segment_name ||
-                            segment?.name ||
-                            `Segment${flow.segment_id}`}
+                          {segment?.segment_name || `Segment${flow.segment_id}`}
                         </button>
                       </td>
                       <td
@@ -1968,8 +1968,8 @@ export default function CampaignDetailsPage() {
                         options={[
                           { value: "", label: "Select Segment" },
                           ...activeSegments.map((seg) => ({
-                            value: String((seg as any).segment_id || seg.id),
-                            label: (seg as any).segment_name || seg.name,
+                            value: String(seg.id),
+                            label: seg.name,
                           })),
                         ]}
                         disabled={isLoadingActiveData}
@@ -2009,14 +2009,14 @@ export default function CampaignDetailsPage() {
                       Condition Rule (JSON)
                     </label>
                     <textarea
-                      value={(editedFlow as any).condition_rule ? JSON.stringify((editedFlow as any).condition_rule, null, 2) : ""}
+                      value={editedFlow.condition_rule ? JSON.stringify(editedFlow.condition_rule, null, 2) : ""}
                       onChange={(e) => {
                         try {
                           const parsed = e.target.value ? JSON.parse(e.target.value) : undefined;
                           setEditedFlow({
                             ...editedFlow,
                             condition_rule: parsed,
-                          } as any);
+                          });
                         } catch {
                           // Invalid JSON, just update as string for now
                         }
@@ -2116,12 +2116,12 @@ export default function CampaignDetailsPage() {
                       Offer Creative
                     </label>
                     <HeadlessSelect
-                      value={String((editedFlow as any).offer_creative_id || "")}
+                      value={String(editedFlow.offer_creative_id || "")}
                       onChange={(value) =>
                         setEditedFlow({
                           ...editedFlow,
                           offer_creative_id: parseInt(value) || undefined,
-                        } as any)
+                        })
                       }
                       options={[
                         { value: "", label: "Select Creative" },
@@ -2138,12 +2138,12 @@ export default function CampaignDetailsPage() {
                     </label>
                     <input
                       type="number"
-                      value={(editedFlow as any).template_id || ""}
+                      value={editedFlow.template_id || ""}
                       onChange={(e) =>
                         setEditedFlow({
                           ...editedFlow,
                           template_id: parseInt(e.target.value) || undefined,
-                        } as any)
+                        })
                       }
                       className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     />
@@ -2209,7 +2209,7 @@ export default function CampaignDetailsPage() {
         onConfirm={handleFlowDeleteConfirm}
         title="Delete Flow"
         description="Are you sure you want to delete this campaign flow? This action cannot be undone and the flow will be permanently removed."
-        itemName={`Flow ${selectedFlow ? (selectedFlow as any).step_order || "" : ""}`}
+        itemName={`Flow ${selectedFlow?.step_order || ""}`}
         isLoading={isFlowActionLoading}
         confirmText="Delete Flow"
         cancelText="Cancel"
@@ -2235,7 +2235,7 @@ export default function CampaignDetailsPage() {
           onClose={() => setShowExecuteModal(false)}
           campaignId={parseInt(id || "0")}
           campaignName={campaign.name}
-          isActive={(campaign as any).is_active}
+          isActive={campaign?.is_active}
           approvalStatus={campaign.approval_status}
           onSuccess={(executionData) => {
             setShowExecuteModal(false);

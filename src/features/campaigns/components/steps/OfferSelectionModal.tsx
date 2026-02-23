@@ -216,15 +216,15 @@ export default function OfferSelectionModal({
           id: offer.id?.toString() || "",
           name: offer.name,
           description: offer.description || "",
-          offer_type: (offer as any).offer_type || "General",
+          offer_type: offer.offer_type || "General",
           reward_type: "bundle" as const,
           reward_value: "Special Offer",
           validity_period: 30,
           terms_conditions: "See offer details",
           segments: [],
-          code: (offer as any).code,
-          category_id: (offer as any).category_id,
-        } as any),
+          code: offer.code,
+          category_id: offer.category_id,
+        }),
       );
 
       setOffers(campaignOffers);
@@ -596,17 +596,17 @@ export default function OfferSelectionModal({
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-sm text-black">
-                            {(offer as any).code || "-"}
+                            {offer.code || "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-sm text-black capitalize">
-                            {(offer as any).offer_type || "-"}
+                            {offer.offer_type || "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">
                           <span className="text-sm text-black">
-                            {(offer as any).category_id ? categories.get((offer as any).category_id) : "-"}
+                            {offer.category_id ? categories.get(offer.category_id) : "-"}
                           </span>
                         </td>
                         <td className="px-4 py-3">

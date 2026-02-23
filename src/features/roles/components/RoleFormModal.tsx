@@ -23,7 +23,7 @@ interface FormData {
   description: string;
   parent_role_id: number | "";
   role_level: number;
-  data_access_level: DataAccessLevel;
+  data_access_level: DataAccessLevel | "";
   max_users: number | "";
   is_default: boolean;
   tags: string[];
@@ -58,7 +58,7 @@ export default function RoleFormModal({
     description: "",
     parent_role_id: "",
     role_level: 5,
-    data_access_level: "" as any,
+    data_access_level: "",
     max_users: "",
     is_default: false,
     tags: [],
@@ -89,7 +89,7 @@ export default function RoleFormModal({
         description: "",
         parent_role_id: "",
         role_level: 5,
-        data_access_level: "" as any,
+        data_access_level: "",
         max_users: "",
         is_default: false,
         tags: [],
@@ -369,7 +369,7 @@ export default function RoleFormModal({
                 onChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
-                    data_access_level: (value as DataAccessLevel) || ("" as any),
+                    data_access_level: (value as DataAccessLevel | ""),
                   }))
                 }
               />

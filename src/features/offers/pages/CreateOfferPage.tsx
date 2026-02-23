@@ -1519,8 +1519,7 @@ export default function CreateOfferPage({
       const offer = response.data || (response as Offer);
 
       // Extract products from response.data if wrapped
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const products = (productsData as any)?.data || productsData || [];
+      const products = (productsData as { data?: unknown } | unknown[])?.data || productsData || [];
 
       const newFormData: CreateOfferRequest = {
         name: offer.name || "",

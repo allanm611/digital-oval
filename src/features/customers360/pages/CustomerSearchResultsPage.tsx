@@ -40,6 +40,7 @@ import type {
 } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerWithContact } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
+import type { CustomerDetail } from "../types/customer";
 import {
   convertSubscriptionToCustomerRow,
   formatDateTime,
@@ -409,32 +410,32 @@ export default function CustomerSearchResultsPage() {
           const response = await customerService.getCustomerById(customerId);
           if (response.success && response.data) {
             // Convert API response to subscription format
-            const apiCustomer = response.data;
+            const apiCustomer: CustomerDetail = response.data;
             const convertedSubscription: CustomerSubscriptionRecord = {
               customerId: customerId,
-              subscriptionId: (apiCustomer as any).subscriber_id || customerId,
+              subscriptionId: apiCustomer.subscriber_id || customerId,
               firstName: apiCustomer.first_name || "Unknown",
               lastName: apiCustomer.last_name || "Customer",
               msisdn: apiCustomer.msisdn,
               email: apiCustomer.email,
-              alternateEmail: (apiCustomer as any).alternate_email,
+              alternateEmail: apiCustomer.alternate_email,
               gender: apiCustomer.gender,
               birthDate: apiCustomer.date_of_birth,
               city: apiCustomer.city,
-              region: (apiCustomer as any).region,
-              postalCode: (apiCustomer as any).postal_code,
-              countryCode: (apiCustomer as any).country_code,
-              physicalAddress: (apiCustomer as any).physical_address,
+              region: apiCustomer.region,
+              postalCode: apiCustomer.postal_code,
+              countryCode: apiCustomer.country_code,
+              physicalAddress: apiCustomer.physical_address,
               customerType: apiCustomer.subscriber_type || "prepaid",
               preferredChannel: apiCustomer.preferred_channel,
-              preferredLanguage: (apiCustomer as any).language_preference,
-              customerTier: (apiCustomer as any).customer_tier,
-              timezone: (apiCustomer as any).timezone,
+              preferredLanguage: apiCustomer.language_preference,
+              customerTier: apiCustomer.customer_tier,
+              timezone: apiCustomer.timezone,
               status: apiCustomer.subscriber_status || "active",
               activationDate: apiCustomer.created_at,
-              alternatemsisdns: (apiCustomer as any).alternate_msisdns?.join(", "),
-              iccid: (apiCustomer as any).iccid,
-              imsi: (apiCustomer as any).imsi,
+              alternatemsisdns: apiCustomer.alternate_msisdns?.join(", "),
+              iccid: apiCustomer.iccid,
+              imsi: apiCustomer.imsi,
             };
             setSelectedSubscription(convertedSubscription);
           }

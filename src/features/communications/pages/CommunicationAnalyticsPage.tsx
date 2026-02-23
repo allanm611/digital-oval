@@ -108,8 +108,7 @@ export default function CommunicationAnalyticsPage() {
       // Load executions - NO FILTERS since they're commented out
       try {
         const executionsResponse =
-          await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (communicationService as any).getExecutions({
+          await communicationService.getExecutions({
             limit: 100,
           });
         if (executionsResponse.success && executionsResponse.data) {
@@ -130,8 +129,7 @@ export default function CommunicationAnalyticsPage() {
       // Load logs - NO FILTERS since they're commented out
       try {
         const logsResponse =
-          await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (communicationService as any).getLogs({
+          await communicationService.getLogs({
             limit: 100,
           });
         if (logsResponse.success && logsResponse.data) {

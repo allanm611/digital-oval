@@ -1776,7 +1776,7 @@ export const sw: Translations = {
       deleteErrorMessage: "Imeshindwa kufuta njia ya SMS",
       saveErrorMessage: "Tafadhali jaribu tena baadaye.",
       routeNameLabel: "Jina la Njia",
-      routeNamePlaceholder: "mf: Njia 1, Njia 2",
+      routeNamePlaceholder: "Effortel SMS Gateway",
       statusLabel: "Hali",
     },
     languages: {

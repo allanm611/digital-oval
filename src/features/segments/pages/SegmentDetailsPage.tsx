@@ -145,7 +145,7 @@ export default function SegmentDetailsPage() {
   const [isUpdatingParent, setIsUpdatingParent] = useState(false);
 
   // Campaign Flows tab
-  const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; offer_name: string; flow_type: string; wait_interval_hours: number }>>([]);
+  const [campaignFlows, setCampaignFlows] = useState<Array<{ campaign_id: number; campaign_name: string; segment_id: number; offer_id: number; offer_name: string; flow_type: string; wait_interval_hours: number; step_order?: number; bucket_allocation?: string | null }>>([]);
   const [isLoadingCampaignFlows, setIsLoadingCampaignFlows] = useState(false);
 
   // Filter customers based on search term and status
@@ -1827,7 +1827,7 @@ export default function SegmentDetailsPage() {
                           className="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold"
                           style={{ color: "#000000" }}
                         >
-                          {(flow as any).step_order || idx + 1}
+                          {flow.step_order || idx + 1}
                         </span>
                       </td>
                       <td className="px-6 py-4" style={{ backgroundColor: color.surface.tablebodybg }}>
@@ -1860,7 +1860,7 @@ export default function SegmentDetailsPage() {
                       </td>
                       <td className="px-6 py-4 hidden md:table-cell" style={{ backgroundColor: color.surface.tablebodybg }}>
                         <div className={`text-sm ${tw.textMuted}`}>
-                          {(flow as any).bucket_allocation || "—"}
+                          {flow.bucket_allocation || "—"}
                         </div>
                       </td>
                     </tr>

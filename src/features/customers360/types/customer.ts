@@ -49,6 +49,10 @@ export interface Customer {
   last_computed_at?: string;
 }
 
+// Customer with flattened attributes (as returned by getCustomerById API)
+// The API returns customer attributes flattened at the top level instead of nested
+export type CustomerDetail = Customer & Partial<CustomerAttributes>;
+
 export interface Subscriber {
   id: string;
   subscriber_id?: string | number; // User-provided subscription ID (if backend stores it)

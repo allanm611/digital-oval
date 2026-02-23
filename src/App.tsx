@@ -15,6 +15,8 @@ import { NotificationSettingsProvider } from "./contexts/NotificationSettingsCon
 import { GlobalLoadingProvider } from "./contexts/GlobalLoadingContext";
 import { color } from "./shared/utils/utils";
 import GlobalLoader from "./shared/components/GlobalLoader";
+import { AppErrorBoundary } from "./shared/components/AppErrorBoundary";
+import { SafeRoute } from "./shared/components/SafeRoute";
 
 // Lazy load all pages for better performance
 const LoginPage = lazy(() => import("./features/auth/pages/LoginPage"));
@@ -29,6 +31,7 @@ const AuthenticatedLandingPage = lazy(
   () => import("./features/dashboard/components/AuthenticatedLandingPage"),
 );
 const Dashboard = lazy(() => import("./features/dashboard/pages/Dashboard"));
+
 
 // Loading fallback component
 function PageLoader() {
@@ -51,7 +54,7 @@ function AppRoutes() {
   }
 
   return (
-    <>
+    <SafeRoute>
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
@@ -80,37 +83,39 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </Suspense>
-    </>
+    </SafeRoute>
   );
 }
 
 function App() {
   return (
-    <GlobalLoadingProvider>
-      <ThemeProvider>
-        <LanguageProvider>
-          <AuthProvider>
-            <ToastProvider>
-              <ConfirmProvider>
-                <NotificationProvider>
-                  <NotificationSettingsProvider>
-                    <Router>
-                      <div
-                        className="min-h-screen"
-                        style={{ backgroundColor: color.primary.background }}
-                      >
-                        <GlobalLoader />
-                        <AppRoutes />
-                      </div>
-                    </Router>
-                  </NotificationSettingsProvider>
-                </NotificationProvider>
-              </ConfirmProvider>
-            </ToastProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </ThemeProvider>
-    </GlobalLoadingProvider>
+    <AppErrorBoundary>
+      <GlobalLoadingProvider>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ToastProvider>
+                <ConfirmProvider>
+                  <NotificationProvider>
+                    <NotificationSettingsProvider>
+                      <Router>
+                        <div
+                          className="min-h-screen"
+                          style={{ backgroundColor: color.primary.background }}
+                        >
+                          <GlobalLoader />
+                          <AppRoutes />
+                        </div>
+                      </Router>
+                    </NotificationSettingsProvider>
+                  </NotificationProvider>
+                </ConfirmProvider>
+              </ToastProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
+      </GlobalLoadingProvider>
+    </AppErrorBoundary>
   );
 }
 

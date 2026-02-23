@@ -92,7 +92,7 @@ export default function ConnectorConfigDisplay({
     let displayValue: React.ReactNode = typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value : (value ? String(value) : "—");
 
     if (type === "password" && typeof value === "string" && value.length > 0) {
-      displayValue = isEditMode ? <PasswordField field={label.toLowerCase() as any} /> : "••••••••";
+      displayValue = isEditMode ? <PasswordField field={label.toLowerCase() as keyof DataConnectorConfiguration} /> : "••••••••";
     }
 
     return (
@@ -104,7 +104,7 @@ export default function ConnectorConfigDisplay({
           <input
             type={type}
             value={typeof value === "string" || typeof value === "number" ? value : ""}
-            onChange={(e) => handleChange(label.toLowerCase() as any, e.target.value)}
+            onChange={(e) => handleChange(label.toLowerCase() as keyof DataConnectorConfiguration, e.target.value)}
             className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-400`}
           />
         ) : (
