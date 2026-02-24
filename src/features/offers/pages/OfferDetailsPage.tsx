@@ -991,23 +991,36 @@ export default function OfferDetailsPage() {
       setProductsSearchLoading(true);
       const searchQuery = productSearchTerm.trim();
 
-      let response;
+      let products: Product[] = [];
+      const limit = 100;
+      let offset = 0;
+      let hasMore = true;
+
       if (searchQuery) {
-        // Use searchProducts when there's a search term
-        response = await productService.searchProducts({
+        // Use searchProducts when there's a search term (no pagination needed for search)
+        const response = await productService.searchProducts({
           q: searchQuery,
           limit: 100,
           skipCache: true,
         });
+        products = response.data || [];
       } else {
-        // Use getActiveProducts when there's no search term (only active products)
-        response = await productService.getActiveProducts({
-          limit: 100,
-          skipCache: true,
-        });
-      }
+        // Use getActiveProducts with pagination for non-search (all active products)
+        while (hasMore) {
+          const response = await productService.getActiveProducts({
+            limit: limit,
+            offset: offset,
+            skipCache: true,
+          });
 
-      let products = response.data || [];
+          const responseProducts = response.data || [];
+          products.push(...responseProducts);
+
+          const total = response.pagination?.total || 0;
+          hasMore = products.length < total && responseProducts.length === limit;
+          offset += limit;
+        }
+      }
 
       // Filter to only show active products (for search results)
       products = products.filter((product: Product) => product.is_active);
@@ -3271,13 +3284,26 @@ export default function OfferDetailsPage() {
               onClose={() => setCreateProductModalOpen(false)}
               onProductCreated={async (productId) => {
                 try {
-                  // Reload products immediately with fresh data
-                  const response = await productService.getAllProducts({
-                    limit: 100,
-                    skipCache: true,
-                  });
+                  // Reload all products with pagination
+                  const limit = 100;
+                  let offset = 0;
+                  let reloadedProducts: Product[] = [];
+                  let hasMore = true;
 
-                  let reloadedProducts = response.data || [];
+                  while (hasMore) {
+                    const response = await productService.getAllProducts({
+                      limit: limit,
+                      offset: offset,
+                      skipCache: true,
+                    });
+
+                    const products = response.data || [];
+                    reloadedProducts.push(...products);
+
+                    const total = response.pagination?.total || 0;
+                    hasMore = reloadedProducts.length < total && products.length === limit;
+                    offset += limit;
+                  }
 
                   // Sort by created_at descending (recently created first)
                   reloadedProducts = reloadedProducts.sort((a, b) => {

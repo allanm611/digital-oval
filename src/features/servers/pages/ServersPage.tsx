@@ -431,7 +431,7 @@ export default function ServersPage() {
     if (!server.health_check_enabled) {
       return (
         <span className="text-sm font-medium text-black">
-          Disabled
+          disabled
         </span>
       );
     }
@@ -448,26 +448,10 @@ export default function ServersPage() {
       );
     }
 
-    if (server.last_health_check_status === "unhealthy") {
-      return (
-        <span className="text-sm font-medium text-black">
-          Unhealthy
-        </span>
-      );
-    }
-
-    if (server.last_health_check_status === "healthy") {
-      return (
-        <span className="text-sm font-medium text-black">
-          Healthy
-        </span>
-      );
-    }
-
-    // Fallback for any other status values
+    // Display backend status as-is (no capitalization)
     return (
       <span className="text-sm font-medium text-black">
-        {server.last_health_check_status || "Unknown"}
+        {server.last_health_check_status || "unknown"}
       </span>
     );
   };

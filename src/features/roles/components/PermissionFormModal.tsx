@@ -172,6 +172,7 @@ export default function PermissionFormModal({
           requires_mfa: formData.requires_mfa,
           requires_justification: formData.requires_justification,
           description: formData.description || undefined,
+          resource_type_id: formData.resource_type_id ? (formData.resource_type_id as number) : undefined,
         };
         await permissionService.updatePermission(permission.id, updateData);
         success("Success", `Permission "${formData.name}" has been updated`);

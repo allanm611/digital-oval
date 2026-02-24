@@ -8,8 +8,6 @@ import {
   Target,
   AlertTriangle,
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Eye,
   Edit,
   X,
@@ -29,6 +27,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
+import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
 import EditCustomerModal from "../components/EditCustomerModal";
@@ -38,6 +37,12 @@ import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const pageSize = 20;
+
+interface SearchParams {
+  page: number;
+  limit: number;
+  offset: number;
+}
 
 // Channel display label mapping
 const CHANNEL_LABELS: Record<string, string> = {
@@ -70,7 +75,12 @@ export default function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isTimeout, setIsTimeout] = useState(false);
-  const [page, setPage] = useState(1);
+  const [filters, setFilters] = useState<SearchParams>({
+    page: 1,
+    limit: pageSize,
+    offset: 0,
+  });
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
   // Delete confirmation modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -90,28 +100,28 @@ export default function CustomersPage() {
     useState<CustomerSubscriptionRecord | null>(null);
   const [customers, setCustomers] = useState<CustomerSubscriptionRecord[]>([]);
 
-  // Load customers from API and localStorage on mount
-  useEffect(() => {
-    const loadCustomers = async () => {
+  // Load customers from API with pagination
+  const loadCustomers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      setIsTimeout(false);
+
+      // Create timeout promise (10 second timeout)
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT")), 10000),
+      );
+
+      // Fetch customers from API with timeout
       try {
-        setIsLoading(true);
-        setError("");
-        setIsTimeout(false);
-
-        // Create timeout promise (10 second timeout)
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("TIMEOUT")), 10000),
-        );
-
-        // Fetch customers from API with timeout
-        try {
-          const apiResponse = await Promise.race([
-            customerService.getAllCustomers({
-              limit: 50,
-              offset: 0,
-            }),
-            timeoutPromise,
-          ]);
+        const apiResponse = await Promise.race([
+          customerService.getAllCustomers({
+            limit: filters.limit,
+            offset: filters.offset,
+            skipCache: true,
+          }),
+          timeoutPromise,
+        ]);
 
           if (
             apiResponse.success &&
@@ -149,6 +159,10 @@ export default function CustomersPage() {
               };
             });
             setCustomers(apiCustomers);
+
+            // Set total from response pagination if available
+            const total = (apiResponse as any).pagination?.total || apiCustomers.length;
+            setTotalCustomers(total);
           }
         } catch (apiError: any) {
           if (apiError.message === "TIMEOUT") {
@@ -171,10 +185,12 @@ export default function CustomersPage() {
         showError("Error", "Failed to load customers");
         setIsLoading(false);
       }
-    };
+  }, [filters, showError]);
 
+  // Load customers when filters change
+  useEffect(() => {
     loadCustomers();
-  }, [showError]);
+  }, [loadCustomers]);
 
   const dataset = customers;
 
@@ -188,7 +204,7 @@ export default function CustomersPage() {
   }, [searchTerm]);
 
   useEffect(() => {
-    setPage(1);
+    setFilters((prev) => ({ ...prev, page: 1, offset: 0 }));
   }, [searchTerm]);
 
   // Use shared search function
@@ -246,7 +262,7 @@ export default function CustomersPage() {
       try {
         const response = await customerService.searchCustomers({
           search: modalSearchTerm,
-          limit: 50,
+          limit: 100,
           skipCache: true,
         });
 
@@ -297,15 +313,9 @@ export default function CustomersPage() {
     };
   }, [modalSearchTerm, isSearchModalOpen]);
 
-  const totalResults = filteredCustomers.length;
-  const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
-  const paginatedResults = useMemo(
-    () =>
-      filteredCustomers.slice((page - 1) * pageSize, page * pageSize) as
-        | CustomerSubscriptionRecord[]
-        | [],
-    [filteredCustomers, page],
-  );
+  // Backend pagination - no need to slice since backend returns paginated data
+  const paginatedResults = customers;
+  const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
 
   const hasSearchFilters = searchTerm.trim().length > 0;
 
@@ -313,7 +323,7 @@ export default function CustomersPage() {
     value.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
   const customerStats = useMemo(() => {
-    if (!dataset.length) {
+    if (!totalCustomers) {
       return {
         uniqueCustomers: 0,
         totalSubscriptions: 0,
@@ -358,14 +368,14 @@ export default function CustomersPage() {
 
     return {
       uniqueCustomers: uniqueCustomers.size,
-      totalSubscriptions: dataset.length,
+      totalSubscriptions: totalCustomers,
       activeSubscriptions,
       pendingActivations,
       atRiskSubscriptions,
       avgTenureDays:
         tenureSamples > 0 ? Math.round(tenureDaysTotal / tenureSamples) : 0,
     };
-  }, [dataset]);
+  }, [dataset, totalCustomers]);
 
   const statCards = useMemo(
     () => [
@@ -885,36 +895,19 @@ export default function CustomersPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && !error && paginatedResults.length > 0 && (
-          <div
-            className={`${tw.rounded} border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex sm:items-center sm:justify-between`}
-          >
-            <p className={`${tw.textSecondary} text-sm`}>
-              {t.customerProfileReports.page
-                .replace("{current}", page.toString())
-                .replace("{total}", totalPages.toString())}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                disabled={page === 1}
-                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                {t.customer360.previous}
-              </button>
-              <button
-                onClick={() =>
-                  setPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={page >= totalPages}
-                className={`flex items-center gap-1 ${tw.rounded} border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-50`}
-              >
-                {t.customer360.next}
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
+        {!isLoading && !error && totalCustomers > 0 && (
+          <Pagination
+            currentPage={filters.page}
+            pageSize={filters.limit}
+            totalItems={totalCustomers}
+            onPageChange={(page) =>
+              setFilters((prev) => ({
+                ...prev,
+                page,
+                offset: (page - 1) * pageSize,
+              }))
+            }
+          />
         )}
       </div>
 

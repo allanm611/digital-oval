@@ -42,6 +42,7 @@ import CreateCategoryModal from "../../../shared/components/CreateCategoryModal"
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 interface ProductsModalProps {
@@ -378,6 +379,10 @@ export default function ProductCatalogsPage() {
   const [filterType, setFilterType] = useState<
     "all" | "active" | "inactive" | "with_products" | "empty"
   >("all");
+
+  // Pagination states
+  const [catalogPage, setCatalogPage] = useState(1);
+  const catalogPageSize = 9; // Show 9 items per page (3x3 grid)
 
   // Advanced search states
   const [advancedSearch, setAdvancedSearch] = useState({
@@ -1147,6 +1152,14 @@ export default function ProductCatalogsPage() {
 
       {/* Error Message */}
 
+      {/* Calculate paginated catalogs */}
+      {(() => {
+        const startIndex = (catalogPage - 1) * catalogPageSize;
+        const endIndex = startIndex + catalogPageSize;
+        const paginatedCatalogs = filteredCatalogs.slice(startIndex, endIndex);
+
+        return (
+          <>
       {/* Catalogs */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
@@ -1178,7 +1191,7 @@ export default function ProductCatalogsPage() {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCatalogs.map((category) => (
+          {paginatedCatalogs.map((category) => (
             <div
               key={category.id}
               className={`bg-white border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
@@ -1290,7 +1303,7 @@ export default function ProductCatalogsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredCatalogs.map((category) => (
+          {paginatedCatalogs.map((category) => (
             <div
               key={category.id}
               className={`bg-white border border-gray-200 ${tw.rounded} p-4 hover:shadow-md transition-all`}
@@ -1394,6 +1407,24 @@ export default function ProductCatalogsPage() {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {filteredCatalogs.length > catalogPageSize && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={catalogPage}
+            pageSize={catalogPageSize}
+            totalItems={filteredCatalogs.length}
+            onPageChange={(newPage) => {
+              setCatalogPage(newPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      )}
+          </>
+        );
+      })()}
 
       {/* Create Catalog Modal */}
       <CreateCategoryModal

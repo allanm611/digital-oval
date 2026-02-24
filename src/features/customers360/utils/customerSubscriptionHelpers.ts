@@ -1,5 +1,25 @@
-import type { CustomerRow } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
+
+// Local type definition to avoid circular imports with ReportsAPI
+export interface CustomerRow {
+  id: string;
+  name: string;
+  segment: string;
+  segments?: string[];
+  email?: string;
+  phone?: string;
+  msisdn?: string;
+  lifetimeValue: number;
+  clv: number;
+  orders: number;
+  aov: number;
+  lastPurchase: string;
+  lastInteractionDate: string;
+  engagementScore: number;
+  churnRisk: number;
+  preferredChannel: "Email" | "SMS" | "Push";
+  location: string;
+}
 
 export const getSubscriptionDisplayName = (
   record: CustomerSubscriptionRecord,

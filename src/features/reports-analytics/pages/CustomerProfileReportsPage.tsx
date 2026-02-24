@@ -35,7 +35,6 @@ import { formatCurrency } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
   CustomerProfileReportsResponse,
-  CustomerRow,
 } from "../types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../../customers360/types/customerSubscription";
 import {
@@ -43,6 +42,7 @@ import {
   formatMsisdn,
   formatDateTime,
   convertSubscriptionToCustomerRow,
+  type CustomerRow,
 } from "../../customers360/utils/customerSubscriptionHelpers";
 import { customerSubscriptions } from "../../customers360/utils/customerDataService";
 import { customerService } from "../../customers360/services/customerServices";
@@ -360,43 +360,6 @@ const generateCustomerRows = (): CustomerRow[] => {
 };
 
 const fallbackCustomerRows: CustomerRow[] = generateCustomerRows();
-// Using shared customer data from customerDataService
-const activationTimestamps = customerSubscriptions
-  .map((record) =>
-    record.activationDate ? new Date(record.activationDate).getTime() : NaN,
-  )
-  .filter((value) => !Number.isNaN(value));
-const datasetReferenceTime = activationTimestamps.length
-  ? Math.max(...activationTimestamps)
-  : Date.now();
-const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
-  convertSubscriptionToCustomerRow,
-);
-const offsetBuckets = [2, 6, 14, 38, 75];
-excelCustomerRows.forEach((row, index) => {
-  const offset = offsetBuckets[index % offsetBuckets.length];
-  const adjusted = new Date(datasetReferenceTime);
-  adjusted.setDate(adjusted.getDate() - offset);
-  row.lastInteractionDate = adjusted.toISOString().split("T")[0];
-});
-const baseCustomerRows =
-  excelCustomerRows.length > 0 ? excelCustomerRows : fallbackCustomerRows;
-const subscriptionLookup: Record<string, CustomerSubscriptionRecord> = {};
-excelCustomerRows.forEach((row, index) => {
-  const record = customerSubscriptions[index];
-  subscriptionLookup[row.id] = record;
-});
-const referenceTimeFallback = datasetReferenceTime;
-const customerTypeOptions = [
-  "All",
-  ...Array.from(
-    new Set(
-      customerSubscriptions
-        .map((record) => record.customerType)
-        .filter((value): value is string => Boolean(value)),
-    ),
-  ).sort(),
-];
 const CUSTOMER_TABLE_PAGE_SIZE = 10;
 // Table headers will be translated inside the component
 const tableCellBackground: CSSProperties = {
@@ -525,9 +488,13 @@ export default function CustomerProfileReportsPage() {
   const [debouncedTableSearchTerm, setDebouncedTableSearchTerm] = useState("");
   const [tablePage, setTablePage] = useState(1);
   const [apiCustomers, setApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
+  const [searchedApiCustomers, setSearchedApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
   const [isLoadingCustomers, setIsLoadingCustomers] = useState(true);
   const [isSearchingTable, setIsSearchingTable] = useState(false);
   const [useDummyData] = useState(true); // Charts use dummy data, table uses API data
+  const [customersPage, setCustomersPage] = useState(1);
+  const [customersPageSize] = useState(20);
+  const [totalApiCustomers, setTotalApiCustomers] = useState(0);
   const locationState = location.state as
     | { subscription?: CustomerSubscriptionRecord }
     | undefined;
@@ -547,17 +514,69 @@ export default function CustomerProfileReportsPage() {
     return undefined;
   }, [locationState, subscriptionIdParam]);
 
+  // Generate base customer rows and lookup with safe initialization
+  const { baseCustomerRows, subscriptionLookup, referenceTime } = useMemo(() => {
+    try {
+      const activationTimestamps = customerSubscriptions
+        .map((record) =>
+          record.activationDate ? new Date(record.activationDate).getTime() : NaN,
+        )
+        .filter((value) => !Number.isNaN(value));
+      const datasetReferenceTime = activationTimestamps.length
+        ? Math.max(...activationTimestamps)
+        : Date.now();
+
+      const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
+        convertSubscriptionToCustomerRow,
+      );
+
+      const offsetBuckets = [2, 6, 14, 38, 75];
+      excelCustomerRows.forEach((row, index) => {
+        const offset = offsetBuckets[index % offsetBuckets.length];
+        const adjusted = new Date(datasetReferenceTime);
+        adjusted.setDate(adjusted.getDate() - offset);
+        row.lastInteractionDate = adjusted.toISOString().split("T")[0];
+      });
+
+      const rows = excelCustomerRows.length > 0 ? excelCustomerRows : fallbackCustomerRows;
+
+      const lookup: Record<string, CustomerSubscriptionRecord> = {};
+      excelCustomerRows.forEach((row, index) => {
+        const record = customerSubscriptions[index];
+        if (record) {
+          lookup[row.id] = record;
+        }
+      });
+
+      return {
+        baseCustomerRows: rows,
+        subscriptionLookup: lookup,
+        referenceTime: datasetReferenceTime,
+      };
+    } catch (error) {
+      console.error("Error generating customer rows:", error);
+      return {
+        baseCustomerRows: fallbackCustomerRows,
+        subscriptionLookup: {},
+        referenceTime: Date.now(),
+      };
+    }
+  }, []);
+
   // Fetch customers from API
   useEffect(() => {
     const loadCustomersFromAPI = async () => {
       try {
         setIsLoadingCustomers(true);
         const response = await customerService.getAllCustomers({
-          limit: 100,
-          offset: 0,
+          limit: customersPageSize,
+          offset: (customersPage - 1) * customersPageSize,
+          skipCache: true,
         });
 
         if (response.success && response.data && Array.isArray(response.data)) {
+          const total = (response as any).pagination?.total || response.data.length;
+          setTotalApiCustomers(total);
           const convertedCustomers = response.data.map((apiCustomer) => {
             const customerId =
               typeof apiCustomer.id === "string"
@@ -599,7 +618,7 @@ export default function CustomerProfileReportsPage() {
     };
 
     loadCustomersFromAPI();
-  }, [showError]);
+  }, [showError, customersPage, customersPageSize]);
 
   // Customer search state
   const [customerSearchTerm, setCustomerSearchTerm] = useState<string>("");
@@ -797,19 +816,6 @@ export default function CustomerProfileReportsPage() {
     appliedCustomRange.end,
   ]);
 
-  const referenceTime = useMemo(() => {
-    if (useDummyData) {
-      return Date.now();
-    }
-    const timestamps = baseCustomerRows
-      .map((row) => new Date(row.lastInteractionDate).getTime())
-      .filter((value) => !Number.isNaN(value));
-    if (!timestamps.length) {
-      return referenceTimeFallback;
-    }
-    return Math.max(...timestamps);
-  }, [baseCustomerRows, useDummyData]);
-
   const valueMatrixSeries = useMemo(() => {
     if (!useDummyData) {
       return baseValueMatrixData.map((point) => ({
@@ -919,8 +925,6 @@ export default function CustomerProfileReportsPage() {
   }, [cohortSeries]);
 
   // Fetch customers for table: Use API search when search term provided, otherwise use loaded customers
-  const [searchedApiCustomers, setSearchedApiCustomers] = useState<CustomerSubscriptionRecord[]>([]);
-
   useEffect(() => {
     const loadTableCustomers = async () => {
       if (!debouncedTableSearchTerm.trim()) {
@@ -1004,7 +1008,7 @@ export default function CustomerProfileReportsPage() {
       return matchesRange;
     });
   }, [
-    customRange,
+    appliedCustomRange,
     customDays,
     activeRangeKey,
     baseCustomerRows,
@@ -1894,12 +1898,12 @@ export default function CustomerProfileReportsPage() {
                 {t.customerProfileReports.noCustomersMatchFilters}
               </div>
             )}
-            {tableCustomers.length > 0 && (
+            {totalApiCustomers > 0 && (
               <Pagination
-                currentPage={tablePage}
-                pageSize={CUSTOMER_TABLE_PAGE_SIZE}
-                totalItems={tableCustomers.length}
-                onPageChange={setTablePage}
+                currentPage={customersPage}
+                pageSize={customersPageSize}
+                totalItems={totalApiCustomers}
+                onPageChange={(page) => setCustomersPage(page)}
               />
             )}
           </div>

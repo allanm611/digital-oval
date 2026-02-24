@@ -182,9 +182,7 @@ export default function UniversalControlGroupModal({
                       {group.name}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {group.customerBase
-                        .replace("_", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {group.customerBase}
                     </div>
                   </div>
                   <div className="col-span-2">
@@ -193,8 +191,7 @@ export default function UniversalControlGroupModal({
                         group.status
                       )}`}
                     >
-                      {group.status.charAt(0).toUpperCase() +
-                        group.status.slice(1)}
+                      {group.status}
                     </span>
                   </div>
                   <div className="col-span-2">

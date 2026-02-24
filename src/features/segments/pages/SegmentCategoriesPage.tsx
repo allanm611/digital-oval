@@ -32,6 +32,7 @@ import {
 import { Segment } from "../types/segment";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const SEGMENT_CATALOG_TAG_PREFIX = "catalog:";
@@ -432,6 +433,11 @@ export default function SegmentCategoriesPage() {
     {},
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Pagination states
+  const [catalogPage, setCatalogPage] = useState(1);
+  const catalogPageSize = 9; // Show 9 items per page (3x3 grid)
+
   const formatNumber = (value?: number | null) =>
     typeof value === "number" && !Number.isNaN(value)
       ? value.toLocaleString()
@@ -863,6 +869,13 @@ export default function SegmentCategoriesPage() {
       </div>
 
       {/* Categories */}
+      {(() => {
+        const startIndex = (catalogPage - 1) * catalogPageSize;
+        const endIndex = startIndex + catalogPageSize;
+        const paginatedCategories = filteredCategories.slice(startIndex, endIndex);
+
+        return (
+          <>
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner
@@ -899,7 +912,7 @@ export default function SegmentCategoriesPage() {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCategories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category.id}
               className={`bg-white border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
@@ -973,7 +986,7 @@ export default function SegmentCategoriesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredCategories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category.id}
               className={`bg-white border border-gray-200 ${tw.rounded} p-4 hover:shadow-md transition-all`}
@@ -1042,6 +1055,24 @@ export default function SegmentCategoriesPage() {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {filteredCategories.length > catalogPageSize && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={catalogPage}
+            pageSize={catalogPageSize}
+            totalItems={filteredCategories.length}
+            onPageChange={(newPage) => {
+              setCatalogPage(newPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      )}
+          </>
+        );
+      })()}
 
       {/* Modals */}
       <CategoryModal

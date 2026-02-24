@@ -71,23 +71,37 @@ export default function ProductSelector({
     try {
       setLoading(true);
 
-      let response;
+      let filteredProducts: Product[] = [];
+      const limit = 100;
+      let offset = 0;
+      let hasMore = true;
 
       // Use search if searchTerm is provided, otherwise use active products
       if (searchTerm.trim()) {
-        response = await productService.searchProducts({
+        // Search endpoint - fetch all results (no pagination needed)
+        const response = await productService.searchProducts({
           q: searchTerm,
           limit: 100,
           skipCache: true,
         });
+        filteredProducts = response.data || [];
       } else {
-        response = await productService.getActiveProducts({
-          limit: 100,
-          skipCache: true,
-        });
-      }
+        // Get active products with pagination
+        while (hasMore) {
+          const response = await productService.getActiveProducts({
+            limit: limit,
+            offset: offset,
+            skipCache: true,
+          });
 
-      let filteredProducts = response.data || [];
+          const products = response.data || [];
+          filteredProducts.push(...products);
+
+          const total = response.pagination?.total || 0;
+          hasMore = filteredProducts.length < total && products.length === limit;
+          offset += limit;
+        }
+      }
 
       // Apply category filter if not 'all'
       if (selectedCategory !== "all") {
@@ -116,13 +130,26 @@ export default function ProductSelector({
   const handleProductCreated = useCallback(
     async (productId: number) => {
       try {
-        // Reload products to get the newly created one
-        const response = await productService.getActiveProducts({
-          limit: 100,
-          skipCache: true,
-        });
+        // Reload products with pagination to get the newly created one
+        const limit = 100;
+        let offset = 0;
+        let reloadedProducts: Product[] = [];
+        let hasMore = true;
 
-        let reloadedProducts = response.data || [];
+        while (hasMore) {
+          const response = await productService.getActiveProducts({
+            limit: limit,
+            offset: offset,
+            skipCache: true,
+          });
+
+          const products = response.data || [];
+          reloadedProducts.push(...products);
+
+          const total = response.pagination?.total || 0;
+          hasMore = reloadedProducts.length < total && products.length === limit;
+          offset += limit;
+        }
 
         // Sort by created_at descending (recently created first)
         reloadedProducts = reloadedProducts.sort((a, b) => {

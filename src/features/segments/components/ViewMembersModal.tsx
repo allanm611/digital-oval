@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Search } from "lucide-react";
 import { segmentService } from "../services/segmentService";
+import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { tw } from "../../../shared/utils/utils";
@@ -274,37 +275,17 @@ export default function ViewMembersModal({
         </div>
 
         {/* Pagination */}
-        {members.length > 0 && membersTotalPages > 1 && (
+        {members.length > 0 && membersCount > 10 && (
           <div className="p-6 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-black">
-                Page {membersPage} of {membersTotalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    const newPage = membersPage - 1;
-                    setMembersPage(newPage);
-                    loadMembers(membersSearchTerm, newPage);
-                  }}
-                  disabled={membersPage <= 1}
-                  className={`px-3 py-1 text-sm border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => {
-                    const newPage = membersPage + 1;
-                    setMembersPage(newPage);
-                    loadMembers(membersSearchTerm, newPage);
-                  }}
-                  disabled={membersPage >= membersTotalPages}
-                  className={`px-3 py-1 text-sm border border-gray-300 ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={membersPage}
+              pageSize={10}
+              totalItems={membersCount}
+              onPageChange={(newPage) => {
+                setMembersPage(newPage);
+                loadMembers(membersSearchTerm, newPage);
+              }}
+            />
           </div>
         )}
       </div>

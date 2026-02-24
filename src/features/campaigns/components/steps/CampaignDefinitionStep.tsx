@@ -964,10 +964,7 @@ export default function CampaignDefinitionStep({
                 className={`mt-3 p-3 bg-gray-50 border border-gray-200 ${tw.rounded}`}
               >
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rank within{" "}
-                  {formData.priority.charAt(0).toUpperCase() +
-                    formData.priority.slice(1)}{" "}
-                  Priority
+                  Rank within {formData.priority} Priority
                 </label>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((rank) => (

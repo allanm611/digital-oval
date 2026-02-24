@@ -139,8 +139,7 @@ export default function OfferApprovalHistoryPage() {
                               entry.previous_status
                             )}`}
                           >
-                            {entry.previous_status.charAt(0).toUpperCase() +
-                              entry.previous_status.slice(1).replace("_", " ")}
+                            {entry.previous_status}
                           </span>
                           <span className={tw.textMuted}>→</span>
                         </>
@@ -150,8 +149,7 @@ export default function OfferApprovalHistoryPage() {
                           entry.new_status
                         )}`}
                       >
-                        {entry.new_status.charAt(0).toUpperCase() +
-                          entry.new_status.slice(1).replace("_", " ")}
+                        {entry.new_status}
                       </span>
                     </div>
                     <span className={`text-xs ${tw.textMuted}`}>

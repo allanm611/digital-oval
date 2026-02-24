@@ -106,7 +106,7 @@ export default function TargetAudienceStep({
     return validation.valid;
   };
 
-  // Check for invalid phone numbers in real-time
+  // Check for invalid contacts in real-time (emails or phone numbers)
   const checkManualInputErrors = () => {
     if (!manualInput.trim()) {
       setManualInputError("");
@@ -117,7 +117,7 @@ export default function TargetAudienceStep({
     const validation = validateContacts(lines);
 
     if (!validation.valid) {
-      setManualInputError("Phone numbers begin with country code");
+      setManualInputError("Please enter valid emails or phone numbers (phone numbers must begin with country code)");
     } else {
       setManualInputError("");
     }
@@ -209,7 +209,7 @@ export default function TargetAudienceStep({
 
         if (!validation.valid) {
           setError(
-            `Phone number must begin with country code. Invalid: ${validation.invalidLines.slice(0, 3).join(", ")}${validation.invalidLines.length > 3 ? ", ..." : ""}`
+            `Please enter valid emails or phone numbers. Invalid: ${validation.invalidLines.slice(0, 3).join(", ")}${validation.invalidLines.length > 3 ? ", ..." : ""}`
           );
           return;
         }
@@ -387,13 +387,18 @@ export default function TargetAudienceStep({
             <label className="text-sm font-medium text-gray-900 block mb-2">
               Enter Contacts Manually *
             </label>
+
+            {/* Error Message above textarea */}
+            {manualInputError && (
+              <p className="mb-2 text-sm text-red-600">{manualInputError}</p>
+            )}
+
             <textarea
               value={manualInput}
               onChange={(e) => {
-                // Only allow numbers, newlines, and @ . for emails
+                // Allow letters, digits, newlines, @ . _ + - for emails and international phone numbers
                 const value = e.target.value;
-                // Allow digits, newlines, @, and . (for emails)
-                const filtered = value.replace(/[^0-9\n@.]/g, "");
+                const filtered = value.replace(/[^a-zA-Z0-9\n@._+-]/g, "");
                 setManualInput(filtered);
                 setError("");
                 // Check for validation errors in real-time
@@ -402,7 +407,7 @@ export default function TargetAudienceStep({
                   if (lines.length > 0) {
                     const validation = validateContacts(lines);
                     if (!validation.valid) {
-                      setManualInputError("Phone numbers begin with country code");
+                      setManualInputError("Please enter valid emails or phone numbers (phone numbers must begin with country code)");
                     } else {
                       setManualInputError("");
                     }
@@ -420,11 +425,6 @@ export default function TargetAudienceStep({
                 manualInputError ? "focus:ring-red-400" : "focus:ring-[var(--primary-color,#5EC6B1)]"
               } disabled:opacity-50 font-mono`}
             />
-
-            {/* Inline Error Message */}
-            {manualInputError && (
-              <p className="mt-2 text-sm text-red-600">{manualInputError}</p>
-            )}
 
             {manualInput.trim() && !manualInputError && (
               <div className="mt-3 flex items-center gap-4 text-sm">

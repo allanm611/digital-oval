@@ -507,10 +507,7 @@ export default function QuickListsPage() {
                       className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {quicklist.processing_status
-                        ? quicklist.processing_status.charAt(0).toUpperCase() +
-                          quicklist.processing_status.slice(1)
-                        : "N/A"}
+                      {quicklist.processing_status || "N/A"}
                     </td>
                     <td
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}

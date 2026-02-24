@@ -67,6 +67,26 @@ export default function CreateManualBroadcastPage() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
+  // Check if we came from a returnTo state
+  const returnTo = (
+    location.state as {
+      returnTo?: {
+        pathname: string;
+        fromModal?: boolean;
+      };
+    }
+  )?.returnTo;
+
+  const navigateBack = () => {
+    if (returnTo) {
+      navigate(returnTo.pathname, {
+        state: returnTo.fromModal ? { fromModal: true } : undefined,
+      });
+    } else {
+      navigate("/dashboard/manual-communications");
+    }
+  };
+
   const STEPS: Step[] = [
     {
       id: 1,
@@ -508,7 +528,7 @@ export default function CreateManualBroadcastPage() {
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => navigate("/dashboard/manual-communications")}
+                onClick={navigateBack}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />

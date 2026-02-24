@@ -7,6 +7,7 @@ interface CreateButtonProps {
   onClick?: () => void;
   className?: string;
   label?: string;
+  navigationState?: any;
 }
 
 export default function CreateButton({
@@ -14,6 +15,7 @@ export default function CreateButton({
   onClick,
   className = "",
   label = "Create",
+  navigationState,
 }: CreateButtonProps) {
   const navigate = useNavigate();
 
@@ -21,7 +23,7 @@ export default function CreateButton({
     if (onClick) {
       onClick();
     } else if (route) {
-      navigate(route);
+      navigate(route, navigationState ? { state: navigationState } : undefined);
     }
   };
 

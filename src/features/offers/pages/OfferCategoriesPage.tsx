@@ -37,6 +37,7 @@ import { Offer, UpdateOfferRequest } from "../types/offer";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 const CATALOG_TAG_PREFIX = "catalog:";
@@ -422,6 +423,11 @@ function OfferCategoriesPage() {
     null,
   );
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Pagination states
+  const [catalogPage, setCatalogPage] = useState(1);
+  const catalogPageSize = 9; // Show 9 items per page (3x3 grid)
+
   const [stats, setStats] = useState<{
     totalCategories: number;
     activeCategories: number;
@@ -1253,6 +1259,13 @@ function OfferCategoriesPage() {
       )}
 
       {/* Categories */}
+      {(() => {
+        const startIndex = (catalogPage - 1) * catalogPageSize;
+        const endIndex = startIndex + catalogPageSize;
+        const paginatedCategories = filteredOfferCategories.slice(startIndex, endIndex);
+
+        return (
+          <>
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner
@@ -1289,7 +1302,7 @@ function OfferCategoriesPage() {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredOfferCategories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category.id}
               className={`border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
@@ -1551,6 +1564,24 @@ function OfferCategoriesPage() {
           })}
         </div>
       )}
+
+      {/* Pagination */}
+      {filteredOfferCategories.length > catalogPageSize && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={catalogPage}
+            pageSize={catalogPageSize}
+            totalItems={filteredOfferCategories.length}
+            onPageChange={(newPage) => {
+              setCatalogPage(newPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      )}
+          </>
+        );
+      })()}
 
       <CategoryModal
         isOpen={isModalOpen}

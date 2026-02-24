@@ -18,6 +18,7 @@ import { campaignService } from "../services/campaignService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import { BackendCampaignType } from "../types/campaign";
 import {
@@ -211,6 +212,11 @@ export default function CampaignCategoriesPage() {
     CampaignCategory | undefined
   >();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Pagination states
+  const [catalogPage, setCatalogPage] = useState(1);
+  const catalogPageSize = 9; // Show 9 items per page (3x3 grid)
+
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [togglingCategoryId, setTogglingCategoryId] = useState<number | null>(
@@ -891,6 +897,13 @@ export default function CampaignCategoriesPage() {
       </div>
 
       {/* Categories */}
+      {(() => {
+        const startIndex = (catalogPage - 1) * catalogPageSize;
+        const endIndex = startIndex + catalogPageSize;
+        const paginatedCategories = filteredCampaignCategories.slice(startIndex, endIndex);
+
+        return (
+          <>
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16">
           <LoadingSpinner
@@ -923,7 +936,7 @@ export default function CampaignCategoriesPage() {
         </div>
       ) : viewMode === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCampaignCategories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category.id}
               className={`border border-gray-200 ${tw.rounded} p-6 hover:shadow-md transition-all`}
@@ -1002,7 +1015,7 @@ export default function CampaignCategoriesPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredCampaignCategories.map((category) => (
+          {paginatedCategories.map((category) => (
             <div
               key={category.id}
               className={`border border-gray-200 ${tw.rounded} p-4 hover:shadow-md transition-all`}
@@ -1074,6 +1087,24 @@ export default function CampaignCategoriesPage() {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {filteredCampaignCategories.length > catalogPageSize && (
+        <div className="flex justify-center mt-6">
+          <Pagination
+            currentPage={catalogPage}
+            pageSize={catalogPageSize}
+            totalItems={filteredCampaignCategories.length}
+            onPageChange={(newPage) => {
+              setCatalogPage(newPage);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </div>
+      )}
+          </>
+        );
+      })()}
 
       <CategoryModal
         isOpen={isModalOpen}

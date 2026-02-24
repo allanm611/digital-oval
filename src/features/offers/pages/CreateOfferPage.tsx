@@ -936,10 +936,7 @@ function ReviewStep({
                   Offer Type
                 </div>
                 <div className={`font-medium ${tw.textPrimary}`}>
-                  {formData.offer_type
-                    ? formData.offer_type.charAt(0).toUpperCase() +
-                      formData.offer_type.slice(1).replace(/_/g, " ")
-                    : "Not selected"}
+                  {formData.offer_type || "Not selected"}
                 </div>
               </div>
               <div>

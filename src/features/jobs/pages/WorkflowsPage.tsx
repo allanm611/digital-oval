@@ -156,12 +156,9 @@ export default function WorkflowsPage() {
   const fetchStats = useCallback(async () => {
     setIsLoadingStats(true);
     try {
-      const [statusCounts, typesResponse, totalResponse] = await Promise.all([
+      const [statusCounts, typesResponse] = await Promise.all([
         workflowService.getStatusCounts(true),
         workflowService.getWorkflowTypes(true),
-        workflowService
-          .getAllWorkflows({ limit: 50, offset: 0, skipCache: true })
-          .catch(() => ({ data: [], pagination: { total: 0 } })),
       ]);
 
       // Handle different response structures
@@ -178,13 +175,7 @@ export default function WorkflowsPage() {
         (counts.deleted || 0) +
         (counts.inactive || 0);
 
-      const totalFromPagination = totalResponse?.pagination?.total ?? 0;
-      const totalFromCount = Array.isArray(totalResponse?.data)
-        ? totalResponse.data.length
-        : 0;
-
-      const totalFinal =
-        totalFromPagination || totalFromCount || totalCalculatedFromStatus || 0;
+      const totalFinal = (counts.total as number) || totalCalculatedFromStatus || 0;
 
       setStats({
         total: totalFinal,

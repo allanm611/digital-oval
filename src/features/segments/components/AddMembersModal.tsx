@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Search } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Popover } from "@headlessui/react";
 import { customerService } from "../../customers360/services/customerServices";
+import Pagination from "../../../shared/components/ui/Pagination";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { tw, zIndex, color } from "../../../shared/utils/utils";
 
@@ -35,27 +36,42 @@ export default function AddMembersModal({
   const [isLoading, setIsLoading] = useState(false);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerStatusFilter, setCustomerStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalCustomers, setTotalCustomers] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
+      setPage(1);
       loadCustomers();
     }
   }, [isOpen]);
 
-  const loadCustomers = async () => {
+  const loadCustomers = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await customerService.getAllCustomers({
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
         skipCache: true,
       });
       setCustomers(response.data || []);
+      // Set total from pagination response
+      const total = (response as any).pagination?.total || response.data?.length || 0;
+      setTotalCustomers(total);
     } catch (error) {
       console.error("Failed to load customers:", error);
       setCustomers([]);
+      setTotalCustomers(0);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, pageSize]);
+
+  // Load customers when page changes
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
@@ -308,6 +324,21 @@ export default function AddMembersModal({
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalCustomers > pageSize && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <Pagination
+                currentPage={page}
+                pageSize={pageSize}
+                totalItems={totalCustomers}
+                onPageChange={(newPage) => {
+                  setPage(newPage);
+                  setSelectedCustomers([]); // Clear selection when changing page
+                }}
+              />
             </div>
           )}
         </div>

@@ -1185,7 +1185,7 @@ export default function SegmentDetailsPage() {
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                     style={getTypeStyles()}
                   >
-                    {typeValue.charAt(0).toUpperCase() + typeValue.slice(1)}
+                    {typeValue}
                   </span>
                 );
               })()}
@@ -1925,7 +1925,7 @@ export default function SegmentDetailsPage() {
                   </div>
                   <Popover className="relative w-48">
                     <Popover.Button className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center justify-between`}>
-                      {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter.charAt(0).toUpperCase() + customerStatusFilter.slice(1)}
+                      {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter}
                       <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
                     </Popover.Button>
                     <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.modal }}>
@@ -1938,7 +1938,7 @@ export default function SegmentDetailsPage() {
                               customerStatusFilter === status ? "bg-gray-50 font-medium" : ""
                             }`}
                           >
-                            {status === "all" ? "All Statuses" : status.charAt(0).toUpperCase() + status.slice(1)}
+                            {status === "all" ? "All Statuses" : status}
                           </button>
                         ))}
                       </div>

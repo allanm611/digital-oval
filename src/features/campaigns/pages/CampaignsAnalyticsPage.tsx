@@ -158,9 +158,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
         if (data.status_breakdown) {
           const statusData = Object.entries(data.status_breakdown).map(
             ([status, count]) => ({
-              status:
-                status.charAt(0).toUpperCase() +
-                status.slice(1).replace(/_/g, " "),
+              status: status,
               count:
                 typeof count === "string"
                   ? parseInt(count, 10) || 0
@@ -177,9 +175,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
           const approvalData = Object.entries(
             data.approval_status_breakdown
           ).map(([status, count]) => ({
-            status:
-              status.charAt(0).toUpperCase() +
-              status.slice(1).replace(/_/g, " "),
+            status: status,
             count:
               typeof count === "string"
                 ? parseInt(count, 10) || 0
@@ -196,9 +192,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
         if (data.activity_status) {
           const activityData = Object.entries(data.activity_status).map(
             ([status, count]) => ({
-              status:
-                status.charAt(0).toUpperCase() +
-                status.slice(1).replace(/_/g, " "),
+              status: status,
               count:
                 typeof count === "string"
                   ? parseInt(count, 10) || 0

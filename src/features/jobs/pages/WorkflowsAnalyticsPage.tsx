@@ -113,18 +113,13 @@ export default function WorkflowsAnalyticsPage() {
           success: true,
           data: [],
         })),
-        workflowService
-          .getAllWorkflows({ limit: 50, offset: 0, skipCache: true })
-          .catch(() => ({ data: [], pagination: { total: 0 } })),
       ]);
 
       setStatusCounts(statusResponse.data || null);
       setCountByType(typeResponse.data || []);
-      const totalFromPagination = totalResponse?.pagination?.total ?? 0;
-      const totalFromCount = Array.isArray(totalResponse?.data)
-        ? totalResponse.data.length
-        : 0;
-      setTotalWorkflows(totalFromPagination || totalFromCount || 0);
+      // Use total from status counts instead of fetching all workflows
+      const totalWorkflows = (statusResponse.data?.total as number) || 0;
+      setTotalWorkflows(totalWorkflows);
     } catch (err) {
       showError(
         t.common.error,

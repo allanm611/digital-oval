@@ -1274,8 +1274,7 @@ export default function CampaignsPage() {
                           campaign.status,
                         )}`}
                       >
-                        {campaign.status.charAt(0).toUpperCase() +
-                          campaign.status.slice(1)}
+                        {campaign.status}
                       </span>
                     </td>
                     <td

@@ -1,13 +1,16 @@
 import customerSubscriptionsData from "../data/customerSubscriptions.json";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 
-// Export the customer data source
-export const customerSubscriptions: CustomerSubscriptionRecord[] = (
-  customerSubscriptionsData as CustomerSubscriptionRecord[]
-).map((record) => ({
-  ...record,
-  msisdn: record.msisdn ? String(record.msisdn) : undefined,
-}));
+// Process customer data with explicit msisdn conversion
+const processedData = (customerSubscriptionsData as CustomerSubscriptionRecord[]).map(
+  (record) => ({
+    ...record,
+    msisdn: record.msisdn ? String(record.msisdn) : undefined,
+  })
+);
+
+// Export the processed customer subscriptions
+export const customerSubscriptions: CustomerSubscriptionRecord[] = processedData;
 
 // Shared search function that can be used across components
 export const searchCustomers = (

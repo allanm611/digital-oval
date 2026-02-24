@@ -1063,13 +1063,29 @@ export default function DashboardHome() {
         // Calculate Products percentage change using date-based filtering
         // Get all products and filter by created_at date
         try {
-          // Get all products (we'll filter by created_at client-side)
-          const allProducts = await productService.getAllProducts({
-            limit: 1000,
-          });
+          // Get all products with pagination
+          const limit = 100;
+          let offset = 0;
+          const allProductsList: Array<any> = [];
+          let hasMore = true;
 
-          if (allProducts.data && Array.isArray(allProducts.data)) {
-            const currentMonthProducts = allProducts.data.filter((product) => {
+          while (hasMore) {
+            const response = await productService.getAllProducts({
+              limit: limit,
+              offset: offset,
+              skipCache: true,
+            });
+
+            const products = response.data || [];
+            allProductsList.push(...products);
+
+            const total = response.pagination?.total || 0;
+            hasMore = allProductsList.length < total && products.length === limit;
+            offset += limit;
+          }
+
+          if (allProductsList.length > 0) {
+            const currentMonthProducts = allProductsList.filter((product) => {
               if (!product.created_at) return false;
               const createdDate = new Date(product.created_at);
               return (
@@ -1078,7 +1094,7 @@ export default function DashboardHome() {
               );
             });
 
-            const previousMonthProducts = allProducts.data.filter((product) => {
+            const previousMonthProducts = allProductsList.filter((product) => {
               if (!product.created_at) return false;
               const createdDate = new Date(product.created_at);
               return (

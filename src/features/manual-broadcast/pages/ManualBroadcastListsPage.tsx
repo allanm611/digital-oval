@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   FileText,
@@ -22,9 +22,28 @@ import { useToast } from "../../../contexts/ToastContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 export default function ManualBroadcastListsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { success: showToast, error: showError } = useToast();
 
+  // Check if we came from a returnTo state
+  const returnTo = (
+    location.state as {
+      returnTo?: {
+        pathname: string;
+      };
+    }
+  )?.returnTo;
+
+  const navigateBack = () => {
+    if (returnTo) {
+      navigate(returnTo.pathname);
+    } else {
+      navigate("/dashboard/manual-actions");
+    }
+  };
+
   const [broadcasts, setBroadcasts] = useState<ManualBroadcast[]>([]);
+  const [allBroadcasts, setAllBroadcasts] = useState<ManualBroadcast[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -70,6 +89,7 @@ export default function ManualBroadcastListsPage() {
           }),
         );
 
+        setAllBroadcasts(broadcasts);
         setBroadcasts(broadcasts);
         // Handle pagination - can be nested under .pagination or at root level
         const paginationData = response.data.pagination || response.data;
@@ -92,6 +112,24 @@ export default function ManualBroadcastListsPage() {
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
+
+  // Filter broadcasts when search term changes
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      const filtered = allBroadcasts.filter(
+        (broadcast) =>
+          broadcast.source_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          broadcast.execution_id
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
+      );
+      setBroadcasts(filtered);
+    } else {
+      setBroadcasts(allBroadcasts);
+    }
+  }, [searchTerm, allBroadcasts]);
 
   const loadBroadcasts = async (page: number = pagination.page) => {
     try {
@@ -127,20 +165,7 @@ export default function ManualBroadcastListsPage() {
           }),
         );
 
-        // Filter by search term on client side
-        const trimmedSearch = searchTerm.trim();
-        if (trimmedSearch) {
-          broadcasts = broadcasts.filter(
-            (broadcast) =>
-              broadcast.source_name
-                .toLowerCase()
-                .includes(trimmedSearch.toLowerCase()) ||
-              broadcast.execution_id
-                .toLowerCase()
-                .includes(trimmedSearch.toLowerCase()),
-          );
-        }
-
+        setAllBroadcasts(broadcasts);
         setBroadcasts(broadcasts);
         // Handle pagination - can be nested under .pagination or at root level
         const paginationData = response.data.pagination || response.data;
@@ -235,7 +260,7 @@ export default function ManualBroadcastListsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={navigateBack}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             title="Go back"
           >
@@ -252,7 +277,14 @@ export default function ManualBroadcastListsPage() {
         </div>
         {/* <PermissionGate permission="manual-communications.create"> */}
         <div className="flex items-center gap-3">
-          <CreateButton route="/dashboard/manual-communications/create" />
+          <CreateButton
+            route="/dashboard/manual-communications/create"
+            navigationState={{
+              returnTo: {
+                pathname: "/dashboard/manual-communications",
+              },
+            }}
+          />
         </div>
         {/* </PermissionGate> */}
       </div>
@@ -325,7 +357,13 @@ export default function ManualBroadcastListsPage() {
               <PermissionGate permission="manual-communications.create">
                 <button
                   onClick={() =>
-                    navigate("/dashboard/manual-communications/create")
+                    navigate("/dashboard/manual-communications/create", {
+                      state: {
+                        returnTo: {
+                          pathname: "/dashboard/manual-communications",
+                        },
+                      },
+                    })
                   }
                   className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm text-white`}
                   style={{ backgroundColor: color.primary.action }}
@@ -451,25 +489,27 @@ export default function ManualBroadcastListsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           {broadcast.execution_id && (
-                            <button
-                              onClick={() => handleViewDetails(broadcast)}
-                              className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                              title="View Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleViewDetails(broadcast)}
+                                className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                                title="View Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    `/dashboard/manual-communications/${broadcast.execution_id}/edit`,
+                                  )
+                                }
+                                className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                                title="Edit"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            </>
                           )}
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/manual-communications/${broadcast.execution_id}/edit`,
-                              )
-                            }
-                            className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                            title="Edit"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
                           <button
                             onClick={() => handleDelete(broadcast)}
                             className={`p-1 ${tw.rounded} text-red-600 hover:text-red-800 transition-colors cursor-pointer`}

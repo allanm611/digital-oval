@@ -34,18 +34,18 @@ import Pagination from "../../../shared/components/ui/Pagination";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import type {
-  CustomerRow,
-  CustomerSearchResultsResponse,
-} from "../../reports-analytics/types/ReportsAPI";
-import type { CustomerWithContact } from "../../reports-analytics/types/ReportsAPI";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { CustomerDetail } from "../types/customer";
 import {
   convertSubscriptionToCustomerRow,
   formatDateTime,
   formatMsisdn,
+  type CustomerRow,
 } from "../utils/customerSubscriptionHelpers";
+import type {
+  CustomerSearchResultsResponse,
+} from "../../reports-analytics/types/ReportsAPI";
+// Note: CustomerWithContact is not imported as it's not used in this file
 import { customerSubscriptions } from "../utils/customerDataService";
 import { customerService } from "../services/customerServices";
 
@@ -98,14 +98,7 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   );
 };
 
-// Using shared customer data from customerDataService
-const excelCustomerRows: CustomerRow[] = customerSubscriptions.map(
-  convertSubscriptionToCustomerRow,
-);
-const subscriptionLookup: Record<string, CustomerSubscriptionRecord> = {};
-excelCustomerRows.forEach((row, index) => {
-  subscriptionLookup[row.id] = customerSubscriptions[index];
-});
+// Using shared customer data from customerDataService - will be generated in component
 
 const generateCustomerRelatedData = (customer: CustomerRow) => {
   const segmentNames = [
@@ -323,6 +316,26 @@ export default function CustomerSearchResultsPage() {
     }
   }, [stateSource, origin]);
 
+  // Generate customer rows and lookup safely inside component
+  const { excelCustomerRows, subscriptionLookup } = useMemo(() => {
+    try {
+      const rows: CustomerRow[] = customerSubscriptions.map(
+        convertSubscriptionToCustomerRow,
+      );
+      const lookup: Record<string, CustomerSubscriptionRecord> = {};
+      rows.forEach((row, index) => {
+        const record = customerSubscriptions[index];
+        if (record) {
+          lookup[row.id] = record;
+        }
+      });
+      return { excelCustomerRows: rows, subscriptionLookup: lookup };
+    } catch (error) {
+      console.error("Error generating customer rows:", error);
+      return { excelCustomerRows: [], subscriptionLookup: {} };
+    }
+  }, []);
+
   // Get customer from state (initial navigation) or from URL params (on refresh)
   const customerFromState = location.state?.customer as CustomerRow | undefined;
   const subscriptionFromState = location.state?.subscription as
@@ -335,7 +348,7 @@ export default function CustomerSearchResultsPage() {
     return excelCustomerRows.find(
       (customer) => customer.id === customerIdFromUrl,
     );
-  }, [customerIdFromUrl]);
+  }, [customerIdFromUrl, excelCustomerRows]);
 
   const subscriptionFromDataset = useMemo(() => {
     if (subscriptionFromState) {
