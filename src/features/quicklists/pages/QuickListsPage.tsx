@@ -507,7 +507,7 @@ export default function QuickListsPage() {
                       className="px-6 py-4 text-sm text-black"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      {quicklist.processing_status || "N/A"}
+                      {(quicklist.processing_status || "N/A").replace(/_/g, " ")}
                     </td>
                     <td
                       className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}

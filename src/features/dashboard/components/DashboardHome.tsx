@@ -207,10 +207,7 @@ export default function DashboardHome() {
   );
 
   const formatStatusLabel = useCallback((status: string) => {
-    return status
-      .split("_")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
+    return status;
   }, []);
 
   // State for percentage changes
@@ -324,7 +321,7 @@ export default function DashboardHome() {
                 const offerType = (item.offer_type || "").toLowerCase();
                 const count = parseInt(item.count || "0", 10);
                 return {
-                  name: offerType.charAt(0).toUpperCase() + offerType.slice(1),
+                  name: offerType,
                   value: count,
                   color:
                     typeColorMap[offerType] || color.charts.offers.discount,
@@ -346,7 +343,7 @@ export default function DashboardHome() {
                     ? value
                     : parseInt(String(value), 10);
                 return {
-                  name: type.charAt(0).toUpperCase() + type.slice(1),
+                  name: type,
                   value: numValue,
                   color:
                     typeColorMap[type.toLowerCase()] ||
@@ -853,8 +850,7 @@ export default function DashboardHome() {
                 };
 
                 return {
-                  type:
-                    segmentType.charAt(0).toUpperCase() + segmentType.slice(1),
+                  type: segmentType,
                   count,
                   percentage,
                   color:

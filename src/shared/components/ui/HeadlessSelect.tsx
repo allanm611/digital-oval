@@ -59,9 +59,16 @@ export default function HeadlessSelect({
     const updatePosition = () => {
       if (isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
+        const dropdownHeight = 320; // Approximate height of dropdown
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        // Determine if dropdown should open upward or downward
+        const shouldOpenUpward = openUpward || (spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+
         setDropdownPosition({
-          top: openUpward ? rect.top - 300 : rect.bottom + 4,
-          left: rect.left,
+          top: shouldOpenUpward ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
+          left: Math.max(0, Math.min(rect.left, window.innerWidth - rect.width)),
           width: rect.width,
         });
       }

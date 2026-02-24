@@ -1053,7 +1053,7 @@ export default function CampaignDetailsPage() {
                       campaign.status,
                     )}`}
                   >
-                    {campaign.status}
+                    {campaign.status.replace(/_/g, " ")}
                   </span>
                 )}
                 {campaign.approval_status && (
@@ -1071,7 +1071,7 @@ export default function CampaignDetailsPage() {
                     {campaign.approval_status === "pending" && (
                       <Clock className="w-3 h-3 mr-1" />
                     )}
-                    {campaign.approval_status}
+                    {campaign.approval_status.replace(/_/g, " ")}
                   </span>
                 )}
               </div>

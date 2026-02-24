@@ -1037,7 +1037,7 @@ export default function SegmentDetailsPage() {
               Segment Type
             </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900 capitalize">
+          <p className="mt-2 text-3xl font-bold text-gray-900">
             {segment.type || "dynamic"}
           </p>
         </div>

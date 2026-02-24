@@ -244,6 +244,20 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
 
+  // Notification preferences
+  const [emailNotifications, setEmailNotifications] = useState(() => {
+    const stored = localStorage.getItem("emailNotifications");
+    return stored !== null ? JSON.parse(stored) : true;
+  });
+  const [inAppNotifications, setInAppNotifications] = useState(() => {
+    const stored = localStorage.getItem("inAppNotifications");
+    return stored !== null ? JSON.parse(stored) : true;
+  });
+  const [browserNotifications, setBrowserNotifications] = useState(() => {
+    const stored = localStorage.getItem("browserNotifications");
+    return stored !== null ? JSON.parse(stored) : true;
+  });
+
   // Cross-tab synchronization: Listen for localStorage changes from other tabs
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -344,6 +358,9 @@ export default function SettingsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Save to localStorage
       localStorage.setItem("appSettings", JSON.stringify(settings));
+      localStorage.setItem("emailNotifications", JSON.stringify(emailNotifications));
+      localStorage.setItem("inAppNotifications", JSON.stringify(inAppNotifications));
+      localStorage.setItem("browserNotifications", JSON.stringify(browserNotifications));
       // Update language if it changed
       setLanguageSettings(settings.language);
       setLanguage(settings.language);
@@ -911,6 +928,85 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Notifications Settings Card */}
+        <div
+          className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
+        >
+          <div className="mb-6 pb-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Notifications
+            </h2>
+            <p className="text-sm text-gray-500">
+              Configure your notification preferences
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Email Notifications */}
+            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
+              <div className="flex items-center flex-1">
+                <input
+                  type="checkbox"
+                  id="emailNotifications"
+                  checked={emailNotifications}
+                  onChange={(e) => setEmailNotifications(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
+                />
+                <label htmlFor="emailNotifications" className="ml-3 cursor-pointer flex-1">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Email Notifications
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Receive notifications via email
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {/* In-App Notifications */}
+            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
+              <div className="flex items-center flex-1">
+                <input
+                  type="checkbox"
+                  id="inAppNotifications"
+                  checked={inAppNotifications}
+                  onChange={(e) => setInAppNotifications(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
+                />
+                <label htmlFor="inAppNotifications" className="ml-3 cursor-pointer flex-1">
+                  <p className="text-sm font-semibold text-gray-900">
+                    In-App Notifications
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Receive notifications within the application
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {/* Browser Notifications */}
+            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
+              <div className="flex items-center flex-1">
+                <input
+                  type="checkbox"
+                  id="browserNotifications"
+                  checked={browserNotifications}
+                  onChange={(e) => setBrowserNotifications(e.target.checked)}
+                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
+                />
+                <label htmlFor="browserNotifications" className="ml-3 cursor-pointer flex-1">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Browser Notifications
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Receive desktop notifications from your browser
+                  </p>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 

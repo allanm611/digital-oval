@@ -191,7 +191,7 @@ export default function UniversalControlGroupModal({
                         group.status
                       )}`}
                     >
-                      {group.status}
+                      {group.status.replace(/_/g, " ")}
                     </span>
                   </div>
                   <div className="col-span-2">

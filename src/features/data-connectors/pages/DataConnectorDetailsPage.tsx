@@ -577,7 +577,7 @@ export default function DataConnectorDetailsPage() {
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(profile.status)}`}
                             >
-                              {profile.status}
+                              {profile.status.replace(/_/g, " ")}
                             </span>
                             <span className="text-sm text-gray-500">
                               {profile.connections} connections

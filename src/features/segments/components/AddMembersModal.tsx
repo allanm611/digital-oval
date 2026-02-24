@@ -168,7 +168,7 @@ export default function AddMembersModal({
             </div>
             <Popover className="relative w-48">
               <Popover.Button className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left flex items-center justify-between`}>
-                {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter.charAt(0).toUpperCase() + customerStatusFilter.slice(1)}
+                {customerStatusFilter === "all" ? "All Statuses" : customerStatusFilter}
                 <ChevronUpDownIcon className="w-4 h-4 text-gray-400" />
               </Popover.Button>
               <Popover.Panel className={`absolute right-0 mt-2 w-48 ${tw.rounded} border border-gray-200 bg-white shadow-lg`} style={{ zIndex: zIndex.modal }}>
@@ -183,7 +183,7 @@ export default function AddMembersModal({
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                     >
-                      {status === "all" ? "All Statuses" : status.charAt(0).toUpperCase() + status.slice(1)}
+                      {status === "all" ? "All Statuses" : status}
                     </button>
                   ))}
                 </div>

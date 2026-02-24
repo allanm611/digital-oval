@@ -1274,7 +1274,7 @@ export default function CampaignsPage() {
                           campaign.status,
                         )}`}
                       >
-                        {campaign.status}
+                        {campaign.status.replace(/_/g, " ")}
                       </span>
                     </td>
                     <td
