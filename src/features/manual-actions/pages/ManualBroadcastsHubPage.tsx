@@ -12,7 +12,9 @@ export default function ManualBroadcastsHubPage() {
       title: t.manualActions.manualCommunications,
       description: t.manualActions.sendTargetedMessages,
       icon: Mail,
-      onClick: () => navigate("/dashboard/manual-communications"),
+      onClick: () => navigate("/dashboard/manual-communications", {
+        state: { returnTo: { pathname: "/dashboard/manual-broadcasts" } }
+      }),
     },
     {
       title: t.manualActions.manualRewards,

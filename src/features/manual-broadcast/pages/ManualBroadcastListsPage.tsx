@@ -38,7 +38,7 @@ export default function ManualBroadcastListsPage() {
     if (returnTo) {
       navigate(returnTo.pathname);
     } else {
-      navigate("/dashboard/manual-actions");
+      navigate("/dashboard/manual-communications");
     }
   };
 
@@ -281,7 +281,7 @@ export default function ManualBroadcastListsPage() {
             route="/dashboard/manual-communications/create"
             navigationState={{
               returnTo: {
-                pathname: "/dashboard/manual-communications",
+                pathname: returnTo?.pathname || "/dashboard/manual-communications",
               },
             }}
           />

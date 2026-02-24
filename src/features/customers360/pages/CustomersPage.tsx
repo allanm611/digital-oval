@@ -160,8 +160,11 @@ export default function CustomersPage() {
             });
             setCustomers(apiCustomers);
 
-            // Set total from response pagination if available
-            const total = (apiResponse as any).pagination?.total || apiCustomers.length;
+            // Set total from response pagination.total (preferred) or top-level total
+            const total =
+              apiResponse.pagination?.total ||
+              apiResponse.total ||
+              apiCustomers.length;
             setTotalCustomers(total);
           }
         } catch (apiError: any) {
@@ -367,7 +370,7 @@ export default function CustomersPage() {
     });
 
     return {
-      uniqueCustomers: uniqueCustomers.size,
+      uniqueCustomers: totalCustomers,
       totalSubscriptions: totalCustomers,
       activeSubscriptions,
       pendingActivations,

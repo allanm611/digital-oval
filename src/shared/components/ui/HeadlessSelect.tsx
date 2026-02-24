@@ -19,7 +19,6 @@ interface HeadlessSelectProps {
   error?: boolean;
   className?: string;
   searchable?: boolean;
-  openUpward?: boolean;
   zIndex?: number;
 }
 
@@ -32,7 +31,6 @@ export default function HeadlessSelect({
   error = false,
   className = "",
   searchable = false,
-  openUpward = false,
   zIndex,
 }: HeadlessSelectProps) {
   // Always use popover z-index by default so dropdowns appear above modals
@@ -59,15 +57,10 @@ export default function HeadlessSelect({
     const updatePosition = () => {
       if (isOpen && buttonRef.current) {
         const rect = buttonRef.current.getBoundingClientRect();
-        const dropdownHeight = 320; // Approximate height of dropdown
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const spaceAbove = rect.top;
 
-        // Determine if dropdown should open upward or downward
-        const shouldOpenUpward = openUpward || (spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-
+        // Always open downward - no flipping logic
         setDropdownPosition({
-          top: shouldOpenUpward ? rect.top - dropdownHeight - 4 : rect.bottom + 4,
+          top: rect.bottom + 4,
           left: Math.max(0, Math.min(rect.left, window.innerWidth - rect.width)),
           width: rect.width,
         });
@@ -83,7 +76,7 @@ export default function HeadlessSelect({
         window.removeEventListener("resize", updatePosition);
       };
     }
-  }, [isOpen, openUpward]);
+  }, [isOpen]);
 
   return (
     <div className={`relative ${className}`}>

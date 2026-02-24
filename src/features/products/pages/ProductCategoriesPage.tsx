@@ -28,7 +28,7 @@ import {
 import { Product, CategoryPerformance } from "../types/product";
 import { productCategoryService } from "../services/productCategoryService";
 import { productService } from "../services/productService";
-import { color, tw, button } from "../../../shared/utils/utils";
+import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import {
   buildCatalogTag,
@@ -1556,11 +1556,12 @@ export default function ProductCatalogsPage() {
       {(showAdvancedFilters || isClosingModal) &&
         createPortal(
           <div
-            className={`fixed inset-0 z-[9999] overflow-hidden ${
+            className={`fixed inset-0 overflow-hidden ${
               isClosingModal
                 ? "animate-out fade-out duration-300"
                 : "animate-in fade-in duration-300"
             }`}
+            style={{ zIndex: zIndex.modal - 1 }}
           >
             <div
               className="fixed inset-0 bg-black bg-opacity-50"
@@ -1688,6 +1689,7 @@ export default function ProductCatalogsPage() {
                       ]}
                       placeholder="Any Status"
                       className="w-full"
+                      zIndex={zIndex.popover}
                     />
                   </div>
 

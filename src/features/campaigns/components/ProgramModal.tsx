@@ -37,6 +37,7 @@ export default function ProgramModal({
     end_date: "",
   });
   const [error, setError] = useState("");
+  const [dateError, setDateError] = useState("");
 
   useEffect(() => {
     if (program) {
@@ -63,6 +64,7 @@ export default function ProgramModal({
       });
     }
     setError("");
+    setDateError("");
   }, [program, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,12 +207,22 @@ export default function ProgramModal({
                 <input
                   type="date"
                   value={formData.start_date}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       start_date: e.target.value,
-                    }))
-                  }
+                    }));
+                    // Validate dates in real-time
+                    if (e.target.value && formData.end_date) {
+                      if (formData.end_date < e.target.value) {
+                        setDateError("End date must be after start date");
+                      } else {
+                        setDateError("");
+                      }
+                    } else {
+                      setDateError("");
+                    }
+                  }}
                   className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
                 />
               </div>
@@ -221,14 +233,31 @@ export default function ProgramModal({
                 <input
                   type="date"
                   value={formData.end_date}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setFormData((prev) => ({
                       ...prev,
                       end_date: e.target.value,
-                    }))
-                  }
-                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                    }));
+                    // Validate dates in real-time
+                    if (e.target.value && formData.start_date) {
+                      if (e.target.value < formData.start_date) {
+                        setDateError("End date must be after start date");
+                      } else {
+                        setDateError("");
+                      }
+                    } else {
+                      setDateError("");
+                    }
+                  }}
+                  className={`w-full px-3 py-2 text-sm border ${
+                    dateError ? "border-red-300" : "border-gray-300"
+                  } ${tw.rounded} focus:outline-none focus:ring-2 ${
+                    dateError ? "focus:ring-red-500 focus:border-red-500" : "focus:ring-purple-500 focus:border-transparent"
+                  }`}
                 />
+                {dateError && (
+                  <p className="mt-1 text-sm text-red-600">{dateError}</p>
+                )}
               </div>
             </div>
           </div>
