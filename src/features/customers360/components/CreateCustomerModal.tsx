@@ -8,6 +8,7 @@ import {
   Download,
 
 } from "lucide-react";
+import countries from "world-countries";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { useToast } from "../../../contexts/ToastContext";
@@ -52,11 +53,15 @@ const LANGUAGE_OPTIONS = [
   { value: "fr", label: "French" },
 ];
 
+// Generate countries list from world-countries package
+const countriesList = countries.map((country) => ({
+  value: country.cca3,
+  label: country.name.common,
+}));
+
 const COUNTRY_OPTIONS = [
-  { value: "UGA", label: "Uganda" },
-  { value: "KEN", label: "Kenya" },
-  { value: "TZA", label: "Tanzania" },
-  { value: "RWA", label: "Rwanda" },
+  { value: "", label: "Select Country" },
+  ...countriesList,
 ];
 
 const CUSTOMER_TIER_OPTIONS = [
@@ -417,17 +422,22 @@ export default function CreateCustomerModal({
       const newCustomer: CustomerSubscriptionRecord = {
         customerId: apiCustomerId || subscriberId, // Fallback to subscriberId if id is undefined
         subscriptionId: subscriberId,
-        // Use API response attributes where available
+        // Use API response attributes where available with null checks
         firstName:
-          apiResponse.data.attributes?.first_name || formData.firstName,
-        lastName: apiResponse.data.attributes?.last_name || formData.lastName,
-        msisdn: msisdnForApi,
+          apiResponse?.data?.first_name || formData.firstName || "Unknown",
+        lastName: apiResponse?.data?.last_name || formData.lastName || "Customer",
+        msisdn: msisdnForApi || "",
         email:
-          apiResponse.data.attributes?.email || formData.email || undefined,
-        activationDate: apiResponse.data.created_at || new Date().toISOString(),
+          apiResponse?.data?.email || formData.email || undefined,
+        city: apiResponse?.data?.city || undefined,
+        customerType: apiResponse?.data?.subscriber_type || "prepaid",
+        tariff: apiResponse?.data?.preferred_channel || "NORMAL_SMS",
+        status: apiResponse?.data?.subscriber_status || "active",
+        simType: apiResponse?.data?.kyc_verified ? "KYC Verified" : "Not Verified",
+        activationDate: apiResponse?.data?.created_at || new Date().toISOString(),
       };
 
-      // Add to local storage and state
+      // Add to parent component state
       onCustomersAdded([newCustomer]);
       success("Success", "Customer added successfully");
 
@@ -505,14 +515,19 @@ export default function CreateCustomerModal({
           },
         });
 
-        // Prepare local customer record
+        // Prepare local customer record with null checks
         const customer: CustomerSubscriptionRecord = {
-          customerId: subscriptionId,
-          subscriptionId: subscriptionId,
-          firstName: parts[1] || "Unknown",
-          lastName: parts[2] || "Customer",
-          msisdn: msisdnForApi,
-          email: parts[5] || undefined,
+          customerId: subscriptionId || 0,
+          subscriptionId: subscriptionId || 0,
+          firstName: parts?.[1]?.trim() || "Unknown",
+          lastName: parts?.[2]?.trim() || "Customer",
+          msisdn: msisdnForApi || "",
+          email: parts?.[5]?.trim() || undefined,
+          city: parts?.[10]?.trim() || undefined,
+          customerType: parts?.[15]?.trim() || "prepaid",
+          tariff: parts?.[16]?.trim() || "NORMAL_SMS",
+          status: "active",
+          simType: "Not Verified",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);
@@ -606,14 +621,19 @@ export default function CreateCustomerModal({
           },
         });
 
-        // Prepare local customer record
+        // Prepare local customer record with null checks
         const customer: CustomerSubscriptionRecord = {
-          customerId: subscriptionId,
-          subscriptionId: subscriptionId,
-          firstName: parts[1] || "Unknown",
-          lastName: parts[2] || "Customer",
-          msisdn: msisdnForApi,
-          email: parts[5] || undefined,
+          customerId: subscriptionId || 0,
+          subscriptionId: subscriptionId || 0,
+          firstName: parts?.[1]?.trim() || "Unknown",
+          lastName: parts?.[2]?.trim() || "Customer",
+          msisdn: msisdnForApi || "",
+          email: parts?.[5]?.trim() || undefined,
+          city: parts?.[10]?.trim() || undefined,
+          customerType: parts?.[15]?.trim() || "prepaid",
+          tariff: parts?.[16]?.trim() || "NORMAL_SMS",
+          status: "active",
+          simType: "Not Verified",
           activationDate: new Date().toISOString(),
         };
         customers.push(customer);

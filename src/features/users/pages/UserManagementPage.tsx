@@ -882,7 +882,8 @@ export default function UserManagementPage() {
 
       // Hash password using the dev endpoint
       const hashResponse = await accountService.hashPassword(tempPassword);
-      if (!hashResponse.success || !hashResponse.data?.hashedPassword) {
+      const hashedPassword = hashResponse.hashedPassword || hashResponse.data?.hashedPassword;
+      if (!hashResponse.success || !hashedPassword) {
         throw new Error("Failed to hash password");
       }
 
@@ -891,7 +892,7 @@ export default function UserManagementPage() {
         email: request.email_address || "",
         first_name: request.first_name || "",
         last_name: request.last_name || "",
-        password_hash: hashResponse.data.hashedPassword,
+        password_hash: hashedPassword,
         primary_role_id: 3, // Default role - TODO: get from request
         department: request.department,
         created_by: authUser?.user_id ?? 1,

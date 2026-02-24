@@ -131,6 +131,11 @@ export default function TeamRolesPermissionsPage() {
     null,
   );
 
+  // Permission deactivation state
+  const [deactivatingPermissionId, setDeactivatingPermissionId] = useState<
+    number | null
+  >(null);
+
   // ============ ROLES TAB FUNCTIONS ============
 
   const fetchRoles = useCallback(async () => {
@@ -454,7 +459,7 @@ export default function TeamRolesPermissionsPage() {
 
   const handleTogglePermissionActive = async (permission: Permission) => {
     try {
-      setIsDeleting(true);
+      setDeactivatingPermissionId(permission.id);
       if (permission.is_active) {
         await permissionService.deactivatePermission(permission.id);
         success(
@@ -480,7 +485,7 @@ export default function TeamRolesPermissionsPage() {
         err instanceof Error ? err.message : t.common.failedToPerformAction,
       );
     } finally {
-      setIsDeleting(false);
+      setDeactivatingPermissionId(null);
     }
   };
 
@@ -983,9 +988,9 @@ export default function TeamRolesPermissionsPage() {
                             onClick={() =>
                               handleTogglePermissionActive(permission)
                             }
-                            disabled={isDeleting}
+                            disabled={deactivatingPermissionId === permission.id}
                             className={`p-1.5 rounded transition-colors ${
-                              isDeleting
+                              deactivatingPermissionId === permission.id
                                 ? "opacity-50 cursor-not-allowed text-gray-400"
                                 : "text-gray-600"
                             }`}

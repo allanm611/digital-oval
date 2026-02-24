@@ -316,7 +316,10 @@ export default function CreateManualBroadcastPage() {
         if (response.success) {
           showToast(t.manualBroadcast.updatedSuccess || "Broadcast resent successfully!");
           clearPersistedFormData("broadcast_form_data");
-          navigate("/dashboard/manual-communications");
+          // Delay navigation to allow success message to be seen
+          setTimeout(() => {
+            navigate("/dashboard/manual-communications");
+          }, 1500);
           return;
         } else {
           throw new Error(response.error || "Communication resending failed");
@@ -363,7 +366,10 @@ export default function CreateManualBroadcastPage() {
         if (response.success) {
           showToast(t.manualBroadcast.createdSuccess);
           clearPersistedFormData("broadcast_form_data");
-          navigate("/dashboard/manual-communications");
+          // Delay navigation to allow success message to be seen
+          setTimeout(() => {
+            navigate("/dashboard/manual-communications");
+          }, 1500);
         } else {
           // Show actual error from backend
           throw new Error(response.error || "Communication sending failed");
@@ -396,7 +402,10 @@ export default function CreateManualBroadcastPage() {
         if (response.success) {
           showToast(t.manualBroadcast.createdSuccess);
           clearPersistedFormData("broadcast_form_data");
-          navigate("/dashboard/manual-communications");
+          // Delay navigation to allow success message to be seen
+          setTimeout(() => {
+            navigate("/dashboard/manual-communications");
+          }, 1500);
         } else {
           // Show actual error from backend
           throw new Error(response.error || "Communication sending failed");
