@@ -565,12 +565,6 @@ export default function QuickListDetailsPage() {
                     QuickList Information
                   </h3>
                   <div className="space-y-3">
-                    <div className={infoRowClass}>
-                      <span className="text-sm text-gray-600">Name</span>
-                      <span className={`${infoValueClass} text-gray-900`}>
-                        {quicklist.name}
-                      </span>
-                    </div>
                     {quicklist.description && (
                       <div className={infoRowClass}>
                         <span className="text-sm text-gray-600">

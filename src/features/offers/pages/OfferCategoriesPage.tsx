@@ -952,12 +952,23 @@ function OfferCategoriesPage() {
     }
   };
 
-  const filteredOfferCategories = (offerCategories || []).filter(
-    (category) =>
-      category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (category?.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase())),
-  );
+  const filteredOfferCategories = (offerCategories || [])
+    .filter(
+      (category) =>
+        category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (category?.description &&
+          category.description.toLowerCase().includes(searchTerm.toLowerCase())),
+    )
+    .sort((a, b) => {
+      // Sort by: active first, then by newest created date
+      if (a.is_active !== b.is_active) {
+        return a.is_active ? -1 : 1; // Active categories first
+      }
+      // Then sort by created_at (newest first)
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
 
   const formatNumber = (value?: number | null) =>
     typeof value === "number" ? value.toLocaleString() : "...";

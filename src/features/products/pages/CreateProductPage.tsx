@@ -110,12 +110,11 @@ export default function CreateProductPage({
       setIsLoading(true);
 
       // Map unit to unit_of_measure and exclude frontend-only fields
-      // Backend doesn't accept: unit, unit_value, validity_hours, combo_data, product_type_id
+      // Backend doesn't accept: unit, unit_value, combo_data, product_type_id
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const {
         unit,
         unit_value,
-        validity_hours,
         combo_data,
         product_type_id,
         ...submitData
@@ -124,7 +123,6 @@ export default function CreateProductPage({
       // Prepare submission data with unit_of_measure
       const finalSubmitData: typeof submitData & {
         unit_of_measure?: string;
-        validity_hours?: number;
       } = {
         ...submitData,
       };
@@ -132,12 +130,6 @@ export default function CreateProductPage({
       // Map unit to unit_of_measure if unit is provided
       if (unit) {
         finalSubmitData.unit_of_measure = unit;
-      }
-
-      // Convert validity_hours to validity_days (backend expects days, not hours)
-      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
-      if (validity_hours && validity_hours > 0) {
-        finalSubmitData.validity_days = Math.ceil(validity_hours / 24);
       }
 
       // Note: combo_data is kept for frontend only, not sent to backend yet

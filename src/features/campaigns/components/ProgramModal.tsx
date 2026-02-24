@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { Program } from "../types/program";
+import { useToast } from "../../../contexts/ToastContext";
 
 interface ProgramModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function ProgramModal({
   onSave,
   isSaving = false,
 }: ProgramModalProps) {
+  const { error: showErrorToast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     code: "",
@@ -80,7 +82,13 @@ export default function ProgramModal({
       return;
     }
 
-    setError("");
+    // Validate dates - end date must be after start date
+    if (formData.start_date && formData.end_date) {
+      if (formData.end_date < formData.start_date) {
+        showErrorToast("Date Validation Error", "End date cannot be before start date");
+        return;
+      }
+    }
 
     const programData = {
       name: formData.name.trim(),
@@ -224,11 +232,6 @@ export default function ProgramModal({
               </div>
             </div>
           </div>
-
-          {error && (() => {
-            console.error("ProgramModal Error:", error);
-            return null;
-          })()}
 
           <div className="flex items-center justify-end space-x-3 mt-6">
             <button

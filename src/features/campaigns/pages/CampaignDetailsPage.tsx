@@ -764,123 +764,106 @@ export default function CampaignDetailsPage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          {/* Primary Action - Based on Status */}
-          {campaign.approval_status === "pending" && (
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Step 1: Request Approval (draft status) */}
+          {campaign.status === "draft" && (
             <button
               onClick={handleApproveCampaign}
               disabled={isApproveLoading}
-              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
-              style={{
-                backgroundColor: button.secondaryAction.background,
-                color: button.secondaryAction.color,
-                border: button.secondaryAction.border,
-                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-                borderRadius: button.secondaryAction.borderRadius,
-                fontSize: button.secondaryAction.fontSize,
-              }}
+              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+              style={{ backgroundColor: color.primary.action }}
             >
               {isApproveLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              {isApproveLoading ? "Requesting..." : "Request Approval"}
+            </button>
+          )}
+
+          {/* Step 2: Approve Campaign (pending_approval status) */}
+          {campaign.status === "pending_approval" && (
+            <button
+              onClick={handleApproveCampaign}
+              disabled={isApproveLoading}
+              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {isApproveLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <CheckCircle className="w-4 h-4" />
               )}
-              {isApproveLoading ? "Approving..." : "Approve"}
+              {isApproveLoading ? "Approving..." : "Approve Campaign"}
             </button>
           )}
 
-          {campaign.approval_status === "approved" &&
-            campaign.status === "draft" && (
-              <button
-                onClick={handleActivateCampaign}
-                disabled={isActionLoading}
-                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm disabled:opacity-50`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isActionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-                {isActionLoading ? "Activating..." : "Activate"}
-              </button>
-            )}
-
-          {/* Run Campaign Button - Commented out until required fields are properly connected */}
-          {/* {campaign.status === 'active' && campaign.status !== 'running' && campaign.status !== 'paused' && (
-                        <button
-                            onClick={handleRunCampaign}
-                            disabled={isRunLoading}
-                            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm disabled:opacity-50`}
-                            style={{ backgroundColor: '#059669' }}
-                        >
-                            {isRunLoading ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            ) : (
-                                <Play className="w-4 h-4" />
-                            )}
-                            {isRunLoading ? 'Running...' : 'Run Campaign'}
-                        </button>
-                    )} */}
-
-          {campaign?.is_active === true && campaign.status !== "paused" && (
+          {/* Step 3: Activate Campaign (approved + is_active=false) */}
+          {campaign.approval_status === "approved" && campaign?.is_active === false && (
             <button
-              onClick={handlePauseCampaign}
+              onClick={handleActivateCampaign}
               disabled={isActionLoading}
-              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
-              style={{
-                backgroundColor: button.secondaryAction.background,
-                color: button.secondaryAction.color,
-                border: button.secondaryAction.border,
-                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-                borderRadius: button.secondaryAction.borderRadius,
-                fontSize: button.secondaryAction.fontSize,
-              }}
+              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+              style={{ backgroundColor: color.primary.action }}
             >
               {isActionLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
-                <Pause className="w-4 h-4" />
+                <Zap className="w-4 h-4" />
               )}
-              {isActionLoading ? "Pausing..." : "Pause"}
+              {isActionLoading ? "Activating..." : "Activate Campaign"}
             </button>
           )}
 
-          {campaign.status === "paused" && (
-            <button
-              onClick={handleResumeCampaign}
-              disabled={isActionLoading}
-              className={`flex items-center gap-2 ${tw.rounded} font-semibold text-sm disabled:opacity-50`}
-              style={{
-                backgroundColor: button.secondaryAction.background,
-                color: button.secondaryAction.color,
-                border: button.secondaryAction.border,
-                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
-                borderRadius: button.secondaryAction.borderRadius,
-                fontSize: button.secondaryAction.fontSize,
-              }}
-            >
-              {isActionLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              {isActionLoading ? "Resuming..." : "Resume"}
-            </button>
-          )}
-
-          {/* Execute Campaign Button */}
+          {/* Step 4: Execute Campaign (approved + is_active=true) */}
           {campaign.approval_status === "approved" && campaign?.is_active === true && (
             <PermissionGate permission="campaigns.execute">
               <button
                 onClick={() => setShowExecuteModal(true)}
-                className={`px-4 py-2 text-white ${tw.rounded} font-semibold flex items-center gap-2 text-sm`}
+                className={`flex items-center gap-2 ${tw.button} text-sm`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 <Play className="w-4 h-4" />
                 Execute Campaign
               </button>
             </PermissionGate>
+          )}
+
+          {/* Step 5: Pause Campaign (approved + is_active=true + not paused) */}
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === true &&
+            campaign.status !== "paused" && (
+              <button
+                onClick={handlePauseCampaign}
+                disabled={isActionLoading}
+                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+                style={{ backgroundColor: color.status.warning }}
+              >
+                {isActionLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Pause className="w-4 h-4" />
+                )}
+                {isActionLoading ? "Pausing..." : "Pause Campaign"}
+              </button>
+            )}
+
+          {/* Step 6: Resume Campaign (paused) */}
+          {campaign.status === "paused" && (
+            <button
+              onClick={handleResumeCampaign}
+              disabled={isActionLoading}
+              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              {isActionLoading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <Play className="w-4 h-4" />
+              )}
+              {isActionLoading ? "Resuming..." : "Resume Campaign"}
+            </button>
           )}
 
           {/* Edit Button - Always Visible */}

@@ -544,7 +544,7 @@ export default function CampaignFlowDetailsPage() {
                     <HeadlessSelect
                       value={editedFlow.flow_type || ""}
                       onChange={(value) => {
-                        const validFlowTypes = ["STANDARD", "AB_TEST", "CHAMPION_CHALLENGER", "ROUND_ROBIN", "MULTIPLE_LEVEL", "MULTIPLE_TARGET"];
+                        const validFlowTypes = ["STANDARD", "AB_TEST", "CHAMPION_CHALLENGER", "ROUND_ROBIN", "MULTIPLE_LEVEL"];
                         if (validFlowTypes.includes(String(value))) {
                           setEditedFlow({
                             ...editedFlow,

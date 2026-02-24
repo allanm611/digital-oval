@@ -380,10 +380,6 @@ class ProgramService {
     program_type?: string;
     is_active?: boolean;
     created_by?: number;
-    start_date_from?: string;
-    start_date_to?: string;
-    end_date_from?: string;
-    end_date_to?: string;
     budget_min?: number;
     budget_max?: number;
     limit?: number;
@@ -401,14 +397,6 @@ class ProgramService {
       queryParams.append("is_active", String(params.is_active));
     if (params.created_by)
       queryParams.append("created_by", String(params.created_by));
-    if (params.start_date_from)
-      queryParams.append("start_date_from", params.start_date_from);
-    if (params.start_date_to)
-      queryParams.append("start_date_to", params.start_date_to);
-    if (params.end_date_from)
-      queryParams.append("end_date_from", params.end_date_from);
-    if (params.end_date_to)
-      queryParams.append("end_date_to", params.end_date_to);
     if (params.budget_min)
       queryParams.append("budget_min", String(params.budget_min));
     if (params.budget_max)
@@ -460,9 +448,9 @@ class ProgramService {
   }): Promise<ProgramResponse> {
     const queryParams = new URLSearchParams();
     if (params.budget_min)
-      queryParams.append("budget_min", String(params.budget_min));
+      queryParams.append("minBudget", String(params.budget_min));
     if (params.budget_max)
-      queryParams.append("budget_max", String(params.budget_max));
+      queryParams.append("maxBudget", String(params.budget_max));
     if (params.limit) queryParams.append("limit", String(params.limit));
     if (params.offset) queryParams.append("offset", String(params.offset));
     if (params.skipCache) queryParams.append("skipCache", "true");

@@ -703,14 +703,25 @@ export default function CampaignCategoriesPage() {
   );
 
   const filteredCampaignCategories = useMemo(() => {
-    return (campaignCategories || []).filter(
-      (category) =>
-        category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (category?.description &&
-          category.description
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())),
-    );
+    return (campaignCategories || [])
+      .filter(
+        (category) =>
+          category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (category?.description &&
+            category.description
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())),
+      )
+      .sort((a, b) => {
+        // Sort by: active first, then by newest created date
+        if (a.is_active !== b.is_active) {
+          return a.is_active ? -1 : 1; // Active categories first
+        }
+        // Then sort by created_at (newest first)
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
   }, [campaignCategories, searchTerm]);
 
   const formatNumber = useCallback(

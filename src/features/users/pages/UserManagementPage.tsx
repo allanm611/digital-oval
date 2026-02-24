@@ -166,7 +166,7 @@ export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<
-    "users" | "requests" | "rejected" | "analytics"
+    "users" | "requests" | "analytics"
   >("users");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
@@ -880,12 +880,18 @@ export default function UserManagementPage() {
       // For now using a placeholder
       const tempPassword = `Temp${Date.now()}!`;
 
+      // Hash password using the dev endpoint
+      const hashResponse = await accountService.hashPassword(tempPassword);
+      if (!hashResponse.success || !hashResponse.data?.hashedPassword) {
+        throw new Error("Failed to hash password");
+      }
+
       const response = await userService.createUser({
         username,
         email: request.email_address || "",
         first_name: request.first_name || "",
         last_name: request.last_name || "",
-        password_hash: tempPassword,
+        password_hash: hashResponse.data.hashedPassword,
         primary_role_id: 3, // Default role - TODO: get from request
         department: request.department,
         created_by: authUser?.user_id ?? 1,
@@ -1409,34 +1415,6 @@ export default function UserManagementPage() {
             {accountRequests.length}
           </span>
           {activeTab === "requests" && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
-            />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab("rejected")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "rejected"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
-        >
-          <UserX className="w-4 h-4 flex-shrink-0" />
-          <span className="whitespace-nowrap">Rejected</span>
-          <span
-            className="px-2 py-0.5 rounded-full text-xs text-white flex-shrink-0"
-            style={{
-              backgroundColor:
-                activeTab === "rejected"
-                  ? color.primary.accent
-                  : color.text.muted,
-            }}
-          >
-            {rejectedRequests.length}
-          </span>
-          {activeTab === "rejected" && (
             <div
               className="absolute bottom-0 left-0 right-0 h-0.5"
               style={{ backgroundColor: color.primary.accent }}
@@ -2344,145 +2322,6 @@ export default function UserManagementPage() {
                     </div>
                   );
                 })}
-              </div>
-            </>
-          )
-        ) : activeTab === "rejected" ? (
-          rejectedRequests.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                No Rejected Requests
-              </h3>
-              <p className={`${tw.textMuted}`}>
-                No account requests have been rejected.
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Table with horizontal scroll */}
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full min-w-[600px]"
-                  style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
-                >
-                  <thead style={{ background: color.surface.tableHeader }}>
-                    <tr>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        User
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Email
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Requested Role
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Rejection Reason
-                      </th>
-                      <th
-                        className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-                        style={{ color: color.surface.tableHeaderText }}
-                      >
-                        Rejected
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rejectedRequests.map((request, index) => {
-                      const fullName =
-                        [request.first_name, request.last_name]
-                          .filter(Boolean)
-                          .join(" ")
-                          .trim() || "Unknown";
-                      const requestEmail =
-                        request.email_address ??
-                        request.email ??
-                        "N/A";
-                      const rejectionReason = request.rejection_reason || "No reason provided";
-                      const rejectedDate =
-                        request.created_at ?? request.created_on;
-                      const formattedDate = rejectedDate
-                        ? formatDate(rejectedDate)
-                        : "N/A";
-
-                      return (
-                        <tr key={`${request.id}-${index}`} className="transition-colors">
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <div
-                              className={`font-semibold text-sm sm:text-base ${tw.textPrimary} truncate`}
-                              title={fullName}
-                            >
-                              {fullName}
-                            </div>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`text-sm ${tw.textMuted} truncate`}
-                              title={requestEmail}
-                            >
-                              {requestEmail}
-                            </span>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`text-sm font-medium text-gray-700 whitespace-nowrap`}
-                            >
-                              {request.roleName}
-                            </span>
-                          </td>
-                          <td
-                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            <span
-                              className={`${tw.textMuted} truncate`}
-                              title={rejectionReason}
-                            >
-                              {rejectionReason}
-                            </span>
-                          </td>
-                          <td
-                            className={`px-4 sm:px-6 py-3 sm:py-4 text-sm ${tw.textMuted} whitespace-nowrap`}
-                            style={{
-                              backgroundColor: color.surface.tablebodybg,
-                            }}
-                          >
-                            {formattedDate}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
               </div>
             </>
           )

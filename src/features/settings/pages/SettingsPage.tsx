@@ -959,10 +959,10 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* Email Notifications */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-gray-50 pb-2 rounded-lg">
+              <div className="flex items-center justify-between px-4 pt-4 pb-2">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
                     Email Notifications
@@ -983,45 +983,11 @@ export default function SettingsPage() {
                 />
               </div>
 
-              {notificationSettings.email_notifications_enabled && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
-                    Email Digest Frequency
-                  </label>
-                  <HeadlessSelect
-                    value={notificationSettings.email_digest_frequency}
-                    onChange={(value) =>
-                      updateNotificationSettings({
-                        email_digest_frequency: value as "instant" | "daily" | "weekly" | "never",
-                      })
-                    }
-                    options={[
-                      {
-                        label: "Instant - Get notified immediately",
-                        value: "instant",
-                      },
-                      {
-                        label: "Daily Digest - Summary once per day",
-                        value: "daily",
-                      },
-                      {
-                        label: "Weekly Digest - Summary once per week",
-                        value: "weekly",
-                      },
-                      {
-                        label: "Never - Disable email notifications",
-                        value: "never",
-                      },
-                    ]}
-                    placeholder="Select frequency"
-                  />
-                </div>
-              )}
             </div>
 
             {/* In-App Notifications */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
+            <div className="bg-gray-50 pb-2 rounded-lg">
+              <div className="flex items-center justify-between px-4 pt-4 pb-2">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
                     In-App Notifications
@@ -1043,8 +1009,11 @@ export default function SettingsPage() {
               </div>
 
               {notificationSettings.in_app_notifications_enabled && (
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3">
+                <div className="space-y-3 px-4 pb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">
+                      Play sound for notifications
+                    </span>
                     <input
                       type="checkbox"
                       checked={notificationSettings.in_app_sound_enabled}
@@ -1055,10 +1024,7 @@ export default function SettingsPage() {
                       }
                       className="w-4 h-4 text-emerald-600 rounded"
                     />
-                    <span className="text-sm text-gray-700">
-                      Play sound for notifications
-                    </span>
-                  </label>
+                  </div>
                   {notificationSettings.in_app_sound_enabled && (
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -1093,7 +1059,7 @@ export default function SettingsPage() {
 
             {/* Browser Notifications */}
             <div className="bg-gray-50 pb-2 rounded-lg">
-              <div className="flex items-center justify-between  ">
+              <div className="flex items-center justify-between px-4 pt-4 pb-2">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">
                     Browser Notifications
@@ -1115,29 +1081,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* SMS Alerts */}
-            <div className="bg-gray-50 p-2 rounded-lg">
-              <div className="flex items-center justify-between ">
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
-                    SMS Alerts
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Critical alerts via SMS (may incur charges)
-                  </p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notificationSettings.sms_alerts_enabled}
-                  onChange={(e) =>
-                    updateNotificationSettings({
-                      sms_alerts_enabled: e.target.checked,
-                    })
-                  }
-                  className="w-5 h-5 text-emerald-600 rounded"
-                />
-              </div>
-            </div>
 
             {/* Notification Categories */}
             <div className="border-t border-gray-200 pt-6">

@@ -392,6 +392,9 @@ export default function OfferDetailsPage() {
       text_body: "",
       html_body: "",
       is_active: true,
+      variables: {
+        sms_route: "Effortel SMS Gateway",
+      },
     });
     setNewCreativeVariables("");
     setSelectedTemplateId(null);
@@ -2653,27 +2656,21 @@ export default function OfferDetailsPage() {
                     SMS Route
                   </label>
                   <HeadlessSelect
-                    value={(newCreativeForm.variables?.sms_route as string) || ""}
-                    onChange={(value) =>
+                    value={newCreativeForm.sms_route || ""}
+                    onChange={(value) => {
                       setNewCreativeForm((prev) => ({
                         ...prev,
-                        variables: {
-                          ...(prev.variables || {}),
-                          sms_route: value || undefined,
-                        },
-                      }))
-                    }
-                    options={[
-                      { label: "Select Route", value: "" },
-                      ...((smsRoutes as TypeConfigurationItem[]) || [])
-                        .filter((route) => route.isActive)
+                        sms_route: value,
+                      }));
+                    }}
+                    options={
+                      smsRoutes?.filter((route) => route.isActive)
                         .map((route) => ({
+                          value: route.id?.toString() || "",
                           label: route.name,
-                          value: route.name,
-                        })),
-                    ]}
-                    placeholder="Select SMS Route..."
-                    className="w-full"
+                        })) || []
+                    }
+                    placeholder="Select SMS Route"
                     zIndex={zIndex.popover}
                   />
                 </div>

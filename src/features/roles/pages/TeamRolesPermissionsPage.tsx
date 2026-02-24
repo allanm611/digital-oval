@@ -455,21 +455,19 @@ export default function TeamRolesPermissionsPage() {
   const handleTogglePermissionActive = async (permission: Permission) => {
     try {
       setIsDeleting(true);
-      // MOCKED - Backend endpoint not available
-      // if (permission.is_active) {
-      //   await permissionService.deactivatePermission(permission.id);
-      //   success(
-      //     "Success",
-      //     `Permission "${permission.name}" has been deactivated`,
-      //   );
-      // } else {
-      //   await permissionService.reactivatePermission(permission.id);
-      //   success(
-      //     "Success",
-      //     `Permission "${permission.name}" has been reactivated`,
-      //   );
-      // }
-      success("Success", `Permission "${permission.name}" status updated`);
+      if (permission.is_active) {
+        await permissionService.deactivatePermission(permission.id);
+        success(
+          "Success",
+          `Permission "${permission.name}" has been deactivated`,
+        );
+      } else {
+        await permissionService.reactivatePermission(permission.id);
+        success(
+          "Success",
+          `Permission "${permission.name}" has been reactivated`,
+        );
+      }
       // Update the specific permission in the list instead of reloading
       setPermissions(
         permissions.map((p) =>

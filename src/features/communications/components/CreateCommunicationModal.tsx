@@ -698,10 +698,12 @@ export default function CreateCommunicationModal({
                       <HeadlessSelect
                         options={[
                           { value: "", label: "Select SMS Route" },
-                          ...(smsRoutes || []).map((route: any) => ({
-                            value: route.id.toString(),
-                            label: route.name,
-                          })),
+                          ...((smsRoutes || [])
+                            .filter((route: any) => route.isActive)
+                            .map((route: any) => ({
+                              value: route.id.toString(),
+                              label: route.name,
+                            }))),
                         ]}
                         value={smsRoute}
                         onChange={(value) => {

@@ -814,6 +814,15 @@ export default function ProductCatalogsPage() {
       matchesProductCount &&
       matchesFilterType
     );
+  }).sort((a, b) => {
+    // Sort by: active first, then by newest created date
+    if (a.is_active !== b.is_active) {
+      return a.is_active ? -1 : 1; // Active categories first
+    }
+    // Then sort by created_at (newest first)
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return dateB - dateA;
   });
 
   const totalCatalogs = stats?.total_categories ?? categories.length;

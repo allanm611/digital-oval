@@ -218,7 +218,7 @@ export default function UserModal({
         }
 
         // Get hashed password from response
-        const hashedPassword = hashResponse.data?.hash;
+        const hashedPassword = hashResponse.data?.hashedPassword;
 
         if (!hashedPassword) {
           console.error("❌ No hashed password in response:", hashResponse);

@@ -32,7 +32,7 @@ export interface ComboResource {
   resource_type: ComboResourceType;
   unit: ProductUnit;
   unit_value: number;
-  validity_hours?: number; // Individual validity (if not using shared)
+  validity_hours?: number; // Individual validity in hours (if not using shared)
   price?: number; // Individual price (if not using shared_price)
 }
 
@@ -41,7 +41,7 @@ export interface ComboProductData {
   combo_type_id?: number; // Reference to the selected combo type
   resources: ComboResource[];
   shared_validity?: boolean; // true = all resources share same validity, false = individual validity
-  shared_validity_hours?: number; // Validity when shared_validity is true
+  shared_validity_hours?: number; // Validity in hours when shared_validity is true
   shared_price?: boolean; // true = single combo price, false = individual resource pricing
   price?: number; // Price for the entire combo (when shared_price is true)
 }
@@ -89,8 +89,7 @@ export interface CreateProductRequest {
   unit?: ProductUnit;
   unit_value?: number;
   cost?: number;
-  validity_days?: number;
-  validity_hours?: number;
+  validity_hours?: number; // Validity period in hours (1-8760)
   offer_category?: ProductOfferCategory | string;
   requires_inventory?: boolean;
   available_quantity?: number;
@@ -115,8 +114,7 @@ export interface UpdateProductRequest {
   unit?: ProductUnit;
   unit_value?: number;
   cost?: number;
-  validity_days?: number;
-  validity_hours?: number;
+  validity_hours?: number; // Validity period in hours (1-8760)
   offer_category?: ProductOfferCategory | string;
   requires_inventory?: boolean;
   available_quantity?: number;

@@ -124,7 +124,7 @@ export default function EditProductPage() {
         scope: productData.scope || "segment",
         unit: unitFromBackend as ProductUnit,
         unit_value: productData.unit_value ?? 0,
-        validity_hours: productData.validity_hours,
+        validity_hours: productData.validity_hours || (productData.validity_days ? productData.validity_days * 24 : undefined),
         combo_data: comboDataFromMetadata,
         tags: productData.tags,
       });
@@ -168,7 +168,6 @@ export default function EditProductPage() {
         is_active,
         unit,
         unit_value,
-        validity_hours,
         combo_data,
         product_type_id,
         ...updateData
@@ -177,7 +176,6 @@ export default function EditProductPage() {
       // Prepare update data with unit_of_measure
       const finalUpdateData: typeof updateData & {
         unit_of_measure?: string;
-        validity_hours?: number;
         combo_data?: typeof combo_data;
       } = {
         ...updateData,
@@ -186,12 +184,6 @@ export default function EditProductPage() {
       // Map unit to unit_of_measure if unit is provided
       if (unit) {
         finalUpdateData.unit_of_measure = unit;
-      }
-
-      // Convert validity_hours to validity_days (backend expects days, not hours)
-      // Example: 24 hours = 1 day, 48 hours = 2 days, etc.
-      if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_days = Math.ceil(validity_hours / 24);
       }
 
       // Include combo_data if provided (for combo products)

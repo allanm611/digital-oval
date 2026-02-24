@@ -57,8 +57,6 @@ export default function ProgramsPage() {
     is_active?: boolean | "all";
     program_type?: string;
     created_by?: number;
-    start_date_from?: string;
-    start_date_to?: string;
     end_date_from?: string;
     end_date_to?: string;
     budget_min?: number;
@@ -139,8 +137,6 @@ export default function ProgramsPage() {
       const hasOtherFilters2 =
         filters.program_type ||
         filters.created_by ||
-        filters.start_date_from ||
-        filters.start_date_to ||
         filters.end_date_from ||
         filters.end_date_to ||
         searchTerm;
@@ -165,8 +161,6 @@ export default function ProgramsPage() {
               : (filters.is_active as boolean | undefined),
           program_type: filters.program_type || undefined,
           created_by: filters.created_by || undefined,
-          start_date_from: filters.start_date_from || undefined,
-          start_date_to: filters.start_date_to || undefined,
           end_date_from: filters.end_date_from || undefined,
           end_date_to: filters.end_date_to || undefined,
           // Note: budget_min and budget_max are not supported by advancedSearchPrograms
@@ -336,7 +330,8 @@ export default function ProgramsPage() {
       await loadStats(); // Reload stats after creating/updating
     } catch (err) {
       console.error("Failed to save program:", err);
-      showError("Failed to save program", "Please try again later.");
+      const errorMessage = err instanceof Error ? err.message : "Please try again later.";
+      showError("Failed to save program", errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -742,40 +737,6 @@ export default function ProgramsPage() {
                     placeholder="Enter user ID"
                     className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                   />
-                </div>
-
-                {/* Start Date Range */}
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
-                  >
-                    Start Date Range
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="date"
-                      value={filters.start_date_from || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "start_date_from",
-                          e.target.value || undefined,
-                        )
-                      }
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
-                    />
-                    <input
-                      type="date"
-                      value={filters.start_date_to || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "start_date_to",
-                          e.target.value || undefined,
-                        )
-                      }
-                      placeholder="To"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
-                    />
-                  </div>
                 </div>
 
                 {/* End Date Range */}

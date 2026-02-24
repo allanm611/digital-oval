@@ -1190,31 +1190,23 @@ export default function OfferCreativeStep({
                     {selectedCreativeData.channel === "SMS" && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          {t.offers.smsRoute.label} <span className="text-red-500">*</span>
+                          {t.offers.smsRoute.label}
                         </label>
                         <HeadlessSelect
-                          value={
-                            (selectedCreativeData.variables?.sms_route as string) || ""
-                          }
-                          onChange={(value) =>
+                          value={selectedCreativeData.sms_route || ""}
+                          onChange={(value) => {
                             updateCreative(selectedCreativeData.id, {
-                              variables: {
-                                ...selectedCreativeData.variables,
-                                sms_route: value || undefined,
-                              },
-                            })
-                          }
-                          options={[
-                            { label: t.offers.smsRoute.defaultPlaceholder, value: "" },
-                            ...((smsRoutes as TypeConfigurationItem[]) || [])
-                              .filter((route) => route.isActive)
+                              sms_route: value,
+                            });
+                          }}
+                          options={
+                            smsRoutes?.filter((route) => route.isActive)
                               .map((route) => ({
+                                value: route.id?.toString() || "",
                                 label: route.name,
-                                value: route.name,
-                              })),
-                          ]}
-                          placeholder={t.offers.smsRoute.defaultPlaceholder}
-                          className="w-full"
+                              })) || []
+                          }
+                          placeholder={t.offers.smsRoute.placeholder}
                           zIndex={zIndex.popover}
                         />
                       </div>

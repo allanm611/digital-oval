@@ -106,9 +106,9 @@ export default function CampaignFlowsStep({
         case "round_robin":
           return "ROUND_ROBIN";
         case "multiple_target_group":
-          return "MULTIPLE_TARGET";
+          return "STANDARD";
         default:
-          return "MULTIPLE_TARGET";
+          return "STANDARD";
       }
     };
 

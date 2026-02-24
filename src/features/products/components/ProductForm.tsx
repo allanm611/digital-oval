@@ -206,7 +206,7 @@ export default function ProductForm({
           combo_type_id: comboData.combo_type_id,
           resources,
           shared_validity: true,
-          shared_validity_hours: 720, // 30 days default
+          shared_validity_hours: 720, // 30 days default (720 hours)
           price: selectedComboType.price, // Prefill price from template
         });
       }
@@ -851,7 +851,7 @@ export default function ProductForm({
                         <label
                           className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                         >
-                          Validity Hours{" "}
+                          Validity (Hours){" "}
                           <span style={{ color: color.status.danger }}>*</span>
                         </label>
                         <input

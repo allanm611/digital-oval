@@ -15,6 +15,7 @@ import {
   communicationChannelsConfig,
   senderIdsConfig,
   smsRoutesConfig,
+  routesConfig,
   languagesConfig,
   characterSetsConfig,
 } from "../configs/configurationPageConfigs";
@@ -136,6 +137,10 @@ class ConfigurationDataService {
           parsed.smsRoutes || [...smsRoutesConfig.initialData]
         );
         this.data.set(
+          "routes",
+          parsed.routes || [...routesConfig.initialData]
+        );
+        this.data.set(
           "languages",
           parsed.languages || [...languagesConfig.initialData]
         );
@@ -167,6 +172,7 @@ class ConfigurationDataService {
         ]);
         this.data.set("senderIds", [...senderIdsConfig.initialData]);
         this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+        this.data.set("routes", [...routesConfig.initialData]);
         this.data.set("languages", [...languagesConfig.initialData]);
         this.data.set("characterSets", [...characterSetsConfig.initialData]);
         this.saveToStorage();
@@ -194,6 +200,7 @@ class ConfigurationDataService {
       ]);
       this.data.set("senderIds", [...senderIdsConfig.initialData]);
       this.data.set("smsRoutes", [...smsRoutesConfig.initialData]);
+      this.data.set("routes", [...routesConfig.initialData]);
       this.data.set("languages", [...languagesConfig.initialData]);
       this.data.set("characterSets", [...characterSetsConfig.initialData]);
     }
@@ -217,6 +224,7 @@ class ConfigurationDataService {
         communicationChannels: this.data.get("communicationChannels") || [],
         senderIds: this.data.get("senderIds") || [],
         smsRoutes: this.data.get("smsRoutes") || [],
+        routes: this.data.get("routes") || [],
         languages: this.data.get("languages") || [],
         characterSets: this.data.get("characterSets") || [],
       };
@@ -364,6 +372,9 @@ class ConfigurationDataService {
         break;
       case "smsRoutes":
         this.setData(type, [...smsRoutesConfig.initialData]);
+        break;
+      case "routes":
+        this.setData(type, [...routesConfig.initialData]);
         break;
       case "languages":
         this.setData(type, [...languagesConfig.initialData]);
