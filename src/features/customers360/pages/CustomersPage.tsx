@@ -20,8 +20,8 @@ import {
   formatDateTime,
   formatMsisdn,
   getSubscriptionDisplayName,
+  searchCustomers as searchCustomersUtil,
 } from "../utils/customerSubscriptionHelpers";
-import { searchCustomers as searchCustomersUtil } from "../utils/customerDataService";
 import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
@@ -210,20 +210,130 @@ export default function CustomersPage() {
     setFilters((prev) => ({ ...prev, page: 1, offset: 0 }));
   }, [searchTerm]);
 
-  // Use shared search function
-  const searchCustomers = useCallback(
-    (term: string, customers: CustomerSubscriptionRecord[]) => {
-      return searchCustomersUtil(term, customers);
-    },
-    [],
-  );
+  // Load all customers for frontend search fallback
+  const loadAllCustomersForSearch = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const apiResponse = await customerService.getAllCustomers({
+        limit: 1000,
+        offset: 0,
+        skipCache: true,
+      });
+
+      if (
+        apiResponse.success &&
+        apiResponse.data &&
+        Array.isArray(apiResponse.data)
+      ) {
+        const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
+          const customerId =
+            typeof apiCustomer.id === "string"
+              ? parseInt(apiCustomer.id, 10)
+              : apiCustomer.id;
+
+          const subscriberId = apiCustomer.subscriber_id
+            ? typeof apiCustomer.subscriber_id === "string"
+              ? parseInt(apiCustomer.subscriber_id, 10)
+              : apiCustomer.subscriber_id
+            : customerId;
+
+          return {
+            customerId: customerId,
+            subscriptionId: subscriberId,
+            firstName: apiCustomer.first_name || "Unknown",
+            lastName: apiCustomer.last_name || "Customer",
+            msisdn: apiCustomer.msisdn,
+            email: apiCustomer.email,
+            city: apiCustomer.city,
+            customerType: apiCustomer.subscriber_type || "prepaid",
+            tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+            status: apiCustomer.subscriber_status || "active",
+            simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+            activationDate: apiCustomer.created_at,
+          };
+        });
+        setCustomers(apiCustomers);
+        setTotalCustomers(apiCustomers.length);
+      }
+    } catch (err) {
+      console.error("Failed to load customers for search:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Perform backend search when debounced search term changes
+  useEffect(() => {
+    if (!debouncedSearchTerm.trim()) {
+      // If search is cleared, reload all customers
+      loadAllCustomersForSearch();
+      return;
+    }
+
+    const performSearch = async () => {
+      try {
+        setIsLoading(true);
+        setError("");
+        const response = await customerService.searchCustomers({
+          search: debouncedSearchTerm,
+          limit: 100,
+          skipCache: true,
+        });
+
+        if (response.success && response.data && Array.isArray(response.data)) {
+          // Convert API response to CustomerSubscriptionRecord format
+          const apiCustomers = response.data.map((apiCustomer: Subscriber) => {
+            const customerId =
+              typeof apiCustomer.id === "string"
+                ? parseInt(apiCustomer.id, 10)
+                : apiCustomer.id;
+
+            const subscriberId = apiCustomer.subscriber_id
+              ? typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id
+              : customerId;
+
+            return {
+              customerId: customerId,
+              subscriptionId: subscriberId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              city: apiCustomer.city,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+              status: apiCustomer.subscriber_status || "active",
+              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+          });
+          setCustomers(apiCustomers);
+          setTotalCustomers(apiCustomers.length);
+        } else {
+          setCustomers([]);
+          setTotalCustomers(0);
+        }
+      } catch (err: any) {
+        console.error("Search error:", err);
+        // Fallback to frontend search - load all customers and filter locally
+        console.warn("Backend search failed, falling back to frontend search");
+        await loadAllCustomersForSearch();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedSearchTerm, loadAllCustomersForSearch]);
 
   const filteredCustomers = useMemo(() => {
     let results = customers;
 
-    // Filter by search term
+    // Apply frontend search filter (for fallback when backend search fails)
     if (debouncedSearchTerm.trim()) {
-      results = searchCustomers(debouncedSearchTerm, results);
+      results = searchCustomersUtil(debouncedSearchTerm, results);
     }
 
     // Filter by preferred channel
@@ -241,7 +351,7 @@ export default function CustomersPage() {
     }
 
     return results;
-  }, [debouncedSearchTerm, selectedPreferredChannel, selectedCustomerType, searchCustomers, customers]);
+  }, [debouncedSearchTerm, selectedPreferredChannel, selectedCustomerType, customers]);
 
   // Debounced search results for modal
   const [modalSearchResults, setModalSearchResults] = useState<
@@ -317,7 +427,7 @@ export default function CustomersPage() {
   }, [modalSearchTerm, isSearchModalOpen]);
 
   // Backend pagination - no need to slice since backend returns paginated data
-  const paginatedResults = customers;
+  const paginatedResults = filteredCustomers;
   const totalPages = Math.max(1, Math.ceil(totalCustomers / pageSize));
 
   const hasSearchFilters = searchTerm.trim().length > 0;
@@ -898,11 +1008,11 @@ export default function CustomersPage() {
         )}
 
         {/* Pagination */}
-        {!isLoading && !error && totalCustomers > 0 && (
+        {!isLoading && !error && filteredCustomers.length > pageSize && (
           <Pagination
             currentPage={filters.page}
             pageSize={filters.limit}
-            totalItems={totalCustomers}
+            totalItems={filteredCustomers.length}
             onPageChange={(page) =>
               setFilters((prev) => ({
                 ...prev,

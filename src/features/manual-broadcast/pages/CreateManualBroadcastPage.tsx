@@ -310,7 +310,8 @@ export default function CreateManualBroadcastPage() {
 
   const handleSubmit = async () => {
     try {
-      setIsLoading(true);
+      // Don't set isLoading - let ScheduleStep button handle the loading state
+      // This keeps the page visible while the API is processing
 
       // In edit mode, resend the communication with updated message content
       if (isEditMode && executionId) {
@@ -334,12 +335,12 @@ export default function CreateManualBroadcastPage() {
         });
 
         if (response.success) {
+          // Fetch updated communications list
+          await communicationService.getCommunications();
+
           showToast(t.manualBroadcast.updatedSuccess || "Broadcast resent successfully!");
           clearPersistedFormData("broadcast_form_data");
-          // Delay navigation to allow success message to be seen
-          setTimeout(() => {
-            navigate("/dashboard/manual-communications");
-          }, 1500);
+          navigate("/dashboard/manual-communications");
           return;
         } else {
           throw new Error(response.error || "Communication resending failed");
@@ -364,7 +365,32 @@ export default function CreateManualBroadcastPage() {
 
       // Case 1: QuickList-based submission (selected or created quicklist)
       if (broadcastData.quicklistId) {
+        // Step 1: Create communication definition
+        const createDefResponse = await communicationService.createCommunication({
+          name: broadcastData.audienceName || `Broadcast ${new Date().toLocaleDateString()}`,
+          description: `Manual broadcast to quicklist: ${broadcastData.audienceName || "Untitled"}`,
+          source_type: "quicklist",
+          source_id: broadcastData.quicklistId,
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle &&
+            broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          created_by: user?.user_id,
+        });
+
+        if (!createDefResponse.success) {
+          throw new Error("Failed to create communication definition");
+        }
+
+        const communicationId = createDefResponse.data.id;
+
+        // Step 2: Send the communication with the communication_id
         const response = await communicationService.sendCommunication({
+          communication_id: communicationId,
           source_type: "quicklist",
           source_id: broadcastData.quicklistId,
           ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
@@ -384,14 +410,13 @@ export default function CreateManualBroadcastPage() {
         });
 
         if (response.success) {
+          // Fetch updated communications list
+          await communicationService.getCommunications();
+
           showToast(t.manualBroadcast.createdSuccess);
           clearPersistedFormData("broadcast_form_data");
-          // Delay navigation to allow success message to be seen
-          setTimeout(() => {
-            navigate("/dashboard/manual-communications");
-          }, 1500);
+          navigate("/dashboard/manual-communications");
         } else {
-          // Show actual error from backend
           throw new Error(response.error || "Communication sending failed");
         }
       }
@@ -403,8 +428,31 @@ export default function CreateManualBroadcastPage() {
           throw new Error("No valid recipients found in audience data");
         }
 
-        // Send to manual recipient list
+        // Step 1: Create communication definition
+        const createDefResponse = await communicationService.createCommunication({
+          name: broadcastData.audienceName || `Manual Broadcast ${new Date().toLocaleDateString()}`,
+          description: `Manual broadcast with ${recipientList.length} recipients`,
+          source_type: "manual",
+          channels: broadcastData.channel ? [broadcastData.channel] : [],
+          message_template: {
+            ...(broadcastData.messageTitle &&
+            broadcastData.channel === "EMAIL"
+              ? { title: broadcastData.messageTitle }
+              : {}),
+            body: broadcastData.messageBody || "",
+          },
+          created_by: user?.user_id,
+        });
+
+        if (!createDefResponse.success) {
+          throw new Error("Failed to create communication definition");
+        }
+
+        const communicationId = createDefResponse.data.id;
+
+        // Step 2: Send the communication with the communication_id
         const response = await communicationService.sendCommunication({
+          communication_id: communicationId,
           source_type: "manual",
           recipient_list: recipientList,
           ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
@@ -420,14 +468,13 @@ export default function CreateManualBroadcastPage() {
         });
 
         if (response.success) {
+          // Fetch updated communications list
+          await communicationService.getCommunications();
+
           showToast(t.manualBroadcast.createdSuccess);
           clearPersistedFormData("broadcast_form_data");
-          // Delay navigation to allow success message to be seen
-          setTimeout(() => {
-            navigate("/dashboard/manual-communications");
-          }, 1500);
+          navigate("/dashboard/manual-communications");
         } else {
-          // Show actual error from backend
           throw new Error(response.error || "Communication sending failed");
         }
       } else {
@@ -440,7 +487,10 @@ export default function CreateManualBroadcastPage() {
       const errorMessage = (err as Error).message || "An error occurred";
       const isGatewayTimeout =
         errorMessage.toLowerCase().includes("504") ||
+        errorMessage.toLowerCase().includes("503") ||
         errorMessage.toLowerCase().includes("gateway timeout") ||
+        errorMessage.toLowerCase().includes("service temporarily unavailable") ||
+        errorMessage.toLowerCase().includes("gateway") ||
         errorMessage.toLowerCase().includes("timeout");
 
       if (isGatewayTimeout) {
@@ -454,8 +504,6 @@ export default function CreateManualBroadcastPage() {
           errorMessage,
         );
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 

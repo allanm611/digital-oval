@@ -868,7 +868,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
-            Draft
+            draft
           </span>
         );
       case OfferStatusEnum.ACTIVE:
@@ -876,7 +876,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.success}] text-[${color.status.success}]`}
           >
-            Active
+            active
           </span>
         );
       case OfferStatusEnum.PAUSED:
@@ -884,7 +884,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.warning}] text-[${color.status.warning}]`}
           >
-            Paused
+            paused
           </span>
         );
       case OfferStatusEnum.EXPIRED:
@@ -892,7 +892,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.danger}] text-[${color.status.danger}]`}
           >
-            Expired
+            expired
           </span>
         );
       case OfferStatusEnum.ARCHIVED:
@@ -900,7 +900,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.surface.cards}] text-[${color.text.primary}]`}
           >
-            Archived
+            archived
           </span>
         );
       default:
@@ -921,7 +921,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.warning}]/10 text-[${color.status.warning}]`}
           >
-            Pending
+            pending
           </span>
         );
       case "approved":
@@ -929,7 +929,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.success}]/10 text-[${color.status.success}]`}
           >
-            Approved
+            approved
           </span>
         );
       case "rejected":
@@ -937,7 +937,7 @@ export default function OffersPage() {
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-base font-medium bg-[${color.status.danger}]/10 text-[${color.status.danger}]`}
           >
-            Rejected
+            rejected
           </span>
         );
       default:

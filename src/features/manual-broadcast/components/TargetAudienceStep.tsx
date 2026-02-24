@@ -396,9 +396,9 @@ export default function TargetAudienceStep({
             <textarea
               value={manualInput}
               onChange={(e) => {
-                // Allow letters, digits, newlines, @ . _ + - for emails and international phone numbers
+                // Allow letters, digits, newlines, @._+- and formatting chars (space, parentheses, dash) for emails and phone numbers
                 const value = e.target.value;
-                const filtered = value.replace(/[^a-zA-Z0-9\n@._+-]/g, "");
+                const filtered = value.replace(/[^a-zA-Z0-9\n@._+\-()\s]/g, "");
                 setManualInput(filtered);
                 setError("");
                 // Check for validation errors in real-time
@@ -416,7 +416,7 @@ export default function TargetAudienceStep({
                   }
                 }, 0);
               }}
-              placeholder="Enter emails or phone numbers (one per line)&#10;Phone numbers must begin with country code&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;254764555247&#10;254750902921"
+              placeholder="Enter emails or phone numbers (one per line)&#10;Phone numbers must begin with country code&#10;&#10;Example:&#10;john@example.com&#10;jane@example.com&#10;254 764 555 247&#10;(254) 764-5524"
               rows={10}
               disabled={isSubmitting}
               className={`w-full px-3 py-2 text-sm border ${

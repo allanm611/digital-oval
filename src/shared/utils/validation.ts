@@ -13,18 +13,23 @@
  * - 1234567890 (USA +1)
  * - 33612345678 (France +33)
  * - 447911123456 (UK +44)
+ * - +254 764 555 247 (formatted with spaces)
+ * - (254) 764-5524 (formatted with parentheses and dash)
  *
  * Examples of invalid formats:
  * - 0712345678 (local format without country code)
  * - 0754567890 (local format)
- * - 075... (local format)
- * - 070... (local format)
+ * - abc254764555247 (contains letters)
+ * - 254abc5555 (contains letters)
  *
- * @param msisdn - Phone number string (digits only or with +/-/space/parentheses)
+ * @param msisdn - Phone number string (digits only or with +/-/space/parentheses formatting)
  * @returns true if phone number is valid, false otherwise
  */
 export function isValidCountryCodePhone(msisdn: string): boolean {
   if (!msisdn) return false;
+
+  // First check: reject if it contains letters (invalid for phone numbers)
+  if (/[a-zA-Z]/.test(msisdn)) return false;
 
   // Remove all non-digits
   const digits = msisdn.replace(/\D/g, "");
@@ -39,6 +44,32 @@ export function isValidCountryCodePhone(msisdn: string): boolean {
   // Pattern: starts with 1-9, followed by 1-2 more digits (country code), then at least 6 more digits (subscriber number)
   // This ensures it starts with a country code, not a local number
   return /^[1-9]\d{1,2}\d{6,}$/.test(digits);
+}
+
+/**
+ * Validates phone numbers (phone-only, no emails)
+ * Used in phone-specific contexts like SMS/WhatsApp channels
+ * @param phoneNumbers - Array of phone number strings
+ * @returns Object with valid flag and array of invalid phone numbers
+ */
+export function validatePhoneOnly(phoneNumbers: string[]): {
+  valid: boolean;
+  invalidLines: string[];
+} {
+  const invalidLines: string[] = [];
+
+  for (const phone of phoneNumbers) {
+    if (!phone.trim()) continue;
+
+    if (!isValidCountryCodePhone(phone)) {
+      invalidLines.push(phone.trim());
+    }
+  }
+
+  return {
+    valid: invalidLines.length === 0,
+    invalidLines,
+  };
 }
 
 /**

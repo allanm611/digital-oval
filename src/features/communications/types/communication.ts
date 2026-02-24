@@ -31,6 +31,7 @@ export interface PaginationMeta {
 }
 
 export interface SendCommunicationRequest {
+  communication_id?: number; // Communication definition ID from createCommunication()
   source_type: 'quicklist' | 'segment' | 'manual';
   source_id?: number; // Required for quicklist/segment
   name?: string; // Broadcast name

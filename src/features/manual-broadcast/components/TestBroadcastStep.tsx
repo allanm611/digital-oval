@@ -9,6 +9,7 @@ import {
   Loader,
 } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
+import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
@@ -41,15 +42,15 @@ export default function TestBroadcastStep({
   const [error, setError] = useState("");
 
   const validateContact = (contact: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[+]?[0-9\s()-]{8,}$/;
-
     if (data.channel === "EMAIL") {
-      return emailRegex.test(contact);
+      return isValidEmail(contact);
     } else if (data.channel === "SMS" || data.channel === "WHATSAPP") {
-      return phoneRegex.test(contact);
+      // For phone channels, validate as phone number only
+      const phoneValidation = validatePhoneOnly([contact]);
+      return phoneValidation.valid;
     }
-    return emailRegex.test(contact) || phoneRegex.test(contact);
+    // For other channels, accept either email or phone
+    return isValidEmail(contact) || validatePhoneOnly([contact]).valid;
   };
 
   const handleAddContact = () => {
@@ -103,16 +104,24 @@ export default function TestBroadcastStep({
       for (const contact of testContacts) {
         // Simulate a small delay for each contact
         await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Validate contact format
-        const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
-        const isValidPhone = /^[+]?[0-9\s()-]{8,}$/.test(contact);
-        
-        const isValid = data.channel === "EMAIL" 
-          ? isValidEmail 
-          : (data.channel === "SMS" || data.channel === "WHATSAPP")
-            ? isValidPhone
-            : (isValidEmail || isValidPhone);
+
+        // Validate based on channel
+        let isValid = false;
+        let errorMessage = "";
+
+        if (data.channel === "EMAIL") {
+          isValid = isValidEmail(contact);
+          errorMessage = t.manualBroadcast.errorInvalidEmail;
+        } else if (data.channel === "SMS" || data.channel === "WHATSAPP") {
+          const phoneValidation = validatePhoneOnly([contact]);
+          isValid = phoneValidation.valid;
+          errorMessage = t.manualBroadcast.errorInvalidPhone;
+        } else {
+          // For other channels, accept either email or phone
+          const phoneValidation = validatePhoneOnly([contact]);
+          isValid = isValidEmail(contact) || phoneValidation.valid;
+          errorMessage = t.manualBroadcast.errorInvalidContact;
+        }
 
         if (isValid) {
           results.push({
@@ -124,9 +133,7 @@ export default function TestBroadcastStep({
           results.push({
             contact,
             status: "failed",
-            message: data.channel === "EMAIL" 
-              ? t.manualBroadcast.errorInvalidEmail
-              : t.manualBroadcast.errorInvalidPhone,
+            message: errorMessage,
           });
         }
       }
@@ -376,21 +383,9 @@ export default function TestBroadcastStep({
 
         {/* Error Message */}
         {error && (
-          <div
-            className="p-3 rounded-md flex items-start space-x-2"
-            style={{
-              backgroundColor: `${color.status.danger}10`,
-              border: `1px solid ${color.status.danger}30`,
-            }}
-          >
-            <AlertCircle
-              className="w-5 h-5 flex-shrink-0 mt-0.5"
-              style={{ color: color.status.danger }}
-            />
-            <p className="text-sm" style={{ color: color.status.danger }}>
-              {error}
-            </p>
-          </div>
+          <p className="text-sm text-red-600">
+            {error}
+          </p>
         )}
       </div>
 

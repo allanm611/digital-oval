@@ -26,7 +26,13 @@ export default function ScheduleStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent any default behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     // Validation
     if (scheduleType === "later") {
       if (!scheduleDate) {
@@ -380,6 +386,7 @@ export default function ScheduleStep({
         className="sticky bottom-12 z-40 bg-white p-4 sm:p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3"
       >
         <button
+          type="button"
           onClick={onPrevious}
           disabled={isSubmitting}
           className="w-full sm:w-auto px-6 py-2.5 rounded-md transition-all text-sm font-semibold disabled:opacity-50 whitespace-nowrap"
@@ -392,7 +399,8 @@ export default function ScheduleStep({
           {t.manualBroadcast.previous}
         </button>
           <button
-            onClick={handleSubmit}
+            type="button"
+            onClick={(e) => handleSubmit(e)}
             disabled={
               isSubmitting ||
               (scheduleType === "later" && (!scheduleDate || !scheduleTime))
