@@ -936,25 +936,10 @@ export default function CampaignsPage() {
 
   const handlePauseCampaign = async (campaignId: number) => {
     try {
-      const pauseResponse = await campaignService.pauseCampaign(campaignId);
-
-      // Update the campaign directly with the fresh data from API response
-      const responseData = pauseResponse as unknown as {
-        success: boolean;
-        data?: { status?: string };
-      };
-      if (responseData.success && responseData.data?.status) {
-        const newStatus = responseData.data.status;
-        setCampaigns((prevCampaigns) =>
-          prevCampaigns.map((campaign) =>
-            campaign.id === campaignId
-              ? { ...campaign, status: newStatus }
-              : campaign,
-          ),
-        );
-      }
-
+      await campaignService.pauseCampaign(campaignId);
       showToast("success", "Campaign paused successfully");
+      // Refetch campaigns to get updated state
+      await fetchCampaigns();
       fetchCampaignStats(); // Refresh stats cards
     } catch (error) {
       console.error("Failed to pause campaign:", error);
@@ -964,25 +949,10 @@ export default function CampaignsPage() {
 
   const handleResumeCampaign = async (campaignId: number) => {
     try {
-      const resumeResponse = await campaignService.resumeCampaign(campaignId);
-
-      // Update the campaign directly with the fresh data from API response
-      const responseData = resumeResponse as unknown as {
-        success: boolean;
-        data?: { status?: string };
-      };
-      if (responseData.success && responseData.data?.status) {
-        const newStatus = responseData.data.status;
-        setCampaigns((prevCampaigns) =>
-          prevCampaigns.map((campaign) =>
-            campaign.id === campaignId
-              ? { ...campaign, status: newStatus }
-              : campaign,
-          ),
-        );
-      }
-
+      await campaignService.resumeCampaign(campaignId);
       showToast("success", "Campaign resumed successfully");
+      // Refetch campaigns to get updated state
+      await fetchCampaigns();
       fetchCampaignStats(); // Refresh stats cards
     } catch (error) {
       console.error("Failed to resume campaign:", error);
@@ -1320,7 +1290,7 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {campaign.status === "paused" ? (
+                        {campaign?.is_active === false ? (
                           <button
                             onClick={() => handleResumeCampaign(campaign.id)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
@@ -1328,8 +1298,7 @@ export default function CampaignsPage() {
                           >
                             <Play className="w-4 h-4" />
                           </button>
-                        ) : campaign.status === "active" ||
-                          campaign.status === "running" ? (
+                        ) : campaign?.is_active === true ? (
                           <button
                             onClick={() => handlePauseCampaign(campaign.id)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300`}
@@ -1428,8 +1397,7 @@ export default function CampaignsPage() {
 
                         {/* Pause Campaign Button */}
                         {campaign.approval_status === "approved" &&
-                        campaign.is_active === true &&
-                        campaign.status !== "paused" ? (
+                        campaign.is_active === true ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={async (e) => {
@@ -1462,7 +1430,7 @@ export default function CampaignsPage() {
 
                         {/* Resume Campaign Button */}
                         {campaign.approval_status === "approved" &&
-                        campaign.status === "paused" ? (
+                        campaign?.is_active === false ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={async (e) => {

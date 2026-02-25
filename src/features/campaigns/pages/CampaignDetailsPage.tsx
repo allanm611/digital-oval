@@ -489,17 +489,24 @@ export default function CampaignDetailsPage() {
       });
       showToast("success", "Campaign paused");
 
-      // Use fresh API data instead of optimistic update
+      // Update campaign with the response data
       const responseData = pauseResponse as unknown as {
-        success: boolean;
-        data?: { status?: string };
+        success?: boolean;
+        data?: Campaign;
       };
-      if (responseData.success && responseData.data?.status) {
-        const newCampaign = {
-          ...campaign,
-          status: responseData.data.status,
-        } as Campaign;
-        setCampaign(newCampaign);
+
+      if (responseData?.success && responseData?.data) {
+        setCampaign(responseData.data);
+      } else {
+        // Fallback: refetch campaign if response doesn't contain full data
+        const fetchResponse = (await campaignService.getCampaignById(id, true)) as {
+          data?: Campaign;
+          success?: boolean;
+        };
+        const campaignData = fetchResponse.data || (fetchResponse as Campaign);
+        if (campaignData) {
+          setCampaign(campaignData);
+        }
       }
     } catch (error) {
       console.error("Failed to pause campaign:", error);
@@ -517,16 +524,24 @@ export default function CampaignDetailsPage() {
       const resumeResponse = await campaignService.resumeCampaign(parseInt(id));
       showToast("success", "Campaign resumed");
 
-      // Use fresh API data instead of optimistic update
+      // Update campaign with the response data
       const responseData = resumeResponse as unknown as {
-        success: boolean;
-        data?: { status?: string };
+        success?: boolean;
+        data?: Campaign;
       };
-      if (responseData.success && responseData.data?.status) {
-        setCampaign({
-          ...campaign,
-          status: responseData.data.status,
-        } as Campaign);
+
+      if (responseData?.success && responseData?.data) {
+        setCampaign(responseData.data);
+      } else {
+        // Fallback: refetch campaign if response doesn't contain full data
+        const fetchResponse = (await campaignService.getCampaignById(id, true)) as {
+          data?: Campaign;
+          success?: boolean;
+        };
+        const campaignData = fetchResponse.data || (fetchResponse as Campaign);
+        if (campaignData) {
+          setCampaign(campaignData);
+        }
       }
     } catch (error) {
       console.error("Failed to resume campaign:", error);
@@ -849,10 +864,9 @@ export default function CampaignDetailsPage() {
             </PermissionGate>
           )}
 
-          {/* Step 5: Pause Campaign (approved + is_active=true + not paused) */}
+          {/* Step 5: Pause Campaign (approved + is_active=true) */}
           {campaign.approval_status === "approved" &&
-            campaign?.is_active === true &&
-            campaign.status !== "paused" && (
+            campaign?.is_active === true && (
               <button
                 onClick={handlePauseCampaign}
                 disabled={isActionLoading}
@@ -868,20 +882,21 @@ export default function CampaignDetailsPage() {
               </button>
             )}
 
-          {/* Step 6: Resume Campaign (paused) */}
-          {campaign.status === "paused" && (
-            <button
-              onClick={handleResumeCampaign}
-              disabled={isActionLoading}
-              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isActionLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Play className="w-4 h-4" />
-              )}
-              {isActionLoading ? "Resuming..." : "Resume Campaign"}
+          {/* Step 6: Resume Campaign (approved + is_active=false) */}
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === false && (
+              <button
+                onClick={handleResumeCampaign}
+                disabled={isActionLoading}
+                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {isActionLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                {isActionLoading ? "Resuming..." : "Resume Campaign"}
             </button>
           )}
 

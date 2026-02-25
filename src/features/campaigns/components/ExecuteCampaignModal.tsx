@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
+import { offerService } from "../../offers/services/offerService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
@@ -88,17 +89,17 @@ export default function ExecuteCampaignModal({
 
       // Create segment list with their first associated offer from flows
       const uniqueSegments = segmentsResponse.data.map((segment) => {
-        const segmentId = segment.id;
+        const segmentId = segment.segment_id || segment.id;
 
         // Find the first flow for this segment to get offer_id
         const flow = flowsResponse.data.find(
-          (f) => f.segment_id === segmentId || String(f.segment_id) === String(segmentId),
+          (f) => String(f.segment_id) === String(segmentId),
         );
 
         return {
           id: segmentId,
           segment_id: String(segmentId),
-          segment_name: segment.name,
+          segment_name: segment.segment_name || segment.name,
           offer_id: flow?.offer_id || 0,
           offer_name: undefined,
           selected: true,
@@ -106,7 +107,44 @@ export default function ExecuteCampaignModal({
         };
       });
 
-      setSegments(uniqueSegments);
+      // Fetch offer names for all unique offer IDs
+      const offerIds = new Set(
+        uniqueSegments.map((seg) => seg.offer_id).filter((id) => id > 0),
+      );
+
+      const offerMap: Record<number, string> = {};
+      if (offerIds.size > 0) {
+        try {
+          const offerPromises = Array.from(offerIds).map(async (offerId) => {
+            try {
+              const offerResponse = await offerService.getOfferById(
+                offerId,
+                true,
+              );
+              const offer =
+                offerResponse?.data ||
+                (offerResponse as { id?: number; name?: string });
+              if (offer?.name) {
+                offerMap[offerId] = offer.name;
+              }
+            } catch {
+              // Silently fail for individual offers
+            }
+          });
+
+          await Promise.all(offerPromises);
+        } catch {
+          // Silently fail if offer fetching fails
+        }
+      }
+
+      // Update segments with offer names
+      const segmentsWithOfferNames = uniqueSegments.map((seg) => ({
+        ...seg,
+        offer_name: offerMap[seg.offer_id],
+      }));
+
+      setSegments(segmentsWithOfferNames);
     } catch {
       showToast("error", "Failed to load campaign segments");
     } finally {
