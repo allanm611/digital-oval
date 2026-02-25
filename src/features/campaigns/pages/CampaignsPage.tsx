@@ -1290,7 +1290,7 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {campaign?.is_active === false ? (
+                        {campaign.status === "paused" ? (
                           <button
                             onClick={() => handleResumeCampaign(campaign.id)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
@@ -1298,7 +1298,7 @@ export default function CampaignsPage() {
                           >
                             <Play className="w-4 h-4" />
                           </button>
-                        ) : campaign?.is_active === true ? (
+                        ) : campaign.status !== "paused" ? (
                           <button
                             onClick={() => handlePauseCampaign(campaign.id)}
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300`}
@@ -1397,7 +1397,7 @@ export default function CampaignsPage() {
 
                         {/* Pause Campaign Button */}
                         {campaign.approval_status === "approved" &&
-                        campaign.is_active === true ? (
+                        campaign.status !== "paused" ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={async (e) => {
@@ -1430,7 +1430,7 @@ export default function CampaignsPage() {
 
                         {/* Resume Campaign Button */}
                         {campaign.approval_status === "approved" &&
-                        campaign?.is_active === false ? (
+                        campaign?.status === "paused" ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={async (e) => {

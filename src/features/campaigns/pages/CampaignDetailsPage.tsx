@@ -864,9 +864,9 @@ export default function CampaignDetailsPage() {
             </PermissionGate>
           )}
 
-          {/* Step 5: Pause Campaign (approved + is_active=true) */}
+          {/* Step 5: Pause Campaign (approved + status !== "paused") */}
           {campaign.approval_status === "approved" &&
-            campaign?.is_active === true && (
+            campaign?.status !== "paused" && (
               <button
                 onClick={handlePauseCampaign}
                 disabled={isActionLoading}
@@ -882,9 +882,9 @@ export default function CampaignDetailsPage() {
               </button>
             )}
 
-          {/* Step 6: Resume Campaign (approved + is_active=false) */}
+          {/* Step 6: Resume Campaign (approved + status === "paused") */}
           {campaign.approval_status === "approved" &&
-            campaign?.is_active === false && (
+            campaign?.status === "paused" && (
               <button
                 onClick={handleResumeCampaign}
                 disabled={isActionLoading}
