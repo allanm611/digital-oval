@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
-  Play,
   AlertTriangle,
-  Mail,
-  MessageSquare,
-  Bell,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
@@ -13,6 +11,7 @@ import { offerService } from "../../offers/services/offerService";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
+import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
 interface ExecuteCampaignModalProps {
   isOpen: boolean;
@@ -35,9 +34,17 @@ interface SegmentMapping {
 }
 
 const AVAILABLE_CHANNELS = [
-  { code: "EMAIL", label: "Email", icon: Mail, color: "#4F46E5" },
-  { code: "SMS", label: "SMS", icon: MessageSquare, color: "#10B981" },
-  { code: "PUSH", label: "Push Notification", icon: Bell, color: "#F59E0B" },
+  { code: "NORMAL_SMS", label: "Normal SMS" },
+  { code: "FLASH_SMS", label: "Flash SMS" },
+  { code: "USSD", label: "USSD" },
+  { code: "INTERACTIVE_USSD", label: "Interactive USSD" },
+  { code: "EMAIL", label: "Email" },
+  { code: "PUSH", label: "Push Notification" },
+  { code: "WHATSAPP", label: "WhatsApp" },
+  { code: "INAPP", label: "In-App" },
+  { code: "OBD", label: "OBD" },
+  { code: "IVR", label: "IVR" },
+  { code: "SHORT_CODE", label: "Short Code" },
 ];
 
 export default function ExecuteCampaignModal({
@@ -53,9 +60,6 @@ export default function ExecuteCampaignModal({
   const [segments, setSegments] = useState<SegmentMapping[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
-  const [executionMode, setExecutionMode] = useState<"immediate" | "schedule">(
-    "immediate",
-  );
 
   // Check if campaign is approved and active, then it can be executed
   const isApproved = approvalStatus === "approved";
@@ -192,6 +196,7 @@ export default function ExecuteCampaignModal({
       return;
     }
 
+
     setIsExecuting(true);
     try {
       // Prepare segments with proper type conversion
@@ -212,10 +217,10 @@ export default function ExecuteCampaignModal({
         };
       });
 
-      const request = {
+      const request: any = {
         campaign_id: campaignId,
         segments: segmentsData,
-        mode: executionMode,
+        mode: "immediate",
       };
 
       const executionResult = await campaignService.executeCampaign(request);
@@ -293,24 +298,13 @@ export default function ExecuteCampaignModal({
             className="flex items-center justify-between p-6 border-b"
             style={{ borderColor: color.border.default }}
           >
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 ${tw.rounded} flex items-center justify-center`}
-                style={{ backgroundColor: `${color.primary.accent}20` }}
-              >
-                <Play
-                  className="w-5 h-5"
-                  style={{ color: color.primary.accent }}
-                />
-              </div>
-              <div>
-                <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                  Execute Campaign
-                </h2>
-                <p className={`text-sm ${tw.textSecondary} mt-0.5`}>
-                  {campaignName}
-                </p>
-              </div>
+            <div>
+              <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
+                Execute Campaign
+              </h2>
+              <p className={`text-sm ${tw.textSecondary} mt-0.5`}>
+                {campaignName}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -322,8 +316,8 @@ export default function ExecuteCampaignModal({
 
           {/* Content */}
           <div className="p-6 space-y-6">
-            {/* Warning/Error Alert */}
-            {executionDisabledReason ? (
+            {/* Error Alert - Only show if disabled */}
+            {executionDisabledReason && (
               <div
                 className={`flex items-start gap-3 p-4 ${tw.rounded}`}
                 style={{
@@ -341,79 +335,7 @@ export default function ExecuteCampaignModal({
                   </p>
                 </div>
               </div>
-            ) : (
-              <div
-                className={`flex items-start gap-3 p-4 ${tw.rounded}`}
-                style={{
-                  backgroundColor: "#FEF3C7",
-                  border: "1px solid #FCD34D",
-                }}
-              >
-                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-medium text-amber-900">
-                    Confirm Campaign Execution
-                  </h4>
-                  <p className="text-sm text-amber-700 mt-1">
-                    This will send communications to the selected segments. Please
-                    review carefully before proceeding.
-                  </p>
-                </div>
-              </div>
             )}
-
-            {/* Execution Mode */}
-            <div>
-              <label
-                className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-              >
-                Execution Mode
-              </label>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setExecutionMode("immediate")}
-                  className={`flex-1 p-3 ${tw.rounded} border-2 font-medium transition-all ${
-                    executionMode === "immediate"
-                      ? "border-2"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  style={
-                    executionMode === "immediate"
-                      ? {
-                          borderColor: color.primary.accent,
-                          backgroundColor: `${color.primary.accent}10`,
-                        }
-                      : {}
-                  }
-                >
-                  <div className="font-medium text-sm">Immediate</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Execute now
-                  </div>
-                </button>
-                <button
-                  onClick={() => setExecutionMode("schedule")}
-                  className={`flex-1 p-3 ${tw.rounded} border-2 font-medium transition-all ${
-                    executionMode === "schedule"
-                      ? "border-2"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                  style={
-                    executionMode === "schedule"
-                      ? {
-                          borderColor: color.primary.accent,
-                          backgroundColor: `${color.primary.accent}10`,
-                        }
-                      : {}
-                  }
-                >
-                  <div className="font-medium text-sm">Scheduled</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Execute as scheduled
-                  </div>
-                </button>
-              </div>
-            </div>
 
             {/* Segments & Channels */}
             <div>
@@ -444,88 +366,61 @@ export default function ExecuteCampaignModal({
                   {segments.map((segment) => (
                     <div
                       key={`${segment.id}-${segment.offer_id}`}
-                      className={`${components.card.surface} transition-all ${
-                        segment.selected ? "border-2" : ""
-                      }`}
+                      className={`${components.card.surface} transition-all border-2 relative`}
                       style={
                         segment.selected
-                          ? { borderColor: color.primary.accent }
-                          : {}
+                          ? { borderColor: "transparent" }
+                          : { borderColor: color.border.default }
                       }
                     >
+                      {segment.selected && (
+                        <div
+                          className={`absolute ${tw.rounded} pointer-events-none border-2`}
+                          style={{
+                            borderColor: color.primary.accent,
+                            top: "-2px",
+                            right: "-2px",
+                            bottom: "-2px",
+                            left: "-2px",
+                          }}
+                        />
+                      )}
                       <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-1">
                           <input
                             type="checkbox"
                             checked={segment.selected}
                             onChange={() => toggleSegment(segment.segment_id)}
-                            className="w-4 h-4 rounded"
+                            className="w-4 h-4 rounded flex-shrink-0"
                             style={{ accentColor: color.primary.accent }}
                           />
-                          <div>
+                          <div className="flex-1">
                             <div
                               className={`text-sm font-medium ${tw.textPrimary}`}
                             >
-                              Segment: {segment.segment_name || segment.segment_id || "Unknown"}
+                              {segment.segment_name || segment.segment_id || "Unknown"}
                             </div>
                             <div className={`text-xs ${tw.textSecondary}`}>
-                              Offer: {segment.offer_name || segment.offer_id || "None"}
+                              {segment.offer_name || `Offer ID: ${segment.offer_id}` || "None"}
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Channels */}
+                      {/* Channels Multi-Select Dropdown */}
                       {segment.selected && (
-                        <div
-                          className="mt-3 pt-3 border-t"
-                          style={{ borderColor: color.border.default }}
-                        >
-                          <div className="text-xs font-medium text-gray-600 mb-2">
-                            Channels:
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {AVAILABLE_CHANNELS.map((channel) => {
-                              const Icon = channel.icon;
-                              const isSelected = segment.channels.includes(
-                                channel.code,
-                              );
-                              return (
-                                <button
-                                  key={channel.code}
-                                  onClick={() =>
-                                    toggleChannel(
-                                      segment.segment_id,
-                                      channel.code,
-                                    )
-                                  }
-                                  className={`flex items-center gap-2 px-3 py-1.5 ${
-                                    tw.rounded
-                                  } text-sm transition-all border-2 ${
-                                    isSelected ? "" : "hover:bg-gray-100"
-                                  }`}
-                                  style={
-                                    isSelected
-                                      ? {
-                                          backgroundColor: `${channel.color}20`,
-                                          color: channel.color,
-                                          borderColor: channel.color,
-                                        }
-                                      : {
-                                          backgroundColor: color.surface.cards,
-                                          borderColor: "transparent",
-                                        }
-                                  }
-                                >
-                                  <Icon className="w-4 h-4" />
-                                  <span className="font-medium">
-                                    {channel.label}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
+                        <ChannelSelector
+                          selectedChannels={segment.channels}
+                          onChannelsChange={(channels) => {
+                            setSegments((prev) =>
+                              prev.map((seg) =>
+                                seg.segment_id === segment.segment_id
+                                  ? { ...seg, channels }
+                                  : seg,
+                              ),
+                            );
+                          }}
+                        />
                       )}
                     </div>
                   ))}
@@ -568,15 +463,118 @@ export default function ExecuteCampaignModal({
                   Executing...
                 </>
               ) : (
-                <>
-                  <Play className="w-4 h-4" />
-                  Execute Campaign
-                </>
+                "Execute Campaign"
               )}
             </button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Channel Selector Component
+interface ChannelSelectorProps {
+  selectedChannels: string[];
+  onChannelsChange: (channels: string[]) => void;
+}
+
+function ChannelSelector({
+  selectedChannels,
+  onChannelsChange,
+}: ChannelSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleChannelToggle = (channelCode: string) => {
+    const newChannels = selectedChannels.includes(channelCode)
+      ? selectedChannels.filter((c) => c !== channelCode)
+      : [...selectedChannels, channelCode];
+    onChannelsChange(newChannels);
+  };
+
+  const selectedLabels = selectedChannels
+    .map((code) => AVAILABLE_CHANNELS.find((ch) => ch.code === code)?.label)
+    .filter(Boolean)
+    .join(", ");
+
+  return (
+    <div
+      ref={dropdownRef}
+      className="relative mt-3 pt-3"
+    >
+      <label className={`block text-xs font-medium ${tw.textPrimary} mb-2`}>
+        Select Channels
+      </label>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full px-3 py-2 border rounded-lg text-left flex items-center justify-between ${tw.textPrimary}`}
+        style={{ borderColor: color.border.default }}
+      >
+        <span className="text-sm">
+          {selectedLabels || "Select channels..."}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div
+          className={`absolute top-full left-0 right-0 mt-1 ${tw.rounded} shadow-lg z-10 border`}
+          style={{
+            backgroundColor: color.surface.background,
+            borderColor: color.border.default,
+          }}
+        >
+          <div className="max-h-64 overflow-y-auto p-2 space-y-1">
+            {AVAILABLE_CHANNELS.map((channel) => {
+              const isSelected = selectedChannels.includes(channel.code);
+              return (
+                <button
+                  key={channel.code}
+                  onClick={() => handleChannelToggle(channel.code)}
+                  className={`w-full text-left px-3 py-2 rounded flex items-center gap-3 transition-colors ${tw.textPrimary} ${
+                    isSelected ? "bg-gray-100" : "hover:bg-gray-50"
+                  }`}
+                >
+                  <div
+                    className={`w-4 h-4 rounded border-2 flex items-center justify-center`}
+                    style={{
+                      borderColor: isSelected
+                        ? color.primary.accent
+                        : color.border.default,
+                      backgroundColor: isSelected
+                        ? color.primary.accent
+                        : "transparent",
+                    }}
+                  >
+                    {isSelected && (
+                      <Check className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                  <span className="text-sm">{channel.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

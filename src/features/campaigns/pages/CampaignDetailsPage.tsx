@@ -36,6 +36,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import EditCampaignFlowModal from "../components/EditCampaignFlowModal";
 import {
   Campaign,
   CampaignSegmentDetail,
@@ -96,6 +97,8 @@ export default function CampaignDetailsPage() {
     null,
   );
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
+  const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
+  const [conditionRuleError, setConditionRuleError] = useState<string>("");
   const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
   const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
@@ -428,7 +431,27 @@ export default function CampaignDetailsPage() {
       }
     } catch (error) {
       console.error("Failed to approve campaign:", error);
-      showToast("error", "Failed to approve campaign");
+
+      // Extract specific error message from backend response
+      let errorMessage = "Failed to approve campaign";
+      if (error instanceof Error) {
+        // Try to extract backend error message
+        const match = error.message.match(/details: ({.*})/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            errorMessage = error.message;
+          }
+        } else if (error.message.includes("Campaign must have")) {
+          errorMessage = error.message;
+        }
+      }
+
+      showToast("error", errorMessage);
     } finally {
       setIsApproveLoading(false);
     }
@@ -611,6 +634,10 @@ export default function CampaignDetailsPage() {
       wait_interval_hours: flow.wait_interval_hours,
       is_active: flow.is_active,
     });
+    // Initialize raw condition rule input from existing rule or empty
+    setRawConditionRuleInput(
+      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : ""
+    );
 
     // Load active segments and offers if not already loaded
     if (activeSegments.length === 0 || activeOffers.length === 0) {
@@ -651,6 +678,23 @@ export default function CampaignDetailsPage() {
     try {
       setIsFlowActionLoading(true);
 
+      // Check if there are any JSON errors before saving
+      if (conditionRuleError) {
+        setConditionRuleError("Please fix the JSON error before saving");
+        return;
+      }
+
+      // Parse condition_rule from raw input to ensure it's an object
+      let parsedConditionRule: any = undefined;
+      if (rawConditionRuleInput.trim()) {
+        try {
+          parsedConditionRule = JSON.parse(rawConditionRuleInput);
+        } catch {
+          setConditionRuleError("Invalid JSON format");
+          return;
+        }
+      }
+
       // Prepare update data - include all editable fields
       const updateData = {
         flow_type: editedFlow.flow_type,
@@ -658,7 +702,7 @@ export default function CampaignDetailsPage() {
         offer_id: editedFlow.offer_id,
         offer_creative_id: editedFlow.offer_creative_id,
         template_id: editedFlow.template_id,
-        condition_rule: editedFlow.condition_rule,
+        condition_rule: parsedConditionRule,
         bucket_allocation: editedFlow.bucket_allocation,
         step_order: editedFlow.step_order,
         wait_interval_hours: editedFlow.wait_interval_hours,
@@ -683,6 +727,8 @@ export default function CampaignDetailsPage() {
 
       showToast("success", "Flow updated successfully");
       setShowFlowEditModal(false);
+      setRawConditionRuleInput(""); // Reset raw input
+      setSelectedFlow(null);
 
       // Reload flows
       const campaignId = parseInt(id);
@@ -864,42 +910,6 @@ export default function CampaignDetailsPage() {
             </PermissionGate>
           )}
 
-          {/* Step 5: Pause Campaign (approved + status !== "paused") */}
-          {campaign.approval_status === "approved" &&
-            campaign?.status !== "paused" && (
-              <button
-                onClick={handlePauseCampaign}
-                disabled={isActionLoading}
-                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-                style={{ backgroundColor: color.status.warning }}
-              >
-                {isActionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Pause className="w-4 h-4" />
-                )}
-                {isActionLoading ? "Pausing..." : "Pause Campaign"}
-              </button>
-            )}
-
-          {/* Step 6: Resume Campaign (approved + status === "paused") */}
-          {campaign.approval_status === "approved" &&
-            campaign?.status === "paused" && (
-              <button
-                onClick={handleResumeCampaign}
-                disabled={isActionLoading}
-                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-                style={{ backgroundColor: color.primary.action }}
-              >
-                {isActionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-                {isActionLoading ? "Resuming..." : "Resume Campaign"}
-            </button>
-          )}
-
           {/* Edit Button - Always Visible */}
           <PermissionGate permission="campaigns.update">
             <button
@@ -937,6 +947,52 @@ export default function CampaignDetailsPage() {
               <div
                 className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
               >
+                {/* Pause Campaign - Only if approved and not paused */}
+                {campaign.approval_status === "approved" &&
+                  campaign?.status !== "paused" && (
+                    <button
+                      onClick={() => {
+                        handlePauseCampaign();
+                        setShowMoreMenu(false);
+                      }}
+                      disabled={isActionLoading}
+                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
+                      style={{
+                        color: color.status.warning,
+                      }}
+                    >
+                      {isActionLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                      ) : (
+                        <Pause className="w-4 h-4 mr-3" />
+                      )}
+                      {isActionLoading ? "Pausing..." : "Pause Campaign"}
+                    </button>
+                  )}
+
+                {/* Resume Campaign - Only if approved and paused */}
+                {campaign.approval_status === "approved" &&
+                  campaign?.status === "paused" && (
+                    <button
+                      onClick={() => {
+                        handleResumeCampaign();
+                        setShowMoreMenu(false);
+                      }}
+                      disabled={isActionLoading}
+                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
+                      style={{
+                        color: color.primary.action,
+                      }}
+                    >
+                      {isActionLoading ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                      ) : (
+                        <Play className="w-4 h-4 mr-3" />
+                      )}
+                      {isActionLoading ? "Resuming..." : "Resume Campaign"}
+                    </button>
+                  )}
+
                 {/* Reject - Only if pending */}
                 {campaign.approval_status === "pending" && (
                   <button
@@ -1893,7 +1949,31 @@ export default function CampaignDetailsPage() {
       </div>
 
       {/* Flow Edit Modal */}
-      {showFlowEditModal && selectedFlow && (
+      {/* Flow Edit Modal - Using Reusable Component */}
+      <EditCampaignFlowModal
+        isOpen={showFlowEditModal}
+        onClose={() => {
+          setShowFlowEditModal(false);
+          setRawConditionRuleInput("");
+          setConditionRuleError("");
+        }}
+        selectedFlow={selectedFlow}
+        editedFlow={editedFlow}
+        setEditedFlow={setEditedFlow}
+        rawConditionRuleInput={rawConditionRuleInput}
+        setRawConditionRuleInput={setRawConditionRuleInput}
+        conditionRuleError={conditionRuleError}
+        setConditionRuleError={setConditionRuleError}
+        activeSegments={activeSegments}
+        activeOffers={offers}
+        isLoadingActiveData={isLoadingActiveData}
+        isActionLoading={isFlowActionLoading}
+        onSave={handleFlowSave}
+        campaignId={campaign?.id}
+      />
+
+      {/* OLD CODE - TO BE REMOVED */}
+      {false && selectedFlow && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
             <div
@@ -2024,22 +2104,38 @@ export default function CampaignDetailsPage() {
                       Condition Rule (JSON)
                     </label>
                     <textarea
-                      value={editedFlow.condition_rule ? JSON.stringify(editedFlow.condition_rule, null, 2) : ""}
+                      value={rawConditionRuleInput}
                       onChange={(e) => {
-                        try {
-                          const parsed = e.target.value ? JSON.parse(e.target.value) : undefined;
+                        const value = e.target.value;
+                        setRawConditionRuleInput(value);
+                        setConditionRuleError(""); // Clear error on change
+
+                        if (value.trim()) {
+                          try {
+                            JSON.parse(value);
+                            setEditedFlow({
+                              ...editedFlow,
+                              condition_rule: JSON.parse(value),
+                            });
+                          } catch (err) {
+                            setConditionRuleError("Invalid JSON format");
+                          }
+                        } else {
                           setEditedFlow({
                             ...editedFlow,
-                            condition_rule: parsed,
+                            condition_rule: undefined,
                           });
-                        } catch {
-                          // Invalid JSON, just update as string for now
                         }
                       }}
                       placeholder='{"condition": "value"}'
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs`}
+                      className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
+                        conditionRuleError ? "border-red-500" : "border-gray-300"
+                      }`}
                       rows={3}
                     />
+                    {conditionRuleError && (
+                      <p className="text-xs text-red-600 mt-1">{conditionRuleError}</p>
+                    )}
                   </div>
                 </div>
 
@@ -2216,6 +2312,7 @@ export default function CampaignDetailsPage() {
           </div>
         </div>
       )}
+      {/* END OLD CODE */}
 
       {/* Flow Delete Modal */}
       <DeleteConfirmModal

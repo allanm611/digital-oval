@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { AlertCircle, Edit2, Trash2, X } from "lucide-react";
+import { AlertCircle, Trash2, X } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -10,6 +10,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import { campaignFlowService } from "../services/campaignFlowService";
 import { segmentService } from "../../segments/services/segmentService";
 import { offerService } from "../../offers/services/offerService";
+import EditCampaignFlowModal from "../components/EditCampaignFlowModal";
 import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
 import { CampaignSegmentDetail } from "../types/campaign";
 import { Offer } from "../../offers/types/offer";
@@ -36,6 +37,8 @@ export default function CampaignFlowDetailsPage() {
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
+  const [conditionRuleError, setConditionRuleError] = useState<string>("");
 
   useEffect(() => {
     const loadFlowDetails = async () => {
@@ -116,6 +119,11 @@ export default function CampaignFlowDetailsPage() {
       is_active: flow.is_active,
     });
 
+    // Initialize raw condition rule input from existing rule or empty
+    setRawConditionRuleInput(
+      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : ""
+    );
+
     // Load active segments and offers if not already loaded
     if (activeSegments.length === 0 || activeOffers.length === 0) {
       try {
@@ -155,6 +163,23 @@ export default function CampaignFlowDetailsPage() {
     try {
       setIsActionLoading(true);
 
+      // Check if there are any JSON errors before saving
+      if (conditionRuleError) {
+        setConditionRuleError("Please fix the JSON error before saving");
+        return;
+      }
+
+      // Parse condition_rule from raw input to ensure it's an object
+      let parsedConditionRule: any = undefined;
+      if (rawConditionRuleInput.trim()) {
+        try {
+          parsedConditionRule = JSON.parse(rawConditionRuleInput);
+        } catch {
+          setConditionRuleError("Invalid JSON format");
+          return;
+        }
+      }
+
       // Prepare update data
       const updateData = {
         flow_type: editedFlow.flow_type,
@@ -162,7 +187,7 @@ export default function CampaignFlowDetailsPage() {
         offer_id: editedFlow.offer_id,
         offer_creative_id: editedFlow.offer_creative_id,
         template_id: editedFlow.template_id,
-        condition_rule: editedFlow.condition_rule,
+        condition_rule: parsedConditionRule,
         bucket_allocation: editedFlow.bucket_allocation,
         step_order: editedFlow.step_order,
         wait_interval_hours: editedFlow.wait_interval_hours,
@@ -172,6 +197,7 @@ export default function CampaignFlowDetailsPage() {
       await campaignFlowService.updateCampaignFlow(flow.id, updateData);
       showToast("success", "Flow updated successfully");
       setIsEditModalOpen(false);
+      setRawConditionRuleInput(""); // Reset raw input
 
       // Reload flow details
       const flowResponse = await campaignFlowService.getCampaignFlowById(flow.id);
@@ -255,16 +281,14 @@ export default function CampaignFlowDetailsPage() {
               color: "white",
             }}
           >
-            <Edit2 className="w-4 h-4 mr-2" />
             Edit
           </button>
           <button
             onClick={() => setIsDeleteModalOpen(true)}
-            className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors`}
+            className={`inline-flex items-center px-4 py-2 text-sm font-medium transition-colors ${tw.rounded}`}
             style={{
-              backgroundColor: "#F3F4F6",
-              color: "#DC2626",
-              border: `1px solid #E5E7EB`,
+              backgroundColor: button.delete.background,
+              color: button.delete.color,
             }}
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -497,8 +521,31 @@ export default function CampaignFlowDetailsPage() {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {isEditModalOpen && flow && (
+      {/* Edit Modal - Using Reusable Component */}
+      <EditCampaignFlowModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setRawConditionRuleInput("");
+          setConditionRuleError("");
+        }}
+        selectedFlow={flow}
+        editedFlow={editedFlow}
+        setEditedFlow={setEditedFlow}
+        rawConditionRuleInput={rawConditionRuleInput}
+        setRawConditionRuleInput={setRawConditionRuleInput}
+        conditionRuleError={conditionRuleError}
+        setConditionRuleError={setConditionRuleError}
+        activeSegments={activeSegments}
+        activeOffers={activeOffers}
+        isLoadingActiveData={isLoadingActiveData}
+        isActionLoading={isActionLoading}
+        onSave={handleFlowSave}
+        campaignId={flow?.campaign_id}
+      />
+
+      {/* OLD CODE - TO BE REMOVED */}
+      {false && flow && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4">
             <div
@@ -513,7 +560,10 @@ export default function CampaignFlowDetailsPage() {
                   Edit Campaign Flow
                 </h3>
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setRawConditionRuleInput(""); // Reset raw input
+                  }}
                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                   title="Close"
                 >
@@ -522,7 +572,7 @@ export default function CampaignFlowDetailsPage() {
               </div>
 
               <div className="space-y-6 mb-6">
-                {/* Campaign ID and Flow Type */}
+                {/* Campaign ID and Campaign Type */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
@@ -539,7 +589,7 @@ export default function CampaignFlowDetailsPage() {
 
                   <div>
                     <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                      Flow Type
+                      Campaign Type
                     </label>
                     <HeadlessSelect
                       value={editedFlow.flow_type || ""}
@@ -613,6 +663,45 @@ export default function CampaignFlowDetailsPage() {
                         disabled={isLoadingActiveData}
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                      Condition Rule (JSON)
+                    </label>
+                    <textarea
+                      value={rawConditionRuleInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setRawConditionRuleInput(value);
+                        setConditionRuleError(""); // Clear error on change
+
+                        if (value.trim()) {
+                          try {
+                            JSON.parse(value);
+                            setEditedFlow({
+                              ...editedFlow,
+                              condition_rule: JSON.parse(value),
+                            });
+                          } catch (err) {
+                            setConditionRuleError("Invalid JSON format");
+                          }
+                        } else {
+                          setEditedFlow({
+                            ...editedFlow,
+                            condition_rule: undefined,
+                          });
+                        }
+                      }}
+                      placeholder='{"condition": "value"}'
+                      className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
+                        conditionRuleError ? "border-red-500" : "border-gray-300"
+                      }`}
+                      rows={3}
+                    />
+                    {conditionRuleError && (
+                      <p className="text-xs text-red-600 mt-1">{conditionRuleError}</p>
+                    )}
                   </div>
                 </div>
 
@@ -699,7 +788,10 @@ export default function CampaignFlowDetailsPage() {
 
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setRawConditionRuleInput(""); // Reset raw input
+                  }}
                   disabled={isActionLoading}
                   className={`px-6 py-2 ${tw.rounded} text-sm font-medium transition-colors disabled:opacity-50`}
                   style={{
@@ -727,6 +819,7 @@ export default function CampaignFlowDetailsPage() {
           </div>
         </div>
       )}
+      {/* END OLD CODE */}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
