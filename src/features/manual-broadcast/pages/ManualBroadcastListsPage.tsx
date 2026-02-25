@@ -5,7 +5,6 @@ import {
   FileText,
   Trash2,
   Eye,
-  Edit,
   CheckCircle,
   XCircle,
   Plus,
@@ -71,10 +70,12 @@ export default function ManualBroadcastListsPage() {
         const broadcasts: ManualBroadcast[] = (executions || []).filter(Boolean).map(
           (exec: any) => ({
             id: exec?.id,
-            execution_id: exec?.execution_id,
+            execution_id: exec?.last_execution_id,
             source_type: exec?.source_type,
             source_id: exec?.source_id ?? null,
             source_name: exec?.name ?? exec?.source_name ?? `Broadcast ${exec?.id ?? 'Unknown'}`,
+            description: exec?.description ?? null,
+            schedule_type: exec?.schedule_type ?? null,
             channels: Array.isArray(exec?.channels) ? exec.channels : [],
             total_recipients: typeof exec?.total_recipients === 'number' ? exec.total_recipients : 0,
             messages_sent: typeof exec?.messages_sent === 'number' ? exec.messages_sent : 0,
@@ -121,9 +122,10 @@ export default function ManualBroadcastListsPage() {
           broadcast.source_name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          broadcast.execution_id
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()),
+          (broadcast.execution_id &&
+            broadcast.execution_id
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())),
       );
       setBroadcasts(filtered);
     } else {
@@ -147,10 +149,12 @@ export default function ManualBroadcastListsPage() {
         let broadcasts: ManualBroadcast[] = executions.map(
           (exec: any) => ({
             id: exec.id,
-            execution_id: exec.execution_id,
+            execution_id: exec.last_execution_id,
             source_type: exec.source_type,
             source_id: exec.source_id || null,
-            source_name: exec.source_name || `Execution ${exec.execution_id}`,
+            source_name: exec.name || `Broadcast ${exec.id}`,
+            description: exec.description || null,
+            schedule_type: exec.schedule_type || null,
             channels: exec.channels || [],
             total_recipients: exec.total_recipients || 0,
             messages_sent: exec.messages_sent || 0,
@@ -158,7 +162,7 @@ export default function ManualBroadcastListsPage() {
             status: "completed" as const,
             created_at: exec.created_at,
             created_by: exec.created_by || null,
-            message_template: { body: "" },
+            message_template: exec.message_template || { body: "" },
             messages_attempted: exec.total_recipients,
             channel_summaries: [],
             execution_time_ms: 0,
@@ -206,7 +210,7 @@ export default function ManualBroadcastListsPage() {
 
     try {
       setIsDeleting(true);
-      await communicationService.deleteExecution(broadcastToDelete.execution_id);
+      await communicationService.deleteCommunication(broadcastToDelete.id);
       showToast(
         `Broadcast "${broadcastToDelete.source_name}" deleted successfully!`,
       );
@@ -221,6 +225,9 @@ export default function ManualBroadcastListsPage() {
     }
   };
 
+  const uniqueChannels = new Set(broadcasts.flatMap(b => b.channels)).size;
+  const executedBroadcasts = broadcasts.filter(b => b.execution_id).length;
+
   const broadcastStatsCards = [
     {
       name: "Total Broadcasts",
@@ -229,26 +236,20 @@ export default function ManualBroadcastListsPage() {
       color: color.tertiary.tag1,
     },
     {
-      name: "Total Recipients",
-      value: broadcasts
-        .reduce((sum, b) => sum + b.total_recipients, 0)
-        .toLocaleString(),
+      name: "Executed Broadcasts",
+      value: executedBroadcasts.toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag4,
     },
     {
-      name: "Messages Sent",
-      value: broadcasts
-        .reduce((sum, b) => sum + b.messages_sent, 0)
-        .toLocaleString(),
+      name: "Unique Channels",
+      value: uniqueChannels.toLocaleString(),
       icon: CheckCircle,
       color: color.tertiary.tag3,
     },
     {
-      name: "Messages Failed",
-      value: broadcasts
-        .reduce((sum, b) => sum + b.messages_failed, 0)
-        .toLocaleString(),
+      name: "Pending Broadcasts",
+      value: (broadcasts.length - executedBroadcasts).toLocaleString(),
       icon: XCircle,
       color: color.tertiary.tag2,
     },
@@ -393,25 +394,25 @@ export default function ManualBroadcastListsPage() {
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Channel
+                      Description
                     </th>
                     <th
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Recipients
+                      Channels
                     </th>
                     <th
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Sent / Failed
+                      Source Type
                     </th>
                     <th
                       className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Status
+                      Schedule Type
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden md:table-cell"
@@ -446,36 +447,29 @@ export default function ManualBroadcastListsPage() {
                         </div>
                       </td>
                       <td
+                        className="px-6 py-4 text-sm text-gray-600 truncate max-w-xs"
+                        style={{ backgroundColor: color.surface.tablebodybg }}
+                        title={broadcast.description || ""}
+                      >
+                        {broadcast.description || "-"}
+                      </td>
+                      <td
                         className="px-6 py-4 text-sm text-gray-600"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         {broadcast.channels?.join(", ") || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600"
+                        className="px-6 py-4 text-sm text-gray-600 capitalize"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        {broadcast.total_recipients.toLocaleString()}
+                        {broadcast.source_type || "-"}
                       </td>
                       <td
-                        className="px-6 py-4 text-sm text-gray-600"
+                        className="px-6 py-4 text-sm text-gray-600 capitalize"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className="text-green-600 font-medium">
-                          {broadcast.messages_sent.toLocaleString()}
-                        </span>
-                        {" / "}
-                        <span className="text-red-600 font-medium">
-                          {broadcast.messages_failed.toLocaleString()}
-                        </span>
-                      </td>
-                      <td
-                        className="px-6 py-4 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="inline-flex px-2 py-1 text-sm font-medium rounded text-black">
-                          {broadcast.status}
-                        </span>
+                        {broadcast.schedule_type || "-"}
                       </td>
                       <td
                         className="px-6 py-4 text-sm text-gray-600 hidden md:table-cell"
@@ -489,26 +483,13 @@ export default function ManualBroadcastListsPage() {
                       >
                         <div className="flex items-center justify-center space-x-2">
                           {broadcast.execution_id && (
-                            <>
-                              <button
-                                onClick={() => handleViewDetails(broadcast)}
-                                className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                                title="View Details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  navigate(
-                                    `/dashboard/manual-communications/${broadcast.execution_id}/edit`,
-                                  )
-                                }
-                                className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                            </>
+                            <button
+                              onClick={() => handleViewDetails(broadcast)}
+                              className={`p-1 ${tw.rounded} text-gray-600 hover:text-gray-800 transition-colors cursor-pointer`}
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
                           )}
                           <button
                             onClick={() => handleDelete(broadcast)}

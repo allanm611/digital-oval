@@ -157,11 +157,11 @@ export default function BroadcastDetailsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-sm font-medium text-black">
               Total Recipients
             </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
+          <p className="mt-2 text-3xl font-bold text-black">
             {execution.total_recipients.toLocaleString()}
           </p>
         </div>
@@ -171,10 +171,13 @@ export default function BroadcastDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-500" />
-            <p className="text-sm font-medium text-gray-600">Messages Sent</p>
+            <CheckCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-black">Messages Sent</p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-green-600">
+          <p className="mt-2 text-3xl font-bold text-black">
             {execution.messages_sent.toLocaleString()}
           </p>
         </div>
@@ -184,10 +187,13 @@ export default function BroadcastDetailsPage() {
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-500" />
-            <p className="text-sm font-medium text-gray-600">Messages Failed</p>
+            <AlertCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-black">Messages Failed</p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-red-600">
+          <p className="mt-2 text-3xl font-bold text-black">
             {execution.messages_failed.toLocaleString()}
           </p>
         </div>
@@ -201,9 +207,9 @@ export default function BroadcastDetailsPage() {
               className="h-5 w-5"
               style={{ color: color.primary.accent }}
             />
-            <p className="text-sm font-medium text-gray-600">Success Rate</p>
+            <p className="text-sm font-medium text-black">Success Rate</p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-blue-600">
+          <p className="mt-2 text-3xl font-bold text-black">
             {successRate}%
           </p>
         </div>
@@ -252,7 +258,7 @@ export default function BroadcastDetailsPage() {
 
       {/* Recent Logs */}
       <div
-        className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        className={`${tw.rounded} py-6`}
       >
         <h2 className="text-lg font-semibold text-gray-900 mb-4">
           Recent Logs ({logs.length})
@@ -264,7 +270,7 @@ export default function BroadcastDetailsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]">
               <thead style={{ background: color.surface.tableHeader }}>
-                <tr>
+                <tr key="header">
                   <th
                     className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
@@ -287,19 +293,7 @@ export default function BroadcastDetailsPage() {
                     className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    Title
-                  </th>
-                  <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Message Preview
-                  </th>
-                  <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-                    style={{ color: color.surface.tableHeaderText }}
-                  >
-                    Error
+                    Error Code
                   </th>
                   <th
                     className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -323,47 +317,23 @@ export default function BroadcastDetailsPage() {
                         </div>
                       </td>
                       <td
-                        className="px-4 py-3 text-sm"
+                        className="px-4 py-3 text-sm text-gray-600"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <div className="flex items-center gap-2 text-gray-600">
-                          {getChannelIcon(log.channel)}
-                          <span className="capitalize">{log.channel}</span>
-                        </div>
+                        <span className="capitalize">{log.channel}</span>
                       </td>
                       <td
-                        className="px-4 py-3 text-sm"
+                        className="px-4 py-3 text-sm text-black capitalize"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded capitalize"
-                          style={{
-                            backgroundColor: statusColor.bg,
-                            color: statusColor.text,
-                          }}
-                        >
-                          {log.status}
-                        </span>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-gray-600 truncate"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {log.title || "-"}
+                        {log.status}
                       </td>
                       <td
                         className="px-4 py-3 text-sm text-gray-600 truncate max-w-xs"
                         style={{ backgroundColor: color.surface.tablebodybg }}
-                        title={log.body_preview}
+                        title={log.error_code}
                       >
-                        {log.body_preview || "-"}
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-red-600 truncate max-w-xs"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                        title={log.error_message}
-                      >
-                        {log.error_message || "-"}
+                        {log.error_code || "-"}
                       </td>
                       <td
                         className="px-4 py-3 text-sm text-gray-600"

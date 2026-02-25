@@ -394,6 +394,25 @@ export default function CampaignDetailsPage() {
   // Note: Campaigns are automatically set to 'pending' approval status when created
   // No manual submit is needed - editing a rejected campaign automatically resets to pending
 
+  const handleSubmitForApproval = async () => {
+    if (!id) return;
+
+    try {
+      setIsApproveLoading(true);
+      await campaignService.submitForApproval(parseInt(id));
+      showToast("success", "Campaign submitted for approval");
+      // Refresh campaign data
+      if (campaign) {
+        setCampaign({ ...campaign, status: "pending_approval" });
+      }
+    } catch (error) {
+      console.error("Failed to submit campaign for approval:", error);
+      showToast("error", "Failed to submit campaign for approval");
+    } finally {
+      setIsApproveLoading(false);
+    }
+  };
+
   const handleApproveCampaign = async () => {
     if (!id) return;
 
@@ -768,7 +787,7 @@ export default function CampaignDetailsPage() {
           {/* Step 1: Request Approval (draft status) */}
           {campaign.status === "draft" && (
             <button
-              onClick={handleApproveCampaign}
+              onClick={handleSubmitForApproval}
               disabled={isApproveLoading}
               className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
               style={{ backgroundColor: color.primary.action }}

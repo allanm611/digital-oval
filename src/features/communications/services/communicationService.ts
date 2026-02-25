@@ -334,6 +334,16 @@ class CommunicationService {
       { method: "DELETE" },
     );
   }
+
+  /**
+   * Delete a communication (broadcast template)
+   */
+  async deleteCommunication(communicationId: string | number): Promise<{ success: boolean; message?: string }> {
+    return this.request<{ success: boolean; message?: string }>(
+      `/${communicationId}`,
+      { method: "DELETE" },
+    );
+  }
 }
 
 export const communicationService = new CommunicationService();

@@ -933,19 +933,12 @@ export default function JobTypesPage() {
 
         {/* Pagination */}
         {!isLoading && filteredJobTypes.length > 0 && (
-          <div
-            className={`flex flex-col items-center justify-between gap-3 ${tw.rounded} border border-gray-200 bg-white px-6 py-4 text-sm text-gray-600 md:flex-row`}
-          >
-            <p>
-              {`Showing ${(currentPage - 1) * PAGE_SIZE + 1}-${Math.min(currentPage * PAGE_SIZE, filteredJobTypes.length)} of ${filteredJobTypes.length} job types`}
-            </p>
-            <Pagination
-              currentPage={currentPage}
-              pageSize={PAGE_SIZE}
-              totalItems={filteredJobTypes.length}
-              onPageChange={setCurrentPage}
-            />
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            pageSize={PAGE_SIZE}
+            totalItems={filteredJobTypes.length}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

@@ -125,7 +125,6 @@ export default function TargetAudienceStep({
 
   const isFormValid =
     listName.trim() &&
-    listType !== "" &&
     inputMethod !== "" &&
     (inputMethod === "manual"
       ? validateManualInput()
@@ -173,8 +172,6 @@ export default function TargetAudienceStep({
         setError("Please enter valid emails or phone numbers (one per line)");
       } else if (!listName.trim()) {
         setError("Please enter a broadcast name");
-      } else if (listType === "") {
-        setError("Please select a list type");
       } else if (inputMethod === "") {
         setError("Please select an input method");
       } else {
@@ -277,7 +274,7 @@ export default function TargetAudienceStep({
         {/* List Type */}
         <div>
           <label className="text-sm font-medium text-gray-900 block mb-1">
-            List Type *
+            List Type
           </label>
           <HeadlessSelect
             options={listTypeOptions}
@@ -426,7 +423,7 @@ export default function TargetAudienceStep({
               } disabled:opacity-50 font-mono`}
             />
 
-            {manualInput.trim() && !manualInputError && (
+            {(manualInput?.trim() || data?.rowCount) && !manualInputError && (
               <div className="mt-3 flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div
@@ -438,12 +435,10 @@ export default function TargetAudienceStep({
                     style={{ color: color.primary.accent }}
                   >
                     {
-                      manualInput.split("\n").filter((line) => line.trim())
-                        .length
+                      data?.rowCount ?? manualInput?.split("\n").filter((line) => line?.trim?.())?.length ?? 0
                     }{" "}
-                    line
-                    {manualInput.split("\n").filter((line) => line.trim())
-                      .length !== 1
+                    recipient
+                    {(data?.rowCount ?? manualInput?.split("\n").filter((line) => line?.trim?.())?.length ?? 0) !== 1
                       ? "s"
                       : ""}
                   </span>

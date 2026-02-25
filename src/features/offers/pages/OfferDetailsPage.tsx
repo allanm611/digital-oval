@@ -1332,8 +1332,16 @@ export default function OfferDetailsPage() {
       setShowDeleteProductModal(false);
       setProductToDelete(null);
       loadProducts(true); // Skip cache to get fresh data after deletion
-    } catch {
-      showError("Failed to delete product");
+    } catch (err) {
+      // Extract backend error message
+      const errorMessage =
+        (err instanceof Error ? err.message : null) ||
+        (typeof err === "object" && err !== null && "error" in err
+          ? String((err as Record<string, unknown>).error)
+          : null) ||
+        "Failed to delete product. Please try again.";
+      // Bypass silent mode for delete operations to always show error
+      showError("Cannot Delete Product", errorMessage, true);
     } finally {
       setIsDeletingProduct(false);
     }

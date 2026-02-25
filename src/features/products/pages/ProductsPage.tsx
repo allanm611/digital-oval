@@ -258,7 +258,8 @@ export default function ProductsPage() {
           ? String((err as Record<string, unknown>).error)
           : null) ||
         "Failed to delete product. Please try again.";
-      showError("Error", errorMessage);
+      // Bypass silent mode for delete operations to always show error
+      showError("Cannot Delete Product", errorMessage, true);
     } finally {
       setIsDeleting(false);
     }

@@ -117,61 +117,74 @@ export default function CreateManualBroadcastPage() {
   const [broadcastData, setBroadcastData] = useState<ManualBroadcastData>({});
   const [isLoading, setIsLoading] = useState(isEditMode);
 
-  // Load execution data in edit mode
+  // Load broadcast template data in edit mode
   useEffect(() => {
     if (isEditMode && executionId) {
-      const loadExecutionData = async () => {
+      const loadBroadcastData = async () => {
         try {
           setIsLoading(true);
-          const response = await communicationService.getExecutionDetails(executionId);
-          if (response.success && response.data) {
-            const exec = response.data.execution as { channel?: string; name?: string; execution_id?: string; source_name?: string; message_template?: { title?: string; body?: string; is_rich_text?: boolean }; source_type?: string; source_id?: string; source_name?: string };
-            const logs = response.data.recent_logs || [];
 
-            // Extract channel from logs if available
-            const channel = logs.length > 0 ? logs[0].channel : exec.channel || "EMAIL";
+          // Get execution details for recipient list and broadcast info
+          const execResponse = await communicationService.getExecutionDetails(executionId);
 
-            // Extract message template from logs or execution
-            const messageTemplate = logs.length > 0
-              ? {
-                  title: logs[0].title || "",
-                  body: logs[0].body_preview || exec.message_template?.body || "",
-                }
-              : {
-                  title: exec.message_template?.title || "",
-                  body: exec.message_template?.body || "",
-                };
-
-            // Prefill form data based on source type
-            const prefillData: Partial<ManualBroadcastData> = {
-              audienceName: exec.source_name || exec.name || `Broadcast ${exec.execution_id}`,
-              channel: channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH",
-              messageTitle: messageTemplate.title,
-              messageBody: messageTemplate.body,
-              isRichText: exec.message_template?.is_rich_text || false,
-              scheduleType: "now",
-            };
-
-            // Handle source type specific prefilling
-            if (exec.source_type === "quicklist" && exec.source_id) {
-              prefillData.quicklistId = exec.source_id;
-              prefillData.audienceName = exec.source_name || `Quicklist ${exec.source_id}`;
-            } else if (exec.source_type === "manual") {
-              prefillData.inputMethod = "manual";
-              prefillData.audienceName = exec.source_name || "Manual Audience";
-            }
-
-            setBroadcastData(prefillData);
+          if (!execResponse?.success || !execResponse?.data?.execution) {
+            showError("Failed to load broadcast details");
+            navigate("/dashboard/manual-communications");
+            return;
           }
+
+          const exec = execResponse.data.execution;
+          const logs = execResponse?.data?.recent_logs || [];
+
+          // Extract channel from logs or execution with optional chaining
+          const channel = logs?.[0]?.channel || exec?.channels?.[0] || exec?.channel || "EMAIL";
+
+          // Extract message template from execution with optional chaining
+          const messageBody = exec?.message_template?.body || "";
+          const messageTitle = exec?.message_template?.title || "";
+
+          // Extract recipient count from execution
+          const recipientCount = exec?.total_recipients ?? 0;
+
+          // Extract unique recipient identifiers from logs
+          const recipientList = logs
+            ?.map((log: any) => log?.recipient_identifier)
+            ?.filter((identifier: any) => !!identifier)
+            ?.filter((v: any, i: any, a: any) => a.indexOf(v) === i) // Remove duplicates
+            ?.join("\n") || "";
+
+          // Prefill form data
+          const prefillData: Partial<ManualBroadcastData> = {
+            audienceName: exec?.name || exec?.source_name || `Broadcast ${exec?.id || "Unknown"}`,
+            channel: (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
+            messageTitle: messageTitle,
+            messageBody: messageBody,
+            isRichText: exec?.message_template?.is_rich_text ?? false,
+            scheduleType: "now",
+            rowCount: recipientCount,
+            audienceFileText: recipientList,
+            audienceDescription: recipientCount > 0 ? `Manual broadcast with ${recipientCount} recipient${recipientCount !== 1 ? "s" : ""}` : "",
+          };
+
+          // Handle source type specific prefilling
+          if (exec?.source_type === "quicklist" && exec?.source_id) {
+            prefillData.quicklistId = exec.source_id;
+            prefillData.audienceName = exec?.source_name || `Quicklist ${exec.source_id}`;
+          } else if (exec?.source_type === "manual") {
+            prefillData.inputMethod = "manual";
+            prefillData.audienceName = exec?.name || exec?.source_name || "Manual Audience";
+          }
+
+          setBroadcastData(prefillData);
         } catch (err) {
-          console.error("Failed to load execution details:", err);
+          console.error("Failed to load broadcast details:", err);
           showError("Failed to load broadcast details");
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);
         }
       };
-      loadExecutionData();
+      loadBroadcastData();
     }
   }, [isEditMode, executionId, showError, navigate]);
 

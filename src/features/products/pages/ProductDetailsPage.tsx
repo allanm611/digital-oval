@@ -154,7 +154,15 @@ export default function ProductDetailsPage() {
       navigate("/dashboard/products");
     } catch (err) {
       console.error("Failed to delete product:", err);
-      showError("Failed to delete product", "Please try again later.");
+      // Extract backend error message
+      const errorMessage =
+        (err instanceof Error ? err.message : null) ||
+        (typeof err === "object" && err !== null && "error" in err
+          ? String((err as Record<string, unknown>).error)
+          : null) ||
+        "Failed to delete product. Please try again.";
+      // Bypass silent mode for delete operations to always show error
+      showError("Cannot Delete Product", errorMessage, true);
     } finally {
       setIsDeleting(false);
     }
