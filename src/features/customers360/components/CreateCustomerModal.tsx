@@ -252,19 +252,11 @@ export default function CreateCustomerModal({
         };
       }
 
-      // Successfully mapped customer
+      // Successfully mapped customer - show only the columns from the input
       return {
         rowNum: index + 1,
         valid: true,
-        data: [
-          parts[colIndices.firstName],
-          parts[colIndices.lastName],
-          parts[colIndices.msisdn],
-          (colIndices.alternatePhone !== -1 ? parts[colIndices.alternatePhone] : undefined) || "—",
-          (colIndices.email !== -1 ? parts[colIndices.email] : undefined) || "—",
-          (colIndices.alternateEmail !== -1 ? parts[colIndices.alternateEmail] : undefined) || "—",
-          (colIndices.gender !== -1 ? parts[colIndices.gender] : undefined) || "—",
-        ],
+        data: parts, // Show all columns from the input data
         customer: {
           firstName: parts[colIndices.firstName],
           lastName: parts[colIndices.lastName],
@@ -290,22 +282,7 @@ export default function CreateCustomerModal({
       valid: validRows,
       invalid: invalidRows,
       rows,
-      headers: [
-        "SubID",
-        "FirstName",
-        "LastName",
-        "Phone",
-        "AlternatePhone",
-        "Email",
-        "AlternateEmail",
-        "Gender",
-        "DateOfBirth",
-        "LanguagePreference",
-        "City",
-        "PhysicalAddress",
-        "Region",
-        "PostalCode",
-      ],
+      headers: headerRow, // Show only the actual headers from the input
     };
   }, [bulkText]);
 
@@ -480,7 +457,7 @@ export default function CreateCustomerModal({
 
   const handleAddBulk = async () => {
     if (!bulkText.trim()) {
-      error("Validation Error", "Please enter customer data");
+      error("Validation Error", "Please enter customer data", true);
       return;
     }
 
@@ -488,28 +465,49 @@ export default function CreateCustomerModal({
     try {
       const lines = bulkText
         .split("\n")
-        .filter((line) => line.trim())
-        .slice(1); // Skip header if present
+        .filter((line) => line.trim());
+
+      if (lines.length < 2) {
+        error("Validation Error", "No data rows to import", true);
+        return;
+      }
+
+      // Detect column indices from header row
+      const headerRow = lines[0].split(",").map((h) => h.trim());
+      const colIndices = detectColumnIndices(headerRow);
+
+      // Check if required columns are found
+      if (colIndices.firstName === -1 || colIndices.lastName === -1 || colIndices.msisdn === -1) {
+        error("Validation Error", "Could not find FirstName, LastName, and Phone columns. Please check your header row.", true);
+        return;
+      }
 
       // Prepare data for API
-      const profiles: { msisdn: string; attributes?: Record<string, any> }[] =
-        [];
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
       const customers: CustomerSubscriptionRecord[] = [];
 
-      for (const line of lines) {
-        const parts = line.split(",").map((p) => p.trim());
-        if (parts.length < 3) continue; // Skip incomplete lines (need FirstName, LastName, Phone)
+      // Process data rows (skip header)
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(",").map((p) => p.trim());
+        if (parts.length < 3) continue;
+
+        const firstName = parts[colIndices.firstName]?.trim() || "Unknown";
+        const lastName = parts[colIndices.lastName]?.trim() || "Customer";
+        const msisdn = parts[colIndices.msisdn]?.trim() || "";
+
+        // Skip if msisdn is empty
+        if (!msisdn) continue;
 
         // Format MSISDN for API - removes + and keeps only digits
-        const msisdnForApi = formatPhoneNumber(parts[2]);
+        const msisdnForApi = formatPhoneNumber(msisdn);
 
         // Add to API profiles array
         profiles.push({
           msisdn: msisdnForApi,
           attributes: {
-            first_name: parts[0] || "Unknown",
-            last_name: parts[1] || "Customer",
-            email: parts[4] || undefined,
+            first_name: firstName,
+            last_name: lastName,
+            email: colIndices.email !== -1 ? parts[colIndices.email]?.trim() : undefined,
             device_type: "unknown",
             premium_user: false,
           },
@@ -518,17 +516,17 @@ export default function CreateCustomerModal({
         // Generate a client-side ID for display (will be replaced by API response)
         const clientId = Math.floor(Math.random() * 1000000);
 
-        // Prepare local customer record with null checks
+        // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
           customerId: clientId,
           subscriptionId: clientId,
-          firstName: parts?.[0]?.trim() || "Unknown",
-          lastName: parts?.[1]?.trim() || "Customer",
-          msisdn: msisdnForApi || "",
-          email: parts?.[4]?.trim() || undefined,
-          city: parts?.[9]?.trim() || undefined,
-          customerType: parts?.[15]?.trim() || "prepaid",
-          tariff: parts?.[16]?.trim() || "NORMAL_SMS",
+          firstName,
+          lastName,
+          msisdn: msisdnForApi,
+          email: colIndices.email !== -1 ? parts[colIndices.email]?.trim() : undefined,
+          city: colIndices.alternatePhone !== -1 ? parts[colIndices.alternatePhone]?.trim() : undefined,
+          customerType: "prepaid",
+          tariff: "NORMAL_SMS",
           status: "active",
           simType: "Not Verified",
           activationDate: new Date().toISOString(),
@@ -536,8 +534,8 @@ export default function CreateCustomerModal({
         customers.push(customer);
       }
 
-      if (customers.length === 0) {
-        error("Validation Error", "No valid customer data found");
+      if (profiles.length === 0) {
+        error("Validation Error", "No valid customer data found in bulk text", true);
         return;
       }
 
@@ -546,7 +544,7 @@ export default function CreateCustomerModal({
 
       // Add to local list
       onCustomersAdded(customers);
-      success("Success", `${customers.length} customer(s) added successfully`);
+      success("Success", `${profiles.length} customer(s) added successfully`);
 
       // Reset
       setBulkText("");
@@ -556,20 +554,22 @@ export default function CreateCustomerModal({
       onClose();
     } catch (err) {
       // Extract backend error message
-      let errorMessage = "Failed to import customers";
+      let errorMessage = "Failed to add customers";
 
       if (err instanceof Error) {
         const message = err.message;
-        // Try to parse backend error from API response
         try {
-          const match = message.match(/"error":"([^"]+)"/);
-          if (match && match[1]) {
-            errorMessage = match[1];
+          const jsonMatch = message.match(/\{[\s\S]*"error"[\s\S]*\}/);
+          if (jsonMatch) {
+            const errorObj = JSON.parse(jsonMatch[0]);
+            if (errorObj.error) {
+              errorMessage = errorObj.error;
+            }
           } else {
             errorMessage = message;
           }
         } catch {
-          errorMessage = message;
+          errorMessage = message || "Failed to add customers";
         }
       }
 
@@ -1267,6 +1267,7 @@ export default function CreateCustomerModal({
                           <tbody>
                             {bulkValidation.rows
                               .filter((r) => r.valid)
+                              .slice(0, 5)
                               .map((row, idx) => (
                                 <tr
                                   key={idx}
@@ -1659,6 +1660,7 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                           <tbody>
                             {importPreview.rows
                               .filter((r) => r.valid)
+                              .slice(0, 5)
                               .map((row, idx) => (
                                 <tr
                                   key={idx}

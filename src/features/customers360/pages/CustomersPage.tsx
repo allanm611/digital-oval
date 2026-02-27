@@ -10,6 +10,7 @@ import {
   Plus,
   Eye,
   Edit,
+  Trash2,
   X,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
@@ -210,47 +211,65 @@ export default function CustomersPage() {
   const loadAllCustomersForSearch = useCallback(async () => {
     try {
       setIsLoading(true);
-      const apiResponse = await customerService.getAllCustomers({
-        limit: 100,
-        offset: 0,
-        skipCache: true,
-      });
+      let allCustomers: CustomerSubscriptionRecord[] = [];
+      let offset = 0;
+      let hasMore = true;
+      let totalCount = 0;
 
-      if (
-        apiResponse.success &&
-        apiResponse.data &&
-        Array.isArray(apiResponse.data)
-      ) {
-        const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
-          const customerId =
-            typeof apiCustomer.id === "string"
-              ? parseInt(apiCustomer.id, 10)
-              : apiCustomer.id;
-
-          const subscriberId = apiCustomer.subscriber_id
-            ? typeof apiCustomer.subscriber_id === "string"
-              ? parseInt(apiCustomer.subscriber_id, 10)
-              : apiCustomer.subscriber_id
-            : customerId;
-
-          return {
-            customerId: customerId,
-            subscriptionId: subscriberId,
-            firstName: apiCustomer.first_name || "Unknown",
-            lastName: apiCustomer.last_name || "Customer",
-            msisdn: apiCustomer.msisdn,
-            email: apiCustomer.email,
-            city: apiCustomer.city,
-            customerType: apiCustomer.subscriber_type || "prepaid",
-            tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
-            status: apiCustomer.subscriber_status || "active",
-            simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
-            activationDate: apiCustomer.created_at,
-          };
+      // Paginate through all customers
+      while (hasMore) {
+        const apiResponse = await customerService.getAllCustomers({
+          limit: 100,
+          offset,
+          skipCache: true,
         });
-        setCustomers(apiCustomers);
-        setTotalCustomers(apiCustomers.length);
+
+        if (
+          apiResponse.success &&
+          apiResponse.data &&
+          Array.isArray(apiResponse.data)
+        ) {
+          const apiCustomers = apiResponse.data.map((apiCustomer: Subscriber) => {
+            const customerId =
+              typeof apiCustomer.id === "string"
+                ? parseInt(apiCustomer.id, 10)
+                : apiCustomer.id;
+
+            const subscriberId = apiCustomer.subscriber_id
+              ? typeof apiCustomer.subscriber_id === "string"
+                ? parseInt(apiCustomer.subscriber_id, 10)
+                : apiCustomer.subscriber_id
+              : customerId;
+
+            return {
+              customerId: customerId,
+              subscriptionId: subscriberId,
+              firstName: apiCustomer.first_name || "Unknown",
+              lastName: apiCustomer.last_name || "Customer",
+              msisdn: apiCustomer.msisdn,
+              email: apiCustomer.email,
+              city: apiCustomer.city,
+              customerType: apiCustomer.subscriber_type || "prepaid",
+              tariff: apiCustomer.preferred_channel || "NORMAL_SMS",
+              status: apiCustomer.subscriber_status || "active",
+              simType: apiCustomer.kyc_verified ? "KYC Verified" : "Not Verified",
+              activationDate: apiCustomer.created_at,
+            };
+          });
+
+          allCustomers = [...allCustomers, ...apiCustomers];
+
+          // Get total from pagination response
+          totalCount = apiResponse.pagination?.total || allCustomers.length;
+          hasMore = apiResponse.pagination?.hasMore || false;
+          offset += 100;
+        } else {
+          hasMore = false;
+        }
       }
+
+      setCustomers(allCustomers);
+      setTotalCustomers(totalCount);
     } catch (err) {
       console.error("Failed to load customers for search:", err);
     } finally {
@@ -927,7 +946,7 @@ export default function CustomersPage() {
                               <Edit className="h-4 w-4" />
                             </button>
                           </PermissionGate>
-                          {/* Delete button - commented out as CVM platforms typically don't delete customers */}
+                          {/* Delete button - commented out */}
                           {/* <PermissionGate permission="customer.delete">
                             <button
                               type="button"
