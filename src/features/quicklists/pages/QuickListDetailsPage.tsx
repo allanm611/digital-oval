@@ -378,6 +378,33 @@ export default function QuickListDetailsPage() {
     });
   };
 
+  const formatCellValue = (value: unknown): string => {
+    if (value === undefined || value === null) {
+      return "-";
+    }
+
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+
+    const stringValue = String(value);
+
+    // Handle scientific notation (e.g., 1.254E+11)
+    if (stringValue.includes("E") || stringValue.includes("e")) {
+      try {
+        const num = Number(value);
+        if (!isNaN(num) && Number.isInteger(num)) {
+          // Use fixed notation to avoid scientific notation
+          return num.toFixed(0);
+        }
+      } catch {
+        // Fallback to original string
+      }
+    }
+
+    return stringValue;
+  };
+
   const infoRowClass =
     "flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 py-2";
   const infoValueClass =
@@ -993,15 +1020,7 @@ export default function QuickListDetailsPage() {
                               ];
                             }
 
-                            let displayValue: string;
-
-                            if (cellValue === undefined || cellValue === null) {
-                              displayValue = "-";
-                            } else if (typeof cellValue === "object") {
-                              displayValue = JSON.stringify(cellValue);
-                            } else {
-                              displayValue = String(cellValue);
-                            }
+                            const displayValue = formatCellValue(cellValue);
 
                             return (
                               <td

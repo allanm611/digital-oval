@@ -199,7 +199,8 @@ export default function QuickListsPage() {
       // Reload stats and quicklists
       await loadStats();
       // Reload the quicklists list to show the new one immediately
-      await loadQuickLists(1); // Always reload from page 1 to see the new quicklist
+      await loadInitialData(); // Always reload from page 1 to see the new quicklist
+      setCurrentPage(1);
     } catch (err) {
       console.error("Failed to create quicklist:", err);
       const errorMessage =
@@ -236,7 +237,8 @@ export default function QuickListsPage() {
       setQuicklistToDelete(null);
       // Reload both stats and quicklists
       await loadStats();
-      await loadQuickLists();
+      await loadInitialData();
+      setCurrentPage(1);
     } catch (err) {
       console.error("Failed to delete quicklist:", err);
       showError(t.quickList.deletedFailed, t.common.loading);
@@ -290,8 +292,9 @@ export default function QuickListsPage() {
         showToast(t.quickList.updatedSuccess);
         setIsEditModalOpen(false);
         setEditQuickList(null);
-        await loadQuickLists(currentPage);
+        await loadInitialData();
         await loadStats();
+        setCurrentPage(1);
       }
     } catch (err) {
       console.error("Failed to update QuickList:", err);

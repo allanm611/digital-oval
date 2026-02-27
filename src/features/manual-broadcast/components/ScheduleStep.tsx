@@ -118,17 +118,25 @@ export default function ScheduleStep({
               type="button"
               onClick={() => setScheduleType("now")}
               disabled={isSubmitting}
-              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left"
+              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left relative bg-white"
               style={{
-                borderColor:
-                  scheduleType === "now"
-                    ? color.primary.accent
-                    : color.border.default,
-                backgroundColor: "white",
+                borderColor: color.border.default,
                 opacity: isSubmitting ? 0.5 : 1,
                 cursor: isSubmitting ? "not-allowed" : "pointer",
               }}
             >
+              {scheduleType === "now" && (
+                <div
+                  className="absolute rounded-md pointer-events-none border-2"
+                  style={{
+                    borderColor: color.primary.accent,
+                    top: "-2px",
+                    right: "-2px",
+                    bottom: "-2px",
+                    left: "-2px",
+                  }}
+                />
+              )}
               <div
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
@@ -158,12 +166,6 @@ export default function ScheduleStep({
                   {t.manualBroadcast.sendNowDesc}
                 </p>
               </div>
-              {scheduleType === "now" && (
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: color.primary.accent }}
-                />
-              )}
             </button>
 
             {/* Schedule for Later */}
@@ -171,17 +173,25 @@ export default function ScheduleStep({
               type="button"
               onClick={() => setScheduleType("later")}
               disabled={isSubmitting}
-              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left"
+              className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-md border-2 transition-all text-left relative bg-white"
               style={{
-                borderColor:
-                  scheduleType === "later"
-                    ? color.primary.accent
-                    : color.border.default,
-                backgroundColor: "white",
+                borderColor: color.border.default,
                 opacity: isSubmitting ? 0.5 : 1,
                 cursor: isSubmitting ? "not-allowed" : "pointer",
               }}
             >
+              {scheduleType === "later" && (
+                <div
+                  className="absolute rounded-md pointer-events-none border-2"
+                  style={{
+                    borderColor: color.primary.accent,
+                    top: "-2px",
+                    right: "-2px",
+                    bottom: "-2px",
+                    left: "-2px",
+                  }}
+                />
+              )}
               <div
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{
@@ -211,12 +221,6 @@ export default function ScheduleStep({
                   {t.manualBroadcast.scheduleLaterDesc}
                 </p>
               </div>
-              {scheduleType === "later" && (
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: color.primary.accent }}
-                />
-              )}
             </button>
           </div>
         </div>

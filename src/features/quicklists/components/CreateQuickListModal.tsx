@@ -189,9 +189,52 @@ export default function CreateQuickListModal({
         try {
           const XLSX = await import("xlsx");
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: "array" });
+          // Read with raw: true to get numeric values
+          const workbook = XLSX.read(data, {
+            type: "array"
+          });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const csvContent = XLSX.utils.sheet_to_csv(firstSheet);
+
+          // Manually build CSV to preserve all values as strings (prevents scientific notation)
+          let csvContent = "";
+          if (firstSheet) {
+            const range = XLSX.utils.decode_range(firstSheet["!ref"] || "A1");
+            const rows: string[][] = [];
+
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+              const row: string[] = [];
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cellAddress = XLSX.utils.encode_col(C) + XLSX.utils.encode_row(R);
+                const cell = firstSheet[cellAddress];
+
+                // Get the value and convert to string, avoiding scientific notation
+                let cellValue = "";
+                if (cell) {
+                  if (typeof cell.v === "number") {
+                    // Convert number to string without scientific notation
+                    cellValue = cell.v.toString();
+                    // If number has "E" in it (scientific notation), use toFixed instead
+                    if (cellValue.includes("E") || cellValue.includes("e")) {
+                      cellValue = Number(cell.v).toFixed(0);
+                    }
+                  } else if (cell.v !== undefined && cell.v !== null) {
+                    cellValue = String(cell.v);
+                  }
+                }
+                row.push(cellValue);
+              }
+              rows.push(row);
+            }
+
+            // Convert rows back to CSV format
+            csvContent = rows.map(row =>
+              row.map(cell => {
+                // Escape quotes and wrap in quotes if contains comma, newline, or quote
+                const needsQuotes = cell.includes(",") || cell.includes("\n") || cell.includes('"');
+                return needsQuotes ? `"${cell.replace(/"/g, '""')}"` : cell;
+              }).join(",")
+            ).join("\n");
+          }
 
           const [headersLine] = csvContent.split(/\r?\n/);
 
