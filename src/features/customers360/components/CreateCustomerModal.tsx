@@ -9,6 +9,7 @@ import {
 
 } from "lucide-react";
 import countries from "world-countries";
+import * as XLSX from "xlsx";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { isValidCountryCodePhone } from "../../../shared/utils/validation";
 import { useToast } from "../../../contexts/ToastContext";
@@ -94,7 +95,6 @@ const TIMEZONE_OPTIONS = [
 ];
 
 const initialFormData: FormData = {
-  subscriptionId: "",
   firstName: "",
   lastName: "",
   msisdn: "",
@@ -145,7 +145,6 @@ export default function CreateCustomerModal({
   const [phoneError, setPhoneError] = useState("");
   const [alternatePhoneError, setAlternatePhoneError] = useState("");
   const [formErrors, setFormErrors] = useState<{
-    subscriptionId?: string;
     firstName?: string;
     lastName?: string;
     msisdn?: string;
@@ -158,6 +157,37 @@ export default function CreateCustomerModal({
     rows: any[];
     headers: string[];
   } | null>(null);
+  const [columnMapping, setColumnMapping] = useState<{
+    firstName: number;
+    lastName: number;
+    msisdn: number;
+    alternatePhone?: number;
+    email?: number;
+    alternateEmail?: number;
+    gender?: number;
+  } | null>(null);
+  const [mappingConfirmed, setMappingConfirmed] = useState(false);
+
+  // Helper function to detect column indices from headers
+  const detectColumnIndices = (headerRow: string[]) => {
+    const normalize = (str: string) => str.toLowerCase().replace(/\s+/g, "");
+
+    const findIndex = (headerRow: string[], keywords: string[]) => {
+      return headerRow.findIndex((header) =>
+        keywords.some((keyword) => normalize(header).includes(keyword))
+      );
+    };
+
+    return {
+      firstName: findIndex(headerRow, ["firstname", "first_name", "first"]),
+      lastName: findIndex(headerRow, ["lastname", "last_name", "last"]),
+      msisdn: findIndex(headerRow, ["phone", "msisdn", "mobile", "number"]),
+      alternatePhone: findIndex(headerRow, ["alternate", "alt_phone", "altphone"]),
+      email: findIndex(headerRow, ["email"]),
+      alternateEmail: findIndex(headerRow, ["alternate_email", "alt_email", "altemail"]),
+      gender: findIndex(headerRow, ["gender"]),
+    };
+  };
 
   // Real-time bulk data parsing and validation
   const bulkValidation = useMemo(() => {
@@ -166,34 +196,34 @@ export default function CreateCustomerModal({
     }
 
     const lines = bulkText.split("\n").filter((line) => line.trim());
+    const headerRow = lines[0].split(",").map((h) => h.trim());
+    const colIndices = detectColumnIndices(headerRow);
+
+    // Check if required columns are found
+    if (colIndices.firstName === -1 || colIndices.lastName === -1 || colIndices.msisdn === -1) {
+      return {
+        valid: 0,
+        invalid: lines.length - 1,
+        rows: [],
+        headers: headerRow,
+      };
+    }
 
     const rows = lines.slice(1).map((line, index) => {
       const parts = line.split(",").map((p) => p.trim());
-      // Required: SubID, FirstName, LastName, Phone, Email
-      const hasMinimumFields =
-        parts.length >= 6 && parts[0] && parts[1] && parts[2] && parts[3] && parts[5];
 
-      if (!hasMinimumFields) {
+      // Check if all required fields are present
+      if (!parts[colIndices.firstName] || !parts[colIndices.lastName] || !parts[colIndices.msisdn]) {
         return {
           rowNum: index + 1,
           valid: false,
-          error: "Missing required fields (SubID, FirstName, LastName, Phone, Email)",
-          data: parts,
-        };
-      }
-
-      // Validate subscription ID is numeric
-      if (!/^\d+$/.test(parts[0])) {
-        return {
-          rowNum: index + 1,
-          valid: false,
-          error: "Subscription ID must be numeric",
+          error: "Missing required fields (FirstName, LastName, Phone)",
           data: parts,
         };
       }
 
       // Validate phone number has country code
-      if (!isValidCountryCodePhone(parts[3])) {
+      if (!isValidCountryCodePhone(parts[colIndices.msisdn])) {
         return {
           rowNum: index + 1,
           valid: false,
@@ -203,7 +233,7 @@ export default function CreateCustomerModal({
       }
 
       // Validate alternate phone number if provided (must start with country code)
-      if (parts[4] && !isValidCountryCodePhone(parts[4])) {
+      if (colIndices.alternatePhone !== -1 && parts[colIndices.alternatePhone] && !isValidCountryCodePhone(parts[colIndices.alternatePhone])) {
         return {
           rowNum: index + 1,
           valid: false,
@@ -213,7 +243,7 @@ export default function CreateCustomerModal({
       }
 
       // Validate gender if provided (only Male or Female)
-      if (parts[7] && !["Male", "Female"].includes(parts[7])) {
+      if (colIndices.gender !== -1 && parts[colIndices.gender] && !["Male", "Female"].includes(parts[colIndices.gender])) {
         return {
           rowNum: index + 1,
           valid: false,
@@ -227,36 +257,28 @@ export default function CreateCustomerModal({
         rowNum: index + 1,
         valid: true,
         data: [
-          parts[0],
-          parts[1],
-          parts[2],
-          parts[3],
-          parts[4] || "—",
-          parts[5] || "—",
-          parts[6] || "—",
-          parts[7] || "—",
-          parts[8] || "—",
-          parts[9] || "—",
-          parts[10] || "—",
-          parts[11] || "—",
-          parts[12] || "—",
-          parts[13] || "—",
+          parts[colIndices.firstName],
+          parts[colIndices.lastName],
+          parts[colIndices.msisdn],
+          (colIndices.alternatePhone !== -1 ? parts[colIndices.alternatePhone] : undefined) || "—",
+          (colIndices.email !== -1 ? parts[colIndices.email] : undefined) || "—",
+          (colIndices.alternateEmail !== -1 ? parts[colIndices.alternateEmail] : undefined) || "—",
+          (colIndices.gender !== -1 ? parts[colIndices.gender] : undefined) || "—",
         ],
         customer: {
-          subscriptionId: parts[0],
-          firstName: parts[1],
-          lastName: parts[2],
-          msisdn: parts[3],
-          alternatemsisdns: parts[4] || undefined,
-          email: parts[5] || undefined,
-          alternateEmail: parts[6] || undefined,
-          gender: parts[7] || undefined,
-          dateOfBirth: parts[8] || undefined,
-          languagePreference: parts[9] || "en",
-          city: parts[10] || undefined,
-          physicalAddress: parts[11] || undefined,
-          region: parts[12] || undefined,
-          postalCode: parts[13] || undefined,
+          firstName: parts[colIndices.firstName],
+          lastName: parts[colIndices.lastName],
+          msisdn: parts[colIndices.msisdn],
+          alternatemsisdns: (colIndices.alternatePhone !== -1 ? parts[colIndices.alternatePhone] : undefined) || undefined,
+          email: (colIndices.email !== -1 ? parts[colIndices.email] : undefined) || undefined,
+          alternateEmail: (colIndices.alternateEmail !== -1 ? parts[colIndices.alternateEmail] : undefined) || undefined,
+          gender: (colIndices.gender !== -1 ? parts[colIndices.gender] : undefined) || undefined,
+          dateOfBirth: undefined,
+          languagePreference: parts[8] || "en",
+          city: parts[9] || undefined,
+          physicalAddress: parts[10] || undefined,
+          region: parts[11] || undefined,
+          postalCode: parts[12] || undefined,
         },
       };
     });
@@ -333,12 +355,6 @@ export default function CreateCustomerModal({
   const validateSingleCustomer = (): boolean => {
     const errors: typeof formErrors = {};
 
-    if (!formData.subscriptionId.trim()) {
-      errors.subscriptionId = "Subscription ID is required";
-    } else if (!/^\d+$/.test(formData.subscriptionId)) {
-      errors.subscriptionId = "Subscription ID must be numeric";
-    }
-
     if (!formData.firstName.trim()) {
       errors.firstName = "First name is required";
     }
@@ -351,10 +367,6 @@ export default function CreateCustomerModal({
       errors.msisdn = "Phone number is required";
     } else if (!isValidCountryCodePhone(formData.msisdn)) {
       errors.msisdn = "Phone number must begin with country code";
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email is required";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -378,12 +390,8 @@ export default function CreateCustomerModal({
       // Format phone number - removes + and keeps only digits
       const msisdnForApi = formatPhoneNumber(formData.msisdn);
 
-      // Use user-provided subscription ID (converted to number)
-      const subscriberId = parseInt(formData.subscriptionId, 10);
-
       // Call API to create customer with all fields
       const apiResponse = await customerService.createCustomer({
-        subscriber_id: subscriberId,
         msisdn: msisdnForApi,
         attributes: {
           first_name: formData.firstName,
@@ -416,12 +424,10 @@ export default function CreateCustomerModal({
           ? parseInt(apiResponse.data.id, 10)
           : apiResponse.data.id;
 
-      console.log("API Response:", apiResponse.data);
-      console.log("Customer ID being set:", apiCustomerId);
 
       const newCustomer: CustomerSubscriptionRecord = {
-        customerId: apiCustomerId || subscriberId, // Fallback to subscriberId if id is undefined
-        subscriptionId: subscriberId,
+        customerId: apiCustomerId,
+        subscriptionId: apiCustomerId,
         // Use API response attributes where available with null checks
         firstName:
           apiResponse?.data?.first_name || formData.firstName || "Unknown",
@@ -492,38 +498,35 @@ export default function CreateCustomerModal({
 
       for (const line of lines) {
         const parts = line.split(",").map((p) => p.trim());
-        if (parts.length < 4) continue; // Skip incomplete lines (need SubID, FirstName, LastName, Phone)
-
-        // Validate subscription ID is numeric
-        if (!/^\d+$/.test(parts[0])) continue;
-
-        // Parse subscription ID from first column
-        const subscriptionId = parseInt(parts[0], 10);
+        if (parts.length < 3) continue; // Skip incomplete lines (need FirstName, LastName, Phone)
 
         // Format MSISDN for API - removes + and keeps only digits
-        const msisdnForApi = formatPhoneNumber(parts[3]);
+        const msisdnForApi = formatPhoneNumber(parts[2]);
 
         // Add to API profiles array
         profiles.push({
           msisdn: msisdnForApi,
           attributes: {
-            first_name: parts[1] || "Unknown",
-            last_name: parts[2] || "Customer",
-            email: parts[5] || undefined,
+            first_name: parts[0] || "Unknown",
+            last_name: parts[1] || "Customer",
+            email: parts[4] || undefined,
             device_type: "unknown",
             premium_user: false,
           },
         });
 
+        // Generate a client-side ID for display (will be replaced by API response)
+        const clientId = Math.floor(Math.random() * 1000000);
+
         // Prepare local customer record with null checks
         const customer: CustomerSubscriptionRecord = {
-          customerId: subscriptionId || 0,
-          subscriptionId: subscriptionId || 0,
-          firstName: parts?.[1]?.trim() || "Unknown",
-          lastName: parts?.[2]?.trim() || "Customer",
+          customerId: clientId,
+          subscriptionId: clientId,
+          firstName: parts?.[0]?.trim() || "Unknown",
+          lastName: parts?.[1]?.trim() || "Customer",
           msisdn: msisdnForApi || "",
-          email: parts?.[5]?.trim() || undefined,
-          city: parts?.[10]?.trim() || undefined,
+          email: parts?.[4]?.trim() || undefined,
+          city: parts?.[9]?.trim() || undefined,
           customerType: parts?.[15]?.trim() || "prepaid",
           tariff: parts?.[16]?.trim() || "NORMAL_SMS",
           status: "active",
@@ -578,60 +581,83 @@ export default function CreateCustomerModal({
 
   const handleImportFile = async () => {
     if (!importFile) {
-      error("Validation Error", "Please select a file");
+      error("Validation Error", "Please select a file", true);
+      return;
+    }
+
+    if (!mappingConfirmed || !columnMapping) {
+      error("Validation Error", "Please confirm column mapping first", true);
       return;
     }
 
     setIsLoading(true);
     try {
-      const text = await importFile.text();
-      // Process file
-      const lines = text
-        .split("\n")
-        .filter((line) => line.trim())
-        .slice(1);
+      const isExcel = importFile.name.endsWith(".xlsx") || importFile.name.endsWith(".xls");
+      const fileContent = isExcel
+        ? await importFile.arrayBuffer()
+        : await importFile.text();
 
-      // Prepare data for API
-      const profiles: { msisdn: string; attributes?: Record<string, any> }[] =
-        [];
+      let allRows: string[][] = [];
+
+      if (isExcel) {
+        const workbook = XLSX.read(fileContent, { type: "array" });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const sheetRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+        allRows = (sheetRows as string[][]).map((row) =>
+          row.map((cell) => String(cell || "").trim())
+        );
+      } else {
+        const lines = (fileContent as string)
+          .split("\n")
+          .filter((line) => line.trim());
+        allRows = lines.map((line) => line.split(importFileDelimiter).map((p) => p.trim()));
+      }
+
+      // Skip header row
+      const dataRows = allRows.slice(1);
+
+      // Prepare data for API using mapped columns
+      const profiles: { msisdn: string; attributes?: Record<string, any> }[] = [];
       const customers: CustomerSubscriptionRecord[] = [];
 
-      for (const line of lines) {
-        const parts = line.split(importFileDelimiter).map((p) => p.trim());
-        if (parts.length < 4) continue;
+      for (const parts of dataRows) {
+        // Extract values using column mapping
+        const firstName = parts[columnMapping.firstName]?.trim() || "Unknown";
+        const lastName = parts[columnMapping.lastName]?.trim() || "Customer";
+        const msisdn = parts[columnMapping.msisdn]?.trim() || "";
 
-        // Validate subscription ID is numeric
-        if (!/^\d+$/.test(parts[0])) continue;
-
-        // Parse subscription ID from first column
-        const subscriptionId = parseInt(parts[0], 10);
+        // Skip if msisdn is empty
+        if (!msisdn) continue;
 
         // Format MSISDN for API - removes + and keeps only digits
-        const msisdnForApi = formatPhoneNumber(parts[3]);
+        const msisdnForApi = formatPhoneNumber(msisdn);
 
         // Add to API profiles array
         profiles.push({
           msisdn: msisdnForApi,
           attributes: {
-            first_name: parts[1] || "Unknown",
-            last_name: parts[2] || "Customer",
-            email: parts[5] || undefined,
+            first_name: firstName,
+            last_name: lastName,
+            email: parts[3]?.trim() || undefined,
             device_type: "unknown",
             premium_user: false,
           },
         });
 
-        // Prepare local customer record with null checks
+        // Generate a client-side ID for display (will be replaced by API response)
+        const clientId = Math.floor(Math.random() * 1000000);
+
+        // Prepare local customer record
         const customer: CustomerSubscriptionRecord = {
-          customerId: subscriptionId || 0,
-          subscriptionId: subscriptionId || 0,
-          firstName: parts?.[1]?.trim() || "Unknown",
-          lastName: parts?.[2]?.trim() || "Customer",
-          msisdn: msisdnForApi || "",
-          email: parts?.[5]?.trim() || undefined,
-          city: parts?.[10]?.trim() || undefined,
-          customerType: parts?.[15]?.trim() || "prepaid",
-          tariff: parts?.[16]?.trim() || "NORMAL_SMS",
+          customerId: clientId,
+          subscriptionId: clientId,
+          firstName,
+          lastName,
+          msisdn: msisdnForApi,
+          email: parts[3]?.trim() || undefined,
+          city: parts[4]?.trim() || undefined,
+          customerType: "prepaid",
+          tariff: "NORMAL_SMS",
           status: "active",
           simType: "Not Verified",
           activationDate: new Date().toISOString(),
@@ -639,8 +665,8 @@ export default function CreateCustomerModal({
         customers.push(customer);
       }
 
-      if (customers.length === 0) {
-        error("Validation Error", "No valid customer data found in file");
+      if (profiles.length === 0) {
+        error("Validation Error", "No valid customer data found in file", true);
         return;
       }
 
@@ -651,11 +677,14 @@ export default function CreateCustomerModal({
       onCustomersAdded(customers);
       success(
         "Success",
-        `${customers.length} customer(s) imported successfully`,
+        `${profiles.length} customer(s) imported successfully`,
       );
 
       // Reset
       setImportFile(null);
+      setColumnMapping(null);
+      setMappingConfirmed(false);
+      setImportPreview(null);
       setPhoneError("");
       setAlternatePhoneError("");
       setFormErrors({});
@@ -666,20 +695,35 @@ export default function CreateCustomerModal({
 
       if (err instanceof Error) {
         const message = err.message;
-        // Try to parse backend error from API response
+
+        // Try to extract and parse backend error response
         try {
-          const match = message.match(/"error":"([^"]+)"/);
-          if (match && match[1]) {
-            errorMessage = match[1];
+          // First, try to parse the entire error as JSON
+          const jsonMatch = message.match(/\{[\s\S]*"error"[\s\S]*\}/);
+          if (jsonMatch) {
+            const errorObj = JSON.parse(jsonMatch[0]);
+            if (errorObj.error) {
+              errorMessage = errorObj.error;
+            }
           } else {
-            errorMessage = message;
+            // Fallback: try regex pattern for quoted error
+            const regexMatch = message.match(/"error"\s*:\s*"([^"\\]|\\.)*"/);
+            if (regexMatch) {
+              const jsonStr = `{${regexMatch[0]}}`;
+              const parsed = JSON.parse(jsonStr);
+              errorMessage = parsed.error;
+            } else {
+              // Last resort: use the message as is
+              errorMessage = message;
+            }
           }
         } catch {
-          errorMessage = message;
+          // If all parsing fails, use message as is
+          errorMessage = message || "Failed to import file";
         }
       }
 
-      error("Error", errorMessage, true);
+      error("Import Failed", errorMessage, true);
     } finally {
       setIsLoading(false);
     }
@@ -771,31 +815,7 @@ export default function CreateCustomerModal({
           {/* Single Customer Tab */}
           {activeTab === "single" && (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                  >
-                    Subscription ID *
-                  </label>
-                  <input
-                    type="text"
-                    name="subscriptionId"
-                    value={formData.subscriptionId}
-                    onChange={handleInputChange}
-                    placeholder="Enter Subscription ID"
-                    className={`w-full px-4 py-3 border ${tw.rounded} focus:outline-none text-sm ${
-                      formErrors.subscriptionId
-                        ? "border-red-500"
-                        : tw.borderDefault
-                    }`}
-                  />
-                  {formErrors.subscriptionId && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {formErrors.subscriptionId}
-                    </p>
-                  )}
-                </div>
+              <div className="space-y-4">
                 <div>
                   <label
                     className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
@@ -927,7 +947,7 @@ export default function CreateCustomerModal({
                     <label
                       className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                     >
-                      Email *
+                      Email
                     </label>
                     <input
                       type="email"
@@ -1165,7 +1185,7 @@ export default function CreateCustomerModal({
                   Required Fields
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {["SubID", "FirstName", "LastName", "Phone", "Email"].map((field) => (
+                  {["FirstName", "LastName", "Phone"].map((field) => (
                     <span
                       key={field}
                       className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium"
@@ -1184,7 +1204,7 @@ export default function CreateCustomerModal({
               <textarea
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
-                placeholder="SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone&#10;1001,David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi"
+                placeholder="FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone&#10;David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi"
                 className={`w-full px-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none text-sm font-mono`}
                 rows={8}
               />
@@ -1292,11 +1312,11 @@ export default function CreateCustomerModal({
                 <button
                   type="button"
                   onClick={() => {
-                    const sampleData = `SubID,FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone
-1001,David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi
-1002,Grace,Wanjiru,254712345678,254712345680,grace.wanjiru@email.com,grace.alt@email.com,Female,1992-03-20,en,Mombasa,456 Nkrumah Rd,Mombasa,80100,KEN,VIP,EMAIL,Africa/Nairobi
-1003,Peter,Ochieng,254734567890,254734567891,peter.ochieng@email.com,,Male,1988-12-10,en,Kisumu,789 Oginga Odinga,Kisumu,40100,KEN,Regular,USSD,Africa/Nairobi
-1004,Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,1995-07-25,en,Mombasa,321 Abdel Nasser,Mombasa,80200,KEN,Gold,SMS,Africa/Nairobi`;
+                    const sampleData = `FirstName,LastName,Phone,AlternatePhone,Email,AlternateEmail,Gender,DateOfBirth,LanguagePreference,City,PhysicalAddress,Region,PostalCode,CountryCode,CustomerTier,PreferredChannel,Timezone
+David,Kipchoge,254750902921,254712345679,david.kipchoge@email.com,david.alt@email.com,Male,1990-05-15,en,Nairobi,123 Kenyatta Ave,Nairobi,00100,KEN,Gold,SMS,Africa/Nairobi
+Grace,Wanjiru,254712345678,254712345680,grace.wanjiru@email.com,grace.alt@email.com,Female,1992-03-20,en,Mombasa,456 Nkrumah Rd,Mombasa,80100,KEN,VIP,EMAIL,Africa/Nairobi
+Peter,Ochieng,254734567890,254734567891,peter.ochieng@email.com,,Male,1988-12-10,en,Kisumu,789 Oginga Odinga,Kisumu,40100,KEN,Regular,USSD,Africa/Nairobi
+Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,1995-07-25,en,Mombasa,321 Abdel Nasser,Mombasa,80200,KEN,Gold,SMS,Africa/Nairobi`;
                     const blob = new Blob([sampleData], { type: "text/csv" });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -1316,148 +1336,109 @@ export default function CreateCustomerModal({
                 </button>
               </div>
               <div
-                className={`border-2 border-dashed ${tw.rounded} p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors`}
+                className={`border-2 border-dashed ${tw.rounded} p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between`}
                 style={{ borderColor: color.border.default }}
-                onClick={() => document.getElementById("fileInput")?.click()}
+                onClick={() => !importFile && document.getElementById("fileInput")?.click()}
               >
-                <Upload className={`w-8 h-8 ${tw.textMuted} mx-auto mb-2`} />
-                <p className={`text-sm ${tw.textPrimary} font-medium`}>
-                  {importFile
-                    ? importFile.name
-                    : "Click to select or drag a CSV file"}
-                </p>
-                <p className={`text-xs ${tw.textSecondary} mt-1`}>
-                  CSV file with columns: SubID*, FirstName*, LastName*, Phone* (country code 254, etc), AlternatePhone, Email, AlternateEmail, Gender, DateOfBirth, LanguagePreference, City, PhysicalAddress, Region, PostalCode, CountryCode, CustomerTier, PreferredChannel, Timezone (* = required)
-                </p>
+                <div className="flex items-center gap-3 flex-1">
+                  <Upload className={`w-8 h-8 ${tw.textMuted} flex-shrink-0`} />
+                  <p className={`text-sm ${tw.textPrimary} font-medium`}>
+                    {importFile
+                      ? importFile.name
+                      : "Click to select or drag a file"}
+                  </p>
+                </div>
+                {importFile && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setImportFile(null);
+                      setColumnMapping(null);
+                      setMappingConfirmed(false);
+                      setImportPreview(null);
+                    }}
+                    className="text-red-600 text-sm font-medium whitespace-nowrap ml-2"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
               <input
                 id="fileInput"
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
+
+                  // Validate file type
+                  if (file) {
+                    const isCSV = file.name.endsWith(".csv");
+                    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+
+                    if (!isCSV && !isExcel) {
+                      error("Invalid File", "Please upload a CSV or Excel file (.csv, .xlsx, .xls)");
+                      e.target.value = ""; // Clear the input
+                      return;
+                    }
+                  }
+
                   setImportFile(file);
 
-                  // Parse file preview
+                  // Parse file to show mapping UI
                   if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const content = event.target?.result as string;
-                      const lines = content
-                        .split("\n")
-                        .filter((line) => line.trim());
-                      const headers = [
-                        "SubID",
-                        "FirstName",
-                        "LastName",
-                        "Phone",
-                        "AlternatePhone",
-                        "Email",
-                        "AlternateEmail",
-                        "Gender",
-                        "DateOfBirth",
-                        "LanguagePreference",
-                        "City",
-                        "PhysicalAddress",
-                        "Region",
-                        "PostalCode",
-                      ];
+                    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
 
-                      const rows = lines.slice(1).map((line, index) => {
-                        const parts = line
-                          .split(importFileDelimiter)
-                          .map((p) => p.trim());
-                        // Required: SubID, FirstName, LastName, Phone, Email
-                        const hasMinimumFields =
-                          parts.length >= 6 &&
-                          parts[0] &&
-                          parts[1] &&
-                          parts[2] &&
-                          parts[3] &&
-                          parts[5];
+                    if (isExcel) {
+                      // Handle Excel file
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          const data = event.target?.result as ArrayBuffer;
+                          const workbook = XLSX.read(data, { type: "array" });
+                          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                          const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-                        if (!hasMinimumFields) {
-                          return {
-                            rowNum: index + 1,
-                            valid: false,
-                            error: "Missing required fields (SubID, FirstName, LastName, Phone, Email)",
-                            data: parts,
-                          };
+                          if (rows.length === 0) return;
+
+                          const headerRow = (rows[0] as string[]).map((h) => String(h || "").trim());
+
+                          // Show mapping UI - don't validate yet, let user map columns first
+                          setColumnMapping(null); // Reset mapping
+                          setMappingConfirmed(false); // Reset confirmation
+                          setImportPreview({
+                            valid: 0,
+                            invalid: 0,
+                            rows: [],
+                            headers: headerRow,
+                          });
+                        } catch (err) {
+                          error("Error", "Failed to read Excel file");
                         }
+                      };
+                      reader.readAsArrayBuffer(file);
+                    } else {
+                      // Handle CSV file
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        const content = event.target?.result as string;
+                        const lines = content
+                          .split("\n")
+                          .filter((line) => line.trim());
+                        const headerRow = lines[0].split(importFileDelimiter).map((h) => h.trim());
 
-                        // Validate subscription ID is numeric
-                        if (!/^\d+$/.test(parts[0])) {
-                          return {
-                            rowNum: index + 1,
-                            valid: false,
-                            error: "Subscription ID must be numeric",
-                            data: parts,
-                          };
-                        }
-
-                        // Validate phone number has country code
-                        if (!isValidCountryCodePhone(parts[3])) {
-                          return {
-                            rowNum: index + 1,
-                            valid: false,
-                            error: "Phone number must begin with country code",
-                            data: parts,
-                          };
-                        }
-
-                        // Validate alternate phone number if provided (must start with country code)
-                        if (parts[4] && !isValidCountryCodePhone(parts[4])) {
-                          return {
-                            rowNum: index + 1,
-                            valid: false,
-                            error: "Alternate phone number must begin with country code",
-                            data: parts,
-                          };
-                        }
-
-                        // Validate gender if provided (only Male or Female)
-                        if (parts[7] && !["Male", "Female"].includes(parts[7])) {
-                          return {
-                            rowNum: index + 1,
-                            valid: false,
-                            error: "Gender must be Male or Female",
-                            data: parts,
-                          };
-                        }
-
-                        return {
-                          rowNum: index + 1,
-                          valid: true,
-                          data: [
-                            parts[0],
-                            parts[1],
-                            parts[2],
-                            parts[3],
-                            parts[4] || "—",
-                            parts[5] || "—",
-                            parts[6] || "—",
-                            parts[7] || "—",
-                            parts[8] || "—",
-                            parts[9] || "en",
-                            parts[10] || "—",
-                            parts[11] || "—",
-                            parts[12] || "—",
-                            parts[13] || "—",
-                          ],
-                        };
-                      });
-
-                      const validRows = rows.filter((r) => r.valid).length;
-                      const invalidRows = rows.filter((r) => !r.valid).length;
-
-                      setImportPreview({
-                        valid: validRows,
-                        invalid: invalidRows,
-                        rows,
-                        headers,
-                      });
-                    };
-                    reader.readAsText(file);
+                        // Show mapping UI - don't validate yet, let user map columns first
+                        setColumnMapping(null); // Reset mapping
+                        setMappingConfirmed(false); // Reset confirmation
+                        setImportPreview({
+                          valid: 0,
+                          invalid: 0,
+                          rows: [],
+                          headers: headerRow,
+                        });
+                      };
+                      reader.readAsText(file);
+                    }
                   } else {
                     setImportPreview(null);
                   }
@@ -1465,8 +1446,163 @@ export default function CreateCustomerModal({
                 className="hidden"
               />
 
+              {/* Column Mapping UI */}
+              {importPreview && !mappingConfirmed && (
+                <div className="mt-4 p-4 border rounded space-y-4 bg-white" style={{ borderColor: color.border.default }}>
+                  <div>
+                    <h3 className={`font-medium mb-2 ${tw.textPrimary}`}>Map Your Columns</h3>
+                    <p className={`text-sm ${tw.textSecondary} mb-3`}>Select which column contains each required field:</p>
+                    <div className="flex flex-col gap-3">
+                      {[
+                        { field: "firstName", label: "First Name *" },
+                        { field: "lastName", label: "Last Name *" },
+                        { field: "msisdn", label: "Phone *" },
+                      ].map(({ field, label }) => {
+                        // Get all selected column indices
+                        const selectedIndices = new Set<number>();
+                        Object.entries(columnMapping || {}).forEach(([key, val]) => {
+                          if (val !== undefined && val !== -1) selectedIndices.add(val as number);
+                        });
+
+                        return (
+                          <div key={field} className="flex items-end gap-3">
+                            <div className="flex-1">
+                              <label className={`text-sm font-medium ${tw.textPrimary} block mb-2`}>
+                                {label}
+                              </label>
+                              <HeadlessSelect
+                                options={[
+                                  { value: "-1", label: "Select column..." },
+                                  ...importPreview.headers
+                                    .map((header, idx) => ({ header, idx }))
+                                    .filter(({ header }) => !header.toLowerCase().includes("subid"))
+                                    .map(({ header, idx }) => {
+                                      const isSelected = selectedIndices.has(idx);
+                                      const isCurrentField = (columnMapping?.[field as keyof typeof columnMapping] ?? -1) === idx;
+                                      const isDisabled = isSelected && !isCurrentField;
+                                      return {
+                                        value: idx.toString(),
+                                        label: isDisabled ? `${header} (already used)` : header,
+                                        disabled: isDisabled,
+                                      };
+                                    }),
+                                ]}
+                                value={((columnMapping?.[field as keyof typeof columnMapping] ?? -1) as number).toString()}
+                                onChange={(value) => {
+                                  const numValue = parseInt(value);
+                                  setColumnMapping((prev) => ({
+                                    ...(prev || { firstName: -1, lastName: -1, msisdn: -1 }),
+                                    [field]: numValue === -1 ? undefined : numValue,
+                                  }));
+                                }}
+                                placeholder="Select column..."
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      // Validate required mappings
+                      if ((columnMapping?.firstName ?? -1) === -1 || (columnMapping?.lastName ?? -1) === -1 || (columnMapping?.msisdn ?? -1) === -1) {
+                        error("Validation", "Please map FirstName, LastName, and Phone columns");
+                        return;
+                      }
+
+                      // Get the file content and validate using mapped columns
+                      if (!importFile) return;
+
+                      const isExcel = importFile.name.endsWith(".xlsx") || importFile.name.endsWith(".xls");
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          let allRows: string[][] = [];
+
+                          if (isExcel) {
+                            const data = event.target?.result as ArrayBuffer;
+                            const workbook = XLSX.read(data, { type: "array" });
+                            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                            const sheetRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                            allRows = (sheetRows as string[][]).map((row) =>
+                              row.map((cell) => String(cell || "").trim())
+                            );
+                          } else {
+                            const content = event.target?.result as string;
+                            const lines = content.split("\n").filter((line) => line.trim());
+                            allRows = lines.map((line) => line.split(importFileDelimiter).map((p) => p.trim()));
+                          }
+
+                          const rows = allRows.slice(1).map((parts, index) => {
+
+                          // Get values using mapped column indices
+                          const firstName = parts[columnMapping.firstName];
+                          const lastName = parts[columnMapping.lastName];
+                          const msisdn = parts[columnMapping.msisdn];
+
+                          // Check if all required fields are present
+                          if (!firstName || !lastName || !msisdn) {
+                            return {
+                              rowNum: index + 1,
+                              valid: false,
+                              error: "Missing required fields",
+                              data: parts,
+                            };
+                          }
+
+                          // Validate phone number has country code
+                          if (!isValidCountryCodePhone(msisdn)) {
+                            return {
+                              rowNum: index + 1,
+                              valid: false,
+                              error: "Phone number must begin with country code",
+                              data: parts,
+                            };
+                          }
+
+                          // Successfully validated
+                          return {
+                            rowNum: index + 1,
+                            valid: true,
+                            data: parts, // Show all columns from CSV
+                          };
+                        });
+
+                          const validRows = rows.filter((r) => r.valid).length;
+                          const invalidRows = rows.filter((r) => !r.valid).length;
+
+                          setImportPreview({
+                            valid: validRows,
+                            invalid: invalidRows,
+                            rows,
+                            headers: allRows[0], // Show all original headers
+                          });
+
+                          // Show preview
+                          setMappingConfirmed(true);
+                        } catch (err) {
+                          error("Error", "Failed to read file");
+                        }
+                      };
+
+                      if (isExcel) {
+                        reader.readAsArrayBuffer(importFile);
+                      } else {
+                        reader.readAsText(importFile);
+                      }
+                    }}
+                    className={`${tw.button} text-white`}
+                    style={{ backgroundColor: color.primary.action }}
+                  >
+                    Confirm Mapping
+                  </button>
+                </div>
+              )}
+
               {/* Import Preview */}
-              {importPreview && (
+              {importPreview && mappingConfirmed && (
                 <div className="mt-4 space-y-3">
                   {/* Status Text */}
                   <p className="text-sm font-medium text-gray-700">

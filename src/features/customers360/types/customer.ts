@@ -79,7 +79,6 @@ export interface Subscriber {
 
 // Form data interface used in customer creation and edit modals
 export interface CustomerFormData {
-  subscriptionId: string;
   firstName: string;
   lastName: string;
   msisdn: string;
@@ -100,7 +99,6 @@ export interface CustomerFormData {
 }
 
 export interface CreateCustomerRequest {
-  subscriber_id: number;
   msisdn: string;
   attributes: CustomerAttributes;
 }

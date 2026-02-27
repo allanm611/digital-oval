@@ -11,7 +11,6 @@ import {
   Eye,
   Edit,
   X,
-  Filter,
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { Subscriber } from "../types/customer";
@@ -26,7 +25,6 @@ import { customerService } from "../services/customerServices";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import RegularModal from "../../../shared/components/ui/RegularModal";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
 import CreateCustomerModal from "../components/CreateCustomerModal";
@@ -70,8 +68,6 @@ export default function CustomersPage() {
   const { success: showSuccess, error: showError } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [selectedPreferredChannel, setSelectedPreferredChannel] = useState<string | "all">("all");
-  const [selectedCustomerType, setSelectedCustomerType] = useState<string | "all">("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isTimeout, setIsTimeout] = useState(false);
@@ -215,7 +211,7 @@ export default function CustomersPage() {
     try {
       setIsLoading(true);
       const apiResponse = await customerService.getAllCustomers({
-        limit: 1000,
+        limit: 100,
         offset: 0,
         skipCache: true,
       });
@@ -336,22 +332,8 @@ export default function CustomersPage() {
       results = searchCustomersUtil(debouncedSearchTerm, results);
     }
 
-    // Filter by preferred channel
-    if (selectedPreferredChannel && selectedPreferredChannel !== "all") {
-      results = results.filter(
-        (customer) => customer.tariff === selectedPreferredChannel
-      );
-    }
-
-    // Filter by customer type
-    if (selectedCustomerType && selectedCustomerType !== "all") {
-      results = results.filter(
-        (customer) => customer.customerType === selectedCustomerType
-      );
-    }
-
     return results;
-  }, [debouncedSearchTerm, selectedPreferredChannel, selectedCustomerType, customers]);
+  }, [debouncedSearchTerm, customers]);
 
   // Debounced search results for modal
   const [modalSearchResults, setModalSearchResults] = useState<
@@ -413,8 +395,24 @@ export default function CustomersPage() {
           setModalSearchResults([]);
         }
       } catch (err) {
-        console.error("Search error:", err);
-        setModalSearchResults([]);
+        // Fallback to frontend search if backend fails
+        const searchTerm = modalSearchTerm.toLowerCase().trim();
+        const results = customers.filter((customer) => {
+          const firstName = customer.firstName.toLowerCase();
+          const lastName = customer.lastName.toLowerCase();
+          const msisdn = customer.msisdn.toLowerCase();
+          const customerId = customer.customerId.toString();
+          const email = customer.email?.toLowerCase() || "";
+
+          return (
+            firstName.includes(searchTerm) ||
+            lastName.includes(searchTerm) ||
+            msisdn.includes(searchTerm) ||
+            customerId.includes(searchTerm) ||
+            email.includes(searchTerm)
+          );
+        });
+        setModalSearchResults(results);
       } finally {
         setIsSearching(false);
       }
@@ -569,13 +567,12 @@ export default function CustomersPage() {
       // Log duplicates if any were filtered
       if (uniqueNewCustomers.length < newCustomers.length) {
         const duplicateCount = newCustomers.length - uniqueNewCustomers.length;
-        console.warn(`Skipped ${duplicateCount} duplicate customer(s)`);
       }
 
       // Prepend new customers to show at top of first page
       return [...uniqueNewCustomers, ...prevCustomers];
     });
-    setPage(1); // Reset to first page to show newly added customers
+    setFilters((prev) => ({ ...prev, page: 1, offset: 0 })); // Reset to first page to show newly added customers
     setIsCreateCustomerModalOpen(false);
   };
 
@@ -736,62 +733,6 @@ export default function CustomersPage() {
             <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
           </div>
         ))}
-      </div>
-
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search
-            className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5`}
-            style={{ color: color.text.muted }}
-          />
-          <input
-            type="text"
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && setSearchTerm(searchTerm)}
-            className={`w-full pl-10 pr-4 py-3 border ${tw.borderDefault} ${tw.rounded} focus:outline-none transition-all duration-200 bg-white focus:ring-2 focus:ring-blue-400 text-sm placeholder:text-sm`}
-          />
-        </div>
-
-        <HeadlessSelect
-          options={[
-            { value: "all", label: "All Channels" },
-            { value: "NORMAL_SMS", label: "Normal SMS" },
-            { value: "FLASH_SMS", label: "Flash SMS" },
-            { value: "EMAIL", label: "Email" },
-            { value: "WHATSAPP", label: "WhatsApp" },
-            { value: "PUSH", label: "Push" },
-            { value: "USSD", label: "USSD" },
-            { value: "INTERACTIVE_USSD", label: "Interactive USSD" },
-            { value: "INAPP", label: "In-App" },
-            { value: "IVR", label: "IVR" },
-            { value: "OBD", label: "OBD" },
-            { value: "SHORT_CODE", label: "Short Code" },
-          ]}
-          value={selectedPreferredChannel}
-          onChange={(value) =>
-            setSelectedPreferredChannel((value as string | "all") || "all")
-          }
-          placeholder="All Channels"
-          className=""
-        />
-
-        <HeadlessSelect
-          options={[
-            { value: "all", label: "All Types" },
-            { value: "prepaid", label: "Prepaid" },
-            { value: "postpaid", label: "Postpaid" },
-            { value: "enterprise", label: "Enterprise" },
-          ]}
-          value={selectedCustomerType}
-          onChange={(value) =>
-            setSelectedCustomerType((value as string | "all") || "all")
-          }
-          placeholder="All Types"
-          className=""
-        />
       </div>
 
       {/* Table card */}

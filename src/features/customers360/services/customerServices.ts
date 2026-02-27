@@ -26,6 +26,7 @@ class CustomerService {
       },
     });
 
+    // Handle error status codes (including 409 Conflict)
     if (!response.ok && response.status !== 304) {
       const errorBody = await response.text();
       console.error("API Error Response:", {
@@ -34,9 +35,16 @@ class CustomerService {
         body: errorBody,
         url,
       });
-      throw new Error(
-        `HTTP error! status: ${response.status}, details: ${errorBody}`,
-      );
+
+      // Try to parse JSON error message for better error display
+      try {
+        const errorJson = JSON.parse(errorBody);
+        throw new Error(errorJson.error || `HTTP error! status: ${response.status}`);
+      } catch {
+        throw new Error(
+          `HTTP error! status: ${response.status}, details: ${errorBody}`,
+        );
+      }
     }
 
     return response.json();
