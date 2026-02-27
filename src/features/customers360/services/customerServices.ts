@@ -183,7 +183,7 @@ class CustomerService {
         if (params.search) queryParams.append("search", params.search);
         if (params.limit) queryParams.append("limit", String(params.limit));
         if (params.offset) queryParams.append("offset", String(params.offset));
-        if (params.skipCache) queryParams.append("skipCache", "true");
+        // Note: skipCache not supported by search endpoint
       }
 
       const query = queryParams.toString() ? `?${queryParams.toString()}` : "";

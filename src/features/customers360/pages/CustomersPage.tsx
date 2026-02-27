@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { CustomerSubscriptionRecord } from "../types/customerSubscription";
 import type { Subscriber } from "../types/customer";
+import { NotificationChannel } from "../types/customer";
 import {
   convertSubscriptionToCustomerRow,
   formatDateTime,
@@ -89,6 +90,7 @@ export default function CustomersPage() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [modalChannelFilter, setModalChannelFilter] = useState("");
 
   // Customer creation/edit modal state
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
@@ -659,6 +661,7 @@ export default function CustomersPage() {
     setIsSearchModalOpen(false);
     setModalSearchTerm("");
     setModalSearchResults([]);
+    setModalChannelFilter("");
   };
 
   const handleApplySearch = () => {
@@ -992,27 +995,41 @@ export default function CustomersPage() {
         size="xl"
       >
         <div className="space-y-4">
-          {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={modalSearchTerm}
-              onChange={(e) => setModalSearchTerm(e.target.value)}
-              placeholder={t.customer360.searchPlaceholder}
-              className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
-              style={
-                {
-                  "--accent-color": `${color.primary.accent}33`,
-                } as CSSProperties
-              }
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && modalSearchTerm.trim()) {
-                  handleApplySearch();
+          {/* Search Input and Channel Filter */}
+          <div className="flex gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={modalSearchTerm}
+                onChange={(e) => setModalSearchTerm(e.target.value)}
+                placeholder={t.customer360.searchPlaceholder}
+                className={`w-full ${tw.rounded} border border-gray-300 py-3 pl-10 pr-3 text-sm focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[--accent-color]`}
+                style={
+                  {
+                    "--accent-color": `${color.primary.accent}33`,
+                  } as CSSProperties
                 }
-              }}
-            />
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && modalSearchTerm.trim()) {
+                    handleApplySearch();
+                  }
+                }}
+              />
+            </div>
+            <select
+              value={modalChannelFilter}
+              onChange={(e) => setModalChannelFilter(e.target.value)}
+              className={`px-3 py-3 border border-gray-300 ${tw.rounded} text-sm focus:border-gray-400 focus:outline-none bg-white`}
+            >
+              <option value="">All Channels</option>
+              {Object.values(NotificationChannel).map((channel) => (
+                <option key={channel} value={channel}>
+                  {CHANNEL_LABELS[channel] || channel}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Helper Text */}
@@ -1042,15 +1059,11 @@ export default function CustomersPage() {
               </div>
             ) : modalSearchTerm.trim() && modalSearchResults.length > 0 ? (
               <div className="divide-y divide-gray-200">
-                {modalSearchResults.length > 50 && (
-                  <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
-                    <p className="text-xs text-yellow-800">
-                      Showing top 50 results. Use filters to narrow down your
-                      search.
-                    </p>
-                  </div>
-                )}
-                {modalSearchResults.map((customer) => (
+                {modalSearchResults
+                  .filter((customer) =>
+                    !modalChannelFilter ? true : customer.tariff === modalChannelFilter
+                  )
+                  .map((customer) => (
                   <button
                     key={`${customer.customerId}-${customer.subscriptionId}`}
                     onClick={() => handleSelectCustomerFromModal(customer)}

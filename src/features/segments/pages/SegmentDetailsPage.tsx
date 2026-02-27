@@ -196,7 +196,7 @@ export default function SegmentDetailsPage() {
       setAllCustomersForSelection(customers);
     } catch (err) {
       console.error("Failed to load customers:", err);
-      showError("Error loading customers", "Please try again later.");
+      showError("Error loading customers", "Please try again later.", true);
       setAllCustomersForSelection([]);
     } finally {
       setIsLoadingCustomersForSelection(false);
@@ -255,7 +255,7 @@ export default function SegmentDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to load segment details:", err);
-      showError("Error loading segment", "Please try again later.");
+      showError("Error loading segment", "Please try again later.", true);
     } finally {
       setIsLoading(false);
     }
@@ -444,7 +444,7 @@ export default function SegmentDetailsPage() {
       navigate("/dashboard/segments");
     } catch (err) {
       console.error("Failed to delete segment:", err);
-      showError("Error deleting segment", "Please try again later.");
+      showError("Error deleting segment", "Please try again later.", true);
     } finally {
       setIsDeleting(false);
     }
@@ -466,7 +466,7 @@ export default function SegmentDetailsPage() {
       const errorMsg = showCustomerSelection
         ? "Please select at least one customer"
         : "Please enter at least one customer ID";
-      showError("Validation error", errorMsg);
+      showError("Validation error", errorMsg, true);
       return;
     }
 
@@ -485,7 +485,7 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to add members:", err);
-      showError("Error adding members", "Please try again later.");
+      showError("Error adding members", "Please try again later.", true);
     }
   };
 
@@ -517,20 +517,20 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to remove members:", err);
-      showError("Error removing members", "Please try again later.");
+      showError("Error removing members", "Please try again later.", true);
     }
   };
 
   const handleAddCustomers = async (customers: any[]) => {
     if (!customers || customers.length === 0) {
-      showError("Validation error", "Please select at least one customer");
+      showError("Validation error", "Please select at least one customer", true);
       return;
     }
 
     const customerIds = customers.map((c) => Number(c.customerId || c.id)).filter((id) => !isNaN(id));
 
     if (customerIds.length === 0) {
-      showError("Validation error", "No valid customer IDs selected");
+      showError("Validation error", "No valid customer IDs selected", true);
       return;
     }
 
@@ -548,7 +548,7 @@ export default function SegmentDetailsPage() {
       await loadMembers();
     } catch (err) {
       console.error("Failed to add members:", err);
-      showError("Error adding members", "Please try again later.");
+      showError("Error adding members", "Please try again later.", true);
     }
   };
 
@@ -565,11 +565,11 @@ export default function SegmentDetailsPage() {
         await loadMembersCount();
       } else {
         const errorMsg = Array.isArray(result.errors) ? result.errors[0] : result.errors || "Recomputation failed";
-        showError("Error recomputing members", errorMsg);
+        showError("Error recomputing members", errorMsg, true);
       }
     } catch (err) {
       console.error("Failed to recompute members:", err);
-      showError("Error recomputing members", (err as Error).message || "Please try again later.");
+      showError("Error recomputing members", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsRecomputingMembers(false);
     }
@@ -584,7 +584,7 @@ export default function SegmentDetailsPage() {
       await loadSegment();
     } catch (err) {
       console.error("Failed to compute size:", err);
-      showError("Error computing size", (err as Error).message || "Please try again later.");
+      showError("Error computing size", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsComputingSize(false);
     }
@@ -598,11 +598,11 @@ export default function SegmentDetailsPage() {
       if (result.success && result.data?.isValid) {
         success("Query validation successful", "The segment query is valid");
       } else {
-        showError("Query validation failed", result.data?.error || "Query contains errors");
+        showError("Query validation failed", result.data?.error || "Query contains errors", true);
       }
     } catch (err) {
       console.error("Failed to validate query:", err);
-      showError("Error validating query", (err as Error).message || "Please try again later.");
+      showError("Error validating query", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsValidatingQuery(false);
     }
@@ -622,7 +622,7 @@ export default function SegmentDetailsPage() {
       await loadSegment();
     } catch (err) {
       console.error("Failed to add tag:", err);
-      showError("Error adding tag", (err as Error).message || "Please try again later.");
+      showError("Error adding tag", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsAddingTag(false);
     }
@@ -638,7 +638,7 @@ export default function SegmentDetailsPage() {
       await loadSegment();
     } catch (err) {
       console.error("Failed to remove tag:", err);
-      showError("Error removing tag", (err as Error).message || "Please try again later.");
+      showError("Error removing tag", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsAddingTag(false);
     }
@@ -662,7 +662,7 @@ export default function SegmentDetailsPage() {
       success("Preview loaded", "Member preview has been generated");
     } catch (err) {
       console.error("Failed to load preview:", err);
-      showError("Error loading preview", (err as Error).message || "Please try again later.");
+      showError("Error loading preview", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsLoadingPreview(false);
     }
@@ -702,7 +702,7 @@ export default function SegmentDetailsPage() {
                 }
                 success("Export completed", "Your export file is ready");
               } else {
-                showError("Export failed", statusRes.data?.error || "Export job failed");
+                showError("Export failed", statusRes.data?.error || "Export job failed", true);
               }
             }
           } catch (err) {
@@ -718,7 +718,7 @@ export default function SegmentDetailsPage() {
       }
     } catch (err) {
       console.error("Failed to start export:", err);
-      showError("Error starting export", (err as Error).message || "Please try again later.");
+      showError("Error starting export", (err as Error).message || "Please try again later.", true);
       setIsExporting(false);
     }
   };
@@ -757,7 +757,7 @@ export default function SegmentDetailsPage() {
       await loadSegment();
     } catch (err) {
       console.error("Failed to update query:", err);
-      showError("Error updating query", (err as Error).message || "Please try again later.");
+      showError("Error updating query", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsUpdatingQuery(false);
     }
@@ -777,7 +777,7 @@ export default function SegmentDetailsPage() {
       await loadHierarchy();
     } catch (err) {
       console.error("Failed to update parent:", err);
-      showError("Error updating parent", (err as Error).message || "Please try again later.");
+      showError("Error updating parent", (err as Error).message || "Please try again later.", true);
     } finally {
       setIsUpdatingParent(false);
     }

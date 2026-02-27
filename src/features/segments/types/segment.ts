@@ -468,7 +468,8 @@ export type AdvancedSearchQuery = {
 // Tag Management Types
 
 export type TagManagementRequest = {
-  tags: string[];
+  tag?: string; // Single tag to add
+  tags?: string[]; // Array of tags for bulk operations
 };
 
 export type TagManagementResponse = {

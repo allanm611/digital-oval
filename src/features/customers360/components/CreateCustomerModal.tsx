@@ -1378,7 +1378,7 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                     const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
 
                     if (!isCSV && !isExcel) {
-                      error("Invalid File", "Please upload a CSV or Excel file (.csv, .xlsx, .xls)");
+                      error("Invalid File", "Please upload a CSV or Excel file (.csv, .xlsx, .xls)", true);
                       e.target.value = ""; // Clear the input
                       return;
                     }
@@ -1414,7 +1414,7 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                             headers: headerRow,
                           });
                         } catch (err) {
-                          error("Error", "Failed to read Excel file");
+                          error("Error", "Failed to read Excel file", true);
                         }
                       };
                       reader.readAsArrayBuffer(file);
@@ -1477,16 +1477,11 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                                   ...importPreview.headers
                                     .map((header, idx) => ({ header, idx }))
                                     .filter(({ header }) => !header.toLowerCase().includes("subid"))
-                                    .map(({ header, idx }) => {
-                                      const isSelected = selectedIndices.has(idx);
-                                      const isCurrentField = (columnMapping?.[field as keyof typeof columnMapping] ?? -1) === idx;
-                                      const isDisabled = isSelected && !isCurrentField;
-                                      return {
-                                        value: idx.toString(),
-                                        label: isDisabled ? `${header} (already used)` : header,
-                                        disabled: isDisabled,
-                                      };
-                                    }),
+                                    .map(({ header, idx }) => ({
+                                      value: idx.toString(),
+                                      label: header,
+                                      disabled: false,
+                                    })),
                                 ]}
                                 value={((columnMapping?.[field as keyof typeof columnMapping] ?? -1) as number).toString()}
                                 onChange={(value) => {
@@ -1506,10 +1501,11 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                   </div>
                   <button
                     type="button"
+                    disabled={(columnMapping?.firstName ?? -1) === -1 || (columnMapping?.lastName ?? -1) === -1 || (columnMapping?.msisdn ?? -1) === -1}
                     onClick={async () => {
                       // Validate required mappings
                       if ((columnMapping?.firstName ?? -1) === -1 || (columnMapping?.lastName ?? -1) === -1 || (columnMapping?.msisdn ?? -1) === -1) {
-                        error("Validation", "Please map FirstName, LastName, and Phone columns");
+                        error("Validation", "Please map FirstName, LastName, and Phone columns", true);
                         return;
                       }
 
@@ -1584,7 +1580,7 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                           // Show preview
                           setMappingConfirmed(true);
                         } catch (err) {
-                          error("Error", "Failed to read file");
+                          error("Error", "Failed to read file", true);
                         }
                       };
 
@@ -1594,7 +1590,7 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                         reader.readAsText(importFile);
                       }
                     }}
-                    className={`${tw.button} text-white`}
+                    className={`${tw.button} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                     style={{ backgroundColor: color.primary.action }}
                   >
                     Confirm Mapping
@@ -1684,6 +1680,18 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
                       </div>
                     </div>
                   )}
+
+                  {/* Back to Mapping Button - shown when there are errors */}
+                  {importPreview.invalid > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setMappingConfirmed(false)}
+                      className={`mt-3 ${tw.borderedButton} w-fit`}
+                      style={{ borderColor: color.border.default, color: color.text.secondary }}
+                    >
+                      Back to Mapping
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1707,7 +1715,11 @@ Fatima,Hassan,254720123456,,fatima.hassan@email.com,fatima.alt@email.com,Female,
               else if (activeTab === "bulk") handleAddBulk();
               else if (activeTab === "import") handleImportFile();
             }}
-            disabled={isLoading}
+            disabled={
+              isLoading ||
+              (activeTab === "bulk" && bulkValidation.invalid > 0) ||
+              (activeTab === "import" && !mappingConfirmed)
+            }
             className={`flex-1 px-4 py-2 ${tw.rounded} text-white font-medium text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2`}
             style={{ backgroundColor: color.primary.action }}
           >

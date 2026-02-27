@@ -11,11 +11,13 @@ import { tw, zIndex, color } from "../../../shared/utils/utils";
 interface Customer {
   id: string | number;
   customerId?: string | number;
-  name?: string;
+  first_name?: string;
+  last_name?: string;
   msisdn?: string;
   email?: string;
   status?: string;
   createdAt?: string;
+  subscriber_status?: string;
 }
 
 interface AddMembersModalProps {
@@ -75,20 +77,20 @@ export default function AddMembersModal({
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((customer) => {
+      const fullName = `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
       const matchesSearch =
-        (customer.name?.toLowerCase() || "").includes(
-          customerSearchTerm.toLowerCase()
-        ) ||
+        fullName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
         (customer.msisdn?.toLowerCase() || "").includes(
           customerSearchTerm.toLowerCase()
         ) ||
         (customer.email?.toLowerCase() || "").includes(
           customerSearchTerm.toLowerCase()
         ) ||
-        String(customer.customerId || "").includes(customerSearchTerm);
+        String(customer.customerId || customer.id || "").includes(customerSearchTerm);
 
       if (customerStatusFilter === "all") return matchesSearch;
-      return matchesSearch && customer.status === customerStatusFilter;
+      const status = customer.subscriber_status || customer.status;
+      return matchesSearch && status === customerStatusFilter;
     });
   }, [customers, customerSearchTerm, customerStatusFilter]);
 
@@ -226,7 +228,7 @@ export default function AddMembersModal({
         )}
 
         {/* Customers List */}
-        <div className="flex-1 overflow-y-auto px-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <LoadingSpinner variant="modern" size="lg" color="primary" />
@@ -301,7 +303,7 @@ export default function AddMembersModal({
                         </td>
                         <td className="px-4 py-4">
                           <div className="text-sm font-medium text-black">
-                            {customer.name || "—"}
+                            {`${customer.first_name || ""} ${customer.last_name || ""}`.trim() || "—"}
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
@@ -316,7 +318,7 @@ export default function AddMembersModal({
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className="text-sm text-black">
-                            {customer.status || "—"}
+                            {customer.subscriber_status || customer.status || "—"}
                           </span>
                         </td>
                       </tr>
@@ -326,22 +328,22 @@ export default function AddMembersModal({
               </table>
             </div>
           )}
-
-          {/* Pagination */}
-          {totalCustomers > pageSize && (
-            <div className="px-6 py-4 border-t border-gray-200">
-              <Pagination
-                currentPage={page}
-                pageSize={pageSize}
-                totalItems={totalCustomers}
-                onPageChange={(newPage) => {
-                  setPage(newPage);
-                  setSelectedCustomers([]); // Clear selection when changing page
-                }}
-              />
-            </div>
-          )}
         </div>
+
+        {/* Pagination */}
+        {totalCustomers > pageSize && (
+          <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
+            <Pagination
+              currentPage={page}
+              pageSize={pageSize}
+              totalItems={totalCustomers}
+              onPageChange={(newPage) => {
+                setPage(newPage);
+                setSelectedCustomers([]); // Clear selection when changing page
+              }}
+            />
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-gray-200 flex-shrink-0">
