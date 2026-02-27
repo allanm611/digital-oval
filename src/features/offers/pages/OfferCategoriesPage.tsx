@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { zIndex } from "../../../shared/utils/tokens";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -318,7 +319,8 @@ function OffersModal({
       setOffers(Array.from(combinedOffersMap.values()));
     } catch (err) {
       console.error("Failed to load offers:", err);
-      showError("Failed to load offers", "Please try again later.");
+      const errorMsg1 = extractBackendError(err, "Failed to load offers");
+      showError("Error", errorMsg1, true);
       setModalError("Failed to load offers. Please try again later.");
     } finally {
       setLoading(false);
@@ -836,7 +838,8 @@ function OfferCategoriesPage() {
       await loadAllOfferCounts(categoriesWithCounts);
     } catch (err) {
       console.error("Failed to load categories:", err);
-      showError("Failed to load categories", "Please try again later.");
+      const errorMsg2 = extractBackendError(err, "Failed to load categories");
+      showError("Error", errorMsg2, true);
       setPageError("Failed to load offer catalogs. Please try again later.");
       setOfferCategories([]);
     } finally {
@@ -881,9 +884,8 @@ function OfferCategoriesPage() {
     } catch (err) {
       console.error("Failed to toggle category status:", err);
       // Display backend error message and bypass silent mode for important errors
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update category";
-      showError("Deactivation Failed", errorMessage, true);
+      const errorMessage = extractBackendError(err, "Failed to update category");
+      showError(errorMessage, "", true);
     } finally {
       setTogglingCategoryId(null);
     }
@@ -905,11 +907,9 @@ function OfferCategoriesPage() {
       setShowDeleteModal(false);
       setCategoryToDelete(null);
     } catch (err) {
-      // Error"Error deleting category:", err);
-      showError(
-        "Error",
-        err instanceof Error ? err.message : "Failed to delete category",
-      );
+      console.error("Error deleting category:", err);
+      const errorMsg = extractBackendError(err, "Failed to delete category");
+      showError(errorMsg, "", true);
     } finally {
       setIsDeleting(false);
     }
@@ -954,7 +954,8 @@ function OfferCategoriesPage() {
       setEditingCategory(undefined);
     } catch (err) {
       console.error("Failed to save category:", err);
-      showError(t.offerCatalogs.saveFailed, t.offerCatalogs.saveFailed);
+      const errorMsg3 = extractBackendError(err, t.offerCatalogs.saveFailed);
+      showError("Error", errorMsg3, true);
     }
   };
 

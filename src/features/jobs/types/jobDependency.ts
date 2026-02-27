@@ -97,6 +97,7 @@ export interface JobDependencySearchParams extends JobDependencyListParams {
   lookback_days_max?: number;
   max_wait_minutes_min?: number;
   max_wait_minutes_max?: number;
+  search?: string; // Search term for job_id, depends_on_job_id, etc
 }
 
 export interface BatchActivatePayload {

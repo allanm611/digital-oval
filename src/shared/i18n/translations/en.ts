@@ -2677,6 +2677,9 @@ export const en: Translations = {
     updateWithProductError: "Failed to update offer with products",
     createWithCreativeError: "Failed to create offer with creatives",
     updateWithCreativeError: "Failed to update offer with creatives",
+    draftSaveSuccess: "Draft saved successfully!",
+    draftSaveError: "Failed to save draft",
+    nameRequired: "Offer name is required",
   },
   segments: {
     segmentModal: {

@@ -29,6 +29,7 @@ import { Product, CategoryPerformance } from "../types/product";
 import { productCategoryService } from "../services/productCategoryService";
 import { productService } from "../services/productService";
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import {
   buildCatalogTag,
@@ -255,7 +256,8 @@ function ProductsModal({
       return snapshot;
     } catch (err) {
       console.error("Failed to load products:", err);
-      showError("Failed to load products", "Please try again later.");
+      const errorMsg1 = extractBackendError(err, "Failed to load products");
+      showError("Error", errorMsg1, true);
       setError(""); // Clear error state
       return undefined;
     } finally {
@@ -577,7 +579,8 @@ export default function ProductCatalogsPage() {
       await refreshCategoryProductCounts(categoryList, productsSnapshot);
     } catch {
       console.error("Failed to load categories");
-      showError("Failed to load categories", "Please try again later.");
+      const errorMsg2 = extractBackendError(err, "Failed to load categories");
+      showError("Error", errorMsg2, true);
     } finally {
       setLoading(false);
     }
@@ -659,7 +662,8 @@ export default function ProductCatalogsPage() {
       await Promise.all([loadCategories(), loadStats(true)]);
     } catch (err) {
       console.error("Failed to update category:", err);
-      showError(t.productCatalogs.saveFailed, t.productCatalogs.saveFailed);
+      const errorMsg3 = extractBackendError(err, t.productCatalogs.saveFailed);
+      showError("Error", errorMsg3, true);
     } finally {
       setIsUpdating(false);
     }

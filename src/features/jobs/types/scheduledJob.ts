@@ -10,9 +10,8 @@ export type ScheduleType =
   | "manual"
   | "cron"
   | "interval"
-  | "event"
-  | "dependency"
-  | "api_trigger";
+  | "event_driven"
+  | "dependency_based";
 
 export type TriggerType =
   | "webhook"

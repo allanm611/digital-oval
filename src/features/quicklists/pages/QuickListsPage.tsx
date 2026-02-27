@@ -39,13 +39,12 @@ export default function QuickListsPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [quicklists, setQuicklists] = useState<QuickList[]>([]);
+  const [allQuicklists, setAllQuicklists] = useState<QuickList[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<QuickListStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalQuicklists, setTotalQuicklists] = useState(0);
   const PAGE_SIZE = 20;
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -66,19 +65,12 @@ export default function QuickListsPage() {
       return;
     }
 
-    // Reset to page 1 and reload when search changes
+    // Reset to page 1 when search changes (frontend filtering)
     setCurrentPage(1);
-    loadQuickLists(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
-  useEffect(() => {
-    // Load quicklists when page changes (skip initial mount)
-    if (!isInitialMount.current && currentPage > 0) {
-      loadQuickLists(currentPage);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
+  // Frontend filtering handles pagination, no need to reload on page change
 
   const loadStats = async () => {
     try {
@@ -97,18 +89,30 @@ export default function QuickListsPage() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      // Load quicklists
-      const quicklistsRes = await quicklistService.getAllQuickLists({
-        limit: PAGE_SIZE,
-        offset: 0,
-      });
+      // Load all quicklists for frontend filtering
+      let allData: QuickList[] = [];
+      let offset = 0;
+      let hasMore = true;
 
-      if (quicklistsRes.success) {
-        setQuicklists(quicklistsRes.data || []);
-        if (quicklistsRes.pagination) {
-          setTotalQuicklists(quicklistsRes.pagination.total);
+      while (hasMore) {
+        const quicklistsRes = await quicklistService.getAllQuickLists({
+          limit: 100,
+          offset,
+        });
+
+        if (quicklistsRes.success && quicklistsRes.data) {
+          allData = [...allData, ...quicklistsRes.data];
+          if (quicklistsRes.pagination?.hasMore) {
+            offset += 100;
+          } else {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
         }
       }
+
+      setAllQuicklists(allData);
     } catch (err) {
       console.error("Failed to load initial data:", err);
       showError("Failed to load QuickLists");
@@ -117,41 +121,30 @@ export default function QuickListsPage() {
     }
   };
 
-  const loadQuickLists = async (page: number = currentPage) => {
-    try {
-      setLoading(true);
-      const offset = (page - 1) * PAGE_SIZE;
-      let response;
-      if (searchTerm) {
-        response = await quicklistService.searchQuickLists({
-          q: searchTerm,
-          limit: PAGE_SIZE,
-          offset,
-        });
-      } else {
-        response = await quicklistService.getAllQuickLists({
-          limit: PAGE_SIZE,
-          offset,
-        });
-      }
+  // Frontend filtering and pagination
+  const filteredAndPaginatedQuicklists = useMemo(() => {
+    let filtered = allQuicklists;
 
-      if (response.success) {
-        setQuicklists(response.data || []);
-        if (response.pagination) {
-          setTotalQuicklists(response.pagination.total);
-        }
-      } else {
-        throw new Error(
-          "error" in response ? response.error : "Failed to load QuickLists",
-        );
-      }
-    } catch (err) {
-      console.error("Failed to load quicklists:", err);
-      showError("Failed to load QuickLists");
-    } finally {
-      setLoading(false);
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (ql) =>
+          ql.name.toLowerCase().includes(term) ||
+          (ql.description && ql.description.toLowerCase().includes(term))
+      );
     }
-  };
+
+    // Apply pagination
+    const offset = (currentPage - 1) * PAGE_SIZE;
+    const paginated = filtered.slice(offset, offset + PAGE_SIZE);
+
+    return {
+      filtered,
+      paginated,
+      total: filtered.length,
+    };
+  }, [allQuicklists, searchTerm, currentPage]);
 
   const handleCreateQuickList = async (request: CreateQuickListRequest) => {
     try {
@@ -414,7 +407,7 @@ export default function QuickListsPage() {
               Loading QuickLists...
             </p>
           </div>
-        ) : quicklists.length === 0 ? (
+        ) : filteredAndPaginatedQuicklists.paginated.length === 0 ? (
           <div className="text-center py-12">
             <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
             <p className={`${tw.textMuted} mb-6`}>
@@ -470,7 +463,7 @@ export default function QuickListsPage() {
                 </tr>
               </thead>
               <tbody>
-                {quicklists.map((quicklist) => (
+                {filteredAndPaginatedQuicklists.paginated.map((quicklist) => (
                   <tr key={quicklist.id} className="transition-colors">
                     <td
                       className="px-6 py-4"
@@ -570,11 +563,11 @@ export default function QuickListsPage() {
       </div>
 
       {/* Pagination */}
-      {!loading && totalQuicklists > 0 && (
+      {!loading && filteredAndPaginatedQuicklists.total > 0 && (
         <Pagination
           currentPage={currentPage}
           pageSize={PAGE_SIZE}
-          totalItems={totalQuicklists}
+          totalItems={filteredAndPaginatedQuicklists.total}
           onPageChange={setCurrentPage}
         />
       )}

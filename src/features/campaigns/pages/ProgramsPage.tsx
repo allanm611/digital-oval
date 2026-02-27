@@ -59,8 +59,6 @@ export default function ProgramsPage() {
     created_by?: number;
     end_date_from?: string;
     end_date_to?: string;
-    budget_min?: number;
-    budget_max?: number;
   }>({});
 
   useEffect(() => {
@@ -127,32 +125,9 @@ export default function ProgramsPage() {
           (v) => v !== undefined && v !== "" && v !== "all",
         );
 
-      // Check if only budget filters are applied
-      const hasBudgetFilters = filters.budget_min || filters.budget_max;
-      const hasOtherFilters =
-        filters.is_active !== undefined &&
-        filters.is_active !== "all" &&
-        filters.is_active !== "" &&
-        filters.is_active !== null;
-      const hasOtherFilters2 =
-        filters.program_type ||
-        filters.created_by ||
-        filters.end_date_from ||
-        filters.end_date_to ||
-        searchTerm;
-
       let response;
-      if (hasBudgetFilters && !hasOtherFilters && !hasOtherFilters2) {
-        // Use budget range endpoint if only budget filters are applied
-        response = await programService.getProgramsByBudgetRange({
-          budget_min: filters.budget_min,
-          budget_max: filters.budget_max,
-          limit: 100,
-          offset: 0,
-          skipCache: skipCache,
-        });
-      } else if (hasFilters || searchTerm) {
-        // Use advanced search if filters or search term exist (without budget filters)
+      if (hasFilters || searchTerm) {
+        // Use advanced search if filters or search term exist
         response = await programService.advancedSearchPrograms({
           name: searchTerm || undefined,
           is_active:
@@ -163,30 +138,10 @@ export default function ProgramsPage() {
           created_by: filters.created_by || undefined,
           end_date_from: filters.end_date_from || undefined,
           end_date_to: filters.end_date_to || undefined,
-          // Note: budget_min and budget_max are not supported by advancedSearchPrograms
           limit: 100,
           offset: 0,
           skipCache: skipCache,
         });
-        // If budget filters are also applied, filter the results client-side
-        if (hasBudgetFilters && response.data) {
-          let filtered = response.data;
-          if (filters.budget_min) {
-            filtered = filtered.filter(
-              (p) =>
-                p.budget_total &&
-                parseFloat(p.budget_total) >= (filters.budget_min as number),
-            );
-          }
-          if (filters.budget_max) {
-            filtered = filtered.filter(
-              (p) =>
-                p.budget_total &&
-                parseFloat(p.budget_total) <= (filters.budget_max as number),
-            );
-          }
-          response.data = filtered;
-        }
       } else {
         // Use regular getAllPrograms if no filters
         response = await programService.getAllPrograms({
@@ -768,41 +723,6 @@ export default function ProgramsPage() {
                         )
                       }
                       placeholder="To"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
-                    />
-                  </div>
-                </div>
-
-                {/* Budget Range */}
-                <div>
-                  <label
-                    className={`block text-sm font-medium ${tw.textPrimary} mb-3`}
-                  >
-                    Budget Range
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="number"
-                      value={filters.budget_min || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "budget_min",
-                          e.target.value ? Number(e.target.value) : undefined,
-                        )
-                      }
-                      placeholder="Min Budget"
-                      className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
-                    />
-                    <input
-                      type="number"
-                      value={filters.budget_max || ""}
-                      onChange={(e) =>
-                        handleFilterChange(
-                          "budget_max",
-                          e.target.value ? Number(e.target.value) : undefined,
-                        )
-                      }
-                      placeholder="Max Budget"
                       className={`w-full px-3 py-2 text-sm border ${tw.borderDefault} ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-[${color.primary.accent}]/20`}
                     />
                   </div>

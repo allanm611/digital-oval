@@ -9,6 +9,7 @@ import {
   Ban,
   Archive,
   RotateCcw,
+  X,
 } from "lucide-react";
 import {
   PieChart,
@@ -166,6 +167,11 @@ export default function JobExecutionDetailsPage() {
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [heatmapPage, setHeatmapPage] = useState(0);
   const HEATMAP_PAGE_SIZE = 10;
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<
+    "abort" | "archive" | "retry" | null
+  >(null);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -280,6 +286,60 @@ export default function JobExecutionDetailsPage() {
     fetchJobAnalytics();
   }, [execution?.job_id]);
 
+  const handleAction = (action: "abort" | "archive" | "retry") => {
+    setActionType(action);
+    setShowActionModal(true);
+  };
+
+  const confirmAction = async () => {
+    if (!execution || !actionType || !id) return;
+
+    setIsProcessingAction(true);
+    try {
+      switch (actionType) {
+        case "abort":
+          await jobExecutionService.markJobExecutionAborted(id, {
+            reason: "User requested abort",
+          });
+          showToast(
+            "Execution Aborted",
+            "The execution has been aborted successfully"
+          );
+          break;
+        case "retry":
+          if (!user?.user_id) return;
+          await jobExecutionService.retryFailedJobExecutions({
+            jobId: execution.job_id,
+            daysBack: 7,
+            userId: user.user_id,
+          });
+          showToast(
+            "Retry Initiated",
+            "Failed executions are being retried"
+          );
+          break;
+        case "archive":
+          if (!user?.user_id) return;
+          await jobExecutionService.archiveJobExecution(id, user.user_id);
+          showToast(
+            "Execution Archived",
+            "The execution has been archived successfully"
+          );
+          break;
+      }
+      setShowActionModal(false);
+      setActionType(null);
+      navigate("/dashboard/job-executions");
+    } catch (err) {
+      showError(
+        "Action Failed",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+    } finally {
+      setIsProcessingAction(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
@@ -321,30 +381,7 @@ export default function JobExecutionDetailsPage() {
         <div className="flex gap-2">
           {canWrite && execution.execution_status === "running" && (
             <button
-              onClick={async () => {
-                if (
-                  !id ||
-                  !window.confirm(
-                    "Are you sure you want to abort this execution?"
-                  )
-                )
-                  return;
-                try {
-                  await jobExecutionService.markJobExecutionAborted(id, {
-                    reason: "User requested abort",
-                  });
-                  showToast(
-                    "Execution Aborted",
-                    "The execution has been aborted"
-                  );
-                  navigate("/dashboard/job-executions");
-                } catch (err) {
-                  showError(
-                    "Abort Failed",
-                    err instanceof Error ? err.message : "Unknown error"
-                  );
-                }
-              }}
+              onClick={() => handleAction("abort")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700`}
             >
               <Ban className="h-4 w-4" />
@@ -355,25 +392,7 @@ export default function JobExecutionDetailsPage() {
             execution.execution_status === "failure" &&
             user?.user_id && (
               <button
-                onClick={async () => {
-                  if (!window.confirm("Retry this failed execution?")) return;
-                  try {
-                    await jobExecutionService.retryFailedJobExecutions({
-                      jobId: execution.job_id,
-                      daysBack: 7,
-                      userId: user.user_id,
-                    });
-                    showToast(
-                      "Retry Initiated",
-                      "Failed executions are being retried"
-                    );
-                  } catch (err) {
-                    showError(
-                      "Retry Failed",
-                      err instanceof Error ? err.message : "Unknown error"
-                    );
-                  }
-                }}
+                onClick={() => handleAction("retry")}
                 className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
                 style={{ backgroundColor: color.primary.action }}
               >
@@ -383,22 +402,7 @@ export default function JobExecutionDetailsPage() {
             )}
           {canWrite && !execution.archived && (
             <button
-              onClick={async () => {
-                if (!id || !window.confirm("Archive this execution?")) return;
-                try {
-                  await jobExecutionService.archiveJobExecution(id);
-                  showToast(
-                    "Execution Archived",
-                    "The execution has been archived"
-                  );
-                  navigate("/dashboard/job-executions");
-                } catch (err) {
-                  showError(
-                    "Archive Failed",
-                    err instanceof Error ? err.message : "Unknown error"
-                  );
-                }
-              }}
+              onClick={() => handleAction("archive")}
               className={`inline-flex items-center gap-2 ${tw.rounded} px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50`}
             >
               <Archive className="h-4 w-4" />
@@ -1219,6 +1223,65 @@ export default function JobExecutionDetailsPage() {
             )}
           </div>
         )}
+
+      {/* Action Confirmation Modal */}
+      {showActionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div
+            className={`bg-white ${tw.rounded} shadow-xl p-6 w-full max-w-md`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {actionType === "abort" && "Abort Execution"}
+                {actionType === "archive" && "Archive Execution"}
+                {actionType === "retry" && "Retry Execution"}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowActionModal(false);
+                  setActionType(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">
+              {actionType === "abort" &&
+                "Are you sure you want to abort this execution?"}
+              {actionType === "archive" &&
+                "Are you sure you want to archive this execution?"}
+              {actionType === "retry" &&
+                "This will retry all failed executions for this job. Continue?"}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowActionModal(false);
+                  setActionType(null);
+                }}
+                className={`flex-1 ${tw.rounded} border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50`}
+                disabled={isProcessingAction}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                disabled={isProcessingAction}
+                className={`flex-1 ${tw.rounded} px-4 py-2 text-sm font-medium text-white`}
+                style={{
+                  backgroundColor: isProcessingAction
+                    ? "#9ca3af"
+                    : color.primary.action,
+                }}
+              >
+                {isProcessingAction ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

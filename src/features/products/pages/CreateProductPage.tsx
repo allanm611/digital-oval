@@ -5,6 +5,7 @@ import { CreateProductRequest } from "../types/product";
 import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import { tw, color } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { X } from "lucide-react";
@@ -102,7 +103,7 @@ export default function CreateProductPage({
       formData.price <= 0 ||
       !formData.da_id.trim()
     ) {
-      showError(t.products.validationError, t.products.productCodeNameRequired);
+      showError(t.products.productCodeNameRequired, "", true);
       return;
     }
 
@@ -182,26 +183,9 @@ export default function CreateProductPage({
         navigate("/dashboard/products");
       }
     } catch (err) {
-      // Extract detailed error message from backend response
-      let errorMessage = t.products.failedToCreateProduct;
-
-      if (err instanceof Error) {
-        // Error from service (already extracted and translated to user-friendly message)
-        errorMessage = err.message;
-      } else if (err && typeof err === "object") {
-        // Fallback for axios-style errors or other error formats
-        const error = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
-        if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-      }
-
       console.error("Product creation error:", err);
-      showError(t.products.failedToCreateProduct, errorMessage);
+      const errorMsg = extractBackendError(err, t.products.failedToCreateProduct);
+      showError(errorMsg, "", true);
     } finally {
       setIsLoading(false);
     }

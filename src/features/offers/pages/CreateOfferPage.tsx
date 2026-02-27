@@ -28,6 +28,7 @@ import {
 } from "../../../shared/hooks/useFormDataPersistence";
 import {
   CreateOfferRequest,
+  UpdateOfferRequest,
   Offer,
   OfferTypeEnum,
   OfferProductLink,
@@ -1315,6 +1316,7 @@ export default function CreateOfferPage({
     Record<string, string>
   >({});
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1])); // Track visited steps
+  const [createdOfferId, setCreatedOfferId] = useState<number | null>(null);
 
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -1826,6 +1828,10 @@ export default function CreateOfferPage({
       if (isEditMode && id) {
         await offerService.updateOffer(parseInt(id), apiData);
         offerId = parseInt(id);
+      } else if (createdOfferId) {
+        // Session draft exists: use update endpoint
+        await offerService.updateOffer(createdOfferId, apiData);
+        offerId = createdOfferId;
       } else {
         const createdOfferResponse = await offerService.createOffer(apiData);
 
@@ -2161,6 +2167,7 @@ export default function CreateOfferPage({
     initialProducts,
     user,
     creatives,
+    createdOfferId,
     navigate,
     showError,
     showToast,
@@ -2170,39 +2177,61 @@ export default function CreateOfferPage({
     try {
       setIsSavingDraft(true);
       if (!formData.name.trim()) {
-        showError(t.offers.nameRequired);
+        showError("Validation Error", t.offers.nameRequired, true);
         return;
       }
 
-      const draftData: CreateOfferRequest = {
+      const baseDraftData = {
         name: formData.name,
         code: formData.code,
-        offer_type: formData.offer_type || OfferTypeEnum.DATA, // Default to DATA if not set for draft
+        offer_type: formData.offer_type || OfferTypeEnum.DATA,
         max_usage_per_customer: formData.max_usage_per_customer,
         ...(formData.description && { description: formData.description }),
         ...(formData.category_id && { category_id: formData.category_id }),
-        ...(formData.primary_product_id && {
-          primary_product_id: formData.primary_product_id,
-        }),
-        ...(formData.eligibility_rules && {
-          eligibility_rules: formData.eligibility_rules,
-        }),
-        ...(formData.is_reusable !== undefined && {
-          is_reusable: formData.is_reusable,
-        }),
-        ...(formData.supports_multi_language !== undefined && {
-          supports_multi_language: formData.supports_multi_language,
-        }),
+        ...(formData.primary_product_id && { primary_product_id: formData.primary_product_id }),
+        ...(formData.eligibility_rules && { eligibility_rules: formData.eligibility_rules }),
+        ...(formData.is_reusable !== undefined && { is_reusable: formData.is_reusable }),
+        ...(formData.supports_multi_language !== undefined && { supports_multi_language: formData.supports_multi_language }),
       };
 
-      await offerService.createOffer(draftData);
-      showToast(t.offers.draftSaveSuccess);
-    } catch {
-      showError(t.offers.draftSaveError);
+      if (isEditMode && id) {
+        // Edit mode: update existing offer from list
+        const updateData: UpdateOfferRequest = { ...baseDraftData, updated_by: user?.user_id };
+        await offerService.updateOffer(parseInt(id), updateData);
+        showToast(t.offers.draftSaveSuccess || "Draft updated successfully!");
+      } else if (createdOfferId) {
+        // Session draft exists: update the already-created draft
+        const updateData: UpdateOfferRequest = { ...baseDraftData, updated_by: user?.user_id };
+        await offerService.updateOffer(createdOfferId, updateData);
+        showToast(t.offers.draftSaveSuccess || "Draft saved successfully!");
+      } else {
+        // New draft: create for the first time
+        const createData: CreateOfferRequest = { ...baseDraftData, created_by: user?.user_id };
+        const createResponse = await offerService.createOffer(createData);
+        const offerId = createResponse?.data?.id;
+        if (!offerId) throw new Error("Offer created but ID not returned");
+        setCreatedOfferId(offerId);
+        showToast(t.offers.draftSaveSuccess || "Draft saved successfully!");
+      }
+    } catch (error) {
+      // Extract backend error message (matches campaign pattern)
+      let errorMessage = t.offers.draftSaveError || "Error saving draft";
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message;
+      } else if (hasErrorString(error)) {
+        errorMessage = error.error;
+      } else if (hasResponseData(error)) {
+        const data = error.response?.data;
+        if (data?.error) errorMessage = data.error;
+        else if (data?.message) errorMessage = data.message;
+      } else if (hasMessageString(error)) {
+        errorMessage = error.message;
+      }
+      showError("Error", errorMessage, true);
     } finally {
       setIsSavingDraft(false);
     }
-  }, [formData, showError, showToast, t]);
+  }, [formData, isEditMode, id, createdOfferId, user, showError, showToast, t]);
 
   const handleCancel = useCallback(() => {
     navigate("/dashboard/offers");

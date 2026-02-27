@@ -309,7 +309,7 @@ export default function AllKPIsPage() {
                     <div className="flex items-center gap-2 justify-end">
                       <button
                         className={`p-2 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-colors`}
-                        title="View"
+                        title="View Details"
                       >
                         <Eye className="w-4 h-4" />
                       </button>

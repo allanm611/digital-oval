@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Edit, Trash2, MessageSquare, Grid, List } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -84,17 +85,17 @@ function CategoryModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      showError("Catalog name is required");
+      showError("Validation Error", "Catalog name is required", true);
       return;
     }
 
     if (formData.name.length > 64) {
-      showError("Catalog name must be 64 characters or less");
+      showError("Validation Error", "Catalog name must be 64 characters or less", true);
       return;
     }
 
     if (formData.description && formData.description.length > 500) {
-      showError("Description must be 500 characters or less");
+      showError("Validation Error", "Description must be 500 characters or less", true);
       return;
     }
 
@@ -427,10 +428,8 @@ export default function CampaignCategoriesPage() {
         await loadStats(skipCache);
       } catch (err) {
         console.error("Failed to load Campaigns catalogs:", err);
-        showError(
-          "Failed to load Campaigns catalogs",
-          "Please try again later.",
-        );
+        const errorMessage = extractBackendError(err, "Failed to load catalogs");
+        showError("Error", errorMessage, true);
         setCampaignCategories([]);
       } finally {
         setLoading(false);
@@ -509,7 +508,8 @@ export default function CampaignCategoriesPage() {
       setCategoryToDelete(null);
     } catch (err) {
       console.error("Failed to delete category:", err);
-      showError("Failed to delete category", "Please try again later.");
+      const errorMessage = extractBackendError(err, "Failed to delete category");
+      showError("Error", errorMessage, true);
     } finally {
       setIsDeleting(false);
     }
@@ -565,7 +565,7 @@ export default function CampaignCategoriesPage() {
           // Create new category - ensure created_by is a number
           const createdBy = user?.user_id;
           if (!createdBy) {
-            showError("User ID is required", "Please log in again.");
+            showError("User ID is required", "Please log in again.", true);
             return;
           }
 
@@ -574,7 +574,7 @@ export default function CampaignCategoriesPage() {
             typeof createdBy === "string" ? parseInt(createdBy, 10) : createdBy;
 
           if (isNaN(createdByNumber)) {
-            showError("Invalid user ID", "Please log in again.");
+            showError("Invalid user ID", "Please log in again.", true);
             return;
           }
 
@@ -592,8 +592,9 @@ export default function CampaignCategoriesPage() {
         }
         setIsModalOpen(false);
         setEditingCategory(undefined);
-      } catch {
-        showError("Failed to save category", "Please try again later.");
+      } catch (err) {
+        const errorMessage = extractBackendError(err, "Failed to save category");
+        showError("Error", errorMessage, true);
       } finally {
         setIsSaving(false);
       }
@@ -606,7 +607,7 @@ export default function CampaignCategoriesPage() {
       try {
         const categoryId = Number(category.id);
         if (isNaN(categoryId)) {
-          showError("Invalid category", "Category ID must be a number");
+          showError("Invalid category", "Category ID must be a number", true);
           return;
         }
 
@@ -671,8 +672,9 @@ export default function CampaignCategoriesPage() {
         }));
 
         setCampaigns(formattedCampaigns);
-      } catch {
-        showError("Failed to load campaigns", "Please try again later.");
+      } catch (err) {
+        const errorMessage = extractBackendError(err, "Failed to load campaigns");
+        showError("Error", errorMessage, true);
         setCampaigns([]);
       } finally {
         setCampaignsLoading(false);

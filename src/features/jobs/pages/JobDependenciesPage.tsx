@@ -928,6 +928,7 @@ export default function JobDependenciesPage() {
           await jobDependencyService.searchJobDependencies(searchParams);
 
         // If there's a search term, filter client-side (text search)
+        // Backend doesn't support search parameter, so filtering is done on frontend
         if (term.trim()) {
           const filtered = (response.data || []).filter(
             (dep) =>
@@ -4165,7 +4166,7 @@ export default function JobDependenciesPage() {
           <div
             className="fixed inset-0 overflow-hidden"
             style={{
-              zIndex: zIndexTokens.overlay,
+              zIndex: zIndex.overlay,
               top: 0,
               left: 0,
               right: 0,
@@ -4179,7 +4180,7 @@ export default function JobDependenciesPage() {
             <div
               ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
-              style={{ zIndex: zIndexTokens.modal }}
+              style={{ zIndex: zIndex.modal }}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}

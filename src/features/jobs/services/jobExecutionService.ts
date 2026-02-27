@@ -1265,11 +1265,12 @@ class JobExecutionService {
    * Archive Job Execution
    * PATCH /job-executions/:id/archive
    */
-  async archiveJobExecution(id: string): Promise<JobExecution> {
+  async archiveJobExecution(id: string, userId?: number): Promise<JobExecution> {
     const response = await this.request<
       JobExecution | { success?: boolean; data?: JobExecution }
     >(`/${id}/archive`, {
       method: "PATCH",
+      body: userId ? JSON.stringify({ userId }) : undefined,
     });
     return this.normalizeExecutionResponse(response);
   }

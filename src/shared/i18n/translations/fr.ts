@@ -2688,6 +2688,9 @@ export const fr: Translations = {
     updateWithProductError: "Échec de la mise à jour de l'offre avec des produits",
     createWithCreativeError: "Échec de la création de l'offre avec des créatifs",
     updateWithCreativeError: "Échec de la mise à jour de l'offre avec des créatifs",
+    draftSaveSuccess: "Brouillon enregistré avec succès!",
+    draftSaveError: "Échec de l'enregistrement du brouillon",
+    nameRequired: "Le nom de l'offre est requis",
   },
   segments: {
     segmentModal: {

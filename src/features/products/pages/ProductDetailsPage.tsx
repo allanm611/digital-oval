@@ -205,7 +205,7 @@ export default function ProductDetailsPage() {
           </p>
           <button
             onClick={navigateBack}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-base text-white`}
+            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -327,7 +327,7 @@ export default function ProductDetailsPage() {
                 <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary} mb-2`}>
                   {product.name}
                 </h2>
-                <p className={`${tw.textSecondary} text-base leading-relaxed`}>
+                <p className={`${tw.textSecondary} text-sm leading-relaxed`}>
                   {product.description || "No description available"}
                 </p>
               </div>
@@ -340,23 +340,12 @@ export default function ProductDetailsPage() {
                     : `bg-[${color.surface.cards}] text-[${color.text.primary}]`
                 }`}
               >
-                {product.is_active ? (
-                  <>
-                    <Eye className="w-4 h-4 mr-1.5" />
-                    Active
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="w-4 h-4 mr-1.5" />
-                    Inactive
-                  </>
-                )}
+                {product.is_active ? "Active" : "Inactive"}
               </span>
               {category && (
                 <span
                   className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-[${color.primary.accent}]/10 text-[${color.primary.accent}]`}
                 >
-                  <Tag className="w-4 h-4 mr-1.5" />
                   {category.name}
                 </span>
               )}
@@ -378,7 +367,7 @@ export default function ProductDetailsPage() {
                   Product Code
                 </label>
                 <p
-                  className={`text-base ${tw.textPrimary} font-mono font-semibold`}
+                  className={`text-sm ${tw.textPrimary} font-mono`}
                 >
                   {product.product_code || product.id || "N/A"}
                 </p>
@@ -390,7 +379,7 @@ export default function ProductDetailsPage() {
                   DA ID
                 </label>
                 <p
-                  className={`text-base ${tw.textPrimary} font-mono font-semibold`}
+                  className={`text-sm ${tw.textPrimary} font-mono`}
                 >
                   {product.da_id || "N/A"}
                 </p>
@@ -401,7 +390,7 @@ export default function ProductDetailsPage() {
                 >
                   Category
                 </label>
-                <p className={`text-base ${tw.textPrimary}`}>
+                <p className={`text-sm ${tw.textPrimary}`}>
                   {category?.name || "No category assigned"}
                 </p>
               </div>
@@ -411,7 +400,7 @@ export default function ProductDetailsPage() {
                 >
                   Requires Inventory
                 </label>
-                <p className={`text-base ${tw.textPrimary}`}>
+                <p className={`text-sm ${tw.textPrimary}`}>
                   {product.requires_inventory ? "Yes" : "No"}
                 </p>
               </div>
@@ -470,7 +459,7 @@ export default function ProductDetailsPage() {
                     >
                       Validity Days
                     </label>
-                    <p className={`text-base ${tw.textPrimary} font-semibold`}>
+                    <p className={`text-sm ${tw.textPrimary}`}>
                       {product.validity_days}{" "}
                       {product.validity_days === 1 ? "day" : "days"}
                     </p>
@@ -483,7 +472,7 @@ export default function ProductDetailsPage() {
                     >
                       Validity Hours
                     </label>
-                    <p className={`text-base ${tw.textPrimary} font-semibold`}>
+                    <p className={`text-sm ${tw.textPrimary}`}>
                       {product.validity_hours}{" "}
                       {product.validity_hours === 1 ? "hour" : "hours"}
                     </p>
@@ -496,7 +485,7 @@ export default function ProductDetailsPage() {
                     >
                       Effective From
                     </label>
-                    <p className={`text-base ${tw.textPrimary}`}>
+                    <p className={`text-sm ${tw.textPrimary}`}>
                       <DateFormatter
                         date={product.effective_from}
                         useLocale
@@ -514,7 +503,7 @@ export default function ProductDetailsPage() {
                     >
                       Effective To
                     </label>
-                    <p className={`text-base ${tw.textPrimary}`}>
+                    <p className={`text-sm ${tw.textPrimary}`}>
                       <DateFormatter
                         date={product.effective_to}
                         useLocale
@@ -608,7 +597,7 @@ export default function ProductDetailsPage() {
                     >
                       Available Quantity
                     </label>
-                    <p className={`text-base ${tw.textPrimary} font-semibold`}>
+                    <p className={`text-sm ${tw.textPrimary}`}>
                       {product.available_quantity}
                     </p>
                   </div>

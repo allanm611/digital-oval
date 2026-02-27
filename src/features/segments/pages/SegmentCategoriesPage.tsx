@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import CatalogItemsModal from "../../../shared/components/CatalogItemsModal";
 import { color, tw, button } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { useRemoveFromCatalog } from "../../../shared/hooks/useRemoveFromCatalog";
@@ -470,10 +471,8 @@ export default function SegmentCategoriesPage() {
         // Load segment counts for each category
         await loadSegmentCounts(validCategoriesData);
       } catch (err) {
-        showError(
-          "Error loading categories",
-          (err as Error).message || "Failed to load segment catalogs",
-        );
+        const errorMsg = extractBackendError(err, "Failed to load segment catalogs");
+        showError("Error", errorMsg, true);
         setCategories([]);
       } finally {
         setIsLoading(false);
@@ -643,10 +642,8 @@ export default function SegmentCategoriesPage() {
       // Refresh from server to ensure cache is cleared
       await loadCategories(true); // skipCache = true
     } catch (err) {
-      showError(
-        "Error deleting catalog",
-        (err as Error).message || "Failed to delete segment catalog",
-      );
+      const errorMsg2 = extractBackendError(err, "Failed to delete segment catalog");
+      showError("Error", errorMsg2, true);
     } finally {
       setIsDeleting(false);
     }

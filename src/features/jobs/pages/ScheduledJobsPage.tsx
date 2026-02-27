@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   AlertTriangle,
@@ -30,7 +30,6 @@ import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { scheduledJobService } from "../services/scheduledJobService";
 import { jobTypeService } from "../services/jobTypeService";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import type {
   ScheduledJob,
   ScheduledJobSearchParams,
@@ -93,15 +92,10 @@ export default function ScheduledJobsPage() {
   const [jobTypes, setJobTypes] = useState<Array<{ id: number; name: string }>>(
     [],
   );
-  const filterRef = useRef<HTMLDivElement>(null);
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
 
-  // Use click outside hook for filter modal
-  useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
-    enabled: showAdvancedFilters,
-  });
 
   const fetchJobs = useCallback(
     async (overrideParams?: Partial<ScheduledJobSearchParams>) => {
@@ -166,9 +160,6 @@ export default function ScheduledJobsPage() {
             searchTerm: trimmedSearchTerm,
             ...overrideParams,
           };
-          if (statusFilter) {
-            params.status = statusFilter as ScheduledJobSearchParams["status"];
-          }
           response = await scheduledJobService.searchScheduledJobs({
             ...params,
             skipCache: true,
@@ -180,9 +171,6 @@ export default function ScheduledJobsPage() {
             offset: 0,
             ...overrideParams,
           };
-          if (statusFilter) {
-            params.status = statusFilter as ScheduledJobSearchParams["status"];
-          }
           response = await scheduledJobService.listScheduledJobs({
             ...params,
             skipCache: true,
@@ -353,7 +341,13 @@ export default function ScheduledJobsPage() {
     loadJobTypes();
   }, []);
 
-  const filteredJobs = useMemo(() => jobs, [jobs]);
+  const filteredJobs = useMemo(() => {
+    if (!statusFilter) return jobs;
+    const filterLower = statusFilter.toLowerCase();
+    return jobs.filter(
+      (job) => job.status?.toLowerCase() === filterLower
+    );
+  }, [jobs, statusFilter]);
 
   // Reset pagination when filters/search change
   useEffect(() => {
@@ -979,7 +973,7 @@ export default function ScheduledJobsPage() {
                 err instanceof Error
                   ? err.message
                   : "Failed to delete scheduled job";
-              showError("Unable to delete scheduled job", message);
+              showError("Unable to delete scheduled job", message, true);
             } finally {
               setIsDeleting(false);
             }
@@ -1012,9 +1006,9 @@ export default function ScheduledJobsPage() {
               onClick={() => setShowAdvancedFilters(false)}
             ></div>
             <div
-              ref={filterRef}
               className="absolute right-0 top-0 h-full w-full sm:w-[28rem] lg:w-96 bg-white shadow-xl transform transition-transform duration-300 ease-out translate-x-0"
               style={{ zIndex: zIndexTokens.modal }}
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col h-full">
                 {/* Header */}
@@ -1095,12 +1089,11 @@ export default function ScheduledJobsPage() {
                       <HeadlessSelect
                         options={[
                           { value: "", label: "All Schedule Types" },
-                          { value: "cron", label: "Cron" },
-                          { value: "interval", label: "Interval" },
-                          { value: "event", label: "Event" },
+                          { value: "cron", label: "Custom Schedule" },
+                          { value: "interval", label: "Repeat Regularly" },
+                          { value: "event_driven", label: "Event Driven" },
                           { value: "manual", label: "Manual" },
-                          { value: "dependency", label: "Dependency" },
-                          { value: "api_trigger", label: "API Trigger" },
+                          { value: "dependency_based", label: "Dependency Based" },
                         ]}
                         value={scheduleTypeFilter}
                         onChange={(value) =>

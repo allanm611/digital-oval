@@ -1185,7 +1185,7 @@ export default function OffersPage() {
                 {filteredOffers.map((offer) => (
                   <tr key={offer.id} className="transition-colors">
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 text-sm"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <div
@@ -1196,7 +1196,7 @@ export default function OffersPage() {
                       </div>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 text-sm"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       <span
@@ -1222,13 +1222,13 @@ export default function OffersPage() {
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 text-sm"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {getStatusBadge(offer.status)}
                     </td>
                     <td
-                      className="px-6 py-4 hidden lg:table-cell"
+                      className="px-6 py-4 text-sm hidden lg:table-cell"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {getApprovalBadge(

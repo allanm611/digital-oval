@@ -495,7 +495,7 @@ export default function JobExecutionsPage() {
           );
           break;
         case "archive":
-          await jobExecutionService.archiveJobExecution(selectedExecution.id);
+          await jobExecutionService.archiveJobExecution(selectedExecution.id, user?.user_id);
           showToast(
             "Execution Archived",
             "The execution has been archived successfully",

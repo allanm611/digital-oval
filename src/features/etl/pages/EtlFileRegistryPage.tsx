@@ -153,6 +153,19 @@ export default function EtlFileRegistryPage() {
 
   const isEmptyState = !isLoadingFiles && files.length === 0;
 
+  // Frontend filtering for search term
+  const filteredFiles = files.filter((file) => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      file.file_name?.toLowerCase().includes(searchLower) ||
+      file.file_category?.toLowerCase().includes(searchLower) ||
+      file.processing_status?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const displayedFiles = filteredFiles.length > 0 ? filteredFiles : files;
+  const showNoResults = !isLoadingFiles && searchTerm && filteredFiles.length === 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -408,14 +421,16 @@ export default function EtlFileRegistryPage() {
               {t.etl.loadingFileRegistry}
             </p>
           </div>
-        ) : isEmptyState ? (
+        ) : isEmptyState || showNoResults ? (
           <div className="py-16 text-center bg-white">
             <Download size={24} className="mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-semibold text-gray-900">
-              {t.etl.noFilesFound}
+              {showNoResults ? "No matching files found" : t.etl.noFilesFound}
             </h3>
             <p className="mt-2 text-sm text-gray-500">
-              {t.etl.adjustFiltersOrRefresh}
+              {showNoResults
+                ? "Try adjusting your search term or filters"
+                : t.etl.adjustFiltersOrRefresh}
             </p>
           </div>
         ) : (
@@ -447,7 +462,7 @@ export default function EtlFileRegistryPage() {
                 </tr>
               </thead>
               <tbody>
-                {files.map((file) => (
+                {displayedFiles.map((file) => (
                   <tr key={file.id} className="transition-colors text-sm">
                     <td
                       className="px-6 py-4"

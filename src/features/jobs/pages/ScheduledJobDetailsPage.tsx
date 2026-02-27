@@ -370,7 +370,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.tagAddFailed", "Failed to add tag"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     } finally {
       setIsAddingTag(false);
@@ -386,7 +386,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.tagRemoveFailed", "Failed to remove tag"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     }
   };
@@ -411,7 +411,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.recipientAddFailed", "Failed to add recipient"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     } finally {
       setIsAddingRecipient(false);
@@ -433,7 +433,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.recipientRemoveFailed", "Failed to remove recipient"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     }
   };
@@ -448,7 +448,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.resetFailureFailed", "Failed to reset failure count"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     } finally {
       setIsActionLoading(false);
@@ -468,7 +468,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.versionCreateFailed", "Failed to create version"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     } finally {
       setIsActionLoading(false);
@@ -503,7 +503,7 @@ export default function ScheduledJobDetailsPage() {
     } catch (err) {
       showError(
         t("scheduledJob.rollbackFailed", "Failed to rollback version"),
-        err instanceof Error ? err.message : t.common.error || "Unknown error"
+        err instanceof Error ? err.message : t("common.error", "Unknown error")
       );
     } finally {
       setIsActionLoading(false);

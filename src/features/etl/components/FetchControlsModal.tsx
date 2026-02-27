@@ -32,7 +32,12 @@ export default function FetchControlsModal({
   onClose,
   onSuccess,
 }: FetchControlsModalProps) {
-  const { success, error: showError } = useToast();
+  const { success, error: toastError } = useToast();
+
+  // Wrapper to bypass silent mode for ETL errors
+  const showError = (title: string, message: string) => {
+    toastError(title, message, true); // true = bypassSilentMode
+  };
   const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -98,10 +103,14 @@ export default function FetchControlsModal({
         showError("Fetch failed", response.message);
       }
     } catch (err) {
-      showError(
-        "Failed to trigger fetch",
-        (err as Error).message || "Please try again.",
-      );
+      // Extract error message from backend response
+      let errorMessage = "Failed to trigger fetch. Please try again.";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      showError("Fetch failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -135,10 +144,14 @@ export default function FetchControlsModal({
         showError("Fetch failed", response.message);
       }
     } catch (err) {
-      showError(
-        "Failed to trigger historical fetch",
-        (err as Error).message || "Please try again.",
-      );
+      // Extract error message from backend response
+      let errorMessage = "Failed to trigger historical fetch. Please try again.";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      showError("Fetch failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -187,10 +200,14 @@ export default function FetchControlsModal({
         showError("Fetch failed", response.message);
       }
     } catch (err) {
-      showError(
-        "Failed to trigger range fetch",
-        (err as Error).message || "Please try again.",
-      );
+      // Extract error message from backend response
+      let errorMessage = "Failed to trigger range fetch. Please try again.";
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      showError("Fetch failed", errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,7 @@ import { productService } from "../services/productService";
 import ProductForm from "../components/ProductForm";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
+import { extractBackendError } from "../../../shared/utils/errorHandler";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -134,10 +135,8 @@ export default function EditProductPage() {
         setSelectedCategoryIds([productData.category_id]);
       }
     } catch (err) {
-      showError(
-        t.products.failedToLoadProduct,
-        err instanceof Error ? err.message : t.products.failedToLoadProduct
-      );
+      const errorMsg = extractBackendError(err, t.products.failedToLoadProduct);
+      showError(errorMsg, "", true);
     } finally {
       setIsLoadingProduct(false);
     }
@@ -152,10 +151,7 @@ export default function EditProductPage() {
       !formData.product_code?.trim() ||
       !formData.da_id?.trim()
     ) {
-      showError(
-        t.products.validationError,
-        t.products.productCodeNameRequired
-      );
+      showError(t.products.productCodeNameRequired, "", true);
       return;
     }
 
@@ -174,18 +170,18 @@ export default function EditProductPage() {
         ...updateData
       } = formData;
 
-      // Prepare update data with unit_of_measure and validity_days conversion
+      // Prepare update data with unit_of_measure and validity_hours for backend
       const finalUpdateData: typeof updateData & {
         unit_of_measure?: string;
         combo_data?: typeof combo_data;
-        validity_days?: number;
+        validity_hours?: number;
       } = {
         ...updateData,
       };
 
-      // Convert validity_hours to validity_days for backend
+      // Pass validity_hours for update endpoint
       if (validity_hours && validity_hours > 0) {
-        finalUpdateData.validity_days = Math.ceil(validity_hours / 24);
+        finalUpdateData.validity_hours = validity_hours;
       }
 
       // Map unit to unit_of_measure if unit is provided
@@ -206,26 +202,9 @@ export default function EditProductPage() {
       );
       navigateBack();
     } catch (err) {
-      // Extract detailed error message from backend response
-      let errorMessage = t.products.failedToUpdateProduct;
-
-      if (err instanceof Error) {
-        // Error from service (already extracted and translated to user-friendly message)
-        errorMessage = err.message;
-      } else if (err && typeof err === "object") {
-        // Fallback for axios-style errors or other error formats
-        const error = err as { response?: { data?: { error?: string; message?: string } }; message?: string };
-        if (error.response?.data?.error) {
-          errorMessage = error.response.data.error;
-        } else if (error.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-      }
-
       console.error("Product update error:", err);
-      showError(t.products.productUpdated, errorMessage);
+      const errorMsg = extractBackendError(err, t.products.failedToUpdateProduct);
+      showError(errorMsg, "", true);
     } finally {
       setIsLoading(false);
     }
