@@ -422,7 +422,7 @@ class SegmentService {
     query: SearchSegmentsQuery,
   ): Promise<PaginatedResponse<SegmentType>> {
     const queryString = this.buildQueryParams({
-      q: query.q,
+      searchTerm: query.q,
       category: query.category,
       type: query.type,
       visibility: query.visibility,

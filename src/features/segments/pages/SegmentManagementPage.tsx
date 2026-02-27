@@ -40,6 +40,7 @@ import DateFormatter from "../../../shared/components/DateFormatter";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import Pagination from "../../../shared/components/ui/Pagination";
+import ErrorState from "../../../shared/components/ui/ErrorState";
 
 export default function SegmentManagementPage() {
   const navigate = useNavigate();

@@ -165,6 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       localStorage.removeItem("auth_user");
       localStorage.removeItem("session_id");
       localStorage.removeItem("auth_permissions");
+      localStorage.removeItem("configurationData");
     }
   };
 
