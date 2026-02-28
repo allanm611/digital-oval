@@ -721,11 +721,7 @@ export default function CampaignCategoriesPage() {
               .includes(searchTerm.toLowerCase())),
       )
       .sort((a, b) => {
-        // Sort by: active first, then by newest created date
-        if (a.is_active !== b.is_active) {
-          return a.is_active ? -1 : 1; // Active categories first
-        }
-        // Then sort by created_at (newest first)
+        // Sort by created_at (newest first), keeping items in place regardless of active status
         const dateA = new Date(a.created_at).getTime();
         const dateB = new Date(b.created_at).getTime();
         return dateB - dateA;

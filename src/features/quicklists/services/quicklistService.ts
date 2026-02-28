@@ -150,8 +150,8 @@ class QuickListService {
       formData.append("description", request.description);
     if (request.created_by)
       formData.append("created_by", String(request.created_by));
-    // Hardcode upload_type as "generic"
-    formData.append("upload_type", "generic");
+    // Use the upload_type from the request, default to "customer_subscription" if not provided
+    formData.append("upload_type", request.upload_type || "customer_subscription");
 
     // Use buildDirectBackendUrl which routes through proxy on Vercel (same domain, avoids CORS/SSL issues)
     const url = `${buildDirectBackendUrl("/quicklists")}`;
@@ -319,6 +319,18 @@ class QuickListService {
     }
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
     return this.request<TableMappingsResponseUnion>(`/mappings${query}`);
+  }
+
+  // Upload Types
+  async getUploadTypes(params?: {
+    skipCache?: boolean;
+  }): Promise<{ success: boolean; data: Array<{ id: number; upload_type: string; description?: string; expected_columns?: string[] }> }> {
+    const queryParams = new URLSearchParams();
+    if (params?.skipCache !== undefined) {
+      queryParams.append("skipCache", String(params.skipCache));
+    }
+    const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
+    return this.request(`/upload-types${query}`);
   }
 }
 

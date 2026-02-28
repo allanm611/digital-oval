@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Save, X, XCircle } from "lucide-react";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -139,6 +139,11 @@ export default function CreateScheduledJobPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newTag, setNewTag] = useState("");
+
+  // Refs for scrolling to errors
+  const basicInfoRef = useRef<HTMLDivElement>(null);
+  const scheduleConfigRef = useRef<HTMLDivElement>(null);
+  const campaignRef = useRef<HTMLDivElement>(null);
 
   // Load job types
   useEffect(() => {
@@ -290,26 +295,28 @@ export default function CreateScheduledJobPage() {
     [showError],
   );
 
-  const validateForm = useCallback((): boolean => {
+  const validateForm = useCallback((): { isValid: boolean; firstErrorField?: string } => {
     const newErrors: Record<string, string> = {};
+    let firstErrorField: string | undefined;
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
+      if (!firstErrorField) firstErrorField = "basic";
     }
 
     if (!formData.code.trim()) {
       newErrors.code = "Code is required";
-    } else if (!/^[A-Za-z0-9_-]+$/.test(formData.code)) {
-      newErrors.code =
-        "Code must contain letters, numbers, hyphens, or underscores";
+      if (!firstErrorField) firstErrorField = "basic";
     }
 
     if (!formData.description?.trim()) {
       newErrors.description = "Description is required";
+      if (!firstErrorField) firstErrorField = "basic";
     }
 
     if (!formData.job_type_id) {
       newErrors.job_type_id = "Job Type is required";
+      if (!firstErrorField) firstErrorField = "basic";
     }
 
     if (
@@ -318,11 +325,13 @@ export default function CreateScheduledJobPage() {
     ) {
       newErrors.cron_expression =
         "Cron expression is required for cron schedule type";
+      if (!firstErrorField) firstErrorField = "schedule";
     }
 
     if (formData.schedule_type === "interval" && !formData.interval_seconds) {
       newErrors.interval_seconds =
         "Interval is required for interval schedule type";
+      if (!firstErrorField) firstErrorField = "schedule";
     } else if (
       formData.schedule_type === "interval" &&
       formData.interval_seconds
@@ -330,6 +339,7 @@ export default function CreateScheduledJobPage() {
       const intervalValue = Number(formData.interval_seconds);
       if (intervalValue < 60) {
         newErrors.interval_seconds = "Interval must be at least 60 seconds";
+        if (!firstErrorField) firstErrorField = "schedule";
       }
     }
 
@@ -337,9 +347,11 @@ export default function CreateScheduledJobPage() {
     if (isCampaignJob) {
       if (!campaignMeta.campaign_id) {
         newErrors.campaign_id = "Campaign is required";
+        if (!firstErrorField) firstErrorField = "campaign";
       }
       if (selectedSegmentIds.length === 0) {
         newErrors.segments = "Select at least one segment";
+        if (!firstErrorField) firstErrorField = "campaign";
       }
       // Check that each selected segment has at least one channel
       const segmentsWithoutChannels = selectedSegmentIds.filter(
@@ -347,17 +359,33 @@ export default function CreateScheduledJobPage() {
       );
       if (segmentsWithoutChannels.length > 0) {
         newErrors.channel_codes = "Each segment must have at least one channel";
+        if (!firstErrorField) firstErrorField = "campaign";
       }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, firstErrorField };
   }, [formData, isCampaignJob, campaignMeta, selectedSegmentIds, segmentChannelCodes]);
+
+  const scrollToError = useCallback((errorField?: string) => {
+    const refMap: Record<string, React.RefObject<HTMLDivElement>> = {
+      basic: basicInfoRef,
+      schedule: scheduleConfigRef,
+      campaign: campaignRef,
+    };
+
+    const targetRef = errorField ? refMap[errorField] : basicInfoRef;
+    if (targetRef?.current) {
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    const validation = validateForm();
+    if (!validation.isValid) {
+      scrollToError(validation.firstErrorField);
       return;
     }
 
@@ -538,7 +566,7 @@ export default function CreateScheduledJobPage() {
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div ref={basicInfoRef} className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Basic Information
           </h2>
@@ -792,7 +820,7 @@ export default function CreateScheduledJobPage() {
 
         {/* Campaign Configuration - Only shown for campaign jobs */}
         {isCampaignJob && (
-          <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+          <div ref={campaignRef} className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
             <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
               Campaign Configuration
             </h2>
@@ -1188,7 +1216,7 @@ export default function CreateScheduledJobPage() {
         )}
 
         {/* Schedule Configuration */}
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
+        <div ref={scheduleConfigRef} className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>
           <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
             Schedule Configuration
           </h2>

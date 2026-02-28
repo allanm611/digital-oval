@@ -6,6 +6,7 @@ import SubscriptionIdSelector from "../../manual-broadcast/components/Subscripti
 import { CreateQuickListRequest } from "../types/quicklist";
 import { customerIdentityService } from "../../customerIdentity/services/customerIdentityService";
 import { CustomerIdentityField } from "../../customerIdentity/types/customerIdentity";
+import { quicklistService } from "../services/quicklistService";
 
 export type QuickListFormValues = {
   list_id?: number;
@@ -14,6 +15,7 @@ export type QuickListFormValues = {
   subscriber_id_col_name: string;
   subscriber_id_field_mapping: string;
   file_delimiter: string;
+  upload_type: string;
   file_text?: string;
   list_headers?: string;
   file_name?: string;
@@ -35,6 +37,7 @@ const defaultForm: QuickListFormValues = {
   subscriber_id_col_name: "",
   subscriber_id_field_mapping: "",
   file_delimiter: ",",
+  upload_type: "customer_subscription",
   list_headers: "",
   file_text: "",
 };
@@ -57,6 +60,10 @@ export default function CreateQuickListModal({
     CustomerIdentityField[]
   >([]);
   const [isLoadingFields, setIsLoadingFields] = useState(false);
+  const [uploadTypes, setUploadTypes] = useState<
+    Array<{ id: number; upload_type: string; description?: string; expected_columns?: string[] }>
+  >([]);
+  const [isLoadingUploadTypes, setIsLoadingUploadTypes] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isCreateMode = mode === "create";
@@ -74,6 +81,7 @@ export default function CreateQuickListModal({
       subscriber_id_col_name: initialData?.subscriber_id_col_name || "",
       subscriber_id_field_mapping: "",
       file_delimiter: initialData?.file_delimiter || ",",
+      upload_type: (initialData as any)?.upload_type || "customer_subscription",
       list_headers: initialData?.list_headers || "",
       file_text: initialData?.file_text || "",
       file_name: initialData?.file_name,
@@ -87,6 +95,33 @@ export default function CreateQuickListModal({
       fileInputRef.current.value = "";
     }
   }, [initialData, isOpen]);
+
+  // Load upload types when modal opens
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const loadUploadTypes = async () => {
+      try {
+        setIsLoadingUploadTypes(true);
+        const response = await quicklistService.getUploadTypes({
+          skipCache: true,
+        });
+        if (response.success && response.data) {
+          setUploadTypes(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to load upload types:", err);
+        // Default to customer_subscription if loading fails
+        setUploadTypes([{ id: 1, upload_type: "customer_subscription", description: "Customer subscription upload type" }]);
+      } finally {
+        setIsLoadingUploadTypes(false);
+      }
+    };
+
+    loadUploadTypes();
+  }, [isOpen]);
 
   // Load customer identity fields when modal opens
   useEffect(() => {
@@ -423,6 +458,7 @@ export default function CreateQuickListModal({
         subscriber_id_col_name: form.subscriber_id_col_name.trim(),
         subscriber_id_field_mapping: form.subscriber_id_field_mapping.trim() || undefined,
         list_headers: form.list_headers,
+        upload_type: form.upload_type,
       });
       handleClose();
     } catch (err) {
@@ -620,6 +656,32 @@ export default function CreateQuickListModal({
               {errors.file_delimiter && (
                 <p className="mt-1 text-xs text-red-500">
                   {errors.file_delimiter}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-black mb-1 block">
+                Upload Type
+              </label>
+              <HeadlessSelect
+                value={form.upload_type}
+                onChange={(value) =>
+                  handleInputChange("upload_type", String(value))
+                }
+                options={uploadTypes.map((type) => ({
+                  label: type.upload_type,
+                  value: type.upload_type,
+                }))}
+                placeholder="Select upload type"
+                error={!!errors.upload_type}
+                className="w-full"
+                disabled={isSubmitting || isLoadingUploadTypes}
+                zIndex={10100}
+              />
+              {errors.upload_type && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.upload_type}
                 </p>
               )}
             </div>

@@ -443,7 +443,13 @@ export default function QuickListsPage() {
                     className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
-                    {t.quickList.rows}
+                    {t.quickList.rowsImported}
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
+                    style={{ color: color.surface.tableHeaderText }}
+                  >
+                    {t.quickList.rowsFailed}
                   </th>
                   <th
                     className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
@@ -497,6 +503,14 @@ export default function QuickListsPage() {
                     >
                       {quicklist.rows_imported != null
                         ? quicklist.rows_imported.toLocaleString()
+                        : "N/A"}
+                    </td>
+                    <td
+                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {quicklist.rows_failed != null
+                        ? quicklist.rows_failed.toLocaleString()
                         : "N/A"}
                     </td>
                     <td

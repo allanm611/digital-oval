@@ -117,15 +117,17 @@ export default function ManualBroadcastListsPage() {
   // Filter broadcasts when search term changes
   useEffect(() => {
     if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
       const filtered = allBroadcasts.filter(
         (broadcast) =>
-          broadcast.source_name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (broadcast.execution_id &&
-            broadcast.execution_id
+          (broadcast.source_name &&
+            broadcast.source_name
               .toLowerCase()
-              .includes(searchTerm.toLowerCase())),
+              .includes(searchLower)) ||
+          (broadcast.execution_id &&
+            String(broadcast.execution_id)
+              .toLowerCase()
+              .includes(searchLower)),
       );
       setBroadcasts(filtered);
     } else {

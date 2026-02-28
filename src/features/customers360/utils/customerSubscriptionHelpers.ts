@@ -103,10 +103,10 @@ export const searchCustomers = (
   const lowerSearchTerm = searchTerm.toLowerCase();
   return customers.filter((customer) => {
     return (
-      customer.name.toLowerCase().includes(lowerSearchTerm) ||
-      customer.msisdn?.includes(lowerSearchTerm) ||
-      customer.email?.toLowerCase().includes(lowerSearchTerm) ||
-      customer.segment.toLowerCase().includes(lowerSearchTerm)
+      (customer.name && customer.name.toLowerCase().includes(lowerSearchTerm)) ||
+      (customer.msisdn && customer.msisdn.toLowerCase().includes(lowerSearchTerm)) ||
+      (customer.email && customer.email.toLowerCase().includes(lowerSearchTerm)) ||
+      (customer.segment && customer.segment.toLowerCase().includes(lowerSearchTerm))
     );
   });
 };

@@ -10,6 +10,7 @@ import {
   PowerOff,
   Eye,
   EyeOff,
+  AlertCircle,
 } from "lucide-react";
 import { Product } from "../types/product";
 import { ProductCategory } from "../types/productCategory";
@@ -121,6 +122,10 @@ export default function ProductDetailsPage() {
           `"${product.name}" has been activated successfully.`,
         );
       }
+      // Update product state immediately to reflect the status change
+      setProduct((prev) =>
+        prev ? { ...prev, is_active: !prev.is_active } : null
+      );
       loadProduct(); // Reload to get updated status
     } catch (err) {
       console.error("Failed to toggle product status:", err);
@@ -205,8 +210,8 @@ export default function ProductDetailsPage() {
           </p>
           <button
             onClick={navigateBack}
-            className={`px-4 py-2 ${tw.rounded} font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 mx-auto text-sm text-white`}
-            style={{ backgroundColor: color.primary.action }}
+            className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 mx-auto text-sm`}
+            style={{ backgroundColor: button.action.background }}
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Products
@@ -622,20 +627,84 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
-      {/* Status Change Confirmation Modal */}
-      <DeleteConfirmModal
-        isOpen={showStatusModal}
-        onClose={handleCancelStatusChange}
-        onConfirm={handleConfirmStatusChange}
-        title={product?.is_active ? "Deactivate Product" : "Activate Product"}
-        description={`Are you sure you want to ${
-          product?.is_active ? "deactivate" : "activate"
-        } this product? This action can be reversed at any time.`}
-        itemName={product?.name || ""}
-        isLoading={isTogglingStatus}
-        confirmText={product?.is_active ? "Deactivate" : "Activate"}
-        cancelText="Cancel"
-      />
+      {/* Deactivate Product Modal */}
+      {showStatusModal && product?.is_active && (
+        <DeleteConfirmModal
+          isOpen={showStatusModal}
+          onClose={handleCancelStatusChange}
+          onConfirm={handleConfirmStatusChange}
+          title="Deactivate Product"
+          description={`Are you sure you want to deactivate "${product?.name}"? This action can be reversed at any time.`}
+          itemName={product?.name || ""}
+          isLoading={isTogglingStatus}
+          confirmText="Deactivate"
+          cancelText="Cancel"
+        />
+      )}
+
+      {/* Activate Product Modal */}
+      {showStatusModal && !product?.is_active && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center px-4">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50"
+              onClick={handleCancelStatusChange}
+            />
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-xl max-w-md w-full p-6`}
+            >
+              <div className="flex items-center space-x-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: "#d1fae5",
+                  }}
+                >
+                  <AlertCircle
+                    className="w-6 h-6"
+                    style={{
+                      color: "#10b981",
+                    }}
+                  />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                    Activate Product
+                  </h3>
+                  <p className={`text-sm ${tw.textMuted}`}>
+                    Please confirm this action
+                  </p>
+                </div>
+              </div>
+
+              <p className={`text-sm ${tw.textPrimary} mb-6`}>
+                Are you sure you want to <strong>activate</strong>{" "}
+                <strong>{product?.name}</strong>? This action can be reversed at any time.
+              </p>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleCancelStatusChange}
+                  disabled={isTogglingStatus}
+                  className={`flex-1 px-4 py-2 text-sm border border-gray-300 text-gray-700 ${tw.rounded} hover:bg-gray-50 font-medium transition-colors disabled:opacity-50`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmStatusChange}
+                  disabled={isTogglingStatus}
+                  className={`flex-1 px-4 py-2 text-sm text-white ${tw.rounded} font-medium transition-colors disabled:opacity-50`}
+                  style={{
+                    backgroundColor: color.primary.action,
+                  }}
+                >
+                  {isTogglingStatus ? "Activating..." : "Activate"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal

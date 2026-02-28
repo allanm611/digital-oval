@@ -614,7 +614,7 @@ export default function SegmentDetailsPage() {
     setIsAddingTag(true);
     try {
       await segmentService.updateSegmentTags(segment.id, {
-        tags: [...(segment.tags || []), newTag.trim()],
+        tag: newTag.trim(),
       });
       success("Tag added", `Tag "${newTag}" has been added`);
       setNewTag("");

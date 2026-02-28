@@ -1619,19 +1619,19 @@ export default function CreateCampaignPage() {
           <div className="py-4">{renderStep()}</div>
 
           {/* Bottom Navigation */}
-          <div className="bg-white py-3">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="sticky bottom-12 bg-white py-4 shadow-sm">
+            <div className="flex justify-between items-center">
               <button
                 onClick={handlePrev}
                 disabled={currentStep === 1}
-                className={`inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
+                className={`inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Previous
               </button>
               <button
                 onClick={currentStep === 5 ? handleSubmit : handleNext}
                 disabled={isLoading || !validateCurrentStep().isValid}
-                className={`inline-flex items-center justify-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
+                className={`inline-flex items-center px-5 py-2 text-sm font-medium ${tw.rounded} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{ backgroundColor: color.primary.action }}
               >
                 {isLoading ? (

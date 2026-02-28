@@ -425,9 +425,9 @@ export default function CampaignDetailsPage() {
         comments: "Approved from details page",
       });
       showToast("success", "Campaign approved successfully");
-      // Refresh campaign data
+      // Refresh campaign data with both approval_status and status updates
       if (campaign) {
-        setCampaign({ ...campaign, approval_status: "approved" });
+        setCampaign({ ...campaign, approval_status: "approved", status: "approved" });
       }
     } catch (error) {
       console.error("Failed to approve campaign:", error);
@@ -492,7 +492,7 @@ export default function CampaignDetailsPage() {
       showToast("success", "Campaign activated successfully");
       // Refresh campaign data
       if (campaign) {
-        setCampaign({ ...campaign, status: "active" });
+        setCampaign({ ...campaign, is_active: true });
       }
     } catch (error) {
       console.error("Failed to activate campaign:", error);
