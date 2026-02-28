@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, Users, UserCheck, UserPlus, UserX } from "lucide-react";
+import { AlertTriangle, Users, UserCheck, UserPlus, UserX, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BackButton from "../../../shared/components/ui/BackButton";
 import {
   PieChart,
@@ -68,6 +69,7 @@ interface AccountRequestListItem {
 export default function UserAnalyticsPage() {
   const { error: showError } = useToast();
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
   // Users and requests data for stat cards
@@ -89,10 +91,15 @@ export default function UserAnalyticsPage() {
   // Reporting data
   const [mfaEnabledCount, setMfaEnabledCount] = useState(0);
   const [mfaDisabledCount, setMfaDisabledCount] = useState(0);
+  const [mfaDisabledUsers, setMfaDisabledUsers] = useState<UserType[]>([]);
   const [expiringPasswordsCount, setExpiringPasswordsCount] = useState(0);
+  const [expiringPasswordsUsers, setExpiringPasswordsUsers] = useState<UserType[]>([]);
   const [expiredAccessCount, setExpiredAccessCount] = useState(0);
+  const [expiredAccessUsers, setExpiredAccessUsers] = useState<UserType[]>([]);
   const [recentUsersCount, setRecentUsersCount] = useState(0);
+  const [recentUsers, setRecentUsers] = useState<UserType[]>([]);
   const [inactiveUsersCount, setInactiveUsersCount] = useState(0);
+  const [inactiveUsers, setInactiveUsers] = useState<UserType[]>([]);
   const [roleLookup, setRoleLookup] = useState<Record<number, { id: number; name: string }>>({});
 
   const loadAnalytics = useCallback(async () => {
@@ -209,6 +216,7 @@ export default function UserAnalyticsPage() {
       }
 
       // Fetch individual roles for IDs not found in the list
+      let fetchedRoles: any[] = [];
       if (uniqueRoleIds.size > 0) {
         const roleDetailsPromises = Array.from(uniqueRoleIds).map((roleId) => {
           // Only fetch if we don't already have this role's name
@@ -223,16 +231,21 @@ export default function UserAnalyticsPage() {
           if (role && role.id && role.name) {
             rolesMap[role.id] = role.name;
             rolesMap[String(role.id)] = role.name;
+            fetchedRoles.push(role);
           }
         });
       }
 
-      setRoleLookup(rolesListRes?.success && rolesListRes?.data ?
-        rolesListRes.data.reduce((acc: any, role: any) => {
-          acc[role.id] = { id: role.id, name: role.name };
-          return acc;
-        }, {}) : {}
-      );
+      // Build roleLookup from both initial roles and fetched roles
+      const initialRoles = rolesListRes?.success && rolesListRes?.data ? rolesListRes.data : [];
+      const allRoles = [...initialRoles, ...fetchedRoles];
+      const roleLookupData: Record<number, { id: number; name: string }> = {};
+      allRoles.forEach((role: any) => {
+        if (role && role.id && role.name) {
+          roleLookupData[role.id] = { id: role.id, name: role.name };
+        }
+      });
+      setRoleLookup(roleLookupData);
 
       // Set chart data with transformation
       if (statusRes?.data) setStatusCounts(transformToObject(statusRes.data));
@@ -270,13 +283,85 @@ export default function UserAnalyticsPage() {
         }
       }
 
-      // Set reporting counts (from meta.total if available)
-      if (mfaEnabledRes?.meta?.total) setMfaEnabledCount(mfaEnabledRes.meta.total);
-      if (mfaDisabledRes?.meta?.total) setMfaDisabledCount(mfaDisabledRes.meta.total);
-      if (expiringRes?.meta?.total) setExpiringPasswordsCount(expiringRes.meta.total);
-      if (expiredRes?.meta?.total) setExpiredAccessCount(expiredRes.meta.total);
-      if (recentRes?.meta?.total) setRecentUsersCount(recentRes.meta.total);
-      if (inactiveRes?.meta?.total) setInactiveUsersCount(inactiveRes.meta.total);
+      // Set reporting counts and data (from pagination.total or meta.total)
+      if (mfaEnabledRes?.success && mfaEnabledRes?.data) {
+        const total = mfaEnabledRes.pagination?.total ?? mfaEnabledRes.meta?.total ?? 0;
+        setMfaEnabledCount(total);
+      }
+
+      if (mfaDisabledRes?.success && mfaDisabledRes?.data) {
+        const total = mfaDisabledRes.pagination?.total ?? mfaDisabledRes.meta?.total ?? 0;
+        setMfaDisabledCount(total);
+        setMfaDisabledUsers(mfaDisabledRes.data);
+      }
+
+      if (expiringRes?.success && expiringRes?.data) {
+        const total = expiringRes.pagination?.total ?? expiringRes.meta?.total ?? 0;
+        setExpiringPasswordsCount(total);
+        setExpiringPasswordsUsers(expiringRes.data);
+      }
+
+      if (expiredRes?.success && expiredRes?.data) {
+        const total = expiredRes.pagination?.total ?? expiredRes.meta?.total ?? 0;
+        setExpiredAccessCount(total);
+        setExpiredAccessUsers(expiredRes.data);
+      }
+
+      if (recentRes?.success && recentRes?.data) {
+        const total = recentRes.pagination?.total ?? recentRes.meta?.total ?? 0;
+        setRecentUsersCount(total);
+        setRecentUsers(recentRes.data);
+      }
+
+      if (inactiveRes?.success && inactiveRes?.data) {
+        const total = inactiveRes.pagination?.total ?? inactiveRes.meta?.total ?? 0;
+        setInactiveUsersCount(total);
+        setInactiveUsers(inactiveRes.data);
+      }
+
+      // Extract unique role IDs from all user tables and fetch missing roles
+      const allTableUsers = [
+        ...(mfaDisabledRes?.data || []),
+        ...(expiringRes?.data || []),
+        ...(expiredRes?.data || []),
+        ...(recentRes?.data || []),
+        ...(inactiveRes?.data || []),
+      ];
+
+      const tableRoleIds = new Set<number>();
+      allTableUsers.forEach((user: any) => {
+        if (user.primary_role_id !== undefined) {
+          tableRoleIds.add(user.primary_role_id);
+        }
+      });
+
+      // Fetch individual roles for IDs not in roleLookup
+      if (tableRoleIds.size > 0) {
+        const roleDetailsPromises = Array.from(tableRoleIds).map((roleId) => {
+          // Only fetch if we don't already have this role's name
+          if (!rolesMap[roleId] && !rolesMap[String(roleId)]) {
+            return roleService.getRoleById(roleId).catch(() => null);
+          }
+          return Promise.resolve(null);
+        });
+
+        const roleDetails = await Promise.all(roleDetailsPromises);
+        roleDetails.forEach((role) => {
+          if (role && role.id && role.name) {
+            rolesMap[role.id] = role.name;
+            rolesMap[String(role.id)] = role.name;
+          }
+        });
+
+        // Update roleLookup with all fetched roles
+        const updatedRoleLookup = { ...roleLookupData };
+        roleDetails.forEach((role) => {
+          if (role && role.id && role.name) {
+            updatedRoleLookup[role.id] = { id: role.id, name: role.name };
+          }
+        });
+        setRoleLookup(updatedRoleLookup);
+      }
     } catch (err) {
       showError("Failed to load analytics", "Please try again later");
     } finally {
@@ -627,6 +712,397 @@ export default function UserAnalyticsPage() {
               {renderPieChart("Users by Department", departmentCounts, undefined, true)}
               {renderPieChart("Users by Role", roleCounts, undefined, true)}
             </div>
+          </div>
+
+          {/* User Data Tables */}
+          <div className="space-y-6">
+            {/* MFA Disabled Users */}
+            {mfaDisabledUsers.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  MFA Disabled Users ({mfaDisabledCount})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[600px]"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {mfaDisabledUsers.map((user) => (
+                        <tr key={user.id} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.username}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.email_address || user.email}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <button
+                              onClick={() => navigate(`/dashboard/user-management/${user.id}`)}
+                              className={`p-2 ${tw.rounded} transition-colors`}
+                              style={{
+                                color: color.primary.action,
+                                backgroundColor: "transparent",
+                              }}
+                              title="View user details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Expiring Passwords Users */}
+            {expiringPasswordsUsers.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Expiring Passwords ({expiringPasswordsCount})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[600px]"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expiringPasswordsUsers.map((user) => (
+                        <tr key={user.id} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.username}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.email_address || user.email}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Expired Access Users */}
+            {expiredAccessUsers.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Expired Access ({expiredAccessCount})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[600px]"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expiredAccessUsers.map((user) => (
+                        <tr key={user.id} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.username}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.email_address || user.email}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Users */}
+            {recentUsers.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Recent Users ({recentUsersCount})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[600px]"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentUsers.map((user) => (
+                        <tr key={user.id} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.username}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.email_address || user.email}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <button
+                              onClick={() => navigate(`/dashboard/user-management/${user.id}`)}
+                              className={`p-2 ${tw.rounded} transition-colors`}
+                              style={{
+                                color: color.primary.action,
+                                backgroundColor: "transparent",
+                              }}
+                              title="View user details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Inactive Users */}
+            {inactiveUsers.length > 0 && (
+              <div>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Inactive Users ({inactiveUsersCount})
+                </h3>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full min-w-[600px]"
+                    style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Username
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Role
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {inactiveUsers.map((user) => (
+                        <tr key={user.id} className="transition-colors">
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.username}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {user.email_address || user.email}
+                          </td>
+                          <td
+                            className="px-4 sm:px-6 py-3 sm:py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <button
+                              onClick={() => navigate(`/dashboard/user-management/${user.id}`)}
+                              className={`p-2 ${tw.rounded} transition-colors`}
+                              style={{
+                                color: color.primary.action,
+                                backgroundColor: "transparent",
+                              }}
+                              title="View user details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
