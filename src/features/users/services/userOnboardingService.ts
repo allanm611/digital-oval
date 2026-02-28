@@ -114,7 +114,7 @@ class UserOnboardingService {
    * GET /user-onboarding-requests - Get all onboarding requests (with pagination)
    */
   async getOnboardingRequests(
-    skipCache: boolean = true,
+    _skipCache: boolean = true,
     limit?: number,
     offset?: number
   ): Promise<{
@@ -134,10 +134,7 @@ class UserOnboardingService {
     }>(`${queryString}`);
   }
 
-  /**
-   * GET /user-onboarding-requests - Get all pending onboarding requests (with pagination)
-   * @deprecated Use getOnboardingRequests() instead
-   */
+  
   async getPendingOnboardingRequests(
     skipCache?: boolean,
     limit?: number,

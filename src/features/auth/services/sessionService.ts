@@ -4,7 +4,6 @@ import {
   CreateSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
-  EndAllSessionsRequest,
   EndAllSessionsResponse,
   VerifyMFARequest,
   VerifyMFAResponse,
@@ -22,10 +21,9 @@ interface SessionQueryParams {
 class SessionService {
   private baseUrl = `${API_CONFIG.BASE_URL}/user-sessions`;
 
-  // ====== CRUD OPERATIONS ======
   // Create a new session
   async createSession(
-    data: CreateSessionRequest
+    data: CreateSessionRequest,
   ): Promise<CreateSessionResponse> {
     const response = await fetch(`${this.baseUrl}`, {
       method: "POST",
@@ -66,7 +64,7 @@ class SessionService {
 
   // Get all sessions (admin)
   async getAllSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -91,11 +89,10 @@ class SessionService {
     return response.json();
   }
 
-  // ====== USER-SPECIFIC ENDPOINTS ======
   // Get all active sessions for a user
   async getActiveSessions(
     userId: number,
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -121,9 +118,9 @@ class SessionService {
   }
 
   // Get all sessions for a user (active and inactive)
-  async getAllSessions(
+  async getAllUserSessions(
     userId: number,
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -187,7 +184,7 @@ class SessionService {
   // End all other sessions except current
   async endOtherSessions(
     userId: number,
-    currentSessionId: number
+    currentSessionId: number,
   ): Promise<EndAllSessionsResponse> {
     const response = await fetch(
       `${this.baseUrl}/user/${userId}/end-others/${currentSessionId}`,
@@ -198,7 +195,7 @@ class SessionService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({}),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -212,11 +209,10 @@ class SessionService {
     return response.json();
   }
 
-  // ====== SESSION OPERATIONS ======
   // End a specific session
   async endSession(
     sessionId: number,
-    data?: EndSessionRequest
+    data?: EndSessionRequest,
   ): Promise<EndSessionResponse> {
     const response = await fetch(`${this.baseUrl}/${sessionId}/end`, {
       method: "PUT",
@@ -264,7 +260,7 @@ class SessionService {
   // Verify MFA for a session
   async verifyMFA(
     sessionId: number,
-    data: VerifyMFARequest
+    data: VerifyMFARequest,
   ): Promise<VerifyMFAResponse> {
     const response = await fetch(`${this.baseUrl}/${sessionId}/verify-mfa`, {
       method: "PUT",
@@ -292,20 +288,26 @@ class SessionService {
 
   // Mark session as suspicious
   async markSessionSuspicious(sessionId: number): Promise<boolean> {
-    const response = await fetch(`${this.baseUrl}/${sessionId}/mark-suspicious`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/${sessionId}/mark-suspicious`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      },
+    );
 
     return response.ok;
   }
 
   // Clear suspicious flag
   async clearSessionSuspicious(sessionId: number): Promise<boolean> {
-    const response = await fetch(`${this.baseUrl}/${sessionId}/clear-suspicious`, {
-      method: "PUT",
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/${sessionId}/clear-suspicious`,
+      {
+        method: "PUT",
+        headers: getAuthHeaders(),
+      },
+    );
 
     return response.ok;
   }
@@ -313,7 +315,7 @@ class SessionService {
   // Update session risk score
   async updateSessionRiskScore(
     sessionId: number,
-    riskScore: number
+    riskScore: number,
   ): Promise<boolean> {
     const response = await fetch(`${this.baseUrl}/${sessionId}/risk-score`, {
       method: "PUT",
@@ -330,7 +332,7 @@ class SessionService {
   // Update session metadata
   async updateSessionMetadata(
     sessionId: number,
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
   ): Promise<boolean> {
     const response = await fetch(`${this.baseUrl}/${sessionId}/metadata`, {
       method: "PUT",
@@ -344,7 +346,6 @@ class SessionService {
     return response.ok;
   }
 
-  // ====== SEARCH & FILTER ENDPOINTS ======
   // Search sessions
   async searchSessions(query: string, params?: SessionQueryParams) {
     const queryParams = new URLSearchParams();
@@ -354,7 +355,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/search?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return null;
@@ -363,7 +364,7 @@ class SessionService {
 
   // Get suspicious sessions
   async getSuspiciousSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -371,7 +372,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/suspicious?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -380,7 +381,7 @@ class SessionService {
 
   // Get high-risk sessions
   async getHighRiskSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -388,7 +389,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/high-risk?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -397,7 +398,7 @@ class SessionService {
 
   // Get expired sessions
   async getExpiredSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -405,7 +406,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/expired?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -414,7 +415,7 @@ class SessionService {
 
   // Get inactive sessions
   async getInactiveSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -422,7 +423,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/inactive?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -431,7 +432,7 @@ class SessionService {
 
   // Get unverified MFA sessions
   async getUnverifiedMfaSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -439,7 +440,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/unverified-mfa?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -448,7 +449,7 @@ class SessionService {
 
   // Get recent sessions
   async getRecentSessions(
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -456,14 +457,13 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/recent?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
     return response.json();
   }
 
-  // ====== LOOKUP ENDPOINTS ======
   // Get session by token hash
   async getSessionByToken(tokenHash: string): Promise<UserSession | null> {
     const response = await fetch(`${this.baseUrl}/token/${tokenHash}`, {
@@ -478,7 +478,7 @@ class SessionService {
   // Get sessions by type
   async getSessionsByType(
     sessionType: string,
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -486,7 +486,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/type/${sessionType}?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
@@ -496,7 +496,7 @@ class SessionService {
   // Get sessions by IP address
   async getSessionsByIpAddress(
     ipAddress: string,
-    params?: SessionQueryParams
+    params?: SessionQueryParams,
   ): Promise<PaginatedSessions> {
     const queryParams = new URLSearchParams();
     if (params?.limit) queryParams.append("limit", params.limit.toString());
@@ -504,14 +504,13 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/ip/${ipAddress}?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return { success: false, data: [] };
     return response.json();
   }
 
-  // ====== STATS ENDPOINTS ======
   // Get active sessions count
   async getActiveSessionsCount(): Promise<number> {
     const response = await fetch(`${this.baseUrl}/stats/active-count`, {
@@ -563,7 +562,7 @@ class SessionService {
 
     const response = await fetch(
       `${this.baseUrl}/stats/top-users?${queryParams.toString()}`,
-      { headers: getAuthHeaders() }
+      { headers: getAuthHeaders() },
     );
 
     if (!response.ok) return [];
@@ -601,13 +600,15 @@ class SessionService {
     return data.data?.duration || 0;
   }
 
-  // ====== MAINTENANCE ENDPOINTS ======
   // Auto expire sessions
   async autoExpireSessions(): Promise<{ count: number }> {
-    const response = await fetch(`${this.baseUrl}/maintenance/expire-sessions`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/maintenance/expire-sessions`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+      },
+    );
 
     if (!response.ok) return { count: 0 };
     const data = await response.json();
@@ -621,7 +622,7 @@ class SessionService {
       {
         method: "POST",
         headers: getAuthHeaders(),
-      }
+      },
     );
 
     if (!response.ok) return { count: 0 };
@@ -651,7 +652,7 @@ class SessionService {
       {
         method: "DELETE",
         headers: getAuthHeaders(),
-      }
+      },
     );
 
     if (!response.ok) return { count: 0 };

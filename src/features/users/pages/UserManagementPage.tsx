@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Search,
   Plus,
@@ -12,6 +13,9 @@ import {
   Eye,
   UserPlus,
   BarChart3,
+  X,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { userService } from "../../users/services/userService";
@@ -25,7 +29,7 @@ import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import ErrorState from "../../../shared/components/ui/ErrorState";
-import { color, tw, components } from "../../../shared/utils/utils";
+import { color, tw, components, zIndex, button } from "../../../shared/utils/utils";
 import { useAuth } from "../../../contexts/AuthContext";
 import { roleService } from "../../roles/services/roleService";
 import { Role } from "../../roles/types/role";
@@ -165,14 +169,14 @@ export default function UserManagementPage() {
   const [errorState, setErrorState] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeTab, setActiveTab] = useState<
-    "users" | "requests" | "analytics"
-  >("users");
+  const [activeTab, setActiveTab] = useState<"users" | "requests">("users");
   const [filterDepartment, setFilterDepartment] = useState<string>("all");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<
-    "all" | "active" | "inactive"
+    "all" | "pending_activation" | "active" | "suspended" | "locked" | "deactivated" | "deleted"
   >("all");
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [isClosingModal, setIsClosingModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
   const [userSummary, setUserSummary] = useState<{
@@ -217,8 +221,104 @@ export default function UserManagementPage() {
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [reportsLoading, setReportsLoading] = useState(false);
 
+  // Batch selection and batch operations
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [batchDepartmentValue, setBatchDepartmentValue] = useState<string>("");
+  const allDepartmentsRef = useRef<string[]>([]);
+  const allRolesRef = useRef<string[]>([]);
+
   const activateColor = color.tertiary.tag4;
   const deactivateColor = color.configStatus.inactive;
+
+  const handleCloseModal = () => {
+    setIsClosingModal(true);
+    setTimeout(() => {
+      setShowFiltersModal(false);
+      setIsClosingModal(false);
+    }, 300);
+  };
+
+  const handleSelectUser = (userId: number) => {
+    setSelectedUsers((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(userId)) {
+        newSet.delete(userId);
+      } else {
+        newSet.add(userId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedUsers.size === filteredUsers.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+    }
+  };
+
+  const handleBatchAction = async (
+    action: "deactivate" | "update_department",
+  ) => {
+    if (selectedUsers.size === 0) return;
+
+    const userIds = Array.from(selectedUsers);
+    setIsBatchProcessing(true);
+
+    try {
+      let result;
+      switch (action) {
+        case "deactivate":
+          result = await userService.batchDeactivateUsers({
+            user_ids: userIds,
+          });
+          const deactivated = result.data?.deactivated || 0;
+          const total = result.data?.total || 0;
+          const failedDeactivate = total - deactivated;
+          success(
+            "Batch deactivate completed",
+            `${deactivated} user(s) deactivated successfully${
+              failedDeactivate > 0 ? `, ${failedDeactivate} failed` : ""
+            }`,
+          );
+          break;
+        case "update_department":
+          if (!batchDepartmentValue) {
+            showError("Department required", "Please select a department");
+            setIsBatchProcessing(false);
+            return;
+          }
+          result = await userService.batchUpdateDepartment({
+            user_ids: userIds,
+            department: batchDepartmentValue,
+          });
+          const updated = result.data?.updated || result.data?.deactivated || 0;
+          const deptTotal = result.data?.total || 0;
+          const failedUpdate = deptTotal - updated;
+          success(
+            "Batch update completed",
+            `${updated} user(s) updated successfully${
+              failedUpdate > 0 ? `, ${failedUpdate} failed` : ""
+            }`,
+          );
+          setBatchDepartmentValue("");
+          break;
+      }
+
+      setSelectedUsers(new Set());
+      loadData({ skipCache: true });
+    } catch (err) {
+      showError(
+        `Batch ${action} failed`,
+        err instanceof Error ? err.message : "Unknown error",
+      );
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
 
   const buildSearchQuery = useCallback(
     ({
@@ -1307,6 +1407,35 @@ export default function UserManagementPage() {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
+          {activeTab === "users" && (
+            <button
+              onClick={() => {
+                if (!isSelectionMode) {
+                  setIsSelectionMode(true);
+                  setSelectedUsers(new Set(filteredUsers.map((user) => user.id)));
+                } else {
+                  setIsSelectionMode(false);
+                  setSelectedUsers(new Set());
+                }
+              }}
+              className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium focus:outline-none transition-colors`}
+              style={{
+                backgroundColor: isSelectionMode
+                  ? color.primary.action
+                  : "transparent",
+                color: isSelectionMode ? "white" : color.primary.action,
+                border: `1px solid ${color.primary.action}`,
+              }}
+              title={isSelectionMode ? "Exit selection mode" : "Enter selection mode"}
+            >
+              {isSelectionMode ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+              {isSelectionMode ? "Exit Selection" : "Select Users"}
+            </button>
+          )}
           <PermissionGate permission="users.create">
             <button
               onClick={() => {
@@ -1423,23 +1552,13 @@ export default function UserManagementPage() {
           )}
         </button>
         <button
-          onClick={() => setActiveTab("analytics")}
-          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 ${
-            activeTab === "analytics"
-              ? "text-black"
-              : "text-gray-600 hover:text-gray-900"
-          }`}
+          onClick={() => navigate("/dashboard/user-management/analytics")}
+          className={`px-3 sm:px-4 py-2.5 text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2 relative flex-shrink-0 text-gray-600 hover:text-gray-900`}
         >
           <BarChart3 className="w-4 h-4 flex-shrink-0" />
           <span className="whitespace-nowrap">
             {t.userManagement.analytics}
           </span>
-          {activeTab === "analytics" && (
-            <div
-              className="absolute bottom-0 left-0 right-0 h-0.5"
-              style={{ backgroundColor: color.primary.accent }}
-            />
-          )}
         </button>
       </div>
 
@@ -1467,41 +1586,17 @@ export default function UserManagementPage() {
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <HeadlessSelect
               options={[
-                { value: "all", label: t.userManagement.allDepartments },
-                ...uniqueDepartments.map((dept) => ({
-                  value: dept.toLowerCase(),
-                  label: dept,
-                })),
-              ]}
-              value={filterDepartment}
-              onChange={(value) => setFilterDepartment(value as string)}
-              placeholder={t.userManagement.selectDepartment}
-              className="w-full sm:min-w-[160px] sm:w-auto"
-            />
-
-            <HeadlessSelect
-              options={[
-                { value: "all", label: t.userManagement.allRoles },
-                ...uniqueRoles.map((role) => ({
-                  value: role.toLowerCase(),
-                  label: role,
-                })),
-              ]}
-              value={filterRole}
-              onChange={(value) => setFilterRole(value as string)}
-              placeholder={t.userManagement.selectRole}
-              className="w-full sm:min-w-[160px] sm:w-auto"
-            />
-
-            <HeadlessSelect
-              options={[
                 { value: "all", label: t.userManagement.allStatus },
+                { value: "pending_activation", label: "Pending Activation" },
                 { value: "active", label: t.userManagement.active },
-                { value: "inactive", label: t.userManagement.inactive },
+                { value: "suspended", label: "Suspended" },
+                { value: "locked", label: "Locked" },
+                { value: "deactivated", label: "Deactivated" },
+                { value: "deleted", label: "Deleted" },
               ]}
               value={filterStatus}
               onChange={(value) =>
-                setFilterStatus(value as "all" | "active" | "inactive")
+                setFilterStatus(value as "all" | "pending_activation" | "active" | "suspended" | "locked" | "deactivated" | "deleted")
               }
               placeholder={t.userManagement.selectStatus}
               className="w-full sm:min-w-[140px] sm:w-auto"
@@ -1529,6 +1624,77 @@ export default function UserManagementPage() {
               filename={`users-${new Date().toISOString().split("T")[0]}.csv`}
               style={{ backgroundColor: color.primary.action }}
             />
+
+            <button
+              onClick={() => setShowFiltersModal(true)}
+              className={`flex items-center gap-2 rounded-md transition-colors font-medium`}
+              style={{
+                backgroundColor: button.secondaryAction.background,
+                color: button.secondaryAction.color,
+                border: button.secondaryAction.border,
+                padding: `${button.secondaryAction.paddingY} ${button.secondaryAction.paddingX}`,
+                fontSize: button.secondaryAction.fontSize,
+              }}
+              title="Open filters"
+            >
+              Filters
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Action Bar */}
+      {isSelectionMode && selectedUsers.size > 0 && activeTab === "users" && (
+        <div
+          className={`flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${tw.rounded} border border-gray-200 bg-white px-4 py-3 mb-6`}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">
+              {selectedUsers.size} user(s) selected
+            </span>
+            <button
+              onClick={() => setSelectedUsers(new Set())}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <HeadlessSelect
+                options={[
+                  { value: "", label: "Select department..." },
+                  ...uniqueDepartments.map((dept) => ({
+                    value: dept,
+                    label: dept,
+                  })),
+                ]}
+                value={batchDepartmentValue}
+                onChange={(value) => setBatchDepartmentValue(value)}
+                placeholder="Select department..."
+                className="w-auto"
+              />
+              <button
+                onClick={() => handleBatchAction("update_department")}
+                disabled={isBatchProcessing || !batchDepartmentValue}
+                className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none transition-colors`}
+                style={{
+                  backgroundColor: "transparent",
+                  color: color.primary.action,
+                  border: `1px solid ${color.primary.action}`,
+                }}
+              >
+                Update Department
+              </button>
+            </div>
+            <button
+              onClick={() => handleBatchAction("deactivate")}
+              disabled={isBatchProcessing}
+              className={`inline-flex items-center gap-2 ${tw.rounded} px-3 py-1.5 text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+              style={{ backgroundColor: color.primary.action }}
+            >
+              Deactivate
+            </button>
           </div>
         </div>
       )}
@@ -1598,6 +1764,22 @@ export default function UserManagementPage() {
                 >
                   <thead style={{ background: color.surface.tableHeader }}>
                     <tr>
+                      {isSelectionMode && (
+                        <th
+                          className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={
+                              filteredUsers.length > 0 &&
+                              selectedUsers.size === filteredUsers.length
+                            }
+                            onChange={handleSelectAll}
+                            className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                          />
+                        </th>
+                      )}
                       <th
                         className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
                         style={{ color: color.surface.tableHeaderText }}
@@ -1651,6 +1833,21 @@ export default function UserManagementPage() {
 
                       return (
                         <tr key={user.id} className="transition-colors">
+                          {isSelectionMode && (
+                            <td
+                              className="px-4 sm:px-6 py-3 sm:py-4"
+                              style={{
+                                backgroundColor: color.surface.tablebodybg,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedUsers.has(user.id)}
+                                onChange={() => handleSelectUser(user.id)}
+                                className="rounded border-gray-300 text-[#3b8169] focus:ring-[#3b8169]"
+                              />
+                            </td>
+                          )}
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4"
                             style={{
@@ -2825,6 +3022,7 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

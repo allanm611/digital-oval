@@ -330,6 +330,12 @@ const UserPages = {
         /* webpackPrefetch: true */ "../../users/pages/UserManagementPageWrapper"
       ),
   ),
+  UserAnalyticsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../users/pages/UserAnalyticsPageWrapper"
+      ),
+  ),
   UserDetailsPage: lazy(
     () =>
       import(/* webpackPrefetch: true */ "../../users/pages/UserDetailsPage"),
@@ -738,6 +744,10 @@ export default function Dashboard() {
           <Route
             path="/user-management"
             element={<UserPages.UserManagementPage />}
+          />
+          <Route
+            path="/user-management/analytics"
+            element={<UserPages.UserAnalyticsPage />}
           />
           <Route
             path="/user-management/:id"

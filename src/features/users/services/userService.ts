@@ -40,10 +40,7 @@ class UserService {
       ...options,
     });
 
-    // Log response for create user endpoint
-    if (endpoint === "/" && options.method === "POST") {
-    }
-
+    
     // Get response text first to check if it's valid JSON
     let responseText = "";
     try {
@@ -70,7 +67,7 @@ class UserService {
     if (!response.ok) {
       // Log error details for create user endpoint
       if (endpoint === "/" && options.method === "POST") {
-        console.error("❌ ERROR RESPONSE:");
+        console.error(" ERROR RESPONSE:");
         console.error("Status:", response.status);
         console.error("Response Text:", responseText);
       }
@@ -148,7 +145,6 @@ class UserService {
     return queryString ? `?${queryString}` : "";
   }
 
-  // ==================== SEARCH & ADVANCED QUERIES (2 endpoints) ====================
 
   /**
    * GET /users/search - Search users
@@ -172,7 +168,6 @@ class UserService {
     );
   }
 
-  // ==================== REPORTS & ANALYTICS (3 endpoints) ====================
 
   /**
    * GET /reports/status-counts - Get status counts
@@ -211,7 +206,6 @@ class UserService {
     );
   }
 
-  // ==================== MFA ENDPOINTS (2 endpoints) ====================
 
   /**
    * GET /users/mfa/enabled - Get MFA enabled users
@@ -237,7 +231,6 @@ class UserService {
     );
   }
 
-  // ==================== SPECIAL LOOKUPS (4 endpoints) ====================
 
   /**
    * GET /users/expiring-passwords/:days - Get expiring passwords
@@ -290,7 +283,6 @@ class UserService {
     );
   }
 
-  // ==================== SPECIFIC FIELD LOOKUPS (7 endpoints) ====================
 
   /**
    * GET /users/uuid/:uuid - Get user by UUID
@@ -383,7 +375,6 @@ class UserService {
     );
   }
 
-  // ==================== BATCH OPERATIONS (2 endpoints) ====================
 
   /**
    * POST /users/batch/deactivate - Bulk deactivate users
@@ -417,7 +408,6 @@ class UserService {
     });
   }
 
-  // ==================== PASSWORD RESET (1 endpoint) ====================
 
   /**
    * POST /users/password-reset/validate - Validate password reset token
@@ -433,7 +423,6 @@ class UserService {
     });
   }
 
-  // ==================== USER-SPECIFIC ENDPOINTS (7 endpoints) ====================
 
   /**
    * GET /users/:id/direct-reports - Get direct reports
@@ -499,7 +488,6 @@ class UserService {
     );
   }
 
-  // ==================== USER STATE MANAGEMENT (5 endpoints) ====================
 
   /**
    * PUT /users/:id/activate - Activate user
@@ -562,7 +550,6 @@ class UserService {
     });
   }
 
-  // ==================== USER PASSWORD MANAGEMENT (2 endpoints) ====================
 
   /**
    * PUT /users/:id/password - Change user password
@@ -592,7 +579,6 @@ class UserService {
     });
   }
 
-  // ==================== MFA MANAGEMENT (2 endpoints) ====================
 
   /**
    * PUT /users/:id/mfa/enable - Enable MFA for user
@@ -616,7 +602,6 @@ class UserService {
     });
   }
 
-  // ==================== ROLE & ACCESS MANAGEMENT (5 endpoints) ====================
 
   /**
    * PUT /users/:id/role - Assign primary role
@@ -684,7 +669,6 @@ class UserService {
     );
   }
 
-  // ==================== STANDARD CRUD OPERATIONS (5 endpoints) ====================
 
   /**
    * GET /users/:id - Get user by ID
@@ -713,7 +697,6 @@ class UserService {
   async createUser(
     request: CreateUserRequest
   ): Promise<ApiSuccessResponse<UserType>> {
-    const url = `${BASE_URL}/`;
 
     return this.request<ApiSuccessResponse<UserType>>("/", {
       method: "POST",

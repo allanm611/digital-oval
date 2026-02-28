@@ -95,7 +95,6 @@ class AccountService {
     }
   }
 
-  // ==================== ACCOUNT REQUEST ENDPOINTS (9 endpoints) ====================
 
   /**
    * GET /accounts/requests - Get all account requests (with pagination and filtering)
@@ -175,7 +174,7 @@ class AccountService {
   }
 
   /**
-   * POST /accounts/dev/hash-password - Hash password (dev only)
+   * POST /accounts/dev/hash-password - Hash password 
    */
   async hashPassword(
     password: string

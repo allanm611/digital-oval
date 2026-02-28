@@ -1,5 +1,4 @@
-// API Configuration
-// Detect environment
+// this file setsup how sentra frontend communicates with the backend .
 const isLocalhost =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
@@ -72,10 +71,10 @@ export const getAuthHeaders = (includeContentType: boolean = true) => {
     headers.Authorization = `Bearer ${token}`;
   } else {
     console.warn(
-      "⚠️ WARNING: No auth token found in localStorage. Request will be sent without Authorization header."
+      " WARNING: No auth token found in localStorage. Request will be sent without Authorization header."
     );
-    console.warn("⚠️ Checked keys: 'authToken' and 'auth_token'");
-    console.warn("⚠️ Please ensure you are logged in.");
+    console.warn(" Checked keys: 'authToken' and 'auth_token'");
+    console.warn(" Please ensure you are logged in.");
   }
 
   return headers;

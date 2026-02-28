@@ -57,7 +57,7 @@ export class AppErrorBoundary extends React.Component<
       "notifications",
       "settings",
       "cache",
-      // Add other non-critical items here
+      "configurations",
     ];
 
     try {
