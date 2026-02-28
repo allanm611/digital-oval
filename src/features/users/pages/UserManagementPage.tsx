@@ -320,6 +320,15 @@ export default function UserManagementPage() {
     }
   };
 
+  // Helper to get role ID from role name
+  const getRoleIdByName = (roleName: string): number | undefined => {
+    return Object.entries(roleLookup).find(
+      ([, role]) => role.name === roleName
+    )?.[0] ? Number(Object.entries(roleLookup).find(
+      ([, role]) => role.name === roleName
+    )?.[0]) : undefined;
+  };
+
   const buildSearchQuery = useCallback(
     ({
       skipCache = false,
@@ -335,13 +344,29 @@ export default function UserManagementPage() {
         query.q = term;
       }
 
+      // Add server-side filter parameters
+      if (filterStatus !== "all") {
+        query.status = filterStatus;
+      }
+
+      if (filterDepartment !== "all") {
+        query.department = filterDepartment;
+      }
+
+      if (filterRole !== "all") {
+        const roleId = getRoleIdByName(filterRole);
+        if (roleId) {
+          query.role_id = roleId;
+        }
+      }
+
       if (skipCache) {
         query.skipCache = true;
       }
 
       return query;
     },
-    [searchTerm],
+    [searchTerm, filterStatus, filterDepartment, filterRole, roleLookup],
   );
 
   const fetchUsers = useCallback(
@@ -353,12 +378,21 @@ export default function UserManagementPage() {
       searchTermOverride?: string;
     } = {}): Promise<PaginatedResponse<UserType>> => {
       const term = (searchTermOverride ?? searchTerm)?.trim();
-      if (term) {
+
+      // Check if any filter is active
+      const hasActiveFilters =
+        filterStatus !== "all" ||
+        filterDepartment !== "all" ||
+        filterRole !== "all";
+
+      // If there's a search term OR active filters, use searchUsers with combined params
+      if (term || hasActiveFilters) {
         return userService.searchUsers(
           buildSearchQuery({ skipCache, searchTermOverride: term }),
         );
       }
 
+      // No search term or filters - use basic getUsers
       const baseQuery: Record<string, unknown> = {};
       if (skipCache) {
         baseQuery.skipCache = true;
@@ -366,7 +400,7 @@ export default function UserManagementPage() {
 
       return userService.getUsers(baseQuery);
     },
-    [buildSearchQuery, searchTerm],
+    [buildSearchQuery, searchTerm, filterStatus, filterDepartment, filterRole],
   );
 
   const loadData = useCallback(
@@ -1436,6 +1470,14 @@ export default function UserManagementPage() {
               {isSelectionMode ? "Exit Selection" : "Select Users"}
             </button>
           )}
+          <button
+            onClick={() => navigate("./analytics")}
+            className={`${tw.button} flex items-center gap-2`}
+            title="View user analytics"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </button>
           <PermissionGate permission="users.create">
             <button
               onClick={() => {
@@ -3022,6 +3064,176 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Filters Modal */}
+      {(showFiltersModal || isClosingModal) &&
+        createPortal(
+          <div
+            className={`fixed inset-0 overflow-hidden transition-opacity duration-300 ${
+              isClosingModal ? "opacity-0" : "opacity-100"
+            }`}
+            style={{ zIndex: zIndex.overlay }}
+          >
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+              onClick={handleCloseModal}
+            />
+
+            {/* Side Modal Panel */}
+            <div
+              className={`absolute right-0 top-0 h-full w-96 bg-white shadow-xl transform transition-transform duration-300 overflow-y-auto ${
+                isClosingModal ? "translate-x-full" : "translate-x-0"
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                <button
+                  onClick={handleCloseModal}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Filter Sections */}
+              <div className="px-6 py-6 space-y-8">
+                {/* Department Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Department
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="department"
+                        value="all"
+                        checked={filterDepartment === "all"}
+                        onChange={(e) => setFilterDepartment(e.target.value)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm text-gray-700">All Departments</span>
+                    </label>
+                    {uniqueDepartments.map((dept) => (
+                      <label key={dept} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="department"
+                          value={dept}
+                          checked={filterDepartment === dept}
+                          onChange={(e) => setFilterDepartment(e.target.value)}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm text-gray-700">{dept}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Role Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Role
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="role"
+                        value="all"
+                        checked={filterRole === "all"}
+                        onChange={(e) => setFilterRole(e.target.value)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm text-gray-700">All Roles</span>
+                    </label>
+                    {uniqueRoles.map((role) => (
+                      <label key={role} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="role"
+                          value={role}
+                          checked={filterRole === role}
+                          onChange={(e) => setFilterRole(e.target.value)}
+                          className="h-4 w-4"
+                        />
+                        <span className="text-sm text-gray-700">{role}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-3">
+                    Status
+                  </label>
+                  <div className="space-y-2">
+                    {["all", "active", "inactive", "pending_activation", "suspended", "locked", "deactivated", "deleted"].map(
+                      (status) => (
+                        <label
+                          key={status}
+                          className="flex items-center gap-3 cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name="status"
+                            value={status}
+                            checked={filterStatus === status}
+                            onChange={(e) =>
+                              setFilterStatus(
+                                e.target.value as
+                                  | "all"
+                                  | "pending_activation"
+                                  | "active"
+                                  | "suspended"
+                                  | "locked"
+                                  | "deactivated"
+                                  | "deleted"
+                              )
+                            }
+                            className="h-4 w-4"
+                          />
+                          <span className="text-sm text-gray-700 capitalize">
+                            {status === "all"
+                              ? "All Statuses"
+                              : status.replace(/_/g, " ")}
+                          </span>
+                        </label>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="sticky bottom-0 bg-white px-6 py-4 flex gap-3">
+                <button
+                  onClick={() => {
+                    setFilterDepartment("all");
+                    setFilterRole("all");
+                    setFilterStatus("all");
+                    handleCloseModal();
+                  }}
+                  className={`flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 ${tw.rounded} hover:bg-gray-200 transition-colors`}
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={handleCloseModal}
+                  className={`flex-1 px-4 py-2 text-sm font-medium text-white ${tw.rounded} transition-colors`}
+                  style={{ backgroundColor: color.primary.accent }}
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
     </div>
   );

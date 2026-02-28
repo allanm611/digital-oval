@@ -1,13 +1,23 @@
-import React from "react";
-import { PermissionGate } from "../../auth/components/PermissionGate";
-import UserAnalyticsPage from "./UserAnalyticsPage";
+/**
+ * UserAnalyticsPageWrapper - Permission & Suspense-enabled wrapper for UserAnalyticsPage
+ *
+ * This wrapper adds permission gating and Suspense support to UserAnalyticsPage without modifying the original component.
+ */
 
-const UserAnalyticsPageWrapper: React.FC = () => {
+import UserAnalyticsPage from "./UserAnalyticsPage";
+import { SuspenseBoundary } from "../../../shared/components/SuspenseBoundaryWrapper";
+import { PermissionGate } from "../../auth/components/PermissionGate";
+
+/**
+ * Permission-gated + Suspense-enabled wrapper
+ * Shows loading skeleton while UserAnalyticsPage mounts and loads its data
+ */
+export default function UserAnalyticsPageWrapper() {
   return (
-    <PermissionGate permission="users.view">
-      <UserAnalyticsPage />
+    <PermissionGate permission="users.read">
+      <SuspenseBoundary type="page">
+        <UserAnalyticsPage />
+      </SuspenseBoundary>
     </PermissionGate>
   );
-};
-
-export default UserAnalyticsPageWrapper;
+}
