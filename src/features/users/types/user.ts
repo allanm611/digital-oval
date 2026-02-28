@@ -34,6 +34,7 @@ export type UserType = {
   access_expires_at?: string | null;
   ip_whitelist?: string[] | null;
   status?: "active" | "inactive" | "suspended" | "locked";
+  is_active?: boolean;
   mfa_enabled?: boolean;
   created_at: string;
   updated_at: string;
@@ -97,6 +98,19 @@ export type LegacyPaginatedResponse<T> = {
     isCachedResponse?: boolean;
     cacheDurationSec?: number;
   };
+};
+
+// Current pagination format with limit/offset
+export type PaginationResponse<T> = {
+  success: true;
+  data: T[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore?: boolean;
+  };
+  source?: string;
 };
 
 // ==================== AUTHENTICATION TYPES ====================
@@ -269,6 +283,8 @@ export type SearchUsersQuery = {
   q?: string;
   page?: number;
   pageSize?: number;
+  limit?: number;
+  offset?: number;
   sortBy?: string;
   sortDirection?: "ASC" | "DESC";
   status?: string;
@@ -539,4 +555,44 @@ export type EndAllSessionsResponse = {
   success: true;
   message: string;
   sessionsEnded?: number;
+};
+
+// ==================== ROLE TYPES ====================
+export type RoleType = {
+  id: number;
+  name: string;
+  code?: string;
+  description?: string | null;
+  [key: string]: unknown;
+};
+
+export type RoleListResponse = {
+  success: true;
+  data: RoleType[];
+  meta?: {
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+    [key: string]: unknown;
+  };
+};
+
+// ==================== ANALYTICS TYPES ====================
+export type ChartTooltipPayload = {
+  color?: string;
+  name?: string;
+  value?: number | string;
+};
+
+export type AccountRequestListItem = {
+  requestId: number;
+  first_name: string;
+  last_name: string;
+  email_address?: string;
+  email?: string;
+  department?: string;
+  created_at?: string;
+  status?: string;
+  rejection_reason?: string;
 };

@@ -8,7 +8,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
 } from "recharts";
 import { userService } from "../services/userService";
 import { userOnboardingService } from "../services/userOnboardingService";
@@ -16,17 +15,18 @@ import { roleService } from "../../roles/services/roleService";
 import { useToast } from "../../../contexts/ToastContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import { UserType } from "../types/user";
+import {
+  UserType,
+  ChartTooltipPayload,
+  AccountRequestListItem,
+  RoleType,
+  RoleListResponse,
+} from "../types/user";
 
 type ChartTooltipProps = {
   active?: boolean;
   label?: string;
-  payload?: Array<{
-    color?: string;
-    name?: string;
-    value?: number | string;
-  }>;
+  payload?: ChartTooltipPayload[];
 };
 
 const CustomTooltip: React.FC<ChartTooltipProps> = ({
@@ -54,21 +54,8 @@ const CustomTooltip: React.FC<ChartTooltipProps> = ({
   );
 };
 
-interface AccountRequestListItem {
-  requestId: number;
-  first_name: string;
-  last_name: string;
-  email_address?: string;
-  email?: string;
-  department?: string;
-  created_at?: string;
-  status?: string;
-  rejection_reason?: string;
-}
-
 export default function UserAnalyticsPage() {
   const { error: showError } = useToast();
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -160,13 +147,13 @@ export default function UserAnalyticsPage() {
           });
           return result;
         }
-        return data as Record<string, number>;
+        return data;
       };
 
       // Set users data
       if (usersRes?.success && usersRes?.data) {
         setUsers(usersRes.data);
-        const totalFromResponse = (usersRes.meta?.total as number | undefined) ?? usersRes.data.length;
+        const totalFromResponse = (usersRes.meta?.total ?? usersRes.data.length);
         setUserSummary({
           total: totalFromResponse,
           cached: Boolean(usersRes.meta?.isCachedResponse),
@@ -178,15 +165,16 @@ export default function UserAnalyticsPage() {
       const statusResponses = [submittedRes, underReviewRes];
       statusResponses.forEach((response) => {
         if (response?.success && response?.data) {
-          response.data.forEach((req: any) => {
+          response.data.forEach((req) => {
+            const reqTyped = req as { id: number; first_name: string; last_name: string; email_address?: string; department?: string; created_at?: string; status?: string };
             allRequests.push({
-              requestId: req.id,
-              first_name: req.first_name,
-              last_name: req.last_name,
-              email_address: req.email_address,
-              department: req.department,
-              created_at: req.created_at,
-              status: req.status || "submitted",
+              requestId: reqTyped.id,
+              first_name: reqTyped.first_name,
+              last_name: reqTyped.last_name,
+              email_address: reqTyped.email_address,
+              department: reqTyped.department,
+              created_at: reqTyped.created_at,
+              status: reqTyped.status || "submitted",
             });
           });
         }
@@ -195,8 +183,9 @@ export default function UserAnalyticsPage() {
 
       // Build role lookup from roles list
       const rolesMap: Record<number | string, string> = {};
-      if (rolesListRes?.success && rolesListRes?.data && Array.isArray(rolesListRes.data)) {
-        rolesListRes.data.forEach((role: any) => {
+      const rolesListTyped = rolesListRes as RoleListResponse | null | undefined;
+      if (rolesListTyped?.success && rolesListTyped?.data && Array.isArray(rolesListTyped.data)) {
+        rolesListTyped.data.forEach((role) => {
           if ((role.id || role.id === 0) && role.name) {
             // Store both numeric and string versions for flexible lookup
             rolesMap[role.id] = role.name;
@@ -208,15 +197,16 @@ export default function UserAnalyticsPage() {
       // If we have role counts, extract unique role IDs and fetch their details
       const uniqueRoleIds = new Set<number>();
       if (roleRes?.data && Array.isArray(roleRes.data)) {
-        roleRes.data.forEach((item: any) => {
-          if (item.role_id !== undefined) {
-            uniqueRoleIds.add(item.role_id);
+        roleRes.data.forEach((item) => {
+          const itemTyped = item as { role_id?: number };
+          if (itemTyped.role_id !== undefined) {
+            uniqueRoleIds.add(itemTyped.role_id);
           }
         });
       }
 
       // Fetch individual roles for IDs not found in the list
-      let fetchedRoles: any[] = [];
+      const fetchedRoles: RoleType[] = [];
       if (uniqueRoleIds.size > 0) {
         const roleDetailsPromises = Array.from(uniqueRoleIds).map((roleId) => {
           // Only fetch if we don't already have this role's name
@@ -237,10 +227,10 @@ export default function UserAnalyticsPage() {
       }
 
       // Build roleLookup from both initial roles and fetched roles
-      const initialRoles = rolesListRes?.success && rolesListRes?.data ? rolesListRes.data : [];
+      const initialRoles = rolesListTyped?.success && rolesListTyped?.data ? rolesListTyped.data : [];
       const allRoles = [...initialRoles, ...fetchedRoles];
       const roleLookupData: Record<number, { id: number; name: string }> = {};
-      allRoles.forEach((role: any) => {
+      allRoles.forEach((role) => {
         if (role && role.id && role.name) {
           roleLookupData[role.id] = { id: role.id, name: role.name };
         }
@@ -257,11 +247,12 @@ export default function UserAnalyticsPage() {
 
         if (Array.isArray(roleRes.data)) {
           // For each role count, extract the ID and look up the name
-          roleRes.data.forEach((item: any) => {
+          roleRes.data.forEach((item) => {
+            const itemTyped = item as { role_id?: number; count?: number | string };
             // Extract role ID from role_id field
-            const roleId = item.role_id;
+            const roleId = itemTyped.role_id;
             // Convert count from string to number
-            const count = parseInt(String(item.count), 10);
+            const count = parseInt(String(itemTyped.count), 10);
 
             if (!isNaN(count) && count > 0 && roleId !== undefined) {
               // Try to get role name from lookup map using both numeric and string keys
@@ -285,36 +276,42 @@ export default function UserAnalyticsPage() {
 
       // Set reporting counts and data (from pagination.total or meta.total)
       if (mfaEnabledRes?.success && mfaEnabledRes?.data) {
-        const total = mfaEnabledRes.pagination?.total ?? mfaEnabledRes.meta?.total ?? 0;
+        const mfaEnabledTyped = mfaEnabledRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = mfaEnabledTyped.pagination?.total ?? mfaEnabledTyped.meta?.total ?? 0;
         setMfaEnabledCount(total);
       }
 
       if (mfaDisabledRes?.success && mfaDisabledRes?.data) {
-        const total = mfaDisabledRes.pagination?.total ?? mfaDisabledRes.meta?.total ?? 0;
+        const mfaDisabledTyped = mfaDisabledRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = mfaDisabledTyped.pagination?.total ?? mfaDisabledTyped.meta?.total ?? 0;
         setMfaDisabledCount(total);
         setMfaDisabledUsers(mfaDisabledRes.data);
       }
 
       if (expiringRes?.success && expiringRes?.data) {
-        const total = expiringRes.pagination?.total ?? expiringRes.meta?.total ?? 0;
+        const expiringTyped = expiringRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = expiringTyped.pagination?.total ?? expiringTyped.meta?.total ?? 0;
         setExpiringPasswordsCount(total);
         setExpiringPasswordsUsers(expiringRes.data);
       }
 
       if (expiredRes?.success && expiredRes?.data) {
-        const total = expiredRes.pagination?.total ?? expiredRes.meta?.total ?? 0;
+        const expiredTyped = expiredRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = expiredTyped.pagination?.total ?? expiredTyped.meta?.total ?? 0;
         setExpiredAccessCount(total);
         setExpiredAccessUsers(expiredRes.data);
       }
 
       if (recentRes?.success && recentRes?.data) {
-        const total = recentRes.pagination?.total ?? recentRes.meta?.total ?? 0;
+        const recentTyped = recentRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = recentTyped.pagination?.total ?? recentTyped.meta?.total ?? 0;
         setRecentUsersCount(total);
         setRecentUsers(recentRes.data);
       }
 
       if (inactiveRes?.success && inactiveRes?.data) {
-        const total = inactiveRes.pagination?.total ?? inactiveRes.meta?.total ?? 0;
+        const inactiveTyped = inactiveRes as { success: true; data: UserType[]; pagination?: { total: number }; meta?: { total: number } };
+        const total = inactiveTyped.pagination?.total ?? inactiveTyped.meta?.total ?? 0;
         setInactiveUsersCount(total);
         setInactiveUsers(inactiveRes.data);
       }
@@ -329,8 +326,8 @@ export default function UserAnalyticsPage() {
       ];
 
       const tableRoleIds = new Set<number>();
-      allTableUsers.forEach((user: any) => {
-        if (user.primary_role_id !== undefined) {
+      allTableUsers.forEach((user) => {
+        if (user.primary_role_id !== undefined && user.primary_role_id !== null) {
           tableRoleIds.add(user.primary_role_id);
         }
       });
@@ -362,7 +359,7 @@ export default function UserAnalyticsPage() {
         });
         setRoleLookup(updatedRoleLookup);
       }
-    } catch (err) {
+    } catch {
       showError("Failed to load analytics", "Please try again later");
     } finally {
       setIsLoading(false);
@@ -768,7 +765,7 @@ export default function UserAnalyticsPage() {
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
-                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                            {user.primary_role_id !== null && user.primary_role_id !== undefined ? (roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`) : "No Role"}
                           </td>
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
@@ -852,7 +849,7 @@ export default function UserAnalyticsPage() {
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
-                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                            {user.primary_role_id !== null && user.primary_role_id !== undefined ? (roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`) : "No Role"}
                           </td>
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
@@ -920,7 +917,7 @@ export default function UserAnalyticsPage() {
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
-                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                            {user.primary_role_id !== null && user.primary_role_id !== undefined ? (roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`) : "No Role"}
                           </td>
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
@@ -988,7 +985,7 @@ export default function UserAnalyticsPage() {
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
-                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                            {user.primary_role_id !== null && user.primary_role_id !== undefined ? (roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`) : "No Role"}
                           </td>
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
@@ -1072,7 +1069,7 @@ export default function UserAnalyticsPage() {
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
                             style={{ backgroundColor: color.surface.tablebodybg }}
                           >
-                            {roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`}
+                            {user.primary_role_id !== null && user.primary_role_id !== undefined ? (roleLookup[user.primary_role_id]?.name || `Role #${user.primary_role_id}`) : "No Role"}
                           </td>
                           <td
                             className="px-4 sm:px-6 py-3 sm:py-4 text-sm"
