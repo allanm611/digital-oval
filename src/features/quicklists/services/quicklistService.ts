@@ -150,8 +150,8 @@ class QuickListService {
       formData.append("description", request.description);
     if (request.created_by)
       formData.append("created_by", String(request.created_by));
-    // Use the upload_type from the request, default to "customer_subscription" if not provided
-    formData.append("upload_type", request.upload_type || "customer_subscription");
+    // Use the upload_type from the request, default to "generic" if not provided
+    formData.append("upload_type", request.upload_type || "generic");
 
     // Use buildDirectBackendUrl which routes through proxy on Vercel (same domain, avoids CORS/SSL issues)
     const url = `${buildDirectBackendUrl("/quicklists")}`;

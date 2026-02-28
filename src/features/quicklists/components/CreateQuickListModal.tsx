@@ -37,7 +37,7 @@ const defaultForm: QuickListFormValues = {
   subscriber_id_col_name: "",
   subscriber_id_field_mapping: "",
   file_delimiter: ",",
-  upload_type: "customer_subscription",
+  upload_type: "generic",
   list_headers: "",
   file_text: "",
 };
@@ -81,7 +81,7 @@ export default function CreateQuickListModal({
       subscriber_id_col_name: initialData?.subscriber_id_col_name || "",
       subscriber_id_field_mapping: "",
       file_delimiter: initialData?.file_delimiter || ",",
-      upload_type: (initialData as any)?.upload_type || "customer_subscription",
+      upload_type: (initialData as any)?.upload_type || "generic",
       list_headers: initialData?.list_headers || "",
       file_text: initialData?.file_text || "",
       file_name: initialData?.file_name,
@@ -113,8 +113,8 @@ export default function CreateQuickListModal({
         }
       } catch (err) {
         console.error("Failed to load upload types:", err);
-        // Default to customer_subscription if loading fails
-        setUploadTypes([{ id: 1, upload_type: "customer_subscription", description: "Customer subscription upload type" }]);
+        // Default to generic if loading fails
+        setUploadTypes([{ id: 1, upload_type: "generic", description: "Generic upload type" }]);
       } finally {
         setIsLoadingUploadTypes(false);
       }
