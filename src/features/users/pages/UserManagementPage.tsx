@@ -1153,7 +1153,17 @@ export default function UserManagementPage() {
       }
       // Optimistically update user status
       setUsers((prev) =>
-        prev.map((u) => (u.id === user.id ? { ...u, status: isActive ? "deactivated" : "active" } : u)),
+        prev.map((u) =>
+          u.id === user.id
+            ? {
+                ...u,
+                status: isActive ? "deactivated" : "active",
+                is_active: !isActive,
+                is_activated: !isActive,
+                account_status: isActive ? "deactivated" : "active",
+              }
+            : u
+        ),
       );
     } catch (err) {
       showError(

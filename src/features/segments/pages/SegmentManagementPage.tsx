@@ -756,7 +756,8 @@ export default function SegmentManagementPage() {
     } catch (err: unknown) {
       showError(
         "Refresh failed",
-        (err as Error).message || "Failed to refresh segment",
+        "Failed to compute segment. Please try again later.",
+        true, // Bypass VITE_SILENT_MODE to show error
       );
     }
   };

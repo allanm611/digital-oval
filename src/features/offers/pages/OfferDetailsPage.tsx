@@ -1221,7 +1221,10 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "approve",
         successMessage: `Offer Approved: "${offer?.name}" has been approved successfully.`,
-        updateFields: { approval_status: "approved" },
+        updateFields: {
+          status: OfferStatusEnum.APPROVED,
+          approval_status: "approved"
+        },
       });
     } finally {
       setIsApproveLoading(false);
@@ -1238,7 +1241,10 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "reject",
         successMessage: `Offer Rejected: "${offer?.name}" has been rejected.`,
-        updateFields: { approval_status: "rejected" },
+        updateFields: {
+          status: OfferStatusEnum.REJECTED,
+          approval_status: "rejected"
+        },
       });
     } finally {
       setIsRejectLoading(false);
@@ -1251,7 +1257,10 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "request_approval",
         successMessage: "Approval Requested: Your approval request has been submitted successfully.",
-        updateFields: { approval_status: "pending" },
+        updateFields: {
+          status: OfferStatusEnum.PENDING_APPROVAL,
+          approval_status: "pending",
+        },
       });
     } finally {
       setIsRequestApprovalLoading(false);
@@ -1264,7 +1273,7 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "activate",
         successMessage: `Offer Activated: "${offer?.name}" is now active.`,
-        updateFields: { lifecycle_status: "active" },
+        updateFields: { status: OfferStatusEnum.ACTIVE },
       });
     } finally {
       setIsActivateLoading(false);
@@ -1277,7 +1286,7 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "pause",
         successMessage: `Offer Paused: "${offer?.name}" has been paused.`,
-        updateFields: { lifecycle_status: "paused" },
+        updateFields: { status: OfferStatusEnum.PAUSED },
       });
     } finally {
       setIsPauseLoading(false);
@@ -1290,7 +1299,7 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "expire",
         successMessage: `Offer Expired: "${offer?.name}" has been expired.`,
-        updateFields: { lifecycle_status: "expired" },
+        updateFields: { status: OfferStatusEnum.EXPIRED },
         onSuccess: () => setShowExpireModal(false),
       });
     } finally {
@@ -1304,7 +1313,7 @@ export default function OfferDetailsPage() {
       await handleOfferDetailAction({
         action: "archive",
         successMessage: `Offer Archived: "${offer?.name}" has been archived.`,
-        updateFields: { lifecycle_status: "archived" },
+        updateFields: { status: OfferStatusEnum.ARCHIVED },
         onSuccess: () => setShowArchiveModal(false),
       });
     } finally {
