@@ -29,7 +29,6 @@ export default function DynamicMessageVariablesPage() {
   const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
   const [fieldConfigs, setFieldConfigs] = useState<MessageVariableFieldConfig[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [editedDefaultValues, setEditedDefaultValues] = useState<{ [key: number]: string }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [togglingId, setTogglingId] = useState<number | null>(null);

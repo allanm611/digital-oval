@@ -623,18 +623,17 @@ export interface SegmentCondition {
     | "not_in"
     // System Event time operators
     | "occurred"
-    | "occurred_in_last_days"
-    | "occurred_in_last_months"
+    | "occurred_in_last"
+    | "on_date"
+    | "between_dates"
     | "count_greater_than"
     | "count_less_than"
     | "count_equals"
     | "never_occurred"
     // KPI time-based operators
-    | "in_last_days"
-    | "on_date"
-    | "between_dates";
+    | "in_last_days";
   operator_id?: number; // Backend operator ID - used for API calls
-  value: string | number | string[];
+  value: string | number | string[] | { start: string; end: string };
   type: "string" | "number" | "boolean" | "array";
 }
 

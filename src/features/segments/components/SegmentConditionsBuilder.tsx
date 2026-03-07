@@ -731,20 +731,85 @@ export default function SegmentConditionsBuilder({
         {selectedEvent &&
           currentOperatorOption &&
           currentOperatorOption.requiresValue && (
-            <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
-              <input
-                type="number"
-                value={condition.value || ""}
-                onChange={(e) => {
-                  updateCondition(groupId, condition.id, {
-                    value: e.target.value ? parseInt(e.target.value) : "",
-                  });
-                }}
-                placeholder={currentOperatorOption.placeholder || "Enter value"}
-                className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
-                style={{ borderColor: color.border.default }}
-              />
-            </div>
+            <>
+              {condition.operator === "on_date" ? (
+                <div className="min-w-[180px] flex-shrink-0">
+                  <input
+                    type="date"
+                    value={(typeof condition.value === "string" ? condition.value : "") || ""}
+                    onChange={(e) => {
+                      updateCondition(groupId, condition.id, {
+                        value: e.target.value || "",
+                      });
+                    }}
+                    className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                    style={{ borderColor: color.border.default }}
+                  />
+                </div>
+              ) : condition.operator === "between_dates" ? (
+                <>
+                  <div className="min-w-[180px] flex-shrink-0">
+                    <input
+                      type="date"
+                      value={
+                        condition.value && typeof condition.value === "object"
+                          ? (condition.value as { start: string; end: string }).start || ""
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const currentVal =
+                          condition.value && typeof condition.value === "object"
+                            ? (condition.value as { start: string; end: string })
+                            : { start: "", end: "" };
+                        updateCondition(groupId, condition.id, {
+                          value: { ...currentVal, start: e.target.value },
+                        });
+                      }}
+                      placeholder="Start date"
+                      className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  </div>
+                  <div className="min-w-[180px] flex-shrink-0">
+                    <input
+                      type="date"
+                      value={
+                        condition.value && typeof condition.value === "object"
+                          ? (condition.value as { start: string; end: string }).end || ""
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const currentVal =
+                          condition.value && typeof condition.value === "object"
+                            ? (condition.value as { start: string; end: string })
+                            : { start: "", end: "" };
+                        updateCondition(groupId, condition.id, {
+                          value: { ...currentVal, end: e.target.value },
+                        });
+                      }}
+                      placeholder="End date"
+                      className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                      style={{ borderColor: color.border.default }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
+                  <input
+                    type="number"
+                    value={typeof condition.value === "object" ? "" : (condition.value || "")}
+                    onChange={(e) => {
+                      updateCondition(groupId, condition.id, {
+                        value: e.target.value ? parseInt(e.target.value) : "",
+                      });
+                    }}
+                    placeholder={currentOperatorOption.placeholder || "Enter value"}
+                    className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                    style={{ borderColor: color.border.default }}
+                  />
+                </div>
+              )}
+            </>
           )}
 
         {/* Unit Selector (for "Occurred in Last" operator) - Only show if event selected */}

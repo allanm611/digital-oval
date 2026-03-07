@@ -2,6 +2,8 @@ export type SystemEventCategory = "email" | "sms" | "campaign" | "customer_journ
 export type SystemEventTimeOperator =
   | "occurred"
   | "occurred_in_last"
+  | "on_date"
+  | "between_dates"
   | "greater_than"
   | "equals"
   | "less_than"
@@ -70,6 +72,20 @@ export const TIME_OPERATOR_OPTIONS: Record<SystemEventTimeOperator, SystemEventT
     requiresValue: true,
     valueType: "number",
     placeholder: "e.g., 7",
+  },
+  on_date: {
+    value: "on_date",
+    label: "On Date",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "Select date",
+  },
+  between_dates: {
+    value: "between_dates",
+    label: "Between Dates",
+    requiresValue: true,
+    valueType: "number",
+    placeholder: "Select dates",
   },
   greater_than: {
     value: "greater_than",
