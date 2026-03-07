@@ -80,6 +80,7 @@ export default function TeamRolesPermissionsPage() {
   const [rolesLevelFilter, setRolesLevelFilter] = useState("");
   const [rolesDataAccessFilter, setRolesDataAccessFilter] = useState("");
   const [togglingRoleId, setTogglingRoleId] = useState<number | null>(null);
+  const [cloningRoleId, setCloningRoleId] = useState<number | null>(null);
   const [rolesPaginationModel, setRolesPaginationModel] =
     useState<PaginationModel>({
       page: 0,
@@ -154,6 +155,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.analytics.failedToLoad,
+        true,
       );
     } finally {
       setRolesLoading(false);
@@ -249,21 +251,23 @@ export default function TeamRolesPermissionsPage() {
     const newName = `${role.name} (Clone)`;
 
     try {
-      setRolesLoading(true);
+      setCloningRoleId(role.id);
       await roleService.cloneRole(role.id, {
         newCode,
         newName,
         userId,
       } as CloneRoleRequest);
       success("Success", `Role "${role.name}" has been cloned`);
+      // Fetch roles to show the newly cloned role
       fetchRoles();
     } catch (err) {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.common.failedToPerformAction,
+        true,
       );
     } finally {
-      setRolesLoading(false);
+      setCloningRoleId(null);
     }
   };
 
@@ -283,7 +287,7 @@ export default function TeamRolesPermissionsPage() {
     if (!roleToDeactivate) return;
 
     if (!roleDeactivationReason.trim()) {
-      showError(t.common.error, t.common.fieldRequired);
+      showError(t.common.error, t.common.fieldRequired, true);
       return;
     }
 
@@ -311,6 +315,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.common.failedToPerformAction,
+        true,
       );
     } finally {
       setDeactivatingRoleId(null);
@@ -330,6 +335,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.common.failedToPerformAction,
+        true,
       );
     } finally {
       setTogglingRoleId(null);
@@ -345,7 +351,7 @@ export default function TeamRolesPermissionsPage() {
     if (!deleteTarget || deleteTarget.type !== "role") return;
 
     if (!userId) {
-      showError(t.common.error, "User ID is required to delete a role");
+      showError(t.common.error, "User ID is required to delete a role", true);
       return;
     }
 
@@ -364,6 +370,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.common.failedToPerformAction,
+        true,
       );
     } finally {
       setIsDeleting(false);
@@ -403,6 +410,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.analytics.failedToLoad,
+        true,
       );
       setPermissions([]);
     } finally {
@@ -483,6 +491,7 @@ export default function TeamRolesPermissionsPage() {
       showError(
         t.common.error,
         err instanceof Error ? err.message : t.common.failedToPerformAction,
+        true,
       );
     } finally {
       setDeactivatingPermissionId(null);
@@ -752,10 +761,19 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleCloneRole(role)}
-                            className="p-1.5 text-gray-600 rounded transition-colors"
+                            disabled={cloningRoleId === role.id}
+                            className={`p-1.5 rounded transition-colors ${
+                              cloningRoleId === role.id
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-gray-600"
+                            }`}
                             title="Clone"
                           >
-                            <Copy className="w-4 h-4" />
+                            {cloningRoleId === role.id ? (
+                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleToggleRoleActive(role)}
@@ -791,19 +809,13 @@ export default function TeamRolesPermissionsPage() {
                           </button>
                           <button
                             onClick={() => handleDeleteRole(role)}
-                            // disabled={role.is_system_role}
+                            disabled={isDeleting}
                             className={`p-1.5 rounded transition-colors ${
-                              // role.is_system_role
-                              //   ? "opacity-50 cursor-not-allowed text-gray-400"
-                              //   :
-                              "text-red-600"
+                              isDeleting
+                                ? "opacity-50 cursor-not-allowed text-gray-400"
+                                : "text-red-600"
                             }`}
-                            title={
-                              // role.is_system_role
-                              //   ? "Cannot modify system roles"
-                              //   :
-                              "Delete"
-                            }
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -998,7 +1010,9 @@ export default function TeamRolesPermissionsPage() {
                               permission.is_active ? "Deactivate" : "Reactivate"
                             }
                           >
-                            {permission.is_active ? (
+                            {deactivatingPermissionId === permission.id ? (
+                              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                            ) : permission.is_active ? (
                               <PowerOff className="w-4 h-4" />
                             ) : (
                               <Play className="w-4 h-4" />

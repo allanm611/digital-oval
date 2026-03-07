@@ -136,19 +136,40 @@ export default function DefineCommunicationStep({
   }, [data.selectedCommunicationPolicyId]);
 
   const handleVariableSelect = (variable: TemplateVariable) => {
-    if (!selectedVariables.find((v) => v.id === variable.id)) {
+    // Validate input data
+    if (!variable) {
+      setVariableError("No variable selected");
+      return;
+    }
+
+    if (!selectedVariables) {
+      setSelectedVariables([]);
+    }
+
+    if (!selectedVariables.find((v) => v?.id === variable.id)) {
       setSelectedVariables((prev) => [...prev, variable]);
+    }
+
+    // Validate activeField before using
+    if (!activeField) {
+      setVariableError("No active field selected");
+      return;
     }
 
     // Get actual cursor position from DOM element
     let actualCursorPosition = cursorPosition;
-    if (activeField === "title" && titleInputRef.current) {
+    if (activeField === "title" && titleInputRef?.current) {
       actualCursorPosition = titleInputRef.current.selectionStart || 0;
-    } else if (activeField === "body" && bodyTextareaRef.current) {
+    } else if (activeField === "body" && bodyTextareaRef?.current) {
       actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
     }
 
+    // Validate message content before inserting
     if (activeField === "title") {
+      if (typeof messageTitle !== "string") {
+        setVariableError("Message title is not available");
+        return;
+      }
       const currentText = messageTitle;
 
       // Validate cursor position
@@ -182,12 +203,30 @@ export default function DefineCommunicationStep({
         }
       }, 0);
     } else {
+      // Validate message body availability
+      if (typeof messageBody !== "string") {
+        setVariableError("Message body is not available");
+        return;
+      }
+
       if (isRichText) {
+        if (!variable) {
+          setVariableError("Variable not selected");
+          return;
+        }
         const placeholder = formatVariablePlaceholder(variable);
+        if (!placeholder) {
+          setVariableError("Could not format variable placeholder");
+          return;
+        }
         setMessageBody(messageBody + " " + placeholder + " ");
         setVariableError("");
       } else {
         const currentText = messageBody;
+        if (typeof currentText !== "string") {
+          setVariableError("Message body is not available");
+          return;
+        }
 
         // Validate cursor position
         const positionError = validateInsertPosition(currentText, actualCursorPosition);
@@ -226,10 +265,21 @@ export default function DefineCommunicationStep({
 
   // Handle opening customization modal
   const handleCustomizePolicy = (policy: CommunicationPolicyConfiguration) => {
+    // Validate policy data
+    if (!policy) {
+      showError("No policy selected for customization");
+      return;
+    }
+
+    if (!policy.id || !policy.name) {
+      showError("Policy data is incomplete");
+      return;
+    }
+
     // Create a copy of the policy with a temporary name for the modal
     const policyWithTempName = {
       ...policy,
-      name: `${policy.name} - Customizing...`,
+      name: `${policy.name || "Unknown"} - Customizing...`,
     };
     setPolicyToCustomize(policyWithTempName);
     setIsCustomizationModalOpen(true);
@@ -239,6 +289,12 @@ export default function DefineCommunicationStep({
   const handleSaveCustomizedPolicy = async (
     policyData: Record<string, unknown>,
   ) => {
+    // Validate policyData
+    if (!policyData || typeof policyData !== "object") {
+      showError("Invalid policy data");
+      return;
+    }
+
     // Store the policy data and open name modal
     // First close the customization modal
     setIsCustomizationModalOpen(false);
@@ -250,26 +306,54 @@ export default function DefineCommunicationStep({
 
   // Handle confirming policy name
   const handleConfirmPolicyName = async (policyName: string) => {
-    if (!pendingPolicyData || !policyToCustomize) return;
+    // Validate inputs
+    if (!pendingPolicyData || typeof pendingPolicyData !== "object") {
+      showError("Policy data is not available");
+      return;
+    }
+
+    if (!policyToCustomize) {
+      showError("No policy selected for customization");
+      return;
+    }
+
+    if (!policyName || typeof policyName !== "string" || !policyName.trim()) {
+      showError("Please provide a valid policy name");
+      return;
+    }
 
     try {
       // Get the original policy name (remove the temporary suffix)
-      const originalPolicyName = policyToCustomize.name.replace(
+      const originalPolicyName = policyToCustomize.name?.replace(
         " - Customizing...",
         "",
-      );
+      ) || "Unknown";
+
+      // Validate required policy configuration
+      const channels = pendingPolicyData.channels as any[];
+      const config = pendingPolicyData.config;
+
+      if (!channels || !Array.isArray(channels) || channels.length === 0) {
+        showError("Please select at least one channel for the policy");
+        return;
+      }
 
       // Create new policy with customized configuration
       const newPolicy = communicationPolicyService.createPolicy({
-        name: policyName,
+        name: policyName.trim(),
         description:
-          pendingPolicyData.description ||
+          (pendingPolicyData.description as string) ||
           `Custom policy based on ${originalPolicyName}`,
-        channels: pendingPolicyData.channels || ["EMAIL"],
-        type: pendingPolicyData.type,
-        config: pendingPolicyData.config,
+        channels: channels,
+        type: pendingPolicyData.type as string,
+        config: config,
         isActive: pendingPolicyData.isActive ?? true,
       });
+
+      if (!newPolicy) {
+        showError("Failed to create policy");
+        return;
+      }
 
       // Apply the new policy to the broadcast
       setSelectedPolicy(newPolicy);
@@ -294,6 +378,15 @@ export default function DefineCommunicationStep({
   };
 
   const getCharacterInfo = () => {
+    // Validate messageBody availability
+    if (typeof messageBody !== "string") {
+      return { charCount: 0, segments: 0, isUnicode: false };
+    }
+
+    if (!messageBody) {
+      return { charCount: 0, segments: 1, isUnicode: false };
+    }
+
     const charCount = messageBody.length;
     const isUnicode = /[^\x00-\x7F]/.test(messageBody);
     const singleSegmentLimit = isUnicode ? 70 : 160;
@@ -307,60 +400,99 @@ export default function DefineCommunicationStep({
 
   const getSampleDataForPreview = (): Record<string, string> => {
     const sampleData: Record<string, string> = {};
-    if (data.fileColumns && data.fileColumns.length > 0) {
+
+    // Validate data object existence
+    if (!data) {
+      console.warn("Data object is not available for preview");
+      return sampleData;
+    }
+
+    // Validate fileColumns availability
+    if (data.fileColumns && Array.isArray(data.fileColumns) && data.fileColumns.length > 0) {
       data.fileColumns.forEach((col) => {
-        sampleData[col] = `[${col}]`;
+        if (col && typeof col === "string") {
+          sampleData[col] = `[${col}]`;
+        }
       });
     }
-    (selectedVariables || []).forEach((variable) => {
-      const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
-      switch (variable.fieldType) {
-        case "text":
-          if ((variable.value || "").includes("name"))
-            sampleData[key] = "John Doe";
-          else if ((variable.value || "").includes("email"))
-            sampleData[key] = "john@example.com";
-          else if ((variable.value || "").includes("phone"))
-            sampleData[key] = "+1234567890";
-          else sampleData[key] = `Sample ${variable.name}`;
-          break;
-        case "numeric":
-          sampleData[key] = "12345";
-          break;
-        case "date":
-          sampleData[key] = new Date().toLocaleDateString();
-          break;
-        case "boolean":
-          sampleData[key] = "Yes";
-          break;
-        default:
-          sampleData[key] = `[${variable.name}]`;
-      }
-    });
+
+    // Validate selectedVariables availability
+    if (selectedVariables && Array.isArray(selectedVariables)) {
+      selectedVariables.forEach((variable) => {
+        if (!variable) {
+          return; // Skip undefined variables
+        }
+        const key = `${(variable.sourceName || "source").toLowerCase().replace(/\s+/g, "_")}.${variable.value || "field"}`;
+        switch (variable.fieldType) {
+          case "text":
+            if ((variable.value || "").includes("name"))
+              sampleData[key] = "John Doe";
+            else if ((variable.value || "").includes("email"))
+              sampleData[key] = "john@example.com";
+            else if ((variable.value || "").includes("phone"))
+              sampleData[key] = "+1234567890";
+            else sampleData[key] = `Sample ${variable.name || "value"}`;
+            break;
+          case "numeric":
+            sampleData[key] = "12345";
+            break;
+          case "date":
+            sampleData[key] = new Date().toLocaleDateString();
+            break;
+          case "boolean":
+            sampleData[key] = "Yes";
+            break;
+          default:
+            sampleData[key] = `[${variable.name || "value"}]`;
+        }
+      });
+    }
     return sampleData;
   };
 
   const handleNext = () => {
-    if (!messageBody.trim()) {
+    // Validate messageBody
+    if (!messageBody || typeof messageBody !== "string" || !messageBody.trim()) {
       setError(t.manualBroadcast.errorMessageBodyRequired);
       return;
     }
-    if (selectedChannel === "EMAIL" && !messageTitle.trim()) {
-      setError(t.manualBroadcast.errorSubjectRequired);
+
+    // Validate selectedChannel
+    if (!selectedChannel) {
+      setError("Please select a communication channel");
       return;
     }
-    if (selectedChannel === "SMS" && !smsRoute.trim()) {
-      setError("Please select an SMS route");
-      return;
+
+    // Validate email requirements
+    if (selectedChannel === "EMAIL") {
+      if (!messageTitle || typeof messageTitle !== "string" || !messageTitle.trim()) {
+        setError(t.manualBroadcast.errorSubjectRequired);
+        return;
+      }
     }
+
+    // Validate SMS requirements
+    if (selectedChannel === "SMS") {
+      if (!smsRoute || typeof smsRoute !== "string" || !smsRoute.trim()) {
+        setError("Please select an SMS route");
+        return;
+      }
+    }
+
+    // Clear any previous errors
     setError("");
+
+    // Validate selectedVariables is an array
+    const validatedVariables = Array.isArray(selectedVariables) ? selectedVariables : [];
+
+    // Update parent with validated data
     onUpdate({
       channel: selectedChannel,
-      messageTitle: messageTitle.trim(),
+      messageTitle: messageTitle?.trim() || "",
       messageBody: messageBody.trim(),
       isRichText,
       smsRoute: selectedChannel === "SMS" ? smsRoute : undefined,
-      selectedVariables,
+      selectedVariables: validatedVariables,
       // Add communication policy data
       selectedCommunicationPolicy: selectedPolicy || undefined,
       selectedCommunicationPolicyId: selectedPolicy?.id || undefined,

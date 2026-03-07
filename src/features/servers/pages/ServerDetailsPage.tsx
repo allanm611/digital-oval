@@ -141,18 +141,20 @@ export default function ServerDetailsPage() {
 
     setActionState(action);
     try {
-      if (action === "activate") {
-        await serverService.activateServer(server.id);
-      } else {
-        await serverService.deactivateServer(server.id);
-      }
+      const updatedServer =
+        action === "activate"
+          ? await serverService.activateServer(server.id)
+          : await serverService.deactivateServer(server.id);
+
+      // Optimistically update the server state
+      setServer(updatedServer);
+
       success(
         `Server ${action === "activate" ? "activated" : "deactivated"}`,
         `${server.name} is now ${
           action === "activate" ? "active" : "inactive"
         }.`,
       );
-      await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} server`,
@@ -179,18 +181,20 @@ export default function ServerDetailsPage() {
 
     setActionState("deprecate");
     try {
-      if (nextAction === "deprecate") {
-        await serverService.deprecateServer(server.id);
-      } else {
-        await serverService.undeprecateServer(server.id);
-      }
+      const updatedServer =
+        nextAction === "deprecate"
+          ? await serverService.deprecateServer(server.id)
+          : await serverService.undeprecateServer(server.id);
+
+      // Optimistically update the server state
+      setServer(updatedServer);
+
       success(
         `Server ${nextAction === "deprecate" ? "deprecated" : "restored"}`,
         nextAction === "deprecate"
           ? `${server.name} will no longer receive new jobs.`
           : `${server.name} is available again.`,
       );
-      await loadServer();
     } catch (err) {
       showError(
         `Failed to ${nextAction} server`,
@@ -224,13 +228,20 @@ export default function ServerDetailsPage() {
       } else {
         await serverService.disableHealthCheck(server.id);
       }
+
+      // Optimistically update the server state
+      setServer((prev) =>
+        prev
+          ? { ...prev, health_check_enabled: action === "enable" }
+          : null,
+      );
+
       success(
         `Health checks ${action === "enable" ? "enabled" : "disabled"}`,
         action === "enable"
           ? `${server.name} will report health automatically.`
           : `${server.name} will no longer be monitored.`,
       );
-      await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} health checks`,
@@ -257,18 +268,20 @@ export default function ServerDetailsPage() {
 
     setActionState("circuit-breaker");
     try {
-      if (action === "enable") {
-        await serverService.enableCircuitBreaker(server.id);
-      } else {
-        await serverService.disableCircuitBreaker(server.id);
-      }
+      const updatedServer =
+        action === "enable"
+          ? await serverService.enableCircuitBreaker(server.id)
+          : await serverService.disableCircuitBreaker(server.id);
+
+      // Optimistically update the server state
+      setServer(updatedServer);
+
       success(
         `Circuit breaker ${action === "enable" ? "enabled" : "disabled"}`,
         `Circuit breaker for ${server.name} is now ${
           action === "enable" ? "enabled" : "disabled"
         }.`,
       );
-      await loadServer();
     } catch (err) {
       showError(
         `Failed to ${action} circuit breaker`,
@@ -294,12 +307,15 @@ export default function ServerDetailsPage() {
 
     setActionState("reset-health");
     try {
-      await serverService.resetHealthCheck(server.id);
+      const updatedServer = await serverService.resetHealthCheck(server.id);
+
+      // Optimistically update the server state
+      setServer(updatedServer);
+
       success(
         "Health check reset",
         `Health check state for ${server.name} has been reset.`,
       );
-      await loadServer();
     } catch (err) {
       showError(
         "Failed to reset health check",
@@ -325,17 +341,23 @@ export default function ServerDetailsPage() {
 
     setActionState("reset-health");
     try {
-      await serverService.pushHealthCheckResult(server.id, {
-        status: healthResultStatus,
-        details: healthResultDetails || undefined,
-      });
+      const updatedServer = await serverService.pushHealthCheckResult(
+        server.id,
+        {
+          status: healthResultStatus,
+          details: healthResultDetails || undefined,
+        },
+      );
+
+      // Optimistically update the server state
+      setServer(updatedServer);
+
       success(
         "Health check result pushed",
         `${healthResultStatus} status has been recorded for ${server.name}.`,
       );
       setShowPushHealthModal(false);
       setHealthResultDetails("");
-      await loadServer();
     } catch (err) {
       showError(
         "Failed to push health check result",

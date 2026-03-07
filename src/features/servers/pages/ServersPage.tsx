@@ -662,8 +662,16 @@ export default function ServersPage() {
             : "will stop automated health polling"
         }.`,
       );
-      await loadServers();
-      await loadStats(); // Refetch health stats to update the stat card
+      // Optimistically update the server
+      setSourceServers((prev) =>
+        prev.map((s) =>
+          s.id === server.id
+            ? { ...s, health_check_enabled: action === "enable" }
+            : s,
+        ),
+      );
+      // Refetch health stats to update the stat card
+      await loadStats();
     } catch (err) {
       showError(
         `Failed to ${action} health checks`,
@@ -994,21 +1002,11 @@ export default function ServersPage() {
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
                         <div className="flex flex-wrap gap-2">
-                          <span
-                            className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
-                            style={{
-                              backgroundColor: color.primary.accent,
-                            }}
-                          >
+                          <span className="text-sm text-gray-600">
                             {server.is_active ? "Active" : "Inactive"}
                           </span>
                           {server.is_deprecated && (
-                            <span
-                              className="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium text-white"
-                              style={{
-                                backgroundColor: color.primary.accent,
-                              }}
-                            >
+                            <span className="text-sm text-purple-600">
                               Deprecated
                             </span>
                           )}
@@ -1049,124 +1047,66 @@ export default function ServersPage() {
                             </button>
                           </PermissionGate>
 
-                          {/* More Actions Menu */}
-                          <div className="relative" ref={menuRef}>
+                          {/* Health Check Toggle Button */}
+                          <PermissionGate permission="servers.update">
                             <button
                               type="button"
-                              onClick={(e) => {
-                                const button = e.currentTarget;
-                                if (openMenuId === server.id) {
-                                  setOpenMenuId(null);
-                                  setMenuPosition(null);
-                                } else {
-                                  setOpenMenuId(server.id);
-                                  // Calculate menu position
-                                  const buttonRect =
-                                    button.getBoundingClientRect();
-                                  setMenuPosition({
-                                    top: buttonRect.bottom + 4,
-                                    left: buttonRect.right - 160, // w-40 = 160px, align right
-                                  });
-                                }
-                              }}
-                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 text-black transition-colors hover:bg-gray-100`}
-                              aria-label={`More actions for ${server.name}`}
-                              title="More actions"
+                              onClick={(e) => handleHealthToggle(server, e)}
+                              disabled={actionState?.id === server.id && actionState?.action === "health"}
+                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
+                                actionState?.id === server.id && actionState?.action === "health"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "text-gray-600 hover:bg-gray-100"
+                              } ${
+                                server.health_check_enabled ? "text-green-600" : ""
+                              }`}
+                              aria-label={`${server.health_check_enabled ? "Disable" : "Enable"} health checks for ${server.name}`}
+                              title={
+                                server.health_check_enabled
+                                  ? "Disable health checks"
+                                  : "Enable health checks"
+                              }
                             >
-                              <MoreVertical size={16} />
-                            </button>
-
-                            {/* Dropdown Menu - Using createPortal to avoid overflow issues */}
-                            {openMenuId === server.id &&
-                              menuPosition &&
-                              createPortal(
-                                <div
-                                  ref={menuRef}
-                                  className="fixed bg-white rounded shadow-lg border border-gray-200 w-40 py-1"
-                                  style={{
-                                    top: `${menuPosition.top}px`,
-                                    left: `${menuPosition.left}px`,
-                                    zIndex: zIndex.popover,
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {/* Health Check Option */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      handleHealthToggle(server, e);
-                                      setOpenMenuId(null);
-                                      setMenuPosition(null);
-                                    }}
-                                    disabled={healthLoading}
-                                    className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors ${
-                                      healthLoading ? "opacity-50" : ""
-                                    } ${
-                                      server.health_check_enabled
-                                        ? "text-green-600"
-                                        : "text-black"
-                                    }`}
-                                    title={
-                                      server.health_check_enabled
-                                        ? "Disable health checks"
-                                        : "Enable health checks"
-                                    }
-                                  >
-                                    {healthLoading ? (
-                                      <Loader2
-                                        size={14}
-                                        className="animate-spin"
-                                      />
-                                    ) : (
-                                      <HeartPulse size={14} />
-                                    )}
-                                    <span>
-                                      {server.health_check_enabled
-                                        ? "Disable Health"
-                                        : "Enable Health"}
-                                    </span>
-                                  </button>
-
-                                  {/* Deprecate Option */}
-                                  <PermissionGate permission="servers.delete">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        handleDeprecationToggle(server, e);
-                                        setOpenMenuId(null);
-                                        setMenuPosition(null);
-                                      }}
-                                      disabled={deprecateLoading}
-                                      className={`w-full text-left px-4 py-2 text-sm flex items-center gap-2 hover:bg-gray-100 transition-colors border-t border-gray-100 ${
-                                        deprecateLoading ? "opacity-50" : ""
-                                      } text-purple-600`}
-                                      title={
-                                        server.is_deprecated
-                                          ? "Undeprecate"
-                                          : "Deprecate"
-                                      }
-                                    >
-                                      {deprecateLoading ? (
-                                        <Loader2
-                                          size={14}
-                                          className="animate-spin"
-                                        />
-                                      ) : server.is_deprecated ? (
-                                        <RotateCcw size={14} />
-                                      ) : (
-                                        <Archive size={14} />
-                                      )}
-                                      <span>
-                                        {server.is_deprecated
-                                          ? "Undeprecate"
-                                          : "Deprecate"}
-                                      </span>
-                                    </button>
-                                  </PermissionGate>
-                                </div>,
-                                document.body,
+                              {actionState?.id === server.id && actionState?.action === "health" ? (
+                                <Loader2
+                                  size={16}
+                                  className="animate-spin"
+                                />
+                              ) : (
+                                <HeartPulse size={16} />
                               )}
-                          </div>
+                            </button>
+                          </PermissionGate>
+
+                          {/* Deprecate Toggle Button */}
+                          <PermissionGate permission="servers.delete">
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeprecationToggle(server, e)}
+                              disabled={actionState?.id === server.id && actionState?.action === "deprecate"}
+                              className={`inline-flex items-center justify-center ${tw.rounded} p-2 transition-colors ${
+                                actionState?.id === server.id && actionState?.action === "deprecate"
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "text-purple-600 hover:bg-gray-100"
+                              }`}
+                              aria-label={`${server.is_deprecated ? "Restore" : "Deprecate"} ${server.name}`}
+                              title={
+                                server.is_deprecated
+                                  ? "Restore server"
+                                  : "Deprecate server"
+                              }
+                            >
+                              {actionState?.id === server.id && actionState?.action === "deprecate" ? (
+                                <Loader2
+                                  size={16}
+                                  className="animate-spin"
+                                />
+                              ) : (
+                                <Archive size={16} />
+                              )}
+                            </button>
+                          </PermissionGate>
+
                         </div>
                       </td>
                     </tr>

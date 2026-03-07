@@ -12,10 +12,7 @@ interface AppErrorBoundaryState {
   errorInfo: React.ErrorInfo | null;
 }
 
-/**
- * Global error boundary that catches provider initialization errors
- * and "must be used within provider" errors
- */
+
 export class AppErrorBoundary extends React.Component<
   AppErrorBoundaryProps,
   AppErrorBoundaryState
@@ -34,7 +31,6 @@ export class AppErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log to console for debugging
     console.error("AppErrorBoundary caught error:", error);
     console.error("Error Info:", errorInfo);
 
@@ -44,13 +40,11 @@ export class AppErrorBoundary extends React.Component<
   }
 
   handleReset = () => {
-    // Just reload the page without clearing auth data
-    // This allows the app to retry initialization while keeping user logged in
+  
     window.location.href = "/";
   };
 
   handleClearCache = () => {
-    // Only clear NON-AUTH items that might be corrupted
     const safeItemsToClear = [
       "theme",
       "language",
