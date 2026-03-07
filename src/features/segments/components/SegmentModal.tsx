@@ -590,7 +590,7 @@ export default function SegmentModal({
                           }))
                         }
                         placeholder="Enter segment name"
-                        className={`w-full px-4 py-3 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm`}
+                        className={`w-full px-3 py-3 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm`}
                         required
                       />
                     </div>

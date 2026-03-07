@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Search, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
@@ -45,8 +44,8 @@ export default function SegmentPickerModal({
           const response = await segmentService.getSegments({
             search: searchTerm || undefined,
             type: selectedFilter !== "all" ? (selectedFilter as "static" | "dynamic" | "trigger") : undefined,
-            page: currentPage,
-            pageSize: pageSize,
+            offset: (currentPage - 1) * pageSize,
+            limit: pageSize,
             skipCache: false,
           });
           setSegments(response.data || []);
@@ -106,9 +105,9 @@ export default function SegmentPickerModal({
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors text-lg font-medium"
           >
-            <X className="w-5 h-5" />
+            ✕
           </button>
         </div>
 
@@ -116,13 +115,12 @@ export default function SegmentPickerModal({
         <div className="px-6 pt-6 pb-4 space-y-4 flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search segments..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-opacity-50`}
+                className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-opacity-50`}
               />
             </div>
             <div className="w-48">
@@ -149,7 +147,6 @@ export default function SegmentPickerModal({
             </div>
           ) : segments.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 No segments found
               </h3>
@@ -197,72 +194,44 @@ export default function SegmentPickerModal({
                         }}
                       >
                         <td
-                          className="px-6 py-4"
+                          className="px-6 py-4 text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div
-                              className={`w-10 h-10 ${tw.rounded} flex items-center justify-center flex-shrink-0`}
-                              style={{
-                                backgroundColor: `${color.primary.accent}20`,
-                              }}
-                            >
-                              <Users
-                                className="w-5 h-5"
-                                style={{ color: color.primary.accent }}
-                              />
-                            </div>
-                            <div className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}>
-                              {segment.name}
-                            </div>
+                          <div className="truncate">
+                            {segment.name}
                           </div>
                         </td>
                         <td
-                          className="px-6 py-4"
+                          className="px-6 py-4 text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <div className="text-sm text-gray-600 max-w-md line-clamp-2">
+                          <div className="max-w-md line-clamp-2">
                             {segment.description || "-"}
                           </div>
                         </td>
                         <td
-                          className="px-6 py-4 whitespace-nowrap"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <span
-                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                            style={{
-                              backgroundColor: `${color.primary.accent}20`,
-                              color: color.primary.accent,
-                            }}
-                          >
-                            {segment.type || "Static"}
-                          </span>
+                          {segment.type || "Static"}
                         </td>
                         <td
-                          className="px-6 py-4 whitespace-nowrap"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-900">
-                              {segment.size_estimate
-                                ? segment.size_estimate.toLocaleString()
-                                : "-"}
-                            </span>
-                          </div>
+                          {segment.size_estimate
+                            ? segment.size_estimate.toLocaleString()
+                            : "-"}
                         </td>
                         <td
-                          className="px-6 py-4 whitespace-nowrap"
+                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
                           style={{ backgroundColor: color.surface.tablebodybg }}
                         >
-                          <span className="text-sm text-gray-600">
-                            {segment.created_at
-                              ? new Date(
-                                  segment.created_at
-                                ).toLocaleDateString()
-                              : "-"}
-                          </span>
+                          {segment.created_at
+                            ? new Date(
+                                segment.created_at
+                              ).toLocaleDateString()
+                            : "-"}
                         </td>
                       </tr>
                     );
@@ -284,11 +253,11 @@ export default function SegmentPickerModal({
                     <button
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                       style={{ borderColor: "#d1d5db" }}
                       title="Previous page"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      ←
                     </button>
                     <span className="text-xs text-gray-600 min-w-[40px] text-center">
                       Page {currentPage}
@@ -296,11 +265,11 @@ export default function SegmentPickerModal({
                     <button
                       onClick={() => setCurrentPage((p) => p + 1)}
                       disabled={currentPage * pageSize >= totalSegments}
-                      className="p-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                       style={{ borderColor: "#d1d5db" }}
                       title="Next page"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      →
                     </button>
                   </div>
                 </div>

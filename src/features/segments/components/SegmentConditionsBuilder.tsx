@@ -241,42 +241,57 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render condition based on type
-  const renderConditionFields = (
+  const renderLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
     switch (condition.conditionType) {
       case "360_profile":
-        return render360ProfileFields(groupId, condition);
+        return render360ProfileLine1Fields(groupId, condition);
       case "segment":
-        return renderSegmentFields(groupId, condition);
+        return renderSegmentLine1Fields(groupId, condition);
       case "list":
-        return renderListFields(groupId, condition);
+        return renderListLine1Fields(groupId, condition);
       case "system_event":
-        return renderSystemEventFields(groupId, condition);
+        return renderSystemEventLine1Fields(groupId, condition);
       case "revenue_metric_kpi":
       case "usage_metric_kpi":
-        return renderKPIFields(groupId, condition);
+        return renderKPILine1Fields(groupId, condition);
       default:
         return null;
     }
   };
 
-  // Render 360 Profile condition fields
-  const render360ProfileFields = (
+  const renderLine2Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
-    const backendField = condition.field
-      ? getFieldByValue(condition.field)
-      : null;
-    const isDropdown = backendField?.ui?.component_type === "dropdown";
-    const distinctValues = backendField?.validation?.distinct_values || [];
+    switch (condition.conditionType) {
+      case "360_profile":
+        return render360ProfileLine2Fields(groupId, condition);
+      case "segment":
+        return renderSegmentLine2Fields(groupId, condition);
+      case "list":
+        return renderListLine2Fields(groupId, condition);
+      case "system_event":
+        return renderSystemEventLine2Fields(groupId, condition);
+      case "revenue_metric_kpi":
+      case "usage_metric_kpi":
+        return renderKPILine2Fields(groupId, condition);
+      default:
+        return null;
+    }
+  };
 
+  // Render 360 Profile condition fields - Line 1 (Category + Field)
+  const render360ProfileLine1Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     return (
       <>
         {/* Category Selection */}
-        <div className="min-w-[150px] max-w-[180px] flex-shrink-0">
+        <div className="min-w-[220px] flex-1 max-w-[350px]">
           <HeadlessSelect
             options={categories.map((cat, index) => ({
               value: cat.id ? cat.id.toString() : (index + 1).toString(),
@@ -316,7 +331,7 @@ export default function SegmentConditionsBuilder({
         </div>
 
         {/* Field Selection - Filtered by category */}
-        <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
+        <div className="min-w-[220px] flex-1 max-w-[350px]">
           <HeadlessSelect
             options={(() => {
               if (
@@ -379,9 +394,25 @@ export default function SegmentConditionsBuilder({
             zIndex={zIndex.popover}
           />
         </div>
+      </>
+    );
+  };
 
+  // Render 360 Profile condition fields - Line 2 (Operator + Value)
+  const render360ProfileLine2Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
+    const backendField = condition.field
+      ? getFieldByValue(condition.field)
+      : null;
+    const isDropdown = backendField?.ui?.component_type === "dropdown";
+    const distinctValues = backendField?.validation?.distinct_values || [];
+
+    return (
+      <>
         {/* Operator Selection */}
-        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
+        <div className="min-w-[200px] max-w-[280px] flex-shrink-0">
           <HeadlessSelect
             options={(() => {
               const field = condition.field
@@ -476,8 +507,8 @@ export default function SegmentConditionsBuilder({
     );
   };
 
-  // Render Segment condition fields
-  const renderSegmentFields = (
+  // Render Segment condition fields - Line 1
+  const renderSegmentLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
@@ -492,7 +523,7 @@ export default function SegmentConditionsBuilder({
     return (
       <>
         {/* Segment Selection */}
-        <div className="min-w-[200px] flex-1 max-w-[350px]">
+        <div className="min-w-[280px] flex-1 max-w-[600px]">
           <button
             type="button"
             onClick={handleOpenSegmentModal}
@@ -508,9 +539,19 @@ export default function SegmentConditionsBuilder({
             <Search className="w-4 h-4 text-gray-400" />
           </button>
         </div>
+      </>
+    );
+  };
 
+  // Render Segment condition fields - Line 2
+  const renderSegmentLine2Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
+    return (
+      <>
         {/* Operator for Segment */}
-        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
+        <div className="min-w-[200px] max-w-[280px] flex-shrink-0">
           <HeadlessSelect
             options={[
               { value: "in", label: "Is In" },
@@ -531,8 +572,8 @@ export default function SegmentConditionsBuilder({
     );
   };
 
-  // Render List (QuickList) condition fields
-  const renderListFields = (groupId: string, condition: SegmentCondition) => {
+  // Render List (QuickList) condition fields - Line 1
+  const renderListLine1Fields = (groupId: string, condition: SegmentCondition) => {
     const handleOpenQuickListModal = () => {
       setCurrentEditingCondition({
         groupId,
@@ -552,7 +593,7 @@ export default function SegmentConditionsBuilder({
     return (
       <>
         {/* QuickList Selection */}
-        <div className="min-w-[200px] flex-1 max-w-[500px] flex gap-2">
+        <div className="min-w-[280px] flex-1 max-w-[600px] flex gap-2">
           <button
             type="button"
             onClick={handleOpenQuickListModal}
@@ -576,9 +617,16 @@ export default function SegmentConditionsBuilder({
             Create quick list
           </button>
         </div>
+      </>
+    );
+  };
 
+  // Render List (QuickList) condition fields - Line 2
+  const renderListLine2Fields = (groupId: string, condition: SegmentCondition) => {
+    return (
+      <>
         {/* Operator for List */}
-        <div className="min-w-[140px] max-w-[180px] flex-shrink-0">
+        <div className="min-w-[200px] max-w-[280px] flex-shrink-0">
           <HeadlessSelect
             options={[
               { value: "in", label: "Is In" },
@@ -600,7 +648,7 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render System Event condition fields
-  const renderSystemEventFields = (
+  const renderSystemEventLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
@@ -612,6 +660,33 @@ export default function SegmentConditionsBuilder({
       setIsSystemEventModalOpen(true);
     };
 
+    return (
+      <>
+        {/* System Event Selection */}
+        <div className="min-w-[280px] flex-1 max-w-[600px]">
+          <button
+            type="button"
+            onClick={handleOpenSystemEventModal}
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
+          >
+            <span
+              className={
+                condition.system_event_name ? "text-gray-900" : "text-gray-500"
+              }
+            >
+              {condition.system_event_name || "Select event..."}
+            </span>
+            <Search className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+      </>
+    );
+  };
+
+  const renderSystemEventLine2Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     // Get the selected event to determine available operators
     const selectedEvent = SYSTEM_EVENTS.find(
       (e) => e.event_name === condition.system_event_name,
@@ -631,28 +706,10 @@ export default function SegmentConditionsBuilder({
 
     return (
       <>
-        {/* System Event Selection */}
-        <div className="min-w-[200px] flex-1 max-w-[400px]">
-          <button
-            type="button"
-            onClick={handleOpenSystemEventModal}
-            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
-          >
-            <span
-              className={
-                condition.system_event_name ? "text-gray-900" : "text-gray-500"
-              }
-            >
-              {condition.system_event_name || "Select event..."}
-            </span>
-            <Search className="w-4 h-4 text-gray-400" />
-          </button>
-        </div>
-
         {/* Time Operator for System Event - Only show if event selected */}
         {selectedEvent && availableOperators.length > 0 && (
           <>
-            <div className="min-w-[180px] max-w-[220px] flex-shrink-0">
+            <div className="min-w-[200px] max-w-[280px] flex-shrink-0">
               <HeadlessSelect
                 options={availableOperators}
                 value={condition.operator || ""}
@@ -716,7 +773,7 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render KPI condition fields
-  const renderKPIFields = (groupId: string, condition: SegmentCondition) => {
+  const renderKPILine1Fields = (groupId: string, condition: SegmentCondition) => {
     const handleOpenKPIModal = () => {
       setCurrentEditingCondition({
         groupId,
@@ -736,7 +793,7 @@ export default function SegmentConditionsBuilder({
     return (
       <>
         {/* KPI Selection */}
-        <div className="min-w-[200px] flex-1 max-w-[500px]">
+        <div className="min-w-[280px] flex-1 max-w-[600px]">
           <button
             type="button"
             onClick={handleOpenKPIModal}
@@ -750,11 +807,17 @@ export default function SegmentConditionsBuilder({
             <Search className="w-4 h-4 text-gray-400" />
           </button>
         </div>
+      </>
+    );
+  };
 
+  const renderKPILine2Fields = (groupId: string, condition: SegmentCondition) => {
+    return (
+      <>
         {/* Operator for KPI - Only show if KPI selected */}
         {condition.kpi_name && (
           <>
-            <div className="min-w-[180px] max-w-[240px] flex-shrink-0">
+            <div className="min-w-[220px] max-w-[300px] flex-shrink-0">
               <HeadlessSelect
                 options={[
                   { value: "equals", label: "Equals" },
@@ -881,20 +944,19 @@ export default function SegmentConditionsBuilder({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {conditions.map((group, groupIndex) => (
-        <div
-          key={group.id}
-          className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
-        >
-          {/* Group Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-4">
-              {/* Operator Between Groups - Only show for 2nd group onwards */}
-              {groupIndex > 0 && (
+        <div key={group.id}>
+          <div
+            className={`border border-gray-200 ${tw.rounded} p-4 bg-gray-50`}
+          >
+            {/* Group Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                {/* Operator within group */}
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-medium text-gray-500 uppercase">
-                    Between Groups:
+                    Within Group:
                   </span>
                   <div className="w-20">
                     <HeadlessSelect
@@ -902,10 +964,10 @@ export default function SegmentConditionsBuilder({
                         { value: "AND", label: "AND" },
                         { value: "OR", label: "OR" },
                       ]}
-                      value={conditions[groupIndex - 1].groupOperator || "AND"}
+                      value={group.operator}
                       onChange={(value) =>
-                        updateConditionGroup(conditions[groupIndex - 1].id, {
-                          groupOperator: value as "AND" | "OR",
+                        updateConditionGroup(group.id, {
+                          operator: value as "AND" | "OR",
                         })
                       }
                       placeholder="AND"
@@ -913,39 +975,13 @@ export default function SegmentConditionsBuilder({
                       zIndex={zIndex.popover}
                     />
                   </div>
-                  <div className="h-6 w-px bg-gray-300 mx-1" />
                 </div>
-              )}
 
-              {/* Operator within group */}
-              <div className="flex items-center space-x-2">
-                <span className="text-xs font-medium text-gray-500 uppercase">
-                  Within Group:
+                <span className="text-sm text-gray-600">
+                  ({group.conditions.length} condition
+                  {group.conditions.length !== 1 ? "s" : ""})
                 </span>
-                <div className="w-20">
-                  <HeadlessSelect
-                    options={[
-                      { value: "AND", label: "AND" },
-                      { value: "OR", label: "OR" },
-                    ]}
-                    value={group.operator}
-                    onChange={(value) =>
-                      updateConditionGroup(group.id, {
-                        operator: value as "AND" | "OR",
-                      })
-                    }
-                    placeholder="AND"
-                    className="text-sm"
-                    zIndex={zIndex.popover}
-                  />
-                </div>
               </div>
-
-              <span className="text-sm text-gray-600">
-                ({group.conditions.length} condition
-                {group.conditions.length !== 1 ? "s" : ""})
-              </span>
-            </div>
             <button
               type="button"
               onClick={() => removeConditionGroup(group.id)}
@@ -964,12 +1000,15 @@ export default function SegmentConditionsBuilder({
               return (
                 <div
                   key={condition.id}
-                  className={`flex items-center flex-wrap gap-3 p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
+                  className={`p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
                   style={{
                     backgroundColor: color.surface.background,
                     borderColor: color.border.muted,
                   }}
                 >
+                  {/* Line 1: Type + Category + Field */}
+                  <div className="flex items-center gap-3 mb-3">
+                    {/* Type Selector will be injected here */}
                   {conditionIndex > 0 && (
                     <span
                       className={`px-2.5 py-1 text-xs font-semibold ${tw.rounded}`}
@@ -984,173 +1023,181 @@ export default function SegmentConditionsBuilder({
 
                   {/* Condition Type Badge - Selectable appearance */}
                   <div
-                    className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[200px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
-                    style={{
-                      backgroundColor: color.surface.background,
-                      border: `1px solid ${color.border.default}`,
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = color.primary.accent;
-                      e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = color.border.default;
-                      e.currentTarget.style.backgroundColor =
-                        color.surface.background;
-                    }}
-                  >
-                    <TypeIcon
-                      className="w-4 h-4 flex-shrink-0"
-                      style={{ color: color.text.secondary }}
-                    />
-                    <div
-                      className="flex-1 [&_button]:bg-transparent [&_button]:border-0 [&_button]:p-0 [&_button]:shadow-none [&_button]:font-medium [&_button]:text-sm [&_button]:cursor-pointer"
+                      className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[200px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
                       style={{
-                        color: color.text.primary,
+                        backgroundColor: color.surface.background,
+                        border: `1px solid ${color.border.default}`,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = color.primary.accent;
+                        e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = color.border.default;
+                        e.currentTarget.style.backgroundColor =
+                          color.surface.background;
                       }}
                     >
-                      <HeadlessSelect
-                        options={[
-                          { value: "360_profile", label: "360 Profile" },
-                          { value: "segment", label: "Segment" },
-                          { value: "list", label: "QuickList" },
-                          { value: "system_event", label: "System Event" },
-                          {
-                            value: "revenue_metric_kpi",
-                            label: "Revenue Metric",
-                          },
-                          { value: "usage_metric_kpi", label: "Usage Metric" },
-                        ]}
-                        value={condition.conditionType}
-                        onChange={(value) => {
-                          const condType = value as
-                            | "360_profile"
-                            | "segment"
-                            | "list"
-                            | "system_event"
-                            | "revenue_metric_kpi"
-                            | "usage_metric_kpi";
-                          // Reset condition based on type
-                          if (condType === "360_profile") {
-                            const firstField =
-                              allFields.length > 0 ? allFields[0] : null;
-                            updateCondition(group.id, condition.id, {
-                              conditionType: condType,
-                              category:
-                                categories.length > 0
-                                  ? categories[0].id
-                                  : undefined,
-                              field: firstField?.field_value || "",
-                              field_id: firstField?.id,
-                              operator: "equals",
-                              operator_id: firstField?.operators[0]?.id,
-                              value: "",
-                              segment_id: undefined,
-                              segment_name: undefined,
-                              list_id: undefined,
-                              list_name: undefined,
-                              system_event_id: undefined,
-                              system_event_code: undefined,
-                              system_event_name: undefined,
-                              kpi_id: undefined,
-                              kpi_name: undefined,
-                              kpi_category: undefined,
-                            });
-                          } else if (condType === "segment") {
-                            updateCondition(group.id, condition.id, {
-                              conditionType: condType,
-                              operator: "in",
-                              value: "",
-                              category: undefined,
-                              field: undefined,
-                              field_id: undefined,
-                              list_id: undefined,
-                              list_name: undefined,
-                              system_event_id: undefined,
-                              system_event_code: undefined,
-                              system_event_name: undefined,
-                              kpi_id: undefined,
-                              kpi_name: undefined,
-                              kpi_category: undefined,
-                            });
-                          } else if (condType === "list") {
-                            updateCondition(group.id, condition.id, {
-                              conditionType: condType,
-                              operator: "in",
-                              value: "",
-                              category: undefined,
-                              field: undefined,
-                              field_id: undefined,
-                              segment_id: undefined,
-                              segment_name: undefined,
-                              system_event_id: undefined,
-                              system_event_code: undefined,
-                              system_event_name: undefined,
-                              kpi_id: undefined,
-                              kpi_name: undefined,
-                              kpi_category: undefined,
-                            });
-                          } else if (condType === "system_event") {
-                            updateCondition(group.id, condition.id, {
-                              conditionType: condType,
-                              operator: "equals",
-                              value: "",
-                              category: undefined,
-                              field: undefined,
-                              field_id: undefined,
-                              segment_id: undefined,
-                              segment_name: undefined,
-                              list_id: undefined,
-                              list_name: undefined,
-                              kpi_id: undefined,
-                              kpi_name: undefined,
-                              kpi_category: undefined,
-                            });
-                          } else if (
-                            condType === "revenue_metric_kpi" ||
-                            condType === "usage_metric_kpi"
-                          ) {
-                            updateCondition(group.id, condition.id, {
-                              conditionType: condType,
-                              operator: "equals",
-                              value: "",
-                              category: undefined,
-                              field: undefined,
-                              field_id: undefined,
-                              segment_id: undefined,
-                              segment_name: undefined,
-                              list_id: undefined,
-                              list_name: undefined,
-                              system_event_id: undefined,
-                              system_event_code: undefined,
-                              system_event_name: undefined,
-                              kpi_id: undefined,
-                              kpi_name: undefined,
-                              kpi_category:
-                                getKPICategoryForConditionType(condType),
-                            });
-                          }
-                        }}
-                        placeholder="Select type"
-                        className="text-sm"
-                        zIndex={zIndex.popover}
+                      <TypeIcon
+                        className="w-4 h-4 flex-shrink-0"
+                        style={{ color: color.text.secondary }}
                       />
+                      <div
+                        className="flex-1 [&_button]:bg-transparent [&_button]:border-0 [&_button]:p-0 [&_button]:shadow-none [&_button]:font-medium [&_button]:text-sm [&_button]:cursor-pointer"
+                        style={{
+                          color: color.text.primary,
+                        }}
+                      >
+                        <HeadlessSelect
+                          options={[
+                            { value: "360_profile", label: "360 Profile" },
+                            { value: "segment", label: "Segment" },
+                            { value: "list", label: "QuickList" },
+                            { value: "system_event", label: "System Event" },
+                            {
+                              value: "revenue_metric_kpi",
+                              label: "Revenue Metric",
+                            },
+                            { value: "usage_metric_kpi", label: "Usage Metric" },
+                          ]}
+                          value={condition.conditionType}
+                          onChange={(value) => {
+                            const condType = value as
+                              | "360_profile"
+                              | "segment"
+                              | "list"
+                              | "system_event"
+                              | "revenue_metric_kpi"
+                              | "usage_metric_kpi";
+                            // Reset condition based on type
+                            if (condType === "360_profile") {
+                              const firstField =
+                                allFields.length > 0 ? allFields[0] : null;
+                              updateCondition(group.id, condition.id, {
+                                conditionType: condType,
+                                category:
+                                  categories.length > 0
+                                    ? categories[0].id
+                                    : undefined,
+                                field: firstField?.field_value || "",
+                                field_id: firstField?.id,
+                                operator: "equals",
+                                operator_id: firstField?.operators[0]?.id,
+                                value: "",
+                                segment_id: undefined,
+                                segment_name: undefined,
+                                list_id: undefined,
+                                list_name: undefined,
+                                system_event_id: undefined,
+                                system_event_code: undefined,
+                                system_event_name: undefined,
+                                kpi_id: undefined,
+                                kpi_name: undefined,
+                                kpi_category: undefined,
+                              });
+                            } else if (condType === "segment") {
+                              updateCondition(group.id, condition.id, {
+                                conditionType: condType,
+                                operator: "in",
+                                value: "",
+                                category: undefined,
+                                field: undefined,
+                                field_id: undefined,
+                                list_id: undefined,
+                                list_name: undefined,
+                                system_event_id: undefined,
+                                system_event_code: undefined,
+                                system_event_name: undefined,
+                                kpi_id: undefined,
+                                kpi_name: undefined,
+                                kpi_category: undefined,
+                              });
+                            } else if (condType === "list") {
+                              updateCondition(group.id, condition.id, {
+                                conditionType: condType,
+                                operator: "in",
+                                value: "",
+                                category: undefined,
+                                field: undefined,
+                                field_id: undefined,
+                                segment_id: undefined,
+                                segment_name: undefined,
+                                system_event_id: undefined,
+                                system_event_code: undefined,
+                                system_event_name: undefined,
+                                kpi_id: undefined,
+                                kpi_name: undefined,
+                                kpi_category: undefined,
+                              });
+                            } else if (condType === "system_event") {
+                              updateCondition(group.id, condition.id, {
+                                conditionType: condType,
+                                operator: "equals",
+                                value: "",
+                                category: undefined,
+                                field: undefined,
+                                field_id: undefined,
+                                segment_id: undefined,
+                                segment_name: undefined,
+                                list_id: undefined,
+                                list_name: undefined,
+                                kpi_id: undefined,
+                                kpi_name: undefined,
+                                kpi_category: undefined,
+                              });
+                            } else if (
+                              condType === "revenue_metric_kpi" ||
+                              condType === "usage_metric_kpi"
+                            ) {
+                              updateCondition(group.id, condition.id, {
+                                conditionType: condType,
+                                operator: "equals",
+                                value: "",
+                                category: undefined,
+                                field: undefined,
+                                field_id: undefined,
+                                segment_id: undefined,
+                                segment_name: undefined,
+                                list_id: undefined,
+                                list_name: undefined,
+                                system_event_id: undefined,
+                                system_event_code: undefined,
+                                system_event_name: undefined,
+                                kpi_id: undefined,
+                                kpi_name: undefined,
+                                kpi_category:
+                                  getKPICategoryForConditionType(condType),
+                              });
+                            }
+                          }}
+                          placeholder="Select type"
+                          className="text-sm"
+                          zIndex={zIndex.popover}
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Render fields based on condition type */}
-                  {renderConditionFields(group.id, condition)}
+                  {/* Render Line 1 Fields (Category, Field for 360_profile, etc.) */}
+                  {renderLine1Fields(group.id, condition)}
+                </div>
 
-                  {/* Remove Condition */}
-                  <button
-                    type="button"
-                    onClick={() => removeCondition(group.id, condition.id)}
-                    className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0"
-                    title="Remove Condition"
-                    disabled={group.conditions.length === 1}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                {/* Line 2: Operator + Value + Remove */}
+                <div className="flex items-center gap-3">
+                  {/* Render Line 2 Fields (Operator, Value for 360_profile, etc.) */}
+                  {renderLine2Fields(group.id, condition)}
+
+                  {/* Remove Condition - Only show if more than one condition */}
+                  {group.conditions.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeCondition(group.id, condition.id)}
+                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0 ml-auto"
+                      title="Remove Condition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
                 </div>
               );
             })}
@@ -1160,7 +1207,7 @@ export default function SegmentConditionsBuilder({
           <button
             type="button"
             onClick={() => addCondition(group.id)}
-            className={`mt-3 inline-flex items-center px-3 py-2 text-sm text-white ${tw.rounded} transition-colors`}
+            className={`mt-6 inline-flex items-center px-3 py-2 text-sm text-white ${tw.rounded} transition-colors`}
             style={{
               backgroundColor: color.primary.action,
             }}
@@ -1168,6 +1215,37 @@ export default function SegmentConditionsBuilder({
             <Plus className="w-4 h-4 mr-2" />
             Add Condition
           </button>
+          </div>
+
+          {/* Between Groups Operator - Display BETWEEN cards */}
+          {groupIndex < conditions.length - 1 && (
+            <div className="flex items-center justify-center gap-3 py-4">
+              <div className="flex-1 h-px bg-gray-300" />
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                  Between Groups:
+                </span>
+                <div className="w-24">
+                  <HeadlessSelect
+                    options={[
+                      { value: "AND", label: "AND" },
+                      { value: "OR", label: "OR" },
+                    ]}
+                    value={group.groupOperator || "AND"}
+                    onChange={(value) =>
+                      updateConditionGroup(group.id, {
+                        groupOperator: value as "AND" | "OR",
+                      })
+                    }
+                    placeholder="AND"
+                    className="text-sm"
+                    zIndex={zIndex.popover}
+                  />
+                </div>
+              </div>
+              <div className="flex-1 h-px bg-gray-300" />
+            </div>
+          )}
         </div>
       ))}
 
