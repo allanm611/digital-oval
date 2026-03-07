@@ -17,6 +17,11 @@ import {
 } from "../types/communication";
 import { QuickList } from "../../quicklists/types/quicklist";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import {
+  useFormDataPersistence,
+  clearPersistedFormData,
+} from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 
 export default function CreateCommunicationPage() {
   const { quicklistId } = useParams<{ quicklistId: string }>();
@@ -36,6 +41,16 @@ export default function CreateCommunicationPage() {
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [sampleData, setSampleData] = useState<Record<string, unknown>>({});
+
+  // Persist form data to localStorage
+  useFormDataPersistence("communication_channel", selectedChannel, setSelectedChannel, false);
+  useFormDataPersistence("communication_title", messageTitle, setMessageTitle, false);
+  useFormDataPersistence("communication_body", messageBody, setMessageBody, false);
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("communication_channel");
+  useFormCleanupOnExit("communication_title");
+  useFormCleanupOnExit("communication_body");
 
   useEffect(() => {
     if (quicklistId) {

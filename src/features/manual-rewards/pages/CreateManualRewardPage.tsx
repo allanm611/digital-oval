@@ -9,6 +9,7 @@ import {
   useFormDataPersistence,
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 import ProgressStepper, {
   Step,
 } from "../../../shared/components/ui/ProgressStepper";
@@ -80,6 +81,9 @@ export default function CreateManualRewardPage() {
 
   // Persist form data to localStorage
   useFormDataPersistence("reward_form_data", rewardData, setRewardData, false);
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("reward_form_data");
 
   const updateRewardData = (data: Partial<ManualRewardData>) => {
     setRewardData((prev) => ({ ...prev, ...data }));

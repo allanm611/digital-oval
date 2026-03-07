@@ -26,6 +26,7 @@ import {
   useFormDataPersistence,
   clearPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 import {
   CreateOfferRequest,
   UpdateOfferRequest,
@@ -1343,6 +1344,13 @@ export default function CreateOfferPage({
     setSelectedProducts,
     isEditMode,
   );
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("offer_form_data");
+  useFormCleanupOnExit("offer_creatives");
+  useFormCleanupOnExit("offer_tracking_sources");
+  useFormCleanupOnExit("offer_rewards");
+  useFormCleanupOnExit("offer_products");
 
   // Restore offer data when returning from product creation
   useEffect(() => {

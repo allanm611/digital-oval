@@ -196,6 +196,16 @@ export default function ConfigurationPage() {
         status: "active",
         navigationPath: "/dashboard/character-sets",
       },
+      {
+        id: "dynamic-message-variables",
+        name: "Dynamic Message Variables",
+        description:
+          "Manage customer identity fields available for dynamic variable insertion in messages and creatives",
+        type: "offer",
+        category: "Offer Configuration",
+        status: "active",
+        navigationPath: "/dashboard/dynamic-message-variables",
+      },
       // Product-related configs
       {
         id: "product-types",

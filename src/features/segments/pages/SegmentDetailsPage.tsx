@@ -581,7 +581,7 @@ export default function SegmentDetailsPage() {
     try {
       await segmentService.computeSegmentSize(Number(id));
       success("Size computation started", "Segment size is being computed");
-      await loadSegment();
+      // No need to reload - computation happens in background
     } catch (err) {
       console.error("Failed to compute size:", err);
       showError("Error computing size", (err as Error).message || "Please try again later.", true);
@@ -616,10 +616,18 @@ export default function SegmentDetailsPage() {
       await segmentService.updateSegmentTags(segment.id, {
         tag: newTag.trim(),
       });
+      // Add tag to local state (optimistic UI)
+      setSegment((prev) =>
+        prev
+          ? {
+              ...prev,
+              tags: [...(Array.isArray(prev.tags) ? prev.tags : []), newTag.trim()],
+            }
+          : prev,
+      );
       success("Tag added", `Tag "${newTag}" has been added`);
       setNewTag("");
       setShowAddTagInput(false);
-      await loadSegment();
     } catch (err) {
       console.error("Failed to add tag:", err);
       showError("Error adding tag", (err as Error).message || "Please try again later.", true);
@@ -634,8 +642,16 @@ export default function SegmentDetailsPage() {
     setIsAddingTag(true);
     try {
       await segmentService.deleteSegmentTag(segment.id, tag);
+      // Remove tag from local state (optimistic UI)
+      setSegment((prev) =>
+        prev
+          ? {
+              ...prev,
+              tags: Array.isArray(prev.tags) ? prev.tags.filter((t) => t !== tag) : [],
+            }
+          : prev,
+      );
       success("Tag removed", `Tag "${tag}" has been removed`);
-      await loadSegment();
     } catch (err) {
       console.error("Failed to remove tag:", err);
       showError("Error removing tag", (err as Error).message || "Please try again later.", true);
@@ -751,10 +767,13 @@ export default function SegmentDetailsPage() {
       await segmentService.updateSegmentQuery(Number(id), {
         query: editQuery.trim(),
       });
+      // Update query in local state (optimistic UI)
+      setSegment((prev) =>
+        prev ? { ...prev, query: editQuery.trim() } : prev,
+      );
       success("Query updated", "Segment query has been updated successfully");
       setShowAdvancedEdit(false);
       setEditQuery("");
-      await loadSegment();
     } catch (err) {
       console.error("Failed to update query:", err);
       showError("Error updating query", (err as Error).message || "Please try again later.", true);
@@ -770,10 +789,13 @@ export default function SegmentDetailsPage() {
     setIsUpdatingParent(true);
     try {
       await segmentService.updateSegmentParent(Number(id), editParentId);
+      // Update parent in local state (optimistic UI)
+      setSegment((prev) =>
+        prev ? { ...prev, parent_segment_id: editParentId } : prev,
+      );
       success("Parent updated", "Segment parent has been updated successfully");
       setShowAdvancedEdit(false);
       setEditParentId(null);
-      await loadSegment();
       await loadHierarchy();
     } catch (err) {
       console.error("Failed to update parent:", err);

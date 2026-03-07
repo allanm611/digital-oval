@@ -126,10 +126,14 @@ export default function NotificationsPage() {
     if (!notification.isRead) {
       await markAsRead([notification.id]);
     }
+    // Don't navigate to campaign, segment, or offer detail pages
     if (notification.actionUrl) {
-      navigate(notification.actionUrl, {
-        state: { fromNotification: true },
-      });
+      const isDetailPage = /\/(campaigns|segments|offers)\/\d+/.test(notification.actionUrl);
+      if (!isDetailPage) {
+        navigate(notification.actionUrl, {
+          state: { fromNotification: true },
+        });
+      }
     }
   };
 

@@ -26,12 +26,6 @@ const ThemeContext = createContext<ThemeContextType>(defaultThemeContext);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    // Check localStorage first
-    const stored = localStorage.getItem("appTheme");
-    if (stored === "light" || stored === "dark") {
-      return stored;
-    }
-
     // Check system preference
     if (
       window.matchMedia &&
@@ -51,7 +45,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("appTheme", theme);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

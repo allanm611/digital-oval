@@ -1133,6 +1133,56 @@ export default function OfferDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  // Consolidated offer action handler for details page
+  interface OfferDetailActionParams {
+    action: "approve" | "reject" | "request_approval" | "activate" | "pause" | "expire" | "archive";
+    successMessage: string;
+    updateFields: Partial<Offer>;
+    onSuccess?: () => void;
+  }
+
+  const handleOfferDetailAction = async (params: OfferDetailActionParams) => {
+    if (!offer || !user?.user_id) return;
+    const { action, successMessage, updateFields, onSuccess } = params;
+
+    try {
+      switch (action) {
+        case "approve":
+          await offerService.approveOffer(Number(id), { approved_by: user.user_id });
+          break;
+        case "reject":
+          await offerService.rejectOffer(Number(id), { rejected_by: user.user_id });
+          break;
+        case "request_approval":
+          await offerService.submitForApproval(Number(id), {});
+          break;
+        case "activate":
+          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.ACTIVE });
+          break;
+        case "pause":
+          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.PAUSED });
+          break;
+        case "expire":
+          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.EXPIRED });
+          break;
+        case "archive":
+          await offerService.updateOfferStatus(Number(id), { status: OfferStatusEnum.ARCHIVED });
+          break;
+      }
+
+      // Update offer state (optimistic UI)
+      setOffer((prev) => (prev ? { ...prev, ...updateFields } : prev));
+      success(successMessage.split(":")[0], successMessage);
+
+      // Execute success callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch {
+      showError(`Failed to ${action} offer`);
+    }
+  };
+
   const handleDelete = () => {
     if (!offer) return;
     setShowDeleteModal(true);
@@ -1166,18 +1216,13 @@ export default function OfferDetailsPage() {
       showError("Error", "User ID not available. Please log in again.");
       return;
     }
+    setIsApproveLoading(true);
     try {
-      setIsApproveLoading(true);
-      await offerService.approveOffer(Number(id), {
-        approved_by: user.user_id,
+      await handleOfferDetailAction({
+        action: "approve",
+        successMessage: `Offer Approved: "${offer?.name}" has been approved successfully.`,
+        updateFields: { approval_status: "approved" },
       });
-      success(
-        "Offer Approved",
-        `"${offer?.name}" has been approved successfully.`,
-      );
-      loadOffer(true); // Skip cache to get fresh data after approval
-    } catch {
-      showError("Failed to approve offer");
     } finally {
       setIsApproveLoading(false);
     }
@@ -1188,91 +1233,80 @@ export default function OfferDetailsPage() {
       showError("Error", "User ID not available. Please log in again.");
       return;
     }
+    setIsRejectLoading(true);
     try {
-      setIsRejectLoading(true);
-      await offerService.rejectOffer(Number(id), { rejected_by: user.user_id });
-      success("Offer Rejected", `"${offer?.name}" has been rejected.`);
-      loadOffer(true); // Skip cache to get fresh data after rejection
-    } catch {
-      showError("Failed to reject offer");
+      await handleOfferDetailAction({
+        action: "reject",
+        successMessage: `Offer Rejected: "${offer?.name}" has been rejected.`,
+        updateFields: { approval_status: "rejected" },
+      });
     } finally {
       setIsRejectLoading(false);
     }
   };
 
   const handleRequestApproval = async () => {
+    setIsRequestApprovalLoading(true);
     try {
-      setIsRequestApprovalLoading(true);
-      await offerService.submitForApproval(Number(id), {});
-      success(
-        "Approval Requested",
-        "Your approval request has been submitted successfully.",
-      );
-      loadOffer(true); // Skip cache to get fresh data after approval request
-    } catch {
-      showError("Failed to request approval");
+      await handleOfferDetailAction({
+        action: "request_approval",
+        successMessage: "Approval Requested: Your approval request has been submitted successfully.",
+        updateFields: { approval_status: "pending" },
+      });
     } finally {
       setIsRequestApprovalLoading(false);
     }
   };
 
   const handleActivate = async () => {
+    setIsActivateLoading(true);
     try {
-      setIsActivateLoading(true);
-      await offerService.updateOfferStatus(Number(id), {
-        status: OfferStatusEnum.ACTIVE,
+      await handleOfferDetailAction({
+        action: "activate",
+        successMessage: `Offer Activated: "${offer?.name}" is now active.`,
+        updateFields: { lifecycle_status: "active" },
       });
-      success("Offer Activated", `"${offer?.name}" is now active.`);
-      loadOffer(true); // Skip cache to get fresh data after activation
-    } catch {
-      showError("Failed to activate offer");
     } finally {
       setIsActivateLoading(false);
     }
   };
 
   const handlePause = async () => {
+    setIsPauseLoading(true);
     try {
-      setIsPauseLoading(true);
-      await offerService.updateOfferStatus(Number(id), {
-        status: OfferStatusEnum.PAUSED,
+      await handleOfferDetailAction({
+        action: "pause",
+        successMessage: `Offer Paused: "${offer?.name}" has been paused.`,
+        updateFields: { lifecycle_status: "paused" },
       });
-      success("Offer Paused", `"${offer?.name}" has been paused.`);
-      loadOffer(true); // Skip cache to get fresh data after pausing
-    } catch {
-      showError("Failed to pause offer");
     } finally {
       setIsPauseLoading(false);
     }
   };
 
   const handleConfirmExpire = async () => {
+    setIsExpireLoading(true);
     try {
-      setIsExpireLoading(true);
-      await offerService.updateOfferStatus(Number(id), {
-        status: OfferStatusEnum.EXPIRED,
+      await handleOfferDetailAction({
+        action: "expire",
+        successMessage: `Offer Expired: "${offer?.name}" has been expired.`,
+        updateFields: { lifecycle_status: "expired" },
+        onSuccess: () => setShowExpireModal(false),
       });
-      success("Offer Expired", `"${offer?.name}" has been expired.`);
-      setShowExpireModal(false);
-      loadOffer(true); // Skip cache to get fresh data after expiration
-    } catch {
-      showError("Failed to expire offer");
     } finally {
       setIsExpireLoading(false);
     }
   };
 
   const handleConfirmArchive = async () => {
+    setIsArchiving(true);
     try {
-      setIsArchiving(true);
-      await offerService.updateOfferStatus(Number(id), {
-        status: OfferStatusEnum.ARCHIVED,
+      await handleOfferDetailAction({
+        action: "archive",
+        successMessage: `Offer Archived: "${offer?.name}" has been archived.`,
+        updateFields: { lifecycle_status: "archived" },
+        onSuccess: () => setShowArchiveModal(false),
       });
-      success("Offer Archived", `"${offer?.name}" has been archived.`);
-      setShowArchiveModal(false);
-      loadOffer(true); // Skip cache to get fresh data after archiving
-    } catch {
-      showError("Failed to archive offer");
     } finally {
       setIsArchiving(false);
     }

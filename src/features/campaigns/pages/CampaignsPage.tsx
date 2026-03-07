@@ -27,9 +27,14 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
-import { campaignFlowService } from "../services/campaignFlowService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
+import {
+  canPauseCampaign,
+  canResumeCampaign,
+  canActivateCampaign,
+  canSubmitForApproval,
+} from "../utils/campaignButtonVisibility";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
@@ -146,6 +151,72 @@ export default function CampaignsPage() {
     pendingApproval: number;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [loadingActionIds, setLoadingActionIds] = useState<Set<number>>(new Set());
+
+  // Helper function to update a single campaign in the list
+  const updateCampaignInList = (campaignId: number, updates: Partial<CampaignDisplay>) => {
+    setCampaigns((prev) =>
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c))
+    );
+    setAllCampaignsUnfiltered((prev) =>
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c))
+    );
+  };
+
+  // Generic handler for campaign actions (pause, resume, activate, submit)
+  interface CampaignActionParams {
+    campaignId: number;
+    campaignName: string;
+    action: "pause" | "resume" | "activate" | "submit";
+    successMessage: string;
+    errorMessage: string;
+    updateFields: Partial<CampaignDisplay>;
+    errorProcessor?: (error: unknown) => { title: string; message: string };
+  }
+
+  const handleCampaignAction = async (params: CampaignActionParams) => {
+    const { campaignId, action, successMessage, errorMessage, updateFields, errorProcessor } = params;
+
+    setLoadingActionIds((prev) => new Set([...prev, campaignId]));
+    setShowActionMenu(null);
+
+    try {
+      switch (action) {
+        case "pause":
+          await campaignService.pauseCampaign(campaignId);
+          break;
+        case "resume":
+          await campaignService.resumeCampaign(campaignId);
+          break;
+        case "activate":
+          await campaignService.activateCampaign(campaignId);
+          break;
+        case "submit":
+          await campaignService.submitForApproval(campaignId);
+          break;
+      }
+
+      updateCampaignInList(campaignId, updateFields);
+      showToast("success", successMessage);
+    } catch (error) {
+      if (errorProcessor) {
+        const { title, message } = errorProcessor(error);
+        showToast("error", title, message);
+      } else {
+        let message = errorMessage;
+        if (error instanceof Error) {
+          message = error.message;
+        }
+        showToast("error", message);
+      }
+    } finally {
+      setLoadingActionIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(campaignId);
+        return newSet;
+      });
+    }
+  };
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -331,65 +402,6 @@ export default function CampaignsPage() {
     }
   }, [showToast]);
 
-  // Fetch offer and segment counts for campaigns using campaign flows
-  const fetchCampaignCounts = useCallback(
-    async (
-      campaignIds: number[],
-    ): Promise<Map<number, { offers: number; segments: number }>> => {
-      const countsMap = new Map<number, { offers: number; segments: number }>();
-
-      // Fetch counts in parallel for all campaigns
-      const countPromises = campaignIds.map(async (campaignId) => {
-        try {
-          // Fetch segments from campaign flows
-          const segmentsResponse =
-            await campaignFlowService.getCampaignSegments(campaignId, true);
-
-          let segmentCount = 0;
-          if (
-            segmentsResponse &&
-            typeof segmentsResponse === "object" &&
-            segmentsResponse.success &&
-            "data" in segmentsResponse &&
-            Array.isArray(segmentsResponse.data)
-          ) {
-            segmentCount = segmentsResponse.data.length;
-          }
-
-          // Fetch offers from campaign flows
-          const offersResponse =
-            await campaignFlowService.getCampaignOffers(campaignId, true);
-
-          let offerCount = 0;
-          if (
-            offersResponse &&
-            typeof offersResponse === "object" &&
-            offersResponse.success &&
-            "data" in offersResponse &&
-            Array.isArray(offersResponse.data)
-          ) {
-            offerCount = offersResponse.data.length;
-          }
-
-          return { campaignId, offers: offerCount, segments: segmentCount };
-        } catch (error) {
-          console.error(
-            `Failed to fetch counts for campaign ${campaignId}:`,
-            error,
-          );
-          return { campaignId, offers: 0, segments: 0 };
-        }
-      });
-
-      const results = await Promise.all(countPromises);
-      results.forEach(({ campaignId, offers, segments }) => {
-        countsMap.set(campaignId, { offers, segments });
-      });
-
-      return countsMap;
-    },
-    [],
-  );
 
   // Fetch campaigns from API
   const fetchCampaigns = useCallback(async () => {
@@ -481,8 +493,8 @@ export default function CampaignsPage() {
           approval_status: campaign.approval_status,
           code: campaign.code,
           created_at: campaign.created_at,
-          offer_count: 0, // Will be updated below
-          segment_count: 0, // Will be updated below
+          offer_count: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
+          segment_count: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
         }),
       );
 
@@ -500,21 +512,7 @@ export default function CampaignsPage() {
       const endIndex = startIndex + pageSize;
       const paginatedCampaigns = campaignsToDisplay.slice(startIndex, endIndex);
 
-      // Fetch counts for the displayed campaigns
-      const campaignIds = paginatedCampaigns.map((c) => c.id);
-      const countsMap = await fetchCampaignCounts(campaignIds);
-
-      // Update campaigns with counts
-      const campaignsWithCounts = paginatedCampaigns.map((campaign) => {
-        const counts = countsMap.get(campaign.id);
-        return {
-          ...campaign,
-          offer_count: counts?.offers ?? 0,
-          segment_count: counts?.segments ?? 0,
-        };
-      });
-
-      setCampaigns(campaignsWithCounts);
+      setCampaigns(paginatedCampaigns);
       setAllCampaignsUnfiltered(campaignsData);
 
       // Get total from pagination response
@@ -543,7 +541,6 @@ export default function CampaignsPage() {
     pageSize,
     filters,
     showToast,
-    fetchCampaignCounts,
   ]);
 
   // Fetch campaign stats
@@ -896,14 +893,18 @@ export default function CampaignsPage() {
       // TODO: Get actual user ID from auth context
       const userId = 1;
       await campaignService.deleteCampaign(campaignToDelete.id, userId);
+      // Remove campaign from list instead of refetching
+      setCampaigns((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
+      setAllCampaignsUnfiltered((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
+      setTotalCampaigns((prev) => Math.max(0, prev - 1));
       showToast(
         "success",
         `Campaign "${campaignToDelete.name}" deleted successfully!`,
       );
       setShowDeleteModal(false);
       setCampaignToDelete(null);
-      fetchCampaigns(); // Refresh campaigns list
-      fetchCampaignStats(); // Refresh stats cards
+      // Only refetch stats since total count changed
+      fetchCampaignStats();
     } catch (error) {
       console.error("Failed to delete campaign:", error);
       // Extract error message from backend response
@@ -934,31 +935,6 @@ export default function CampaignsPage() {
     setCampaignToDelete(null);
   };
 
-  const handlePauseCampaign = async (campaignId: number) => {
-    try {
-      await campaignService.pauseCampaign(campaignId);
-      showToast("success", "Campaign paused successfully");
-      // Refetch campaigns to get updated state
-      await fetchCampaigns();
-      fetchCampaignStats(); // Refresh stats cards
-    } catch (error) {
-      console.error("Failed to pause campaign:", error);
-      showToast("error", "Failed to pause campaign");
-    }
-  };
-
-  const handleResumeCampaign = async (campaignId: number) => {
-    try {
-      await campaignService.resumeCampaign(campaignId);
-      showToast("success", "Campaign resumed successfully");
-      // Refetch campaigns to get updated state
-      await fetchCampaigns();
-      fetchCampaignStats(); // Refresh stats cards
-    } catch (error) {
-      console.error("Failed to resume campaign:", error);
-      showToast("error", "Failed to resume campaign");
-    }
-  };
 
   const filteredCampaigns = campaigns;
 
@@ -1290,17 +1266,40 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {campaign.status === "paused" ? (
+                        {canResumeCampaign(campaign) ? (
                           <button
-                            onClick={() => handleResumeCampaign(campaign.id)}
-                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300`}
+                            onClick={() =>
+                              handleCampaignAction({
+                                campaignId: campaign.id,
+                                campaignName: campaign.name,
+                                action: "resume",
+                                successMessage: `Campaign "${campaign.name}" resumed successfully!`,
+                                errorMessage: "Failed to resume campaign",
+                                updateFields: { status: "active" },
+                              })
+                            }
+                            className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-gray-100 transition-all duration-300 relative`}
                             title="Resume Campaign"
+                            disabled={loadingActionIds.has(campaign.id)}
                           >
-                            <Play className="w-4 h-4" />
+                            {loadingActionIds.has(campaign.id) ? (
+                              <LoadingSpinner variant="modern" size="sm" color="primary" />
+                            ) : (
+                              <Play className="w-4 h-4" />
+                            )}
                           </button>
-                        ) : campaign.status !== "paused" ? (
+                        ) : canPauseCampaign(campaign) ? (
                           <button
-                            onClick={() => handlePauseCampaign(campaign.id)}
+                            onClick={() =>
+                              handleCampaignAction({
+                                campaignId: campaign.id,
+                                campaignName: campaign.name,
+                                action: "pause",
+                                successMessage: `Campaign "${campaign.name}" paused successfully!`,
+                                errorMessage: "Failed to pause campaign",
+                                updateFields: { status: "paused" },
+                              })
+                            }
                             className={`group p-3 ${tw.rounded} ${tw.textMuted} hover:bg-orange-500 transition-all duration-300`}
                             style={{ backgroundColor: "transparent" }}
                             onMouseLeave={(e) => {
@@ -1309,8 +1308,13 @@ export default function CampaignsPage() {
                               ).style.backgroundColor = "transparent";
                             }}
                             title="Pause Campaign"
+                            disabled={loadingActionIds.has(campaign.id)}
                           >
-                            <Pause className="w-4 h-4" />
+                            {loadingActionIds.has(campaign.id) ? (
+                              <LoadingSpinner variant="modern" size="sm" color="primary" />
+                            ) : (
+                              <Pause className="w-4 h-4" />
+                            )}
                           </button>
                         ) : null}
                         <PermissionGate permission="campaigns.update">
@@ -1396,164 +1400,143 @@ export default function CampaignsPage() {
                         </PermissionGate>
 
                         {/* Pause Campaign Button */}
-                        {campaign.approval_status === "approved" &&
-                        campaign.status !== "paused" ? (
+                        {canPauseCampaign(campaign) ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.pauseCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" paused successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage = "Failed to pause campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleCampaignAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "pause",
+                                  successMessage: `Campaign "${campaign.name}" paused successfully!`,
+                                  errorMessage: "Failed to pause campaign",
+                                  updateFields: { status: "paused" },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Pause className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                              ) : (
+                                <Pause className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Pause Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
                         {/* Resume Campaign Button */}
-                        {campaign.approval_status === "approved" &&
-                        campaign?.status === "paused" ? (
+                        {canResumeCampaign(campaign) ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.resumeCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" resumed successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage = "Failed to resume campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleCampaignAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "resume",
+                                  successMessage: `Campaign "${campaign.name}" resumed successfully!`,
+                                  errorMessage: "Failed to resume campaign",
+                                  updateFields: { status: "active" },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Play className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                              ) : (
+                                <Play className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Resume Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
-                        {campaign.approval_status === "approved" &&
-                        campaign.is_active === false ? (
+                        {canActivateCampaign(campaign) ? (
                           <PermissionGate permission="campaigns.activate">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.activateCampaign(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" activated successfully!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage =
-                                    "Failed to activate campaign";
-                                  if (error instanceof Error) {
-                                    errorMessage = error.message;
-                                  }
-                                  showToast("error", errorMessage);
-                                }
+                                handleCampaignAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "activate",
+                                  successMessage: `Campaign "${campaign.name}" activated successfully!`,
+                                  errorMessage: "Failed to activate campaign",
+                                  updateFields: { is_active: true },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Activate Campaign
                             </button>
                           </PermissionGate>
                         ) : null}
 
-                        {campaign.status === "draft" && (
+                        {canSubmitForApproval(campaign) && (
                           <PermissionGate permission="campaigns.update">
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.stopPropagation();
-                                setShowActionMenu(null);
-                                try {
-                                  await campaignService.submitForApproval(
-                                    campaign.id,
-                                  );
-                                  showToast(
-                                    "success",
-                                    `Campaign "${campaign.name}" submitted for approval!`,
-                                  );
-                                  fetchCampaigns();
-                                } catch (error) {
-                                  let errorMessage =
-                                    "Failed to submit campaign for approval";
-                                  let errorTitle = "Submission Failed";
+                                handleCampaignAction({
+                                  campaignId: campaign.id,
+                                  campaignName: campaign.name,
+                                  action: "submit",
+                                  successMessage: `Campaign "${campaign.name}" submitted for approval!`,
+                                  errorMessage: "Failed to submit campaign for approval",
+                                  updateFields: { status: "pending_approval", approval_status: "pending" },
+                                  errorProcessor: (error) => {
+                                    let errorTitle = "Submission Failed";
+                                    let errorMessage = "Failed to submit campaign for approval";
 
-                                  if (error instanceof Error) {
-                                    // Check for budget-related errors
-                                    if (
-                                      error.message
-                                        .toLowerCase()
-                                        .includes("budget") ||
-                                      error.message
-                                        .toLowerCase()
-                                        .includes("positive")
-                                    ) {
-                                      errorTitle = "Budget Required";
-                                      errorMessage =
-                                        "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
-                                    } else {
-                                      // Try to extract error from response
-                                      const match =
-                                        error.message.match(/details: ({.*})/);
-                                      if (match) {
-                                        try {
-                                          const errorData = JSON.parse(
-                                            match[1],
-                                          );
-                                          errorMessage =
-                                            errorData.error ||
-                                            errorData.message ||
-                                            errorMessage;
-                                        } catch {
+                                    if (error instanceof Error) {
+                                      // Check for budget-related errors
+                                      if (
+                                        error.message.toLowerCase().includes("budget") ||
+                                        error.message.toLowerCase().includes("positive")
+                                      ) {
+                                        errorTitle = "Budget Required";
+                                        errorMessage =
+                                          "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
+                                      } else {
+                                        // Try to extract error from response
+                                        const match = error.message.match(/details: ({.*})/);
+                                        if (match) {
+                                          try {
+                                            const errorData = JSON.parse(match[1]);
+                                            errorMessage =
+                                              errorData.error ||
+                                              errorData.message ||
+                                              errorMessage;
+                                          } catch {
+                                            errorMessage = error.message;
+                                          }
+                                        } else {
                                           errorMessage = error.message;
                                         }
-                                      } else {
-                                        errorMessage = error.message;
                                       }
                                     }
-                                  }
-                                  showToast("error", errorTitle, errorMessage);
-                                }
+                                    return { title: errorTitle, message: errorMessage };
+                                  },
+                                });
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
+                              disabled={loadingActionIds.has(campaign.id)}
                             >
-                              <Send className="w-4 h-4 mr-4 text-black" />
+                              {loadingActionIds.has(campaign.id) ? (
+                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                              ) : (
+                                <Send className="w-4 h-4 mr-4 text-black" />
+                              )}
                               Request Approval
                             </button>
                           </PermissionGate>
@@ -1943,8 +1926,22 @@ export default function CampaignsPage() {
           campaignName={campaignToExecute.name}
           isActive={campaignToExecute.is_active}
           approvalStatus={campaignToExecute.approval_status}
-          onSuccess={() => {
-            fetchCampaigns();
+          onSuccess={async () => {
+            // Fetch fresh campaign data after execution
+            try {
+              const response = await campaignService.getCampaignById(campaignToExecute.id, true);
+              if (response && response.data) {
+                updateCampaignInList(campaignToExecute.id, {
+                  status: response.data.status,
+                  is_active: response.data.is_active,
+                });
+              } else {
+                updateCampaignInList(campaignToExecute.id, { status: "executed" });
+              }
+            } catch {
+              updateCampaignInList(campaignToExecute.id, { status: "executed" });
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
         />
       )}
@@ -1959,8 +1956,22 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToApprove.id}
           campaignName={campaignToApprove.name}
-          onSuccess={() => {
-            fetchCampaigns();
+          onSuccess={async () => {
+            // Fetch fresh campaign data after approval
+            try {
+              const response = await campaignService.getCampaignById(campaignToApprove.id, true);
+              if (response && response.data) {
+                updateCampaignInList(campaignToApprove.id, {
+                  approval_status: response.data.approval_status,
+                  status: response.data.status,
+                });
+              } else {
+                updateCampaignInList(campaignToApprove.id, { approval_status: "approved" });
+              }
+            } catch {
+              updateCampaignInList(campaignToApprove.id, { approval_status: "approved" });
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
         />
       )}
@@ -1975,8 +1986,24 @@ export default function CampaignsPage() {
           }}
           campaignId={campaignToReject.id}
           campaignName={campaignToReject.name}
-          onSuccess={() => {
-            fetchCampaigns();
+          onSuccess={async () => {
+            // Fetch fresh campaign data after rejection to ensure correct state
+            try {
+              const response = await campaignService.getCampaignById(campaignToReject.id, true);
+              if (response && response.data) {
+                updateCampaignInList(campaignToReject.id, {
+                  approval_status: response.data.approval_status,
+                  status: response.data.status,
+                });
+              } else {
+                // Fallback: just update with rejected status
+                updateCampaignInList(campaignToReject.id, { approval_status: "rejected" });
+              }
+            } catch {
+              // Fallback: just update with rejected status
+              updateCampaignInList(campaignToReject.id, { approval_status: "rejected" });
+            }
+            fetchCampaignStats(); // Refresh stats
           }}
         />
       )}

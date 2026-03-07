@@ -218,13 +218,15 @@ export default function ProductsPage() {
           `"${product.name}" has been activated successfully.`,
         );
       }
-      // Reload in background to sync with backend
-      loadProducts(true);
+      // Update local state (optimistic UI)
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === product.id ? { ...p, is_active: newStatus } : p,
+        ),
+      );
     } catch (err) {
       console.error("Failed to update product status:", err);
       showError("Failed to update product status", "Please try again later.");
-      // Reload to revert the optimistic update if API fails
-      loadProducts(true);
     }
   };
 
@@ -241,14 +243,15 @@ export default function ProductsPage() {
     setIsDeleting(true);
     try {
       await productService.deleteProduct(Number(productToDelete.id));
+      // Remove from list (optimistic UI)
+      setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
       showToast(
         "Product Deleted",
         `"${productToDelete.name}" has been deleted successfully.`,
       );
       setShowDeleteModal(false);
       setProductToDelete(null);
-      loadProducts(true); // Skip cache when refetching after delete
-      loadStats(); // Refresh stats cards
+      loadStats(); // Refresh stats cards only
     } catch (err) {
       console.error("Failed to delete product:", err);
       // Extract error message from backend response

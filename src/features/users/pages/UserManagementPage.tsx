@@ -1151,7 +1151,10 @@ export default function UserManagementPage() {
           `User ${user.first_name} ${user.last_name} activated successfully`,
         );
       }
-      await loadData({ skipCache: true }); // Skip cache to get fresh data
+      // Optimistically update user status
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, status: isActive ? "deactivated" : "active" } : u)),
+      );
     } catch (err) {
       showError(
         "Error updating status",
@@ -1187,7 +1190,8 @@ export default function UserManagementPage() {
 
     try {
       await userService.deleteUser(userToDelete.id, authUser.user_id);
-      await loadData({ skipCache: true }); // Skip cache to get fresh data
+      // Optimistically remove user from list
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
       success(
         t.userManagement.userDeleted,
         `${userToDelete.first_name} ${userToDelete.last_name} deleted successfully`,
@@ -2961,10 +2965,15 @@ export default function UserManagementPage() {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onUserSaved={() => {
+        onUserSaved={(savedUser: UserType) => {
           setIsModalOpen(false);
+          // Optimistically update user in list
+          if (savedUser && savedUser.id) {
+            setUsers((prev) =>
+              prev.map((u) => (u.id === savedUser.id ? savedUser : u)),
+            );
+          }
           setSelectedUser(null);
-          loadData({ skipCache: true }); // Skip cache to get fresh data
         }}
       />
 

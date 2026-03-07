@@ -573,9 +573,10 @@ export default function SegmentManagementPage() {
     try {
       const segmentId = segmentToDelete.id;
       await segmentService.deleteSegment(segmentId);
+      // Remove segment from list (optimistic UI)
+      setSegments((prev) => prev.filter((s) => s.id !== segmentId));
       setShowDeleteModal(false);
       setSegmentToDelete(null);
-      await loadSegments();
       success(
         "Segment deleted",
         `Segment "${segmentToDelete.name}" has been deleted successfully`,
@@ -620,12 +621,12 @@ export default function SegmentManagementPage() {
     try {
       setDuplicatingSegment(segmentId);
 
-      await segmentService.duplicateSegment(segmentId, { new_name: newName });
-      // Small delay to ensure backend has processed the duplicate
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // Force refresh with cache-busting
-      setSegments([]); // Clear current segments first
-      await loadSegments();
+      const response = await segmentService.duplicateSegment(segmentId, { new_name: newName });
+
+      // Add new segment to list (optimistic UI)
+      if (response && response.data) {
+        setSegments((prev) => [...prev, response.data]);
+      }
 
       // Success: show toast and close modal
       success(
@@ -710,8 +711,16 @@ export default function SegmentManagementPage() {
     //   );
     // }
 
-    // Simplified: Just reload segments and show success message
-    await loadSegments();
+    // Simplified: Update local state and show success message
+    if (selectedSegment) {
+      // Update existing segment
+      setSegments((prev) =>
+        prev.map((s) => (s.id === segment.id ? segment : s)),
+      );
+    } else {
+      // Add new segment to list
+      setSegments((prev) => [...prev, segment]);
+    }
     const segName = segment?.name || "(Unnamed)";
     success(
       selectedSegment ? "Segment updated" : "Segment created",
@@ -736,8 +745,10 @@ export default function SegmentManagementPage() {
     try {
       const segmentId = segment.id;
       await segmentService.refreshSegment(segmentId);
-      // Reload segments to get updated data
-      await loadSegments();
+      // Update segment state to show refresh was applied (optimistic UI)
+      setSegments((prev) =>
+        prev.map((s) => (s.id === segmentId ? { ...s, last_refresh: new Date().toISOString() } : s)),
+      );
       success(
         "Segment refreshed",
         `Segment "${segment.name}" has been refreshed successfully`,
@@ -808,15 +819,23 @@ export default function SegmentManagementPage() {
         segmentIds: segmentIdsArray,
       });
 
+      // Update segments to reflect refresh (optimistic UI)
+      setSegments((prev) =>
+        prev.map((s) =>
+          segmentIdsArray.includes(s.id)
+            ? { ...s, last_refresh: new Date().toISOString() }
+            : s,
+        ),
+      );
+
       success(
         "Segments refreshed",
         `${segmentIdsArray.length} segment(s) have been refreshed successfully`,
       );
 
-      // Clear selection and reload segments
+      // Clear selection
       setSelectedSegmentIds(new Set());
       setIsSelectionMode(false);
-      await loadSegments();
     } catch (err: unknown) {
       showError(
         "Bulk refresh failed",
@@ -852,10 +871,9 @@ export default function SegmentManagementPage() {
         `Computation started for ${segmentIdsArray.length} segment(s)`,
       );
 
-      // Clear selection and reload segments
+      // Clear selection (no need to reload - compute happens in background)
       setSelectedSegmentIds(new Set());
       setIsSelectionMode(false);
-      await loadSegments();
     } catch (err: unknown) {
       showError(
         "Batch compute failed",

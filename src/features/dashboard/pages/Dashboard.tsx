@@ -596,6 +596,12 @@ const OtherPages = {
         /* webpackPrefetch: true */ "../../notifications/pages/NotificationsPage"
       ),
   ),
+  DynamicMessageVariablesPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../manual-broadcast/pages/DynamicMessageVariablesPage"
+      ),
+  ),
 };
 
 export default function Dashboard() {
@@ -863,6 +869,10 @@ export default function Dashboard() {
           <Route
             path="/character-sets"
             element={<OfferPages.CharacterSetsPage />}
+          />
+          <Route
+            path="/dynamic-message-variables"
+            element={<OtherPages.DynamicMessageVariablesPage />}
           />
           <Route
             path="/communication-channels"

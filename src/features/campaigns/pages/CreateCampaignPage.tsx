@@ -14,6 +14,7 @@ import {
   clearPersistedFormData,
   getPersistedFormData,
 } from "../../../shared/hooks/useFormDataPersistence";
+import { useFormCleanupOnExit } from "../../../shared/hooks/useFormCleanupOnExit";
 import { color, tw } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
@@ -282,6 +283,13 @@ export default function CreateCampaignPage() {
       localStorage.setItem("campaign_flows", JSON.stringify(campaignFlows));
     }
   }, [campaignFlows, isEditMode]);
+
+  // Clear persisted form data when user exits the creation flow
+  useFormCleanupOnExit("campaign_form_data");
+  useFormCleanupOnExit("campaign_segments");
+  useFormCleanupOnExit("campaign_offers");
+  useFormCleanupOnExit("campaign_mappings");
+  useFormCleanupOnExit("campaign_flows");
 
   const loadCampaignData = useCallback(
     async (

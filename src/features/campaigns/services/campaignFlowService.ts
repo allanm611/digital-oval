@@ -73,9 +73,13 @@ class CampaignFlowService {
    * Get all flows for a specific campaign
    */
   async getCampaignFlows(
-    campaignId: number
+    campaignId: number,
+    skipCache: boolean = false
   ): Promise<GetCampaignFlowsResponse> {
-    const url = `${BASE_URL}/campaign/${campaignId}`;
+    let url = `${BASE_URL}/campaign/${campaignId}`;
+    if (skipCache) {
+      url += `?skipCache=${Date.now()}`;
+    }
 
     const response = await fetch(url, {
       method: "GET",

@@ -233,27 +233,34 @@ export default function SegmentModal({
       }
 
       // Build the request for query generation - ONLY 360_profile conditions
+      const mappedGroups = formData.conditions
+        .map((group) => ({
+          logic: group.operator,
+          groupOperator: group.groupOperator,
+          conditions: group.conditions
+            .filter(
+              (c) =>
+                c.conditionType === "360_profile" &&
+                c.field_id &&
+                c.operator_id
+            )
+            .map((c) => ({
+              field_id: c.field_id!,
+              operator_id: c.operator_id!,
+              value: c.value,
+            })),
+        }))
+        .filter((group) => group.conditions.length > 0); // Remove empty groups
+
+      // Remove groupOperator from last group (it has no group after it)
+      if (mappedGroups.length > 0) {
+        delete mappedGroups[mappedGroups.length - 1].groupOperator;
+      }
+
       const queryRequest = {
         fields: Array.from(fieldIds), // Fields to select in the query
         filters: {
-          logic: "AND" as const,
-          groups: formData.conditions
-            .map((group) => ({
-              logic: group.operator,
-              conditions: group.conditions
-                .filter(
-                  (c) =>
-                    c.conditionType === "360_profile" &&
-                    c.field_id &&
-                    c.operator_id
-                )
-                .map((c) => ({
-                  field_id: c.field_id!,
-                  operator_id: c.operator_id!,
-                  value: c.value,
-                })),
-            }))
-            .filter((group) => group.conditions.length > 0), // Remove empty groups
+          groups: mappedGroups,
         },
         limit: 100, // Preview limit
       };
@@ -332,27 +339,34 @@ export default function SegmentModal({
       }
 
       // Build the request for query generation (without limit for production) - ONLY 360_profile
+      const mappedGroups = formData.conditions
+        .map((group) => ({
+          logic: group.operator,
+          groupOperator: group.groupOperator,
+          conditions: group.conditions
+            .filter(
+              (c) =>
+                c.conditionType === "360_profile" &&
+                c.field_id &&
+                c.operator_id
+            )
+            .map((c) => ({
+              field_id: c.field_id!,
+              operator_id: c.operator_id!,
+              value: c.value,
+            })),
+        }))
+        .filter((group) => group.conditions.length > 0); // Remove empty groups
+
+      // Remove groupOperator from last group (it has no group after it)
+      if (mappedGroups.length > 0) {
+        delete mappedGroups[mappedGroups.length - 1].groupOperator;
+      }
+
       const queryRequest = {
         fields: Array.from(fieldIds),
         filters: {
-          logic: "AND" as const,
-          groups: formData.conditions
-            .map((group) => ({
-              logic: group.operator,
-              conditions: group.conditions
-                .filter(
-                  (c) =>
-                    c.conditionType === "360_profile" &&
-                    c.field_id &&
-                    c.operator_id
-                )
-                .map((c) => ({
-                  field_id: c.field_id!,
-                  operator_id: c.operator_id!,
-                  value: c.value,
-                })),
-            }))
-            .filter((group) => group.conditions.length > 0), // Remove empty groups
+          groups: mappedGroups,
         },
         // Don't set limit for production query
       };
