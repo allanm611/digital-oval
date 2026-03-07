@@ -41,6 +41,7 @@ export default function CreateCommunicationPage() {
   const [messageTitle, setMessageTitle] = useState("");
   const [messageBody, setMessageBody] = useState("");
   const [sampleData, setSampleData] = useState<Record<string, unknown>>({});
+  const [isRichText, setIsRichText] = useState(false);
 
   // Persist form data to localStorage
   useFormDataPersistence("communication_channel", selectedChannel, setSelectedChannel, false);
@@ -338,6 +339,8 @@ export default function CreateCommunicationPage() {
                 }
                 onTitleChange={setMessageTitle}
                 onBodyChange={setMessageBody}
+                isRichText={isRichText}
+                onToggleRichText={() => setIsRichText(!isRichText)}
               />
             </div>
 

@@ -1,0 +1,441 @@
+import { useState, useEffect } from 'react';
+import { Search, Power, PowerOff } from 'lucide-react';
+import { color, tw } from '../utils/utils';
+import { useMessageVariableFields } from '../../features/manual-broadcast/hooks/useMessageVariableFields';
+import { dynamicMessageVariableService } from '../../features/manual-broadcast/services/dynamicMessageVariableService';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import BackButton from '../components/ui/BackButton';
+import HeadlessSelect from '../components/ui/HeadlessSelect';
+import { createPortal } from 'react-dom';
+
+interface MessageVariableFieldConfig {
+  id: number;
+  field_name: string;
+  field_value: string;
+  description?: string;
+  is_active: boolean;
+  type?: string;
+  default_value?: string;
+}
+
+interface CategoryConfig {
+  id?: string;
+  name: string;
+  is_active: boolean;
+  fields: MessageVariableFieldConfig[];
+}
+
+export default function DynamicMessageVariablesPage() {
+  const { categories, allFields, isLoading } = useMessageVariableFields();
+
+  const [categoryConfigs, setCategoryConfigs] = useState<CategoryConfig[]>([]);
+  const [fieldConfigs, setFieldConfigs] = useState<MessageVariableFieldConfig[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [togglingCategoryId, setTogglingCategoryId] = useState<string | null>(null);
+  const [isFieldsModalOpen, setIsFieldsModalOpen] = useState(false);
+  const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<CategoryConfig | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.toLowerCase());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Initialize configurations from fetched fields
+  useEffect(() => {
+    const loadStoredConfigurations = async () => {
+      try {
+        const storedConfigs = await dynamicMessageVariableService.loadConfigurations();
+
+        const configs: MessageVariableFieldConfig[] = allFields.map((field) => {
+          const stored = storedConfigs.find((c) => c.id === field.id);
+          return (
+            stored || {
+              id: field.id,
+              field_name: field.field_name,
+              field_value: field.field_value,
+              description: field.description,
+              type: field.type,
+              is_active: true,
+              default_value: field.default_value || '',
+            }
+          );
+        });
+        setFieldConfigs(configs);
+
+        // Build category configs
+        const catConfigs: CategoryConfig[] = categories.map((cat) => ({
+          id: cat.name || cat.category || 'General',
+          name: cat.name || cat.category || 'General',
+          is_active: true,
+          fields: configs.filter((field) => {
+            const catFields = cat.fields || [];
+            return catFields.some((f) => f.id === field.id);
+          }),
+        }));
+        setCategoryConfigs(catConfigs);
+      } catch (error) {
+        console.error('Failed to load configurations:', error);
+      }
+    };
+
+    if (allFields.length > 0) {
+      loadStoredConfigurations();
+    }
+  }, [allFields, categories]);
+
+  // Update category configs when field configs change
+  useEffect(() => {
+    if (categoryConfigs.length > 0 && fieldConfigs.length > 0) {
+      const updatedCatConfigs = categoryConfigs.map((cat) => ({
+        ...cat,
+        fields: cat.fields.map((field) => {
+          const updatedField = fieldConfigs.find((f) => f.id === field.id);
+          return updatedField || field;
+        }),
+      }));
+      setCategoryConfigs(updatedCatConfigs);
+
+      // Also update selected category modal if it's open
+      if (selectedCategoryForModal) {
+        const updatedCategory = updatedCatConfigs.find(
+          (cat) => cat.id === selectedCategoryForModal.id
+        );
+        if (updatedCategory) {
+          setSelectedCategoryForModal(updatedCategory);
+        }
+      }
+    }
+  }, [fieldConfigs]);
+
+  const handleToggleCategoryActive = async (categoryId: string) => {
+    try {
+      setTogglingCategoryId(categoryId);
+      const category = categoryConfigs.find((cat) => cat.id === categoryId);
+      const isDeactivating = category?.is_active;
+
+      const updated = categoryConfigs.map((cat) =>
+        cat.id === categoryId ? { ...cat, is_active: !cat.is_active } : cat
+      );
+      setCategoryConfigs(updated);
+
+      // If deactivating, also deactivate all fields in this category
+      let updatedFields = fieldConfigs;
+      if (isDeactivating && category) {
+        updatedFields = fieldConfigs.map((field) =>
+          category.fields.some((f) => f.id === field.id)
+            ? { ...field, is_active: false }
+            : field
+        );
+        setFieldConfigs(updatedFields);
+      }
+
+      await dynamicMessageVariableService.saveConfigurations(updatedFields);
+    } catch (error) {
+      console.error('Failed to toggle category activation:', error);
+    } finally {
+      setTogglingCategoryId(null);
+    }
+  };
+
+  const handleToggleFieldActive = async (fieldId: number, desiredState?: boolean) => {
+    try {
+      setTogglingId(fieldId);
+      const updated = fieldConfigs.map((config) =>
+        config.id === fieldId
+          ? { ...config, is_active: desiredState !== undefined ? desiredState : !config.is_active }
+          : config
+      );
+      setFieldConfigs(updated);
+      await dynamicMessageVariableService.saveConfigurations(updated);
+    } catch (error) {
+      console.error('Failed to toggle field activation:', error);
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+  // Filter categories by search term and selected category
+  const filteredCategories = categoryConfigs
+    .filter((cat) => selectedCategory === 'all' || cat.id === selectedCategory)
+    .filter((cat) =>
+      cat.name.toLowerCase().includes(debouncedSearchTerm) ||
+      cat.fields.some(
+        (field) =>
+          field.field_name.toLowerCase().includes(debouncedSearchTerm) ||
+          field.field_value.toLowerCase().includes(debouncedSearchTerm)
+      )
+    );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <LoadingSpinner variant="modern" size="lg" color="primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <BackButton fallbackTo="/dashboard/configurations" />
+        <div>
+          <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+            Dynamic Message Variables
+          </h1>
+          <p className={`${tw.textSecondary} text-sm mt-1`}>
+            Manage customer identity fields for message and creative variables
+          </p>
+        </div>
+      </div>
+
+      {/* Search Bar and Category Filter */}
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search categories..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-gray-400"
+          />
+        </div>
+        <div className="w-48">
+          <HeadlessSelect
+            options={[
+              { value: 'all', label: 'All Categories' },
+              ...categoryConfigs.map((cat) => ({
+                value: cat.id || cat.name,
+                label: cat.name,
+              })),
+            ]}
+            value={selectedCategory}
+            onChange={(value) => setSelectedCategory(value as string)}
+            placeholder="Filter by category"
+          />
+        </div>
+      </div>
+
+      {/* Category Cards Grid */}
+      {filteredCategories.length === 0 ? (
+        <div
+          className={`${tw.rounded} border p-8 text-center bg-white`}
+          style={{ borderColor: color.border.default }}
+        >
+          <Search className={`w-12 h-12 ${tw.textMuted} mx-auto mb-4`} />
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-2`}>
+            {searchTerm ? 'No categories found' : 'No categories available'}
+          </h3>
+          <p className={tw.textSecondary}>
+            {searchTerm ? 'Try adjusting your search terms' : 'No categories are available'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredCategories.map((category) => (
+            <div
+              key={category.id || category.name}
+              className="bg-white border border-gray-200 rounded-lg p-6"
+              style={{ opacity: category.is_active ? 1 : 0.6 }}
+            >
+              {/* Card Header: Name + Toggle */}
+              <div className="flex items-start justify-between mb-2">
+                <h3 className={`${tw.tableFirstColumn} text-gray-900 flex-1`}>
+                  {category.name}
+                </h3>
+                <button
+                  onClick={() => handleToggleCategoryActive(category.id || category.name)}
+                  disabled={togglingCategoryId === (category.id || category.name)}
+                  className="p-2 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={category.is_active ? 'Deactivate category' : 'Activate category'}
+                >
+                  {togglingCategoryId === (category.id || category.name) ? (
+                    <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  ) : category.is_active ? (
+                    <PowerOff className="w-4 h-4 text-orange-600" />
+                  ) : (
+                    <Power className="w-4 h-4 text-green-600" />
+                  )}
+                </button>
+              </div>
+
+              {/* Divider with Count and Button */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <span className="text-sm text-gray-600">
+                  {category.fields.length} field{category.fields.length !== 1 ? 's' : ''}
+                </span>
+                <button
+                  onClick={() => {
+                    setSelectedCategoryForModal(category);
+                    setIsFieldsModalOpen(true);
+                  }}
+                  className="text-sm font-medium text-gray-700 hover:underline transition-colors"
+                >
+                  View Fields
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fields Modal */}
+      {isFieldsModalOpen && selectedCategoryForModal && (
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+            style={{ zIndex: 9999 }}
+          >
+            <div
+              className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              {/* Modal Header */}
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className={`${tw.textPrimary} text-xl font-semibold`}>
+                  {selectedCategoryForModal.name} - Fields
+                </h2>
+                <button
+                  onClick={() => setIsFieldsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Body - Table */}
+              <div className="flex-1 overflow-auto px-6 py-4">
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full"
+                    style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}
+                  >
+                    <thead style={{ background: color.surface.tableHeader }}>
+                      <tr>
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Field Code
+                        </th>
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Field Name
+                        </th>
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Description
+                        </th>
+                        <th
+                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Default Value
+                        </th>
+                        <th
+                          className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
+                          style={{ color: color.surface.tableHeaderText }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedCategoryForModal.fields.map((field) => (
+                        <tr key={field.id} className="transition-colors">
+                          <td
+                            className="px-6 py-4 text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {field.field_value}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <div className="truncate">
+                              {field.field_name}
+                            </div>
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <div className="line-clamp-2">
+                              {field.description || '-'}
+                            </div>
+                          </td>
+                          <td
+                            className="px-6 py-4 text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            0
+                          </td>
+                          <td
+                            className="px-6 py-4 text-center text-sm text-black"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            {field.is_active ? 'Active' : 'Inactive'}
+                          </td>
+                          <td
+                            className="px-6 py-4 text-center"
+                            style={{ backgroundColor: color.surface.tablebodybg }}
+                          >
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                onClick={() => handleToggleFieldActive(field.id, true)}
+                                disabled={field.is_active || togglingId === field.id || !selectedCategoryForModal.is_active}
+                                className="px-4 py-2 text-sm font-medium text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ backgroundColor: color.primary.action }}
+                              >
+                                {togglingId === field.id ? '...' : 'Activate'}
+                              </button>
+                              <button
+                                onClick={() => handleToggleFieldActive(field.id, false)}
+                                disabled={!field.is_active || togglingId === field.id || !selectedCategoryForModal.is_active}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {togglingId === field.id ? '...' : 'Deactivate'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+                <button
+                  onClick={() => setIsFieldsModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      )}
+    </div>
+  );
+}

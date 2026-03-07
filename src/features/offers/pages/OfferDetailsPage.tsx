@@ -73,7 +73,7 @@ import CascadingVariableSelector from "../../manual-broadcast/components/Cascadi
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../../manual-broadcast/utils/variableInsertion";
+} from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 
 const localeLabelMap: Record<string, string> = {

@@ -32,7 +32,7 @@ import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../../manual-broadcast/utils/variableInsertion";
+} from "../../../shared/utils/variableInsertion";
 import type { TemplateVariable } from "../../manual-broadcast/types";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
@@ -852,28 +852,6 @@ export default function CreateCommunicationModal({
                           Variables like {"{{field}}"} will be replaced with
                           customer data
                         </span>
-                      )}
-
-                      {selectedVariables.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          {selectedVariables.slice(0, 3).map((v) => (
-                            <span
-                              key={v.id}
-                              className="px-2 py-0.5 rounded text-xs"
-                              style={{
-                                backgroundColor: `${color.primary.accent}10`,
-                                color: color.primary.accent,
-                              }}
-                            >
-                              {v.name}
-                            </span>
-                          ))}
-                          {selectedVariables.length > 3 && (
-                            <span className="text-xs text-gray-400">
-                              +{selectedVariables.length - 3} more
-                            </span>
-                          )}
-                        </div>
                       )}
                     </div>
                   </div>

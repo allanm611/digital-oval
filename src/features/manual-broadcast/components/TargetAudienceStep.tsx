@@ -310,16 +310,16 @@ export default function TargetAudienceStep({
         {/* QuickList Selection - Show only when Upload File is selected */}
         {inputMethod === "file" && (
           <div className="space-y-3  rounded-md">
-            <label className="text-sm font-medium text-gray-900 block">
+            <label className="text-sm font-medium text-gray-900 block mb-0">
               Select or Create QuickList *
             </label>
 
             {selectedQuickList ? (
               <>
                 <div className="flex items-center gap-2 mb-3">
-                  <p className="text-xs text-gray-600">
+                  {/* <p className="text-xs text-gray-600">
                     Select an existing quicklist or create a new one
-                  </p>
+                  </p> */}
                   <button
                     type="button"
                     onClick={() => {
@@ -346,7 +346,7 @@ export default function TargetAudienceStep({
               </>
             ) : (
               <p className="text-xs text-gray-600 mb-3">
-                Select an existing quicklist or create a new one
+                {/* Select an existing quicklist or create a new one */}
               </p>
             )}
 
@@ -356,7 +356,7 @@ export default function TargetAudienceStep({
                   type="button"
                   onClick={() => setShowPickerModal(true)}
                   disabled={isSubmitting}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium border border-gray-300 rounded-md  disabled:opacity-50 transition-colors"
                 >
                   <List className="w-4 h-4" />
                   Select from Existing

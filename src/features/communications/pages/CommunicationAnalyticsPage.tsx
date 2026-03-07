@@ -351,13 +351,13 @@ export default function CommunicationAnalyticsPage() {
                                   backgroundColor: color.surface.tablebodybg,
                                 }}
                               >
-                                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                <td className="px-6 py-4 text-sm font-medium text-black">
                                   {execution.execution_id}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
+                                <td className="px-6 py-4 text-sm text-black">
                                   {execution.source_type} #{execution.source_id}
                                 </td>
-                                <td className="px-6 py-4 text-sm">
+                                <td className="px-6 py-4 text-sm text-black">
                                   <span
                                     className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
                                     style={{
@@ -375,7 +375,7 @@ export default function CommunicationAnalyticsPage() {
                                     {execution.status || "completed"}
                                   </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600">
+                                <td className="px-6 py-4 text-sm text-black">
                                   {execution.created_at
                                     ? new Date(
                                         execution.created_at
@@ -389,7 +389,7 @@ export default function CommunicationAnalyticsPage() {
                         <tr>
                           <td
                             colSpan={4}
-                            className="px-6 py-8 text-center text-gray-500"
+                            className="px-6 py-8 text-center text-sm text-black"
                           >
                             No executions found for the selected filters.
                           </td>
@@ -518,13 +518,13 @@ export default function CommunicationAnalyticsPage() {
                                 backgroundColor: color.surface.tablebodybg,
                               }}
                             >
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                              <td className="px-6 py-4 text-sm font-medium text-black">
                                 {log.execution_id}
                               </td>
-                              <td className="px-6 py-4 text-sm text-gray-600">
+                              <td className="px-6 py-4 text-sm text-black">
                                 {log.channel}
                               </td>
-                              <td className="px-6 py-4 text-sm">
+                              <td className="px-6 py-4 text-sm text-black">
                                 <span
                                   className="inline-flex px-2 py-1 text-sm font-semibold rounded-full text-white"
                                   style={{
@@ -545,7 +545,7 @@ export default function CommunicationAnalyticsPage() {
                         <tr>
                           <td
                             colSpan={3}
-                            className="px-6 py-8 text-center text-gray-500"
+                            className="px-6 py-8 text-center text-sm text-black"
                           >
                             No logs found for the selected filters.
                           </td>

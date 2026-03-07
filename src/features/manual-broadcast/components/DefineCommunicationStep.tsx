@@ -12,13 +12,15 @@ import {
 import { color, tw, components } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
 import PreviewPanel from "../../communications/components/PreviewPanel";
+import RichTextEditor from "../../communications/components/RichTextEditor";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import CascadingVariableSelector from "./CascadingVariableSelector";
 import type { TemplateVariable } from "../types";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../utils/variableInsertion";
+  validateInsertPosition,
+} from "../../../shared/utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
@@ -76,6 +78,7 @@ export default function DefineCommunicationStep({
   const [showVariableSelector, setShowVariableSelector] = useState(false);
   const [activeField, setActiveField] = useState<"title" | "body">("body");
   const [cursorPosition, setCursorPosition] = useState<number>(0);
+  const [variableError, setVariableError] = useState<string>("");
   const [selectedVariables, setSelectedVariables] = useState<
     TemplateVariable[]
   >(data.selectedVariables || []);
@@ -137,12 +140,37 @@ export default function DefineCommunicationStep({
       setSelectedVariables((prev) => [...prev, variable]);
     }
 
+    // Get actual cursor position from DOM element
+    let actualCursorPosition = cursorPosition;
+    if (activeField === "title" && titleInputRef.current) {
+      actualCursorPosition = titleInputRef.current.selectionStart || 0;
+    } else if (activeField === "body" && bodyTextareaRef.current) {
+      actualCursorPosition = bodyTextareaRef.current.selectionStart || 0;
+    }
+
     if (activeField === "title") {
+      const currentText = messageTitle;
+
+      // Validate cursor position
+      const positionError = validateInsertPosition(currentText, actualCursorPosition);
+
+      if (positionError) {
+        setVariableError(positionError);
+        return;
+      }
+
+      setVariableError("");
       const result = insertVariableAtCursor(
         messageTitle,
-        cursorPosition,
+        actualCursorPosition,
         variable,
       );
+
+      if (result.error) {
+        setVariableError(result.error);
+        return;
+      }
+
       setMessageTitle(result.newText);
       setTimeout(() => {
         if (titleInputRef.current) {
@@ -157,12 +185,30 @@ export default function DefineCommunicationStep({
       if (isRichText) {
         const placeholder = formatVariablePlaceholder(variable);
         setMessageBody(messageBody + " " + placeholder + " ");
+        setVariableError("");
       } else {
+        const currentText = messageBody;
+
+        // Validate cursor position
+        const positionError = validateInsertPosition(currentText, actualCursorPosition);
+
+        if (positionError) {
+          setVariableError(positionError);
+          return;
+        }
+
+        setVariableError("");
         const result = insertVariableAtCursor(
           messageBody,
-          cursorPosition,
+          actualCursorPosition,
           variable,
         );
+
+        if (result.error) {
+          setVariableError(result.error);
+          return;
+        }
+
         setMessageBody(result.newText);
         setTimeout(() => {
           if (bodyTextareaRef.current) {
@@ -551,26 +597,24 @@ export default function DefineCommunicationStep({
                 Message Content
               </span>
               <div className="flex items-center gap-2">
-                {selectedChannel === "EMAIL" && (
-                  <button
-                    type="button"
-                    onClick={() => setIsRichText(!isRichText)}
-                    className="px-3 py-1.5 text-sm rounded-md border transition-colors"
-                    style={{
-                      backgroundColor: isRichText
-                        ? `${color.primary.accent}10`
-                        : "white",
-                      borderColor: isRichText
-                        ? color.primary.accent
-                        : color.border.default,
-                      color: isRichText
-                        ? color.primary.accent
-                        : color.text.secondary,
-                    }}
-                  >
-                    {isRichText ? "Rich Text" : "Plain Text"}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setIsRichText(!isRichText)}
+                  className="px-3 py-1.5 text-sm rounded-md border transition-colors"
+                  style={{
+                    backgroundColor: isRichText
+                      ? `${color.primary.accent}10`
+                      : "white",
+                    borderColor: isRichText
+                      ? color.primary.accent
+                      : color.border.default,
+                    color: isRichText
+                      ? color.primary.accent
+                      : color.text.secondary,
+                  }}
+                >
+                  {isRichText ? "Rich Text" : "Plain Text"}
+                </button>
                 <div className="relative">
                   <button
                     type="button"
@@ -636,26 +680,46 @@ export default function DefineCommunicationStep({
               >
                 Message Body <span className="text-red-500">*</span>
               </label>
-              <textarea
-                ref={bodyTextareaRef}
-                value={messageBody}
-                onChange={(e) => {
-                  setMessageBody(e.target.value);
-                  setCursorPosition(e.target.selectionStart || 0);
-                }}
-                onClick={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                onFocus={(e) => {
-                  setActiveField("body");
-                  setCursorPosition(e.currentTarget.selectionStart || 0);
-                }}
-                placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
-                rows={10}
-                className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                style={{ borderColor: color.border.default }}
-              />
+              {isRichText ? (
+                <div
+                  onClick={() => setActiveField("body")}
+                  onFocus={() => setActiveField("body")}
+                >
+                  <RichTextEditor
+                    value={messageBody}
+                    onChange={setMessageBody}
+                    placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
+                    minHeight="250px"
+                  />
+                </div>
+              ) : (
+                <textarea
+                  ref={bodyTextareaRef}
+                  value={messageBody}
+                  onChange={(e) => {
+                    setMessageBody(e.target.value);
+                    setCursorPosition(e.target.selectionStart || 0);
+                  }}
+                  onClick={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  onFocus={(e) => {
+                    setActiveField("body");
+                    setCursorPosition(e.currentTarget.selectionStart || 0);
+                  }}
+                  placeholder="Enter your message... Click 'Insert Variable' to add dynamic content like {{customer_identity.first_name}}"
+                  rows={10}
+                  className="w-full px-4 py-3 border rounded-md  focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                  style={{ borderColor: color.border.default }}
+                />
+              )}
+
+              {variableError && (
+                <div className="mt-3 text-sm text-red-700">
+                  {variableError}
+                </div>
+              )}
 
               {/* Info bar */}
               <div className="mt-2 flex items-center justify-between">
@@ -678,28 +742,6 @@ export default function DefineCommunicationStep({
                     Variables like {"{{field}}"} will be replaced with customer
                     data
                   </span>
-                )}
-
-                {selectedVariables.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {selectedVariables.slice(0, 3).map((v) => (
-                      <span
-                        key={v.id}
-                        className="px-2 py-0.5 rounded text-xs"
-                        style={{
-                          backgroundColor: `${color.primary.accent}10`,
-                          color: color.primary.accent,
-                        }}
-                      >
-                        {v.name}
-                      </span>
-                    ))}
-                    {selectedVariables.length > 3 && (
-                      <span className="text-xs text-gray-400">
-                        +{selectedVariables.length - 3} more
-                      </span>
-                    )}
-                  </div>
                 )}
               </div>
             </div>

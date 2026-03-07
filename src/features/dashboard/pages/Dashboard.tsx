@@ -599,7 +599,7 @@ const OtherPages = {
   DynamicMessageVariablesPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../manual-broadcast/pages/DynamicMessageVariablesPage"
+        /* webpackPrefetch: true */ "../../../shared/pages/DynamicMessageVariablesPage"
       ),
   ),
 };
