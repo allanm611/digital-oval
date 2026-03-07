@@ -18,6 +18,21 @@ import {
 
 const BASE_URL = `${API_CONFIG.BASE_URL}/campaign-flows`;
 
+/**
+ * Clean up flow object by removing null/undefined optional fields
+ */
+function cleanFlowData(flow: any) {
+  const cleaned = { ...flow };
+  // Remove optional fields if they are null or undefined
+  const optionalFields = ['offer_creative_id', 'template_id', 'bucket_allocation', 'condition_rule'];
+  optionalFields.forEach(field => {
+    if (cleaned[field] === null || cleaned[field] === undefined) {
+      delete cleaned[field];
+    }
+  });
+  return cleaned;
+}
+
 class CampaignFlowService {
   /**
    * Create a single campaign flow
@@ -25,10 +40,11 @@ class CampaignFlowService {
   async createCampaignFlow(
     data: CreateCampaignFlowRequest
   ): Promise<CampaignFlowResponse> {
+    const cleanedData = cleanFlowData(data);
     const response = await fetch(BASE_URL, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanedData),
     });
 
     if (!response.ok) {
@@ -78,7 +94,7 @@ class CampaignFlowService {
   ): Promise<GetCampaignFlowsResponse> {
     let url = `${BASE_URL}/campaign/${campaignId}`;
     if (skipCache) {
-      url += `?skipCache=${Date.now()}`;
+      url += `?skipCache=true`;
     }
 
     const response = await fetch(url, {
@@ -110,11 +126,12 @@ class CampaignFlowService {
     data: UpdateCampaignFlowRequest
   ): Promise<CampaignFlowResponse> {
     const url = `${BASE_URL}/${id}`;
+    const cleanedData = cleanFlowData(data);
 
     const response = await fetch(url, {
       method: "PUT",
       headers: getAuthHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(cleanedData),
     });
 
     if (!response.ok) {

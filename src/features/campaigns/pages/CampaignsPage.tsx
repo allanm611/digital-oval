@@ -29,12 +29,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import {
-  canPauseCampaign,
-  canResumeCampaign,
-  canActivateCampaign,
-  canSubmitForApproval,
-} from "../utils/campaignButtonVisibility";
+import { canShowCampaignButton, handleCampaignAction, type CampaignActionParams } from "../utils/campaignActions";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
@@ -43,40 +38,13 @@ import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
   CampaignCollection,
+  CampaignDisplay,
   CampaignStatsSummary,
   CampaignStatus,
   CampaignSuperSearchQuery,
   GetCampaignsResponse,
 } from "../types/campaign";
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
-
-interface CampaignDisplay {
-  is_active: boolean;
-  id: number;
-  name: string;
-  description?: string;
-  status: string;
-  type?: string;
-  category?: string;
-  category_id?: number;
-  segment?: string;
-  offer?: string;
-  objective?: string;
-  startDate?: string;
-  endDate?: string;
-  approval_status?: string;
-  code?: string;
-  created_at?: string;
-  offer_count?: number;
-  segment_count?: number;
-  performance?: {
-    sent: number;
-    delivered: number;
-    opened?: number;
-    converted: number;
-    revenue: number;
-  };
-}
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
@@ -163,60 +131,14 @@ export default function CampaignsPage() {
     );
   };
 
-  // Generic handler for campaign actions (pause, resume, activate, submit)
-  interface CampaignActionParams {
-    campaignId: number;
-    campaignName: string;
-    action: "pause" | "resume" | "activate" | "submit";
-    successMessage: string;
-    errorMessage: string;
-    updateFields: Partial<CampaignDisplay>;
-    errorProcessor?: (error: unknown) => { title: string; message: string };
-  }
-
-  const handleCampaignAction = async (params: CampaignActionParams) => {
-    const { campaignId, action, successMessage, errorMessage, updateFields, errorProcessor } = params;
-
-    setLoadingActionIds((prev) => new Set([...prev, campaignId]));
-    setShowActionMenu(null);
-
-    try {
-      switch (action) {
-        case "pause":
-          await campaignService.pauseCampaign(campaignId);
-          break;
-        case "resume":
-          await campaignService.resumeCampaign(campaignId);
-          break;
-        case "activate":
-          await campaignService.activateCampaign(campaignId);
-          break;
-        case "submit":
-          await campaignService.submitForApproval(campaignId);
-          break;
-      }
-
-      updateCampaignInList(campaignId, updateFields);
-      showToast("success", successMessage);
-    } catch (error) {
-      if (errorProcessor) {
-        const { title, message } = errorProcessor(error);
-        showToast("error", title, message);
-      } else {
-        let message = errorMessage;
-        if (error instanceof Error) {
-          message = error.message;
-        }
-        showToast("error", message);
-      }
-    } finally {
-      setLoadingActionIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(campaignId);
-        return newSet;
-      });
-    }
-  };
+  const handleAction = (params: CampaignActionParams) =>
+    handleCampaignAction(params, {
+      onSetLoading: setLoadingActionIds,
+      onCloseMenu: () => setShowActionMenu(null),
+      onUpdateCampaign: updateCampaignInList,
+      onSuccess: (message) => showToast("success", message),
+      onError: (title, message) => showToast("error", title, message),
+    });
 
   // Use click outside hook for filter modal
   useClickOutside(filterRef, () => setShowAdvancedFilters(false), {
@@ -479,24 +401,31 @@ export default function CampaignsPage() {
       }
 
       // Transform response data to display format
-      const campaignsData: CampaignDisplay[] = response.data.map(
-        (campaign) => ({
-          id: campaign.id,
-          name: campaign.name,
-          description: campaign.description || undefined,
-          status: campaign.status,
-          is_active: campaign.is_active || false,
-          category_id: campaign.category_id || undefined,
-          objective: campaign.objective,
-          startDate: campaign.start_date || undefined,
-          endDate: campaign.end_date || undefined,
-          approval_status: campaign.approval_status,
-          code: campaign.code,
-          created_at: campaign.created_at,
-          offer_count: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
-          segment_count: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
-        }),
-      );
+      const campaignsData: CampaignDisplay[] = response.data
+        .map((campaign) => {
+          // Null checks for critical fields
+          if (!campaign || !campaign.id || !campaign.name || !campaign.status) {
+            console.warn("Campaign data invalid:", campaign);
+            return null;
+          }
+          return {
+            id: campaign.id,
+            name: campaign.name,
+            description: campaign.description || undefined,
+            status: campaign.status,
+            is_active: campaign.is_active || false,
+            category_id: campaign.category_id || undefined,
+            objective: campaign.objective || undefined,
+            startDate: campaign.start_date || undefined,
+            endDate: campaign.end_date || undefined,
+            approval_status: campaign.approval_status || undefined,
+            code: campaign.code || undefined,
+            created_at: campaign.created_at || "",
+            offer_count: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
+            segment_count: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
+          };
+        })
+        .filter((c): c is CampaignDisplay => c !== null);
 
       // When status is "all", exclude archived campaigns from default view
       // Users can still see archived campaigns by selecting "Archived" filter
@@ -831,7 +760,9 @@ export default function CampaignsPage() {
   // Category options from API
   const categoryOptions = [
     { value: "all", label: "All Catalogs" },
-    ...categories.map((cat) => ({ value: cat.id.toString(), label: cat.name })),
+    ...categories
+      .filter((cat): cat is typeof categories[number] => cat && cat.id && cat.name)
+      .map((cat) => ({ value: cat.id.toString(), label: cat.name })),
   ];
 
   const approvalStatusOptions = [
@@ -1266,10 +1197,10 @@ export default function CampaignsPage() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {canResumeCampaign(campaign) ? (
+                        {canShowCampaignButton(campaign, "resume") ? (
                           <button
                             onClick={() =>
-                              handleCampaignAction({
+                              handleAction({
                                 campaignId: campaign.id,
                                 campaignName: campaign.name,
                                 action: "resume",
@@ -1288,10 +1219,10 @@ export default function CampaignsPage() {
                               <Play className="w-4 h-4" />
                             )}
                           </button>
-                        ) : canPauseCampaign(campaign) ? (
+                        ) : canShowCampaignButton(campaign, "pause") ? (
                           <button
                             onClick={() =>
-                              handleCampaignAction({
+                              handleAction({
                                 campaignId: campaign.id,
                                 campaignName: campaign.name,
                                 action: "pause",
@@ -1400,12 +1331,12 @@ export default function CampaignsPage() {
                         </PermissionGate>
 
                         {/* Pause Campaign Button */}
-                        {canPauseCampaign(campaign) ? (
+                        {canShowCampaignButton(campaign, "pause") ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCampaignAction({
+                                handleAction({
                                   campaignId: campaign.id,
                                   campaignName: campaign.name,
                                   action: "pause",
@@ -1428,12 +1359,12 @@ export default function CampaignsPage() {
                         ) : null}
 
                         {/* Resume Campaign Button */}
-                        {canResumeCampaign(campaign) ? (
+                        {canShowCampaignButton(campaign, "resume") ? (
                           <PermissionGate permission="campaigns.execute">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCampaignAction({
+                                handleAction({
                                   campaignId: campaign.id,
                                   campaignName: campaign.name,
                                   action: "resume",
@@ -1455,12 +1386,12 @@ export default function CampaignsPage() {
                           </PermissionGate>
                         ) : null}
 
-                        {canActivateCampaign(campaign) ? (
+                        {canShowCampaignButton(campaign, "activate") ? (
                           <PermissionGate permission="campaigns.activate">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCampaignAction({
+                                handleAction({
                                   campaignId: campaign.id,
                                   campaignName: campaign.name,
                                   action: "activate",
@@ -1482,12 +1413,12 @@ export default function CampaignsPage() {
                           </PermissionGate>
                         ) : null}
 
-                        {canSubmitForApproval(campaign) && (
+                        {canShowCampaignButton(campaign, "submit") && (
                           <PermissionGate permission="campaigns.update">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleCampaignAction({
+                                handleAction({
                                   campaignId: campaign.id,
                                   campaignName: campaign.name,
                                   action: "submit",
@@ -1930,7 +1861,7 @@ export default function CampaignsPage() {
             // Fetch fresh campaign data after execution
             try {
               const response = await campaignService.getCampaignById(campaignToExecute.id, true);
-              if (response && response.data) {
+              if (response && response.data && response.data.status && response.data.is_active !== undefined) {
                 updateCampaignInList(campaignToExecute.id, {
                   status: response.data.status,
                   is_active: response.data.is_active,
@@ -1960,7 +1891,7 @@ export default function CampaignsPage() {
             // Fetch fresh campaign data after approval
             try {
               const response = await campaignService.getCampaignById(campaignToApprove.id, true);
-              if (response && response.data) {
+              if (response && response.data && response.data.approval_status && response.data.status) {
                 updateCampaignInList(campaignToApprove.id, {
                   approval_status: response.data.approval_status,
                   status: response.data.status,
@@ -1990,7 +1921,7 @@ export default function CampaignsPage() {
             // Fetch fresh campaign data after rejection to ensure correct state
             try {
               const response = await campaignService.getCampaignById(campaignToReject.id, true);
-              if (response && response.data) {
+              if (response && response.data && response.data.approval_status && response.data.status) {
                 updateCampaignInList(campaignToReject.id, {
                   approval_status: response.data.approval_status,
                   status: response.data.status,

@@ -27,21 +27,11 @@ import {
   ControlGroup,
   CampaignScheduling,
   BackendCampaignType,
+  CampaignFormData,
+  StepProps,
+  SegmentOfferMapping,
 } from "../types/campaign";
 import { CreateCampaignRequest } from "../types/createCampaign";
-
-// Extended type for form data that includes all properties needed during creation
-// Mapping interface for segment-offer relationships
-export interface SegmentOfferMapping {
-  segment_id: string;
-  offer_id: number;
-}
-
-interface CampaignFormData extends CreateCampaignRequest {
-  scheduling?: CampaignScheduling;
-  segments?: CampaignSegment[];
-  segmentOfferMappings?: SegmentOfferMapping[];
-}
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
 import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
@@ -75,32 +65,6 @@ import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
 import SchedulingStep from "../components/steps/SchedulingStep";
 import CampaignPreviewStep from "../components/steps/CampaignPreviewStep";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
-
-interface StepProps {
-  currentStep: number;
-  totalSteps: number;
-  onNext: () => void;
-  onPrev: () => void;
-  onSubmit: () => void;
-  formData: CreateCampaignRequest;
-  setFormData: (data: CreateCampaignRequest) => void;
-  selectedSegments: CampaignSegment[];
-  setSelectedSegments: (segments: CampaignSegment[]) => void;
-  selectedOffers: CampaignOffer[];
-  setSelectedOffers: (offers: CampaignOffer[]) => void;
-  segmentOfferMappings?: SegmentOfferMapping[];
-  setSegmentOfferMappings?: (mappings: SegmentOfferMapping[]) => void;
-  campaignFlows?: CampaignFlowConfig[];
-  setCampaignFlows?: (flows: CampaignFlowConfig[]) => void;
-  controlGroup: ControlGroup;
-  setControlGroup: (group: ControlGroup) => void;
-  isLoading?: boolean;
-  onSaveDraft?: () => void;
-  onCancel?: () => void;
-  validationErrors?: { [key: string]: string };
-  clearValidationErrors?: () => void;
-  setValidationErrors?: (errors: { [key: string]: string }) => void;
-}
 
 const steps: Step[] = [
   {
@@ -436,29 +400,36 @@ export default function CreateCampaignPage() {
 
           if (flowsResponse.success && flowsResponse.data.length > 0) {
             // Convert API response to CampaignFlowResponseData format (includes id)
-            const flows: CampaignFlowResponseData[] = flowsResponse.data.map(
-              (flow) => ({
-                id: flow.id,
-                campaign_id: flow.campaign_id,
-                segment_id:
-                  typeof flow.segment_id === "string"
-                    ? parseInt(flow.segment_id)
-                    : flow.segment_id,
-                offer_id: flow.offer_id,
-                offer_creative_id: flow.offer_creative_id || undefined,
-                template_id: flow.template_id || undefined,
-                flow_type: flow.flow_type,
-                step_order: flow.step_order,
-                wait_interval_hours: flow.wait_interval_hours,
-                bucket_allocation: flow.bucket_allocation || undefined,
-                condition_rule: flow.condition_rule || undefined,
-                is_active: flow.is_active,
-                created_at: flow.created_at,
-                updated_at: flow.updated_at,
-                created_by: flow.created_by,
-                updated_by: flow.updated_by,
-              }),
-            );
+            const flows: CampaignFlowResponseData[] = flowsResponse.data
+              .map((flow) => {
+                // Null checks for critical fields
+                if (!flow || !flow.id || !flow.campaign_id || !flow.offer_id) {
+                  console.warn("Flow data invalid:", flow);
+                  return null;
+                }
+                return {
+                  id: flow.id,
+                  campaign_id: flow.campaign_id,
+                  segment_id:
+                    typeof flow.segment_id === "string" && flow.segment_id
+                      ? parseInt(flow.segment_id)
+                      : flow.segment_id || 0,
+                  offer_id: flow.offer_id,
+                  offer_creative_id: flow.offer_creative_id || undefined,
+                  template_id: flow.template_id || undefined,
+                  flow_type: flow.flow_type || "",
+                  step_order: flow.step_order || 0,
+                  wait_interval_hours: flow.wait_interval_hours || 0,
+                  bucket_allocation: flow.bucket_allocation || undefined,
+                  condition_rule: flow.condition_rule || undefined,
+                  is_active: flow.is_active ?? true,
+                  created_at: flow.created_at || "",
+                  updated_at: flow.updated_at || "",
+                  created_by: flow.created_by || null,
+                  updated_by: flow.updated_by || null,
+                };
+              })
+              .filter((f): f is CampaignFlowResponseData => f !== null);
 
             setCampaignFlows(flows);
             // Store original flows for edit mode comparison

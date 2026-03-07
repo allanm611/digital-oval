@@ -29,11 +29,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
-import {
-  canPauseCampaign,
-  canResumeCampaign,
-  canRejectCampaign,
-} from "../utils/campaignButtonVisibility";
+import { canShowCampaignButton, handleCampaignAction, type CampaignActionParams } from "../utils/campaignActions";
 import { offerService } from "../../offers/services/offerService";
 import { segmentService } from "../../segments/services/segmentService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -263,16 +259,23 @@ export default function CampaignDetailsPage() {
       );
       if (response && response.success && Array.isArray(response.data)) {
         // Convert segment info from API to CampaignSegmentDetail format
-        const fetchedSegments: CampaignSegmentDetail[] = response.data.map(
-          (segment) => ({
-            id: segment.id,
-            name: segment.name,
-            code: segment.code,
-            total_subscribers: 0, // Not provided by campaign flows endpoint
-            created_at: "",
-            updated_at: "",
-          }),
-        );
+        const fetchedSegments: CampaignSegmentDetail[] = response.data
+          .map((segment) => {
+            // Null checks for critical fields
+            if (!segment || !segment.id || !segment.name) {
+              console.warn("Segment data invalid:", segment);
+              return null;
+            }
+            return {
+              id: segment.id,
+              name: segment.name,
+              code: segment.code || "",
+              total_subscribers: 0, // Not provided by campaign flows endpoint
+              created_at: "",
+              updated_at: "",
+            };
+          })
+          .filter((s): s is CampaignSegmentDetail => s !== null);
         setSegments(fetchedSegments);
       } else {
         setSegments([]);
@@ -294,27 +297,36 @@ export default function CampaignDetailsPage() {
       const response = await campaignFlowService.getCampaignFlows(campaignId);
       if (response && response.success && Array.isArray(response.data)) {
         // Convert API response to CampaignFlowResponseData format (includes id)
-        const flowsData: CampaignFlowResponseData[] = response.data.map((flow) => ({
-          id: flow.id,
-          campaign_id: flow.campaign_id,
-          segment_id:
-            typeof flow.segment_id === "string"
-              ? parseInt(flow.segment_id)
-              : flow.segment_id,
-          offer_id: flow.offer_id,
-          offer_creative_id: flow.offer_creative_id || undefined,
-          template_id: flow.template_id || undefined,
-          flow_type: flow.flow_type,
-          step_order: flow.step_order,
-          wait_interval_hours: flow.wait_interval_hours,
-          bucket_allocation: flow.bucket_allocation || undefined,
-          condition_rule: flow.condition_rule || undefined,
-          is_active: flow.is_active,
-          created_at: flow.created_at,
-          updated_at: flow.updated_at,
-          created_by: flow.created_by,
-          updated_by: flow.updated_by,
-        }));
+        const flowsData: CampaignFlowResponseData[] = response.data
+          .map((flow) => {
+            // Null checks for critical fields
+            if (!flow || !flow.id || !flow.campaign_id || !flow.offer_id) {
+              console.warn("Flow data invalid:", flow);
+              return null;
+            }
+            return {
+              id: flow.id,
+              campaign_id: flow.campaign_id,
+              segment_id:
+                typeof flow.segment_id === "string" && flow.segment_id
+                  ? parseInt(flow.segment_id)
+                  : flow.segment_id || 0,
+              offer_id: flow.offer_id,
+              offer_creative_id: flow.offer_creative_id || undefined,
+              template_id: flow.template_id || undefined,
+              flow_type: flow.flow_type || "",
+              step_order: flow.step_order || 0,
+              wait_interval_hours: flow.wait_interval_hours || 0,
+              bucket_allocation: flow.bucket_allocation || undefined,
+              condition_rule: flow.condition_rule || undefined,
+              is_active: flow.is_active ?? true,
+              created_at: flow.created_at || "",
+              updated_at: flow.updated_at || "",
+              created_by: flow.created_by || null,
+              updated_by: flow.updated_by || null,
+            };
+          })
+          .filter((f): f is CampaignFlowResponseData => f !== null);
         setFlows(flowsData);
         return flowsData;
       } else {
@@ -510,50 +522,59 @@ export default function CampaignDetailsPage() {
 
   const handleCampaignDetailAction = async (params: CampaignDetailActionParams) => {
     const { action, successMessage, onSuccess } = params;
-    if (!id) return;
+    if (!id || !campaign) return;
 
-    try {
-      setIsActionLoading(true);
-      const campaignId = parseInt(id);
+    const campaignId = parseInt(id);
+    const updateFields: Partial<Campaign> = {};
 
-      switch (action) {
-        case "pause":
-          await campaignService.pauseCampaign(campaignId, { updated_by: 1 });
-          break;
-        case "resume":
-          await campaignService.resumeCampaign(campaignId);
-          break;
-        case "delete":
-          await campaignService.deleteCampaign(campaignId);
-          break;
-      }
+    // Map action to fields that need updating
+    switch (action) {
+      case "pause":
+        updateFields.status = "paused";
+        break;
+      case "resume":
+        updateFields.status = "active";
+        break;
+    }
 
-      showToast("success", successMessage);
+    await handleCampaignAction(
+      {
+        campaignId,
+        campaignName: campaign.name,
+        action: action as "pause" | "resume" | "activate" | "submit",
+        successMessage,
+        errorMessage: `Failed to ${action} campaign`,
+        updateFields,
+      },
+      {
+        onSetLoading: (state) => setIsActionLoading(typeof state === "function" ? state(new Set([campaignId])).size > 0 : state.size > 0),
+        onCloseMenu: () => {},
+        onSetCampaign: (updatedCampaign) => setCampaign({ ...campaign, ...updatedCampaign }),
+        onSuccess: (message) => {
+          showToast("success", message);
+          // Close dropdown immediately so user doesn't see stale button state
+          if (onSuccess) onSuccess();
 
-      // For pause/resume, update campaign state
-      if (action !== "delete") {
-        const fetchResponse = (await campaignService.getCampaignById(id, true)) as {
-          data?: Campaign;
-          success?: boolean;
-        };
-        const campaignData = fetchResponse.data || (fetchResponse as Campaign);
-        if (campaignData) {
-          setCampaign(campaignData);
-        }
-      }
+          // Refetch campaign data for pause/resume to sync button state (in background)
+          if (action === "pause" || action === "resume") {
+            campaignService
+              .getCampaignById(id, true)
+              .then((response) => {
+                if (response && response.data) {
+                  setCampaign(response.data);
+                }
+              })
+              .catch((error) => {
+                console.error("Failed to refetch campaign:", error);
+              });
+          }
+        },
+        onError: (title, message) => showToast("error", title, message),
+      },
+    );
 
-      // Execute success callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error(`Failed to ${action} campaign:`, error);
-      showToast("error", `Failed to ${action} campaign`);
-    } finally {
-      setIsActionLoading(false);
-      if (action === "delete") {
-        setShowDeleteModal(false);
-      }
+    if (action === "delete") {
+      setShowDeleteModal(false);
     }
   };
 
@@ -914,7 +935,7 @@ export default function CampaignDetailsPage() {
                 className={`absolute right-0 mt-2 w-52 bg-white border border-gray-200 ${tw.rounded} shadow-xl py-2 z-50`}
               >
                 {/* Pause Campaign - Only if approved and not paused */}
-                {canPauseCampaign(campaign) && (
+                {canShowCampaignButton(campaign, "pause") && (
                     <button
                       onClick={() => {
                         handleCampaignDetailAction({
@@ -924,10 +945,7 @@ export default function CampaignDetailsPage() {
                         });
                       }}
                       disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
-                      style={{
-                        color: color.status.warning,
-                      }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
                     >
                       {isActionLoading ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
@@ -939,7 +957,7 @@ export default function CampaignDetailsPage() {
                   )}
 
                 {/* Resume Campaign - Only if approved and paused */}
-                {canResumeCampaign(campaign) && (
+                {canShowCampaignButton(campaign, "resume") && (
                     <button
                       onClick={() => {
                         handleCampaignDetailAction({
@@ -949,10 +967,7 @@ export default function CampaignDetailsPage() {
                         });
                       }}
                       disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm disabled:opacity-50"
-                      style={{
-                        color: color.primary.action,
-                      }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
                     >
                       {isActionLoading ? (
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
@@ -964,7 +979,7 @@ export default function CampaignDetailsPage() {
                   )}
 
                 {/* Reject - Only if pending */}
-                {canRejectCampaign(campaign) && (
+                {canShowCampaignButton(campaign, "reject") && (
                   <button
                     onClick={() => {
                       setShowRejectModal(true);

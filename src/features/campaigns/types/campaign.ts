@@ -1,3 +1,5 @@
+import type { CreateCampaignRequest } from "./createCampaign";
+
 export type CampaignType =
   | "multiple_target_group"
   | "champion_challenger"
@@ -144,7 +146,7 @@ export type ApiResponse<T> = CacheableResponse<T> | ErrorResponse;
 
 export type PaginatedApiResponse<T> = PaginatedResponse<T> | ErrorResponse;
 
-// Campaign Stats Types - Based on backend response structure
+// Campaign Stats Types 
 export interface CampaignOverview {
   total_campaigns: number;
   non_deleted_campaigns: number;
@@ -274,7 +276,7 @@ export interface CampaignStatsSummary {
   top_performers?: TopPerformers;
   generated_at?: string;
   source?: string;
-  // Legacy fields for backward compatibility
+  // L
   total_campaigns?: number | string;
   active_campaigns?: number | string;
   currently_active?: number | string;
@@ -706,6 +708,86 @@ export interface CampaignPreview {
   estimated_revenue: number;
   roi_projection: number;
   delivery_schedule: { date: string; estimated_sends: number }[];
+}
+
+
+/**
+ * Display type for campaign list view
+ * Maps backend campaign fields to frontend display format
+ */
+export interface CampaignDisplay {
+  is_active: boolean;
+  id: number;
+  name: string;
+  description?: string;
+  status: string;
+  type?: string;
+  category?: string;
+  category_id?: number;
+  segment?: string;
+  offer?: string;
+  objective?: string;
+  startDate?: string;
+  endDate?: string;
+  approval_status?: string;
+  code?: string;
+  created_at?: string;
+  offer_count?: number;
+  segment_count?: number;
+  performance?: {
+    sent: number;
+    delivered: number;
+    opened?: number;
+    converted: number;
+    revenue: number;
+  };
+}
+
+/**
+ * Form data type for campaign creation
+ */
+export interface CampaignFormData extends CreateCampaignRequest {
+  scheduling?: CampaignScheduling;
+  segments?: CampaignSegment[];
+  segmentOfferMappings?: SegmentOfferMapping[];
+}
+
+/**
+ * Segment-Offer mapping type
+ */
+export interface SegmentOfferMapping {
+  segment_id: string;
+  offer_id: number | string;
+  priority?: number;
+}
+
+/**
+ * Props passed to campaign creation steps
+ */
+export interface StepProps {
+  currentStep: number;
+  totalSteps: number;
+  onNext: () => void;
+  onPrev: () => void;
+  onSubmit: () => void;
+  formData: CreateCampaignRequest;
+  setFormData: (data: CreateCampaignRequest) => void;
+  selectedSegments: CampaignSegment[];
+  setSelectedSegments: (segments: CampaignSegment[]) => void;
+  selectedOffers: CampaignOffer[];
+  setSelectedOffers: (offers: CampaignOffer[]) => void;
+  segmentOfferMappings?: SegmentOfferMapping[];
+  setSegmentOfferMappings?: (mappings: SegmentOfferMapping[]) => void;
+  campaignFlows?: Record<string, unknown>[]; // CampaignFlowConfig type
+  setCampaignFlows?: (flows: Record<string, unknown>[]) => void;
+  controlGroup: ControlGroup;
+  setControlGroup: (group: ControlGroup) => void;
+  isLoading?: boolean;
+  onSaveDraft?: () => void;
+  onCancel?: () => void;
+  validationErrors?: { [key: string]: string };
+  clearValidationErrors?: () => void;
+  setValidationErrors?: (errors: { [key: string]: string }) => void;
 }
 
 // Round Robin Configuration
