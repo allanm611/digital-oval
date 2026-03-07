@@ -631,10 +631,8 @@ export interface SegmentCondition {
     | "never_occurred"
     // KPI time-based operators
     | "in_last_days"
-    | "in_last_weeks"
-    | "in_last_months"
-    | "greater_than_in_period"
-    | "less_than_in_period";
+    | "on_date"
+    | "between_dates";
   operator_id?: number; // Backend operator ID - used for API calls
   value: string | number | string[];
   type: "string" | "number" | "boolean" | "array";

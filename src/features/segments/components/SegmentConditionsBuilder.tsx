@@ -822,6 +822,8 @@ export default function SegmentConditionsBuilder({
                 options={[
                   { value: "equals", label: "Equals" },
                   { value: "not_equals", label: "Not Equals" },
+                  { value: "on_date", label: "On Date" },
+                  { value: "between_dates", label: "Between Dates" },
                   { value: "greater_than", label: "Greater Than" },
                   { value: "less_than", label: "Less Than" },
                   { value: "contains", label: "Contains" },
@@ -829,17 +831,7 @@ export default function SegmentConditionsBuilder({
                   { value: "in", label: "In" },
                   { value: "not_in", label: "Not In" },
                   // Time-based operators for metrics
-                  { value: "in_last_days", label: "In Last (Days)" },
-                  { value: "in_last_weeks", label: "In Last (Weeks)" },
-                  { value: "in_last_months", label: "In Last (Months)" },
-                  {
-                    value: "greater_than_in_period",
-                    label: "Greater Than In Period",
-                  },
-                  {
-                    value: "less_than_in_period",
-                    label: "Less Than In Period",
-                  },
+                  { value: "in_last_days", label: "In Last Days" },
                 ]}
                 value={condition.operator}
                 onChange={(value) => {
@@ -855,48 +847,72 @@ export default function SegmentConditionsBuilder({
               />
             </div>
 
-            {/* Value Input */}
-            <input
-              type="text"
-              value={condition.value as string}
-              onChange={(e) => {
-                updateCondition(groupId, condition.id, {
-                  value: e.target.value,
-                });
-              }}
-              placeholder={
-                ["in_last_days", "in_last_weeks", "in_last_months"].includes(
-                  condition.operator,
-                )
-                  ? "Enter number"
-                  : "Enter value"
-              }
-              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
-              style={{ borderColor: color.border.default }}
-            />
+            {/* Value Input - For "in_last_days" and regular operators */}
+            {condition.operator !== "between_dates" && condition.operator !== "on_date" && (
+              <input
+                type={condition.operator === "in_last_days" ? "number" : "text"}
+                value={condition.value as string}
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value,
+                  });
+                }}
+                placeholder={
+                  condition.operator === "in_last_days"
+                    ? "Enter days (e.g., 30)"
+                    : "Enter value"
+                }
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
 
-            {/* Time Unit Selector - For time-based operators */}
-            {["in_last_days", "in_last_weeks", "in_last_months"].includes(
-              condition.operator,
-            ) && (
-              <div className="min-w-[80px] max-w-[120px] flex-shrink-0">
-                <HeadlessSelect
-                  options={[
-                    { value: "days", label: "Days" },
-                    { value: "weeks", label: "Weeks" },
-                    { value: "months", label: "Months" },
-                  ]}
-                  value={condition.time_unit || "days"}
-                  onChange={(value) => {
+            {/* Single Date Input - For "on_date" operator */}
+            {condition.operator === "on_date" && (
+              <input
+                type="date"
+                value={condition.value as string}
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value,
+                  });
+                }}
+                placeholder="Select Date"
+                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                style={{ borderColor: color.border.default }}
+              />
+            )}
+
+            {/* Date Range Inputs - For "between_dates" operator */}
+            {condition.operator === "between_dates" && (
+              <>
+                <input
+                  type="date"
+                  value={condition.value ? (condition.value as string).split(",")[0] || "" : ""}
+                  onChange={(e) => {
+                    const endDate = condition.value ? (condition.value as string).split(",")[1] || "" : "";
                     updateCondition(groupId, condition.id, {
-                      time_unit: value as string,
+                      value: `${e.target.value},${endDate}`,
                     });
                   }}
-                  placeholder="Select unit"
-                  className="text-sm"
-                  zIndex={zIndex.popover}
+                  placeholder="Start Date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                  style={{ borderColor: color.border.default }}
                 />
-              </div>
+                <input
+                  type="date"
+                  value={condition.value ? (condition.value as string).split(",")[1] || "" : ""}
+                  onChange={(e) => {
+                    const startDate = condition.value ? (condition.value as string).split(",")[0] || "" : "";
+                    updateCondition(groupId, condition.id, {
+                      value: `${startDate},${e.target.value}`,
+                    });
+                  }}
+                  placeholder="End Date"
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
+                  style={{ borderColor: color.border.default }}
+                />
+              </>
             )}
           </>
         )}
