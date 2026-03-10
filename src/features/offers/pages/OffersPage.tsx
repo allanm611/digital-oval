@@ -58,7 +58,7 @@ export default function OffersPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [filters, setFilters] = useState<SearchParams>({
     page: 1,
-    limit: 10,
+    limit: 15,
     sortBy: "created_at",
     sortDirection: "DESC",
   });
@@ -124,13 +124,17 @@ export default function OffersPage() {
     try {
       setLoading(true);
 
+      // Calculate offset from page number
+      const pageSize = filters.limit || 15;
+      const offset = (filters.page - 1) * pageSize;
+
       // If category filter is applied, use the specific category endpoint
       if (filters.categoryId) {
         const response = await offerService.getOffersByCategory(
           filters.categoryId,
           {
-            limit: filters.limit || 10,
-            offset: filters.offset || 0,
+            limit: pageSize,
+            offset: offset,
             skipCache: skipCache,
           },
         );
@@ -188,7 +192,7 @@ export default function OffersPage() {
         if (needsClientSideFiltering) {
           // Fetch all offers in batches when we need to filter client-side
           let allOffers: Offer[] = [];
-          let offset = 0;
+          let batchOffset = 0;
           const batchSize = 100;
           let hasMore = true;
 
@@ -196,7 +200,7 @@ export default function OffersPage() {
           while (hasMore) {
             const batchResponse = await offerService.searchOffers({
               limit: batchSize,
-              offset: offset,
+              offset: batchOffset,
               search: debouncedSearchTerm || undefined,
               sortBy: filters.sortBy || "created_at",
               sortDirection: filters.sortDirection || "DESC",
@@ -211,7 +215,7 @@ export default function OffersPage() {
               hasMore =
                 allOffers.length < totalFromPagination &&
                 batchResponse.data.length === batchSize;
-              offset += batchSize;
+              batchOffset += batchSize;
             } else {
               hasMore = false;
             }
@@ -254,6 +258,8 @@ export default function OffersPage() {
           // No client-side filtering needed - use regular paginated search
           const searchParams: SearchParams = {
             ...filters,
+            limit: pageSize,
+            offset: offset,
             skipCache: skipCache,
           };
 
@@ -1674,7 +1680,7 @@ export default function OffersPage() {
       {!loading && filteredOffers.length > 0 && (
         <Pagination
           currentPage={filters.page || 1}
-          pageSize={filters.pageSize || 20}
+          pageSize={filters.limit || 15}
           totalItems={totalOffers}
           onPageChange={(page) =>
             setFilters((prev) => ({

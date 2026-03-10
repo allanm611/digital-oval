@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   Filter,
   Search,
@@ -15,8 +16,6 @@ import {
   Trash2,
   CheckCircle,
   Send,
-  ChevronLeft,
-  ChevronRight,
   Target,
   Clock,
   AlertCircle,
@@ -25,11 +24,16 @@ import {
 import { color, tw, button, zIndex } from "../../../shared/utils/utils";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import Pagination from "../../../shared/components/ui/Pagination";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { campaignService } from "../services/campaignService";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
-import { canShowCampaignButton, handleCampaignAction, type CampaignActionParams } from "../utils/campaignActions";
+import {
+  canShowCampaignButton,
+  handleCampaignAction,
+  type CampaignActionParams,
+} from "../utils/campaignActions";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
@@ -44,12 +48,14 @@ import {
   CampaignSuperSearchQuery,
   GetCampaignsResponse,
 } from "../types/campaign";
+import { CampaignCategory } from "../types/campaignCategory";
 type CampaignListResponse = CampaignCollection | GetCampaignsResponse;
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -101,10 +107,8 @@ export default function CampaignsPage() {
   >([]);
   const [totalCampaigns, setTotalCampaigns] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [categories, setCategories] = useState<
-    Array<{ id: number; name: string; description?: string }>
-  >([]);
+  const [pageSize] = useState(15);
+  const [categories, setCategories] = useState<CampaignCategory[]>([]);
   const categoryMap = useMemo(() => {
     const map: Record<number, string> = {};
     categories.forEach((category) => {
@@ -119,15 +123,20 @@ export default function CampaignsPage() {
     pendingApproval: number;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [loadingActionIds, setLoadingActionIds] = useState<Set<number>>(new Set());
+  const [loadingActionIds, setLoadingActionIds] = useState<Set<number>>(
+    new Set(),
+  );
 
   // Helper function to update a single campaign in the list
-  const updateCampaignInList = (campaignId: number, updates: Partial<CampaignDisplay>) => {
+  const updateCampaignInList = (
+    campaignId: number,
+    updates: Partial<CampaignDisplay>,
+  ) => {
     setCampaigns((prev) =>
-      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c))
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
     );
     setAllCampaignsUnfiltered((prev) =>
-      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c))
+      prev.map((c) => (c.id === campaignId ? { ...c, ...updates } : c)),
     );
   };
 
@@ -299,21 +308,10 @@ export default function CampaignsPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await campaignService.getCampaignCategories();
-      type CategoryRecord = {
-        id: number;
-        name: string;
-        description?: string;
-      };
       const categoriesData = Array.isArray(response)
         ? response
-        : ((response as { data?: CategoryRecord[] })?.data ?? []);
-      setCategories(
-        categoriesData as Array<{
-          id: number;
-          name: string;
-          description?: string;
-        }>,
-      );
+        : ((response as { data?: CampaignCategory[] })?.data ?? []);
+      setCategories(categoriesData as CampaignCategory[]);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
       showToast(
@@ -324,45 +322,35 @@ export default function CampaignsPage() {
     }
   }, [showToast]);
 
-
   // Fetch campaigns from API
   const fetchCampaigns = useCallback(async () => {
     try {
       setIsLoading(true);
 
-      let response: CampaignListResponse;
-      const LIMIT = 100; // Fetch reasonable batch size
-      const currentIndex = (currentPage - 1) * pageSize;
-      const chunkOffset = Math.floor(currentIndex / LIMIT) * LIMIT;
-      const chunkStartIndex = currentIndex % LIMIT;
+      const API_LIMIT = 100; // Fetch all at once, client-side pagination for UI
+      const apiOffset = 0; // Always fetch from beginning
 
-      // Check if we have any filters applied
+      // Check if any filters are applied
       const hasFilters =
-        (filters.categoryId && filters.categoryId !== "all") ||
+        searchQuery.trim() ||
         (filters.approvalStatus && filters.approvalStatus !== "all") ||
+        (filters.categoryId && filters.categoryId !== "all") ||
         filters.startDateFrom ||
         filters.startDateTo ||
-        (selectedStatus && selectedStatus !== "all") ||
-        searchQuery.trim();
+        (selectedStatus && selectedStatus !== "all");
+
+      let response: CampaignListResponse;
 
       if (hasFilters) {
-        // Use superSearchCampaigns when filters are applied
+        // Use superSearch when filters are applied
         const searchParams: CampaignSuperSearchQuery = {
-          limit: LIMIT,
-          offset: chunkOffset,
+          limit: API_LIMIT,
+          offset: apiOffset,
           skipCache: true,
         };
 
         if (searchQuery.trim()) {
           searchParams.name = searchQuery.trim();
-        }
-
-        if (selectedStatus && selectedStatus !== "all") {
-          searchParams.status = selectedStatus as CampaignStatus;
-        } else if (selectedStatus === "all") {
-          // When "all" is selected, exclude archived campaigns from default view
-          // Users can still see archived campaigns by selecting "Archived" filter
-          // Note: Backend doesn't support excludeStatus, so we'll filter client-side
         }
 
         if (filters.approvalStatus && filters.approvalStatus !== "all") {
@@ -382,12 +370,16 @@ export default function CampaignsPage() {
           searchParams.startDateTo = filters.startDateTo;
         }
 
+        if (selectedStatus && selectedStatus !== "all") {
+          searchParams.status = selectedStatus as CampaignStatus;
+        }
+
         response = await campaignService.superSearchCampaigns(searchParams);
       } else {
-        // Use regular getCampaigns when no filters applied (more efficient)
+        // Use getCampaigns for basic list (no filters)
         response = await campaignService.getCampaigns({
-          limit: LIMIT,
-          offset: chunkOffset,
+          limit: API_LIMIT,
+          offset: apiOffset,
           skipCache: true,
         });
       }
@@ -400,12 +392,10 @@ export default function CampaignsPage() {
         throw new Error(errorMessage);
       }
 
-      // Transform response data to display format
       const campaignsData: CampaignDisplay[] = response.data
         .map((campaign) => {
           // Null checks for critical fields
           if (!campaign || !campaign.id || !campaign.name || !campaign.status) {
-            console.warn("Campaign data invalid:", campaign);
             return null;
           }
           return {
@@ -421,14 +411,17 @@ export default function CampaignsPage() {
             approval_status: campaign.approval_status || undefined,
             code: campaign.code || undefined,
             created_at: campaign.created_at || "",
-            offer_count: Array.isArray(campaign.offers) ? campaign.offers.length : 0,
-            segment_count: Array.isArray(campaign.segments) ? campaign.segments.length : 0,
+            offer_count: Array.isArray(campaign.offers)
+              ? campaign.offers.length
+              : 0,
+            segment_count: Array.isArray(campaign.segments)
+              ? campaign.segments.length
+              : 0,
           };
         })
         .filter((c): c is CampaignDisplay => c !== null);
 
-      // When status is "all", exclude archived campaigns from default view
-      // Users can still see archived campaigns by selecting "Archived" filter
+      // Filter out archived campaigns when showing "all" status
       let campaignsToDisplay = campaignsData;
       if (selectedStatus === "all") {
         campaignsToDisplay = campaignsData.filter(
@@ -436,22 +429,14 @@ export default function CampaignsPage() {
         );
       }
 
-      // Apply client-side pagination for display (we fetch 100, display 10 per page)
-      const startIndex = chunkStartIndex;
-      const endIndex = startIndex + pageSize;
-      const paginatedCampaigns = campaignsToDisplay.slice(startIndex, endIndex);
+      // Client-side pagination: slice the fetched campaigns to show only current page
+      const currentIndex = (currentPage - 1) * pageSize;
+      const clientEndIndex = currentIndex + pageSize;
+      const paginatedCampaigns = campaignsToDisplay.slice(currentIndex, clientEndIndex);
 
       setCampaigns(paginatedCampaigns);
       setAllCampaignsUnfiltered(campaignsData);
-
-      // Get total from pagination response
-      // When filtering client-side, use the filtered count to match displayed items
-      // When a specific status is selected, backend should return correct total
-      const total =
-        selectedStatus === "all"
-          ? campaignsToDisplay.length // Use filtered count when excluding archived
-          : response.pagination.total || campaignsToDisplay.length; // Use backend total if available, otherwise filtered count
-      setTotalCampaigns(total);
+      setTotalCampaigns(response.pagination?.total || 0);
     } catch (error) {
       console.error("Failed to load campaigns list:", error);
       showToast(
@@ -463,14 +448,7 @@ export default function CampaignsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedStatus,
-    searchQuery,
-    currentPage,
-    pageSize,
-    filters,
-    showToast,
-  ]);
+  }, [selectedStatus, searchQuery, currentPage, pageSize, filters, showToast]);
 
   // Fetch campaign stats
   const fetchCampaignStats = useCallback(async () => {
@@ -495,9 +473,6 @@ export default function CampaignsPage() {
 
         const draft = Number(statusBreakdown.draft) || 0;
 
-        // Only use status_breakdown.pending_approval (campaigns with status="pending_approval")
-        // Don't use approval_status_breakdown.pending as it counts approval_status="pending"
-        // which may not match the actual campaign status displayed
         const pendingApproval = Number(statusBreakdown.pending_approval) || 0;
 
         setCampaignStats({
@@ -527,7 +502,7 @@ export default function CampaignsPage() {
     }
   }, []);
 
-  // Fetch categories on component mount (non-blocking)
+  // Fetch categories on component mount
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
@@ -761,7 +736,9 @@ export default function CampaignsPage() {
   const categoryOptions = [
     { value: "all", label: "All Catalogs" },
     ...categories
-      .filter((cat): cat is typeof categories[number] => cat && cat.id && cat.name)
+      .filter(
+        (cat): cat is (typeof categories)[number] => cat && cat.id && cat.name,
+      )
       .map((cat) => ({ value: cat.id.toString(), label: cat.name })),
   ];
 
@@ -780,8 +757,10 @@ export default function CampaignsPage() {
 
   const handleArchiveCampaign = async (campaignId: number) => {
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
       await campaignService.archiveCampaign(campaignId, userId);
       showToast("success", "Campaign archived successfully!");
       setShowActionMenu(null);
@@ -821,12 +800,16 @@ export default function CampaignsPage() {
 
     setIsDeleting(true);
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
       await campaignService.deleteCampaign(campaignToDelete.id, userId);
       // Remove campaign from list instead of refetching
       setCampaigns((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
-      setAllCampaignsUnfiltered((prev) => prev.filter((c) => c.id !== campaignToDelete.id));
+      setAllCampaignsUnfiltered((prev) =>
+        prev.filter((c) => c.id !== campaignToDelete.id),
+      );
       setTotalCampaigns((prev) => Math.max(0, prev - 1));
       showToast(
         "success",
@@ -865,7 +848,6 @@ export default function CampaignsPage() {
     setShowDeleteModal(false);
     setCampaignToDelete(null);
   };
-
 
   const filteredCampaigns = campaigns;
 
@@ -1099,9 +1081,9 @@ export default function CampaignsPage() {
                     >
                       <div
                         className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                        title={campaign.name}
+                        title={campaign.name || "—"}
                       >
-                        {campaign.name}
+                        {campaign.name || "—"}
                       </div>
                     </td>
                     {/* <td
@@ -1151,7 +1133,7 @@ export default function CampaignsPage() {
                           campaign.status,
                         )}`}
                       >
-                        {campaign.status.replace(/_/g, " ")}
+                        {campaign.status?.replace(/_/g, " ") || "Unknown"}
                       </span>
                     </td>
                     <td
@@ -1214,7 +1196,11 @@ export default function CampaignsPage() {
                             disabled={loadingActionIds.has(campaign.id)}
                           >
                             {loadingActionIds.has(campaign.id) ? (
-                              <LoadingSpinner variant="modern" size="sm" color="primary" />
+                              <LoadingSpinner
+                                variant="modern"
+                                size="sm"
+                                color="primary"
+                              />
                             ) : (
                               <Play className="w-4 h-4" />
                             )}
@@ -1242,7 +1228,11 @@ export default function CampaignsPage() {
                             disabled={loadingActionIds.has(campaign.id)}
                           >
                             {loadingActionIds.has(campaign.id) ? (
-                              <LoadingSpinner variant="modern" size="sm" color="primary" />
+                              <LoadingSpinner
+                                variant="modern"
+                                size="sm"
+                                color="primary"
+                              />
                             ) : (
                               <Pause className="w-4 h-4" />
                             )}
@@ -1349,7 +1339,12 @@ export default function CampaignsPage() {
                               disabled={loadingActionIds.has(campaign.id)}
                             >
                               {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
                               ) : (
                                 <Pause className="w-4 h-4 mr-4 text-black" />
                               )}
@@ -1377,7 +1372,12 @@ export default function CampaignsPage() {
                               disabled={loadingActionIds.has(campaign.id)}
                             >
                               {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
                               ) : (
                                 <Play className="w-4 h-4 mr-4 text-black" />
                               )}
@@ -1404,7 +1404,12 @@ export default function CampaignsPage() {
                               disabled={loadingActionIds.has(campaign.id)}
                             >
                               {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
                               ) : (
                                 <CheckCircle className="w-4 h-4 mr-4 text-black" />
                               )}
@@ -1423,27 +1428,41 @@ export default function CampaignsPage() {
                                   campaignName: campaign.name,
                                   action: "submit",
                                   successMessage: `Campaign "${campaign.name}" submitted for approval!`,
-                                  errorMessage: "Failed to submit campaign for approval",
-                                  updateFields: { status: "pending_approval", approval_status: "pending" },
+                                  errorMessage:
+                                    "Failed to submit campaign for approval",
+                                  updateFields: {
+                                    status: "pending_approval",
+                                    approval_status: "pending",
+                                  },
                                   errorProcessor: (error) => {
                                     let errorTitle = "Submission Failed";
-                                    let errorMessage = "Failed to submit campaign for approval";
+                                    let errorMessage =
+                                      "Failed to submit campaign for approval";
 
                                     if (error instanceof Error) {
                                       // Check for budget-related errors
                                       if (
-                                        error.message.toLowerCase().includes("budget") ||
-                                        error.message.toLowerCase().includes("positive")
+                                        error.message
+                                          .toLowerCase()
+                                          .includes("budget") ||
+                                        error.message
+                                          .toLowerCase()
+                                          .includes("positive")
                                       ) {
                                         errorTitle = "Budget Required";
                                         errorMessage =
                                           "This campaign must have a positive budget allocated before it can be submitted for approval. Please set a budget in the campaign details.";
                                       } else {
                                         // Try to extract error from response
-                                        const match = error.message.match(/details: ({.*})/);
+                                        const match =
+                                          error.message.match(
+                                            /details: ({.*})/,
+                                          );
                                         if (match) {
                                           try {
-                                            const errorData = JSON.parse(match[1]);
+                                            const errorData = JSON.parse(
+                                              match[1],
+                                            );
                                             errorMessage =
                                               errorData.error ||
                                               errorData.message ||
@@ -1456,7 +1475,10 @@ export default function CampaignsPage() {
                                         }
                                       }
                                     }
-                                    return { title: errorTitle, message: errorMessage };
+                                    return {
+                                      title: errorTitle,
+                                      message: errorMessage,
+                                    };
                                   },
                                 });
                               }}
@@ -1464,7 +1486,12 @@ export default function CampaignsPage() {
                               disabled={loadingActionIds.has(campaign.id)}
                             >
                               {loadingActionIds.has(campaign.id) ? (
-                                <LoadingSpinner variant="modern" size="sm" color="primary" className="mr-4" />
+                                <LoadingSpinner
+                                  variant="modern"
+                                  size="sm"
+                                  color="primary"
+                                  className="mr-4"
+                                />
                               ) : (
                                 <Send className="w-4 h-4 mr-4 text-black" />
                               )}
@@ -1636,38 +1663,12 @@ export default function CampaignsPage() {
 
       {/* Pagination */}
       {!isLoading && filteredCampaigns.length > 0 && totalCampaigns > 0 && (
-        <div
-          className={`bg-white ${tw.rounded} shadow-sm border ${tw.borderDefault} px-4 sm:px-6 py-4`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div
-              className={`text-sm ${tw.textSecondary} text-center sm:text-left`}
-            >
-              Showing {(currentPage - 1) * pageSize + 1} to{" "}
-              {Math.min(currentPage * pageSize, totalCampaigns)} of{" "}
-              {totalCampaigns} campaigns
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className={`text-sm ${tw.textSecondary} px-2`}>
-                Page {currentPage} of {totalPages || 1}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-                className={`p-2 border ${tw.borderDefault} ${tw.rounded} hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          pageSize={pageSize}
+          totalItems={totalCampaigns}
+          onPageChange={handlePageChange}
+        />
       )}
 
       {/* Filters Side Modal */}
@@ -1797,7 +1798,6 @@ export default function CampaignsPage() {
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
 
@@ -1860,17 +1860,19 @@ export default function CampaignsPage() {
           onSuccess={async () => {
             // Fetch fresh campaign data after execution
             try {
-              const response = await campaignService.getCampaignById(campaignToExecute.id, true);
-              if (response && response.data && response.data.status && response.data.is_active !== undefined) {
+              const response = await campaignService.getCampaignById(
+                campaignToExecute.id,
+                true,
+              );
+              if (response && response.status && response.is_active !== undefined) {
                 updateCampaignInList(campaignToExecute.id, {
-                  status: response.data.status,
-                  is_active: response.data.is_active,
+                  status: response.status,
+                  is_active: response.is_active,
                 });
-              } else {
-                updateCampaignInList(campaignToExecute.id, { status: "executed" });
               }
+              // If response doesn't have status, don't set a fallback - let the user refresh
             } catch {
-              updateCampaignInList(campaignToExecute.id, { status: "executed" });
+              // If execution fails, don't update status - user should refresh
             }
             fetchCampaignStats(); // Refresh stats
           }}
@@ -1890,17 +1892,24 @@ export default function CampaignsPage() {
           onSuccess={async () => {
             // Fetch fresh campaign data after approval
             try {
-              const response = await campaignService.getCampaignById(campaignToApprove.id, true);
-              if (response && response.data && response.data.approval_status && response.data.status) {
+              const response = await campaignService.getCampaignById(
+                campaignToApprove.id,
+                true,
+              );
+              if (response && response.approval_status && response.status) {
                 updateCampaignInList(campaignToApprove.id, {
-                  approval_status: response.data.approval_status,
-                  status: response.data.status,
+                  approval_status: response.approval_status,
+                  status: response.status,
                 });
               } else {
-                updateCampaignInList(campaignToApprove.id, { approval_status: "approved" });
+                updateCampaignInList(campaignToApprove.id, {
+                  approval_status: "approved",
+                });
               }
             } catch {
-              updateCampaignInList(campaignToApprove.id, { approval_status: "approved" });
+              updateCampaignInList(campaignToApprove.id, {
+                approval_status: "approved",
+              });
             }
             fetchCampaignStats(); // Refresh stats
           }}
@@ -1920,19 +1929,26 @@ export default function CampaignsPage() {
           onSuccess={async () => {
             // Fetch fresh campaign data after rejection to ensure correct state
             try {
-              const response = await campaignService.getCampaignById(campaignToReject.id, true);
-              if (response && response.data && response.data.approval_status && response.data.status) {
+              const response = await campaignService.getCampaignById(
+                campaignToReject.id,
+                true,
+              );
+              if (response && response.approval_status && response.status) {
                 updateCampaignInList(campaignToReject.id, {
-                  approval_status: response.data.approval_status,
-                  status: response.data.status,
+                  approval_status: response.approval_status,
+                  status: response.status,
                 });
               } else {
                 // Fallback: just update with rejected status
-                updateCampaignInList(campaignToReject.id, { approval_status: "rejected" });
+                updateCampaignInList(campaignToReject.id, {
+                  approval_status: "rejected",
+                });
               }
             } catch {
               // Fallback: just update with rejected status
-              updateCampaignInList(campaignToReject.id, { approval_status: "rejected" });
+              updateCampaignInList(campaignToReject.id, {
+                approval_status: "rejected",
+              });
             }
             fetchCampaignStats(); // Refresh stats
           }}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ArrowLeft, Users, MessageSquare, Send, Calendar } from "lucide-react";
+import { ArrowLeft, Users, MessageSquare, Calendar } from "lucide-react";
 import { color, tw } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
@@ -15,12 +15,13 @@ import ProgressStepper, {
 } from "../../../shared/components/ui/ProgressStepper";
 import TargetAudienceStep from "../components/TargetAudienceStep";
 import DefineCommunicationStep from "../components/DefineCommunicationStep";
-import TestBroadcastStep from "../components/TestBroadcastStep";
 import ScheduleStep from "../components/ScheduleStep";
 import { communicationService } from "../../communications/services/communicationService";
+import { quicklistService } from "../../quicklists/services/quicklistService";
 import type { TemplateVariable, AudienceInputMethod } from "../types";
 import type { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
 import type { ManualCommunicationRecipient } from "../../communications/types/communication";
+import type { QuickListWithDetails } from "../../quicklists/types/quicklist";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 
 export interface ManualBroadcastData {
@@ -31,6 +32,7 @@ export interface ManualBroadcastData {
   audienceDescription?: string;
   uploadType?: string;
   quicklistId?: number;
+  quicklist?: QuickListWithDetails; // Full quicklist object for edit mode
   rowCount?: number;
   subscriptionIdColumn?: string;
   fileColumns?: string[];
@@ -102,12 +104,6 @@ export default function CreateManualBroadcastPage() {
     },
     {
       id: 3,
-      name: t.manualBroadcast.testBroadcast,
-      description: t.manualBroadcast.testBroadcastDesc,
-      icon: Send,
-    },
-    {
-      id: 4,
       name: t.manualBroadcast.schedule,
       description: t.manualBroadcast.scheduleDesc,
       icon: Calendar,
@@ -168,8 +164,20 @@ export default function CreateManualBroadcastPage() {
 
           // Handle source type specific prefilling
           if (exec?.source_type === "quicklist" && exec?.source_id) {
+            prefillData.inputMethod = "file"; // Set input method to file for quicklist
             prefillData.quicklistId = exec.source_id;
             prefillData.audienceName = exec?.source_name || `Quicklist ${exec.source_id}`;
+
+            // Fetch full quicklist details for display in edit mode
+            try {
+              const quicklistResponse = await quicklistService.getQuickListById(exec.source_id);
+              if (quicklistResponse.success && "data" in quicklistResponse) {
+                prefillData.quicklist = quicklistResponse.data;
+              }
+            } catch (err) {
+              console.error("Failed to fetch quicklist details:", err);
+              // Continue with just the ID and name if fetch fails
+            }
           } else if (exec?.source_type === "manual") {
             prefillData.inputMethod = "manual";
             prefillData.audienceName = exec?.name || exec?.source_name || "Manual Audience";
@@ -229,11 +237,7 @@ export default function CreateManualBroadcastPage() {
           broadcastData.messageBody &&
           (broadcastData.channel !== "EMAIL" || broadcastData.messageTitle)
         );
-      case 3: // Test Broadcast
-        return (
-          !!broadcastData.testContacts && broadcastData.testContacts.length > 0
-        );
-      case 4: // Schedule
+      case 3: // Schedule
         return !!(broadcastData.scheduleType && broadcastData.scheduleDate);
       default:
         return true;
@@ -540,15 +544,6 @@ export default function CreateManualBroadcastPage() {
           />
         );
       case 3:
-        return (
-          <TestBroadcastStep
-            data={broadcastData}
-            onUpdate={updateBroadcastData}
-            onNext={handleNext}
-            onPrevious={handlePrevious}
-          />
-        );
-      case 4:
         return (
           <ScheduleStep
             data={broadcastData}

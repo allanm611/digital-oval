@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
@@ -64,6 +65,7 @@ export default function ProgramDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   const [program, setProgram] = useState<Program | null>(null);
@@ -177,8 +179,10 @@ export default function ProgramDetailsPage() {
     if (!id) return;
     try {
       setIsActionLoading(true);
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
       await programService.recalculateProgramBudget(Number(id), userId);
       showToast("success", t.programs.budgetRecalculateSuccess);
       await loadProgramDetails();
@@ -227,9 +231,6 @@ export default function ProgramDetailsPage() {
 
     try {
       setIsSaving(true);
-      // TODO: Get actual user ID from auth context
-      const _userId = 1;
-
       // Check if dates changed
       const datesChanged =
         (programData.start_date !== undefined &&
@@ -301,7 +302,10 @@ export default function ProgramDetailsPage() {
 
     try {
       setIsActionLoading(true);
-      const userId = 1; // TODO: Get from auth context
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
 
       if (program.is_active) {
         await programService.deactivateProgram(Number(id), userId);
@@ -369,10 +373,10 @@ export default function ProgramDetailsPage() {
           <BackButton fallbackTo="/dashboard/programs" onClick={handleBack} />
           <div>
             <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {program.name}
+              {program?.name || "—"}
             </h1>
             <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {program.description || "Program details and information"}
+              {program?.description || "Program details and information"}
             </p>
           </div>
         </div>

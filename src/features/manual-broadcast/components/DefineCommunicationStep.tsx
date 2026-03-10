@@ -8,6 +8,10 @@ import {
   Variable,
   ChevronDown,
   Settings,
+  Send,
+  CheckCircle,
+  XCircle,
+  Loader,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
@@ -29,12 +33,21 @@ import CommunicationPolicyModal from "../../campaigns/components/CommunicationPo
 import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
 import { useClickOutside } from "../../../shared/hooks/useClickOutside";
 import { useToast } from "../../../contexts/ToastContext";
+import { validatePhoneOnly, isValidEmail } from "../../../shared/utils/validation";
+import { DUMMY_RECIPIENTS } from "../../campaigns/pages/SeedListManagementPage";
+import type { SeedListRecipient } from "../../campaigns/pages/SeedListManagementPage";
 
 interface DefineCommunicationStepProps {
   data: ManualBroadcastData;
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
   onNext: () => void;
   onPrevious: () => void;
+}
+
+interface TestResult {
+  contact: string;
+  status: "success" | "failed";
+  message?: string;
 }
 
 type Channel = "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
@@ -83,6 +96,14 @@ export default function DefineCommunicationStep({
     TemplateVariable[]
   >(data.selectedVariables || []);
 
+  // Test state
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [testError, setTestError] = useState("");
+  const [selectedTestContacts, setSelectedTestContacts] = useState<Set<string>>(
+    new Set()
+  );
+
   const titleInputRef = useRef<HTMLInputElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -107,6 +128,109 @@ export default function DefineCommunicationStep({
   const { success: showToast, error: showError } = useToast();
 
   useClickOutside(policyDropdownRef, () => setIsPolicyDropdownOpen(false));
+
+  // Get active seed list recipients
+  const getActiveRecipients = (): SeedListRecipient[] => {
+    return DUMMY_RECIPIENTS.filter((r) => r.status === "active");
+  };
+
+  // Derive all available test contacts from active recipients based on channel
+  const getAvailableTestContacts = (): string[] => {
+    const activeRecipients = getActiveRecipients();
+    return activeRecipients
+      .map((r) => {
+        const contact =
+          selectedChannel === "EMAIL" ? r.customer_email : r.customer_phone;
+        // Remove + prefix from phone numbers
+        return contact?.replace(/^\+/, "") || "";
+      })
+      .filter(Boolean) as string[];
+  };
+
+  // Get only the selected/checked test contacts
+  const getSelectedTestContacts = (): string[] => {
+    return getAvailableTestContacts().filter((contact) =>
+      selectedTestContacts.has(contact)
+    );
+  };
+
+  // Toggle selection of a test contact
+  const toggleTestContact = (contact: string) => {
+    const newSelected = new Set(selectedTestContacts);
+    if (newSelected.has(contact)) {
+      newSelected.delete(contact);
+    } else {
+      newSelected.add(contact);
+    }
+    setSelectedTestContacts(newSelected);
+  };
+
+  // Validate contact based on channel
+  const validateContact = (contact: string): boolean => {
+    if (selectedChannel === "EMAIL") {
+      return isValidEmail(contact);
+    } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+      const phoneValidation = validatePhoneOnly([contact]);
+      return phoneValidation.valid;
+    }
+    return isValidEmail(contact) || validatePhoneOnly([contact]).valid;
+  };
+
+  // Handle sending test broadcasts
+  const handleSendTest = async () => {
+    const contacts = getSelectedTestContacts();
+
+    if (contacts.length === 0) {
+      setTestError("Please select at least one test contact to send tests");
+      return;
+    }
+
+    setIsTesting(true);
+    setTestError("");
+    setTestResults([]);
+
+    try {
+      const results: TestResult[] = [];
+
+      for (const contact of contacts) {
+        // Simulate a small delay for each contact
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Validate based on channel
+        const isValid = validateContact(contact);
+        let errorMessage = "";
+
+        if (selectedChannel === "EMAIL") {
+          errorMessage = t.manualBroadcast.errorInvalidEmail;
+        } else if (selectedChannel === "SMS" || selectedChannel === "WHATSAPP") {
+          errorMessage = t.manualBroadcast.errorInvalidPhone;
+        } else {
+          errorMessage = t.manualBroadcast.errorInvalidContact;
+        }
+
+        if (isValid) {
+          results.push({
+            contact,
+            status: "success",
+            message: `${t.manualBroadcast.testMessageSuccess} (${selectedChannel})`,
+          });
+        } else {
+          results.push({
+            contact,
+            status: "failed",
+            message: errorMessage,
+          });
+        }
+      }
+
+      setTestResults(results);
+    } catch (err) {
+      console.error("Failed to process test broadcasts:", err);
+      setTestError(t.manualBroadcast.errorSendTestFailed);
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   // Load Communication Policies from service
   useEffect(() => {
@@ -485,6 +609,13 @@ export default function DefineCommunicationStep({
     // Validate selectedVariables is an array
     const validatedVariables = Array.isArray(selectedVariables) ? selectedVariables : [];
 
+    // Prepare test results record
+    const resultsRecord: Record<string, unknown> = {
+      results: testResults,
+      successCount: testResults.filter(r => r.status === "success").length,
+      failedCount: testResults.filter(r => r.status === "failed").length,
+    };
+
     // Update parent with validated data
     onUpdate({
       channel: selectedChannel,
@@ -496,6 +627,9 @@ export default function DefineCommunicationStep({
       // Add communication policy data
       selectedCommunicationPolicy: selectedPolicy || undefined,
       selectedCommunicationPolicyId: selectedPolicy?.id || undefined,
+      // Add test data
+      testContacts: getSelectedTestContacts(),
+      testResults: resultsRecord,
     });
     onNext();
   };
@@ -877,10 +1011,103 @@ export default function DefineCommunicationStep({
                 )}
               </div>
             </div>
+
+            {/* Test Section - Send Test Button */}
+            {getAvailableTestContacts().length > 0 && (
+              <div className="mt-8 pt-6 border-t" style={{ borderColor: color.border.default }}>
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+                  Send Test Message
+                </h3>
+
+                {/* Send Test Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={handleSendTest}
+                    disabled={getSelectedTestContacts().length === 0 || isTesting}
+                    className="w-full px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    style={{ backgroundColor: color.primary.accent }}
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                        <span>Sending Tests...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 flex-shrink-0" />
+                        <span>Send Test</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              {/* Test Results */}
+              {testResults.length > 0 && (
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                    Test Results
+                  </label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {testResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 p-2 rounded-md text-sm"
+                        style={{
+                          backgroundColor:
+                            result.status === "success"
+                              ? `${color.status.success}10`
+                              : `${color.status.danger}10`,
+                        }}
+                      >
+                        {result.status === "success" ? (
+                          <CheckCircle
+                            className="w-4 h-4 flex-shrink-0 mt-0.5"
+                            style={{ color: color.status.success }}
+                          />
+                        ) : (
+                          <XCircle
+                            className="w-4 h-4 flex-shrink-0 mt-0.5"
+                            style={{ color: color.status.danger }}
+                          />
+                        )}
+                        <div className="flex-1">
+                          <p
+                            className="text-xs font-medium"
+                            style={{
+                              color:
+                                result.status === "success"
+                                  ? color.status.success
+                                  : color.status.danger,
+                            }}
+                          >
+                            {result.contact}
+                          </p>
+                          {result.message && (
+                            <p className={`text-xs ${tw.textMuted} mt-0.5`}>
+                              {result.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Test Error */}
+              {testError && (
+                <div className="p-3 rounded-md" style={{ backgroundColor: `${color.status.danger}10` }}>
+                  <p className="text-sm" style={{ color: color.status.danger }}>
+                    {testError}
+                  </p>
+                </div>
+              )}
+            </div>
+            )}
           </div>
 
-          {/* Right Column - Preview (2/5) */}
-          <div className="lg:col-span-2">
+          {/* Right Column - Preview & Test Contacts (2/5) */}
+          <div className="lg:col-span-2 space-y-4">
             <div className="sticky top-4">
               <PreviewPanel
                 channel={selectedChannel}
@@ -889,6 +1116,40 @@ export default function DefineCommunicationStep({
                 sampleData={getSampleDataForPreview()}
               />
             </div>
+
+            {/* Test Contacts Selection */}
+            {getAvailableTestContacts().length > 0 && (
+              <div
+                className="bg-white rounded-md shadow-sm border p-4"
+                style={{ borderColor: color.border.default }}
+              >
+                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-3`}>
+                  Select Test Contacts
+                </h3>
+                <p className={`text-xs ${tw.textSecondary} mb-3`}>
+                  Check the contacts you want to test ({getSelectedTestContacts().length} selected)
+                </p>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {getAvailableTestContacts().map((contact, index) => (
+                    <label
+                      key={index}
+                      className="flex items-center gap-2 p-2 rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedTestContacts.has(contact)}
+                        onChange={() => toggleTestContact(contact)}
+                        disabled={isTesting}
+                        className="w-4 h-4 rounded cursor-pointer"
+                      />
+                      <span className={`text-sm ${tw.textPrimary} flex-1 truncate`}>
+                        {contact}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -936,7 +1197,7 @@ export default function DefineCommunicationStep({
           className="px-6 py-2.5 text-white rounded-md text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           style={{ backgroundColor: color.primary.action }}
         >
-          {t.manualBroadcast.nextTest}
+          {t.manualBroadcast.nextSchedule}
         </button>
       </div>
 

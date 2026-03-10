@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, CheckCircle } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface ApproveCampaignModalProps {
@@ -20,13 +21,16 @@ export default function ApproveCampaignModal({
   onSuccess,
 }: ApproveCampaignModalProps) {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [isApproving, setIsApproving] = useState(false);
 
   const handleApprove = async () => {
     setIsApproving(true);
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
 
       await campaignService.approveCampaign(campaignId, userId);
 

@@ -9,7 +9,7 @@ type CampaignButtonType = "pause" | "resume" | "activate" | "execute" | "submit"
  *  function to check if a campaign button should be displayed
  */
 export function canShowCampaignButton(
-  campaign: Campaign | undefined,
+  campaign: Campaign | CampaignDisplay | undefined,
   buttonType: CampaignButtonType
 ): boolean {
   if (!campaign) return false;

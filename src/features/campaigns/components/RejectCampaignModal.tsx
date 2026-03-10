@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, XCircle } from "lucide-react";
 import { campaignService } from "../services/campaignService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { color, tw } from "../../../shared/utils/utils";
 
 interface RejectCampaignModalProps {
@@ -20,6 +21,7 @@ export default function RejectCampaignModal({
   onSuccess,
 }: RejectCampaignModalProps) {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -31,8 +33,10 @@ export default function RejectCampaignModal({
 
     setIsRejecting(true);
     try {
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
 
       await campaignService.rejectCampaign(campaignId, userId, rejectionReason);
 

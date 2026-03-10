@@ -26,9 +26,9 @@ export interface FetchFilesResponse {
 // 2. POST /fetch-by-time
 export interface FetchByTimeRequest {
   file_category: EtlFileCategory;
-  month: string; // 1-12
-  day: string; // 1-31
-  hour: string; // 0-23
+  month: string; 
+  day: string; 
+  hour: string; 
   user_id: number;
   job_id?: number;
 }

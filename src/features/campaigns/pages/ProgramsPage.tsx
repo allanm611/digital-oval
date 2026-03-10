@@ -17,6 +17,7 @@ import {
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import Pagination from "../../../shared/components/ui/Pagination";
@@ -29,8 +30,9 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 const PAGE_SIZE = 20;
 
 export default function ProgramsPage() {
-  
+
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [programToDelete, setProgramToDelete] = useState<Program | null>(null);
@@ -229,8 +231,10 @@ export default function ProgramsPage() {
   }) => {
     try {
       setIsSaving(true);
-      // TODO: Get actual user ID from auth context
-      const userId = 1;
+      const userId = user?.user_id;
+      if (!userId) {
+        throw new Error("User ID not available");
+      }
 
       if (editingProgram) {
         // Check if dates changed

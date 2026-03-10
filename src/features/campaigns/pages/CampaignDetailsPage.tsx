@@ -261,16 +261,15 @@ export default function CampaignDetailsPage() {
         // Convert segment info from API to CampaignSegmentDetail format
         const fetchedSegments: CampaignSegmentDetail[] = response.data
           .map((segment) => {
-            // Null checks for critical fields
-            if (!segment || !segment.id || !segment.name) {
-              console.warn("Segment data invalid:", segment);
+            // API returns segment_id and segment_name
+            if (!segment || !segment.segment_id || !segment.segment_name) {
               return null;
             }
             return {
-              id: segment.id,
-              name: segment.name,
+              id: parseInt(segment.segment_id),
+              name: segment.segment_name,
               code: segment.code || "",
-              total_subscribers: 0, // Not provided by campaign flows endpoint
+              total_subscribers: 0,
               created_at: "",
               updated_at: "",
             };
@@ -1117,10 +1116,10 @@ export default function CampaignDetailsPage() {
           <div className="mb-3 pb-3 border-b border-gray-200">
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <h2 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-                {campaign.name}
+                {campaign.name || "—"}
               </h2>
               <div className="flex items-center flex-wrap gap-2">
-                {(!campaign.approval_status ||
+                {campaign.status && (!campaign.approval_status ||
                   campaign.approval_status?.toLowerCase() !==
                     campaign.status?.toLowerCase()) && (
                   <span
@@ -1128,7 +1127,7 @@ export default function CampaignDetailsPage() {
                       campaign.status,
                     )}`}
                   >
-                    {campaign.status.replace(/_/g, " ")}
+                    {campaign.status?.replace(/_/g, " ") || "Unknown"}
                   </span>
                 )}
                 {campaign.approval_status && (
@@ -1146,13 +1145,13 @@ export default function CampaignDetailsPage() {
                     {campaign.approval_status === "pending" && (
                       <Clock className="w-3 h-3 mr-1" />
                     )}
-                    {campaign.approval_status.replace(/_/g, " ")}
+                    {campaign.approval_status?.replace(/_/g, " ") || "Unknown"}
                   </span>
                 )}
               </div>
             </div>
             <p className={`${tw.textSecondary} mb-2 text-base leading-relaxed`}>
-              {campaign.description}
+              {campaign.description || "—"}
             </p>
             {/* Rejection Reason Display */}
             {campaign.approval_status === "rejected" &&
@@ -2071,14 +2070,14 @@ export default function CampaignDetailsPage() {
         </div>
       )}
 
-      {/* Campaign Flows Table */}
+      {/* Segment-Offer Mappings Table */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <h3
               className={`text-lg font-semibold ${tw.textPrimary}`}
             >
-              Campaign Flows
+              Segment-Offer Mappings
             </h3>
           </div>
         </div>
@@ -2090,7 +2089,7 @@ export default function CampaignDetailsPage() {
           <div className="text-center py-8">
             <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className={`text-sm ${tw.textSecondary}`}>
-              No delivery flows configured for this campaign
+              No mappings configured for this campaign
             </p>
           </div>
         ) : (

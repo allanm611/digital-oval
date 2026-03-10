@@ -55,31 +55,42 @@ export default function TargetAudienceStep({
 
     // Restore selected quicklist if they had selected one
     if (data.inputMethod === "file" && data.quicklistId) {
-      // Try to fetch the actual quicklist details
-      quicklistService
-        .getQuickListById(data.quicklistId)
-        .then((response) => {
-          if (response.data) {
-            setSelectedQuickList({
-              id: response.data.id,
-              name: response.data.name,
-              upload_type: response.data.processing_status || "multi",
-              row_count: response.data.rows_imported || 0,
-              created_at: response.data.created_at,
-            });
-          }
-        })
-        .catch((err) => {
-          console.error("Failed to load quicklist details:", err);
-          // Fallback to minimal info we have
-          setSelectedQuickList({
-            id: data.quicklistId,
-            name: "QuickList",
-            upload_type: data.uploadType || "multi",
-            row_count: data.rowCount || 0,
-            created_at: new Date().toISOString(),
-          });
+      // Use pre-fetched quicklist data if available (from edit mode)
+      if (data.quicklist) {
+        setSelectedQuickList({
+          id: data.quicklist.id,
+          name: data.quicklist.name,
+          upload_type: data.quicklist.processing_status || "multi",
+          row_count: data.quicklist.rows_imported || 0,
+          created_at: data.quicklist.created_at,
         });
+      } else {
+        // Otherwise try to fetch the actual quicklist details
+        quicklistService
+          .getQuickListById(data.quicklistId)
+          .then((response) => {
+            if (response.data) {
+              setSelectedQuickList({
+                id: response.data.id,
+                name: response.data.name,
+                upload_type: response.data.processing_status || "multi",
+                row_count: response.data.rows_imported || 0,
+                created_at: response.data.created_at,
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Failed to load quicklist details:", err);
+            // Fallback to minimal info we have
+            setSelectedQuickList({
+              id: data.quicklistId,
+              name: "QuickList",
+              upload_type: data.uploadType || "multi",
+              row_count: data.rowCount || 0,
+              created_at: new Date().toISOString(),
+            });
+          });
+      }
     } else {
       setSelectedQuickList(null);
     }
@@ -195,6 +206,10 @@ export default function TargetAudienceStep({
       if (inputMethod === "file" && selectedQuickList) {
         updateData.quicklistId = selectedQuickList.id;
         updateData.rowCount = selectedQuickList.row_count;
+        // Preserve the pre-fetched quicklist data if available
+        if (data.quicklist) {
+          updateData.quicklist = data.quicklist;
+        }
         // uploadType already set above from user's list type selection - don't overwrite
       }
 

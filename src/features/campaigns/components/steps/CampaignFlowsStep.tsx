@@ -234,11 +234,10 @@ export default function CampaignFlowsStep({
       {/* Header */}
       <div>
         <h2 className={`text-xl font-semibold ${tw.textPrimary} mb-2`}>
-          Add Delivery Flows
+          Map Segments to Offers
         </h2>
         <p className={`text-sm ${tw.textMuted}`}>
-          Define how and when your offers will be delivered to each segment. Select
-          offers for each segment to create delivery flows.
+          Assign offers to segments. Select offers for each segment to create the mappings.
         </p>
       </div>
 

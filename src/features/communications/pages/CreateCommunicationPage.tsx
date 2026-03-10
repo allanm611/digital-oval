@@ -11,6 +11,7 @@ import PreviewPanel from "../components/PreviewPanel";
 import { communicationService } from "../services/communicationService";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import { useToast } from "../../../contexts/ToastContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
   CommunicationChannel,
   CommunicationResult,
@@ -28,6 +29,7 @@ export default function CreateCommunicationPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const { success: showToast, error: showError } = useToast();
+  const { user } = useAuth();
 
   // State
   const [quicklist, setQuickList] = useState<QuickList | null>(null);
@@ -117,7 +119,7 @@ export default function CreateCommunicationPage() {
           limit: 1000,
         },
         batch_size: 500,
-        created_by: 1, // TODO: Get from auth context
+        created_by: user?.user_id || 0,
       });
 
       if (response.success) {

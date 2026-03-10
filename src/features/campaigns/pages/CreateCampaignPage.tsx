@@ -81,8 +81,8 @@ const steps: Step[] = [
   },
   {
     id: 3,
-    name: "Delivery Flows",
-    description: "Delivery flow configuration",
+    name: "Map Segments to Offers",
+    description: "Configure segment-offer mappings",
     icon: Gift,
   },
   {

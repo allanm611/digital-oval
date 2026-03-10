@@ -1797,14 +1797,14 @@ export default function SegmentDetailsPage() {
         </div>
       )}
 
-      {/* Campaign Flows Section */}
+      {/* Campaigns Using This Segment */}
       {campaignFlows.length > 0 || isLoadingCampaignFlows ? (
         <div className={`${tw.rounded} border border-gray-200 p-6 shadow-sm`}>
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-            Campaign Flows ({campaignFlows.length})
+            Used in Campaigns ({campaignFlows.length})
           </h3>
           <p className={`text-sm ${tw.textSecondary} mb-4`}>
-            Campaigns that use this segment
+            Campaigns that have mappings with this segment
           </p>
           {isLoadingCampaignFlows ? (
             <div className="flex justify-center py-8">
@@ -1813,7 +1813,7 @@ export default function SegmentDetailsPage() {
           ) : campaignFlows.length === 0 ? (
             <div className="text-center py-8">
               <p className={`text-sm ${tw.textSecondary}`}>
-                This segment is not used in any campaign flows
+                This segment is not used in any campaigns yet
               </p>
             </div>
           ) : (

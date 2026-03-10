@@ -7,7 +7,6 @@ export type CampaignType =
   | "round_robin"
   | "multiple_level";
 
-// Backend Campaign Response Types
 export interface BackendCampaignType {
   id: number;
   campaign_uuid: string;
@@ -93,7 +92,6 @@ export interface GetCampaignCategoriesResponse {
   source: string;
 }
 
-// Extended API type helpers
 export type CampaignStatus =
   | "draft"
   | "pending_approval"

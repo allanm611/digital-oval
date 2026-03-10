@@ -268,35 +268,38 @@ export default function BroadcastDetailsPage() {
           <p className={`${tw.textMuted} text-sm`}>No logs available yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
+            <table
+              className="w-full min-w-[1200px]"
+              style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}
+            >
               <thead style={{ background: color.surface.tableHeader }}>
-                <tr key="header">
+                <tr>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Recipient
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Channel
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Status
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Error Code
                   </th>
                   <th
-                    className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider"
                     style={{ color: color.surface.tableHeaderText }}
                   >
                     Created At
@@ -304,46 +307,43 @@ export default function BroadcastDetailsPage() {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log) => {
-                  const statusColor = getStatusColor(log.status);
-                  return (
-                    <tr key={log.id} className="transition-colors">
-                      <td
-                        className="px-4 py-3 text-sm"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <div className="font-medium text-gray-900 truncate">
-                          {log.recipient_identifier}
-                        </div>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-gray-600"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        <span className="capitalize">{log.channel}</span>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-black capitalize"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {log.status}
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-gray-600 truncate max-w-xs"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                        title={log.error_code}
-                      >
-                        {log.error_code || "-"}
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-gray-600"
-                        style={{ backgroundColor: color.surface.tablebodybg }}
-                      >
-                        {new Date(log.created_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {logs.map((log) => (
+                  <tr key={log.id} className="transition-colors">
+                    <td
+                      className="px-6 py-4 text-sm text-black"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <div className="font-medium truncate">
+                        {log.recipient_identifier}
+                      </div>
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-black capitalize"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {log.channel}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-black capitalize"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {log.status}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-black truncate max-w-xs"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                      title={log.error_code}
+                    >
+                      {log.error_code || "-"}
+                    </td>
+                    <td
+                      className="px-6 py-4 text-sm text-black"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

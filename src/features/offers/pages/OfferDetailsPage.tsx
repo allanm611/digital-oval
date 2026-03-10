@@ -2397,14 +2397,14 @@ export default function OfferDetailsPage() {
         </div>
       </section>
 
-      {/* Campaign Flows Section */}
+      {/* Used in Campaigns Section */}
       <section className={`${tw.rounded} border-gray-200 py-6`}>
         <div className="px-6 mb-6">
           <h3 className={`${tw.cardHeading}`}>
-            Campaign Flows ({campaignFlows.length})
+            Used in Campaigns ({campaignFlows.length})
           </h3>
           <p className={`${tw.textSecondary} text-sm mt-1`}>
-            Campaigns that use this offer
+            Campaigns that have mappings with this offer
           </p>
         </div>
 
@@ -2416,7 +2416,7 @@ export default function OfferDetailsPage() {
           <div className="px-6 text-center py-8">
             <Zap className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <p className={`text-sm ${tw.textSecondary}`}>
-              This offer is not used in any campaign flows
+              This offer is not used in any campaigns yet
             </p>
           </div>
         ) : (

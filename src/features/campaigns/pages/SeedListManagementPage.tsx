@@ -40,7 +40,7 @@ export interface LineOfBusiness {
 }
 
 // Dummy data
-const DUMMY_RECIPIENTS: SeedListRecipient[] = [
+export const DUMMY_RECIPIENTS: SeedListRecipient[] = [
   {
     id: 1,
     customer_id: 301,
@@ -357,7 +357,25 @@ export default function SeedListManagementPage() {
                       borderTopLeftRadius: "0.375rem",
                     }}
                   >
-                    Recipient
+                    Name
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Email
+                  </th>
+                  <th
+                    className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
+                    style={{
+                      color: color.surface.tableHeaderText,
+                      backgroundColor: color.surface.tableHeader,
+                    }}
+                  >
+                    Phone
                   </th>
                   <th
                     className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
@@ -427,18 +445,25 @@ export default function SeedListManagementPage() {
                         borderBottomLeftRadius: "0.375rem",
                       }}
                     >
-                      <div>
-                        <div
-                          className={`${tw.tableFirstColumn} ${tw.textPrimary}`}
-                        >
-                          {recipient.customer_name || "Unknown"}
-                        </div>
-                        <div className={`text-sm ${tw.textMuted}`}>
-                          {recipient.customer_email ||
-                            recipient.customer_phone ||
-                            "No contact info"}
-                        </div>
+                      <div className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+                        {recipient.customer_name || "Unknown"}
                       </div>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textSecondary}`}>
+                        {recipient.customer_email || "-"}
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4"
+                      style={{ backgroundColor: color.surface.tablebodybg }}
+                    >
+                      <span className={`text-sm ${tw.textSecondary}`}>
+                        {recipient.customer_phone?.replace(/^\+/, "") || "-"}
+                      </span>
                     </td>
                     <td
                       className="px-6 py-4"

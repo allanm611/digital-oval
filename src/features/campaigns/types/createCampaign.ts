@@ -1,19 +1,15 @@
 export interface CreateCampaignRequest {
-  // Required fields
-  name: string; // required, 1-128 chars
+  name: string;
 
-  // Basic information
-  code?: string; // Campaign code/identifier
-  description?: string | null; // optional, max 1000 chars, can be null
-  objective?: string | null; // optional, max 256 chars, can be null
-  priority?: "low" | "medium" | "high" | "critical"; // optional priority bucket
-  priority_rank?: number | null; // optional rank within the bucket
+  code?: string;
+  description?: string | null;
+  objective?: string | null;
+  priority?: "low" | "medium" | "high" | "critical";
+  priority_rank?: number | null;
 
-  // Category and program
-  category_id?: number | null; // optional, positive integer, can be null
-  program_id?: number | null; // optional, positive integer, can be null
+  category_id?: number | null;
+  program_id?: number | null;
 
-  // Status
   status?:
     | "draft"
     | "pending_approval"
@@ -23,48 +19,38 @@ export interface CreateCampaignRequest {
     | "completed"
     | "cancelled"
     | "archived"
-    | "rejected"; // optional, default: 'draft'
+    | "rejected";
 
-  // Schedule
-  start_date?: string | null; // optional, ISO date format, can be null
-  end_date?: string | null; // optional, ISO date format, can be null
-  timezone?: string | null; // optional, timezone (e.g., "America/New_York")
+  start_date?: string | null;
+  end_date?: string | null;
+  timezone?: string | null;
 
-  // Budget
-  budget_allocated?: number | string | null; // optional, accepts decimal string or number
-  budget_spent?: number | string | null; // optional, accepts decimal string or number
+  budget_allocated?: number | string | null;
+  budget_spent?: number | string | null;
 
-  // Participants and targets
-  max_participants?: number | null; // optional, integer
-  current_participants?: number | null; // optional, integer
-  target_reach?: number | null; // optional, integer
-  target_conversion_rate?: number | null; // optional, decimal percentage
-  target_revenue?: number | null; // optional, decimal
+  max_participants?: number | null;
+  current_participants?: number | null;
+  target_reach?: number | null;
+  target_conversion_rate?: number | null;
+  target_revenue?: number | null;
 
-  // Team and ownership
-  owner_team?: string | null; // optional, max 64 chars, can be null
-  campaign_manager_id?: number | null; // optional, integer
+  owner_team?: string | null;
+  campaign_manager_id?: number | null;
 
-  // Control group
-  control_group_enabled?: boolean; // optional, default: false
-  control_group_percentage?: number | null; // optional, decimal percentage
+  control_group_enabled?: boolean;
+  control_group_percentage?: number | null;
 
-  // Tenant and client
-  tenant_id?: number | null; // optional, integer
-  client_id?: number | null; // optional, integer
+  tenant_id?: number | null;
+  client_id?: number | null;
 
-  // Active status
-  is_active?: boolean; // optional, default: true
+  is_active?: boolean;
 
-  // Audit
-  created_by?: number | null; // optional, user ID who created the campaign
-  updated_by?: number | null; // optional, user ID who updated the campaign
+  created_by?: number | null;
+  updated_by?: number | null;
 
-  // Additional data
-  tags?: string[]; // optional, array of tags
-  metadata?: Record<string, unknown>; // optional, JSON object for additional data
+  tags?: string[];
+  metadata?: Record<string, unknown>;
 
-  // Scheduling (frontend-only, maps to individual date/time fields for backend)
   scheduling?: {
     type?: "scheduled" | "recurring" | "trigger_based" | "immediate";
     time_zone?: string;
@@ -88,16 +74,15 @@ export interface CreateCampaignRequest {
     };
   };
 
-  // Frontend-only fields
   campaign_type?:
     | "multiple_target_group"
     | "champion_challenger"
     | "ab_test"
     | "round_robin"
     | "multiple_level";
-  step_order?: number; // Step order for flow execution (default: 1)
-  tag?: string; // Temporary UI field for comma-separated tags
-  department_id?: number; // UI field for department selection (maps to owner_team)
+  step_order?: number;
+  tag?: string;
+  department_id?: number;
 }
 
 export interface CreateCampaignResponse {
@@ -117,20 +102,20 @@ export interface CreateCampaignResponse {
     start_date?: string | null;
     end_date?: string | null;
     timezone?: string | null;
-    budget_allocated?: string; // Backend returns as string decimal
-    budget_spent?: string; // Backend returns as string decimal
+    budget_allocated?: string; 
+    budget_spent?: string; 
     max_participants?: number | null;
     current_participants?: number;
     target_reach?: number | null;
-    target_conversion_rate?: string; // Backend returns as string decimal
-    target_revenue?: string; // Backend returns as string decimal
+    target_conversion_rate?: string; 
+    target_revenue?: string; 
     owner_team?: string | null;
     campaign_manager_id?: number | null;
     approved_by?: number | null;
     approved_at?: string | null;
     rejection_reason?: string | null;
     control_group_enabled?: boolean;
-    control_group_percentage?: string; // Backend returns as string decimal
+    control_group_percentage?: string; 
     tenant_id?: number | null;
     client_id?: number | null;
     is_active: boolean;

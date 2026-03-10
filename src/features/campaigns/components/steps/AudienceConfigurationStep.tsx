@@ -5,13 +5,15 @@ import {
   Plus,
   Edit,
   Trash2,
-  Settings,
   GripVertical,
   Award,
   TestTube,
   RotateCw,
   Layers,
   ChevronDown,
+  Shield,
+  Database,
+  X,
 } from "lucide-react";
 import {
   CreateCampaignRequest,
@@ -53,7 +55,7 @@ export default function AudienceConfigurationStep({
   setFormData,
   selectedSegments,
   setSelectedSegments,
-  controlGroup: _controlGroup, // eslint-disable-line @typescript-eslint/no-unused-vars
+  controlGroup: _controlGroup, 
   validationErrors = {},
   clearValidationErrors,
 }: AudienceConfigurationStepProps) {
@@ -70,6 +72,12 @@ export default function AudienceConfigurationStep({
   const [isCampaignTypeDropdownOpen, setIsCampaignTypeDropdownOpen] =
     useState(false);
   const [segmentRefreshTrigger, setSegmentRefreshTrigger] = useState(0);
+
+  // Seed List state
+  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">("all");
+  const [showSeedListModal, setShowSeedListModal] = useState(false);
+  const [editingSeedListSegmentId, setEditingSeedListSegmentId] = useState<string | null>(null);
+  const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>({});
 
   const { t } = useLanguage();
 
@@ -453,6 +461,42 @@ export default function AudienceConfigurationStep({
         </div>
       )}
 
+      {/* Seed List Configuration - Checkboxes */}
+      {formData.campaign_type && (
+        <div className={`${tw.rounded} p-4 mb-6 bg-gray-50`}>
+          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+            Seed List Configuration
+          </h3>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={seedListMode === "all"}
+                onChange={(e) => setSeedListMode(e.target.checked ? "all" : "per-segment")}
+                className="w-4 h-4"
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Apply seed list to all segments
+              </span>
+            </label>
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={seedListMode === "per-segment"}
+                onChange={(e) => setSeedListMode(e.target.checked ? "per-segment" : "all")}
+                className="w-4 h-4"
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Apply seed list per segment
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Mutually Exclusive Segments Checkbox */}
       {selectedSegments.length > 1 && (
         <div className={`${tw.rounded} p-3`}>
@@ -726,26 +770,38 @@ export default function AudienceConfigurationStep({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
+                          {seedListMode === "per-segment" && (
+                            <button
+                              onClick={() => {
+                                setEditingSeedListSegmentId(segment.id);
+                                setShowSeedListModal(true);
+                              }}
+                              className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
+                              title="Configure Seed List"
+                            >
+                              <Database className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => {
                               setEditingControlGroup(segment.id);
                               setShowControlGroupModal(true);
                             }}
-                            className="p-1.5 text-gray-400 hover:text-[#588157] hover:bg-gray-100 rounded transition-colors"
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
                             title="Configure Control Group"
                           >
-                            <Settings className="w-4 h-4" />
+                            <Shield className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => {}}
-                            className="p-1.5 text-gray-400 hover:text-[#588157] hover:bg-gray-100 rounded transition-colors"
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
                             title="Edit Segment"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleRemoveSegment(segment.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
                             title="Remove Segment"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -788,6 +844,27 @@ export default function AudienceConfigurationStep({
           isOpen={showCreateSegmentModal}
           onClose={() => setShowCreateSegmentModal(false)}
           onSave={handleSegmentCreated}
+        />
+      )}
+
+      {/* Seed List Configuration Modal */}
+      {showSeedListModal && editingSeedListSegmentId && (
+        <SeedListConfigModal
+          isOpen={showSeedListModal}
+          onClose={() => {
+            setShowSeedListModal(false);
+            setEditingSeedListSegmentId(null);
+          }}
+          segmentId={editingSeedListSegmentId}
+          selectedSeedLists={segmentSeedLists[editingSeedListSegmentId] || []}
+          onSave={(segmentId, seedListIds) => {
+            setSegmentSeedLists({
+              ...segmentSeedLists,
+              [segmentId]: seedListIds,
+            });
+            setShowSeedListModal(false);
+            setEditingSeedListSegmentId(null);
+          }}
         />
       )}
 
@@ -1427,6 +1504,145 @@ function ControlGroupConfigModal({
           <button onClick={handleSave} className={`${tw.button}`}>
             {t.campaigns.audienceConfiguration.saveConfiguration}
           </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// Seed List Configuration Modal Component
+interface SeedListConfigModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  segmentId: string;
+  selectedSeedLists: string[];
+  onSave: (segmentId: string, seedListIds: string[]) => void;
+}
+
+function SeedListConfigModal({
+  isOpen,
+  onClose,
+  segmentId,
+  selectedSeedLists,
+  onSave,
+}: SeedListConfigModalProps) {
+  const { t } = useLanguage();
+  const [selected, setSelected] = useState<string[]>(selectedSeedLists);
+
+  // Mock seed list data derived from recipients
+  const seedLists = [
+    {
+      id: "marketing-staff",
+      name: "Marketing Staff",
+      description: "Marketing team members",
+      count: 2,
+    },
+    {
+      id: "sales-staff",
+      name: "Sales Staff",
+      description: "Sales team members",
+      count: 2,
+    },
+    {
+      id: "support-staff",
+      name: "Support Staff",
+      description: "Support team members",
+      count: 2,
+    },
+    {
+      id: "finance-staff",
+      name: "Finance Staff",
+      description: "Finance team members",
+      count: 1,
+    },
+  ];
+
+  const toggleSelection = (seedListId: string) => {
+    setSelected((prev) =>
+      prev.includes(seedListId)
+        ? prev.filter((id) => id !== seedListId)
+        : [...prev, seedListId],
+    );
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Modal */}
+        <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
+          {/* Header */}
+          <div
+            className="flex items-center justify-between p-6 border-b"
+            style={{ borderColor: color.border.default }}
+          >
+            <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
+              Select Seed Lists
+            </h2>
+            <button
+              onClick={onClose}
+              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 max-h-96 overflow-y-auto">
+            <div className="space-y-3">
+              {seedLists.map((seedList) => (
+                <label
+                  key={seedList.id}
+                  className="flex items-start gap-3 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+                  style={{ borderColor: color.border.default }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(seedList.id)}
+                    onChange={() => toggleSelection(seedList.id)}
+                    className="mt-1 w-4 h-4"
+                  />
+                  <div>
+                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {seedList.name}
+                    </p>
+                    <p className={`text-xs ${tw.textSecondary}`}>
+                      {seedList.description} ({seedList.count} members)
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div
+            className="flex items-center justify-end gap-3 p-6 border-t"
+            style={{ borderColor: color.border.default }}
+          >
+            <button
+              onClick={onClose}
+              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+              style={{ borderColor: color.border.default }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => onSave(segmentId, selected)}
+              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all`}
+              style={{ backgroundColor: color.primary.accent }}
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>,
