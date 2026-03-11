@@ -311,17 +311,17 @@ export default function OfferMappingStep({
 
       {/* Header */}
       <div className="mt-8 mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Offer Selection & Mapping
+        <h2 className="text-sm font-semibold text-gray-900 ">
+          Map Segments to Offers
         </h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-xs text-gray-600">
           {isRoundRobinOrMultiLevel
             ? `Configure offers with ${
                 formData.campaign_type === "round_robin"
                   ? "time intervals"
                   : "conditions"
               } for sequential delivery`
-            : "Select offers and map them to your audience segments"}
+            : "Assign offers to segments. Select offers for each segment to create the mappings."}
         </p>
       </div>
 

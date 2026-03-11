@@ -1116,7 +1116,7 @@ export default function SegmentDetailsPage() {
                 </span>
               </div>
             ) : (
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-xl font-bold text-gray-900">
                 {mockCustomerCount !== null
                   ? mockCustomerCount.toLocaleString()
                   : "-"}
@@ -1137,7 +1137,7 @@ export default function SegmentDetailsPage() {
               Segment Type
             </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
+          <p className="mt-2 text-xl font-bold text-gray-900">
             {segment.type || "dynamic"}
           </p>
         </div>
@@ -1155,7 +1155,7 @@ export default function SegmentDetailsPage() {
             </p>
           </div>
           <p
-            className={`mt-2 text-3xl font-bold ${
+            className={`mt-2 text-xl font-bold ${
               segment.visibility === "public"
                 ? "text-green-600"
                 : "text-gray-900"
@@ -1175,7 +1175,7 @@ export default function SegmentDetailsPage() {
           <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
             Basic Information
           </h3>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             <div>
               <label
                 className={`text-sm font-medium ${tw.textMuted} block mb-1`}
@@ -1226,37 +1226,14 @@ export default function SegmentDetailsPage() {
               </label>
               <p className={`text-sm ${tw.textPrimary}`}>{categoryName}</p>
             </div>
-            {segment.tags && segment.tags.length > 0 && (
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Tags
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {segment.tags.map((tag) => {
-                    const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
-                    const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || tagName : tag;
-                    return (
-                      <span
-                        key={tagKey}
-                        className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700`}
-                      >
-                        <Tag className="w-3 h-3 mr-1" />
-                        {tagName}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-            <div className="pt-6 mt-6 border-t border-gray-200">
+          </div>
+          <div className="pt-6 mt-6">
               <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-5`}>
                 Metadata
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {/* Created */}
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div>
                   <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
                     Created
                   </label>
@@ -1273,7 +1250,7 @@ export default function SegmentDetailsPage() {
                 </div>
 
                 {/* Last Updated */}
-                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <div>
                   <label className={`text-xs font-medium ${tw.textMuted} block mb-2`}>
                     Last Updated
                   </label>
@@ -1343,7 +1320,7 @@ export default function SegmentDetailsPage() {
 
             {/* Tag Management Section */}
             {segment && (
-              <div className="pt-6 mt-6 border-t border-gray-200">
+              <div className="pt-6 mt-6 pb-6">
                 <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>Tags</h4>
                 <div className="space-y-3">
                   {segment.tags && segment.tags.length > 0 ? (
@@ -1418,8 +1395,6 @@ export default function SegmentDetailsPage() {
             )}
           </div>
         </div>
-
-      </div>
 
       {/* Criteria/Definition Section */}
       {(segment.criteria || segment.definition) && (

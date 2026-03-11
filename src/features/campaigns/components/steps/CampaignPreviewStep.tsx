@@ -1,4 +1,13 @@
-import { Users, Gift, Target } from "lucide-react";
+import { useState } from "react";
+import {
+  Users,
+  Gift,
+  Target,
+  Send,
+  CheckCircle,
+  XCircle,
+  Loader,
+} from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -13,6 +22,14 @@ interface CampaignPreviewStepProps {
   selectedSegments: CampaignSegment[];
   selectedOffers: CampaignOffer[];
   campaignFlows?: CampaignFlowConfig[];
+  seedListMode?: "all" | "per-segment";
+  segmentSeedLists?: Record<string, string[]>;
+}
+
+interface TestResult {
+  seedList: string;
+  status: "success" | "failed";
+  message?: string;
 }
 
 export default function CampaignPreviewStep({
@@ -20,16 +37,79 @@ export default function CampaignPreviewStep({
   selectedSegments,
   selectedOffers,
   campaignFlows = [],
+  seedListMode = "all",
+  segmentSeedLists = {},
 }: CampaignPreviewStepProps) {
-  // Debug logging
-  console.log("CampaignPreviewStep formData:", formData);
-  console.log("selectedSegments:", selectedSegments);
-  console.log("selectedOffers:", selectedOffers);
-  console.log("campaignFlows:", campaignFlows);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [testError, setTestError] = useState("");
+
   const totalAudienceSize = selectedSegments.reduce(
     (total, segment) => total + (segment.customer_count || 0),
     0
   );
+
+  // Get all test seed lists
+  const getTestSeedLists = (): string[] => {
+    const seedLists = new Set<string>();
+    if (seedListMode === "all" && segmentSeedLists["all"]) {
+      segmentSeedLists["all"].forEach((sl) => seedLists.add(sl));
+    } else {
+      selectedSegments.forEach((segment) => {
+        if (segmentSeedLists[segment.id]) {
+          segmentSeedLists[segment.id].forEach((sl) => seedLists.add(sl));
+        }
+      });
+    }
+    return Array.from(seedLists);
+  };
+
+  // Handle sending test to seed lists
+  const handleSendTest = async () => {
+    const seedLists = getTestSeedLists();
+
+    if (seedLists.length === 0) {
+      setTestError("Please select at least one seed list to send tests");
+      return;
+    }
+
+    setIsTesting(true);
+    setTestError("");
+    setTestResults([]);
+
+    try {
+      const results: TestResult[] = [];
+
+      for (const seedList of seedLists) {
+        // Simulate a small delay for each seed list
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Validate seed list (mock validation)
+        const isValid = seedList && seedList.length > 0;
+
+        if (isValid) {
+          results.push({
+            seedList,
+            status: "success",
+            message: "Test message sent successfully",
+          });
+        } else {
+          results.push({
+            seedList,
+            status: "failed",
+            message: "Failed to send test message",
+          });
+        }
+      }
+
+      setTestResults(results);
+    } catch (err) {
+      console.error("Failed to process test broadcasts:", err);
+      setTestError("Failed to send test messages");
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const getObjectiveLabel = (objective: string) => {
     const labels = {
@@ -196,19 +276,20 @@ export default function CampaignPreviewStep({
             {selectedSegments.length ? (
               <div>
                 {/* Column Headers */}
-                <div className="grid grid-cols-3 gap-4 pb-3 mb-4 border-b border-gray-200">
-                  <div className="text-sm font-semibold text-gray-700">Segment Name</div>
+                <div className="grid grid-cols-5 gap-3 pb-3 mb-4 border-b border-gray-200">
+                  <div className="col-span-2 text-sm font-semibold text-gray-700">Segment Name</div>
                   <div className="text-sm font-semibold text-gray-700">Customers</div>
                   <div className="text-sm font-semibold text-gray-700">Control Group</div>
+                  <div className="text-sm font-semibold text-gray-700">Seed List</div>
                 </div>
                 {/* Rows */}
                 <div className="space-y-3">
                   {selectedSegments.map((segment) => (
                     <div
                       key={segment.id}
-                      className="grid grid-cols-3 gap-4"
+                      className="grid grid-cols-5 gap-3"
                     >
-                      <div className="text-sm font-medium text-gray-600">
+                      <div className="col-span-2 text-sm font-medium text-gray-600">
                         {segment.name}
                       </div>
                       <div>
@@ -220,6 +301,15 @@ export default function CampaignPreviewStep({
                         {segment.control_group_config ? (
                           <div className="text-sm font-medium text-gray-700">
                             {segment.control_group_config.control_group_method?.percentage || segment.control_group_config.percentage || "0"}%
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-400">—</div>
+                        )}
+                      </div>
+                      <div>
+                        {segmentSeedLists[segment.id]?.length ? (
+                          <div className="text-sm font-medium text-gray-700">
+                            {segmentSeedLists[segment.id].length}
                           </div>
                         ) : (
                           <div className="text-sm text-gray-400">—</div>
@@ -310,6 +400,147 @@ export default function CampaignPreviewStep({
               </span>
             </div>
           </div>
+
+          {/* Test Contacts Section */}
+          {Object.keys(segmentSeedLists).length > 0 && (
+            <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-6 space-y-4`}>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Test Contacts
+              </h3>
+              <p className={`text-sm ${tw.textSecondary}`}>
+                {seedListMode === "all"
+                  ? "Seed list applied to all segments"
+                  : "Seed lists configured per segment"}
+              </p>
+              <div className="space-y-4">
+                {seedListMode === "all" ? (
+                  segmentSeedLists["all"]?.length > 0 && (
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium mb-2">Global seed list:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {segmentSeedLists["all"].map((seedListId) => (
+                          <span
+                            key={seedListId}
+                            className="inline-block px-3 py-1.5 rounded text-sm font-medium"
+                            style={{
+                              backgroundColor: `${color.primary.accent}15`,
+                              color: color.primary.accent,
+                            }}
+                          >
+                            {seedListId}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-sm space-y-3 max-h-40 overflow-y-auto">
+                    {selectedSegments
+                      .filter((segment) => segmentSeedLists[segment.id]?.length > 0)
+                      .map((segment) => (
+                        <div key={segment.id}>
+                          <p className="font-medium text-gray-700 text-sm mb-1.5">{segment.name}:</p>
+                          <div className="flex flex-wrap gap-2 ml-2">
+                            {segmentSeedLists[segment.id].map((seedListId) => (
+                              <span
+                                key={seedListId}
+                                className="inline-block px-3 py-1.5 rounded text-sm font-medium"
+                                style={{
+                                  backgroundColor: `${color.primary.accent}15`,
+                                  color: color.primary.accent,
+                                }}
+                              >
+                                {seedListId}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleSendTest}
+                disabled={isTesting || getTestSeedLists().length === 0}
+                className="w-auto px-4 py-2 rounded text-sm font-medium text-white transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {isTesting ? (
+                  <>
+                    <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                    <span>Sending Tests...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 flex-shrink-0" />
+                    <span>Send Test Message</span>
+                  </>
+                )}
+              </button>
+
+              {/* Test Results */}
+              {testResults.length > 0 && (
+                <div>
+                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                    Test Results
+                  </label>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {testResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-2 p-2 rounded-md text-sm"
+                        style={{
+                          backgroundColor:
+                            result.status === "success"
+                              ? `${color.status.success}10`
+                              : `${color.status.danger}10`,
+                        }}
+                      >
+                        {result.status === "success" ? (
+                          <CheckCircle
+                            className="w-4 h-4 flex-shrink-0 mt-0.5"
+                            style={{ color: color.status.success }}
+                          />
+                        ) : (
+                          <XCircle
+                            className="w-4 h-4 flex-shrink-0 mt-0.5"
+                            style={{ color: color.status.danger }}
+                          />
+                        )}
+                        <div className="flex-1">
+                          <p
+                            className="text-sm font-medium"
+                            style={{
+                              color:
+                                result.status === "success"
+                                  ? color.status.success
+                                  : color.status.danger,
+                            }}
+                          >
+                            {result.seedList}
+                          </p>
+                          {result.message && (
+                            <p className={`text-sm ${tw.textMuted} mt-0.5`}>
+                              {result.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Test Error */}
+              {testError && (
+                <div className="p-3 rounded-md" style={{ backgroundColor: `${color.status.danger}10` }}>
+                  <p className="text-sm" style={{ color: color.status.danger }}>
+                    {testError}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-5 space-y-3`}>
             <h3 className="text-sm font-semibold text-gray-900">

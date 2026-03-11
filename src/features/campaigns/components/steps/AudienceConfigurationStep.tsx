@@ -41,12 +41,24 @@ import UniversalControlGroupModal from "./UniversalControlGroupModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
 import { UNIVERSAL_CONTROL_GROUPS } from "../../../../shared/config/universalControlGroupsConfig";
 
+// Available seed lists in the system
+const AVAILABLE_SEED_LISTS = [
+  { id: "marketing-staff", name: "Marketing Staff" },
+  { id: "sales-staff", name: "Sales Staff" },
+  { id: "support-staff", name: "Support Staff" },
+  { id: "finance-staff", name: "Finance Staff" },
+];
+
 interface AudienceConfigurationStepProps {
   formData: CreateCampaignRequest;
   setFormData: (data: CreateCampaignRequest) => void;
   selectedSegments: CampaignSegment[];
   setSelectedSegments: (segments: CampaignSegment[]) => void;
   controlGroup: ControlGroup;
+  seedListMode?: "all" | "per-segment";
+  setSeedListMode?: (mode: "all" | "per-segment") => void;
+  segmentSeedLists?: Record<string, string[]>;
+  setSegmentSeedLists?: (seedLists: Record<string, string[]>) => void;
   validationErrors?: { [key: string]: string };
   clearValidationErrors?: () => void;
 }
@@ -56,9 +68,13 @@ export default function AudienceConfigurationStep({
   setFormData,
   selectedSegments,
   setSelectedSegments,
-  controlGroup: _controlGroup, 
+  controlGroup: _controlGroup,
   validationErrors = {},
   clearValidationErrors,
+  seedListMode: propSeedListMode,
+  setSeedListMode: propSetSeedListMode,
+  segmentSeedLists: propSegmentSeedLists,
+  setSegmentSeedLists: propSetSegmentSeedLists,
 }: AudienceConfigurationStepProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCreateSegmentModal, setShowCreateSegmentModal] = useState(false);
@@ -74,13 +90,28 @@ export default function AudienceConfigurationStep({
     useState(false);
   const [segmentRefreshTrigger, setSegmentRefreshTrigger] = useState(0);
 
-  // Seed List state
-  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">("all");
+  // Seed List state - use props if provided, otherwise use local state
+  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">(propSeedListMode || "all");
   const [showSeedListModal, setShowSeedListModal] = useState(false);
   const [editingSeedListSegmentId, setEditingSeedListSegmentId] = useState<string | null>(null);
-  const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>({});
+  const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>(propSegmentSeedLists || {});
 
   const { t } = useLanguage();
+
+  // Wrapper functions to sync with parent state
+  const handleSetSeedListMode = (mode: "all" | "per-segment") => {
+    setSeedListMode(mode);
+    if (propSetSeedListMode) {
+      propSetSeedListMode(mode);
+    }
+  };
+
+  const handleSetSegmentSeedLists = (seedLists: Record<string, string[]>) => {
+    setSegmentSeedLists(seedLists);
+    if (propSetSegmentSeedLists) {
+      propSetSegmentSeedLists(seedLists);
+    }
+  };
 
   const campaignTypeDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -318,7 +349,7 @@ export default function AudienceConfigurationStep({
         return color.status.warning;
       return color.primary.accent;
     }
-    if (config.type === "multiple_control_group") return color.tertiary.tag1;
+    if (config.type === "multiple_control_group") return color.primary.accent;
     return "#f3f4f6";
   };
 
@@ -452,7 +483,7 @@ export default function AudienceConfigurationStep({
               <input
                 type="checkbox"
                 checked={seedListMode === "all"}
-                onChange={(e) => setSeedListMode(e.target.checked ? "all" : "per-segment")}
+                onChange={(e) => handleSetSeedListMode(e.target.checked ? "all" : "per-segment")}
                 className="w-4 h-4"
                 style={{ accentColor: color.primary.accent }}
               />
@@ -465,7 +496,7 @@ export default function AudienceConfigurationStep({
               <input
                 type="checkbox"
                 checked={seedListMode === "per-segment"}
-                onChange={(e) => setSeedListMode(e.target.checked ? "per-segment" : "all")}
+                onChange={(e) => handleSetSeedListMode(e.target.checked ? "per-segment" : "all")}
                 className="w-4 h-4"
                 style={{ accentColor: color.primary.accent }}
               />
@@ -667,17 +698,20 @@ export default function AudienceConfigurationStep({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                       {t.campaigns.audienceConfiguration.priority}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       {t.campaigns.audienceConfiguration.segment}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       {t.campaigns.audienceConfiguration.customers}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">
                       {t.campaigns.audienceConfiguration.controlGroup}
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                      Seed List
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                       {t.campaigns.audienceConfiguration.actions}
@@ -711,27 +745,18 @@ export default function AudienceConfigurationStep({
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <Users
-                            className="w-5 h-5"
-                            style={{ color: color.primary.accent }}
-                          />
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {segment.name}
-                            </div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {segment.description}
-                            </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">
+                            {segment.name}
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {segment.description}
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm text-gray-900 font-medium">
                           {(segment.customer_count || 0).toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {t.campaigns.audienceConfiguration.customers}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -747,6 +772,13 @@ export default function AudienceConfigurationStep({
                         >
                           {getControlGroupLabel(segment.control_group_config)}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {seedListMode === "all"
+                            ? AVAILABLE_SEED_LISTS.length
+                            : segmentSeedLists[segment.id]?.length || 0}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
@@ -838,10 +870,11 @@ export default function AudienceConfigurationStep({
           segmentId={editingSeedListSegmentId}
           selectedSeedLists={segmentSeedLists[editingSeedListSegmentId] || []}
           onSave={(segmentId, seedListIds) => {
-            setSegmentSeedLists({
+            const newSeedLists = {
               ...segmentSeedLists,
               [segmentId]: seedListIds,
-            });
+            };
+            handleSetSegmentSeedLists(newSeedLists);
             setShowSeedListModal(false);
             setEditingSeedListSegmentId(null);
           }}
@@ -1618,7 +1651,7 @@ function SeedListConfigModal({
             <button
               onClick={() => onSave(segmentId, selected)}
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all`}
-              style={{ backgroundColor: color.primary.accent }}
+              style={{ backgroundColor: color.primary.action }}
             >
               Save
             </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Users, Gift, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -233,11 +233,11 @@ export default function CampaignFlowsStep({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className={`text-xl font-semibold ${tw.textPrimary} mb-2`}>
+        <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-1 `}>
           Map Segments to Offers
         </h2>
-        <p className={`text-sm ${tw.textMuted}`}>
-          Assign offers to segments. Select offers for each segment to create the mappings.
+        <p className={`text-xs ${tw.textMuted}`}>
+         Select offers for each segment to create the mappings.
         </p>
       </div>
 
@@ -290,19 +290,10 @@ export default function CampaignFlowsStep({
               <div key={segment.id} className={components.card.surface}>
                 {/* Segment Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <Users
-                      className="w-5 h-5"
-                      style={{ color: color.primary.accent }}
-                    />
-                    <div>
-                      <h4 className={`text-base font-medium ${tw.textPrimary}`}>
-                        {segment.name}
-                      </h4>
-                      <p className={`text-sm ${tw.textSecondary}`}>
-                        {segment.customer_count?.toLocaleString() || "0"} customers
-                      </p>
-                    </div>
+                  <div>
+                    <h4 className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {segment.name}
+                    </h4>
                   </div>
                   <button
                     onClick={() => handleSelectOffers(segment.id)}
@@ -339,21 +330,8 @@ export default function CampaignFlowsStep({
                           className={`flex items-center justify-between p-3 ${tw.rounded}`}
                           style={{ backgroundColor: color.surface.cards }}
                         >
-                          <div className="flex items-center gap-3">
-                            <Gift
-                              className="w-5 h-5"
-                              style={{ color: color.primary.accent }}
-                            />
-                            <div>
-                              <div
-                                className={`text-base font-medium ${tw.textPrimary}`}
-                              >
-                                {offer.name}
-                              </div>
-                              <div className={`text-sm ${tw.textSecondary}`}>
-                                {offer.offer_type}
-                              </div>
-                            </div>
+                          <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                            {offer.name}
                           </div>
 
                           <button

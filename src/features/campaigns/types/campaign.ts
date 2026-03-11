@@ -792,6 +792,10 @@ export interface StepProps {
   setCampaignFlows?: (flows: Record<string, unknown>[]) => void;
   controlGroup: ControlGroup;
   setControlGroup: (group: ControlGroup) => void;
+  seedListMode?: "all" | "per-segment";
+  setSeedListMode?: (mode: "all" | "per-segment") => void;
+  segmentSeedLists?: Record<string, string[]>;
+  setSegmentSeedLists?: (seedLists: Record<string, string[]>) => void;
   isLoading?: boolean;
   onSaveDraft?: () => void;
   onCancel?: () => void;

@@ -195,6 +195,10 @@ export default function CreateCampaignPage() {
     type: "standard",
   });
 
+  // Seed list state
+  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">("all");
+  const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>({});
+
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
@@ -226,6 +230,18 @@ export default function CreateCampaignPage() {
     setSegmentOfferMappings,
     isEditMode,
   );
+  useFormDataPersistence(
+    "campaign_seed_list_mode",
+    seedListMode,
+    setSeedListMode,
+    isEditMode,
+  );
+  useFormDataPersistence(
+    "campaign_segment_seed_lists",
+    segmentSeedLists,
+    setSegmentSeedLists,
+    isEditMode,
+  );
 
   // Handle campaign flows persistence - only in create mode
   useEffect(() => {
@@ -254,6 +270,8 @@ export default function CreateCampaignPage() {
   useFormCleanupOnExit("campaign_offers");
   useFormCleanupOnExit("campaign_mappings");
   useFormCleanupOnExit("campaign_flows");
+  useFormCleanupOnExit("campaign_seed_list_mode");
+  useFormCleanupOnExit("campaign_segment_seed_lists");
 
   const loadCampaignData = useCallback(
     async (
@@ -1504,6 +1522,10 @@ export default function CreateCampaignPage() {
     setCampaignFlows,
     controlGroup,
     setControlGroup,
+    seedListMode,
+    setSeedListMode,
+    segmentSeedLists,
+    setSegmentSeedLists,
     isLoading,
     onSaveDraft: handleSaveDraft,
     onCancel: handleCancel,
