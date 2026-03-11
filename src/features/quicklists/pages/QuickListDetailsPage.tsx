@@ -26,7 +26,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import { navigateBackOrFallback } from "../../../shared/utils/navigation";
 import BackButton from "../../../shared/components/ui/BackButton";
-import CreateCommunicationModal from "../../communications/components/CreateCommunicationModal";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import EditQuickListModal from "../components/EditQuickListModal";
 
 export default function QuickListDetailsPage() {

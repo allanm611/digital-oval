@@ -17,6 +17,7 @@ import {
   Layers,
   Zap,
   MoreVertical,
+  Send,
 } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
@@ -46,6 +47,7 @@ import ViewMembersModal from "../components/ViewMembersModal";
 import AddMembersModal from "../components/AddMembersModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import DateFormatter from "../../../shared/components/DateFormatter";
+import CreateCommunicationModal from "../../../shared/components/CreateCommunicationModal";
 import type { Customer } from "../../customers360/types/customer";
 
 export default function SegmentDetailsPage() {
@@ -88,6 +90,7 @@ export default function SegmentDetailsPage() {
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [isCommunicateModalOpen, setIsCommunicateModalOpen] = useState(false);
 
   // Members state
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -907,6 +910,20 @@ export default function SegmentDetailsPage() {
               Edit Segment
             </button>
           </PermissionGate>
+
+          <button
+            onClick={() => setIsCommunicateModalOpen(true)}
+            className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
+            style={{
+              backgroundColor: button.action.background,
+              color: button.action.color,
+              borderRadius: button.action.borderRadius,
+              padding: `${button.action.paddingY} ${button.action.paddingX}`,
+            }}
+          >
+            <Send className="w-4 h-4" />
+            Send Communication
+          </button>
 
           <PermissionGate permission="segments.delete">
             <button
@@ -2345,6 +2362,21 @@ export default function SegmentDetailsPage() {
         confirmText="Delete Segment"
         cancelText="Cancel"
       />
+
+      {/* Communication Modal */}
+      {isCommunicateModalOpen && segment && (
+        <CreateCommunicationModal
+          isOpen={isCommunicateModalOpen}
+          onClose={() => setIsCommunicateModalOpen(false)}
+          segment={segment}
+          onSuccess={(result) => {
+            success(
+              `Communication sent successfully! ${result.total_messages_sent} messages sent.`,
+            );
+            setIsCommunicateModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

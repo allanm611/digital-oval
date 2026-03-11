@@ -14,35 +14,38 @@ import {
   ChevronDown,
   Settings,
 } from "lucide-react";
-import { color, tw, components, zIndex } from "../../../shared/utils/utils";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
-import PreviewPanel from "./PreviewPanel";
-import { communicationService } from "../services/communicationService";
-import { quicklistService } from "../../quicklists/services/quicklistService";
+import { color, tw, components, zIndex } from "../utils/utils";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import PreviewPanel from "../../features/communications/components/PreviewPanel";
+import RichTextEditor from "../../features/communications/components/RichTextEditor";
+import { communicationService } from "../../features/communications/services/communicationService";
+import { quicklistService } from "../../features/quicklists/services/quicklistService";
 import {
   CommunicationChannel,
   CommunicationResult,
-} from "../types/communication";
-import { QuickList } from "../../quicklists/types/quicklist";
-import CascadingVariableSelector from "../../manual-broadcast/components/CascadingVariableSelector";
-import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import { useConfigurationData } from "../../../shared/services/configurationDataService";
-import { useToast } from "../../../contexts/ToastContext";
-import { useClickOutside } from "../../../shared/hooks/useClickOutside";
+} from "../../features/communications/types/communication";
+import { QuickList } from "../../features/quicklists/types/quicklist";
+import CascadingVariableSelector from "../../features/manual-broadcast/components/CascadingVariableSelector";
+import HeadlessSelect from "./ui/HeadlessSelect";
+import { useConfigurationData } from "../services/configurationDataService";
+import { useToast } from "../../contexts/ToastContext";
+import { useClickOutside } from "../hooks/useClickOutside";
 import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
-} from "../../../shared/utils/variableInsertion";
-import type { TemplateVariable } from "../../manual-broadcast/types";
-import { CommunicationPolicyConfiguration } from "../../campaigns/types/communicationPolicyConfig";
-import { communicationPolicyService } from "../../campaigns/services/communicationPolicyService";
-import CommunicationPolicyModal from "../../campaigns/components/CommunicationPolicyModal";
-import PolicyNameModal from "../../campaigns/components/PolicyNameModal";
+} from "../utils/variableInsertion";
+import type { TemplateVariable } from "../../features/manual-broadcast/types";
+import { CommunicationPolicyConfiguration } from "../../features/campaigns/types/communicationPolicyConfig";
+import { communicationPolicyService } from "../../features/campaigns/services/communicationPolicyService";
+import CommunicationPolicyModal from "../../features/campaigns/components/CommunicationPolicyModal";
+import PolicyNameModal from "../../features/campaigns/components/PolicyNameModal";
+import { Segment } from "../../features/segments/types/segment";
 
 interface CreateCommunicationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  quicklist: QuickList;
+  quicklist?: QuickList;
+  segment?: Segment;
   onSuccess?: (result: CommunicationResult) => void;
 }
 
@@ -52,6 +55,7 @@ export default function CreateCommunicationModal({
   isOpen,
   onClose,
   quicklist,
+  segment,
   onSuccess,
 }: CreateCommunicationModalProps) {
   const { data: smsRoutes } = useConfigurationData("smsRoutes");
@@ -249,7 +253,7 @@ export default function CreateCommunicationModal({
 
   const getSampleDataForPreview = (): Record<string, string> => {
     const sampleData: Record<string, string> = {};
-    if (quicklist.columns && quicklist.columns.length > 0) {
+    if (quicklist?.columns && quicklist.columns.length > 0) {
       quicklist.columns.forEach((col: string) => {
         sampleData[col] = `[${col}]`;
       });
@@ -310,8 +314,8 @@ export default function CreateCommunicationModal({
       setResult(null);
 
       const response = await communicationService.sendCommunication({
-        source_type: "quicklist",
-        source_id: quicklist.id,
+        source_type: quicklist ? "quicklist" : "segment",
+        source_id: quicklist?.id || segment?.id || 0,
         channels: [selectedChannel],
         message_template: {
           ...(messageTitle && selectedChannel === "EMAIL"
@@ -497,9 +501,9 @@ export default function CreateCommunicationModal({
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Sending to:{" "}
               <span className="font-semibold text-gray-700 break-words">
-                {quicklist.name}
+                {quicklist?.name || segment?.name}
               </span>{" "}
-              ({quicklist.rows_imported || 0} recipients)
+              ({quicklist?.rows_imported || segment?.size_estimate || 0} recipients)
             </p>
           </div>
           <button
@@ -808,26 +812,38 @@ export default function CreateCommunicationModal({
                     <label className="text-sm font-medium text-gray-900 mb-2 block">
                       Message Body <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      ref={bodyTextareaRef}
-                      value={messageBody}
-                      onChange={(e) => {
-                        setMessageBody(e.target.value);
-                        setCursorPosition(e.target.selectionStart || 0);
-                      }}
-                      onClick={(e) => {
-                        setActiveField("body");
-                        setCursorPosition(e.currentTarget.selectionStart || 0);
-                      }}
-                      onFocus={(e) => {
-                        setActiveField("body");
-                        setCursorPosition(e.currentTarget.selectionStart || 0);
-                      }}
-                      placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
-                      rows={10}
-                      className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
-                      style={{ borderColor: color.border.default }}
-                    />
+                    {isRichText ? (
+                      <RichTextEditor
+                        value={messageBody}
+                        onChange={(value) => {
+                          setMessageBody(value);
+                          setActiveField("body");
+                        }}
+                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        minHeight="250px"
+                      />
+                    ) : (
+                      <textarea
+                        ref={bodyTextareaRef}
+                        value={messageBody}
+                        onChange={(e) => {
+                          setMessageBody(e.target.value);
+                          setCursorPosition(e.target.selectionStart || 0);
+                        }}
+                        onClick={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(e.currentTarget.selectionStart || 0);
+                        }}
+                        onFocus={(e) => {
+                          setActiveField("body");
+                          setCursorPosition(e.currentTarget.selectionStart || 0);
+                        }}
+                        placeholder="Enter your message... Click 'Insert Variable' to add dynamic content"
+                        rows={10}
+                        className="w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 transition-all text-sm resize-none"
+                        style={{ borderColor: color.border.default }}
+                      />
+                    )}
 
                     {/* Info bar */}
                     <div className="mt-2 flex items-center justify-between">
@@ -919,7 +935,7 @@ export default function CreateCommunicationModal({
               <>
                 <Send className="w-4 h-4" />
                 <span className="hidden sm:inline">
-                  Send Now to {quicklist.rows_imported || 0} Recipients
+                  Send Now to {quicklist?.rows_imported || segment?.size_estimate || 0} Recipients
                 </span>
                 <span className="sm:hidden">Send Now</span>
               </>

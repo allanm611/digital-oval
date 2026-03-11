@@ -732,6 +732,18 @@ export interface CampaignDisplay {
   created_at?: string;
   offer_count?: number;
   segment_count?: number;
+  offers?: Array<{
+    offer_id: number;
+    offer_name: string;
+    flow_count?: string | number;
+  }>;
+  segments?: Array<{
+    id: string | number;
+    segment_id: number;
+    segment_name: string;
+    include_exclude?: "include" | "exclude";
+    is_primary?: boolean;
+  }>;
   performance?: {
     sent: number;
     delivered: number;

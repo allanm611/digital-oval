@@ -38,6 +38,8 @@ import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
 import RejectCampaignModal from "../components/RejectCampaignModal";
+import CampaignOffersModal from "../components/CampaignOffersModal";
+import CampaignSegmentsModal from "../components/CampaignSegmentsModal";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import {
   CampaignApprovalStatus,
@@ -126,6 +128,10 @@ export default function CampaignsPage() {
   const [loadingActionIds, setLoadingActionIds] = useState<Set<number>>(
     new Set(),
   );
+  const [showOffersModal, setShowOffersModal] = useState(false);
+  const [showSegmentsModal, setShowSegmentsModal] = useState(false);
+  const [selectedCampaignForModal, setSelectedCampaignForModal] =
+    useState<CampaignDisplay | null>(null);
 
   // Helper function to update a single campaign in the list
   const updateCampaignInList = (
@@ -417,6 +423,8 @@ export default function CampaignsPage() {
             segment_count: Array.isArray(campaign.segments)
               ? campaign.segments.length
               : 0,
+            offers: Array.isArray(campaign.offers) ? campaign.offers : [],
+            segments: Array.isArray(campaign.segments) ? campaign.segments : [],
           };
         })
         .filter((c): c is CampaignDisplay => c !== null);
@@ -1137,16 +1145,28 @@ export default function CampaignsPage() {
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((campaign.offer_count ?? 0) > 0) {
+                          setSelectedCampaignForModal(campaign);
+                          setShowOffersModal(true);
+                        }
+                      }}
                     >
                       <span className={`text-sm ${tw.textPrimary} font-medium`}>
                         {campaign.offer_count ?? 0}
                       </span>
                     </td>
                     <td
-                      className="px-6 py-4"
+                      className="px-6 py-4 cursor-pointer"
                       style={{ backgroundColor: color.surface.tablebodybg }}
+                      onClick={() => {
+                        if ((campaign.segment_count ?? 0) > 0) {
+                          setSelectedCampaignForModal(campaign);
+                          setShowSegmentsModal(true);
+                        }
+                      }}
                     >
                       <span className={`text-sm ${tw.textPrimary} font-medium`}>
                         {campaign.segment_count ?? 0}
@@ -1952,6 +1972,32 @@ export default function CampaignsPage() {
             }
             fetchCampaignStats(); // Refresh stats
           }}
+        />
+      )}
+
+      {/* Campaign Offers Modal */}
+      {selectedCampaignForModal && (
+        <CampaignOffersModal
+          isOpen={showOffersModal}
+          onClose={() => {
+            setShowOffersModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          offers={selectedCampaignForModal.offers || []}
+          campaignName={selectedCampaignForModal.name}
+        />
+      )}
+
+      {/* Campaign Segments Modal */}
+      {selectedCampaignForModal && (
+        <CampaignSegmentsModal
+          isOpen={showSegmentsModal}
+          onClose={() => {
+            setShowSegmentsModal(false);
+            setSelectedCampaignForModal(null);
+          }}
+          segments={selectedCampaignForModal.segments || []}
+          campaignName={selectedCampaignForModal.name}
         />
       )}
     </div>

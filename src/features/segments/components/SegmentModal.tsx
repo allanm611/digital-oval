@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import {
   Segment,
   CreateSegmentRequest,
+  SegmentCondition,
   SegmentConditionGroup,
   SegmentPayload,
   LayerColumnRef,
@@ -56,7 +57,25 @@ export default function SegmentModal({
   }>({});
   const [existingQuery, setExistingQuery] = useState<string | null>(null);
   const [existingCountQuery, setExistingCountQuery] = useState<string | null>(null);
+  const [fieldSelectorConfig, setFieldSelectorConfig] = useState<any[]>([]);
   const isUserInteractionRef = useRef(false);
+
+  // Load field selector config once on component mount
+  useEffect(() => {
+    const loadFieldSelectorConfig = async () => {
+      try {
+        const response = await segmentService.getSegmentationFields(true);
+        if (response && response.success && response.data && response.data.length > 0) {
+          const config = response.data[0]?.field_selector_config || [];
+          setFieldSelectorConfig(config);
+          console.log("✅ Loaded field selector config:", config.length, "categories");
+        }
+      } catch (err) {
+        console.warn("Failed to load field selector config:", err);
+      }
+    };
+    loadFieldSelectorConfig();
+  }, []);
 
   // Update formData.category when selectedCategoryIds changes (use first one)
   // This only runs when user manually changes the selection
@@ -82,29 +101,40 @@ export default function SegmentModal({
       if (isOpen) {
         isUserInteractionRef.current = false; // Mark as initialization
 
-        if (segment) {
-          // Convert the stored definition/payload back to UI conditions
-          const category = segment.category ? Number(segment.category) : undefined;
-          let conditions: SegmentConditionGroup[] = [];
+        if (segment && segment.id) {
+          try {
+            // Fetch full segment data from backend to ensure we have the definition
+            const fullSegmentResponse = await segmentService.getSegmentById(segment.id);
+            const fullSegment = fullSegmentResponse && "data" in fullSegmentResponse
+              ? fullSegmentResponse.data
+              : fullSegmentResponse;
 
-          // Try to get conditions from the definition (SegmentPayload)
-          if (segment.definition) {
-            conditions = convertPayloadToConditions(segment.definition);
+            // Convert the stored definition/payload back to UI conditions
+            const category = fullSegment.category ? Number(fullSegment.category) : undefined;
+            let conditions: SegmentConditionGroup[] = [];
+
+            // Try to get conditions from the definition (SegmentPayload)
+            if (fullSegment.definition) {
+              conditions = await convertPayloadToConditions(fullSegment.definition);
+            }
+
+            setFormData({
+              name: fullSegment.name,
+              description: fullSegment.description || "",
+              tags: fullSegment.tags || [],
+              conditions: conditions,
+              type: "dynamic",
+              category,
+            });
+            // Store existing queries (not displayed in edit mode, but kept for reference)
+            setExistingQuery(fullSegment.query || null);
+            setExistingCountQuery(fullSegment.count_query || null);
+            // Initialize selectedCategoryIds from segment category
+            setSelectedCategoryIds(category ? [category] : []);
+          } catch (err) {
+            console.error("Failed to load segment:", err);
+            setError("Failed to load segment data");
           }
-
-          setFormData({
-            name: segment.name,
-            description: segment.description || "",
-            tags: segment.tags || [],
-            conditions: conditions,
-            type: "dynamic",
-            category,
-          });
-          // Store existing queries (not displayed in edit mode, but kept for reference)
-          setExistingQuery(segment.query || null);
-          setExistingCountQuery(segment.count_query || null);
-          // Initialize selectedCategoryIds from segment category
-          setSelectedCategoryIds(category ? [category] : []);
         } else {
           setFormData({
             name: "",
@@ -160,13 +190,59 @@ export default function SegmentModal({
     }));
   };
 
+  // Convert operator label from backend format (spaces) to UI format (underscores)
+  const normalizeOperatorLabel = (label: string): string => {
+    if (!label) return "equals";
+    // Convert spaces to underscores and lowercase
+    return label.toLowerCase().replace(/\s+/g, "_");
+  };
+
   // Convert SegmentPayload back to UI SegmentConditionGroup format for editing
-  const convertPayloadToConditions = (payload: SegmentPayload): SegmentConditionGroup[] => {
+  const convertPayloadToConditions = async (payload: SegmentPayload): Promise<SegmentConditionGroup[]> => {
     if (!payload.layer_filters || !payload.layer_filters.groups) {
       return [];
     }
 
+    // Use the fieldSelectorConfig from state, or fetch if not available
+    let config = fieldSelectorConfig;
+    if (config.length === 0) {
+      console.log("⏳ Field config empty in state, fetching from API...");
+      try {
+        const response = await segmentService.getSegmentationFields(true);
+        if (response && response.success && response.data && response.data.length > 0) {
+          config = response.data[0]?.field_selector_config || [];
+          console.log("✅ Fetched field config from API:", config.length, "categories");
+        }
+      } catch (err) {
+        console.warn("❌ Failed to fetch field config:", err);
+      }
+    } else {
+      console.log("📥 Using field config from state:", config.length, "categories");
+    }
+
+    // Flatten all fields from fieldSelectorConfig into a searchable map
+    const allBackendFields: Record<string, any> = {};
+    for (const category of config) {
+      if (category.fields && Array.isArray(category.fields)) {
+        for (const field of category.fields) {
+          // Map by both field_name and field_value (with "p_" prefix handling)
+          allBackendFields[field.field_name] = field;
+          allBackendFields[field.field_value] = field;
+          // Also add with "p_" prefix if not already there
+          if (field.field_value && field.field_value.startsWith("p_")) {
+            const unprefixed = field.field_value.slice(2);
+            allBackendFields[unprefixed] = field;
+          }
+          // Map by category ID for later reference
+          field.category = category.id;
+        }
+      }
+    }
+    console.log("🗂️ Built allBackendFields map with", Object.keys(allBackendFields).length, "entries. Sample keys:", Object.keys(allBackendFields).slice(0, 10));
+
     const conditions: SegmentConditionGroup[] = [];
+
+    console.log("📦 Processing payload layer_filters:", JSON.stringify(payload.layer_filters, null, 2));
 
     for (const group of payload.layer_filters.groups) {
       const conditionGroup: SegmentConditionGroup = {
@@ -180,59 +256,105 @@ export default function SegmentModal({
         const fieldName = layerCond.column_ref?.column || "";
         const operatorId = layerCond.operator_id;
 
-        // Map operator_id to operator label (must match operatorMapper.ts)
-        let operatorLabel = "equals";
-        switch (operatorId) {
-          case 1:
-            operatorLabel = "equals";
-            break;
-          case 2:
-            operatorLabel = "not_equals";
-            break;
-          case 3:
-            operatorLabel = "greater_than";
-            break;
-          case 4:
-            operatorLabel = "less_than";
-            break;
-          case 5:
-            operatorLabel = "greater_than_or_equal";
-            break;
-          case 6:
-            operatorLabel = "less_than_or_equal";
-            break;
-          case 14:
-            operatorLabel = "on_date";
-            break;
-          case 15:
-            operatorLabel = "after_date";
-            break;
-          case 16:
-            operatorLabel = "before_date";
-            break;
-          case 17:
-            operatorLabel = "in_last_days";
-            break;
-          case 18:
-            operatorLabel = "between_dates";
-            break;
-          default:
-            operatorLabel = "equals";
+        console.log(`🔍 Looking up field "${fieldName}" in allBackendFields...`);
+
+        // Look up field metadata from backend fields - handles both field_name and field_value
+        let matchedField = allBackendFields[fieldName];
+
+        // If not found, try with "p_" prefix (in case field_value format)
+        if (!matchedField && !fieldName.startsWith("p_")) {
+          console.log(`  └─ Not found, trying with "p_" prefix: "p_${fieldName}"`);
+          matchedField = allBackendFields[`p_${fieldName}`];
         }
 
-        // Build the condition based on what data is available
+        console.log(`  └─ Result: ${matchedField ? '✅ FOUND' : '❌ NOT FOUND'}`);
+        if (!matchedField) {
+          console.log(`  └─ Available keys: ${Object.keys(allBackendFields).slice(0, 10).join(", ")} ...`);
+        }
+
+        // Map operator_id to operator label from matched field's operators array
+        let operatorLabel = "equals";
+        let operatorFromField = null;
+
+        if (matchedField && matchedField.operators && Array.isArray(matchedField.operators)) {
+          operatorFromField = matchedField.operators.find((op: any) => op.id === operatorId);
+          if (operatorFromField) {
+            // Normalize the label from backend (convert spaces to underscores)
+            operatorLabel = normalizeOperatorLabel(operatorFromField.label || "equals");
+          }
+        } else {
+          // Fallback to hardcoded mapping if field operators not available (using underscore format to match UI)
+          switch (operatorId) {
+            case 1:
+              operatorLabel = "equals";
+              break;
+            case 2:
+              operatorLabel = "not_equals";
+              break;
+            case 3:
+              operatorLabel = "greater_than";
+              break;
+            case 4:
+              operatorLabel = "less_than";
+              break;
+            case 5:
+              operatorLabel = "greater_than_or_equal";
+              break;
+            case 6:
+              operatorLabel = "less_than_or_equal";
+              break;
+            case 14:
+              operatorLabel = "on_date";
+              break;
+            case 15:
+              operatorLabel = "after_date";
+              break;
+            case 16:
+              operatorLabel = "before_date";
+              break;
+            case 17:
+              operatorLabel = "in_last_days";
+              break;
+            case 18:
+              operatorLabel = "between_dates";
+              break;
+            default:
+              operatorLabel = "equals";
+          }
+        }
+
+        // Build the condition with all matched field metadata
+        // Ensure we're storing field_value (might have "p_" prefix) and field_name separately
         const condition: SegmentCondition = {
           id: Math.random().toString(36).substr(2, 9),
           conditionType: "360_profile",
-          field_name: fieldName,
-          field: fieldName,
+          field_name: matchedField?.field_name || fieldName,
+          // Store the actual field_value from the matched field (this is what SegmentConditionsBuilder looks up)
+          field: matchedField?.field_value || (fieldName.startsWith("p_") ? fieldName : `p_${fieldName}`),
+          field_id: matchedField?.id,
+          category: matchedField?.category,
           operator_id: operatorId,
           operator: operatorLabel,
           value: layerCond.value,
           start_date: layerCond.start_date,
           end_date: layerCond.end_date,
-          type: "string",
+          type: matchedField?.field_type || "string",
         };
+
+        console.log("🔄 [convertPayloadToConditions] Created condition:", {
+          fieldName,
+          matchedField: matchedField ? { id: matchedField.id, field_name: matchedField.field_name, field_value: matchedField.field_value, field_type: matchedField.field_type, category: matchedField.category } : null,
+          operatorId,
+          operatorLabel,
+          condition: {
+            field: condition.field,
+            field_name: condition.field_name,
+            category: condition.category,
+            operator: condition.operator,
+            operator_id: condition.operator_id,
+            value: condition.value,
+          }
+        });
 
         conditionGroup.conditions.push(condition);
       }

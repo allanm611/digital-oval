@@ -311,92 +311,65 @@ export default function DynamicMessageVariablesPage() {
 
               {/* Modal Body - Table */}
               <div className="flex-1 overflow-auto px-6 py-4">
-                <div className="overflow-x-auto">
+                <div
+                  className={`border ${tw.rounded} overflow-hidden`}
+                  style={{ borderColor: color.border.default }}
+                >
                   <table
-                    className="w-full"
-                    style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}
+                    className="min-w-full divide-y"
+                    style={{ borderColor: color.border.default }}
                   >
-                    <thead style={{ background: color.surface.tableHeader }}>
+                    <thead style={{ backgroundColor: color.surface.cards }}>
                       <tr>
-                        <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Field Code
                         </th>
-                        <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Field Name
                         </th>
-                        <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Description
                         </th>
-                        <th
-                          className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Default Value
                         </th>
-                        <th
-                          className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
-                        <th
-                          className="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider"
-                          style={{ color: color.surface.tableHeaderText }}
-                        >
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody
+                      className="bg-white divide-y"
+                      style={{ borderColor: color.border.default }}
+                    >
                       {selectedCategoryForModal.fields.map((field) => (
-                        <tr key={field.id} className="transition-colors">
-                          <td
-                            className="px-6 py-4 text-sm text-black"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
+                        <tr
+                          key={field.id}
+                          className="transition-colors hover:bg-gray-50"
+                        >
+                          <td className="px-4 py-3 text-sm text-black">
                             {field.field_value}
                           </td>
-                          <td
-                            className="px-6 py-4 text-sm text-black"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
-                            <div className="truncate">
+                          <td className="px-4 py-3">
+                            <div className="text-sm font-medium text-black truncate">
                               {field.field_name}
                             </div>
                           </td>
-                          <td
-                            className="px-6 py-4 text-sm text-black"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
-                            <div className="line-clamp-2">
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-black">
                               {field.description || '-'}
-                            </div>
+                            </span>
                           </td>
-                          <td
-                            className="px-6 py-4 text-sm text-black"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
+                          <td className="px-4 py-3 text-sm text-black">
                             0
                           </td>
-                          <td
-                            className="px-6 py-4 text-center text-sm text-black"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
+                          <td className="px-4 py-3 text-sm text-black">
                             {field.is_active ? 'Active' : 'Inactive'}
                           </td>
-                          <td
-                            className="px-6 py-4 text-center"
-                            style={{ backgroundColor: color.surface.tablebodybg }}
-                          >
+                          <td className="px-4 py-3">
                             <div className="flex gap-2 justify-center">
                               <button
                                 onClick={() => handleToggleFieldActive(field.id, true)}

@@ -83,8 +83,6 @@ export default function CampaignDetailsPage() {
   const [rejectComments, setRejectComments] = useState("");
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [isApproveLoading, setIsApproveLoading] = useState(false);
-  const [showMetadata, setShowMetadata] = useState(false);
-  const [showAuditTrail, setShowAuditTrail] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [segments, setSegments] = useState<CampaignSegmentDetail[]>([]);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
@@ -97,6 +95,7 @@ export default function CampaignDetailsPage() {
   const [isLoadingBudgetUtil, setIsLoadingBudgetUtil] = useState(false);
   const [createdByName, setCreatedByName] = useState<string>("");
   const [updatedByName, setUpdatedByName] = useState<string>("");
+  const [approvedByName, setApprovedByName] = useState<string>("");
   const [showFlowEditModal, setShowFlowEditModal] = useState(false);
   const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
   const [selectedFlow, setSelectedFlow] = useState<CampaignFlowResponseData | null>(
@@ -207,19 +206,22 @@ export default function CampaignDetailsPage() {
           }
         }
 
-        // Fetch created_by and updated_by user names
-        if (campaignData.created_by || campaignData.updated_by) {
+        // Fetch created_by, updated_by, and approved_by user names
+        if (campaignData.created_by || campaignData.updated_by || campaignData.approved_by) {
           try {
-            const [createdName, updatedName] = await Promise.all([
+            const [createdName, updatedName, approvedName] = await Promise.all([
               getUserDisplayName(campaignData.created_by),
               getUserDisplayName(campaignData.updated_by),
+              getUserDisplayName(campaignData.approved_by),
             ]);
             setCreatedByName(createdName);
             setUpdatedByName(updatedName);
+            setApprovedByName(approvedName);
           } catch (error) {
             console.error("Failed to fetch user names:", error);
             setCreatedByName(campaignData.created_by ? `User #${campaignData.created_by}` : "");
             setUpdatedByName(campaignData.updated_by ? `User #${campaignData.updated_by}` : "");
+            setApprovedByName(campaignData.approved_by ? `User #${campaignData.approved_by}` : "");
           }
         }
 
@@ -1106,8 +1108,374 @@ export default function CampaignDetailsPage() {
           </div>
         </div>
 
+      {/* Campaign Information Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+          Campaign Information
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Name
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>{campaign.name || "—"}</p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Code
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>{campaign.code || "—"}</p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Status
+            </label>
+            <div className="flex items-center flex-wrap gap-2">
+              {campaign.status && (
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white ${getStatusBadge(
+                    campaign.status,
+                  ).replace(/text-\S+/, "")}`}
+                  style={{
+                    backgroundColor:
+                      campaign.status === "active"
+                        ? "#10B981"
+                        : campaign.status === "draft"
+                          ? "#6B7280"
+                          : campaign.status === "paused"
+                            ? "#F59E0B"
+                            : "#EF4444",
+                  }}
+                >
+                  {campaign.status?.replace(/_/g, " ") || "Unknown"}
+                </span>
+              )}
+              {campaign.approval_status && (
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white`}
+                  style={{
+                    backgroundColor:
+                      campaign.approval_status === "approved"
+                        ? "#10B981"
+                        : campaign.approval_status === "rejected"
+                          ? "#EF4444"
+                          : "#F59E0B",
+                  }}
+                >
+                  {campaign.approval_status === "approved" && (
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                  )}
+                  {campaign.approval_status === "rejected" && (
+                    <XCircle className="w-3 h-3 mr-1" />
+                  )}
+                  {campaign.approval_status === "pending" && (
+                    <Clock className="w-3 h-3 mr-1" />
+                  )}
+                  {campaign.approval_status?.replace(/_/g, " ") || "Unknown"}
+                </span>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Category
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>{categoryName || "—"}</p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Objective
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {formatObjective(campaign.objective)}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Tags
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {campaign.tags && campaign.tags.length > 0 ? (
+                campaign.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                    style={{
+                      backgroundColor: color.primary.accent,
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <p className={`text-base ${tw.textPrimary}`}>—</p>
+              )}
+            </div>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Program ID
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>{campaign.program_id || "—"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Schedule & Targets Combined Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        {/* Schedule Section */}
+        <div className="mb-8">
+          <h3 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+            Schedule & Timeline
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Start Date
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.start_date ? (
+                  <DateFormatter
+                    date={campaign.start_date}
+                    useLocale
+                    year="numeric"
+                    month="long"
+                    day="numeric"
+                  />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                End Date
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.end_date ? (
+                  <DateFormatter
+                    date={campaign.end_date}
+                    useLocale
+                    year="numeric"
+                    month="long"
+                    day="numeric"
+                  />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Timezone
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.timezone || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 my-6"></div>
+
+        {/* Targets & Performance Section */}
+        <div>
+          <h3 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+            Targets & Performance
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Max Participants
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.max_participants ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Current Participants
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.current_participants ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Target Reach
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.target_reach ?? "—"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Target Conversion Rate
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.target_conversion_rate ? `${campaign.target_conversion_rate}%` : "—"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Target Revenue
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.target_revenue ? (
+                  <CurrencyFormatter amount={parseFloat(String(campaign.target_revenue))} />
+                ) : (
+                  "—"
+                )}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Control Group Enabled
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.control_group_enabled ? "Yes" : "No"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Control Group Percentage
+              </label>
+              <p className={`text-base ${tw.textPrimary}`}>
+                {campaign.control_group_percentage ? `${campaign.control_group_percentage}%` : "—"}
+              </p>
+            </div>
+            <div>
+              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+                Control Group UUID
+              </label>
+              <p className={`text-base ${tw.textPrimary} break-all text-sm`}>
+                {campaign.campaign_uuid || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Audit Trail Card */}
+      <div
+        className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+        style={{ borderColor: color.border.default }}
+      >
+        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+          Audit Trail
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Created Date
+            </label>
+            <p className={`text-base ${tw.textPrimary} flex items-center`}>
+              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+              <DateFormatter
+                date={campaign.created_at}
+                useLocale
+                year="numeric"
+                month="long"
+                day="numeric"
+              />
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Created By
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {createdByName || "—"}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Updated Date
+            </label>
+            <p className={`text-base ${tw.textPrimary} flex items-center`}>
+              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+              <DateFormatter
+                date={campaign.updated_at}
+                useLocale
+                year="numeric"
+                month="long"
+                day="numeric"
+              />
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Updated By
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {updatedByName || "—"}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approved Date
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {campaign.approved_at ? (
+                <DateFormatter
+                  date={campaign.approved_at}
+                  useLocale
+                  year="numeric"
+                  month="long"
+                  day="numeric"
+                />
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approved By
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {approvedByName || "—"}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Deleted At
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {campaign.deleted_at ? (
+                <DateFormatter
+                  date={campaign.deleted_at}
+                  useLocale
+                  year="numeric"
+                  month="long"
+                  day="numeric"
+                />
+              ) : (
+                "—"
+              )}
+            </p>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Deleted By
+            </label>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {campaign.deleted_by || "—"}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Campaign Information and Budget Utilization - Side by Side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start hidden">
         {/* Campaign Information Card */}
         <div
           className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
@@ -1322,103 +1690,6 @@ export default function CampaignDetailsPage() {
               </div>
             </div>
 
-            {/* Audit Trail Card - Collapsible */}
-            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
-              <button
-                onClick={() => setShowAuditTrail(!showAuditTrail)}
-                className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
-              >
-                <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide`}>
-                  Audit Trail
-                </h4>
-                <ChevronDown
-                  className={`w-5 h-5 transition-transform ${
-                    showAuditTrail ? "transform rotate-180" : ""
-                  }`}
-                  style={{ color: color.textSecondary }}
-                />
-              </button>
-
-              {showAuditTrail && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Created Date
-                      </label>
-                      <p className={`text-base ${tw.textPrimary} flex items-center`}>
-                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                        <DateFormatter
-                          date={campaign.created_at}
-                          useLocale
-                          year="numeric"
-                          month="long"
-                          day="numeric"
-                        />
-                      </p>
-                    </div>
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Created By
-                      </label>
-                      <p className={`text-base ${tw.textPrimary}`}>
-                        {createdByName || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Updated Date
-                      </label>
-                      <p className={`text-base ${tw.textPrimary} flex items-center`}>
-                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                        <DateFormatter
-                          date={campaign.updated_at}
-                          useLocale
-                          year="numeric"
-                          month="long"
-                          day="numeric"
-                        />
-                      </p>
-                    </div>
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Updated By
-                      </label>
-                      <p className={`text-base ${tw.textPrimary}`}>
-                        {updatedByName || "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Approved Date
-                      </label>
-                      <p className={`text-base ${tw.textPrimary}`}>
-                        {campaign.approved_at ? (
-                          <DateFormatter
-                            date={campaign.approved_at}
-                            useLocale
-                            year="numeric"
-                            month="long"
-                            day="numeric"
-                          />
-                        ) : (
-                          "—"
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                        Approved By
-                      </label>
-                      <p className={`text-base ${tw.textPrimary}`}>
-                        {campaign.approved_by || "—"}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* Tags Card */}
             {campaign.tags && campaign.tags.length > 0 && (
               <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
@@ -1443,242 +1714,6 @@ export default function CampaignDetailsPage() {
             )}
           </div>
         </div>
-
-        {/* Budget Utilization Card */}
-        {budgetUtilisation && (
-          <div
-            className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-          style={{ borderColor: color.border.default }}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Budget Utilization
-            </h3>
-            {isLoadingBudgetUtil ? (
-              <div className="flex items-center justify-center py-4">
-                <LoadingSpinner variant="modern" size="sm" color="primary" />
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm ${tw.textSecondary}`}>
-                      Utilization:{" "}
-                      {budgetUtilisation.utilization_percentage.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="h-2 rounded-full transition-all"
-                      style={{
-                        width: `${Math.min(
-                          budgetUtilisation.utilization_percentage,
-                          100,
-                        )}%`,
-                        backgroundColor: color.primary.accent,
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  <span className={`text-sm ${tw.textSecondary}`}>
-                    Remaining Budget
-                  </span>
-                  <span className={`text-sm font-semibold ${tw.textPrimary}`}>
-                    <CurrencyFormatter
-                      amount={budgetUtilisation.remaining_budget}
-                    />
-                  </span>
-                </div>
-                {campaign.budget_allocated && campaign.budget_spent && (
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
-                    <div>
-                      <span
-                        className={`text-xs ${tw.textSecondary} block mb-1`}
-                      >
-                        Allocated
-                      </span>
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        <CurrencyFormatter
-                          amount={parseFloat(String(campaign.budget_allocated))}
-                        />
-                      </span>
-                    </div>
-                    <div>
-                      <span
-                        className={`text-xs ${tw.textSecondary} block mb-1`}
-                      >
-                        Spent
-                      </span>
-                      <span className={`text-sm font-medium ${tw.textPrimary}`}>
-                        <CurrencyFormatter
-                          amount={parseFloat(String(campaign.budget_spent))}
-                        />
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* System Metadata Section - Collapsible */}
-      <div
-        className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
-        style={{ borderColor: color.border.default }}
-      >
-        <button
-          onClick={() => setShowMetadata(!showMetadata)}
-          className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
-        >
-          <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-            System Metadata
-          </h3>
-          <ChevronDown
-            className={`w-5 h-5 transition-transform ${
-              showMetadata ? "transform rotate-180" : ""
-            }`}
-            style={{ color: color.textSecondary }}
-          />
-        </button>
-
-        {showMetadata && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Campaign UUID
-                </label>
-                <p className={`text-base ${tw.textPrimary} font-mono text-xs break-all`}>
-                  {campaign.campaign_uuid || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Campaign Code
-                </label>
-                <p className={`text-base ${tw.textPrimary} font-mono`}>
-                  {campaign.code || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Type
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.type || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Program ID
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.program_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Control Group Enabled
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.control_group_enabled ? "Yes" : "No"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Control Group Percentage
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.control_group_percentage ? `${campaign.control_group_percentage}%` : "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Is Active
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.is_active ? "Yes" : "No"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Attribution Model ID
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.attribution_model_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Tenant ID
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.tenant_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Client ID
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.client_id || "—"}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Deleted At
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.deleted_at ? (
-                    <DateFormatter
-                      date={campaign.deleted_at}
-                      useLocale
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                    />
-                  ) : (
-                    "—"
-                  )}
-                </p>
-              </div>
-              <div>
-                <label
-                  className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                >
-                  Deleted By
-                </label>
-                <p className={`text-base ${tw.textPrimary}`}>
-                  {campaign.deleted_by || "—"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Campaign Segments Table - COMMENTED OUT */}
@@ -2045,6 +2080,84 @@ export default function CampaignDetailsPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Budget Utilization Card */}
+      {budgetUtilisation && (
+        <div
+          className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
+          style={{ borderColor: color.border.default }}
+        >
+          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+            Budget Utilization
+          </h3>
+          {isLoadingBudgetUtil ? (
+            <div className="flex items-center justify-center py-4">
+              <LoadingSpinner variant="modern" size="sm" color="primary" />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className={`text-sm ${tw.textSecondary}`}>
+                    Utilization:{" "}
+                    {budgetUtilisation.utilization_percentage.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(
+                        budgetUtilisation.utilization_percentage,
+                        100,
+                      )}%`,
+                      backgroundColor: color.primary.accent,
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className={`text-sm ${tw.textSecondary}`}>
+                  Remaining Budget
+                </span>
+                <span className={`text-sm font-semibold ${tw.textPrimary}`}>
+                  <CurrencyFormatter
+                    amount={budgetUtilisation.remaining_budget}
+                  />
+                </span>
+              </div>
+              {campaign.budget_allocated && campaign.budget_spent && (
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
+                  <div>
+                    <span
+                      className={`text-xs ${tw.textSecondary} block mb-1`}
+                    >
+                      Allocated
+                    </span>
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.budget_allocated))}
+                      />
+                    </span>
+                  </div>
+                  <div>
+                    <span
+                      className={`text-xs ${tw.textSecondary} block mb-1`}
+                    >
+                      Spent
+                    </span>
+                    <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.budget_spent))}
+                      />
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
