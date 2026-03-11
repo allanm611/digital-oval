@@ -851,6 +851,9 @@ export default function DefineCommunicationStep({
                   placeholder="Select SMS Route"
                   zIndex={1050}
                 />
+                {error === "Please select an SMS route" && (
+                  <p className="text-red-600 text-sm mt-2">{error}</p>
+                )}
               </div>
             )}
 

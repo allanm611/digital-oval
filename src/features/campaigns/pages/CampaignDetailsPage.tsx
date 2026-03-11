@@ -84,6 +84,7 @@ export default function CampaignDetailsPage() {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [isApproveLoading, setIsApproveLoading] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
+  const [showAuditTrail, setShowAuditTrail] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("Uncategorized");
   const [segments, setSegments] = useState<CampaignSegmentDetail[]>([]);
   const [isLoadingSegments, setIsLoadingSegments] = useState(false);
@@ -1174,16 +1175,12 @@ export default function CampaignDetailsPage() {
               )}
           </div>
 
-          {/* Campaign Details - Organized Sections */}
-          <div>
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
-              Campaign Information
-            </h3>
-
-            {/* Basic Information */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
+          {/* Campaign Details - Organized by Priority - Each in Own Card */}
+          <div className="space-y-6">
+            {/* Core Details Card */}
+            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
               <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
-                Basic Information
+                Core Details
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -1210,35 +1207,17 @@ export default function CampaignDetailsPage() {
                 </div>
                 <div>
                   <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Owner Team
+                    Campaign Manager
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.owner_team || "—"}
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Segments
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {segments.length} segment{segments.length !== 1 ? "s" : ""}
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Offers
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {isLoadingOffers
-                      ? "Loading..."
-                      : `${offers.length} offer${offers.length !== 1 ? "s" : ""}`}
+                    {campaign.campaign_manager_id || "—"}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Campaign Dates & Schedule */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
+            {/* Timeline Card */}
+            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
               <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
                 Schedule & Timeline
               </h4>
@@ -1290,10 +1269,10 @@ export default function CampaignDetailsPage() {
               </div>
             </div>
 
-            {/* Audience & Targets */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
+            {/* Targets & Performance Card */}
+            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
               <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
-                Audience & Targets
+                Targets & Performance
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -1328,15 +1307,6 @@ export default function CampaignDetailsPage() {
                     {campaign.target_conversion_rate ? `${campaign.target_conversion_rate}%` : "—"}
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Financial Information */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
-              <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
-                Financial
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
                     Target Revenue
@@ -1349,101 +1319,109 @@ export default function CampaignDetailsPage() {
                     )}
                   </p>
                 </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Campaign Manager
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.campaign_manager_id || "—"}
-                  </p>
-                </div>
               </div>
             </div>
 
-            {/* Audit Trail */}
-            <div className="mb-6 pb-6 border-b border-gray-200">
-              <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
-                Audit Trail
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Created Date
-                  </label>
-                  <p className={`text-base ${tw.textPrimary} flex items-center`}>
-                    <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                    <DateFormatter
-                      date={campaign.created_at}
-                      useLocale
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                    />
-                  </p>
+            {/* Audit Trail Card - Collapsible */}
+            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
+              <button
+                onClick={() => setShowAuditTrail(!showAuditTrail)}
+                className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
+              >
+                <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide`}>
+                  Audit Trail
+                </h4>
+                <ChevronDown
+                  className={`w-5 h-5 transition-transform ${
+                    showAuditTrail ? "transform rotate-180" : ""
+                  }`}
+                  style={{ color: color.textSecondary }}
+                />
+              </button>
+
+              {showAuditTrail && (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Created Date
+                      </label>
+                      <p className={`text-base ${tw.textPrimary} flex items-center`}>
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                        <DateFormatter
+                          date={campaign.created_at}
+                          useLocale
+                          year="numeric"
+                          month="long"
+                          day="numeric"
+                        />
+                      </p>
+                    </div>
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Created By
+                      </label>
+                      <p className={`text-base ${tw.textPrimary}`}>
+                        {createdByName || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Updated Date
+                      </label>
+                      <p className={`text-base ${tw.textPrimary} flex items-center`}>
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                        <DateFormatter
+                          date={campaign.updated_at}
+                          useLocale
+                          year="numeric"
+                          month="long"
+                          day="numeric"
+                        />
+                      </p>
+                    </div>
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Updated By
+                      </label>
+                      <p className={`text-base ${tw.textPrimary}`}>
+                        {updatedByName || "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Approved Date
+                      </label>
+                      <p className={`text-base ${tw.textPrimary}`}>
+                        {campaign.approved_at ? (
+                          <DateFormatter
+                            date={campaign.approved_at}
+                            useLocale
+                            year="numeric"
+                            month="long"
+                            day="numeric"
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                        Approved By
+                      </label>
+                      <p className={`text-base ${tw.textPrimary}`}>
+                        {campaign.approved_by || "—"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Created By
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {createdByName || "—"}
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Updated Date
-                  </label>
-                  <p className={`text-base ${tw.textPrimary} flex items-center`}>
-                    <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                    <DateFormatter
-                      date={campaign.updated_at}
-                      useLocale
-                      year="numeric"
-                      month="long"
-                      day="numeric"
-                    />
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Updated By
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {updatedByName || "—"}
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Approved Date
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.approved_at ? (
-                      <DateFormatter
-                        date={campaign.approved_at}
-                        useLocale
-                        year="numeric"
-                        month="long"
-                        day="numeric"
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
-                    Approved By
-                  </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.approved_by || "—"}
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Tags Section */}
+            {/* Tags Card */}
             {campaign.tags && campaign.tags.length > 0 && (
-              <div className="pt-6 border-t border-gray-200">
+              <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
                 <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
                   Tags
                 </h4>

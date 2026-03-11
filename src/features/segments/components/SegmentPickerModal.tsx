@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { X, Search, Users, Check, Loader2 } from "lucide-react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import { segmentService } from "../services/segmentService";
 import { SegmentType } from "../types/segment";
-import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 
 interface SegmentPickerModalProps {
   isOpen: boolean;
@@ -24,9 +24,6 @@ export default function SegmentPickerModal({
   const [segments, setSegments] = useState<SegmentType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hoveredSegmentId, setHoveredSegmentId] = useState<number | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [totalSegments, setTotalSegments] = useState(0);
 
   const filterOptions = [
     { value: "all", label: "All Segments" },
@@ -35,25 +32,36 @@ export default function SegmentPickerModal({
     { value: "trigger", label: "Trigger" },
   ];
 
-  // Load segments from backend with pagination
+  // Load segments from backend
   useEffect(() => {
     const loadSegments = async () => {
       if (isOpen) {
         setIsLoading(true);
         try {
-          const response = await segmentService.getSegments({
-            search: searchTerm || undefined,
-            type: selectedFilter !== "all" ? (selectedFilter as "static" | "dynamic" | "trigger") : undefined,
-            offset: (currentPage - 1) * pageSize,
-            limit: pageSize,
-            skipCache: false,
-          });
+          // Use search endpoint if user has typed search term, otherwise use get all
+          let response;
+          if (searchTerm.trim()) {
+            response = await segmentService.searchSegments({
+              q: searchTerm,
+              type:
+                selectedFilter !== "all"
+                  ? (selectedFilter as "static" | "dynamic" | "trigger")
+                  : undefined,
+              skipCache: true,
+            });
+          } else {
+            response = await segmentService.getSegments({
+              type:
+                selectedFilter !== "all"
+                  ? (selectedFilter as "static" | "dynamic" | "trigger")
+                  : undefined,
+              skipCache: true,
+            });
+          }
           setSegments(response.data || []);
-          setTotalSegments(response.pagination?.total || 0);
         } catch (error) {
           console.error("Failed to load segments:", error);
           setSegments([]);
-          setTotalSegments(0);
         } finally {
           setIsLoading(false);
         }
@@ -61,12 +69,7 @@ export default function SegmentPickerModal({
     };
 
     loadSegments();
-  }, [isOpen, currentPage, pageSize, searchTerm, selectedFilter]);
-
-  // Reset page when search or filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedFilter]);
+  }, [isOpen, searchTerm, selectedFilter]);
 
   if (!isOpen) return null;
 
@@ -88,26 +91,38 @@ export default function SegmentPickerModal({
         width: "100vw",
         height: "100vh",
       }}
+      onClick={onClose}
     >
       <div
         className={`${tw.rounded} w-full max-w-4xl max-h-[90vh] flex flex-col`}
         style={{ backgroundColor: color.surface.background }}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+        <div
+          className="flex items-center justify-between p-6 border-b flex-shrink-0"
+          style={{ borderColor: color.border.default }}
+        >
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
               Select a Segment
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className={`text-sm ${tw.textSecondary} mt-1`}>
               Choose a segment to use in this condition
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors text-lg font-medium"
+            className="p-2 transition-colors"
+            style={{ color: color.text.secondary }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = color.interactive.hover;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+            }}
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -115,12 +130,26 @@ export default function SegmentPickerModal({
         <div className="px-6 pt-6 pb-4 space-y-4 flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="relative flex-1">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                style={{ color: color.text.muted }}
+              />
               <input
                 type="text"
                 placeholder="Search segments..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full px-4 py-2 border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-opacity-50`}
+                className={`w-full pl-10 pr-4 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 text-sm`}
+                style={{
+                  borderColor: color.border.default,
+                  color: color.text.primary,
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = color.primary.accent;
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = color.border.default;
+                }}
               />
             </div>
             <div className="w-48">
@@ -141,44 +170,80 @@ export default function SegmentPickerModal({
         {/* Segments List */}
         <div className="flex-1 overflow-y-auto px-6">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <LoadingSpinner variant="modern" size="lg" color="primary" />
-              <p className="text-gray-500 mt-4">Loading segments...</p>
+            <div className="text-center py-12">
+              <Loader2
+                className="w-12 h-12 mx-auto mb-4 animate-spin"
+                strokeWidth={1.5}
+                style={{ color: color.text.primary }}
+              />
+              <p className={tw.textSecondary}>Loading segments...</p>
             </div>
           ) : segments.length === 0 ? (
             <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <Users
+                className="w-12 h-12 mx-auto mb-4"
+                style={{ color: color.text.muted }}
+              />
+              <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
                 No segments found
               </h3>
-              <p className="text-gray-500">
+              <p className={tw.textSecondary}>
                 Try adjusting your search or filter criteria
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full" style={{ borderCollapse: "separate", borderSpacing: "0 8px" }}>
-                <thead style={{ background: color.surface.tableHeader }}>
+              <table className="w-full">
+                <thead
+                  className="sticky top-0 z-10"
+                  style={{ backgroundColor: color.surface.tableHeader }}
+                >
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-20"
+                      style={{ color: color.text.secondary }}
+                    >
+                      Select
+                    </th>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: color.text.secondary }}
+                    >
                       Segment Name
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium uppercase tracking-wider" style={{ color: color.surface.tableHeaderText }}>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
+                      style={{ color: color.text.secondary }}
+                    >
                       Description
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-24" style={{ color: color.surface.tableHeaderText }}>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32"
+                      style={{ color: color.text.secondary }}
+                    >
                       Type
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-32" style={{ color: color.surface.tableHeaderText }}>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-24"
+                      style={{ color: color.text.secondary }}
+                    >
                       Size
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider w-32" style={{ color: color.surface.tableHeaderText }}>
+                    <th
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider w-32"
+                      style={{ color: color.text.secondary }}
+                    >
                       Created Date
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody
+                  className="divide-y"
+                  style={{ borderColor: color.border.muted }}
+                >
                   {segments.map((segment) => {
                     const isSelected = selectedSegmentId === segment.id;
+                    const isHovered = hoveredSegmentId === segment.id;
 
                     return (
                       <tr
@@ -190,102 +255,70 @@ export default function SegmentPickerModal({
                         style={{
                           backgroundColor: isSelected
                             ? `${color.primary.accent}15`
-                            : "transparent",
+                            : isHovered
+                              ? color.interactive.hover
+                              : "white",
                         }}
                       >
-                        <td
-                          className="px-6 py-4 text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <div className="truncate">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center">
+                            {isSelected ? (
+                              <div
+                                className="w-5 h-5 rounded flex items-center justify-center"
+                                style={{
+                                  backgroundColor: color.primary.action,
+                                }}
+                              >
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                            ) : (
+                              <div
+                                className="w-5 h-5 rounded border-2"
+                                style={{
+                                  borderColor: color.border.default,
+                                }}
+                              />
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className={`text-sm font-medium ${tw.textPrimary}`}>
                             {segment.name}
                           </div>
                         </td>
-                        <td
-                          className="px-6 py-4 text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          <div className="max-w-md line-clamp-2">
+                        <td className="px-4 py-4">
+                          <div
+                            className={`text-sm max-w-md line-clamp-2 ${tw.textSecondary}`}
+                          >
                             {segment.description || "-"}
                           </div>
                         </td>
-                        <td
-                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {segment.type || "Static"}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                            {segment.type || "Static"}
+                          </span>
                         </td>
-                        <td
-                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {segment.size_estimate
-                            ? segment.size_estimate.toLocaleString()
-                            : "-"}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                            {segment.size_estimate
+                              ? segment.size_estimate.toLocaleString()
+                              : "-"}
+                          </span>
                         </td>
-                        <td
-                          className="px-6 py-4 whitespace-nowrap text-sm text-black"
-                          style={{ backgroundColor: color.surface.tablebodybg }}
-                        >
-                          {segment.created_at
-                            ? new Date(
-                                segment.created_at
-                              ).toLocaleDateString()
-                            : "-"}
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`text-sm ${tw.textSecondary}`}>
+                            {segment.created_at
+                              ? new Date(segment.created_at).toLocaleDateString()
+                              : "-"}
+                          </span>
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
-              {/* Pagination Controls */}
-              {totalSegments > pageSize && (
-                <div className="flex items-center justify-between gap-4 mt-4 px-6 py-3 border-t border-gray-200">
-                  <span className="text-xs text-gray-600">
-                    Showing{" "}
-                    <strong>
-                      {(currentPage - 1) * pageSize + 1}-
-                      {Math.min(currentPage * pageSize, totalSegments)}
-                    </strong>{" "}
-                    of <strong>{totalSegments}</strong>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                      style={{ borderColor: "#d1d5db" }}
-                      title="Previous page"
-                    >
-                      ←
-                    </button>
-                    <span className="text-xs text-gray-600 min-w-[40px] text-center">
-                      Page {currentPage}
-                    </span>
-                    <button
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                      disabled={currentPage * pageSize >= totalSegments}
-                      className="px-3 py-2 rounded border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                      style={{ borderColor: "#d1d5db" }}
-                      title="Next page"
-                    >
-                      →
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end p-6 border-t border-gray-200 flex-shrink-0">
-          <button
-            onClick={onClose}
-            className={`px-4 py-2 border border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
-          >
-            Cancel
-          </button>
         </div>
       </div>
     </div>,

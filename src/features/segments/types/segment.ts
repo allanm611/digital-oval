@@ -589,7 +589,8 @@ export interface SegmentCondition {
 
   // For 360 Profile conditions
   category?: number; // Category ID for filtering fields
-  field?: string; // field_value (e.g., "customer_id")
+  field?: string; // field_value (e.g., "p_msisdn")
+  field_name?: string; // field_name - actual DB column (e.g., "msisdn") - used for API payloads
   field_id?: number; // Backend field ID - used for API calls
 
   // For Segment conditions
@@ -635,6 +636,10 @@ export interface SegmentCondition {
   operator_id?: number; // Backend operator ID - used for API calls
   value: string | number | string[] | { start: string; end: string };
   type: "string" | "number" | "boolean" | "array";
+
+  // For date filtering
+  start_date?: string; // ISO 8601 date for "from" date or range start
+  end_date?: string; // ISO 8601 date for "to" date or range end
 }
 
 export interface SegmentConditionGroup {
@@ -948,4 +953,125 @@ export type GenerateQueryPreviewResponse = {
     count_query: string; // The generated SQL COUNT query
   };
   source: string; // "database" or "cache"
+};
+
+// ==================== SEGMENT BUILDER v2.0 TYPES ====================
+
+/**
+ * Reference to a column in a specific layer
+ */
+export type LayerColumnRef = {
+  layer_index: number;
+  column: string;
+};
+
+/**
+ * Join types supported by the backend
+ */
+export type JoinType = "INNER JOIN" | "LEFT JOIN" | "RIGHT JOIN" | "FULL OUTER JOIN" | "CROSS JOIN" | "LEFT SEMI JOIN";
+
+/**
+ * Source layer types
+ */
+export type LayerSourceType = "subscribers" | "segment" | "quicklist";
+
+/**
+ * Configuration for joining a layer to a previous layer
+ */
+export type JoinConfig = {
+  join_type: JoinType;
+  left_column_ref: LayerColumnRef;
+  right_column: string;
+};
+
+/**
+ * A data source layer in the query
+ */
+export type SourceLayer = {
+  source_type: LayerSourceType;
+  segment_id?: number;
+  quicklist_id?: number;
+  join_config?: JoinConfig;
+};
+
+/**
+ * A single condition with a column reference
+ */
+export type LayerCondition = {
+  column_ref: LayerColumnRef;
+  operator_id: number;
+  value?: string | number | (string | number)[] | null;
+  start_date?: string | null;
+  end_date?: string | null;
+};
+
+/**
+ * A group of conditions with AND/OR logic
+ */
+export type LayerConditionGroup = {
+  logic?: "AND" | "OR";
+  conditions: LayerCondition[];
+};
+
+/**
+ * All filter conditions with groups and top-level logic
+ */
+export type LayerFilters = {
+  logic?: "AND" | "OR";
+  groups: LayerConditionGroup[];
+};
+
+/**
+ * Order by specification
+ */
+export type LayerOrderBy = {
+  column_ref: LayerColumnRef;
+  direction?: "ASC" | "DESC";
+};
+
+/**
+ * Complete segment query payload (v2.0)
+ */
+export type SegmentPayload = {
+  source_layers: SourceLayer[];
+  layer_fields?: LayerColumnRef[];
+  layer_filters?: LayerFilters;
+  layer_group_by?: LayerColumnRef[];
+  layer_order_by?: LayerOrderBy[];
+  limit?: number;
+};
+
+// ==================== UI-SIDE BUILDER TYPES ====================
+
+/**
+ * UI version of SourceLayer with id and label for React rendering
+ */
+export type UISourceLayer = SourceLayer & {
+  id: string;
+  label?: string;
+};
+
+/**
+ * UI version of LayerCondition with id for React rendering
+ */
+export type UILayerCondition = LayerCondition & {
+  id: string;
+};
+
+/**
+ * UI version of LayerConditionGroup with id for React rendering
+ */
+export type UILayerConditionGroup = LayerConditionGroup & {
+  id: string;
+};
+
+/**
+ * Complete builder state for the UI
+ */
+export type BuilderState = {
+  source_layers: UISourceLayer[];
+  filters: {
+    logic: "AND" | "OR";
+    groups: UILayerConditionGroup[];
+  };
 };

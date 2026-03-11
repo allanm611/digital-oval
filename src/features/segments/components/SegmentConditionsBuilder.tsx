@@ -20,10 +20,10 @@ import {
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useSegmentationFields } from "../hooks/useSegmentationFields";
+import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 import SegmentPickerModal from "./SegmentPickerModal";
 import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
-import CreateQuickListModal from "../../quicklists/components/CreateQuickListModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import {
   SYSTEM_EVENTS,
@@ -45,18 +45,22 @@ const allKPIs = generateAllKPIs();
 interface SegmentConditionsBuilderProps {
   conditions: SegmentConditionGroup[];
   onChange: (conditions: SegmentConditionGroup[]) => void;
+  onSegmentValidate?: (
+    segmentId: number,
+  ) => Promise<{ valid: boolean; error?: string }>;
+  onValidationError?: (error: string) => void;
 }
 
 export default function SegmentConditionsBuilder({
   conditions,
   onChange,
+  onSegmentValidate,
+  onValidationError,
 }: SegmentConditionsBuilderProps) {
   const generateId = () => Math.random().toString(36).substr(2, 9);
   const [isSegmentModalOpen, setIsSegmentModalOpen] = useState(false);
   const [isQuickListModalOpen, setIsQuickListModalOpen] = useState(false);
   const [isSystemEventModalOpen, setIsSystemEventModalOpen] = useState(false);
-  const [isCreateQuickListModalOpen, setIsCreateQuickListModalOpen] =
-    useState(false);
   const [isKPIModalOpen, setIsKPIModalOpen] = useState(false);
   const [currentKPIModalType, setCurrentKPIModalType] =
     useState<KPIConditionType | null>(null);
@@ -95,12 +99,19 @@ export default function SegmentConditionsBuilder({
   } = useSegmentationFields();
 
   const addConditionGroup = () => {
-    const firstField = allFields.length > 0 ? allFields[0] : null;
+    const fieldsArray = Array.isArray(allFields) ? allFields : [];
+    const categoriesArray = Array.isArray(categories) ? categories : [];
+
+    const firstField = fieldsArray.length > 0 ? fieldsArray[0] : null;
     const defaultFieldValue = firstField
       ? firstField.field_value
-      : SEGMENT_FIELDS[0].key;
+      : (SEGMENT_FIELDS.length > 0 ? SEGMENT_FIELDS[0].key : "");
     const defaultFieldId = firstField ? firstField.id : undefined;
-    const defaultOperatorId = firstField?.operators[0]?.id;
+
+    // Get default operator from operatorMapper based on field type
+    const fieldTypeForDefault = firstField?.field_type || "text";
+    const defaultOperators = getOperatorsForFieldType(fieldTypeForDefault);
+    const defaultOperatorId = defaultOperators.length > 0 ? defaultOperators[0].id : 1;
 
     const newGroup: SegmentConditionGroup = {
       id: generateId(),
@@ -110,8 +121,9 @@ export default function SegmentConditionsBuilder({
         {
           id: generateId(),
           conditionType: "360_profile",
-          category: categories.length > 0 ? 1 : undefined,
+          category: categoriesArray.length > 0 ? 1 : undefined,
           field: defaultFieldValue,
+          field_name: firstField?.field_name,
           field_id: defaultFieldId,
           operator: "equals",
           operator_id: defaultOperatorId,
@@ -139,18 +151,26 @@ export default function SegmentConditionsBuilder({
   };
 
   const addCondition = (groupId: string) => {
-    const firstField = allFields.length > 0 ? allFields[0] : null;
+    const fieldsArray = Array.isArray(allFields) ? allFields : [];
+    const categoriesArray = Array.isArray(categories) ? categories : [];
+
+    const firstField = fieldsArray.length > 0 ? fieldsArray[0] : null;
     const defaultFieldValue = firstField
       ? firstField.field_value
-      : SEGMENT_FIELDS[0].key;
+      : (SEGMENT_FIELDS.length > 0 ? SEGMENT_FIELDS[0].key : "");
     const defaultFieldId = firstField ? firstField.id : undefined;
-    const defaultOperatorId = firstField?.operators[0]?.id;
+
+    // Get default operator from operatorMapper based on field type
+    const fieldTypeForDefault = firstField?.field_type || "text";
+    const defaultOperators = getOperatorsForFieldType(fieldTypeForDefault);
+    const defaultOperatorId = defaultOperators.length > 0 ? defaultOperators[0].id : 1;
 
     const newCondition: SegmentCondition = {
       id: generateId(),
       conditionType: "360_profile",
-      category: categories.length > 0 ? 1 : undefined,
+      category: categoriesArray.length > 0 ? 1 : undefined,
       field: defaultFieldValue,
+      field_name: firstField?.field_name,
       field_id: defaultFieldId,
       operator: "equals",
       operator_id: defaultOperatorId,
@@ -221,23 +241,35 @@ export default function SegmentConditionsBuilder({
 
   const getAvailableOperators = (fieldKey: string) => {
     const backendField = getFieldByValue(fieldKey);
-    if (backendField && backendField.operators.length > 0) {
-      return backendField.operators.map((op) => {
-        const symbolMap: Record<string, string> = {
-          "=": "equals",
-          "!=": "not_equals",
-          ">": "greater_than",
-          "<": "less_than",
-          IN: "in",
-          "NOT IN": "not_in",
-          LIKE: "contains",
-          "NOT LIKE": "not_contains",
-        };
-        return symbolMap[op.symbol] || op.label;
-      });
+    if (backendField && backendField.field_type) {
+      // Use frontend-defined operators based on field type
+      const operators = getOperatorsForFieldType(backendField.field_type);
+      return operators.map((op) => op.label);
     }
-    const field = SEGMENT_FIELDS.find((f) => f.key === fieldKey);
-    return field?.operators || ["equals"];
+    // Fallback to basic operators
+    return ["equals"];
+  };
+
+  // Build unified data source options combining categories and special types
+  const getDataSourceOptions = () => {
+    const options: { value: string; label: string; type: SegmentCondition["conditionType"] }[] = [];
+
+    // Add field categories (360_profile)
+    const categoriesArray = Array.isArray(categories) ? categories : [];
+    categoriesArray.forEach((cat) => {
+      options.push({
+        value: `360_profile:${cat.id}`,
+        label: cat.name || cat.category || "Unknown",
+        type: "360_profile",
+      });
+    });
+
+    // Add special types
+    options.push({ value: "segment", label: "Segment", type: "segment" });
+    options.push({ value: "system_event", label: "System Event", type: "system_event" });
+    options.push({ value: "list", label: "QuickList", type: "list" });
+
+    return options;
   };
 
   // Render condition based on type
@@ -283,53 +315,13 @@ export default function SegmentConditionsBuilder({
     }
   };
 
-  // Render 360 Profile condition fields - Line 1 (Category + Field)
+  // Render 360 Profile condition fields - Line 1 (Field + Operator on same line)
   const render360ProfileLine1Fields = (
     groupId: string,
     condition: SegmentCondition,
   ) => {
     return (
       <>
-        {/* Category Selection */}
-        <div className="min-w-[220px] flex-1 max-w-[350px]">
-          <HeadlessSelect
-            options={categories.map((cat, index) => ({
-              value: cat.id ? cat.id.toString() : (index + 1).toString(),
-              label: cat.name || cat.category || `Category ${index + 1}`,
-            }))}
-            value={
-              condition.category !== undefined
-                ? condition.category.toString()
-                : ""
-            }
-            onChange={(value) => {
-              const categoryId = parseInt(value as string);
-              // Try to find by ID first, then by index
-              let selectedCategory = categories.find(
-                (c) => c.id === categoryId,
-              );
-              if (!selectedCategory) {
-                selectedCategory = categories[categoryId - 1];
-              }
-              const categoryFields = selectedCategory?.fields || [];
-              const firstField =
-                categoryFields.length > 0 ? categoryFields[0] : null;
-
-              updateCondition(groupId, condition.id, {
-                category: categoryId,
-                field: firstField ? firstField.field_value : "",
-                field_id: firstField?.id,
-                operator: "equals",
-                operator_id: firstField?.operators[0]?.id,
-                value: "",
-              });
-            }}
-            placeholder="Select category"
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
-
         {/* Field Selection - Filtered by category */}
         <div className="min-w-[220px] flex-1 max-w-[350px]">
           <HeadlessSelect
@@ -339,12 +331,13 @@ export default function SegmentConditionsBuilder({
                 condition.category !== null
               ) {
                 const categoryId = condition.category as number;
+                const categoriesArray = Array.isArray(categories) ? categories : [];
                 // Try to find by ID first, then by index
-                let selectedCategory = categories.find(
+                let selectedCategory = categoriesArray.find(
                   (c) => c.id === categoryId,
                 );
                 if (!selectedCategory) {
-                  selectedCategory = categories[categoryId - 1];
+                  selectedCategory = categoriesArray[categoryId - 1];
                 }
                 const fieldsToShow = selectedCategory?.fields || [];
                 return fieldsToShow.map((field) => ({
@@ -352,8 +345,9 @@ export default function SegmentConditionsBuilder({
                   label: field.field_name,
                 }));
               }
+              const fieldsArray = Array.isArray(allFields) ? allFields : [];
               const fieldsToShow =
-                allFields.length > 0 ? allFields : SEGMENT_FIELDS;
+                fieldsArray.length > 0 ? fieldsArray : SEGMENT_FIELDS;
               return fieldsToShow.map((field) => ({
                 value: "field_value" in field ? field.field_value : field.key,
                 label: "field_name" in field ? field.field_name : field.label,
@@ -362,28 +356,18 @@ export default function SegmentConditionsBuilder({
             value={condition.field || ""}
             onChange={(value) => {
               const fieldType = getFieldType(value as string);
-              const availableOperators = getAvailableOperators(value as string);
               const backendField = getFieldByValue(value as string);
-              const firstOperator = backendField?.operators[0];
 
-              const symbolMap: Record<string, string> = {
-                "=": "equals",
-                "!=": "not_equals",
-                ">": "greater_than",
-                "<": "less_than",
-                IN: "in",
-                "NOT IN": "not_in",
-                LIKE: "contains",
-                "NOT LIKE": "not_contains",
-              };
-              const mappedOperator = firstOperator
-                ? symbolMap[firstOperator.symbol] || firstOperator.label
-                : availableOperators[0];
+              // Get operators from frontend-defined mapping based on field type
+              const fieldTypeNorm = backendField?.field_type || "text";
+              const applicableOperators = getOperatorsForFieldType(fieldTypeNorm);
+              const firstOperator = applicableOperators.length > 0 ? applicableOperators[0] : null;
 
               updateCondition(groupId, condition.id, {
                 field: value as string,
+                field_name: backendField?.field_name,
                 field_id: backendField?.id,
-                operator: mappedOperator as SegmentCondition["operator"],
+                operator: firstOperator?.label as SegmentCondition["operator"],
                 operator_id: firstOperator?.id,
                 type: fieldType,
                 value: fieldType === "number" ? 0 : "",
@@ -394,11 +378,38 @@ export default function SegmentConditionsBuilder({
             zIndex={zIndex.popover}
           />
         </div>
+
+        {/* Operator Selection - on same line as field */}
+        <div className="min-w-[180px] max-w-[250px] flex-shrink-0">
+          <HeadlessSelect
+            options={(() => {
+              const field = condition.field ? getFieldByValue(condition.field) : null;
+              if (field && field.field_type) {
+                // Use frontend-defined operators based on field type
+                return getOperatorsForFieldType(field.field_type).map((op) => ({
+                  value: `${op.label}|${op.id}`,
+                  label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
+                }));
+              }
+              return [];
+            })()}
+            value={`${condition.operator}|${condition.operator_id}`}
+            onChange={(value) => {
+              const [operator, operatorId] = (value as string).split("|");
+              updateCondition(groupId, condition.id, {
+                operator: operator as SegmentCondition["operator"],
+                operator_id: operatorId ? parseInt(operatorId) : undefined,
+              });
+            }}
+            className="text-sm"
+            zIndex={zIndex.popover}
+          />
+        </div>
       </>
     );
   };
 
-  // Render 360 Profile condition fields - Line 2 (Operator + Value)
+  // Render 360 Profile condition fields - Line 2 (Value Input - Conditional based on operator)
   const render360ProfileLine2Fields = (
     groupId: string,
     condition: SegmentCondition,
@@ -408,60 +419,116 @@ export default function SegmentConditionsBuilder({
       : null;
     const isDropdown = backendField?.ui?.component_type === "dropdown";
     const distinctValues = backendField?.validation?.distinct_values || [];
+    const operator = condition.operator?.toLowerCase() || "";
+    const fieldType = backendField?.field_type?.toLowerCase() || "";
+    const isDateField = fieldType === "date";
+
+    // Check if operator is NULL-type (no value needed)
+    const isNullOperator = operator.includes("null");
+
+    // Check if operator needs multiple values
+    const isMultiValueOperator = operator === "in" || operator === "not in" || operator === "between";
+
+    // No value input needed for NULL operators
+    if (isNullOperator) {
+      return null;
+    }
 
     return (
       <>
-        {/* Operator Selection */}
-        <div className="min-w-[200px] max-w-[280px] flex-shrink-0">
-          <HeadlessSelect
-            options={(() => {
-              const field = condition.field
-                ? getFieldByValue(condition.field)
-                : null;
-              if (field && field.operators.length > 0) {
-                return field.operators.map((op) => {
-                  const symbolMap: Record<string, string> = {
-                    "=": "equals",
-                    "!=": "not_equals",
-                    ">": "greater_than",
-                    "<": "less_than",
-                    IN: "in",
-                    "NOT IN": "not_in",
-                    LIKE: "contains",
-                    "NOT LIKE": "not_contains",
-                  };
-                  const mappedOp = symbolMap[op.symbol] || op.label;
-                  return {
-                    value: `${mappedOp}|${op.id}`,
-                    label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
-                  };
+        {/* Value Input - Conditional based on operator and field type */}
+        {isDateField && (operator === "on date" || operator === "after date" || operator === "before date" || operator === "between dates" || operator === "in last days") ? (
+          // Date/numeric picker for date fields
+          <div className="flex gap-2">
+            {operator === "on date" && (
+              <input
+                type="date"
+                placeholder="Date"
+                value={
+                  condition.value && typeof condition.value === "string"
+                    ? condition.value.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+              />
+            )}
+            {(operator === "after date" || operator === "between dates") && (
+              <input
+                type="date"
+                placeholder={operator === "between dates" ? "From date" : "From date"}
+                value={
+                  condition.start_date
+                    ? condition.start_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    start_date: e.target.value
+                      ? `${e.target.value}T00:00:00Z`
+                      : undefined,
+                  });
+                }}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+              />
+            )}
+            {(operator === "before date" || operator === "between dates") && (
+              <input
+                type="date"
+                placeholder={operator === "between dates" ? "To date" : "Up to date"}
+                value={
+                  condition.end_date
+                    ? condition.end_date.split("T")[0]
+                    : ""
+                }
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    end_date: e.target.value
+                      ? `${e.target.value}T23:59:59Z`
+                      : undefined,
+                  });
+                }}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+              />
+            )}
+            {operator === "in last days" && (
+              <input
+                type="number"
+                placeholder="Days"
+                min="1"
+                value={typeof condition.value === "number" ? condition.value : ""}
+                onChange={(e) => {
+                  updateCondition(groupId, condition.id, {
+                    value: e.target.value ? parseInt(e.target.value) : undefined,
+                  });
+                }}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
+              />
+            )}
+          </div>
+        ) : isMultiValueOperator ? (
+          // Multiple value input for IN, NOT IN
+          <div className="flex gap-2">
+            <input
+              type={getFieldType(condition.field || "") === "number" ? "number" : "text"}
+              placeholder="Value"
+              value={condition.value as string | number || ""}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  value: e.target.value,
                 });
-              }
-              return getAvailableOperators(condition.field || "").map((op) => ({
-                value: `${op}|`,
-                label: OPERATOR_LABELS[op],
-              }));
-            })()}
-            value={
-              condition.operator_id
-                ? `${condition.operator}|${condition.operator_id}`
-                : `${condition.operator}|`
-            }
-            onChange={(value) => {
-              const [operator, operatorId] = (value as string).split("|");
-              updateCondition(groupId, condition.id, {
-                operator: operator as SegmentCondition["operator"],
-                operator_id: operatorId ? parseInt(operatorId) : undefined,
-              });
-            }}
-            placeholder="Select operator"
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
-
-        {/* Value Input */}
-        {isDropdown && distinctValues.length > 0 ? (
+              }}
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+            />
+          </div>
+        ) : isDropdown && distinctValues.length > 0 ? (
+          // Dropdown select if field has distinct values
           <div className="min-w-[160px] flex-1 max-w-[250px]">
             <HeadlessSelect
               options={distinctValues.map((val) => ({
@@ -481,6 +548,7 @@ export default function SegmentConditionsBuilder({
             />
           </div>
         ) : (
+          // Regular text/number input
           <input
             type={
               getFieldType(condition.field || "") === "number"
@@ -500,7 +568,7 @@ export default function SegmentConditionsBuilder({
               });
             }}
             placeholder="Enter value"
-            className={`px-3 py-2 border border-[${tw.borderDefault}] ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
+            className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1 max-w-[250px]`}
           />
         )}
       </>
@@ -582,22 +650,14 @@ export default function SegmentConditionsBuilder({
       setIsQuickListModalOpen(true);
     };
 
-    const handleOpenCreateModal = () => {
-      setCurrentEditingCondition({
-        groupId,
-        conditionId: condition.id,
-      });
-      setIsCreateQuickListModalOpen(true);
-    };
-
     return (
       <>
         {/* QuickList Selection */}
-        <div className="min-w-[280px] flex-1 max-w-[600px] flex gap-2">
+        <div className="min-w-[280px] flex-1 max-w-[600px]">
           <button
             type="button"
             onClick={handleOpenQuickListModal}
-            className={`flex-1 px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
+            className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm text-left flex items-center justify-between hover:border-gray-400 transition-colors`}
           >
             <span
               className={
@@ -607,14 +667,6 @@ export default function SegmentConditionsBuilder({
               {condition.list_name || "Select a quicklist..."}
             </span>
             <Search className="w-4 h-4 text-gray-400" />
-          </button>
-          <button
-            type="button"
-            onClick={handleOpenCreateModal}
-            className={`px-4 py-2 text-sm font-medium ${tw.rounded} text-white whitespace-nowrap`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            Create quick list
           </button>
         </div>
       </>
@@ -1130,40 +1182,51 @@ export default function SegmentConditionsBuilder({
                         }}
                       >
                         <HeadlessSelect
-                          options={[
-                            { value: "360_profile", label: "360 Profile" },
-                            { value: "segment", label: "Segment" },
-                            { value: "list", label: "QuickList" },
-                            { value: "system_event", label: "System Event" },
-                            {
-                              value: "revenue_metric_kpi",
-                              label: "Revenue Metric",
-                            },
-                            { value: "usage_metric_kpi", label: "Usage Metric" },
-                          ]}
-                          value={condition.conditionType}
+                          options={getDataSourceOptions().map((opt) => ({
+                            value: opt.value,
+                            label: opt.label,
+                          }))}
+                          value={
+                            condition.conditionType === "360_profile"
+                              ? `360_profile:${condition.category}`
+                              : condition.conditionType
+                          }
                           onChange={(value) => {
-                            const condType = value as
-                              | "360_profile"
-                              | "segment"
-                              | "list"
-                              | "system_event"
-                              | "revenue_metric_kpi"
-                              | "usage_metric_kpi";
+                            const selectedOption = getDataSourceOptions().find(
+                              (opt) => opt.value === value,
+                            );
+                            if (!selectedOption) return;
+
+                            const condType = selectedOption.type;
+
                             // Reset condition based on type
                             if (condType === "360_profile") {
+                              const fieldsArray = Array.isArray(allFields) ? allFields : [];
+                              const categoryId = parseInt(value.split(":")[1] || "1");
+                              const categoriesArray = Array.isArray(categories) ? categories : [];
+                              let selectedCategory = categoriesArray.find(
+                                (c) => c.id === categoryId,
+                              );
+                              if (!selectedCategory) {
+                                selectedCategory = categoriesArray[categoryId - 1];
+                              }
+                              const categoryFields = selectedCategory?.fields || [];
                               const firstField =
-                                allFields.length > 0 ? allFields[0] : null;
+                                categoryFields.length > 0 ? categoryFields[0] : fieldsArray[0];
+
+                              // Get operators from frontend-defined mapping based on field type
+                              const fieldTypeNorm = firstField?.field_type || "text";
+                              const applicableOps = getOperatorsForFieldType(fieldTypeNorm);
+                              const firstOperatorFromMapper = applicableOps.length > 0 ? applicableOps[0] : null;
+
                               updateCondition(group.id, condition.id, {
                                 conditionType: condType,
-                                category:
-                                  categories.length > 0
-                                    ? categories[0].id
-                                    : undefined,
-                                field: firstField?.field_value || "",
+                                category: categoryId,
+                                field: firstField ? firstField.field_value : "",
+                                field_name: firstField?.field_name,
                                 field_id: firstField?.id,
-                                operator: "equals",
-                                operator_id: firstField?.operators[0]?.id,
+                                operator: firstOperatorFromMapper?.label || "equals",
+                                operator_id: firstOperatorFromMapper?.id,
                                 value: "",
                                 segment_id: undefined,
                                 segment_name: undefined,
@@ -1226,32 +1289,9 @@ export default function SegmentConditionsBuilder({
                                 kpi_name: undefined,
                                 kpi_category: undefined,
                               });
-                            } else if (
-                              condType === "revenue_metric_kpi" ||
-                              condType === "usage_metric_kpi"
-                            ) {
-                              updateCondition(group.id, condition.id, {
-                                conditionType: condType,
-                                operator: "equals",
-                                value: "",
-                                category: undefined,
-                                field: undefined,
-                                field_id: undefined,
-                                segment_id: undefined,
-                                segment_name: undefined,
-                                list_id: undefined,
-                                list_name: undefined,
-                                system_event_id: undefined,
-                                system_event_code: undefined,
-                                system_event_name: undefined,
-                                kpi_id: undefined,
-                                kpi_name: undefined,
-                                kpi_category:
-                                  getKPICategoryForConditionType(condType),
-                              });
                             }
                           }}
-                          placeholder="Select type"
+                          placeholder="Select data source"
                           className="text-sm"
                           zIndex={zIndex.popover}
                         />
@@ -1348,7 +1388,22 @@ export default function SegmentConditionsBuilder({
           setIsSegmentModalOpen(false);
           setCurrentEditingCondition(null);
         }}
-        onSelect={(segment) => {
+        onSelect={async (segment) => {
+          // Validate segment if validator is provided
+          if (onSegmentValidate) {
+            const validation = await onSegmentValidate(segment.id!);
+            if (!validation.valid) {
+              // Validation failed - call error callback instead of alert
+              if (onValidationError) {
+                onValidationError(
+                  validation.error ||
+                    "This segment cannot be used as a layer source"
+                );
+              }
+              return;
+            }
+          }
+
           if (currentEditingCondition) {
             updateCondition(
               currentEditingCondition.groupId,
@@ -1403,46 +1458,6 @@ export default function SegmentConditionsBuilder({
                 )?.list_id
             : undefined
         }
-      />
-
-      {/* Create QuickList Modal */}
-      <CreateQuickListModal
-        isOpen={isCreateQuickListModalOpen}
-        onClose={() => {
-          setIsCreateQuickListModalOpen(false);
-          setCurrentEditingCondition(null);
-        }}
-        onSubmit={async (request) => {
-          const response = await quicklistService.createQuickList(request);
-
-          // Auto-select the newly created quicklist
-          if (currentEditingCondition && response) {
-            // Extract the quicklist data from response
-            const quicklistData = response.data || response;
-            const quicklistId =
-              quicklistData.id ||
-              (Array.isArray(quicklistData) ? quicklistData[0]?.id : undefined);
-            const quicklistName =
-              quicklistData.name ||
-              (Array.isArray(quicklistData)
-                ? quicklistData[0]?.name
-                : undefined);
-
-            if (quicklistId && quicklistName) {
-              updateCondition(
-                currentEditingCondition.groupId,
-                currentEditingCondition.conditionId,
-                {
-                  list_id: quicklistId,
-                  list_name: quicklistName,
-                },
-              );
-            }
-          }
-
-          setIsCreateQuickListModalOpen(false);
-          setCurrentEditingCondition(null);
-        }}
       />
 
       {/* System Event Picker Modal */}

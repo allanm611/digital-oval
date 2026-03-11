@@ -644,73 +644,6 @@ export default function SegmentManagementPage() {
   };
 
   const handleSaveSegment = async (segment: Segment) => {
-    // COMMENTED OUT: Automatic recompute disabled due to backend issues
-    // const isNewSegment = !selectedSegment;
-
-    // // For new segments, perform full recompute (first-time computation)
-    // if (isNewSegment) {
-    //   try {
-    //     // Show a message that computation is starting
-    //     success(
-    //       "Segment created",
-    //       `Segment "${segment.name}" has been created. Computing members...`
-    //     );
-
-    //     // Small delay to ensure segment is fully created in backend
-    //     await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    //     // Try full recompute first, fallback to refresh if recompute fails
-    //     try {
-    //       await segmentService.recomputeSegmentMembers({
-    //         segment_id: segment.id,
-    //         force: true,
-    //       });
-    //     } catch (recomputeErr) {
-    //       // If recompute fails, try refresh as fallback (lighter operation)
-    //       console.warn(
-    //         "Recompute failed, trying refresh instead:",
-    //         recomputeErr
-    //       );
-    //       try {
-    //         await segmentService.refreshSegment(segment.id, { force: true });
-    //       } catch (refreshErr) {
-    //         // If both fail, throw the original recompute error
-    //         throw recomputeErr;
-    //       }
-    //     }
-
-    //     // Reload segments to get updated data
-    //     await loadSegments();
-
-    //     success(
-    //       "Segment computed",
-    //       `Segment "${segment.name}" has been created and computed successfully`
-    //     );
-    //   } catch (err: unknown) {
-    //     // Segment was created but computation failed - show actual error
-    //     await loadSegments();
-    //     const errorMessage =
-    //       err instanceof Error
-    //         ? err.message
-    //         : "Unknown error occurred during computation";
-
-    //     console.error("Computation error:", err);
-
-    //     // Show warning but don't treat as critical error since segment was created
-    //     showError(
-    //       "Computation failed",
-    //       `Segment "${segment.name}" was created successfully, but automatic computation failed: ${errorMessage}. You can manually refresh it from the action menu.`
-    //     );
-    //   }
-    // } else {
-    //   // For existing segments, just reload (no automatic recompute on update)
-    //   await loadSegments();
-    //   success(
-    //     "Segment updated",
-    //     `Segment "${segment.name}" has been updated successfully`
-    //   );
-    // }
-
     // Simplified: Update local state and show success message
     if (selectedSegment) {
       // Update existing segment
@@ -718,16 +651,25 @@ export default function SegmentManagementPage() {
         prev.map((s) => (s.id === segment.id ? segment : s)),
       );
     } else {
-      // Add new segment to list
-      setSegments((prev) => [...prev, segment]);
+      // Add new segment to list - prepend to show at top
+      setSegments((prev) => [segment, ...prev]);
     }
-    const segName = segment?.name || "(Unnamed)";
-    success(
-      selectedSegment ? "Segment updated" : "Segment created",
-      `Segment "${segName}" has been ${
-        selectedSegment ? "updated" : "created"
-      } successfully`,
-    );
+
+    // Show success message with segment name if available, otherwise generic message
+    const isCreate = !selectedSegment;
+    if (segment?.name) {
+      success(
+        isCreate ? "Segment created" : "Segment updated",
+        `Segment "${segment.name}" has been ${
+          isCreate ? "created" : "updated"
+        } successfully`,
+      );
+    } else {
+      success(
+        isCreate ? "Segment created" : "Segment updated",
+        isCreate ? "Segment has been created successfully" : "Segment has been updated successfully",
+      );
+    }
   };
 
   const handleComputeSegment = async (segment: Segment) => {

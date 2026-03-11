@@ -5,6 +5,10 @@ import {
   Segment,
   CreateSegmentRequest,
   SegmentConditionGroup,
+  SegmentPayload,
+  LayerColumnRef,
+  LayerCondition,
+  SourceLayer,
 } from "../types/segment";
 import SegmentConditionsBuilder from "./SegmentConditionsBuilder";
 import { segmentService } from "../services/segmentService";
@@ -150,6 +154,30 @@ export default function SegmentModal({
     }));
   };
 
+  // TODO: Validate segment - temporarily disabled
+  // const validateSegmentNotSelectStar = async (
+  //   segmentId: number,
+  // ): Promise<{ valid: boolean; error?: string }> => {
+  //   try {
+  //     const response = await segmentService.getSegmentById(segmentId);
+  //     if (response && "data" in response) {
+  //       const segment = response.data;
+  //       if (segment.query && segment.query.includes("SELECT *")) {
+  //         return {
+  //           valid: false,
+  //           error: "This segment uses SELECT * and cannot be used as a base layer",
+  //         };
+  //       }
+  //     }
+  //     return { valid: true };
+  //   } catch (err) {
+  //     return {
+  //       valid: false,
+  //       error: "Failed to validate segment",
+  //     };
+  //   }
+  // };
+
   // Format SQL query for better readability
   const formatSQL = (sql: string): string => {
     if (!sql) return "";
@@ -181,6 +209,168 @@ export default function SegmentModal({
     return formatted;
   };
 
+  const convertConditionsToPayload = (conditions: SegmentConditionGroup[]): SegmentPayload => {
+    // Convert SegmentConditionGroup format to SegmentPayload (v2.0 format)
+    // Dynamically handle all condition types except system_event
+    // Layer 0 = base subscribers layer
+    // Additional layers: segment, quicklist, and any other non-filter types
+
+    const sourceLayers: SourceLayer[] = [
+      {
+        source_type: "subscribers", // Base layer (layer 0)
+      },
+    ];
+
+    const layerConditions: LayerCondition[] = [];
+    let currentLayerIndex = 1; // Start from 1 since 0 is subscribers
+
+    // Track which layers we've added to avoid duplicates
+    const addedSegments = new Set<number>();
+    const addedQuicklists = new Set<number>();
+
+    for (const group of conditions) {
+      for (const condition of group.conditions) {
+        // Skip system_event conditions - don't send to API
+        if (condition.conditionType === "system_event") {
+          continue;
+        }
+
+        // Handle filter-based conditions (go to layer 0)
+        if (
+          (condition.conditionType === "360_profile" ||
+            condition.conditionType === "revenue_metric_kpi" ||
+            condition.conditionType === "usage_metric_kpi") &&
+          condition.field_id &&
+          condition.operator_id
+        ) {
+          // Skip conditions without values (don't send empty conditions to API)
+          const hasValue = condition.value !== "" && condition.value !== undefined && condition.value !== null;
+          const hasDateRange = condition.start_date || condition.end_date;
+
+          if (!hasValue && !hasDateRange) {
+            continue; // Skip this condition if no value and no date range
+          }
+
+          const layerCond: LayerCondition = {
+            column_ref: {
+              layer_index: 0, // All filter conditions go to base subscribers layer
+              column: condition.field_name || "",
+            },
+            operator_id: condition.operator_id,
+            ...(hasDateRange
+              ? {
+                  start_date: condition.start_date || null,
+                  end_date: condition.end_date || null,
+                }
+              : { value: condition.value || undefined }),
+          };
+          layerConditions.push(layerCond);
+        }
+        // Handle segment conditions (as additional layers)
+        else if (condition.conditionType === "segment" && condition.segment_id) {
+          // Only add segment if not already added
+          if (!addedSegments.has(condition.segment_id)) {
+            sourceLayers.push({
+              source_type: "segment",
+              segment_id: condition.segment_id,
+              join_config: {
+                join_type: "INNER JOIN",
+                left_column_ref: {
+                  layer_index: 0,
+                  column: "customer_id", // Standard join column
+                },
+                right_column: "customer_id",
+              },
+            });
+            addedSegments.add(condition.segment_id);
+            currentLayerIndex++;
+          }
+        }
+        // Handle quicklist conditions (as additional layers)
+        else if (condition.conditionType === "list" && condition.list_id) {
+          // Only add quicklist if not already added
+          if (!addedQuicklists.has(condition.list_id)) {
+            sourceLayers.push({
+              source_type: "quicklist",
+              quicklist_id: condition.list_id,
+              join_config: {
+                join_type: "INNER JOIN",
+                left_column_ref: {
+                  layer_index: 0,
+                  column: "customer_id", // Standard join column
+                },
+                right_column: "customer_id",
+              },
+            });
+            addedQuicklists.add(condition.list_id);
+            currentLayerIndex++;
+          }
+        }
+      }
+    }
+
+    // Determine if we need to specify layer_fields
+    // Required when using segments/quicklists (can't use SELECT *)
+    const hasSegmentsOrQuicklists = sourceLayers.some(
+      (layer) => layer.source_type === "segment" || layer.source_type === "quicklist"
+    );
+
+    // Build layer_fields from the fields user selected in conditions
+    // Extract unique field_names from all conditions on layer 0
+    const selectedFieldsSet = new Set<string>();
+    for (const group of conditions) {
+      for (const condition of group.conditions) {
+        // Only include fields from layer 0 (360_profile, revenue_metric_kpi, usage_metric_kpi)
+        if (
+          (condition.conditionType === "360_profile" ||
+            condition.conditionType === "revenue_metric_kpi" ||
+            condition.conditionType === "usage_metric_kpi") &&
+          condition.field_name
+        ) {
+          selectedFieldsSet.add(condition.field_name);
+        }
+      }
+    }
+
+    // Build layer_fields: include fields used in conditions
+    // When using segments/quicklists, must include at least customer_id to avoid SELECT *
+    const layerFields: LayerColumnRef[] | undefined =
+      selectedFieldsSet.size > 0 || hasSegmentsOrQuicklists
+        ? [
+            // Always include customer_id when using segments/quicklists (required for joins)
+            ...(hasSegmentsOrQuicklists
+              ? [{ layer_index: 0, column: "customer_id" }]
+              : []),
+            // Add all fields user selected in conditions
+            ...Array.from(selectedFieldsSet).map((fieldName) => ({
+              layer_index: 0,
+              column: fieldName,
+            })),
+          ]
+        : undefined;
+
+    const payload: SegmentPayload = {
+      source_layers: sourceLayers,
+      // Include layer_fields when needed to avoid SELECT *
+      ...(layerFields !== undefined && { layer_fields: layerFields }),
+      layer_filters:
+        layerConditions.length > 0
+          ? {
+              logic: "AND",
+              groups: [
+                {
+                  logic: "AND",
+                  conditions: layerConditions,
+                },
+              ],
+            }
+          : undefined,
+      limit: 100, // Preview limit
+    };
+
+    return payload;
+  };
+
   const handlePreview = async () => {
     if (formData.conditions.length === 0) {
       setPreviewCount(0);
@@ -192,90 +382,15 @@ export default function SegmentModal({
     setError("");
 
     try {
-      // Extract all unique field IDs from conditions
-      const fieldIds = new Set<number>();
-      const queryConditions: Array<{
-        field_id: number;
-        operator_id: number;
-        value: string | number | string[];
-      }> = [];
-
-      // Process each condition group - ONLY 360_profile conditions
-      for (const group of formData.conditions) {
-        for (const condition of group.conditions) {
-          // Only process 360_profile conditions
-          if (condition.conditionType !== "360_profile") {
-            continue; // Skip segment and list conditions
-          }
-
-          if (condition.field_id && condition.operator_id) {
-            fieldIds.add(condition.field_id);
-            queryConditions.push({
-              field_id: condition.field_id,
-              operator_id: condition.operator_id,
-              value: condition.value,
-            });
-          } else {
-            throw new Error(
-              `Missing field_id or operator_id for condition. Please reload the page.`
-            );
-          }
-        }
-      }
-
-      if (queryConditions.length === 0) {
-        setError(
-          "No 360 Profile conditions to preview. Please add at least one 360 Profile condition."
-        );
-        setPreviewCount(null);
-        setPreviewQuery(null);
-        return;
-      }
-
-      // Build the request for query generation - ONLY 360_profile conditions
-      const mappedGroups = formData.conditions
-        .map((group) => ({
-          logic: group.operator,
-          groupOperator: group.groupOperator,
-          conditions: group.conditions
-            .filter(
-              (c) =>
-                c.conditionType === "360_profile" &&
-                c.field_id &&
-                c.operator_id
-            )
-            .map((c) => ({
-              field_id: c.field_id!,
-              operator_id: c.operator_id!,
-              value: c.value,
-            })),
-        }))
-        .filter((group) => group.conditions.length > 0); // Remove empty groups
-
-      // Remove groupOperator from last group (it has no group after it)
-      if (mappedGroups.length > 0) {
-        delete mappedGroups[mappedGroups.length - 1].groupOperator;
-      }
-
-      const queryRequest = {
-        fields: Array.from(fieldIds), // Fields to select in the query
-        filters: {
-          groups: mappedGroups,
-        },
-        limit: 100, // Preview limit
-      };
+      const payload = convertConditionsToPayload(formData.conditions);
 
       // Call the query generation preview API
-      const response = await segmentService.generateSegmentQueryPreview(
-        queryRequest
-      );
+      const response = await segmentService.generateSegmentQueryPreview(payload);
 
       if (response.success && response.data) {
         setPreviewQuery(response.data.segment_query);
         setShowPreviewModal(true);
-        // Note: The backend doesn't return count in preview yet
-        // You could parse the SQL or make a separate count call
-        setPreviewCount(null); // Set to null for now, or implement count extraction
+        setPreviewCount(null);
         setError("");
       } else {
         throw new Error("Failed to generate query preview");
@@ -302,7 +417,7 @@ export default function SegmentModal({
   };
 
   /**
-   * Generate SQL query from conditions
+   * Generate SQL query from conditions (convert to v2.0 SegmentPayload)
    */
   const generateQueryFromConditions = async (): Promise<{
     segment_query: string;
@@ -313,68 +428,14 @@ export default function SegmentModal({
     }
 
     try {
-      // Extract all unique field IDs from conditions
-      const fieldIds = new Set<number>();
+      // Convert SegmentConditionGroup to SegmentPayload (v2.0 format)
+      const payload = convertConditionsToPayload(formData.conditions);
 
-      // Process each condition group - ONLY 360_profile conditions
-      for (const group of formData.conditions) {
-        for (const condition of group.conditions) {
-          // Only process 360_profile conditions
-          if (condition.conditionType !== "360_profile") {
-            continue; // Skip segment and list conditions
-          }
-
-          if (condition.field_id && condition.operator_id) {
-            fieldIds.add(condition.field_id);
-          } else {
-            throw new Error(
-              `Missing field_id or operator_id for condition. Please reload the page.`
-            );
-          }
-        }
-      }
-
-      if (fieldIds.size === 0) {
-        throw new Error("No valid conditions to generate query");
-      }
-
-      // Build the request for query generation (without limit for production) - ONLY 360_profile
-      const mappedGroups = formData.conditions
-        .map((group) => ({
-          logic: group.operator,
-          groupOperator: group.groupOperator,
-          conditions: group.conditions
-            .filter(
-              (c) =>
-                c.conditionType === "360_profile" &&
-                c.field_id &&
-                c.operator_id
-            )
-            .map((c) => ({
-              field_id: c.field_id!,
-              operator_id: c.operator_id!,
-              value: c.value,
-            })),
-        }))
-        .filter((group) => group.conditions.length > 0); // Remove empty groups
-
-      // Remove groupOperator from last group (it has no group after it)
-      if (mappedGroups.length > 0) {
-        delete mappedGroups[mappedGroups.length - 1].groupOperator;
-      }
-
-      const queryRequest = {
-        fields: Array.from(fieldIds),
-        filters: {
-          groups: mappedGroups,
-        },
-        // Don't set limit for production query
-      };
+      // Remove the limit for production query
+      delete payload.limit;
 
       // Call the query generation API
-      const response = await segmentService.generateSegmentQueryPreview(
-        queryRequest
-      );
+      const response = await segmentService.generateSegmentQueryPreview(payload);
 
       if (response.success && response.data) {
         return {
@@ -514,7 +575,16 @@ export default function SegmentModal({
         }
       }
 
-      onSave(savedSegment);
+      // Ensure savedSegment includes the name and other form data from formData
+      const finalSegment = {
+        ...savedSegment,
+        name: savedSegment.name || formData.name,
+        description: savedSegment.description || formData.description,
+        tags: savedSegment.tags || formData.tags,
+        category: savedSegment.category || formData.category,
+      };
+
+      onSave(finalSegment);
       setPendingQueries(null);
       onClose();
     } catch (err: unknown) {
@@ -819,6 +889,8 @@ export default function SegmentModal({
                             return { ...prev, conditions };
                           })
                         }
+                        // onSegmentValidate={validateSegmentNotSelectStar}
+                        onValidationError={(errorMsg) => setError(errorMsg)}
                       />
                     </div>
                     {fieldErrors.conditions && (

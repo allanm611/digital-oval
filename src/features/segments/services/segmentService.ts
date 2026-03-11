@@ -65,6 +65,7 @@ import {
   SegmentationFieldsResponse,
   GenerateQueryPreviewRequest,
   GenerateQueryPreviewResponse,
+  SegmentPayload,
 } from "../types/segment";
 import {
   API_CONFIG,
@@ -1544,13 +1545,13 @@ class SegmentService {
   }
 
   /**
-   * POST /segments/generate-query/preview - Generate SQL query preview from conditions
+   * POST /segments/generate-query/preview - Generate SQL query preview from layer-based conditions (v2.0)
    * This endpoint takes the user's segment conditions and returns the generated SQL queries
    */
   async generateSegmentQueryPreview(
-    request: GenerateQueryPreviewRequest,
+    request: SegmentPayload,
   ): Promise<GenerateQueryPreviewResponse> {
-    const url = `${buildApiUrl("/segments")}/generate-query/preview`;
+    const url = `${BASE_URL}/generate-query/preview`;
 
     const response = await fetch(url, {
       method: "POST",
