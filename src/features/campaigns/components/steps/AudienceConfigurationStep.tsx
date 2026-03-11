@@ -11,7 +11,7 @@ import {
   RotateCw,
   Layers,
   ChevronDown,
-  Shield,
+  Settings,
   Database,
   X,
 } from "lucide-react";
@@ -39,6 +39,7 @@ interface AvailableControlGroup {
 import SegmentSelectionModal from "./SegmentSelectionModal";
 import UniversalControlGroupModal from "./UniversalControlGroupModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
+import { UNIVERSAL_CONTROL_GROUPS } from "../../../../shared/config/universalControlGroupsConfig";
 
 interface AudienceConfigurationStepProps {
   formData: CreateCampaignRequest;
@@ -122,36 +123,15 @@ export default function AudienceConfigurationStep({
   ];
 
   // Mock data for available control groups
-  const [availableControlGroups] = useState<AvailableControlGroup[]>([
-    {
-      id: "1",
-      name: "Pilot",
-      description: "Standard pilot control group",
-      percentage: 10,
-      created_at: "2024-01-15",
-    },
-    {
-      id: "2",
-      name: "Champion Challenger",
-      description: "A/B testing control group",
-      percentage: 15,
-      created_at: "2024-01-20",
-    },
-    {
-      id: "3",
-      name: "Multiple Target Groups",
-      description: "Multi-variant control group",
-      percentage: 20,
-      created_at: "2024-02-01",
-    },
-    {
-      id: "4",
-      name: "Multiple Target Groups (Non-Exclusive)",
-      description: "Non-exclusive multi-variant control",
-      percentage: 25,
-      created_at: "2024-02-10",
-    },
-  ]);
+  const [availableControlGroups] = useState<AvailableControlGroup[]>(
+    UNIVERSAL_CONTROL_GROUPS.map((group) => ({
+      id: group.id,
+      name: group.name,
+      description: group.description || "",
+      percentage: group.percentage,
+      created_at: group.createdAt || group.created_at || new Date().toISOString(),
+    }))
+  );
 
   const handleSegmentSelect = (segments: CampaignSegment[]) => {
     // Clear validation errors when segments are selected
@@ -790,7 +770,7 @@ export default function AudienceConfigurationStep({
                             className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
                             title="Configure Control Group"
                           >
-                            <Shield className="w-4 h-4" />
+                            <Settings className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => {}}

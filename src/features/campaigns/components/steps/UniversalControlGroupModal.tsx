@@ -13,63 +13,22 @@ import {
 } from "lucide-react";
 
 import { tw, zIndex } from "../../../../shared/utils/utils";
-interface UniversalControlGroup {
-  id: string;
-  name: string;
-  status: "active" | "inactive" | "expired";
-  percentage: number;
-  generationTime: string;
-  memberCount: number;
-  customerBase: "active_subscribers" | "all_customers" | "saved_segments";
-  sizeMethod: "percentage" | "fixed_value" | "advanced_parameters";
-  outlierRemoval: boolean;
-  varianceCalculation: boolean;
-  recurrence: "once" | "daily" | "weekly" | "monthly";
-  createdAt: string;
-}
+import {
+  UniversalControlGroup,
+  UNIVERSAL_CONTROL_GROUPS,
+} from "../../../../shared/config/universalControlGroupsConfig";
 
 interface UniversalControlGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const mockControlGroups: UniversalControlGroup[] = [
-  {
-    id: "1",
-    name: "UCG Sep 2025",
-    status: "active",
-    percentage: 10,
-    generationTime: "01 Sep 2025 01:00 AM",
-    memberCount: 106889,
-    customerBase: "active_subscribers",
-    sizeMethod: "percentage",
-    outlierRemoval: true,
-    varianceCalculation: true,
-    recurrence: "monthly",
-    createdAt: "2025-09-01",
-  },
-  {
-    id: "2",
-    name: "UCG Aug 2025",
-    status: "expired",
-    percentage: 8,
-    generationTime: "01 Aug 2025 01:00 AM",
-    memberCount: 100300,
-    customerBase: "active_subscribers",
-    sizeMethod: "percentage",
-    outlierRemoval: false,
-    varianceCalculation: false,
-    recurrence: "monthly",
-    createdAt: "2025-08-01",
-  },
-];
-
 export default function UniversalControlGroupModal({
   isOpen,
   onClose,
 }: UniversalControlGroupModalProps) {
   const [controlGroups, setControlGroups] =
-    useState<UniversalControlGroup[]>(mockControlGroups);
+    useState<UniversalControlGroup[]>(UNIVERSAL_CONTROL_GROUPS);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingGroup, setEditingGroup] =
     useState<UniversalControlGroup | null>(null);
@@ -556,20 +515,21 @@ function CreateControlGroupModal({
                 {formData.sizeMethod === "percentage" && (
                   <div className="mt-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Size Percentage Value
+                      Size Percentage Value: {formData.percentage}%
                     </label>
                     <input
-                      type="number"
+                      type="range"
                       min="1"
                       max="50"
-                      value={formData.percentage}
+                      step="1"
+                      value={formData.percentage || 10}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           percentage: parseInt(e.target.value),
                         })
                       }
-                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-1 focus:ring-[#588157] focus:border-[#588157]`}
+                      className="w-full"
                     />
                   </div>
                 )}

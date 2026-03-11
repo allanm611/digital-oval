@@ -47,6 +47,7 @@ export default function SegmentModal({
   const [pendingQueries, setPendingQueries] = useState<{
     segment_query: string;
     count_query: string;
+    payload?: SegmentPayload;
   } | null>(null);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [fieldErrors, setFieldErrors] = useState<{
@@ -82,19 +83,24 @@ export default function SegmentModal({
         isUserInteractionRef.current = false; // Mark as initialization
 
         if (segment) {
-          // NOTE: With the new implementation, segments are created with SQL queries directly
-          // We cannot reconstruct UI conditions from the SQL query
-          // When editing, user will need to rebuild conditions from scratch
-          const category = segment.category ?? undefined;
+          // Convert the stored definition/payload back to UI conditions
+          const category = segment.category ? Number(segment.category) : undefined;
+          let conditions: SegmentConditionGroup[] = [];
+
+          // Try to get conditions from the definition (SegmentPayload)
+          if (segment.definition) {
+            conditions = convertPayloadToConditions(segment.definition);
+          }
+
           setFormData({
             name: segment.name,
             description: segment.description || "",
             tags: segment.tags || [],
-            conditions: [], // Cannot reconstruct from query - user must rebuild
+            conditions: conditions,
             type: "dynamic",
             category,
           });
-          // Store existing queries to display in edit mode
+          // Store existing queries (not displayed in edit mode, but kept for reference)
           setExistingQuery(segment.query || null);
           setExistingCountQuery(segment.count_query || null);
           // Initialize selectedCategoryIds from segment category
@@ -152,6 +158,134 @@ export default function SegmentModal({
       ...prev,
       tags: updatedTags,
     }));
+  };
+
+  // Convert SegmentPayload back to UI SegmentConditionGroup format for editing
+  const convertPayloadToConditions = (payload: SegmentPayload): SegmentConditionGroup[] => {
+    if (!payload.layer_filters || !payload.layer_filters.groups) {
+      return [];
+    }
+
+    const conditions: SegmentConditionGroup[] = [];
+
+    for (const group of payload.layer_filters.groups) {
+      const conditionGroup: SegmentConditionGroup = {
+        id: Math.random().toString(36).substr(2, 9),
+        operator: group.logic === "OR" ? "OR" : "AND",
+        groupOperator: "AND",
+        conditions: [],
+      };
+
+      for (const layerCond of group.conditions || []) {
+        const fieldName = layerCond.column_ref?.column || "";
+        const operatorId = layerCond.operator_id;
+
+        // Map operator_id to operator label (must match operatorMapper.ts)
+        let operatorLabel = "equals";
+        switch (operatorId) {
+          case 1:
+            operatorLabel = "equals";
+            break;
+          case 2:
+            operatorLabel = "not_equals";
+            break;
+          case 3:
+            operatorLabel = "greater_than";
+            break;
+          case 4:
+            operatorLabel = "less_than";
+            break;
+          case 5:
+            operatorLabel = "greater_than_or_equal";
+            break;
+          case 6:
+            operatorLabel = "less_than_or_equal";
+            break;
+          case 14:
+            operatorLabel = "on_date";
+            break;
+          case 15:
+            operatorLabel = "after_date";
+            break;
+          case 16:
+            operatorLabel = "before_date";
+            break;
+          case 17:
+            operatorLabel = "in_last_days";
+            break;
+          case 18:
+            operatorLabel = "between_dates";
+            break;
+          default:
+            operatorLabel = "equals";
+        }
+
+        // Build the condition based on what data is available
+        const condition: SegmentCondition = {
+          id: Math.random().toString(36).substr(2, 9),
+          conditionType: "360_profile",
+          field_name: fieldName,
+          field: fieldName,
+          operator_id: operatorId,
+          operator: operatorLabel,
+          value: layerCond.value,
+          start_date: layerCond.start_date,
+          end_date: layerCond.end_date,
+          type: "string",
+        };
+
+        conditionGroup.conditions.push(condition);
+      }
+
+      if (conditionGroup.conditions.length > 0) {
+        conditions.push(conditionGroup);
+      }
+    }
+
+    // Handle segment/quicklist layers
+    if (payload.source_layers && payload.source_layers.length > 1) {
+      // Create a new condition group for segment/quicklist layers
+      const layerGroup: SegmentConditionGroup = {
+        id: Math.random().toString(36).substr(2, 9),
+        operator: "AND",
+        groupOperator: "AND",
+        conditions: [],
+      };
+
+      for (let i = 1; i < payload.source_layers.length; i++) {
+        const layer = payload.source_layers[i];
+
+        if (layer.source_type === "segment" && layer.segment_id) {
+          layerGroup.conditions.push({
+            id: Math.random().toString(36).substr(2, 9),
+            conditionType: "segment",
+            segment_id: Number(layer.segment_id),
+            segment_name: `Segment ${layer.segment_id}`, // Name will be fetched from backend
+            operator: "in",
+            operator_id: 9, // IN operator
+            value: "",
+            type: "string",
+          });
+        } else if (layer.source_type === "quicklist" && layer.quicklist_id) {
+          layerGroup.conditions.push({
+            id: Math.random().toString(36).substr(2, 9),
+            conditionType: "list",
+            list_id: Number(layer.quicklist_id),
+            list_name: `QuickList ${layer.quicklist_id}`, // Name will be fetched from backend
+            operator: "in",
+            operator_id: 9, // IN operator
+            value: "",
+            type: "string",
+          });
+        }
+      }
+
+      if (layerGroup.conditions.length > 0) {
+        conditions.push(layerGroup);
+      }
+    }
+
+    return conditions;
   };
 
   // TODO: Validate segment - temporarily disabled
@@ -422,6 +556,7 @@ export default function SegmentModal({
   const generateQueryFromConditions = async (): Promise<{
     segment_query: string;
     count_query: string;
+    payload: SegmentPayload;
   } | null> => {
     if (formData.conditions.length === 0) {
       return null;
@@ -430,6 +565,9 @@ export default function SegmentModal({
     try {
       // Convert SegmentConditionGroup to SegmentPayload (v2.0 format)
       const payload = convertConditionsToPayload(formData.conditions);
+
+      // Keep a copy of the payload for storage (without limit)
+      const payloadForStorage = { ...payload };
 
       // Remove the limit for production query
       delete payload.limit;
@@ -441,6 +579,7 @@ export default function SegmentModal({
         return {
           segment_query: response.data.segment_query,
           count_query: response.data.count_query,
+          payload: payloadForStorage,
         };
       } else {
         throw new Error("Failed to generate query");
@@ -523,6 +662,7 @@ export default function SegmentModal({
           category: formData.category,
           query: queries.segment_query,
           count_query: queries.count_query,
+          definition: queries.payload, // Store the original payload for editing
         });
 
         // Extract segment from response
@@ -545,6 +685,7 @@ export default function SegmentModal({
           count_query: queries.count_query,
           is_active: true,
           visibility: "private",
+          definition: queries.payload, // Store the original payload for editing
         };
 
         const createResponse = await segmentService.createSegment(
@@ -857,18 +998,7 @@ export default function SegmentModal({
                       </div>
                     </div>
 
-                    {segment && existingQuery && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-2">
-                          Query:
-                        </label>
-                        <div
-                          className="bg-gray-50 border border-gray-200 rounded p-3 text-xs font-mono text-gray-700 max-h-40 overflow-y-auto"
-                        >
-                          {existingQuery}
-                        </div>
-                      </div>
-                    )}
+                    {/* Query display removed in edit mode - now showing conditions instead */}
                     <div
                       className={`${tw.rounded} p-4`}
                       style={{

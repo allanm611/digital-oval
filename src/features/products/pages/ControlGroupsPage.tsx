@@ -22,21 +22,11 @@ import ProgressStepper, {
 } from "../../../shared/components/ui/ProgressStepper";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { color, tw } from "../../../shared/utils/utils";
+import {
+  UniversalControlGroup,
+  UNIVERSAL_CONTROL_GROUPS,
+} from "../../../shared/config/universalControlGroupsConfig";
 
-interface UniversalControlGroup {
-  id: string;
-  name: string;
-  status: "active" | "inactive" | "expired";
-  generationTime: string;
-  percentage: number;
-  memberCount: number;
-  customerBase: "active_subscribers" | "all_customers" | "saved_segments";
-  recurrence: "once" | "daily" | "weekly" | "monthly";
-  lastGenerated: string;
-  nextGeneration?: string;
-  createdBy: string;
-  description?: string;
-}
 
 export default function ControlGroupsPage() {
   const navigate = useNavigate();
@@ -49,6 +39,7 @@ export default function ControlGroupsPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [controlGroupName, setControlGroupName] = useState("");
   const [nameError, setNameError] = useState("");
+  const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
 
   const STEPS: Step[] = [
     {
@@ -78,50 +69,8 @@ export default function ControlGroupsPage() {
     { value: "expired", label: "Expired" },
   ];
 
-  // Mock data
-  const controlGroups: UniversalControlGroup[] = [
-    {
-      id: "1",
-      name: "Premium Customer Control",
-      status: "active",
-      generationTime: "2025-01-20 09:00",
-      percentage: 15,
-      memberCount: 12500,
-      customerBase: "active_subscribers",
-      recurrence: "weekly",
-      lastGenerated: "2025-01-20",
-      nextGeneration: "2025-01-27",
-      createdBy: "Marketing Team",
-      description: "Control group for premium customer campaigns",
-    },
-    {
-      id: "2",
-      name: "General Population Control",
-      status: "active",
-      generationTime: "2025-01-19 14:30",
-      percentage: 10,
-      memberCount: 25000,
-      customerBase: "all_customers",
-      recurrence: "monthly",
-      lastGenerated: "2025-01-19",
-      nextGeneration: "2025-02-19",
-      createdBy: "Data Science Team",
-      description: "Standard control group for all customer campaigns",
-    },
-    {
-      id: "3",
-      name: "Segment-Based Control",
-      status: "inactive",
-      generationTime: "2025-01-15 11:00",
-      percentage: 20,
-      memberCount: 8750,
-      customerBase: "saved_segments",
-      recurrence: "once",
-      lastGenerated: "2025-01-15",
-      createdBy: "Campaign Manager",
-      description: "One-time control group for specific segment testing",
-    },
-  ];
+  // Control groups from config
+  const controlGroups: UniversalControlGroup[] = UNIVERSAL_CONTROL_GROUPS;
 
   const filteredGroups = controlGroups.filter((group) => {
     const matchesSearch =
@@ -170,6 +119,32 @@ export default function ControlGroupsPage() {
         return "Monthly";
       default:
         return recurrence;
+    }
+  };
+
+  const canNavigateToStep = (stepId: number) => {
+    // Can always go to completed steps or current step
+    if (stepId <= currentStep) return true;
+    // To go to next step, current step must be valid
+    if (stepId === currentStep + 1) {
+      // Validate current step
+      if (currentStep === 1 && controlGroupName.trim() === "") {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const handleStepClick = (stepId: number) => {
+    // Validate before navigating
+    if (currentStep === 1 && controlGroupName.trim() === "") {
+      setNameError("Control group name is required");
+      return;
+    }
+    if (canNavigateToStep(stepId)) {
+      setNameError("");
+      setCurrentStep(stepId);
     }
   };
 
@@ -517,8 +492,8 @@ export default function ControlGroupsPage() {
               <ProgressStepper
                 steps={STEPS}
                 currentStep={currentStep}
-                onStepClick={() => {}}
-                canNavigateToStep={() => true}
+                onStepClick={handleStepClick}
+                canNavigateToStep={canNavigateToStep}
                 primaryColor={color.primary.action}
                 textPrimary={tw.textPrimary}
                 textMuted={tw.textMuted}
@@ -660,14 +635,15 @@ export default function ControlGroupsPage() {
                             type="range"
                             min="1"
                             max="50"
-                            defaultValue="10"
+                            value={controlGroupPercentage}
+                            onChange={(e) => setControlGroupPercentage(Number(e.target.value))}
                             className="flex-1"
                             style={{
                               accentColor: color.primary.action,
                             }}
                           />
                           <span className="text-sm font-semibold text-gray-700 w-12">
-                            10%
+                            {controlGroupPercentage}%
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">

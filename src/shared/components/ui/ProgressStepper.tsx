@@ -81,11 +81,12 @@ export default function ProgressStepper({
       <div className="md:hidden flex items-center justify-center gap-2 flex-wrap">
         {steps.map((step) => {
           const status = getStepStatus(step.id);
+          const isDisabled = !canNavigateToStep(step.id);
           return (
             <button
               key={step.id}
               onClick={() => onStepClick(step.id)}
-              disabled={!canNavigateToStep(step.id)}
+              disabled={isDisabled}
               className={`w-2 h-2 rounded-full transition-all duration-200 ${
                 status === "completed" || status === "current" ? "w-8" : ""
               }`}
@@ -94,6 +95,8 @@ export default function ProgressStepper({
                   status === "completed" || status === "current"
                     ? ACCENT_COLOR
                     : GRAY_COLOR,
+                cursor: isDisabled ? "not-allowed" : "pointer",
+                opacity: isDisabled ? 0.6 : 1,
               }}
             />
           );
