@@ -103,7 +103,7 @@ export default function CampaignPreviewStep({
               />
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500">{label}</p>
+              <p className="text-sm font-medium text-gray-500">{label}</p>
               <p className="text-lg font-semibold text-gray-900">{value}</p>
             </div>
           </div>
@@ -114,41 +114,41 @@ export default function CampaignPreviewStep({
         <div className="space-y-6 lg:col-span-2">
           {/* Campaign Details */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-4`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-4`}>
               Campaign Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Name
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.name || "Untitled campaign"}
                 </div>
               </div>
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Objective
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {getObjectiveLabel(formData.objective)}
                 </div>
               </div>
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Catalog
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.category_id
                     ? `Category ${formData.category_id}`
                     : "Not selected"}
                 </div>
               </div>
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Start Date
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.start_date ? (
                     <DateFormatter date={formData.start_date} />
                   ) : (
@@ -157,10 +157,10 @@ export default function CampaignPreviewStep({
                 </div>
               </div>
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   End Date
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.end_date ? (
                     <DateFormatter date={formData.end_date} />
                   ) : (
@@ -169,10 +169,10 @@ export default function CampaignPreviewStep({
                 </div>
               </div>
               <div>
-                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
                   Tags
                 </div>
-                <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                <div className="text-sm font-medium text-gray-600">
                   {formData.tag || "None"}
                 </div>
               </div>
@@ -181,57 +181,53 @@ export default function CampaignPreviewStep({
 
           {/* Audience Summary */}
           <div className={components.card.surface}>
-            <div className="mb-4">
-              <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
-                Campaign Type
-              </h3>
-              <div className="text-sm font-medium text-gray-700 mb-4">
-                {formData.campaign_type || "Not specified"}
-              </div>
-            </div>
-
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-4`}>
               Audience Segments
             </h3>
+
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-500">Campaign Type</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {formData.campaign_type || "Not specified"}
+                </span>
+              </div>
+            </div>
             {selectedSegments.length ? (
-              <div className="space-y-3">
-                {selectedSegments.map((segment) => (
-                  <div
-                    key={segment.id}
-                    className={`flex items-center justify-between p-4 ${tw.rounded} border border-gray-100 bg-white`}
-                  >
-                    <div className="flex-1">
-                      <div
-                        className={`text-sm font-semibold ${tw.textPrimary}`}
-                      >
+              <div>
+                {/* Column Headers */}
+                <div className="grid grid-cols-3 gap-4 pb-3 mb-4 border-b border-gray-200">
+                  <div className="text-sm font-semibold text-gray-700">Segment Name</div>
+                  <div className="text-sm font-semibold text-gray-700">Customers</div>
+                  <div className="text-sm font-semibold text-gray-700">Control Group</div>
+                </div>
+                {/* Rows */}
+                <div className="space-y-3">
+                  {selectedSegments.map((segment) => (
+                    <div
+                      key={segment.id}
+                      className="grid grid-cols-3 gap-4"
+                    >
+                      <div className="text-sm font-medium text-gray-600">
                         {segment.name}
                       </div>
-                      <div className={`text-xs ${tw.textSecondary}`}>
-                        {segment.description || "No description provided"}
-                      </div>
-                    </div>
-                    <div className="text-right space-y-2">
                       <div>
-                        <div
-                          className="text-sm font-semibold"
-                          style={{ color: color.primary.accent }}
-                        >
+                        <div className="text-sm font-semibold text-gray-900">
                           {segment.customer_count?.toLocaleString() || "0"}
                         </div>
-                        <div className={`text-xs ${tw.textSecondary}`}>
-                          customers
-                        </div>
                       </div>
-                      {segment.control_group_config && (
-                        <div className="text-right border-t pt-2">
-                          <div className="text-xs font-medium text-gray-700">
-                            Control: {segment.control_group_config.upper_limit || segment.control_group_config.lower_limit || "0"}%
+                      <div>
+                        {segment.control_group_config ? (
+                          <div className="text-sm font-medium text-gray-700">
+                            {segment.control_group_config.control_group_method?.percentage || segment.control_group_config.percentage || "0"}%
                           </div>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="text-sm text-gray-400">—</div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="text-sm text-gray-500">
@@ -242,7 +238,7 @@ export default function CampaignPreviewStep({
 
           {/* Offers Overview */}
           <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+            <h3 className={`text-sm font-bold ${tw.textPrimary} mb-3`}>
               Selected Offers
             </h3>
             {selectedOffers.length ? (
@@ -252,10 +248,10 @@ export default function CampaignPreviewStep({
                     key={offer.id}
                     className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
                   >
-                    <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                    <div className="text-sm font-medium text-gray-600">
                       {offer.name || `Offer #${offer.id}`}
                     </div>
-                    <div className="text-right text-xs text-gray-500">
+                    <div className="text-right text-sm text-gray-500">
                       <div className="font-medium text-gray-900">
                         {offer.offer_type || "N/A"}
                       </div>
@@ -323,7 +319,7 @@ export default function CampaignPreviewStep({
               {readinessChecks.map((item) => (
                 <li key={item.label} className="flex items-center gap-2">
                   <span
-                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs ${
+                    className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-sm ${
                       item.complete
                         ? "bg-green-100 text-green-700"
                         : "bg-gray-100 text-gray-500"
