@@ -68,10 +68,9 @@ export default function SegmentModal({
         if (response && response.success && response.data && response.data.length > 0) {
           const config = response.data[0]?.field_selector_config || [];
           setFieldSelectorConfig(config);
-          console.log("✅ Loaded field selector config:", config.length, "categories");
         }
       } catch (err) {
-        console.warn("Failed to load field selector config:", err);
+        // Silently handle - fields will be fetched on-demand if needed
       }
     };
     loadFieldSelectorConfig();
@@ -206,18 +205,14 @@ export default function SegmentModal({
     // Use the fieldSelectorConfig from state, or fetch if not available
     let config = fieldSelectorConfig;
     if (config.length === 0) {
-      console.log("⏳ Field config empty in state, fetching from API...");
       try {
         const response = await segmentService.getSegmentationFields(true);
         if (response && response.success && response.data && response.data.length > 0) {
           config = response.data[0]?.field_selector_config || [];
-          console.log("✅ Fetched field config from API:", config.length, "categories");
         }
       } catch (err) {
-        console.warn("❌ Failed to fetch field config:", err);
+        // Silently handle - field matching will use fallback logic
       }
-    } else {
-      console.log("📥 Using field config from state:", config.length, "categories");
     }
 
     // Flatten all fields from fieldSelectorConfig into a searchable map
@@ -238,11 +233,8 @@ export default function SegmentModal({
         }
       }
     }
-    console.log("🗂️ Built allBackendFields map with", Object.keys(allBackendFields).length, "entries. Sample keys:", Object.keys(allBackendFields).slice(0, 10));
 
     const conditions: SegmentConditionGroup[] = [];
-
-    console.log("📦 Processing payload layer_filters:", JSON.stringify(payload.layer_filters, null, 2));
 
     for (const group of payload.layer_filters.groups) {
       const conditionGroup: SegmentConditionGroup = {
@@ -256,20 +248,12 @@ export default function SegmentModal({
         const fieldName = layerCond.column_ref?.column || "";
         const operatorId = layerCond.operator_id;
 
-        console.log(`🔍 Looking up field "${fieldName}" in allBackendFields...`);
-
         // Look up field metadata from backend fields - handles both field_name and field_value
         let matchedField = allBackendFields[fieldName];
 
         // If not found, try with "p_" prefix (in case field_value format)
         if (!matchedField && !fieldName.startsWith("p_")) {
-          console.log(`  └─ Not found, trying with "p_" prefix: "p_${fieldName}"`);
           matchedField = allBackendFields[`p_${fieldName}`];
-        }
-
-        console.log(`  └─ Result: ${matchedField ? '✅ FOUND' : '❌ NOT FOUND'}`);
-        if (!matchedField) {
-          console.log(`  └─ Available keys: ${Object.keys(allBackendFields).slice(0, 10).join(", ")} ...`);
         }
 
         // Map operator_id to operator label from matched field's operators array
@@ -340,21 +324,6 @@ export default function SegmentModal({
           end_date: layerCond.end_date,
           type: matchedField?.field_type || "string",
         };
-
-        console.log("🔄 [convertPayloadToConditions] Created condition:", {
-          fieldName,
-          matchedField: matchedField ? { id: matchedField.id, field_name: matchedField.field_name, field_value: matchedField.field_value, field_type: matchedField.field_type, category: matchedField.category } : null,
-          operatorId,
-          operatorLabel,
-          condition: {
-            field: condition.field,
-            field_name: condition.field_name,
-            category: condition.category,
-            operator: condition.operator,
-            operator_id: condition.operator_id,
-            value: condition.value,
-          }
-        });
 
         conditionGroup.conditions.push(condition);
       }
@@ -427,15 +396,6 @@ export default function SegmentModal({
         }
       }
     }
-
-    // Log the final structure
-    console.log("📋 Final conditions structure:");
-    conditions.forEach((group, groupIdx) => {
-      console.log(`  Group ${groupIdx}: ${group.conditions.length} conditions (operator: ${group.operator})`);
-      group.conditions.forEach((cond, condIdx) => {
-        console.log(`    └─ Condition ${condIdx}: type=${cond.conditionType}, field=${cond.field || cond.segment_id || cond.list_id}`);
-      });
-    });
 
     return conditions;
   };
@@ -983,7 +943,6 @@ export default function SegmentModal({
                   className="p-6 space-y-6"
                 >
                   {/* Error Message - Hidden */}
-                  {error && console.error("Segment Modal Error:", error)}
 
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

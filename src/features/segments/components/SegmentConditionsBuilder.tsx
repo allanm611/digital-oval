@@ -320,12 +320,6 @@ export default function SegmentConditionsBuilder({
     groupId: string,
     condition: SegmentCondition,
   ) => {
-    console.log("📋 [render360ProfileLine1Fields] Rendering condition:", {
-      field: condition.field,
-      field_name: condition.field_name,
-      category: condition.category,
-    });
-
     return (
       <>
         {/* Field Selection - Filtered by category */}
@@ -346,12 +340,6 @@ export default function SegmentConditionsBuilder({
                   selectedCategory = categoriesArray[categoryId - 1];
                 }
                 const fieldsToShow = selectedCategory?.fields || [];
-                console.log("📊 [Field Dropdown] Category found:", {
-                  categoryId,
-                  selectedCategory: selectedCategory?.name,
-                  fieldsCount: fieldsToShow.length,
-                  fields: fieldsToShow.map(f => ({ value: f.field_value, label: f.field_name }))
-                });
                 return fieldsToShow.map((field) => ({
                   value: field.field_value,
                   label: field.field_name,
@@ -404,28 +392,14 @@ export default function SegmentConditionsBuilder({
             <div className="min-w-[180px] max-w-[250px] flex-shrink-0">
               <HeadlessSelect
                 options={(() => {
-                  console.log("⚙️ [Operator Dropdown] Looking up field:", {
-                    condition_field: condition.field,
-                    field_found: !!field,
-                    field_type: field?.field_type,
-                  });
                   if (field && field.field_type) {
                     // Use frontend-defined operators based on field type
                     const operators = getOperatorsForFieldType(field.field_type);
-                    console.log("⚙️ [Operator Dropdown] Found operators:", {
-                      field_type: field.field_type,
-                      operators: operators.map(op => ({ label: op.label, id: op.id })),
-                      options: operators.map((op) => ({
-                        value: `${op.label}|${op.id}`,
-                        label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
-                      }))
-                    });
                     return operators.map((op) => ({
                       value: `${op.label}|${op.id}`,
                       label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
                     }));
                   }
-                  console.log("⚙️ [Operator Dropdown] No field or field_type found!");
                   return [];
                 })()}
                 value={`${condition.operator}|${condition.operator_id}`}
