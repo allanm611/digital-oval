@@ -64,7 +64,8 @@ export interface CommunicationResult {
 
 export interface SendCommunicationResponse {
   success: boolean;
-  data: CommunicationResult;
+  data?: CommunicationResult;
+  error?: string;
 }
 
 // Analytics and monitoring types

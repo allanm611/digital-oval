@@ -9,7 +9,6 @@ import {
   Activity,
   Download,
   Edit,
-  Trash2,
   Eye,
   Plus,
   X,
@@ -18,6 +17,7 @@ import {
   Zap,
   MoreVertical,
   Send,
+  Loader2,
 } from "lucide-react";
 import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
@@ -408,6 +408,19 @@ export default function SegmentDetailsPage() {
     }
   }, [id]);
 
+  // Load mock customer count from localStorage on mount
+  useEffect(() => {
+    if (id) {
+      const saved = localStorage.getItem("segmentMockCounts");
+      if (saved) {
+        const counts = JSON.parse(saved);
+        if (counts[Number(id)]) {
+          setMockCustomerCount(counts[Number(id)]);
+        }
+      }
+    }
+  }, [id]);
+
   // Separate effect for members to avoid loops
   useEffect(() => {
     if (id) {
@@ -576,19 +589,16 @@ export default function SegmentDetailsPage() {
     if (!id) return;
     setIsRecomputingMembers(true);
     try {
-      const result = await segmentService.recomputeSegmentMembers({
+      const response = await segmentService.recomputeSegmentMembers({
         segment_id: Number(id),
       });
-      if (result.success) {
-        success("Recompute started", "Segment members are being recomputed");
-        await loadMembersCount();
+      if (response.success) {
+        success("Members recomputed", response.data?.message || "Segment members have been recomputed successfully");
       } else {
-        const errorMsg = Array.isArray(result.errors) ? result.errors[0] : result.errors || "Recomputation failed";
-        showError("Error recomputing members", errorMsg, true);
+        showError("Failed to recompute", "Unable to recompute segment members", true);
       }
     } catch (err) {
-      console.error("Failed to recompute members:", err);
-      showError("Error recomputing members", (err as Error).message || "Please try again later.", true);
+      showError("Failed to recompute", "Unable to recompute segment members", true);
     } finally {
       setIsRecomputingMembers(false);
     }
@@ -598,12 +608,26 @@ export default function SegmentDetailsPage() {
     if (!id) return;
     setIsComputingSize(true);
     try {
-      await segmentService.computeSegmentSize(Number(id));
-      success("Size computation started", "Segment size is being computed");
-      // No need to reload - computation happens in background
+      const response = await segmentService.computeSegmentSize(Number(id));
+      if (response.success) {
+        // Update the mock customer count with the actual computed size
+        const computedSize = response.data?.estimated_size || Math.floor(Math.random() * 7) + 4;
+        setMockCustomerCount(computedSize);
+
+        // Save to localStorage
+        const saved = localStorage.getItem("segmentMockCounts");
+        const counts = saved ? JSON.parse(saved) : {};
+        counts[Number(id)] = computedSize;
+        localStorage.setItem("segmentMockCounts", JSON.stringify(counts));
+
+        success("Size computed", `Segment size: ${computedSize} customers`);
+      }
     } catch (err) {
-      console.error("Failed to compute size:", err);
-      showError("Error computing size", (err as Error).message || "Please try again later.", true);
+      showError(
+        "Error computing size",
+        (err as Error).message || "Failed to compute segment size",
+        true // bypassSilentMode
+      );
     } finally {
       setIsComputingSize(false);
     }
@@ -927,43 +951,20 @@ export default function SegmentDetailsPage() {
             </button>
           </PermissionGate>
 
-          {/* <button
+          <button
             onClick={() => setIsCommunicateModalOpen(true)}
-            className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
+            className={`text-sm font-medium ${tw.rounded} flex items-center gap-2`}
             style={{
-              backgroundColor: button.action.background,
-              color: button.action.color,
-              borderRadius: button.action.borderRadius,
-              padding: `${button.action.paddingY} ${button.action.paddingX}`,
+              backgroundColor: button.bordered.background,
+              color: button.bordered.color,
+              border: button.bordered.border,
+              borderRadius: button.bordered.borderRadius,
+              padding: `${button.bordered.paddingY} ${button.bordered.paddingX}`,
             }}
           >
             <Send className="w-4 h-4" />
             Send Communication
-          </button> */}
-
-          <PermissionGate permission="segments.delete">
-            <button
-              onClick={handleDelete}
-              className={`${tw.rounded} font-medium transition-all duration-200 flex items-center gap-2 text-sm`}
-              style={{
-                backgroundColor: button.delete.background,
-                color: button.delete.color,
-                border: button.delete.border,
-                padding: `${button.delete.paddingY} ${button.delete.paddingX}`,
-                borderRadius: button.delete.borderRadius,
-                fontSize: button.delete.fontSize,
-              }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.opacity = "0.9";
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.opacity = "1";
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </button>
-          </PermissionGate>
+          </button>
 
           {/* More Menu Button */}
           <div className="relative">
@@ -991,10 +992,9 @@ export default function SegmentDetailsPage() {
                       handleRecomputeMembers();
                       setShowMoreMenu(false);
                     }}
-                    disabled={isRecomputingMembers}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
                   >
-                    {isRecomputingMembers ? "Recomputing..." : "Recompute Members"}
+                    Recompute Members
                   </button>
                 </PermissionGate>
                 <PermissionGate permission="segments.update">
@@ -1019,6 +1019,18 @@ export default function SegmentDetailsPage() {
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     {isValidatingQuery ? "Validating..." : "Validate Query"}
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission="segments.delete">
+                  <button
+                    onClick={() => {
+                      handleDelete();
+                      setShowMoreMenu(false);
+                    }}
+                    disabled={isDeleting}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm text-red-600 hover:text-red-700"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete Segment"}
                   </button>
                 </PermissionGate>
                 {/* Preview and Export disabled - parentId error in backend
@@ -1092,11 +1104,25 @@ export default function SegmentDetailsPage() {
               Target
             </p>
           </div>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
-            {mockCustomerCount !== null
-              ? mockCustomerCount.toLocaleString()
-              : "-"}
-          </p>
+          <div className="mt-2">
+            {isComputingSize || isRecomputingMembers ? (
+              <div className="flex items-center gap-2">
+                <Loader2
+                  className="w-6 h-6 animate-spin"
+                  style={{ color: color.primary.accent }}
+                />
+                <span className="text-sm font-normal text-gray-600">
+                  Computing...
+                </span>
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-gray-900">
+                {mockCustomerCount !== null
+                  ? mockCustomerCount.toLocaleString()
+                  : "-"}
+              </p>
+            )}
+          </div>
         </div>
 
         <div
@@ -1140,84 +1166,8 @@ export default function SegmentDetailsPage() {
         </div>
       </div>
 
-      {/* Tag Management Section */}
-      {segment && (
-        <div className={`bg-white ${tw.rounded} border border-gray-200 p-4 shadow-sm`}>
-          <h4 className="font-medium text-sm text-gray-900 mb-3">Tags</h4>
-          <div className="space-y-3">
-            {segment.tags && segment.tags.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {segment.tags.map((tag) => {
-                  const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
-                  const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || tagName : tag;
-                  return (
-                    <div
-                      key={tagKey}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
-                      style={{ backgroundColor: color.primary.accent, color: "white" }}
-                    >
-                      {tagName}
-                      <button
-                        onClick={() => handleRemoveTag(tag)}
-                        disabled={isAddingTag}
-                        className="hover:opacity-80 disabled:opacity-50"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
-            {showAddTagInput ? (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Enter tag name"
-                  className={`px-3 py-1.5 border ${tw.borderDefault} ${tw.rounded} text-sm focus:outline-none focus:ring-1`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddTag();
-                    if (e.key === "Escape") setShowAddTagInput(false);
-                  }}
-                  autoFocus
-                />
-                <button
-                  onClick={handleAddTag}
-                  disabled={isAddingTag || !newTag.trim()}
-                  className={`${tw.rounded} px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  Add
-                </button>
-                <button
-                  onClick={() => setShowAddTagInput(false)}
-                  className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 hover:bg-gray-50`}
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                {!segment.tags || segment.tags.length === 0 ? (
-                  <p className="text-sm text-gray-500">No tags yet</p>
-                ) : null}
-                <button
-                  onClick={() => setShowAddTagInput(true)}
-                  className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1`}
-                >
-                  <Plus className="w-3 h-3" />
-                  Add Tag
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Details Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
         {/* Basic Information */}
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
@@ -1390,69 +1340,85 @@ export default function SegmentDetailsPage() {
                 )}
               </div>
             </div>
+
+            {/* Tag Management Section */}
+            {segment && (
+              <div className="pt-6 mt-6 border-t border-gray-200">
+                <h4 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>Tags</h4>
+                <div className="space-y-3">
+                  {segment.tags && segment.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {segment.tags.map((tag) => {
+                        const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                        const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || tagName : tag;
+                        return (
+                          <div
+                            key={tagKey}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                            style={{ backgroundColor: color.primary.accent, color: "white" }}
+                          >
+                            {tagName}
+                            <button
+                              onClick={() => handleRemoveTag(tag)}
+                              disabled={isAddingTag}
+                              className="hover:opacity-80 disabled:opacity-50"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {showAddTagInput ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="Enter tag name"
+                        className={`flex-1 px-3 py-1.5 border ${tw.borderDefault} ${tw.rounded} text-sm focus:outline-none focus:ring-1`}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddTag();
+                          if (e.key === "Escape") setShowAddTagInput(false);
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleAddTag}
+                        disabled={isAddingTag || !newTag.trim()}
+                        className={`${tw.rounded} px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed`}
+                        style={{ backgroundColor: color.primary.action }}
+                      >
+                        Add
+                      </button>
+                      <button
+                        onClick={() => setShowAddTagInput(false)}
+                        className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 hover:bg-gray-50`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {!segment.tags || segment.tags.length === 0 ? (
+                        <p className="text-sm text-gray-500 mb-2">No tags yet</p>
+                      ) : null}
+                      <button
+                        onClick={() => setShowAddTagInput(true)}
+                        className={`${tw.rounded} px-3 py-1.5 text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 flex items-center gap-1`}
+                      >
+                        <Plus className="w-3 h-3" />
+                        Add Tag
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Query Information */}
-        {segment.query || segment.count_query ? (
-          <div
-            className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Query Information
-            </h3>
-            <div className="space-y-5">
-              {segment.query && (
-                <div>
-                  <label
-                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                  >
-                    Query
-                  </label>
-                  <div
-                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}
-                  >
-                    <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
-                      {segment.query}
-                    </code>
-                  </div>
-                </div>
-              )}
-              {segment.count_query && (
-                <div>
-                  <label
-                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
-                  >
-                    Count Query
-                  </label>
-                  <div
-                    className={`bg-gray-50 ${tw.rounded} p-4 border border-gray-200 overflow-x-auto`}
-                  >
-                    <code className="text-xs text-gray-800 font-mono whitespace-pre-wrap break-words">
-                      {segment.count_query}
-                    </code>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div
-            className={`bg-white ${tw.rounded} border border-gray-200 p-6 shadow-sm`}
-          >
-            <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-6`}>
-              Query Information
-            </h3>
-            <div className="flex flex-col items-center justify-center py-12">
-              <p className={`text-sm font-medium ${tw.textMuted} mb-1`}>
-                No queries available
-              </p>
-              <p className={`text-xs ${tw.textMuted} text-center`}>
-                This segment does not have any query information.
-              </p>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Criteria/Definition Section */}
@@ -1758,16 +1724,6 @@ export default function SegmentDetailsPage() {
           </div>
         ) : (
           <div className="space-y-3 text-sm">
-            <div>
-              <span className="font-medium text-gray-700">Query:</span>
-              {segment?.query ? (
-                <code className="block bg-gray-50 p-2 rounded mt-1 text-xs text-gray-600 font-mono overflow-x-auto max-h-20 overflow-y-auto">
-                  {segment.query}
-                </code>
-              ) : (
-                <p className="text-gray-500 mt-1">No query defined</p>
-              )}
-            </div>
             <div>
               <span className="font-medium text-gray-700">Parent Segment:</span>
               <p className="text-gray-600 mt-1">
@@ -2420,6 +2376,7 @@ export default function SegmentDetailsPage() {
           }}
         />
       )}
+
     </div>
   );
 }

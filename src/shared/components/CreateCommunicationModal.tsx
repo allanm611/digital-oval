@@ -332,10 +332,32 @@ export default function CreateCommunicationModal({
         if (onSuccess) {
           onSuccess(response.data);
         }
+      } else {
+        // Handle backend error response
+        let errorMsg = "Failed to send communication";
+        if (response.error) {
+          errorMsg = typeof response.error === "string"
+            ? response.error
+            : JSON.stringify(response.error);
+        }
+        showError("Communication Error", errorMsg, true); // bypassSilentMode
       }
     } catch (err) {
       console.error("Failed to send communication:", err);
-      showError("Failed to send communication");
+      // Try to extract error message from response if available
+      let errorMsg = "Failed to send communication";
+
+      // Check if error has response data with error field
+      if (err && typeof err === "object" && "response" in err) {
+        const errResponse = (err as any).response?.data;
+        if (errResponse?.error) {
+          errorMsg = typeof errResponse.error === "string"
+            ? errResponse.error
+            : JSON.stringify(errResponse.error);
+        }
+      }
+
+      showError("Communication Error", errorMsg, true); // bypassSilentMode
     } finally {
       setSending(false);
     }

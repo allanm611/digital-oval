@@ -1,4 +1,4 @@
-import { Users, Gift, Target, TrendingUp } from "lucide-react";
+import { Users, Gift, Target } from "lucide-react";
 import {
   CreateCampaignRequest,
   CampaignSegment,
@@ -21,16 +21,15 @@ export default function CampaignPreviewStep({
   selectedOffers,
   campaignFlows = [],
 }: CampaignPreviewStepProps) {
+  // Debug logging
+  console.log("CampaignPreviewStep formData:", formData);
+  console.log("selectedSegments:", selectedSegments);
+  console.log("selectedOffers:", selectedOffers);
+  console.log("campaignFlows:", campaignFlows);
   const totalAudienceSize = selectedSegments.reduce(
     (total, segment) => total + (segment.customer_count || 0),
     0
   );
-  const estimatedCost = totalAudienceSize * 0.05;
-  const estimatedRevenue = totalAudienceSize * 2.5;
-  const estimatedROI =
-    totalAudienceSize > 0
-      ? ((estimatedRevenue - estimatedCost) / (estimatedCost || 1)) * 100
-      : 0;
 
   const getObjectiveLabel = (objective: string) => {
     const labels = {
@@ -74,8 +73,8 @@ export default function CampaignPreviewStep({
         </p>
       </div>
 
-      {/* Campaign Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Campaign Summary Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
             icon: Target,
@@ -92,27 +91,20 @@ export default function CampaignPreviewStep({
             label: "Offers",
             value: selectedOffers.length.toString(),
           },
-          {
-            icon: TrendingUp,
-            label: "Est. ROI",
-            value: `${estimatedROI.toFixed(0)}%`,
-          },
         ].map(({ icon: Icon, label, value }) => (
           <div
             key={label}
-            className={`${tw.rounded} border border-gray-100 p-5 flex items-center gap-4`}
+            className={`${tw.rounded} border border-gray-100 p-4 flex items-center gap-3 bg-white shadow-sm`}
           >
-            <div className="w-12 h-12 flex items-center justify-center">
+            <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
               <Icon
-                className="w-6 h-6"
+                className="w-5 h-5"
                 style={{ color: color.primary.accent }}
               />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-wide text-gray-500">
-                {label}
-              </p>
-              <p className="text-2xl font-semibold text-gray-900">{value}</p>
+              <p className="text-xs font-medium text-gray-500">{label}</p>
+              <p className="text-lg font-semibold text-gray-900">{value}</p>
             </div>
           </div>
         ))}
@@ -125,38 +117,38 @@ export default function CampaignPreviewStep({
             <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-4`}>
               Campaign Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   Name
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {formData.name || "Untitled campaign"}
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   Objective
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {getObjectiveLabel(formData.objective)}
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   Catalog
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {formData.category_id
                     ? `Category ${formData.category_id}`
                     : "Not selected"}
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   Start Date
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {formData.start_date ? (
                     <DateFormatter date={formData.start_date} />
                   ) : (
@@ -165,10 +157,10 @@ export default function CampaignPreviewStep({
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   End Date
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {formData.end_date ? (
                     <DateFormatter date={formData.end_date} />
                   ) : (
@@ -177,10 +169,10 @@ export default function CampaignPreviewStep({
                 </div>
               </div>
               <div>
-                <div className={`${tw.caption} ${tw.textSecondary} mb-1`}>
+                <div className={`text-xs font-medium ${tw.textSecondary} mb-1`}>
                   Tags
                 </div>
-                <div className={`font-medium ${tw.textPrimary}`}>
+                <div className={`text-sm font-medium ${tw.textPrimary}`}>
                   {formData.tag || "None"}
                 </div>
               </div>
@@ -189,6 +181,15 @@ export default function CampaignPreviewStep({
 
           {/* Audience Summary */}
           <div className={components.card.surface}>
+            <div className="mb-4">
+              <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
+                Campaign Type
+              </h3>
+              <div className="text-sm font-medium text-gray-700 mb-4">
+                {formData.campaign_type || "Not specified"}
+              </div>
+            </div>
+
             <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
               Audience Segments
             </h3>
@@ -199,32 +200,35 @@ export default function CampaignPreviewStep({
                     key={segment.id}
                     className={`flex items-center justify-between p-4 ${tw.rounded} border border-gray-100 bg-white`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Users
-                        className="w-5 h-5"
-                        style={{ color: color.primary.accent }}
-                      />
-                      <div>
-                        <div
-                          className={`text-sm font-semibold ${tw.textPrimary}`}
-                        >
-                          {segment.name}
-                        </div>
-                        <div className={`text-xs ${tw.textSecondary}`}>
-                          {segment.description || "No description provided"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
+                    <div className="flex-1">
                       <div
-                        className="text-sm font-semibold"
-                        style={{ color: color.primary.accent }}
+                        className={`text-sm font-semibold ${tw.textPrimary}`}
                       >
-                        {segment.customer_count?.toLocaleString() || "0"}
+                        {segment.name}
                       </div>
                       <div className={`text-xs ${tw.textSecondary}`}>
-                        customers
+                        {segment.description || "No description provided"}
                       </div>
+                    </div>
+                    <div className="text-right space-y-2">
+                      <div>
+                        <div
+                          className="text-sm font-semibold"
+                          style={{ color: color.primary.accent }}
+                        >
+                          {segment.customer_count?.toLocaleString() || "0"}
+                        </div>
+                        <div className={`text-xs ${tw.textSecondary}`}>
+                          customers
+                        </div>
+                      </div>
+                      {segment.control_group_config && (
+                        <div className="text-right border-t pt-2">
+                          <div className="text-xs font-medium text-gray-700">
+                            Control: {segment.control_group_config.upper_limit || segment.control_group_config.lower_limit || "0"}%
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -248,30 +252,13 @@ export default function CampaignPreviewStep({
                     key={offer.id}
                     className={`flex items-center justify-between p-3 ${tw.rounded} border border-gray-100 bg-white`}
                   >
-                    <div className="flex items-center gap-3">
-                      <Gift
-                        className="w-5 h-5"
-                        style={{ color: color.primary.accent }}
-                      />
-                      <div className={`text-sm font-medium ${tw.textPrimary}`}>
-                        {offer.name || `Offer #${offer.id}`}
-                      </div>
+                    <div className={`text-sm font-medium ${tw.textPrimary}`}>
+                      {offer.name || `Offer #${offer.id}`}
                     </div>
                     <div className="text-right text-xs text-gray-500">
                       <div className="font-medium text-gray-900">
                         {offer.offer_type || "N/A"}
                       </div>
-                      <div className="text-gray-500">
-                        {offer.start_date ? (
-                          <>
-                            <DateFormatter date={offer.start_date} /> -{" "}
-                            <DateFormatter date={offer.end_date} />
-                          </>
-                        ) : (
-                          "No schedule"
-                        )}
-                      </div>
-                      <div className="text-gray-400">ID: {offer.id}</div>
                     </div>
                   </div>
                 ))}
@@ -283,64 +270,6 @@ export default function CampaignPreviewStep({
             )}
           </div>
 
-          {/* Campaign Flows Overview */}
-          <div className={components.card.surface}>
-            <h3 className={`${tw.cardTitle} ${tw.textPrimary} mb-3`}>
-              Execution Plan ({campaignFlows.length} flows)
-            </h3>
-            {campaignFlows.length ? (
-              <div className="space-y-3">
-                {campaignFlows.map((flow, idx) => {
-                  const segment = selectedSegments.find(
-                    (s) => parseInt(s.id) === flow.segment_id
-                  );
-                  const offer = selectedOffers.find(
-                    (o) => parseInt(o.id) === flow.offer_id
-                  );
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-3 ${tw.rounded} border border-gray-100 bg-white`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold text-white"
-                          style={{ backgroundColor: color.primary.accent }}
-                        >
-                          {flow.step_order}
-                        </div>
-                        <div className="flex-1">
-                          <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                            {segment?.name || "Unknown Segment"} →{" "}
-                            {offer?.name || "Unknown Offer"}
-                          </p>
-                          <div className="flex gap-2 mt-1 flex-wrap">
-                            <span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {flow.flow_type}
-                            </span>
-                            {flow.wait_interval_hours > 0 && (
-                              <span className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded">
-                                Wait: {flow.wait_interval_hours}h
-                              </span>
-                            )}
-                            {flow.bucket_allocation && (
-                              <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded">
-                                Allocation: {flow.bucket_allocation}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500">
-                No delivery flows configured yet.
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Sidebar */}
