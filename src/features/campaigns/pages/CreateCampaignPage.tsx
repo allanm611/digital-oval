@@ -289,7 +289,9 @@ export default function CreateCampaignPage() {
             end_date: campaign?.end_date || undefined,
             campaign_type: campaign?.campaign_type || "multiple_target_group",
             // Load tags as array
-            tags: campaign?.tags || [],
+            tags: (campaign?.tags || []).map((tag: any) =>
+              typeof tag === "string" ? tag : (tag?.name || String(tag))
+            ),
             // Load department_id if owner_team matches a department name
             department_id: campaign?.owner_team ? undefined : undefined, // Will be set in UI selection
             // Load budget_allocated - convert string to number for the form

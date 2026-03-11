@@ -120,7 +120,9 @@ export default function SegmentModal({
             setFormData({
               name: fullSegment.name,
               description: fullSegment.description || "",
-              tags: fullSegment.tags || [],
+              tags: (fullSegment.tags || []).map((tag: any) =>
+                typeof tag === "string" ? tag : (tag?.name || String(tag))
+              ),
               conditions: conditions,
               type: "dynamic",
               category,
@@ -1059,9 +1061,9 @@ export default function SegmentModal({
                         </div>
                         {formData.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {formData.tags.map((tag) => (
+                            {formData.tags.map((tag, index) => (
                               <span
-                                key={tag}
+                                key={`${tag}-${index}`}
                                 className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
                                 style={{
                                   borderColor: color.primary.accent,
@@ -1072,12 +1074,12 @@ export default function SegmentModal({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveTag(tag)}
-                                  className="ml-2 hover:opacity-80"
-                                  style={{ color: color.primary.accent }}
-                                >
-                                  ×
-                                </button>
-                              </span>
+                                    className="ml-2 hover:opacity-80"
+                                    style={{ color: color.primary.accent }}
+                                  >
+                                    ×
+                                  </button>
+                                </span>
                             ))}
                           </div>
                         )}

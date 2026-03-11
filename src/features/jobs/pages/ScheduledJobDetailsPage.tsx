@@ -1213,21 +1213,24 @@ export default function ScheduledJobDetailsPage() {
           </h2>
           {job.tags && job.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
-              {job.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
-                >
-                  {tag}
-                  <button
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 hover:text-gray-900"
-                    aria-label={`Remove ${tag}`}
+              {job.tags.map((tag, idx) => {
+                const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                return (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800"
                   >
-                    <XCircle className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
+                    {tagName}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 hover:text-gray-900"
+                      aria-label={`Remove ${tagName}`}
+                    >
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </span>
+                );
+              })}
             </div>
           )}
           <div className="flex gap-2">

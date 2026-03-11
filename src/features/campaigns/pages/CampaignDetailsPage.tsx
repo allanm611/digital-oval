@@ -1199,17 +1199,20 @@ export default function CampaignDetailsPage() {
             </label>
             <div className="flex flex-wrap gap-2">
               {campaign.tags && campaign.tags.length > 0 ? (
-                campaign.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-                    style={{
-                      backgroundColor: color.primary.accent,
-                    }}
-                  >
-                    {tag}
-                  </span>
-                ))
+                campaign.tags.map((tag, index) => {
+                  const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                  return (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{
+                        backgroundColor: color.primary.accent,
+                      }}
+                    >
+                      {tagName.replace("catalog:", "")}
+                    </span>
+                  );
+                })
               ) : (
                 <p className={`text-base ${tw.textPrimary}`}>—</p>
               )}
@@ -1671,18 +1674,22 @@ export default function CampaignDetailsPage() {
                   Tags
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {campaign.tags.map((tag, index) => (
-                    <span
-                      key={`${tag}-${index}`}
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
-                      style={{
-                        backgroundColor: color.primary.accent,
-                        color: "white",
-                      }}
-                    >
-                      {tag.replace("catalog:", "")}
-                    </span>
-                  ))}
+                  {campaign.tags.map((tag, index) => {
+                    const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                    const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || index : tag;
+                    return (
+                      <span
+                        key={`${tagKey}-${index}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium`}
+                        style={{
+                          backgroundColor: color.primary.accent,
+                          color: "white",
+                        }}
+                      >
+                        {tagName.replace("catalog:", "")}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}

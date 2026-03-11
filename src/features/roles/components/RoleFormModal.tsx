@@ -455,22 +455,26 @@ export default function RoleFormModal({
             />
             {formData.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
-                {formData.tags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-sm font-medium"
-                    style={{ backgroundColor: color.primary.action + "20", color: color.primary.action }}
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="hover:opacity-70 transition-opacity font-bold"
+                {formData.tags.map((tag, index) => {
+                  const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                  const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || index : `${tag}-${index}`;
+                  return (
+                    <div
+                      key={tagKey}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-sm font-medium"
+                      style={{ backgroundColor: color.primary.action + "20", color: color.primary.action }}
                     >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                      {tagName}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="hover:opacity-70 transition-opacity font-bold"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

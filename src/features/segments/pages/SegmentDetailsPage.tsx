@@ -83,6 +83,7 @@ export default function SegmentDetailsPage() {
   const [segment, setSegment] = useState<Segment | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [membersCount, setMembersCount] = useState<number>(0);
+  const [mockCustomerCount, setMockCustomerCount] = useState<number | null>(null);
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<"csv" | "json" | "xml">("csv");
@@ -391,6 +392,21 @@ export default function SegmentDetailsPage() {
       loadMembersCount();
     }
   }, [id, loadSegment, loadMembersCount]);
+
+  // Load mock customer count from localStorage
+  useEffect(() => {
+    if (id) {
+      const saved = localStorage.getItem("segmentMockCounts");
+      if (saved) {
+        try {
+          const counts = JSON.parse(saved);
+          setMockCustomerCount(counts[Number(id)] || null);
+        } catch {
+          setMockCustomerCount(null);
+        }
+      }
+    }
+  }, [id]);
 
   // Separate effect for members to avoid loops
   useEffect(() => {
@@ -911,7 +927,7 @@ export default function SegmentDetailsPage() {
             </button>
           </PermissionGate>
 
-          <button
+          {/* <button
             onClick={() => setIsCommunicateModalOpen(true)}
             className={`text-sm font-medium text-white ${tw.rounded} flex items-center gap-2`}
             style={{
@@ -923,7 +939,7 @@ export default function SegmentDetailsPage() {
           >
             <Send className="w-4 h-4" />
             Send Communication
-          </button>
+          </button> */}
 
           <PermissionGate permission="segments.delete">
             <button
@@ -1040,7 +1056,7 @@ export default function SegmentDetailsPage() {
       {/* Stats Cards and Overview Content */}
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
+        {/* <div
           className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
         >
           <div className="flex items-center gap-2">
@@ -1062,6 +1078,25 @@ export default function SegmentDetailsPage() {
               Updated {segment.refresh_frequency}
             </p>
           )}
+        </div> */}
+
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Users
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">
+              Target
+            </p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {mockCustomerCount !== null
+              ? mockCustomerCount.toLocaleString()
+              : "-"}
+          </p>
         </div>
 
         <div
@@ -1112,22 +1147,26 @@ export default function SegmentDetailsPage() {
           <div className="space-y-3">
             {segment.tags && segment.tags.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {segment.tags.map((tag) => (
-                  <div
-                    key={tag}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
-                    style={{ backgroundColor: color.primary.accent, color: "white" }}
-                  >
-                    {tag}
-                    <button
-                      onClick={() => handleRemoveTag(tag)}
-                      disabled={isAddingTag}
-                      className="hover:opacity-80 disabled:opacity-50"
+                {segment.tags.map((tag) => {
+                  const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                  const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || tagName : tag;
+                  return (
+                    <div
+                      key={tagKey}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                      style={{ backgroundColor: color.primary.accent, color: "white" }}
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                      {tagName}
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        disabled={isAddingTag}
+                        className="hover:opacity-80 disabled:opacity-50"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
             {showAddTagInput ? (
@@ -1245,15 +1284,19 @@ export default function SegmentDetailsPage() {
                   Tags
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {segment.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700`}
-                    >
-                      <Tag className="w-3 h-3 mr-1" />
-                      {tag}
-                    </span>
-                  ))}
+                  {segment.tags.map((tag) => {
+                    const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                    const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || tagName : tag;
+                    return (
+                      <span
+                        key={tagKey}
+                        className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-700`}
+                      >
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tagName}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}

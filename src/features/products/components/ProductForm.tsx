@@ -616,9 +616,9 @@ export default function ProductForm({
                   </div>
                   {formData.tags && formData.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {formData.tags.map((tag) => (
+                      {formData.tags.map((tag, index) => (
                         <span
-                          key={tag}
+                          key={`${tag}-${index}`}
                           className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border"
                           style={{
                             backgroundColor: color.primary.accent,

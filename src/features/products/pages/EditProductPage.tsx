@@ -127,7 +127,9 @@ export default function EditProductPage() {
         unit_value: productData.unit_value ?? 0,
         validity_hours: productData.validity_hours || (productData.validity_days ? productData.validity_days * 24 : undefined),
         combo_data: comboDataFromMetadata,
-        tags: productData.tags,
+        tags: (productData.tags || []).map((tag: any) =>
+          typeof tag === "string" ? tag : (tag?.name || String(tag))
+        ),
       });
 
       // Set selected category IDs for MultiCategorySelector

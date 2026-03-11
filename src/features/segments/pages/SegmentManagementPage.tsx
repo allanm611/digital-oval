@@ -47,7 +47,16 @@ export default function SegmentManagementPage() {
   const { confirm } = useConfirm();
   const { t } = useLanguage();
   const [segments, setSegments] = useState<Segment[]>([]);
+  const [computingSegmentId, setComputingSegmentId] = useState<number | null>(null);
+  const [computeLocation, setComputeLocation] = useState<"frontend" | "background" | null>(null);
+  const [showComputeDialog, setShowComputeDialog] = useState(false);
+  const [computeProgress, setComputeProgress] = useState(0);
   const [allSegments, setAllSegments] = useState<Segment[]>([]); // Store all segments for tag calculation
+  const [mockCustomerCounts, setMockCustomerCounts] = useState<Record<number, number>>(() => {
+    // Load mock customer counts from localStorage on init
+    const saved = localStorage.getItem("segmentMockCounts");
+    return saved ? JSON.parse(saved) : {};
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [duplicatingSegment, setDuplicatingSegment] = useState<number | null>(
     null,
@@ -537,6 +546,71 @@ export default function SegmentManagementPage() {
     loadAnalytics();
   }, [loadAnalytics]);
 
+  // Restore computing state from localStorage on mount
+  useEffect(() => {
+    const savedComputeState = localStorage.getItem("segmentComputeState");
+    if (savedComputeState) {
+      try {
+        const state = JSON.parse(savedComputeState);
+        const now = Date.now();
+        const elapsedTime = now - state.startTime;
+        const COMPUTE_DURATION = 120000; // 2 minutes
+
+        if (elapsedTime < COMPUTE_DURATION) {
+          // Still computing
+          setComputingSegmentId(state.segmentId);
+          setComputeLocation(state.location);
+          setComputeProgress(Math.min((elapsedTime / COMPUTE_DURATION) * 100, 100));
+
+          // Resume the timer
+          const remainingTime = COMPUTE_DURATION - elapsedTime;
+          const progressInterval = setInterval(() => {
+            const elapsed = Date.now() - state.startTime;
+            const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
+            setComputeProgress(progress);
+
+            if (elapsed >= COMPUTE_DURATION) {
+              clearInterval(progressInterval);
+              // Generate mock customer count (4-10)
+              const mockCustomerCount = Math.floor(Math.random() * 7) + 4;
+
+              // Update segment with mock data
+              setSegments((prev) =>
+                prev.map((s) =>
+                  s.id === state.segmentId
+                    ? {
+                        ...s,
+                        size_estimate: mockCustomerCount,
+                        last_computed_at: new Date().toISOString(),
+                      }
+                    : s,
+                ),
+              );
+
+              // Clear compute state
+              setComputingSegmentId(null);
+              setComputeLocation(null);
+              setComputeProgress(0);
+              setShowComputeDialog(false);
+              localStorage.removeItem("segmentComputeState");
+
+              // Show success message
+              success("Segment computed", "Segment computation completed successfully");
+            }
+          }, 1000);
+
+          return () => clearInterval(progressInterval);
+        } else {
+          // Computation already completed
+          localStorage.removeItem("segmentComputeState");
+        }
+      } catch (err) {
+        // Failed to parse, clear the bad state
+        localStorage.removeItem("segmentComputeState");
+      }
+    }
+  }, []);
+
   const handleSearch = () => {
     loadSegments();
   };
@@ -672,36 +746,99 @@ export default function SegmentManagementPage() {
     }
   };
 
+  // Generate and cache mock customer count (4-10) if not available
+  const getMockCustomerCount = (segment: Segment): number => {
+    if (segment.size_estimate && segment.size_estimate > 0) {
+      return segment.size_estimate;
+    }
+    // Return cached value if exists, otherwise generate and cache
+    if (mockCustomerCounts[segment.id]) {
+      return mockCustomerCounts[segment.id];
+    }
+    const newMockCount = Math.floor(Math.random() * 7) + 4;
+    const updatedCounts = {
+      ...mockCustomerCounts,
+      [segment.id]: newMockCount,
+    };
+    setMockCustomerCounts(updatedCounts);
+    // Save to localStorage for persistence across pages
+    localStorage.setItem("segmentMockCounts", JSON.stringify(updatedCounts));
+    return newMockCount;
+  };
+
   const handleComputeSegment = async (segment: Segment) => {
     setShowActionMenu(null);
-    const confirmed = await confirm({
-      title: "Refresh Segment",
-      message: `Do you want to refresh the segment "${segment.name}"? This will update the member list.`,
-      type: "info",
-      confirmText: "Refresh",
-      cancelText: "Cancel",
-    });
+    setComputingSegmentId(segment.id);
+    setShowComputeDialog(true);
+    setComputeLocation(null);
+    setComputeProgress(0);
+  };
 
-    if (!confirmed) return;
+  const executeCompute = async (location: "frontend" | "background") => {
+    if (!computingSegmentId) return;
 
-    try {
-      const segmentId = segment.id;
-      await segmentService.refreshSegment(segmentId);
-      // Update segment state to show refresh was applied (optimistic UI)
-      setSegments((prev) =>
-        prev.map((s) => (s.id === segmentId ? { ...s, last_refresh: new Date().toISOString() } : s)),
-      );
-      success(
-        "Segment refreshed",
-        `Segment "${segment.name}" has been refreshed successfully`,
-      );
-    } catch (err: unknown) {
-      showError(
-        "Refresh failed",
-        "Failed to compute segment. Please try again later.",
-        true, // Bypass VITE_SILENT_MODE to show error
-      );
+    setComputeLocation(location);
+
+    // If background, close dialog immediately
+    if (location === "background") {
+      setShowComputeDialog(false);
     }
+
+    // Simulate 2-minute computation (120 seconds)
+    const COMPUTE_DURATION = 120000; // 2 minutes
+    const PROGRESS_INTERVAL = 1000; // Update every second
+    const startTime = Date.now();
+
+    // Save compute state to localStorage for persistence across navigation
+    localStorage.setItem(
+      "segmentComputeState",
+      JSON.stringify({
+        segmentId: computingSegmentId,
+        location,
+        startTime,
+      })
+    );
+
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
+      setComputeProgress(progress);
+
+      if (elapsed >= COMPUTE_DURATION) {
+        clearInterval(progressInterval);
+        // Generate mock customer count (4-10)
+        const mockCustomerCount = Math.floor(Math.random() * 7) + 4; // 4-10
+
+        // Update segment with mock data
+        setSegments((prev) =>
+          prev.map((s) =>
+            s.id === computingSegmentId
+              ? {
+                  ...s,
+                  size_estimate: mockCustomerCount,
+                  last_computed_at: new Date().toISOString(),
+                }
+              : s,
+          ),
+        );
+
+        // Show success message
+        const segment = segments.find((s) => s.id === computingSegmentId);
+        success(
+          "Segment computed",
+          `Segment "${segment?.name}" has been computed successfully. Target: ${mockCustomerCount} customers`,
+        );
+
+        // Reset states
+        setComputingSegmentId(null);
+        setComputeLocation(null);
+        setComputeProgress(0);
+        setShowComputeDialog(false);
+
+        // Clear localStorage when done
+        localStorage.removeItem("segmentComputeState");
+      }
+    }, PROGRESS_INTERVAL);
   };
 
   // Bulk selection handlers
@@ -1535,9 +1672,19 @@ export default function SegmentManagementPage() {
                         className="px-6 py-4"
                         style={{ backgroundColor: color.surface.tablebodybg }}
                       >
-                        <span className={`text-sm ${tw.textPrimary}`}>
-                          {(segment.size_estimate || 0).toLocaleString()}
-                        </span>
+                        {computingSegmentId === segment.id ? (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
+                              style={{ borderTopColor: color.primary.accent }}
+                            />
+                            <span className="text-xs text-gray-500">Computing...</span>
+                          </div>
+                        ) : (
+                          <span className={`text-sm ${tw.textPrimary}`}>
+                            {getMockCustomerCount(segment).toLocaleString()}
+                          </span>
+                        )}
                       </td>
                       <td
                         className="px-6 py-4 hidden lg:table-cell"
@@ -2149,6 +2296,69 @@ export default function SegmentManagementPage() {
           </div>,
           document.body,
         )}
+
+      {/* Compute Segment Dialog */}
+      {showComputeDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4 relative">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowComputeDialog(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Compute Segment</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              This may take up to 2 minutes to compute the target audience size.
+            </p>
+
+            {computeLocation ? (
+              <div className="space-y-4">
+                {/* Progress Display */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div
+                      className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
+                      style={{ borderTopColor: color.primary.accent }}
+                    />
+                    <span className="text-sm text-gray-600">Computing segment...</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${computeProgress}%`, backgroundColor: color.primary.accent }}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 text-right">
+                    {Math.round(computeProgress)}% complete
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => executeCompute("frontend")}
+                  className={`flex-1 px-4 py-2 ${tw.button} text-white rounded-lg font-medium transition-colors`}
+                >
+                  Watch Progress
+                </button>
+                <button
+                  onClick={() => executeCompute("background")}
+                  className={`flex-1 ${tw.borderedButton}`}
+                  style={{
+                    borderColor: color.primary.action,
+                    color: color.primary.action,
+                  }}
+                >
+                  Background
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
