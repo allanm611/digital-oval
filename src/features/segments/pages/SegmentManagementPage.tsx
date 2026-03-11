@@ -1434,7 +1434,7 @@ export default function SegmentManagementPage() {
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider"
                       style={{ color: color.surface.tableHeaderText }}
                     >
-                      Customers
+                      Target
                     </th>
                     <th
                       className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider hidden lg:table-cell"

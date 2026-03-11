@@ -1445,32 +1445,6 @@ export default function CampaignDetailsPage() {
               {approvedByName || "—"}
             </p>
           </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Deleted At
-            </label>
-            <p className={`text-base ${tw.textPrimary}`}>
-              {campaign.deleted_at ? (
-                <DateFormatter
-                  date={campaign.deleted_at}
-                  useLocale
-                  year="numeric"
-                  month="long"
-                  day="numeric"
-                />
-              ) : (
-                "—"
-              )}
-            </p>
-          </div>
-          <div>
-            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
-              Deleted By
-            </label>
-            <p className={`text-base ${tw.textPrimary}`}>
-              {campaign.deleted_by || "—"}
-            </p>
-          </div>
         </div>
       </div>
 

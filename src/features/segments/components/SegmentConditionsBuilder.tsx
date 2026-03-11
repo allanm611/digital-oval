@@ -391,47 +391,57 @@ export default function SegmentConditionsBuilder({
           />
         </div>
 
-        {/* Operator Selection - on same line as field */}
-        <div className="min-w-[180px] max-w-[250px] flex-shrink-0">
-          <HeadlessSelect
-            options={(() => {
-              const field = condition.field ? getFieldByValue(condition.field) : null;
-              console.log("⚙️ [Operator Dropdown] Looking up field:", {
-                condition_field: condition.field,
-                field_found: !!field,
-                field_type: field?.field_type,
-              });
-              if (field && field.field_type) {
-                // Use frontend-defined operators based on field type
-                const operators = getOperatorsForFieldType(field.field_type);
-                console.log("⚙️ [Operator Dropdown] Found operators:", {
-                  field_type: field.field_type,
-                  operators: operators.map(op => ({ label: op.label, id: op.id })),
-                  options: operators.map((op) => ({
-                    value: `${op.label}|${op.id}`,
-                    label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
-                  }))
-                });
-                return operators.map((op) => ({
-                  value: `${op.label}|${op.id}`,
-                  label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
-                }));
-              }
-              console.log("⚙️ [Operator Dropdown] No field or field_type found!");
-              return [];
-            })()}
-            value={`${condition.operator}|${condition.operator_id}`}
-            onChange={(value) => {
-              const [operator, operatorId] = (value as string).split("|");
-              updateCondition(groupId, condition.id, {
-                operator: operator as SegmentCondition["operator"],
-                operator_id: operatorId ? parseInt(operatorId) : undefined,
-              });
-            }}
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
+        {/* Operator Selection - on same line as field (hidden for boolean fields) */}
+        {(() => {
+          const field = condition.field ? getFieldByValue(condition.field) : null;
+          const isBooleanField = field?.field_type?.toLowerCase() === "boolean";
+
+          if (isBooleanField) {
+            return null; // Don't show operator dropdown for boolean fields
+          }
+
+          return (
+            <div className="min-w-[180px] max-w-[250px] flex-shrink-0">
+              <HeadlessSelect
+                options={(() => {
+                  console.log("⚙️ [Operator Dropdown] Looking up field:", {
+                    condition_field: condition.field,
+                    field_found: !!field,
+                    field_type: field?.field_type,
+                  });
+                  if (field && field.field_type) {
+                    // Use frontend-defined operators based on field type
+                    const operators = getOperatorsForFieldType(field.field_type);
+                    console.log("⚙️ [Operator Dropdown] Found operators:", {
+                      field_type: field.field_type,
+                      operators: operators.map(op => ({ label: op.label, id: op.id })),
+                      options: operators.map((op) => ({
+                        value: `${op.label}|${op.id}`,
+                        label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
+                      }))
+                    });
+                    return operators.map((op) => ({
+                      value: `${op.label}|${op.id}`,
+                      label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
+                    }));
+                  }
+                  console.log("⚙️ [Operator Dropdown] No field or field_type found!");
+                  return [];
+                })()}
+                value={`${condition.operator}|${condition.operator_id}`}
+                onChange={(value) => {
+                  const [operator, operatorId] = (value as string).split("|");
+                  updateCondition(groupId, condition.id, {
+                    operator: operator as SegmentCondition["operator"],
+                    operator_id: operatorId ? parseInt(operatorId) : undefined,
+                  });
+                }}
+                className="text-sm"
+                zIndex={zIndex.popover}
+              />
+            </div>
+          );
+        })()}
       </>
     );
   };
@@ -449,6 +459,7 @@ export default function SegmentConditionsBuilder({
     const operator = condition.operator?.toLowerCase() || "";
     const fieldType = backendField?.field_type?.toLowerCase() || "";
     const isDateField = fieldType === "date";
+    const isBooleanField = fieldType === "boolean";
 
     // Check if operator is NULL-type (no value needed)
     const isNullOperator = operator.includes("null");
@@ -463,8 +474,33 @@ export default function SegmentConditionsBuilder({
 
     return (
       <>
-        {/* Value Input - Conditional based on operator and field type */}
-        {isDateField && (operator === "on date" || operator === "after date" || operator === "before date" || operator === "between dates" || operator === "in last days") ? (
+        {/* Boolean field - True/False dropdown */}
+        {isBooleanField ? (
+          <div className="min-w-[120px] flex-1 max-w-[250px]">
+            <HeadlessSelect
+              options={[
+                { value: "true", label: "True" },
+                { value: "false", label: "False" },
+              ]}
+              value={
+                condition.value === true || condition.value === "true"
+                  ? "true"
+                  : condition.value === false || condition.value === "false"
+                    ? "false"
+                    : ""
+              }
+              onChange={(value) => {
+                updateCondition(groupId, condition.id, {
+                  value: value === "true" ? "true" : "false",
+                  type: "boolean",
+                });
+              }}
+              placeholder="Select value"
+              className="text-sm"
+              zIndex={zIndex.popover}
+            />
+          </div>
+        ) : isDateField && (operator === "on date" || operator === "after date" || operator === "before date" || operator === "between dates" || operator === "in last days") ? (
           // Date/numeric picker for date fields
           <div className="flex gap-2">
             {operator === "on date" && (
@@ -1367,7 +1403,7 @@ export default function SegmentConditionsBuilder({
 
           {/* Between Groups Operator - Display BETWEEN cards */}
           {groupIndex < conditions.length - 1 && (
-            <div className="flex items-center justify-center gap-3 py-4">
+            <div className="flex items-center justify-end gap-3 py-4 pr-4">
               <div className="flex-1 h-px bg-gray-300" />
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
@@ -1391,7 +1427,6 @@ export default function SegmentConditionsBuilder({
                   />
                 </div>
               </div>
-              <div className="flex-1 h-px bg-gray-300" />
             </div>
           )}
         </div>

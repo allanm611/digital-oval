@@ -361,24 +361,21 @@ export default function SegmentModal({
 
       if (conditionGroup.conditions.length > 0) {
         conditions.push(conditionGroup);
+      } else {
+        // Even if no 360_profile conditions, create a group for segment/quicklist conditions
+        // This ensures segment/quicklist are in the same group context
       }
     }
 
-    // Handle segment/quicklist layers
+    // Handle segment/quicklist layers - ADD TO THE LAST GROUP (or first group if no groups exist)
     if (payload.source_layers && payload.source_layers.length > 1) {
-      // Create a new condition group for segment/quicklist layers
-      const layerGroup: SegmentConditionGroup = {
-        id: Math.random().toString(36).substr(2, 9),
-        operator: "AND",
-        groupOperator: "AND",
-        conditions: [],
-      };
+      const targetGroup = conditions.length > 0 ? conditions[conditions.length - 1] : null;
 
       for (let i = 1; i < payload.source_layers.length; i++) {
         const layer = payload.source_layers[i];
 
         if (layer.source_type === "segment" && layer.segment_id) {
-          layerGroup.conditions.push({
+          const segmentCondition = {
             id: Math.random().toString(36).substr(2, 9),
             conditionType: "segment",
             segment_id: Number(layer.segment_id),
@@ -387,9 +384,23 @@ export default function SegmentModal({
             operator_id: 9, // IN operator
             value: "",
             type: "string",
-          });
+          };
+
+          if (targetGroup) {
+            // Add to existing group
+            targetGroup.conditions.push(segmentCondition);
+          } else {
+            // Create a new group with just the segment condition
+            const layerGroup: SegmentConditionGroup = {
+              id: Math.random().toString(36).substr(2, 9),
+              operator: "AND",
+              groupOperator: "AND",
+              conditions: [segmentCondition],
+            };
+            conditions.push(layerGroup);
+          }
         } else if (layer.source_type === "quicklist" && layer.quicklist_id) {
-          layerGroup.conditions.push({
+          const quicklistCondition = {
             id: Math.random().toString(36).substr(2, 9),
             conditionType: "list",
             list_id: Number(layer.quicklist_id),
@@ -398,14 +409,33 @@ export default function SegmentModal({
             operator_id: 9, // IN operator
             value: "",
             type: "string",
-          });
+          };
+
+          if (targetGroup) {
+            // Add to existing group
+            targetGroup.conditions.push(quicklistCondition);
+          } else {
+            // Create a new group with just the quicklist condition
+            const layerGroup: SegmentConditionGroup = {
+              id: Math.random().toString(36).substr(2, 9),
+              operator: "AND",
+              groupOperator: "AND",
+              conditions: [quicklistCondition],
+            };
+            conditions.push(layerGroup);
+          }
         }
       }
-
-      if (layerGroup.conditions.length > 0) {
-        conditions.push(layerGroup);
-      }
     }
+
+    // Log the final structure
+    console.log("📋 Final conditions structure:");
+    conditions.forEach((group, groupIdx) => {
+      console.log(`  Group ${groupIdx}: ${group.conditions.length} conditions (operator: ${group.operator})`);
+      group.conditions.forEach((cond, condIdx) => {
+        console.log(`    └─ Condition ${condIdx}: type=${cond.conditionType}, field=${cond.field || cond.segment_id || cond.list_id}`);
+      });
+    });
 
     return conditions;
   };
@@ -605,20 +635,70 @@ export default function SegmentModal({
           ]
         : undefined;
 
+    // Build layer_filters with proper group structure and operators
+    // Need to maintain separate groups with their own logic (OR/AND)
+    // and connect them with groupOperator (BETWEEN GROUPS)
+    const layerFilterGroups: any[] = [];
+
+    for (const group of conditions) {
+      const groupConditions: LayerCondition[] = [];
+
+      for (const condition of group.conditions) {
+        // Skip non-filter conditions
+        if (
+          (condition.conditionType === "360_profile" ||
+            condition.conditionType === "revenue_metric_kpi" ||
+            condition.conditionType === "usage_metric_kpi") &&
+          condition.field_id &&
+          condition.operator_id
+        ) {
+          const hasValue = condition.value !== "" && condition.value !== undefined && condition.value !== null;
+          const hasDateRange = condition.start_date || condition.end_date;
+
+          if (!hasValue && !hasDateRange) {
+            continue;
+          }
+
+          const layerCond: LayerCondition = {
+            column_ref: {
+              layer_index: 0,
+              column: condition.field_name || "",
+            },
+            operator_id: condition.operator_id,
+            ...(hasDateRange
+              ? {
+                  start_date: condition.start_date || null,
+                  end_date: condition.end_date || null,
+                }
+              : { value: condition.value || undefined }),
+          };
+          groupConditions.push(layerCond);
+        }
+      }
+
+      // Only add group if it has conditions
+      if (groupConditions.length > 0) {
+        layerFilterGroups.push({
+          logic: (group.operator || "AND").toUpperCase(),
+          conditions: groupConditions,
+        });
+      }
+    }
+
+    // Determine top-level logic from groupOperator of first condition group
+    const topLevelLogic = conditions.length > 0 && conditions[0].groupOperator
+      ? (conditions[0].groupOperator).toUpperCase()
+      : "AND";
+
     const payload: SegmentPayload = {
       source_layers: sourceLayers,
       // Include layer_fields when needed to avoid SELECT *
       ...(layerFields !== undefined && { layer_fields: layerFields }),
       layer_filters:
-        layerConditions.length > 0
+        layerFilterGroups.length > 0
           ? {
-              logic: "AND",
-              groups: [
-                {
-                  logic: "AND",
-                  conditions: layerConditions,
-                },
-              ],
+              logic: topLevelLogic,
+              groups: layerFilterGroups,
             }
           : undefined,
       limit: 100, // Preview limit
