@@ -13,6 +13,7 @@ import {
   ValidateResponse,
 } from "../types/auth";
 import { getAuthHeaders, API_CONFIG } from "../../../shared/services/api";
+import { fetchWithAuthInterceptor } from "../../../shared/services/fetchInterceptor";
 
 class AuthService {
   private baseUrl = `${API_CONFIG.BASE_URL}/auth`;
@@ -44,7 +45,7 @@ class AuthService {
 
   // Logout user
   async logout(): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/logout`, {
+    const response = await fetchWithAuthInterceptor(`${this.baseUrl}/logout`, {
       method: "POST",
       headers: getAuthHeaders(),
     });
@@ -56,7 +57,7 @@ class AuthService {
 
   // Logout all sessions
   async logoutAll(): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/logout-all`, {
+    const response = await fetchWithAuthInterceptor(`${this.baseUrl}/logout-all`, {
       method: "POST",
       headers: getAuthHeaders(),
     });
@@ -68,7 +69,7 @@ class AuthService {
 
   // Refresh token
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const response = await fetch(`${this.baseUrl}/refresh`, {
+    const response = await fetchWithAuthInterceptor(`${this.baseUrl}/refresh`, {
       method: "POST",
       headers: getAuthHeaders(),
     });
@@ -89,7 +90,7 @@ class AuthService {
 
   // Get current user info
   async getMe(): Promise<MeResponse> {
-    const response = await fetch(`${this.baseUrl}/me`, {
+    const response = await fetchWithAuthInterceptor(`${this.baseUrl}/me`, {
       headers: getAuthHeaders(),
     });
 

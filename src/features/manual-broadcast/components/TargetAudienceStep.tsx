@@ -145,6 +145,13 @@ export default function TargetAudienceStep({
     setSelectedQuickList(quicklist);
     setError("");
     setShowPickerModal(false);
+    // Immediately update parent state so selection is preserved when navigating
+    // IMPORTANT: Clear the cached quicklist object so it doesn't restore the old one
+    onUpdate({
+      quicklistId: quicklist.id,
+      rowCount: quicklist.row_count,
+      quicklist: null, // Clear cached data to force fresh load
+    });
   };
 
   const handleCreateQuickList = async (request: CreateQuickListRequest) => {
@@ -168,6 +175,13 @@ export default function TargetAudienceStep({
         setIsQuickListCreated(true);
         setShowCreateModal(false);
         setError("");
+        // Immediately update parent state so selection is preserved when navigating
+        // IMPORTANT: Clear the cached quicklist object so it doesn't restore an old one
+        onUpdate({
+          quicklistId: quicklistId,
+          rowCount: rowsImported,
+          quicklist: null, // Clear cached data
+        });
       }
     } catch (err) {
       console.error("Failed to create quicklist:", err);

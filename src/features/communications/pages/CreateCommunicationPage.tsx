@@ -119,7 +119,7 @@ export default function CreateCommunicationPage() {
           limit: 1000,
         },
         batch_size: 500,
-        created_by: user?.user_id || 0,
+        created_by: user?.user_id ?? null,
       });
 
       if (response.success) {
@@ -127,7 +127,7 @@ export default function CreateCommunicationPage() {
       }
     } catch (_error) {
       // Backend not fixed yet - show error
-      showError("Error", "Failed to create communication");
+      showError("Error", "Failed to create communication", true); // bypassSilentMode
     } finally {
       setSending(false);
     }

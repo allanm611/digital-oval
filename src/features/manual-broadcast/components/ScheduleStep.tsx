@@ -9,6 +9,7 @@ interface ScheduleStepProps {
   onUpdate: (data: Partial<ManualBroadcastData>) => void;
   onSubmit: () => void;
   onPrevious: () => void;
+  isEditMode?: boolean;
 }
 
 export default function ScheduleStep({
@@ -16,6 +17,7 @@ export default function ScheduleStep({
   onUpdate,
   onSubmit,
   onPrevious,
+  isEditMode = false,
 }: ScheduleStepProps) {
   const { t } = useLanguage();
   const [scheduleType, setScheduleType] = useState<"now" | "later">(
@@ -415,7 +417,7 @@ export default function ScheduleStep({
             {isSubmitting ? (
               <>
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                <span>{t.manualBroadcast.creating}</span>
+                <span>{isEditMode ? t.manualBroadcast.updating || "Updating..." : t.manualBroadcast.creating}</span>
               </>
             ) : (
               <>

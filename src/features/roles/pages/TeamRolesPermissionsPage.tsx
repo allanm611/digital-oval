@@ -132,6 +132,15 @@ export default function TeamRolesPermissionsPage() {
     null,
   );
 
+  // Role clone modal state
+  const [cloneModalOpen, setCloneModalOpen] = useState(false);
+  const [roleToClone, setRoleToClone] = useState<Role | null>(null);
+  const [cloneFormData, setCloneFormData] = useState({
+    name: "",
+    code: "",
+    description: "",
+  });
+
   // Permission deactivation state
   const [deactivatingPermissionId, setDeactivatingPermissionId] = useState<
     number | null
@@ -246,19 +255,35 @@ export default function TeamRolesPermissionsPage() {
     setRoleFormOpen(true);
   };
 
-  const handleCloneRole = async (role: Role) => {
-    const newCode = `${role.code}_clone_${Date.now()}`;
-    const newName = `${role.name} (Clone)`;
+  const handleCloneRole = (role: Role) => {
+    setRoleToClone(role);
+    setCloneFormData({
+      name: role.name,
+      code: role.code,
+      description: role.description || "",
+    });
+    setCloneModalOpen(true);
+  };
+
+  const handleConfirmClone = async () => {
+    if (!roleToClone || !userId) return;
+
+    if (!cloneFormData.name.trim() || !cloneFormData.code.trim()) {
+      showError(t.common.error, "Name and Code are required", true);
+      return;
+    }
 
     try {
-      setCloningRoleId(role.id);
-      await roleService.cloneRole(role.id, {
-        newCode,
-        newName,
+      setCloningRoleId(roleToClone.id);
+      await roleService.cloneRole(roleToClone.id, {
+        newCode: cloneFormData.code,
+        newName: cloneFormData.name,
         userId,
       } as CloneRoleRequest);
-      success("Success", `Role "${role.name}" has been cloned`);
-      // Fetch roles to show the newly cloned role
+      success("Success", `Role "${roleToClone.name}" has been cloned`);
+      setCloneModalOpen(false);
+      setRoleToClone(null);
+      // Refresh to show the newly cloned role
       fetchRoles();
     } catch (err) {
       showError(
@@ -1203,6 +1228,91 @@ export default function TeamRolesPermissionsPage() {
               >
                 {deactivatingRoleId !== null && <LoadingSpinner />}
                 Deactivate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clone Role Modal */}
+      {cloneModalOpen && roleToClone && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <h2 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+              Copy Role
+            </h2>
+
+            {/* Form Fields */}
+            <div className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                  Role Name
+                </label>
+                <input
+                  type="text"
+                  value={cloneFormData.name}
+                  onChange={(e) =>
+                    setCloneFormData({ ...cloneFormData, name: e.target.value })
+                  }
+                  placeholder="Enter role name"
+                  className={`w-full px-3 py-2 border border-gray-300 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              {/* Code */}
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                  Role Code
+                </label>
+                <input
+                  type="text"
+                  value={cloneFormData.code}
+                  onChange={(e) =>
+                    setCloneFormData({ ...cloneFormData, code: e.target.value })
+                  }
+                  placeholder="Enter role code"
+                  className={`w-full px-3 py-2 border border-gray-300 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className={`block text-sm font-medium ${tw.textPrimary} mb-1`}>
+                  Description
+                </label>
+                <textarea
+                  value={cloneFormData.description}
+                  onChange={(e) =>
+                    setCloneFormData({ ...cloneFormData, description: e.target.value })
+                  }
+                  placeholder="Enter description"
+                  rows={3}
+                  className={`w-full px-3 py-2 border border-gray-300 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end mt-6">
+              <button
+                onClick={() => {
+                  setCloneModalOpen(false);
+                  setRoleToClone(null);
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmClone}
+                disabled={cloningRoleId !== null}
+                className="px-4 py-2 text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                style={{ backgroundColor: color.primary.action }}
+              >
+                {cloningRoleId !== null && <LoadingSpinner />}
+                Copy
               </button>
             </div>
           </div>

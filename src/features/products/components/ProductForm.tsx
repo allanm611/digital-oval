@@ -797,7 +797,7 @@ export default function ProductForm({
                 {/* Combo Price and Validity Configuration */}
                 <div
                   style={{ borderColor: color.border.default }}
-                  className="mb-6 pb-6 border-b"
+                  className="mb-6 pb-6"
                 >
                   {/* Shared Configuration Checkboxes */}
                   <div className="grid gap-4 md:grid-cols-2 mb-4">
@@ -907,57 +907,36 @@ export default function ProductForm({
 
                 {/* Show Add Resource Selector only for custom combos */}
                 {isCustomComboMode && !comboData.combo_type_id && (
-                  <div className="flex gap-3 mb-4 items-end">
-                    <div className="flex-1">
-                      <label
-                        className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
-                      >
-                        Add Resource to Combo
-                      </label>
-                      <HeadlessSelect
-                        options={[
-                          { value: "", label: "Select resource type to add" },
-                          ...resourceTypeOptions
-                            .filter(
-                              (opt) =>
-                                !existingResourceTypes.includes(opt.value),
-                            )
-                            .map((opt) => ({
-                              value: opt.value,
-                              label: opt.label,
-                            })),
-                        ]}
-                        value={selectedResourceType}
-                        onChange={(value) =>
-                          setSelectedResourceType(value as ProductUnit | "")
-                        }
-                        placeholder="Select resource type"
-                        className="w-full"
-                        zIndex={zIndex.popover}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        selectedResourceType &&
-                        addComboResource(selectedResourceType)
-                      }
-                      disabled={!selectedResourceType}
-                      className={`px-4 py-2.5 ${tw.rounded} text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap`}
-                      style={{
-                        color: "#FFFFFF",
-                        backgroundColor: selectedResourceType
-                          ? color.primary.action
-                          : color.text.secondary,
-                        opacity: selectedResourceType ? 1 : 0.5,
-                        cursor: selectedResourceType
-                          ? "pointer"
-                          : "not-allowed",
-                      }}
+                  <div className="mb-4">
+                    <label
+                      className={`block text-sm font-medium ${tw.textPrimary} mb-2`}
                     >
-                      <Plus className="w-4 h-4" />
-                      Add Resource
-                    </button>
+                      Add Resource to Combo
+                    </label>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select resource type to add" },
+                        ...resourceTypeOptions
+                          .filter(
+                            (opt) =>
+                              !existingResourceTypes.includes(opt.value),
+                          )
+                          .map((opt) => ({
+                            value: opt.value,
+                            label: opt.label,
+                          })),
+                      ]}
+                      value={selectedResourceType}
+                      onChange={(value) => {
+                        const selected = value as ProductUnit | "";
+                        if (selected) {
+                          addComboResource(selected);
+                        }
+                      }}
+                      placeholder="Select resource type"
+                      className="w-full"
+                      zIndex={zIndex.popover}
+                    />
                   </div>
                 )}
 
@@ -1131,16 +1110,6 @@ export default function ProductForm({
                               />
                             </div>
                           )}
-                        </div>
-
-                        <div className="mt-4 flex justify-end">
-                          <button
-                            type="button"
-                            className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
-                            style={{ backgroundColor: color.primary.action }}
-                          >
-                            Save
-                          </button>
                         </div>
                       </div>
                     ))}

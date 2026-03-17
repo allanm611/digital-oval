@@ -64,7 +64,7 @@ import AudienceConfigurationStep from "../components/steps/AudienceConfiguration
 import CampaignFlowsStep from "../components/steps/CampaignFlowsStep";
 import SchedulingStep from "../components/steps/SchedulingStep";
 import CampaignPreviewStep from "../components/steps/CampaignPreviewStep";
-import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import RunCampaignModal from "../components/RunCampaignModal";
 
 const steps: Step[] = [
   {
@@ -81,8 +81,8 @@ const steps: Step[] = [
   },
   {
     id: 3,
-    name: "Map Segments to Offers",
-    description: "Configure segment-offer mappings",
+    name: "Offers",
+    description: "Select offers",
     icon: Gift,
   },
   {
@@ -114,7 +114,7 @@ export default function CreateCampaignPage() {
   const isEditMode = Boolean(id);
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
-  const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [showRunModal, setShowRunModal] = useState(false);
   const [createdCampaignId, setCreatedCampaignId] = useState<number | null>(
     null,
   );
@@ -336,7 +336,6 @@ export default function CreateCampaignPage() {
             const validSegments: CampaignSegment[] = segmentsResponse.data
               .map((segment) => {
                 if (!segment || !segment.segment_id) {
-                  console.warn("Segment data invalid:", segment);
                   return null;
                 }
                 return {
@@ -358,7 +357,6 @@ export default function CreateCampaignPage() {
             const validOffers: CampaignOffer[] = offersResponse.data
               .map((offer: any) => {
                 if (!offer || !offer.offer_id) {
-                  console.warn("Offer data invalid:", offer);
                   return null;
                 }
 
@@ -863,7 +861,7 @@ export default function CreateCampaignPage() {
         const updateData: Partial<CreateCampaignRequest> = {
           name: formData.name,
           objective: objectiveLabel, // Send label text, not value
-          updated_by: user?.user_id || 1,
+          updated_by: user?.user_id ?? null,
           ...(formData.description && { description: formData.description }),
           ...(formData.category_id && { category_id: formData.category_id }),
           ...(formData.program_id && { program_id: formData.program_id }),
@@ -940,7 +938,7 @@ export default function CreateCampaignPage() {
                     ...flow,
                     campaign_id: parseInt(id),
                     step_order: index + 1,
-                    created_by: user?.user_id || 1,
+                    created_by: user?.user_id ?? null,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -954,7 +952,7 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: parseInt(id),
                   step_order: index + 1,
-                  created_by: user?.user_id || 1,
+                  created_by: user?.user_id ?? null,
                 }),
               );
               await campaignFlowService.createBatchCampaignFlows(
@@ -1050,7 +1048,7 @@ export default function CreateCampaignPage() {
                     ...flow,
                     campaign_id: createdCampaignId,
                     step_order: index + 1,
-                    created_by: user?.user_id || 1,
+                    created_by: user?.user_id ?? null,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -1064,7 +1062,7 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: createdCampaignId,
                   step_order: index + 1,
-                  created_by: user?.user_id || 1,
+                  created_by: user?.user_id ?? null,
                 }),
               );
               await campaignFlowService.createBatchCampaignFlows(
@@ -1109,7 +1107,7 @@ export default function CreateCampaignPage() {
           code: campaignCode,
           objective: objectiveLabel, // Send label text, not value
           status: "draft", // New campaigns start as draft
-          created_by: user?.user_id || 1,
+          created_by: user?.user_id ?? null,
           ...(formData.description && { description: formData.description }),
           ...(formData.category_id && { category_id: formData.category_id }),
           ...(formData.program_id && { program_id: formData.program_id }),
@@ -1156,7 +1154,7 @@ export default function CreateCampaignPage() {
                 segment_id: parseInt(segment.id),
                 is_primary: segment.priority === 1,
                 include_exclude: segment.include_exclude || "include",
-                created_by: user?.user_id || 1,
+                created_by: user?.user_id ?? null,
               });
             }
           } catch (segmentError) {
@@ -1227,7 +1225,7 @@ export default function CreateCampaignPage() {
                     ...flow,
                     campaign_id: createdCampaignIdValue,
                     step_order: index + 1,
-                    created_by: user?.user_id || 1,
+                    created_by: user?.user_id ?? null,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -1243,7 +1241,7 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: createdCampaignIdValue,
                   step_order: index + 1,
-                  created_by: user?.user_id || 1,
+                  created_by: user?.user_id ?? null,
                 }),
               );
 
@@ -1405,7 +1403,7 @@ export default function CreateCampaignPage() {
         // Create session without existing draft - create new campaign
         const draftData: CreateCampaignRequest = {
           ...baseDraftData,
-          created_by: user?.user_id || 1,
+          created_by: user?.user_id ?? null,
         };
         const createResponse = await campaignService.createCampaign(draftData);
         campaignId = createResponse?.data?.id;
@@ -1663,10 +1661,10 @@ export default function CreateCampaignPage() {
 
       {/* Execute Campaign Modal */}
       {createdCampaignId && createdCampaignName && (
-        <ExecuteCampaignModal
-          isOpen={showExecuteModal}
+        <RunCampaignModal
+          isOpen={showRunModal}
           onClose={() => {
-            setShowExecuteModal(false);
+            setShowRunModal(false);
             navigate("/dashboard/campaigns");
           }}
           campaignId={createdCampaignId}

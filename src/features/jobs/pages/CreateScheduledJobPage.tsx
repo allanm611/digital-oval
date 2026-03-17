@@ -110,7 +110,7 @@ export default function CreateScheduledJobPage() {
     tags: [],
     notification_recipients: [],
     is_active: true,
-    created_by: user?.user_id || 1,
+    created_by: user?.user_id ?? null,
     processing_mode: "batch",
     metadata: {},
   });
@@ -448,7 +448,7 @@ export default function CreateScheduledJobPage() {
       if (isEditMode && id) {
         const updatePayload: UpdateScheduledJobPayload = {
           ...finalPayload,
-          updated_by: user?.user_id || 1,
+          updated_by: user?.user_id ?? null,
         };
         await scheduledJobService.updateScheduledJob(Number(id), updatePayload);
         const jobDisplayName =
@@ -464,7 +464,7 @@ export default function CreateScheduledJobPage() {
       } else {
         await scheduledJobService.createScheduledJob({
           ...finalPayload,
-          created_by: created_by ?? (user?.user_id || 1),
+          created_by: created_by ?? (user?.user_id ?? null),
         });
         const jobDisplayName =
           (formData.name && formData.name.trim()) || "Scheduled job";

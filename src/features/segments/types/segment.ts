@@ -615,13 +615,23 @@ export interface SegmentCondition {
   // Common fields
   operator:
     | "equals"
+    | "not equals"
     | "not_equals"
-    | "contains"
-    | "not_contains"
+    | "greater than"
     | "greater_than"
+    | "less than"
     | "less_than"
+    | "greater than or equal"
+    | "greater_than_or_equal"
+    | "less than or equal"
+    | "less_than_or_equal"
+    | "in list"
     | "in"
+    | "not in list"
     | "not_in"
+    | "between"
+    | "is empty"
+    | "is not empty"
     // System Event time operators
     | "occurred"
     | "occurred_in_last"
@@ -632,7 +642,8 @@ export interface SegmentCondition {
     | "count_equals"
     | "never_occurred"
     // KPI time-based operators
-    | "in_last_days";
+    | "in_last_days"
+    | string; // Allow backend operator labels not explicitly listed
   operator_id?: number; // Backend operator ID - used for API calls
   value: string | number | string[] | { start: string; end: string };
   type: "string" | "number" | "boolean" | "array";
@@ -968,7 +979,13 @@ export type LayerColumnRef = {
 /**
  * Join types supported by the backend
  */
-export type JoinType = "INNER JOIN" | "LEFT JOIN" | "RIGHT JOIN" | "FULL OUTER JOIN" | "CROSS JOIN" | "LEFT SEMI JOIN";
+export type JoinType =
+  | "INNER JOIN"
+  | "LEFT JOIN"
+  | "RIGHT JOIN"
+  | "FULL OUTER JOIN"
+  | "CROSS JOIN"
+  | "LEFT SEMI JOIN";
 
 /**
  * Source layer types

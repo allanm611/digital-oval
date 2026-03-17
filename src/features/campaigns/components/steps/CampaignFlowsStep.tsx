@@ -414,6 +414,36 @@ export default function CampaignFlowsStep({
                     </div>
                   )}
                 </div>
+
+                {/* Conversion Tracking Section */}
+                <div className="mt-4 pt-4">
+                  <h5 className={`text-sm font-medium ${tw.textPrimary} mb-3`}>
+                    Conversion Tracking
+                  </h5>
+                  {offers.length === 0 ? (
+                    <p className={`text-xs ${tw.textSecondary}`}>
+                      Select offers to view tracking configuration
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {offers.map((offer) => (
+                        <div
+                          key={`tracking-${offer.id}`}
+                          className={`p-3 ${tw.rounded}`}
+                          style={{ backgroundColor: color.surface.cards }}
+                        >
+                          <div className={`text-xs font-medium ${tw.textPrimary} mb-2`}>
+                            {offer.name}
+                          </div>
+                          <div className={`text-xs ${tw.textSecondary} space-y-1`}>
+                            <p>• Tracking Type: <span className="font-medium">Not configured</span></p>
+                            <p>• Rules: <span className="font-medium">0</span></p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })

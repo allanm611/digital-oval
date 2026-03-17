@@ -324,7 +324,7 @@ export default function WorkflowsPage() {
     try {
       await workflowService.cloneWorkflow(workflow.id, {
         newName: `${workflow.name} (Copy)`,
-        created_by: user?.user_id || null,
+        created_by: user?.user_id ?? null,
       });
       showToast(
         t.workflows.cloneSuccess || "Workflow cloned",

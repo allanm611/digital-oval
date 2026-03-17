@@ -596,12 +596,12 @@ export default function JobWorkflowStepsPage() {
       if (action === "activate") {
         result = await jobWorkflowStepService.batchActivateSteps({
           stepIds,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
       } else if (action === "deactivate") {
         result = await jobWorkflowStepService.batchDeactivateSteps({
           stepIds,
-          userId: user?.user_id || 0,
+          userId: user?.user_id ?? null,
         });
       } else if (action === "delete") {
         // Delete each step individually (batch delete not available in API)
@@ -814,7 +814,7 @@ export default function JobWorkflowStepsPage() {
 
       const result = await jobWorkflowStepService.batchUpdateSteps({
         updates,
-        userId: user?.user_id || 0,
+        userId: user?.user_id ?? null,
       });
 
       showToast(

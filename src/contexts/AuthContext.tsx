@@ -9,6 +9,7 @@ import { authService } from "../features/auth/services/authService";
 import { userService } from "../features/users/services/userService";
 import { roleService } from "../features/roles/services/roleService";
 import { User, LoginResponse } from "../features/auth/types/auth";
+import { registerAuthLogoutCallback } from "../shared/services/fetchInterceptor";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -58,6 +59,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsAuthenticated(true);
     }
     setLoading(false);
+
+    // Register logout callback for global auth error handling
+    // This allows the fetch interceptor to log out the user if API returns 401/403
+    registerAuthLogoutCallback(async () => {
+      setIsAuthenticated(false);
+      setUser(null);
+      setToken(null);
+      setPermissions([]);
+      // Redirect to login
+      window.location.href = "/login";
+    });
   }, []);
 
   const login = async (
@@ -127,22 +139,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(user);
       localStorage.setItem("auth_user", JSON.stringify(user));
     } else {
-      // Fallback basic user if no user data in response
-      const basicUser: User = {
-        user_id: 0,
-        first_name: "",
-        last_name: "",
-        private_email_address: email,
-        email,
-        role: userRole,
-        is_activated: true,
-        is_deleted: false,
-        force_password_reset: false,
-        created_on: new Date().toISOString(),
-        updated_on: new Date().toISOString(),
-      };
-      setUser(basicUser);
-      localStorage.setItem("auth_user", JSON.stringify(basicUser));
+      // If no user data in response, login is incomplete
+      // Don't create a user object - auth is not complete
+      throw new Error("Login successful but user data missing");
     }
 
     return response;

@@ -54,10 +54,10 @@ export default function SubscriptionIdSelector({
 
   return (
     <div className="space-y-2">
-      <label className={`block text-sm font-medium ${tw.textPrimary} mb-0`}>
+      <label className={`block text-sm font-medium ${tw.textPrimary}`}>
         {t.manualBroadcast.subscriptionIdLabel || "Subscription ID Field *"}
       </label>
-      <p className={`text-xs ${tw.textSecondary} mb-2`}>
+      <p className={`text-xs ${tw.textSecondary} mb-0`}>
         {t.manualBroadcast.subscriptionIdHelper ||
           "Select the column that contains the unique identifier for each customer"}
       </p>

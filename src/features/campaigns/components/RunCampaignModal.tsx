@@ -13,14 +13,14 @@ import { color, tw, components } from "../../../shared/utils/utils";
 import React, { useCallback } from "react";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 
-interface ExecuteCampaignModalProps {
+interface RunCampaignModalProps {
   isOpen: boolean;
   onClose: () => void;
   campaignId: number;
   campaignName: string;
   isActive?: boolean;
   approvalStatus?: string;
-  onSuccess?: (executionData?: any) => void;
+  onSuccess?: (runData?: any) => void;
 }
 
 interface SegmentMapping {
@@ -47,7 +47,7 @@ const AVAILABLE_CHANNELS = [
   { code: "SHORT_CODE", label: "Short Code" },
 ];
 
-export default function ExecuteCampaignModal({
+export default function RunCampaignModal({
   isOpen,
   onClose,
   campaignId,
@@ -55,16 +55,16 @@ export default function ExecuteCampaignModal({
   isActive,
   approvalStatus,
   onSuccess,
-}: ExecuteCampaignModalProps) {
+}: RunCampaignModalProps) {
   const { showToast } = useToast();
   const [segments, setSegments] = useState<SegmentMapping[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isExecuting, setIsExecuting] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
-  // Check if campaign is approved and active, then it can be executed
+  // Check if campaign is approved and active, then it can be run
   const isApproved = approvalStatus === "approved";
-  const canExecute = isApproved && isActive;
-  const executionDisabledReason = !isApproved
+  const canRun = isApproved && isActive;
+  const runDisabledReason = !isApproved
     ? `Campaign is pending approval (status: ${approvalStatus})`
     : !isActive
       ? "Campaign is not active. Please activate it first."
@@ -197,7 +197,7 @@ export default function ExecuteCampaignModal({
     }
 
 
-    setIsExecuting(true);
+    setIsRunning(true);
     try {
       // Prepare segments with proper type conversion
       const segmentsData = selectedSegments.map((seg) => {
@@ -223,14 +223,14 @@ export default function ExecuteCampaignModal({
         mode: "immediate",
       };
 
-      const executionResult = await campaignService.executeCampaign(request);
+      const runResult = await campaignService.runCampaign(request);
 
-      showToast("success", `Campaign "${campaignName}" executed successfully!`);
-      onSuccess?.(executionResult?.data);
+      showToast("success", `Campaign "${campaignName}" started successfully!`);
+      onSuccess?.(runResult?.data);
       onClose();
     } catch (error) {
       // Extract error message from backend response
-      let errorMessage = "Failed to execute campaign. Please try again.";
+      let errorMessage = "Failed to run campaign. Please try again.";
 
       if (error instanceof Error) {
         // Filter out HTTP error messages
@@ -251,13 +251,13 @@ export default function ExecuteCampaignModal({
                 backendMessage.includes("HTTP error") ||
                 backendMessage.includes("status:")
               ) {
-                errorMessage = "Failed to execute campaign. Please try again.";
+                errorMessage = "Failed to run campaign. Please try again.";
               } else {
                 errorMessage = backendMessage || errorMessage;
               }
             } catch {
               // If parsing fails, use generic message
-              errorMessage = "Failed to execute campaign. Please try again.";
+              errorMessage = "Failed to run campaign. Please try again.";
             }
           } else {
             // Use the error message if it doesn't contain HTTP errors
@@ -273,7 +273,7 @@ export default function ExecuteCampaignModal({
 
       showToast("error", errorMessage);
     } finally {
-      setIsExecuting(false);
+      setIsRunning(false);
     }
   };
 
@@ -300,7 +300,7 @@ export default function ExecuteCampaignModal({
           >
             <div>
               <h2 className={`text-xl font-semibold ${tw.textPrimary}`}>
-                Execute Campaign
+                Run Campaign
               </h2>
               <p className={`text-sm ${tw.textSecondary} mt-0.5`}>
                 {campaignName}
@@ -328,7 +328,7 @@ export default function ExecuteCampaignModal({
                 <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-sm font-medium text-red-900">
-                    Cannot Execute Campaign
+                    Cannot Run Campaign
                   </h4>
                   <p className="text-sm text-red-700 mt-1">
                     {executionDisabledReason}
@@ -436,7 +436,7 @@ export default function ExecuteCampaignModal({
           >
             <button
               onClick={onClose}
-              disabled={isExecuting}
+              disabled={isRunning}
               className={`px-4 py-2 border ${tw.rounded} text-sm font-medium transition-colors disabled:opacity-50`}
               style={{
                 borderColor: color.border.default,
@@ -448,22 +448,22 @@ export default function ExecuteCampaignModal({
             <button
               onClick={handleExecute}
               disabled={
-                !canExecute ||
-                isExecuting ||
+                !canRun ||
+                isRunning ||
                 segments.filter((s) => s.selected && s.channels.length > 0)
                   .length === 0
               }
-              title={executionDisabledReason || "Execute campaign"}
+              title={runDisabledReason || "Run campaign"}
               className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
               style={{ backgroundColor: color.primary.action }}
             >
-              {isExecuting ? (
+              {isRunning ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Executing...
+                  Running...
                 </>
               ) : (
-                "Execute Campaign"
+                "Run Campaign"
               )}
             </button>
           </div>

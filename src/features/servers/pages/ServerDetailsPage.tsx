@@ -231,9 +231,7 @@ export default function ServerDetailsPage() {
 
       // Optimistically update the server state
       setServer((prev) =>
-        prev
-          ? { ...prev, health_check_enabled: action === "enable" }
-          : null,
+        prev ? { ...prev, health_check_enabled: action === "enable" } : null,
       );
 
       success(
@@ -420,8 +418,8 @@ export default function ServerDetailsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton fallbackTo="/dashboard/servers" />
       <div className="flex items-center justify-between">
-        <BackButton fallbackTo="/dashboard/servers" iconSize="w-4 h-4" />
         <div className="flex items-center gap-2">
           <button
             onClick={handleActivationToggle}
@@ -571,7 +569,9 @@ export default function ServerDetailsPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-black">
               Server
             </p>
-            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>{server.name}</h1>
+            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
+              {server.name}
+            </h1>
             <p className="text-sm text-black">Code: {server.code}</p>
           </div>
           <div className="flex items-center gap-2">

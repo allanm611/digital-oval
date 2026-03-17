@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   Users,
@@ -37,7 +37,7 @@ interface AvailableControlGroup {
   created_at: string;
 }
 import SegmentSelectionModal from "./SegmentSelectionModal";
-import UniversalControlGroupModal from "./UniversalControlGroupModal";
+import SeedListConfigModal from "./SeedListConfigModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
 import { UNIVERSAL_CONTROL_GROUPS } from "../../../../shared/config/universalControlGroupsConfig";
 
@@ -78,8 +78,6 @@ export default function AudienceConfigurationStep({
 }: AudienceConfigurationStepProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCreateSegmentModal, setShowCreateSegmentModal] = useState(false);
-  const [showUniversalControlGroupModal, setShowUniversalControlGroupModal] =
-    useState(false);
   const [editingControlGroup, setEditingControlGroup] = useState<string | null>(
     null,
   );
@@ -89,6 +87,11 @@ export default function AudienceConfigurationStep({
   const [isCampaignTypeDropdownOpen, setIsCampaignTypeDropdownOpen] =
     useState(false);
   const [segmentRefreshTrigger, setSegmentRefreshTrigger] = useState(0);
+
+  // Control Group Mode state
+  const [controlGroupMode, setControlGroupMode] = useState<"shared" | "per-segment">("per-segment");
+  const [sharedControlGroupId, setSharedControlGroupId] = useState<string | null>(null);
+  const [sharedControlGroupConfig, setSharedControlGroupConfig] = useState<SegmentControlGroupConfig | null>(null);
 
   // Seed List state - use props if provided, otherwise use local state
   const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">(propSeedListMode || "all");
@@ -104,6 +107,15 @@ export default function AudienceConfigurationStep({
     if (propSetSeedListMode) {
       propSetSeedListMode(mode);
     }
+
+    // When switching to "apply to all", populate with all available seed lists
+    if (mode === "all") {
+      const allSeedListIds = AVAILABLE_SEED_LISTS.map((list) => list.id);
+      handleSetSegmentSeedLists({ all: allSeedListIds });
+    } else {
+      // When switching to "per-segment", clear the global setting
+      handleSetSegmentSeedLists({});
+    }
   };
 
   const handleSetSegmentSeedLists = (seedLists: Record<string, string[]>) => {
@@ -118,6 +130,52 @@ export default function AudienceConfigurationStep({
   useClickOutside(campaignTypeDropdownRef, () =>
     setIsCampaignTypeDropdownOpen(false),
   );
+
+  // Initialize seed lists when mode is "apply to all"
+  useEffect(() => {
+    if (seedListMode === "all" && (!segmentSeedLists["all"] || segmentSeedLists["all"].length === 0)) {
+      const allSeedListIds = AVAILABLE_SEED_LISTS.map((list) => list.id);
+      handleSetSegmentSeedLists({ all: allSeedListIds });
+    }
+  }, [seedListMode]);
+
+  // Persist control group and seed list configuration to localStorage
+  useEffect(() => {
+    const audienceConfig = {
+      controlGroupMode,
+      sharedControlGroupId,
+      sharedControlGroupConfig,
+      seedListMode,
+      segmentSeedLists,
+    };
+    localStorage.setItem(
+      "campaign_audience_config",
+      JSON.stringify(audienceConfig)
+    );
+  }, [controlGroupMode, sharedControlGroupId, sharedControlGroupConfig, seedListMode, segmentSeedLists]);
+
+  // Load audience configuration from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("campaign_audience_config");
+    if (saved) {
+      try {
+        const config = JSON.parse(saved);
+        setControlGroupMode(config.controlGroupMode || "per-segment");
+        setSharedControlGroupId(config.sharedControlGroupId || null);
+        setSharedControlGroupConfig(config.sharedControlGroupConfig || null);
+        if (config.seedListMode && propSetSeedListMode) {
+          propSetSeedListMode(config.seedListMode);
+          setSeedListMode(config.seedListMode);
+        }
+        if (config.segmentSeedLists && propSetSegmentSeedLists) {
+          propSetSegmentSeedLists(config.segmentSeedLists);
+          setSegmentSeedLists(config.segmentSeedLists);
+        }
+      } catch (e) {
+        console.error("Failed to load audience configuration:", e);
+      }
+    }
+  }, []);
 
   // Campaign type options
   const campaignTypeOptions = [
@@ -472,13 +530,75 @@ export default function AudienceConfigurationStep({
         </div>
       )}
 
+      {/* Control Group Mode Configuration */}
+      {formData.campaign_type && (
+        <div className={`${tw.rounded} p-4 mb-6 bg-gray-50`}>
+          <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
+            Control Group Configuration
+          </h3>
+          <div className="space-y-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={controlGroupMode === "shared"}
+                onChange={(e) => {
+                  setControlGroupMode(e.target.checked ? "shared" : "per-segment");
+                  if (e.target.checked) {
+                    setSharedControlGroupId(null);
+                  }
+                }}
+                className="w-4 h-4"
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Use shared control group for all segments
+              </span>
+            </label>
+
+            {controlGroupMode === "shared" && (
+              <div className="ml-7">
+                <button
+                  onClick={() => {
+                    setEditingControlGroup("all");
+                    setShowControlGroupModal(true);
+                  }}
+                  className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Configure Control Group
+                </button>
+              </div>
+            )}
+
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={controlGroupMode === "per-segment"}
+                onChange={(e) => {
+                  setControlGroupMode(e.target.checked ? "per-segment" : "shared");
+                  if (e.target.checked) {
+                    setSharedControlGroupId(null);
+                  }
+                }}
+                className="w-4 h-4"
+                style={{ accentColor: color.primary.accent }}
+              />
+              <span className={`text-sm font-medium ${tw.textPrimary}`}>
+                Configure control group per segment
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Seed List Configuration - Checkboxes */}
       {formData.campaign_type && (
         <div className={`${tw.rounded} p-4 mb-6 bg-gray-50`}>
           <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
             Seed List Configuration
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -491,6 +611,22 @@ export default function AudienceConfigurationStep({
                 Apply seed list to all segments
               </span>
             </label>
+
+            {seedListMode === "all" && (
+              <div className="ml-7">
+                <button
+                  onClick={() => {
+                    setEditingSeedListSegmentId("all");
+                    setShowSeedListModal(true);
+                  }}
+                  className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Select Seed Lists
+                </button>
+              </div>
+            )}
 
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -762,21 +898,27 @@ export default function AudienceConfigurationStep({
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getControlGroupColor(
-                            segment.control_group_config,
+                            controlGroupMode === "shared" && sharedControlGroupConfig
+                              ? sharedControlGroupConfig
+                              : segment.control_group_config,
                           )}`}
                           style={{
                             backgroundColor: getControlGroupBgColor(
-                              segment.control_group_config,
+                              controlGroupMode === "shared" && sharedControlGroupConfig
+                                ? sharedControlGroupConfig
+                                : segment.control_group_config,
                             ),
                           }}
                         >
-                          {getControlGroupLabel(segment.control_group_config)}
+                          {controlGroupMode === "shared" && sharedControlGroupConfig
+                            ? getControlGroupLabel(sharedControlGroupConfig)
+                            : getControlGroupLabel(segment.control_group_config)}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-gray-900">
                           {seedListMode === "all"
-                            ? AVAILABLE_SEED_LISTS.length
+                            ? segmentSeedLists["all"]?.length || 0
                             : segmentSeedLists[segment.id]?.length || 0}
                         </div>
                       </td>
@@ -794,16 +936,18 @@ export default function AudienceConfigurationStep({
                               <Database className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => {
-                              setEditingControlGroup(segment.id);
-                              setShowControlGroupModal(true);
-                            }}
-                            className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
-                            title="Configure Control Group"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </button>
+                          {controlGroupMode === "per-segment" && (
+                            <button
+                              onClick={() => {
+                                setEditingControlGroup(segment.id);
+                                setShowControlGroupModal(true);
+                              }}
+                              className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
+                              title="Configure Control Group"
+                            >
+                              <Settings className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => {}}
                             className="p-1.5 text-gray-900 rounded transition-colors cursor-pointer"
@@ -842,13 +986,6 @@ export default function AudienceConfigurationStep({
         />
       )}
 
-      {/* Universal Control Group Modal */}
-      {showUniversalControlGroupModal && (
-        <UniversalControlGroupModal
-          isOpen={showUniversalControlGroupModal}
-          onClose={() => setShowUniversalControlGroupModal(false)}
-        />
-      )}
 
       {/* Create Segment Modal */}
       {showCreateSegmentModal && (
@@ -890,9 +1027,28 @@ export default function AudienceConfigurationStep({
             setEditingControlGroup(null);
           }}
           segmentId={editingControlGroup}
-          segment={selectedSegments.find((s) => s.id === editingControlGroup)!}
+          segment={editingControlGroup === "all" ? {
+            id: "all",
+            name: "All Segments",
+            customer_count: selectedSegments.reduce((sum, s) => sum + (s.customer_count || 0), 0),
+            description: "Shared control group for all segments",
+            created_at: new Date().toISOString(),
+            criteria: {},
+            priority: 0,
+            control_group_config: { type: "none" },
+          } : selectedSegments.find((s) => s.id === editingControlGroup)!}
           availableControlGroups={availableControlGroups}
-          onSave={updateSegmentControlGroup}
+          onSave={(id, config) => {
+            if (id === "all") {
+              // For shared mode, store the full configuration
+              setSharedControlGroupConfig(config);
+              if (config.type === "multiple_control_group") {
+                setSharedControlGroupId(config.selected_control_group_id || null);
+              }
+            } else {
+              updateSegmentControlGroup(id, config);
+            }
+          }}
         />
       )}
     </div>
@@ -993,14 +1149,22 @@ function ControlGroupConfigModal({
       <div
         className={`bg-white ${tw.rounded} max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-300`}
       >
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900">
-            {t.campaigns.audienceConfiguration.configureControlGroup}
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">
-            {t.campaigns.audienceConfiguration.configureControlGroupSettings}{" "}
-            <span className="font-medium">{segment.name}</span>
-          </p>
+        <div className="p-6 border-b border-gray-200 flex items-start justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">
+              {t.campaigns.audienceConfiguration.configureControlGroup}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {t.campaigns.audienceConfiguration.configureControlGroupSettings}{" "}
+              <span className="font-medium">{segment.name}</span>
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <div className="p-6 space-y-6">
@@ -1525,140 +1689,3 @@ function ControlGroupConfigModal({
 }
 
 // Seed List Configuration Modal Component
-interface SeedListConfigModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  segmentId: string;
-  selectedSeedLists: string[];
-  onSave: (segmentId: string, seedListIds: string[]) => void;
-}
-
-function SeedListConfigModal({
-  isOpen,
-  onClose,
-  segmentId,
-  selectedSeedLists,
-  onSave,
-}: SeedListConfigModalProps) {
-  const { t } = useLanguage();
-  const [selected, setSelected] = useState<string[]>(selectedSeedLists);
-
-  // Mock seed list data derived from recipients
-  const seedLists = [
-    {
-      id: "marketing-staff",
-      name: "Marketing Staff",
-      description: "Marketing team members",
-      count: 2,
-    },
-    {
-      id: "sales-staff",
-      name: "Sales Staff",
-      description: "Sales team members",
-      count: 2,
-    },
-    {
-      id: "support-staff",
-      name: "Support Staff",
-      description: "Support team members",
-      count: 2,
-    },
-    {
-      id: "finance-staff",
-      name: "Finance Staff",
-      description: "Finance team members",
-      count: 1,
-    },
-  ];
-
-  const toggleSelection = (seedListId: string) => {
-    setSelected((prev) =>
-      prev.includes(seedListId)
-        ? prev.filter((id) => id !== seedListId)
-        : [...prev, seedListId],
-    );
-  };
-
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-          onClick={onClose}
-        />
-
-        {/* Modal */}
-        <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-md`}>
-          {/* Header */}
-          <div
-            className="flex items-center justify-between p-6 border-b"
-            style={{ borderColor: color.border.default }}
-          >
-            <h2 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Select Seed Lists
-            </h2>
-            <button
-              onClick={onClose}
-              className={`p-2 hover:bg-gray-100 ${tw.rounded} transition-colors`}
-            >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 max-h-96 overflow-y-auto">
-            <div className="space-y-3">
-              {seedLists.map((seedList) => (
-                <label
-                  key={seedList.id}
-                  className="flex items-start gap-3 cursor-pointer p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                  style={{ borderColor: color.border.default }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(seedList.id)}
-                    onChange={() => toggleSelection(seedList.id)}
-                    className="mt-1 w-4 h-4"
-                  />
-                  <div>
-                    <p className={`text-sm font-medium ${tw.textPrimary}`}>
-                      {seedList.name}
-                    </p>
-                    <p className={`text-xs ${tw.textSecondary}`}>
-                      {seedList.description} ({seedList.count} members)
-                    </p>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div
-            className="flex items-center justify-end gap-3 p-6 border-t"
-            style={{ borderColor: color.border.default }}
-          >
-            <button
-              onClick={onClose}
-              className={`px-4 py-2 border ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
-              style={{ borderColor: color.border.default }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => onSave(segmentId, selected)}
-              className={`px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-all`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>,
-    document.body,
-  );
-}

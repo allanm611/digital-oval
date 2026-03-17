@@ -213,6 +213,7 @@ export default function JobExecutionsPage() {
             filters: {},
             limit: pageSize,
             offset,
+            skipCache: true,
             ...overrideParams,
           };
           if (statusFilter) {
@@ -345,6 +346,7 @@ export default function JobExecutionsPage() {
     startDateFilter,
     endDateFilter,
     longRunningThreshold,
+    searchTerm,
   ]);
 
   useEffect(() => {
@@ -1265,7 +1267,7 @@ export default function JobExecutionsPage() {
               <Pagination
                 currentPage={currentPage}
                 pageSize={pageSize}
-                totalItems={totalExecutions}
+                totalItems={searchTerm.trim() ? filteredExecutions.length : totalExecutions}
                 onPageChange={setCurrentPage}
               />
             )}

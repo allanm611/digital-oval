@@ -129,7 +129,7 @@ export default function FetchControlsModal({
         month: byTimeMonth,
         day: byTimeDay,
         hour: byTimeHour,
-        user_id: user?.user_id || 0,
+        user_id: user?.user_id ?? null,
       };
 
       const response = await etlService.fetchByTime(payload);
@@ -174,7 +174,7 @@ export default function FetchControlsModal({
     try {
       const payload: FetchByRangeRequest = {
         job_id: parseInt(byRangeJobId, 10),
-        user_id: user?.user_id || 0,
+        user_id: user?.user_id ?? null,
         start_time: {
           month: byRangeStartMonth,
           day: byRangeStartDay,

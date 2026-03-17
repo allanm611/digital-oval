@@ -26,6 +26,7 @@ import { colors } from "../../../shared/utils/tokens";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import Pagination from "../../../shared/components/ui/Pagination";
 import CsvDownloadButton from "../../../shared/components/CsvDownloadButton";
+import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { formatCurrency as formatCurrencyAmount } from "../../../shared/services/currencyService";
 import type {
   RangeOption,
@@ -34,6 +35,10 @@ import type {
 } from "../types/ReportsAPI";
 
 import { tw } from "../../../shared/utils/utils";
+import { offerService } from "../../offers/services/offerService";
+import { useToast } from "../../../contexts/ToastContext";
+import type { Offer } from "../../offers/types/offer";
+
 // Extract types from API response type
 type CombinedSummary = OfferReportsResponse["summary"];
 type FunnelStage = OfferReportsResponse["redemptionFunnel"][number];
@@ -514,18 +519,69 @@ const statIcons = {
 
 export default function OfferReportsPage() {
   const { t } = useLanguage();
+  const { error: showError } = useToast();
   const [tableQuery, setTableQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Statuses");
-  const [segmentFilter, setSegmentFilter] = useState("All Segments");
   const [selectedRange, setSelectedRange] = useState<RangeOption>("7d");
   const [customRange, setCustomRange] = useState({ start: "", end: "" });
   const [appliedCustomRange, setAppliedCustomRange] = useState({
     start: "",
     end: "",
   });
-  const [useDummyData, setUseDummyData] = useState(true);
+  const [useDummyData, setUseDummyData] = useState(false);
   const [tablePage, setTablePage] = useState(1);
   const tablePageSize = 20;
+
+  // State for real offer data
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(true);
+  const [offerFetchError, setOfferFetchError] = useState<string | null>(null);
+
+  // Fetch real offers on mount using batch loading
+  const fetchOffers = async () => {
+    try {
+      setIsLoadingOffers(true);
+      setOfferFetchError(null);
+      let allOffers: Offer[] = [];
+      let batchOffset = 0;
+      const batchSize = 100;
+      let hasMore = true;
+
+      // Fetch all offers in batches
+      while (hasMore) {
+        const batchResponse = await offerService.searchOffers({
+          limit: batchSize,
+          offset: batchOffset,
+          skipCache: true,
+        });
+
+        if (batchResponse?.data && Array.isArray(batchResponse.data)) {
+          allOffers = [...allOffers, ...batchResponse.data];
+
+          // Check if there are more offers to fetch
+          const totalFromPagination = batchResponse.pagination?.total || 0;
+          hasMore =
+            allOffers.length < totalFromPagination &&
+            batchResponse.data.length === batchSize;
+          batchOffset += batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      setOffers(allOffers);
+    } catch (err) {
+      console.error("Error fetching offers:", err);
+      setOfferFetchError("Failed to load offers");
+      setOffers([]);
+    } finally {
+      setIsLoadingOffers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
 
   const handleRun = () => {
     setAppliedCustomRange(customRange);
@@ -729,10 +785,25 @@ export default function OfferReportsPage() {
     }));
   }, [activeRangeKey, scaleFactor, useDummyData]);
 
+  // Convert real offers to table row format with mixed real and dummy data
+  const offerTableRows = useMemo(() => {
+    return offers.map((offer) => ({
+      id: `offer-${offer.id}`,
+      offerName: offer.name,
+      status: offer.status ?? "Active",
+      // Dummy data for columns without backend data
+      targetGroup: Math.floor(Math.random() * 50000) + 10000,
+      controlGroup: Math.floor(Math.random() * 10000) + 1000,
+      messagesGenerated: Math.floor(Math.random() * 100000) + 50000,
+      sent: Math.floor(Math.random() * 95000) + 45000,
+      delivered: Math.floor(Math.random() * 90000) + 40000,
+      conversions: Math.floor(Math.random() * 15000) + 5000,
+      lastUpdated: offer.updated_at ? new Date(offer.updated_at).toLocaleDateString() : "—",
+      lastUpdatedDate: offer.updated_at ? new Date(offer.updated_at).getTime() : Date.now(),
+    }));
+  }, [offers]);
+
   const filteredRows = useMemo(() => {
-    if (!useDummyData) {
-      return [];
-    }
     const query = tableQuery.trim().toLowerCase();
     const maxDays =
       appliedCustomRange.start && appliedCustomRange.end
@@ -745,32 +816,28 @@ export default function OfferReportsPage() {
       ? new Date(appliedCustomRange.end).getTime()
       : null;
 
-    return offerRows.filter((row) => {
+    // Only use real offer data
+    return offerTableRows.filter((row) => {
       const matchesStatus =
         statusFilter === "All Statuses" ? true : row.status === statusFilter;
-      const matchesSegment =
-        segmentFilter === "All Segments" ? true : row.segment === segmentFilter;
       const matchesQuery = query
-        ? row.offerName.toLowerCase().includes(query) ||
-          row.campaignName.toLowerCase().includes(query) ||
-          row.segment.toLowerCase().includes(query)
+        ? row.offerName.toLowerCase().includes(query)
         : true;
-      const rowDate = new Date(row.lastUpdated).getTime();
+      const rowDate = (row as any).lastUpdatedDate || Date.now();
       const now = Date.now();
       const matchesRange =
         appliedCustomRange.start && appliedCustomRange.end && startMs && endMs
           ? rowDate >= startMs && rowDate <= endMs
           : now - rowDate <= maxDays * 24 * 60 * 60 * 1000;
-      return matchesStatus && matchesSegment && matchesQuery && matchesRange;
+      return matchesStatus && matchesQuery && matchesRange;
     });
   }, [
     statusFilter,
-    segmentFilter,
     tableQuery,
     customRange,
     customDays,
     selectedRange,
-    useDummyData,
+    offerTableRows,
   ]);
 
   // Reset pagination when filters change
@@ -779,7 +846,6 @@ export default function OfferReportsPage() {
   }, [
     tableQuery,
     statusFilter,
-    segmentFilter,
     appliedCustomRange.start,
     appliedCustomRange.end,
   ]);
@@ -792,8 +858,6 @@ export default function OfferReportsPage() {
 
   const csvHeaders = [
     "Offer Name",
-    "Campaign Name",
-    "Segment",
     "Status",
     "Target Group",
     "Control Group",
@@ -806,8 +870,6 @@ export default function OfferReportsPage() {
 
   const csvRows = filteredRows.map((row) => [
     row.offerName,
-    row.campaignName,
-    row.segment,
     row.status,
     row.targetGroup,
     row.controlGroup,
@@ -1187,16 +1249,6 @@ export default function OfferReportsPage() {
               placeholder="All Status"
               className="w-full md:w-48"
             />
-            <HeadlessSelect
-              value={segmentFilter}
-              onChange={(value) => setSegmentFilter(value as string)}
-              options={segmentOptions.map((segment) => ({
-                label: segment,
-                value: segment,
-              }))}
-              placeholder="All Segments"
-              className="w-full md:w-48"
-            />
             <CsvDownloadButton
               headers={csvHeaders}
               rows={csvRows}
@@ -1206,6 +1258,31 @@ export default function OfferReportsPage() {
           </div>
         </div>
 
+        {isLoadingOffers && (
+          <div className="flex justify-center py-16">
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {!isLoadingOffers && offerFetchError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center">
+            <p className="text-sm text-red-700 font-medium mb-4">{offerFetchError}</p>
+            <button
+              onClick={fetchOffers}
+              className={`${tw.rounded} ${tw.btnSmall} bg-red-600 text-white hover:bg-red-700`}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!isLoadingOffers && !offerFetchError && offers.length === 0 && (
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+            <p className="text-sm text-gray-600">No offers found</p>
+          </div>
+        )}
+
+        {!isLoadingOffers && !offerFetchError && offers.length > 0 && (
         <div className="hidden lg:block">
           <div className="overflow-x-auto">
             <table
@@ -1216,8 +1293,6 @@ export default function OfferReportsPage() {
                 <tr className="text-left text-sm font-medium uppercase tracking-wide">
                   {[
                     "Offer Name",
-                    "Campaign Name",
-                    "Segment",
                     "Status",
                     "Target Group",
                     "Control Group",
@@ -1264,18 +1339,6 @@ export default function OfferReportsPage() {
                         }}
                       >
                         <div className="text-gray-900">{entry.offerName}</div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.campaignName}
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        style={{ backgroundColor: colors.surface.tablebodybg }}
-                      >
-                        {entry.segment}
                       </td>
                       <td
                         className="px-6 py-4 text-gray-900"
@@ -1337,13 +1400,16 @@ export default function OfferReportsPage() {
               </tbody>
             </table>
           </div>
-          <Pagination
-            currentPage={tablePage}
-            pageSize={tablePageSize}
-            totalItems={filteredRows.length}
-            onPageChange={setTablePage}
-          />
+          {filteredRows.length > 0 && (
+            <Pagination
+              currentPage={tablePage}
+              pageSize={tablePageSize}
+              totalItems={filteredRows.length}
+              onPageChange={setTablePage}
+            />
+          )}
         </div>
+        )}
       </section>
     </div>
   );

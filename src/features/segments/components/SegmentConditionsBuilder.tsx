@@ -15,7 +15,6 @@ import {
   SegmentCondition,
   SegmentConditionGroup,
   SEGMENT_FIELDS,
-  OPERATOR_LABELS,
 } from "../types/segment";
 import { color, tw, zIndex } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -98,6 +97,60 @@ export default function SegmentConditionsBuilder({
     getFieldByValue,
   } = useSegmentationFields();
 
+  // Helper: get the first operator from a backend field's operators array
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getFirstBackendOperator = (
+    field: Record<string, any> | null | undefined,
+  ) => {
+    if (
+      field?.operators &&
+      Array.isArray(field.operators) &&
+      field.operators.length > 0
+    ) {
+      return field.operators[0];
+    }
+    // Fallback to operatorMapper if backend doesn't provide operators
+    const ops = getOperatorsForFieldType(field?.field_type || "text");
+    return ops.length > 0
+      ? { id: ops[0].id, label: ops[0].label }
+      : { id: 1, label: "equals" };
+  };
+
+  // Helper: get all operators for a backend field (prefer field.operators[], fallback to mapper)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getBackendOperators = (
+    field: Record<string, any> | null | undefined,
+  ) => {
+    if (
+      field?.operators &&
+      Array.isArray(field.operators) &&
+      field.operators.length > 0
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return field.operators.map((op: Record<string, any>) => ({
+        id: op.id,
+        label: op.label,
+        symbol: op.symbol,
+        requiresValue: op.requires_value !== false,
+        requiresTwoValues: op.requires_two_values === true,
+      }));
+    }
+    return getOperatorsForFieldType(field?.field_type || "text");
+  };
+
+  // Helper: check if a field is a date/timestamp field
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isDateFieldType = (field: Record<string, any> | null | undefined) => {
+    if (!field?.field_type) return false;
+    const ft = field.field_type.toLowerCase();
+    return (
+      ft === "date" ||
+      ft === "timestamp" ||
+      ft === "timestamptz" ||
+      ft === "datetime"
+    );
+  };
+
   const addConditionGroup = () => {
     const fieldsArray = Array.isArray(allFields) ? allFields : [];
     const categoriesArray = Array.isArray(categories) ? categories : [];
@@ -105,13 +158,13 @@ export default function SegmentConditionsBuilder({
     const firstField = fieldsArray.length > 0 ? fieldsArray[0] : null;
     const defaultFieldValue = firstField
       ? firstField.field_value
-      : (SEGMENT_FIELDS.length > 0 ? SEGMENT_FIELDS[0].key : "");
+      : SEGMENT_FIELDS.length > 0
+        ? SEGMENT_FIELDS[0].key
+        : "";
     const defaultFieldId = firstField ? firstField.id : undefined;
 
-    // Get default operator from operatorMapper based on field type
-    const fieldTypeForDefault = firstField?.field_type || "text";
-    const defaultOperators = getOperatorsForFieldType(fieldTypeForDefault);
-    const defaultOperatorId = defaultOperators.length > 0 ? defaultOperators[0].id : 1;
+    // Get default operator from backend field's operators array
+    const firstOp = getFirstBackendOperator(firstField);
 
     const newGroup: SegmentConditionGroup = {
       id: generateId(),
@@ -125,8 +178,8 @@ export default function SegmentConditionsBuilder({
           field: defaultFieldValue,
           field_name: firstField?.field_name,
           field_id: defaultFieldId,
-          operator: "equals",
-          operator_id: defaultOperatorId,
+          operator: firstOp.label || "equals",
+          operator_id: firstOp.id,
           value: "",
           type: "string",
         },
@@ -157,13 +210,13 @@ export default function SegmentConditionsBuilder({
     const firstField = fieldsArray.length > 0 ? fieldsArray[0] : null;
     const defaultFieldValue = firstField
       ? firstField.field_value
-      : (SEGMENT_FIELDS.length > 0 ? SEGMENT_FIELDS[0].key : "");
+      : SEGMENT_FIELDS.length > 0
+        ? SEGMENT_FIELDS[0].key
+        : "";
     const defaultFieldId = firstField ? firstField.id : undefined;
 
-    // Get default operator from operatorMapper based on field type
-    const fieldTypeForDefault = firstField?.field_type || "text";
-    const defaultOperators = getOperatorsForFieldType(fieldTypeForDefault);
-    const defaultOperatorId = defaultOperators.length > 0 ? defaultOperators[0].id : 1;
+    // Get default operator from backend field's operators array
+    const firstOp = getFirstBackendOperator(firstField);
 
     const newCondition: SegmentCondition = {
       id: generateId(),
@@ -172,8 +225,8 @@ export default function SegmentConditionsBuilder({
       field: defaultFieldValue,
       field_name: firstField?.field_name,
       field_id: defaultFieldId,
-      operator: "equals",
-      operator_id: defaultOperatorId,
+      operator: firstOp.label || "equals",
+      operator_id: firstOp.id,
       value: "",
       type: "string",
     };
@@ -224,13 +277,26 @@ export default function SegmentConditionsBuilder({
   const getFieldType = (fieldKey: string) => {
     const backendField = getFieldByValue(fieldKey);
     if (backendField) {
-      switch (backendField.field_type) {
+      const ft = (backendField.field_type || "").toLowerCase();
+      switch (ft) {
         case "numeric":
+        case "number":
+        case "money":
+        case "integer":
+        case "decimal":
           return "number";
         case "text":
+        case "varchar":
+        case "string":
           return "string";
         case "boolean":
+        case "bool":
           return "boolean";
+        case "date":
+        case "timestamp":
+        case "timestamptz":
+        case "datetime":
+          return "string"; // dates are stored as ISO strings
         default:
           return "string";
       }
@@ -239,20 +305,13 @@ export default function SegmentConditionsBuilder({
     return field?.type || "string";
   };
 
-  const getAvailableOperators = (fieldKey: string) => {
-    const backendField = getFieldByValue(fieldKey);
-    if (backendField && backendField.field_type) {
-      // Use frontend-defined operators based on field type
-      const operators = getOperatorsForFieldType(backendField.field_type);
-      return operators.map((op) => op.label);
-    }
-    // Fallback to basic operators
-    return ["equals"];
-  };
-
   // Build unified data source options combining categories and special types
   const getDataSourceOptions = () => {
-    const options: { value: string; label: string; type: SegmentCondition["conditionType"] }[] = [];
+    const options: {
+      value: string;
+      label: string;
+      type: SegmentCondition["conditionType"];
+    }[] = [];
 
     // Add field categories (360_profile)
     const categoriesArray = Array.isArray(categories) ? categories : [];
@@ -266,17 +325,18 @@ export default function SegmentConditionsBuilder({
 
     // Add special types
     options.push({ value: "segment", label: "Segment", type: "segment" });
-    options.push({ value: "system_event", label: "System Event", type: "system_event" });
+    options.push({
+      value: "system_event",
+      label: "System Event",
+      type: "system_event",
+    });
     options.push({ value: "list", label: "QuickList", type: "list" });
 
     return options;
   };
 
   // Render condition based on type
-  const renderLine1Fields = (
-    groupId: string,
-    condition: SegmentCondition,
-  ) => {
+  const renderLine1Fields = (groupId: string, condition: SegmentCondition) => {
     switch (condition.conditionType) {
       case "360_profile":
         return render360ProfileLine1Fields(groupId, condition);
@@ -294,10 +354,7 @@ export default function SegmentConditionsBuilder({
     }
   };
 
-  const renderLine2Fields = (
-    groupId: string,
-    condition: SegmentCondition,
-  ) => {
+  const renderLine2Fields = (groupId: string, condition: SegmentCondition) => {
     switch (condition.conditionType) {
       case "360_profile":
         return render360ProfileLine2Fields(groupId, condition);
@@ -331,7 +388,9 @@ export default function SegmentConditionsBuilder({
                 condition.category !== null
               ) {
                 const categoryId = condition.category as number;
-                const categoriesArray = Array.isArray(categories) ? categories : [];
+                const categoriesArray = Array.isArray(categories)
+                  ? categories
+                  : [];
                 // Try to find by ID first, then by index
                 let selectedCategory = categoriesArray.find(
                   (c) => c.id === categoryId,
@@ -358,19 +417,19 @@ export default function SegmentConditionsBuilder({
               const fieldType = getFieldType(value as string);
               const backendField = getFieldByValue(value as string);
 
-              // Get operators from frontend-defined mapping based on field type
-              const fieldTypeNorm = backendField?.field_type || "text";
-              const applicableOperators = getOperatorsForFieldType(fieldTypeNorm);
-              const firstOperator = applicableOperators.length > 0 ? applicableOperators[0] : null;
+              // Get first operator from backend field's operators array
+              const firstOp = getFirstBackendOperator(backendField);
 
               updateCondition(groupId, condition.id, {
                 field: value as string,
                 field_name: backendField?.field_name,
                 field_id: backendField?.id,
-                operator: firstOperator?.label as SegmentCondition["operator"],
-                operator_id: firstOperator?.id,
+                operator: firstOp.label as SegmentCondition["operator"],
+                operator_id: firstOp.id,
                 type: fieldType,
                 value: fieldType === "number" ? 0 : "",
+                start_date: undefined,
+                end_date: undefined,
               });
             }}
             placeholder="Select field"
@@ -381,7 +440,9 @@ export default function SegmentConditionsBuilder({
 
         {/* Operator Selection - on same line as field (hidden for boolean fields) */}
         {(() => {
-          const field = condition.field ? getFieldByValue(condition.field) : null;
+          const field = condition.field
+            ? getFieldByValue(condition.field)
+            : null;
           const isBooleanField = field?.field_type?.toLowerCase() === "boolean";
 
           if (isBooleanField) {
@@ -392,12 +453,14 @@ export default function SegmentConditionsBuilder({
             <div className="min-w-[180px] max-w-[250px] flex-shrink-0">
               <HeadlessSelect
                 options={(() => {
-                  if (field && field.field_type) {
-                    // Use frontend-defined operators based on field type
-                    const operators = getOperatorsForFieldType(field.field_type);
-                    return operators.map((op) => ({
+                  if (field) {
+                    // Use operators from backend field's operators array
+                    const operators = getBackendOperators(field);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    return operators.map((op: Record<string, any>) => ({
                       value: `${op.label}|${op.id}`,
-                      label: op.label.charAt(0).toUpperCase() + op.label.slice(1),
+                      label:
+                        op.label.charAt(0).toUpperCase() + op.label.slice(1),
                     }));
                   }
                   return [];
@@ -408,6 +471,10 @@ export default function SegmentConditionsBuilder({
                   updateCondition(groupId, condition.id, {
                     operator: operator as SegmentCondition["operator"],
                     operator_id: operatorId ? parseInt(operatorId) : undefined,
+                    // Clear date fields and value when operator changes
+                    value: "",
+                    start_date: undefined,
+                    end_date: undefined,
                   });
                 }}
                 className="text-sm"
@@ -432,14 +499,22 @@ export default function SegmentConditionsBuilder({
     const distinctValues = backendField?.validation?.distinct_values || [];
     const operator = condition.operator?.toLowerCase() || "";
     const fieldType = backendField?.field_type?.toLowerCase() || "";
-    const isDateField = fieldType === "date";
-    const isBooleanField = fieldType === "boolean";
+    const isDateField = isDateFieldType(backendField);
+    const isBooleanField = fieldType === "boolean" || fieldType === "bool";
 
-    // Check if operator is NULL-type (no value needed)
-    const isNullOperator = operator.includes("null");
+    // Check if operator is NULL-type (no value needed) — backend labels: "is empty" / "is not empty"
+    const isNullOperator =
+      operator.includes("null") || operator.includes("empty");
 
-    // Check if operator needs multiple values
-    const isMultiValueOperator = operator === "in" || operator === "not in" || operator === "between";
+    // Check if operator needs multiple values (backend labels: "in list" / "not in list")
+    const isInListOperator =
+      operator === "in list" ||
+      operator === "not in list" ||
+      operator === "in" ||
+      operator === "not in";
+
+    // Check if operator is between (backend label: "between")
+    const isBetweenOperator = operator === "between";
 
     // No value input needed for NULL operators
     if (isNullOperator) {
@@ -457,9 +532,9 @@ export default function SegmentConditionsBuilder({
                 { value: "false", label: "False" },
               ]}
               value={
-                condition.value === true || condition.value === "true"
+                String(condition.value) === "true"
                   ? "true"
-                  : condition.value === false || condition.value === "false"
+                  : String(condition.value) === "false"
                     ? "false"
                     : ""
               }
@@ -474,10 +549,12 @@ export default function SegmentConditionsBuilder({
               zIndex={zIndex.popover}
             />
           </div>
-        ) : isDateField && (operator === "on date" || operator === "after date" || operator === "before date" || operator === "between dates" || operator === "in last days") ? (
-          // Date/numeric picker for date fields
+        ) : isDateField ? (
+          // Date fields: use start_date/end_date per backend spec.
+          // equals → value (exact match), greater_than/>=  → start_date only,
+          // less_than/<= → end_date only, between → start_date + end_date
           <div className="flex gap-2">
-            {operator === "on date" && (
+            {(operator === "equals" || operator === "not equals") && (
               <input
                 type="date"
                 placeholder="Date"
@@ -488,22 +565,20 @@ export default function SegmentConditionsBuilder({
                 }
                 onChange={(e) => {
                   updateCondition(groupId, condition.id, {
-                    value: e.target.value
-                      ? `${e.target.value}T00:00:00Z`
-                      : undefined,
+                    value: e.target.value ? `${e.target.value}T00:00:00Z` : "",
                   });
                 }}
-                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1`}
               />
             )}
-            {(operator === "after date" || operator === "between dates") && (
+            {(operator === "greater than" ||
+              operator === "greater than or equal" ||
+              isBetweenOperator) && (
               <input
                 type="date"
-                placeholder={operator === "between dates" ? "From date" : "From date"}
+                placeholder={isBetweenOperator ? "From date" : "After date"}
                 value={
-                  condition.start_date
-                    ? condition.start_date.split("T")[0]
-                    : ""
+                  condition.start_date ? condition.start_date.split("T")[0] : ""
                 }
                 onChange={(e) => {
                   updateCondition(groupId, condition.id, {
@@ -512,17 +587,17 @@ export default function SegmentConditionsBuilder({
                       : undefined,
                   });
                 }}
-                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1`}
               />
             )}
-            {(operator === "before date" || operator === "between dates") && (
+            {(operator === "less than" ||
+              operator === "less than or equal" ||
+              isBetweenOperator) && (
               <input
                 type="date"
-                placeholder={operator === "between dates" ? "To date" : "Up to date"}
+                placeholder={isBetweenOperator ? "To date" : "Before date"}
                 value={
-                  condition.end_date
-                    ? condition.end_date.split("T")[0]
-                    : ""
+                  condition.end_date ? condition.end_date.split("T")[0] : ""
                 }
                 onChange={(e) => {
                   updateCondition(groupId, condition.id, {
@@ -531,37 +606,59 @@ export default function SegmentConditionsBuilder({
                       : undefined,
                   });
                 }}
-                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
-              />
-            )}
-            {operator === "in last days" && (
-              <input
-                type="number"
-                placeholder="Days"
-                min="1"
-                value={typeof condition.value === "number" ? condition.value : ""}
-                onChange={(e) => {
-                  updateCondition(groupId, condition.id, {
-                    value: e.target.value ? parseInt(e.target.value) : undefined,
-                  });
-                }}
-                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
+                className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[160px] flex-1`}
               />
             )}
           </div>
-        ) : isMultiValueOperator ? (
-          // Multiple value input for IN, NOT IN
-          <div className="flex gap-2">
+        ) : isInListOperator ? (
+          // IN / NOT IN — comma-separated input, stored as array
+          <div className="flex gap-2 flex-1">
             <input
-              type={getFieldType(condition.field || "") === "number" ? "number" : "text"}
-              placeholder="Value"
-              value={condition.value as string | number || ""}
+              type="text"
+              placeholder="Enter comma-separated values (e.g. NAIROBI, MOMBASA)"
+              value={
+                Array.isArray(condition.value)
+                  ? (condition.value as (string | number)[]).join(", ")
+                  : (condition.value as string | number) || ""
+              }
               onChange={(e) => {
+                // Store as array by splitting on commas
+                const rawValue = e.target.value;
+                const valuesArray = rawValue
+                  .split(",")
+                  .map((v) => v.trim())
+                  .filter((v) => v !== "");
                 updateCondition(groupId, condition.id, {
-                  value: e.target.value,
+                  value: valuesArray.length > 0 ? valuesArray : rawValue,
                 });
               }}
-              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[120px] flex-1`}
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[200px] flex-1`}
+            />
+          </div>
+        ) : isBetweenOperator ? (
+          // BETWEEN for non-date fields (numeric) — two value inputs
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="Min"
+              value={condition.start_date || ""}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  start_date: e.target.value || undefined,
+                });
+              }}
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
+            />
+            <input
+              type="number"
+              placeholder="Max"
+              value={condition.end_date || ""}
+              onChange={(e) => {
+                updateCondition(groupId, condition.id, {
+                  end_date: e.target.value || undefined,
+                });
+              }}
+              className={`px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1`}
             />
           </div>
         ) : isDropdown && distinctValues.length > 0 ? (
@@ -678,7 +775,10 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render List (QuickList) condition fields - Line 1
-  const renderListLine1Fields = (groupId: string, condition: SegmentCondition) => {
+  const renderListLine1Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     const handleOpenQuickListModal = () => {
       setCurrentEditingCondition({
         groupId,
@@ -711,7 +811,10 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render List (QuickList) condition fields - Line 2
-  const renderListLine2Fields = (groupId: string, condition: SegmentCondition) => {
+  const renderListLine2Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     return (
       <>
         {/* Operator for List */}
@@ -825,7 +928,11 @@ export default function SegmentConditionsBuilder({
                 <div className="min-w-[180px] flex-shrink-0">
                   <input
                     type="date"
-                    value={(typeof condition.value === "string" ? condition.value : "") || ""}
+                    value={
+                      (typeof condition.value === "string"
+                        ? condition.value
+                        : "") || ""
+                    }
                     onChange={(e) => {
                       updateCondition(groupId, condition.id, {
                         value: e.target.value || "",
@@ -842,13 +949,17 @@ export default function SegmentConditionsBuilder({
                       type="date"
                       value={
                         condition.value && typeof condition.value === "object"
-                          ? (condition.value as { start: string; end: string }).start || ""
+                          ? (condition.value as { start: string; end: string })
+                              .start || ""
                           : ""
                       }
                       onChange={(e) => {
                         const currentVal =
                           condition.value && typeof condition.value === "object"
-                            ? (condition.value as { start: string; end: string })
+                            ? (condition.value as {
+                                start: string;
+                                end: string;
+                              })
                             : { start: "", end: "" };
                         updateCondition(groupId, condition.id, {
                           value: { ...currentVal, start: e.target.value },
@@ -864,13 +975,17 @@ export default function SegmentConditionsBuilder({
                       type="date"
                       value={
                         condition.value && typeof condition.value === "object"
-                          ? (condition.value as { start: string; end: string }).end || ""
+                          ? (condition.value as { start: string; end: string })
+                              .end || ""
                           : ""
                       }
                       onChange={(e) => {
                         const currentVal =
                           condition.value && typeof condition.value === "object"
-                            ? (condition.value as { start: string; end: string })
+                            ? (condition.value as {
+                                start: string;
+                                end: string;
+                              })
                             : { start: "", end: "" };
                         updateCondition(groupId, condition.id, {
                           value: { ...currentVal, end: e.target.value },
@@ -886,13 +1001,19 @@ export default function SegmentConditionsBuilder({
                 <div className="min-w-[100px] max-w-[120px] flex-shrink-0">
                   <input
                     type="number"
-                    value={typeof condition.value === "object" ? "" : (condition.value || "")}
+                    value={
+                      typeof condition.value === "object"
+                        ? ""
+                        : condition.value || ""
+                    }
                     onChange={(e) => {
                       updateCondition(groupId, condition.id, {
                         value: e.target.value ? parseInt(e.target.value) : "",
                       });
                     }}
-                    placeholder={currentOperatorOption.placeholder || "Enter value"}
+                    placeholder={
+                      currentOperatorOption.placeholder || "Enter value"
+                    }
                     className={`w-full px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm`}
                     style={{ borderColor: color.border.default }}
                   />
@@ -927,7 +1048,10 @@ export default function SegmentConditionsBuilder({
   };
 
   // Render KPI condition fields
-  const renderKPILine1Fields = (groupId: string, condition: SegmentCondition) => {
+  const renderKPILine1Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     const handleOpenKPIModal = () => {
       setCurrentEditingCondition({
         groupId,
@@ -965,7 +1089,10 @@ export default function SegmentConditionsBuilder({
     );
   };
 
-  const renderKPILine2Fields = (groupId: string, condition: SegmentCondition) => {
+  const renderKPILine2Fields = (
+    groupId: string,
+    condition: SegmentCondition,
+  ) => {
     return (
       <>
         {/* Operator for KPI - Only show if KPI selected */}
@@ -1002,24 +1129,27 @@ export default function SegmentConditionsBuilder({
             </div>
 
             {/* Value Input - For "in_last_days" and regular operators */}
-            {condition.operator !== "between_dates" && condition.operator !== "on_date" && (
-              <input
-                type={condition.operator === "in_last_days" ? "number" : "text"}
-                value={condition.value as string}
-                onChange={(e) => {
-                  updateCondition(groupId, condition.id, {
-                    value: e.target.value,
-                  });
-                }}
-                placeholder={
-                  condition.operator === "in_last_days"
-                    ? "Enter days (e.g., 30)"
-                    : "Enter value"
-                }
-                className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
-                style={{ borderColor: color.border.default }}
-              />
-            )}
+            {condition.operator !== "between_dates" &&
+              condition.operator !== "on_date" && (
+                <input
+                  type={
+                    condition.operator === "in_last_days" ? "number" : "text"
+                  }
+                  value={condition.value as string}
+                  onChange={(e) => {
+                    updateCondition(groupId, condition.id, {
+                      value: e.target.value,
+                    });
+                  }}
+                  placeholder={
+                    condition.operator === "in_last_days"
+                      ? "Enter days (e.g., 30)"
+                      : "Enter value"
+                  }
+                  className={`px-3 py-3 border border-gray-300 ${tw.rounded} focus:outline-none text-sm min-w-[100px] flex-1 max-w-[200px]`}
+                  style={{ borderColor: color.border.default }}
+                />
+              )}
 
             {/* Single Date Input - For "on_date" operator */}
             {condition.operator === "on_date" && (
@@ -1042,9 +1172,15 @@ export default function SegmentConditionsBuilder({
               <>
                 <input
                   type="date"
-                  value={condition.value ? (condition.value as string).split(",")[0] || "" : ""}
+                  value={
+                    condition.value
+                      ? (condition.value as string).split(",")[0] || ""
+                      : ""
+                  }
                   onChange={(e) => {
-                    const endDate = condition.value ? (condition.value as string).split(",")[1] || "" : "";
+                    const endDate = condition.value
+                      ? (condition.value as string).split(",")[1] || ""
+                      : "";
                     updateCondition(groupId, condition.id, {
                       value: `${e.target.value},${endDate}`,
                     });
@@ -1055,9 +1191,15 @@ export default function SegmentConditionsBuilder({
                 />
                 <input
                   type="date"
-                  value={condition.value ? (condition.value as string).split(",")[1] || "" : ""}
+                  value={
+                    condition.value
+                      ? (condition.value as string).split(",")[1] || ""
+                      : ""
+                  }
                   onChange={(e) => {
-                    const startDate = condition.value ? (condition.value as string).split(",")[0] || "" : "";
+                    const startDate = condition.value
+                      ? (condition.value as string).split(",")[0] || ""
+                      : "";
                     updateCondition(groupId, condition.id, {
                       value: `${startDate},${e.target.value}`,
                     });
@@ -1152,227 +1294,245 @@ export default function SegmentConditionsBuilder({
                   {group.conditions.length !== 1 ? "s" : ""})
                 </span>
               </div>
-            <button
-              type="button"
-              onClick={() => removeConditionGroup(group.id)}
-              className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors"
-              title="Remove Group"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => removeConditionGroup(group.id)}
+                className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors"
+                title="Remove Group"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
 
-          {/* Conditions */}
-          <div className="space-y-3">
-            {group.conditions.map((condition, conditionIndex) => {
-              const TypeIcon = getConditionTypeIcon(condition.conditionType);
+            {/* Conditions */}
+            <div className="space-y-3">
+              {group.conditions.map((condition, conditionIndex) => {
+                const TypeIcon = getConditionTypeIcon(condition.conditionType);
 
-              return (
-                <div
-                  key={condition.id}
-                  className={`p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
-                  style={{
-                    backgroundColor: color.surface.background,
-                    borderColor: color.border.muted,
-                  }}
-                >
-                  {/* Line 1: Type + Category + Field */}
-                  <div className="flex items-center gap-3 mb-3">
-                    {/* Type Selector will be injected here */}
-                  {conditionIndex > 0 && (
-                    <span
-                      className={`px-2.5 py-1 text-xs font-semibold ${tw.rounded}`}
-                      style={{
-                        backgroundColor: `${color.primary.accent}15`,
-                        color: color.text.primary,
-                      }}
-                    >
-                      {group.operator}
-                    </span>
-                  )}
-
-                  {/* Condition Type Badge - Selectable appearance */}
+                return (
                   <div
-                      className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[200px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
-                      style={{
-                        backgroundColor: color.surface.background,
-                        border: `1px solid ${color.border.default}`,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = color.primary.accent;
-                        e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = color.border.default;
-                        e.currentTarget.style.backgroundColor =
-                          color.surface.background;
-                      }}
-                    >
-                      <TypeIcon
-                        className="w-4 h-4 flex-shrink-0"
-                        style={{ color: color.text.secondary }}
-                      />
+                    key={condition.id}
+                    className={`p-3 ${tw.rounded} border transition-colors hover:border-gray-300`}
+                    style={{
+                      backgroundColor: color.surface.background,
+                      borderColor: color.border.muted,
+                    }}
+                  >
+                    {/* Line 1: Type + Category + Field */}
+                    <div className="flex items-center gap-3 mb-3">
+                      {/* Type Selector will be injected here */}
+                      {conditionIndex > 0 && (
+                        <span
+                          className={`px-2.5 py-1 text-xs font-semibold ${tw.rounded}`}
+                          style={{
+                            backgroundColor: `${color.primary.accent}15`,
+                            color: color.text.primary,
+                          }}
+                        >
+                          {group.operator}
+                        </span>
+                      )}
+
+                      {/* Condition Type Badge - Selectable appearance */}
                       <div
-                        className="flex-1 [&_button]:bg-transparent [&_button]:border-0 [&_button]:p-0 [&_button]:shadow-none [&_button]:font-medium [&_button]:text-sm [&_button]:cursor-pointer"
+                        className={`flex items-center gap-2 px-3 py-2 ${tw.rounded} min-w-[200px] flex-shrink-0 cursor-pointer transition-all hover:shadow-md`}
                         style={{
-                          color: color.text.primary,
+                          backgroundColor: color.surface.background,
+                          border: `1px solid ${color.border.default}`,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor =
+                            color.primary.accent;
+                          e.currentTarget.style.backgroundColor = `${color.primary.accent}08`;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor =
+                            color.border.default;
+                          e.currentTarget.style.backgroundColor =
+                            color.surface.background;
                         }}
                       >
-                        <HeadlessSelect
-                          options={getDataSourceOptions().map((opt) => ({
-                            value: opt.value,
-                            label: opt.label,
-                          }))}
-                          value={
-                            condition.conditionType === "360_profile"
-                              ? `360_profile:${condition.category}`
-                              : condition.conditionType
-                          }
-                          onChange={(value) => {
-                            const selectedOption = getDataSourceOptions().find(
-                              (opt) => opt.value === value,
-                            );
-                            if (!selectedOption) return;
-
-                            const condType = selectedOption.type;
-
-                            // Reset condition based on type
-                            if (condType === "360_profile") {
-                              const fieldsArray = Array.isArray(allFields) ? allFields : [];
-                              const categoryId = parseInt(value.split(":")[1] || "1");
-                              const categoriesArray = Array.isArray(categories) ? categories : [];
-                              let selectedCategory = categoriesArray.find(
-                                (c) => c.id === categoryId,
-                              );
-                              if (!selectedCategory) {
-                                selectedCategory = categoriesArray[categoryId - 1];
-                              }
-                              const categoryFields = selectedCategory?.fields || [];
-                              const firstField =
-                                categoryFields.length > 0 ? categoryFields[0] : fieldsArray[0];
-
-                              // Get operators from frontend-defined mapping based on field type
-                              const fieldTypeNorm = firstField?.field_type || "text";
-                              const applicableOps = getOperatorsForFieldType(fieldTypeNorm);
-                              const firstOperatorFromMapper = applicableOps.length > 0 ? applicableOps[0] : null;
-
-                              updateCondition(group.id, condition.id, {
-                                conditionType: condType,
-                                category: categoryId,
-                                field: firstField ? firstField.field_value : "",
-                                field_name: firstField?.field_name,
-                                field_id: firstField?.id,
-                                operator: firstOperatorFromMapper?.label || "equals",
-                                operator_id: firstOperatorFromMapper?.id,
-                                value: "",
-                                segment_id: undefined,
-                                segment_name: undefined,
-                                list_id: undefined,
-                                list_name: undefined,
-                                system_event_id: undefined,
-                                system_event_code: undefined,
-                                system_event_name: undefined,
-                                kpi_id: undefined,
-                                kpi_name: undefined,
-                                kpi_category: undefined,
-                              });
-                            } else if (condType === "segment") {
-                              updateCondition(group.id, condition.id, {
-                                conditionType: condType,
-                                operator: "in",
-                                value: "",
-                                category: undefined,
-                                field: undefined,
-                                field_id: undefined,
-                                list_id: undefined,
-                                list_name: undefined,
-                                system_event_id: undefined,
-                                system_event_code: undefined,
-                                system_event_name: undefined,
-                                kpi_id: undefined,
-                                kpi_name: undefined,
-                                kpi_category: undefined,
-                              });
-                            } else if (condType === "list") {
-                              updateCondition(group.id, condition.id, {
-                                conditionType: condType,
-                                operator: "in",
-                                value: "",
-                                category: undefined,
-                                field: undefined,
-                                field_id: undefined,
-                                segment_id: undefined,
-                                segment_name: undefined,
-                                system_event_id: undefined,
-                                system_event_code: undefined,
-                                system_event_name: undefined,
-                                kpi_id: undefined,
-                                kpi_name: undefined,
-                                kpi_category: undefined,
-                              });
-                            } else if (condType === "system_event") {
-                              updateCondition(group.id, condition.id, {
-                                conditionType: condType,
-                                operator: "equals",
-                                value: "",
-                                category: undefined,
-                                field: undefined,
-                                field_id: undefined,
-                                segment_id: undefined,
-                                segment_name: undefined,
-                                list_id: undefined,
-                                list_name: undefined,
-                                kpi_id: undefined,
-                                kpi_name: undefined,
-                                kpi_category: undefined,
-                              });
-                            }
-                          }}
-                          placeholder="Select data source"
-                          className="text-sm"
-                          zIndex={zIndex.popover}
+                        <TypeIcon
+                          className="w-4 h-4 flex-shrink-0"
+                          style={{ color: color.text.secondary }}
                         />
+                        <div
+                          className="flex-1 [&_button]:bg-transparent [&_button]:border-0 [&_button]:p-0 [&_button]:shadow-none [&_button]:font-medium [&_button]:text-sm [&_button]:cursor-pointer"
+                          style={{
+                            color: color.text.primary,
+                          }}
+                        >
+                          <HeadlessSelect
+                            options={getDataSourceOptions().map((opt) => ({
+                              value: opt.value,
+                              label: opt.label,
+                            }))}
+                            value={
+                              condition.conditionType === "360_profile"
+                                ? `360_profile:${condition.category}`
+                                : condition.conditionType
+                            }
+                            onChange={(value) => {
+                              const selectedOption =
+                                getDataSourceOptions().find(
+                                  (opt) => opt.value === value,
+                                );
+                              if (!selectedOption) return;
+
+                              const condType = selectedOption.type;
+
+                              // Reset condition based on type
+                              if (condType === "360_profile") {
+                                const fieldsArray = Array.isArray(allFields)
+                                  ? allFields
+                                  : [];
+                                const categoryId = parseInt(
+                                  value.split(":")[1] || "1",
+                                );
+                                const categoriesArray = Array.isArray(
+                                  categories,
+                                )
+                                  ? categories
+                                  : [];
+                                let selectedCategory = categoriesArray.find(
+                                  (c) => c.id === categoryId,
+                                );
+                                if (!selectedCategory) {
+                                  selectedCategory =
+                                    categoriesArray[categoryId - 1];
+                                }
+                                const categoryFields =
+                                  selectedCategory?.fields || [];
+                                const firstField =
+                                  categoryFields.length > 0
+                                    ? categoryFields[0]
+                                    : fieldsArray[0];
+
+                                // Get first operator from backend field's operators array
+                                const firstOp =
+                                  getFirstBackendOperator(firstField);
+
+                                updateCondition(group.id, condition.id, {
+                                  conditionType: condType,
+                                  category: categoryId,
+                                  field: firstField
+                                    ? firstField.field_value
+                                    : "",
+                                  field_name: firstField?.field_name,
+                                  field_id: firstField?.id,
+                                  operator: firstOp.label || "equals",
+                                  operator_id: firstOp.id,
+                                  value: "",
+                                  segment_id: undefined,
+                                  segment_name: undefined,
+                                  list_id: undefined,
+                                  list_name: undefined,
+                                  system_event_id: undefined,
+                                  system_event_code: undefined,
+                                  system_event_name: undefined,
+                                  kpi_id: undefined,
+                                  kpi_name: undefined,
+                                  kpi_category: undefined,
+                                });
+                              } else if (condType === "segment") {
+                                updateCondition(group.id, condition.id, {
+                                  conditionType: condType,
+                                  operator: "in",
+                                  value: "",
+                                  category: undefined,
+                                  field: undefined,
+                                  field_id: undefined,
+                                  list_id: undefined,
+                                  list_name: undefined,
+                                  system_event_id: undefined,
+                                  system_event_code: undefined,
+                                  system_event_name: undefined,
+                                  kpi_id: undefined,
+                                  kpi_name: undefined,
+                                  kpi_category: undefined,
+                                });
+                              } else if (condType === "list") {
+                                updateCondition(group.id, condition.id, {
+                                  conditionType: condType,
+                                  operator: "in",
+                                  value: "",
+                                  category: undefined,
+                                  field: undefined,
+                                  field_id: undefined,
+                                  segment_id: undefined,
+                                  segment_name: undefined,
+                                  system_event_id: undefined,
+                                  system_event_code: undefined,
+                                  system_event_name: undefined,
+                                  kpi_id: undefined,
+                                  kpi_name: undefined,
+                                  kpi_category: undefined,
+                                });
+                              } else if (condType === "system_event") {
+                                updateCondition(group.id, condition.id, {
+                                  conditionType: condType,
+                                  operator: "equals",
+                                  value: "",
+                                  category: undefined,
+                                  field: undefined,
+                                  field_id: undefined,
+                                  segment_id: undefined,
+                                  segment_name: undefined,
+                                  list_id: undefined,
+                                  list_name: undefined,
+                                  kpi_id: undefined,
+                                  kpi_name: undefined,
+                                  kpi_category: undefined,
+                                });
+                              }
+                            }}
+                            placeholder="Select data source"
+                            className="text-sm"
+                            zIndex={zIndex.popover}
+                          />
+                        </div>
                       </div>
+
+                      {/* Render Line 1 Fields (Category, Field for 360_profile, etc.) */}
+                      {renderLine1Fields(group.id, condition)}
                     </div>
 
-                  {/* Render Line 1 Fields (Category, Field for 360_profile, etc.) */}
-                  {renderLine1Fields(group.id, condition)}
-                </div>
+                    {/* Line 2: Operator + Value + Remove */}
+                    <div className="flex items-center gap-3">
+                      {/* Render Line 2 Fields (Operator, Value for 360_profile, etc.) */}
+                      {renderLine2Fields(group.id, condition)}
 
-                {/* Line 2: Operator + Value + Remove */}
-                <div className="flex items-center gap-3">
-                  {/* Render Line 2 Fields (Operator, Value for 360_profile, etc.) */}
-                  {renderLine2Fields(group.id, condition)}
+                      {/* Remove Condition - Only show if more than one condition */}
+                      {group.conditions.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            removeCondition(group.id, condition.id)
+                          }
+                          className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0 ml-auto"
+                          title="Remove Condition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                  {/* Remove Condition - Only show if more than one condition */}
-                  {group.conditions.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeCondition(group.id, condition.id)}
-                      className="p-1 text-red-600 hover:text-red-700 hover:bg-red-100 rounded transition-colors flex-shrink-0 ml-auto"
-                      title="Remove Condition"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Add Condition Button */}
-          <button
-            type="button"
-            onClick={() => addCondition(group.id)}
-            className={`mt-6 inline-flex items-center px-3 py-2 text-sm text-white ${tw.rounded} transition-colors`}
-            style={{
-              backgroundColor: color.primary.action,
-            }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Condition
-          </button>
+            {/* Add Condition Button */}
+            <button
+              type="button"
+              onClick={() => addCondition(group.id)}
+              className={`mt-6 inline-flex items-center px-3 py-2 text-sm text-white ${tw.rounded} transition-colors`}
+              style={{
+                backgroundColor: color.primary.action,
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Condition
+            </button>
           </div>
 
           {/* Between Groups Operator - Display BETWEEN cards */}
@@ -1433,7 +1593,7 @@ export default function SegmentConditionsBuilder({
               if (onValidationError) {
                 onValidationError(
                   validation.error ||
-                    "This segment cannot be used as a layer source"
+                    "This segment cannot be used as a layer source",
                 );
               }
               return;

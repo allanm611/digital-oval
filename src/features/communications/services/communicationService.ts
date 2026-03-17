@@ -193,10 +193,13 @@ class CommunicationService {
    */
   async getExecutionDetails(
     executionId: string,
+    skipCache: boolean = false,
   ): Promise<CommunicationExecutionDetailResponse> {
-    return this.request<CommunicationExecutionDetailResponse>(
-      `/executions/${executionId}`,
-    );
+    let endpoint = `/executions/${executionId}`;
+    if (skipCache) {
+      endpoint += `?skipCache=true`;
+    }
+    return this.request<CommunicationExecutionDetailResponse>(endpoint);
   }
 
   /**
@@ -314,6 +317,19 @@ class CommunicationService {
   ): Promise<CreateCommunicationResponse> {
     return this.request<CreateCommunicationResponse>("", {
       method: "POST",
+      body: JSON.stringify(request),
+    });
+  }
+
+  /**
+   * Update an existing communication
+   */
+  async updateCommunication(
+    communicationId: string | number,
+    request: CreateCommunicationRequest,
+  ): Promise<CreateCommunicationResponse> {
+    return this.request<CreateCommunicationResponse>(`/${communicationId}`, {
+      method: "PUT",
       body: JSON.stringify(request),
     });
   }

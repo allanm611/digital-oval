@@ -29,7 +29,11 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import BackButton from "../../../shared/components/ui/BackButton";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
-import { canShowCampaignButton, handleCampaignAction, type CampaignActionParams } from "../utils/campaignActions";
+import {
+  canShowCampaignButton,
+  handleCampaignAction,
+  type CampaignActionParams,
+} from "../utils/campaignActions";
 import { offerService } from "../../offers/services/offerService";
 import { segmentService } from "../../segments/services/segmentService";
 import DeleteConfirmModal from "../../../shared/components/ui/DeleteConfirmModal";
@@ -38,14 +42,17 @@ import CurrencyFormatter from "../../../shared/components/CurrencyFormatter";
 import DateFormatter from "../../../shared/components/DateFormatter";
 import { userService } from "../../users/services/userService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
-import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import RunCampaignModal from "../components/RunCampaignModal";
 import EditCampaignFlowModal from "../components/EditCampaignFlowModal";
 import {
   Campaign,
   CampaignSegmentDetail,
   CampaignBudgetUtilisation,
 } from "../types/campaign";
-import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
+import {
+  CampaignFlowConfig,
+  CampaignFlowResponseData,
+} from "../types/campaignFlow";
 import { Offer } from "../../offers/types/offer";
 import { SegmentType } from "../../segments/types/segment";
 
@@ -98,17 +105,17 @@ export default function CampaignDetailsPage() {
   const [approvedByName, setApprovedByName] = useState<string>("");
   const [showFlowEditModal, setShowFlowEditModal] = useState(false);
   const [showFlowDeleteModal, setShowFlowDeleteModal] = useState(false);
-  const [selectedFlow, setSelectedFlow] = useState<CampaignFlowResponseData | null>(
-    null,
-  );
+  const [selectedFlow, setSelectedFlow] =
+    useState<CampaignFlowResponseData | null>(null);
   const [editedFlow, setEditedFlow] = useState<Partial<CampaignFlowConfig>>({});
-  const [rawConditionRuleInput, setRawConditionRuleInput] = useState<string>("");
+  const [rawConditionRuleInput, setRawConditionRuleInput] =
+    useState<string>("");
   const [conditionRuleError, setConditionRuleError] = useState<string>("");
   const [isFlowActionLoading, setIsFlowActionLoading] = useState(false);
   const [activeSegments, setActiveSegments] = useState<SegmentType[]>([]);
   const [activeOffers, setActiveOffers] = useState<Offer[]>([]);
   const [isLoadingActiveData, setIsLoadingActiveData] = useState(false);
-  const [showExecuteModal, setShowExecuteModal] = useState(false);
+  const [showRunModal, setShowRunModal] = useState(false);
   const [executionMetrics, setExecutionMetrics] = useState<{
     total_messages_sent: number;
     total_messages_failed: number;
@@ -207,7 +214,11 @@ export default function CampaignDetailsPage() {
         }
 
         // Fetch created_by, updated_by, and approved_by user names
-        if (campaignData.created_by || campaignData.updated_by || campaignData.approved_by) {
+        if (
+          campaignData.created_by ||
+          campaignData.updated_by ||
+          campaignData.approved_by
+        ) {
           try {
             const [createdName, updatedName, approvedName] = await Promise.all([
               getUserDisplayName(campaignData.created_by),
@@ -219,9 +230,17 @@ export default function CampaignDetailsPage() {
             setApprovedByName(approvedName);
           } catch (error) {
             console.error("Failed to fetch user names:", error);
-            setCreatedByName(campaignData.created_by ? `User #${campaignData.created_by}` : "");
-            setUpdatedByName(campaignData.updated_by ? `User #${campaignData.updated_by}` : "");
-            setApprovedByName(campaignData.approved_by ? `User #${campaignData.approved_by}` : "");
+            setCreatedByName(
+              campaignData.created_by ? `User #${campaignData.created_by}` : "",
+            );
+            setUpdatedByName(
+              campaignData.updated_by ? `User #${campaignData.updated_by}` : "",
+            );
+            setApprovedByName(
+              campaignData.approved_by
+                ? `User #${campaignData.approved_by}`
+                : "",
+            );
           }
         }
 
@@ -303,7 +322,6 @@ export default function CampaignDetailsPage() {
           .map((flow) => {
             // Null checks for critical fields
             if (!flow || !flow.id || !flow.campaign_id || !flow.offer_id) {
-              console.warn("Flow data invalid:", flow);
               return null;
             }
             return {
@@ -344,7 +362,9 @@ export default function CampaignDetailsPage() {
     }
   };
 
-  const fetchOffersFromFlows = async (flowsData: CampaignFlowResponseData[]) => {
+  const fetchOffersFromFlows = async (
+    flowsData: CampaignFlowResponseData[],
+  ) => {
     try {
       setIsLoadingOffers(true);
       // Extract unique offer IDs from flows data
@@ -440,7 +460,11 @@ export default function CampaignDetailsPage() {
       showToast("success", "Campaign approved successfully");
       // Refresh campaign data with both approval_status and status updates
       if (campaign) {
-        setCampaign({ ...campaign, approval_status: "approved", status: "approved" });
+        setCampaign({
+          ...campaign,
+          approval_status: "approved",
+          status: "approved",
+        });
       }
     } catch (error) {
       console.error("Failed to approve campaign:", error);
@@ -522,7 +546,9 @@ export default function CampaignDetailsPage() {
     onSuccess?: () => void;
   }
 
-  const handleCampaignDetailAction = async (params: CampaignDetailActionParams) => {
+  const handleCampaignDetailAction = async (
+    params: CampaignDetailActionParams,
+  ) => {
     const { action, successMessage, onSuccess } = params;
     if (!id || !campaign) return;
 
@@ -549,9 +575,15 @@ export default function CampaignDetailsPage() {
         updateFields,
       },
       {
-        onSetLoading: (state) => setIsActionLoading(typeof state === "function" ? state(new Set([campaignId])).size > 0 : state.size > 0),
+        onSetLoading: (state) =>
+          setIsActionLoading(
+            typeof state === "function"
+              ? state(new Set([campaignId])).size > 0
+              : state.size > 0,
+          ),
         onCloseMenu: () => {},
-        onSetCampaign: (updatedCampaign) => setCampaign({ ...campaign, ...updatedCampaign }),
+        onSetCampaign: (updatedCampaign) =>
+          setCampaign({ ...campaign, ...updatedCampaign }),
         onSuccess: (message) => {
           showToast("success", message);
           // Close dropdown immediately so user doesn't see stale button state
@@ -625,7 +657,7 @@ export default function CampaignDetailsPage() {
     });
     // Initialize raw condition rule input from existing rule or empty
     setRawConditionRuleInput(
-      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : ""
+      flow.condition_rule ? JSON.stringify(flow.condition_rule, null, 2) : "",
     );
 
     // Load active segments and offers if not already loaded
@@ -711,7 +743,6 @@ export default function CampaignDetailsPage() {
         return;
       }
 
-      console.log("Updating flow with ID:", flowId, "Data:", updateData);
       await campaignFlowService.updateCampaignFlow(flowId, updateData);
 
       showToast("success", "Flow updated successfully");
@@ -754,7 +785,6 @@ export default function CampaignDetailsPage() {
         return;
       }
 
-      console.log("Deleting flow with ID:", flowId);
       // Call deleteCampaignFlow
       await campaignFlowService.deleteCampaignFlow(flowId);
 
@@ -821,17 +851,15 @@ export default function CampaignDetailsPage() {
 
   return (
     <div className="space-y-6">
+      <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.pages.campaignDetails}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage campaign information
-            </p>
-          </div>
+        <div>
+          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
+            {t.pages.campaignDetails}
+          </h1>
+          <p className={`${tw.textSecondary} mt-2 text-sm`}>
+            View and manage campaign information
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Step 1: Request Approval (draft status) */}
@@ -869,35 +897,37 @@ export default function CampaignDetailsPage() {
           )}
 
           {/* Step 3: Activate Campaign (approved + is_active=false) */}
-          {campaign.approval_status === "approved" && campaign?.is_active === false && (
-            <button
-              onClick={handleActivateCampaign}
-              disabled={isActionLoading}
-              className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
-              style={{ backgroundColor: color.primary.action }}
-            >
-              {isActionLoading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (
-                <Zap className="w-4 h-4" />
-              )}
-              {isActionLoading ? "Activating..." : "Activate Campaign"}
-            </button>
-          )}
-
-          {/* Step 4: Execute Campaign (approved + is_active=true) */}
-          {campaign.approval_status === "approved" && campaign?.is_active === true && (
-            <PermissionGate permission="campaigns.execute">
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === false && (
               <button
-                onClick={() => setShowExecuteModal(true)}
-                className={`flex items-center gap-2 ${tw.button} text-sm`}
+                onClick={handleActivateCampaign}
+                disabled={isActionLoading}
+                className={`flex items-center gap-2 ${tw.button} text-sm disabled:opacity-50`}
                 style={{ backgroundColor: color.primary.action }}
               >
-                <Play className="w-4 h-4" />
-                Execute Campaign
+                {isActionLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Zap className="w-4 h-4" />
+                )}
+                {isActionLoading ? "Activating..." : "Activate Campaign"}
               </button>
-            </PermissionGate>
-          )}
+            )}
+
+          {/* Step 4: Execute Campaign (approved + is_active=true) */}
+          {campaign.approval_status === "approved" &&
+            campaign?.is_active === true && (
+              <PermissionGate permission="campaigns.execute">
+                <button
+                  onClick={() => setShowRunModal(true)}
+                  className={`flex items-center gap-2 ${tw.button} text-sm`}
+                  style={{ backgroundColor: color.primary.action }}
+                >
+                  <Play className="w-4 h-4" />
+                  Execute Campaign
+                </button>
+              </PermissionGate>
+            )}
 
           {/* Edit Button - Always Visible */}
           <PermissionGate permission="campaigns.update">
@@ -938,47 +968,47 @@ export default function CampaignDetailsPage() {
               >
                 {/* Pause Campaign - Only if approved and not paused */}
                 {canShowCampaignButton(campaign, "pause") && (
-                    <button
-                      onClick={() => {
-                        handleCampaignDetailAction({
-                          action: "pause",
-                          successMessage: "Campaign paused successfully!",
-                          onSuccess: () => setShowMoreMenu(false),
-                        });
-                      }}
-                      disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
-                    >
-                      {isActionLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
-                      ) : (
-                        <Pause className="w-4 h-4 mr-3" />
-                      )}
-                      {isActionLoading ? "Pausing..." : "Pause Campaign"}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      handleCampaignDetailAction({
+                        action: "pause",
+                        successMessage: "Campaign paused successfully!",
+                        onSuccess: () => setShowMoreMenu(false),
+                      });
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    {isActionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                    ) : (
+                      <Pause className="w-4 h-4 mr-3" />
+                    )}
+                    {isActionLoading ? "Pausing..." : "Pause Campaign"}
+                  </button>
+                )}
 
                 {/* Resume Campaign - Only if approved and paused */}
                 {canShowCampaignButton(campaign, "resume") && (
-                    <button
-                      onClick={() => {
-                        handleCampaignDetailAction({
-                          action: "resume",
-                          successMessage: "Campaign resumed successfully!",
-                          onSuccess: () => setShowMoreMenu(false),
-                        });
-                      }}
-                      disabled={isActionLoading}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
-                    >
-                      {isActionLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
-                      ) : (
-                        <Play className="w-4 h-4 mr-3" />
-                      )}
-                      {isActionLoading ? "Resuming..." : "Resume Campaign"}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      handleCampaignDetailAction({
+                        action: "resume",
+                        successMessage: "Campaign resumed successfully!",
+                        onSuccess: () => setShowMoreMenu(false),
+                      });
+                    }}
+                    disabled={isActionLoading}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 disabled:opacity-50"
+                  >
+                    {isActionLoading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3"></div>
+                    ) : (
+                      <Play className="w-4 h-4 mr-3" />
+                    )}
+                    {isActionLoading ? "Resuming..." : "Resume Campaign"}
+                  </button>
+                )}
 
                 {/* Reject - Only if pending */}
                 {canShowCampaignButton(campaign, "reject") && (
@@ -1018,95 +1048,91 @@ export default function CampaignDetailsPage() {
 
       {/* Execution Metrics Cards - Always Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Messages Sent Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <Send
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Messages Sent</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
-            </p>
+        {/* Messages Sent Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Send className="h-5 w-5" style={{ color: color.primary.accent }} />
+            <p className="text-sm font-medium text-gray-600">Messages Sent</p>
           </div>
-
-          {/* Messages Failed Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <AlertCircle
-                className="h-5 w-5"
-                style={{ color: "#DC2626" }}
-              />
-              <p className="text-sm font-medium text-gray-600">Failed</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
-            </p>
-          </div>
-
-          {/* Success Rate Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <CheckCircle
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Success Rate</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {(executionMetrics?.total_messages_sent || 0) + (executionMetrics?.total_messages_failed || 0) > 0
-                ? (
-                    ((executionMetrics?.total_messages_sent || 0) /
-                      ((executionMetrics?.total_messages_sent || 0) +
-                        (executionMetrics?.total_messages_failed || 0))) *
-                    100
-                  ).toFixed(1)
-                : "0.0"}
-              %
-            </p>
-          </div>
-
-          {/* Broadcasts Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <TrendingUp
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Broadcasts</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {executionMetrics?.broadcasts_completed || 0} /
-              {executionMetrics?.total_broadcasts || 0}
-            </p>
-          </div>
-
-          {/* Execution Time Card */}
-          <div
-            className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
-          >
-            <div className="flex items-center gap-2">
-              <Clock
-                className="h-5 w-5"
-                style={{ color: color.primary.accent }}
-              />
-              <p className="text-sm font-medium text-gray-600">Execution Time</p>
-            </div>
-            <p className="mt-2 text-3xl font-bold text-gray-900">
-              {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
-            </p>
-          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_sent || 0).toLocaleString()}
+          </p>
         </div>
+
+        {/* Messages Failed Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" style={{ color: "#DC2626" }} />
+            <p className="text-sm font-medium text-gray-600">Failed</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_failed || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Success Rate Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Success Rate</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {(executionMetrics?.total_messages_sent || 0) +
+              (executionMetrics?.total_messages_failed || 0) >
+            0
+              ? (
+                  ((executionMetrics?.total_messages_sent || 0) /
+                    ((executionMetrics?.total_messages_sent || 0) +
+                      (executionMetrics?.total_messages_failed || 0))) *
+                  100
+                ).toFixed(1)
+              : "0.0"}
+            %
+          </p>
+        </div>
+
+        {/* Broadcasts Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <TrendingUp
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Broadcasts</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {executionMetrics?.broadcasts_completed || 0} /
+            {executionMetrics?.total_broadcasts || 0}
+          </p>
+        </div>
+
+        {/* Execution Time Card */}
+        <div
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+        >
+          <div className="flex items-center gap-2">
+            <Clock
+              className="h-5 w-5"
+              style={{ color: color.primary.accent }}
+            />
+            <p className="text-sm font-medium text-gray-600">Execution Time</p>
+          </div>
+          <p className="mt-2 text-3xl font-bold text-gray-900">
+            {((executionMetrics?.execution_time_ms || 0) / 1000).toFixed(2)}s
+          </p>
+        </div>
+      </div>
 
       {/* Campaign Information Card */}
       <div
@@ -1121,13 +1147,13 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Name
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{campaign.name || "—"}</p>
+            <p className={`text-base ${tw.textPrimary}`}>{campaign.name}</p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Code
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{campaign.code || "—"}</p>
+            <p className={`text-base ${tw.textPrimary}`}>{campaign.code}</p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
@@ -1150,7 +1176,7 @@ export default function CampaignDetailsPage() {
                             : "#EF4444",
                   }}
                 >
-                  {campaign.status?.replace(/_/g, " ") || "Unknown"}
+                  {campaign.status?.replace(/_/g, " ")}
                 </span>
               )}
               {campaign.approval_status && (
@@ -1174,7 +1200,7 @@ export default function CampaignDetailsPage() {
                   {campaign.approval_status === "pending" && (
                     <Clock className="w-3 h-3 mr-1" />
                   )}
-                  {campaign.approval_status?.replace(/_/g, " ") || "Unknown"}
+                  {campaign.approval_status?.replace(/_/g, " ")}
                 </span>
               )}
             </div>
@@ -1183,7 +1209,9 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Category
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{categoryName || "—"}</p>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {categoryName || "—"}
+            </p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
@@ -1200,7 +1228,10 @@ export default function CampaignDetailsPage() {
             <div className="flex flex-wrap gap-2">
               {campaign.tags && campaign.tags.length > 0 ? (
                 campaign.tags.map((tag, index) => {
-                  const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
+                  const tagName =
+                    typeof tag === "object" && tag !== null
+                      ? (tag as any).name || String(tag)
+                      : String(tag);
                   return (
                     <span
                       key={index}
@@ -1222,7 +1253,9 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Program ID
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{campaign.program_id || "—"}</p>
+            <p className={`text-base ${tw.textPrimary}`}>
+              {campaign.program_id}
+            </p>
           </div>
         </div>
       </div>
@@ -1234,12 +1267,16 @@ export default function CampaignDetailsPage() {
       >
         {/* Schedule Section */}
         <div className="mb-8">
-          <h3 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+          <h3
+            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+          >
             Schedule & Timeline
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Start Date
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1257,7 +1294,9 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 End Date
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1275,11 +1314,13 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Timezone
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
-                {campaign.timezone || "—"}
+                {campaign.timezone}
               </p>
             </div>
           </div>
@@ -1290,12 +1331,16 @@ export default function CampaignDetailsPage() {
 
         {/* Targets & Performance Section */}
         <div>
-          <h3 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+          <h3
+            className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+          >
             Targets & Performance
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Max Participants
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1303,7 +1348,9 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Current Participants
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1311,7 +1358,9 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Target Reach
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1319,27 +1368,37 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Target Conversion Rate
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
-                {campaign.target_conversion_rate ? `${campaign.target_conversion_rate}%` : "—"}
+                {campaign.target_conversion_rate
+                  ? `${campaign.target_conversion_rate}%`
+                  : "—"}
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Target Revenue
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
                 {campaign.target_revenue ? (
-                  <CurrencyFormatter amount={parseFloat(String(campaign.target_revenue))} />
+                  <CurrencyFormatter
+                    amount={parseFloat(String(campaign.target_revenue))}
+                  />
                 ) : (
                   "—"
                 )}
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Control Group Enabled
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
@@ -1347,19 +1406,25 @@ export default function CampaignDetailsPage() {
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Control Group Percentage
               </label>
               <p className={`text-base ${tw.textPrimary}`}>
-                {campaign.control_group_percentage ? `${campaign.control_group_percentage}%` : "—"}
+                {campaign.control_group_percentage
+                  ? `${campaign.control_group_percentage}%`
+                  : "—"}
               </p>
             </div>
             <div>
-              <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              <label
+                className={`text-sm font-medium ${tw.textMuted} block mb-1`}
+              >
                 Control Group UUID
               </label>
               <p className={`text-base ${tw.textPrimary} break-all text-sm`}>
-                {campaign.campaign_uuid || "—"}
+                {campaign.campaign_uuid}
               </p>
             </div>
           </div>
@@ -1465,17 +1530,18 @@ export default function CampaignDetailsPage() {
                 {campaign.name || "—"}
               </h2>
               <div className="flex items-center flex-wrap gap-2">
-                {campaign.status && (!campaign.approval_status ||
-                  campaign.approval_status?.toLowerCase() !==
-                    campaign.status?.toLowerCase()) && (
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
-                      campaign.status,
-                    )}`}
-                  >
-                    {campaign.status?.replace(/_/g, " ") || "Unknown"}
-                  </span>
-                )}
+                {campaign.status &&
+                  (!campaign.approval_status ||
+                    campaign.approval_status?.toLowerCase() !==
+                      campaign.status?.toLowerCase()) && (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(
+                        campaign.status,
+                      )}`}
+                    >
+                      {campaign.status?.replace(/_/g, " ")}
+                    </span>
+                  )}
                 {campaign.approval_status && (
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getApprovalBadge(
@@ -1491,7 +1557,7 @@ export default function CampaignDetailsPage() {
                     {campaign.approval_status === "pending" && (
                       <Clock className="w-3 h-3 mr-1" />
                     )}
-                    {campaign.approval_status?.replace(/_/g, " ") || "Unknown"}
+                    {campaign.approval_status?.replace(/_/g, " ")}
                   </span>
                 )}
               </div>
@@ -1523,13 +1589,20 @@ export default function CampaignDetailsPage() {
           {/* Campaign Details - Organized by Priority - Each in Own Card */}
           <div className="space-y-6">
             {/* Core Details Card */}
-            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
-              <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
                 Core Details
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Campaign ID
                   </label>
                   <p className={`text-base ${tw.textPrimary} font-mono`}>
@@ -1537,7 +1610,9 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Objective
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1545,13 +1620,19 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Category
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>{categoryName}</p>
+                  <p className={`text-base ${tw.textPrimary}`}>
+                    {categoryName}
+                  </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Campaign Manager
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1562,13 +1643,20 @@ export default function CampaignDetailsPage() {
             </div>
 
             {/* Timeline Card */}
-            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
-              <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
                 Schedule & Timeline
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Start Date
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1586,7 +1674,9 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     End Date
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1604,24 +1694,33 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Timezone
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.timezone || "—"}
+                    {campaign.timezone}
                   </p>
                 </div>
               </div>
             </div>
 
             {/* Targets & Performance Card */}
-            <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
-              <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+            <div
+              className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+              style={{ borderColor: color.border.default }}
+            >
+              <h4
+                className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+              >
                 Targets & Performance
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Max Participants
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1629,7 +1728,9 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Current Participants
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1637,7 +1738,9 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Target Reach
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
@@ -1645,20 +1748,28 @@ export default function CampaignDetailsPage() {
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Target Conversion Rate
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
-                    {campaign.target_conversion_rate ? `${campaign.target_conversion_rate}%` : "—"}
+                    {campaign.target_conversion_rate
+                      ? `${campaign.target_conversion_rate}%`
+                      : "—"}
                   </p>
                 </div>
                 <div>
-                  <label className={`text-sm font-medium ${tw.textMuted} block mb-2`}>
+                  <label
+                    className={`text-sm font-medium ${tw.textMuted} block mb-2`}
+                  >
                     Target Revenue
                   </label>
                   <p className={`text-base ${tw.textPrimary}`}>
                     {campaign.target_revenue ? (
-                      <CurrencyFormatter amount={parseFloat(String(campaign.target_revenue))} />
+                      <CurrencyFormatter
+                        amount={parseFloat(String(campaign.target_revenue))}
+                      />
                     ) : (
                       "—"
                     )}
@@ -1669,14 +1780,25 @@ export default function CampaignDetailsPage() {
 
             {/* Tags Card */}
             {campaign.tags && campaign.tags.length > 0 && (
-              <div className={`bg-white ${tw.rounded} border p-6 shadow-sm`} style={{ borderColor: color.border.default }}>
-                <h4 className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}>
+              <div
+                className={`bg-white ${tw.rounded} border p-6 shadow-sm`}
+                style={{ borderColor: color.border.default }}
+              >
+                <h4
+                  className={`text-sm font-semibold ${tw.textMuted} uppercase tracking-wide mb-4`}
+                >
                   Tags
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {campaign.tags.map((tag, index) => {
-                    const tagName = typeof tag === "object" && tag !== null ? (tag as any).name || String(tag) : String(tag);
-                    const tagKey = typeof tag === "object" && tag !== null ? (tag as any).id || index : tag;
+                    const tagName =
+                      typeof tag === "object" && tag !== null
+                        ? (tag as any).name || String(tag)
+                        : String(tag);
+                    const tagKey =
+                      typeof tag === "object" && tag !== null
+                        ? (tag as any).id || index
+                        : tag;
                     return (
                       <span
                         key={`${tagKey}-${index}`}
@@ -2112,9 +2234,7 @@ export default function CampaignDetailsPage() {
               {campaign.budget_allocated && campaign.budget_spent && (
                 <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-200">
                   <div>
-                    <span
-                      className={`text-xs ${tw.textSecondary} block mb-1`}
-                    >
+                    <span className={`text-xs ${tw.textSecondary} block mb-1`}>
                       Allocated
                     </span>
                     <span className={`text-sm font-medium ${tw.textPrimary}`}>
@@ -2124,9 +2244,7 @@ export default function CampaignDetailsPage() {
                     </span>
                   </div>
                   <div>
-                    <span
-                      className={`text-xs ${tw.textSecondary} block mb-1`}
-                    >
+                    <span className={`text-xs ${tw.textSecondary} block mb-1`}>
                       Spent
                     </span>
                     <span className={`text-sm font-medium ${tw.textPrimary}`}>
@@ -2146,9 +2264,7 @@ export default function CampaignDetailsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <h3
-              className={`text-lg font-semibold ${tw.textPrimary}`}
-            >
+            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
               Segment-Offer Mappings
             </h3>
           </div>
@@ -2224,7 +2340,7 @@ export default function CampaignDetailsPage() {
                   // Match on segment_id (not id which is the association ID)
                   // Name is in segment_name (not name)
                   const segment = segments.find(
-                    (s) => s.segment_id === flow.segment_id
+                    (s) => s.segment_id === flow.segment_id,
                   );
                   const offer = offers.find(
                     (o) => parseInt(o.id) === flow.offer_id,
@@ -2436,7 +2552,6 @@ export default function CampaignDetailsPage() {
 
                 {/* Core Selection */}
                 <div className="space-y-4">
-
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label
@@ -2521,12 +2636,16 @@ export default function CampaignDetailsPage() {
                       }}
                       placeholder='{"condition": "value"}'
                       className={`w-full px-3 py-2 border ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs ${
-                        conditionRuleError ? "border-red-500" : "border-gray-300"
+                        conditionRuleError
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       rows={3}
                     />
                     {conditionRuleError && (
-                      <p className="text-xs text-red-600 mt-1">{conditionRuleError}</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        {conditionRuleError}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -2668,7 +2787,10 @@ export default function CampaignDetailsPage() {
                       }
                       className="w-4 h-4"
                     />
-                    <label htmlFor="flowActive" className={`text-sm font-medium ${tw.textPrimary}`}>
+                    <label
+                      htmlFor="flowActive"
+                      className={`text-sm font-medium ${tw.textPrimary}`}
+                    >
                       Active Flow
                     </label>
                   </div>
@@ -2740,15 +2862,15 @@ export default function CampaignDetailsPage() {
 
       {/* Execute Campaign Modal */}
       {campaign && (
-        <ExecuteCampaignModal
-          isOpen={showExecuteModal}
-          onClose={() => setShowExecuteModal(false)}
+        <RunCampaignModal
+          isOpen={showRunModal}
+          onClose={() => setShowRunModal(false)}
           campaignId={parseInt(id || "0")}
           campaignName={campaign.name}
           isActive={campaign?.is_active}
           approvalStatus={campaign.approval_status}
           onSuccess={(executionData) => {
-            setShowExecuteModal(false);
+            setShowRunModal(false);
             // Store execution metrics
             if (executionData) {
               setExecutionMetrics({

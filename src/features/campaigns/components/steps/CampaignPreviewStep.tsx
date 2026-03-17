@@ -256,6 +256,48 @@ export default function CampaignPreviewStep({
                   {formData.tag || "None"}
                 </div>
               </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Line of Business
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {(formData as { line_of_business_id?: number }).line_of_business_id || "Not selected"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Department
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {(formData as { department_id?: number }).department_id || "Not selected"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Program
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {(formData as { program_id?: number }).program_id || "Not selected"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Priority
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {formData.priority ?
+                    (formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1))
+                    : "Not set"}
+                </div>
+              </div>
+              <div>
+                <div className={`text-sm font-medium ${tw.textSecondary} mb-1`}>
+                  Description
+                </div>
+                <div className="text-sm font-medium text-gray-600">
+                  {formData.description || "No description"}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -307,13 +349,20 @@ export default function CampaignPreviewStep({
                         )}
                       </div>
                       <div>
-                        {segmentSeedLists[segment.id]?.length ? (
-                          <div className="text-sm font-medium text-gray-700">
-                            {segmentSeedLists[segment.id].length}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-gray-400">—</div>
-                        )}
+                        {(() => {
+                          // Show seed list count based on mode
+                          const perSegmentCount = segmentSeedLists[segment.id]?.length || 0;
+                          const globalCount = seedListMode === "all" ? (segmentSeedLists["all"]?.length || 0) : 0;
+                          const totalCount = perSegmentCount || globalCount;
+
+                          return totalCount > 0 ? (
+                            <div className="text-sm font-medium text-gray-700">
+                              {totalCount}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-400">—</div>
+                          );
+                        })()}
                       </div>
                     </div>
                   ))}
@@ -402,7 +451,8 @@ export default function CampaignPreviewStep({
           </div>
 
           {/* Test Contacts Section */}
-          {Object.keys(segmentSeedLists).length > 0 && (
+          {((seedListMode === "all" && segmentSeedLists["all"] && segmentSeedLists["all"].length > 0) ||
+           (seedListMode === "per-segment" && Object.keys(segmentSeedLists).some((key) => key !== "all" && segmentSeedLists[key]?.length > 0))) && (
             <div className={`${tw.rounded} border border-gray-200 bg-white shadow-sm p-6 space-y-4`}>
               <h3 className="text-sm font-semibold text-gray-900">
                 Test Contacts
@@ -423,8 +473,8 @@ export default function CampaignPreviewStep({
                             key={seedListId}
                             className="inline-block px-3 py-1.5 rounded text-sm font-medium"
                             style={{
-                              backgroundColor: `${color.primary.accent}15`,
-                              color: color.primary.accent,
+                              backgroundColor: color.primary.accent,
+                              color: "white",
                             }}
                           >
                             {seedListId}
@@ -446,8 +496,8 @@ export default function CampaignPreviewStep({
                                 key={seedListId}
                                 className="inline-block px-3 py-1.5 rounded text-sm font-medium"
                                 style={{
-                                  backgroundColor: `${color.primary.accent}15`,
-                                  color: color.primary.accent,
+                                  backgroundColor: color.primary.accent,
+                                  color: "white",
                                 }}
                               >
                                 {seedListId}

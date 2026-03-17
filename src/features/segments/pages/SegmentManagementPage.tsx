@@ -47,16 +47,20 @@ export default function SegmentManagementPage() {
   const { confirm } = useConfirm();
   const { t } = useLanguage();
   const [segments, setSegments] = useState<Segment[]>([]);
-  const [computingSegmentId, setComputingSegmentId] = useState<number | null>(null);
-  const [computeLocation, setComputeLocation] = useState<"frontend" | "background" | null>(null);
+  const [computingSegmentId, setComputingSegmentId] = useState<number | null>(
+    null,
+  );
+  const [computeLocation, setComputeLocation] = useState<
+    "frontend" | "background" | null
+  >(null);
   const [showComputeDialog, setShowComputeDialog] = useState(false);
   const [computeProgress, setComputeProgress] = useState(0);
   const [allSegments, setAllSegments] = useState<Segment[]>([]); // Store all segments for tag calculation
-  const [mockCustomerCounts, setMockCustomerCounts] = useState<Record<number, number>>(() => {
-    // Load mock customer counts from localStorage on init
-    const saved = localStorage.getItem("segmentMockCounts");
-    return saved ? JSON.parse(saved) : {};
-  });
+  // COMMENTED OUT: Mock customer counts and localStorage persistence — testing real backend data
+  // const [mockCustomerCounts, setMockCustomerCounts] = useState<Record<number, number>>(() => {
+  //   const saved = localStorage.getItem("segmentMockCounts");
+  //   return saved ? JSON.parse(saved) : {};
+  // });
   const [isLoading, setIsLoading] = useState(true);
   const [duplicatingSegment, setDuplicatingSegment] = useState<number | null>(
     null,
@@ -546,70 +550,50 @@ export default function SegmentManagementPage() {
     loadAnalytics();
   }, [loadAnalytics]);
 
-  // Restore computing state from localStorage on mount
-  useEffect(() => {
-    const savedComputeState = localStorage.getItem("segmentComputeState");
-    if (savedComputeState) {
-      try {
-        const state = JSON.parse(savedComputeState);
-        const now = Date.now();
-        const elapsedTime = now - state.startTime;
-        const COMPUTE_DURATION = 120000; // 2 minutes
-
-        if (elapsedTime < COMPUTE_DURATION) {
-          // Still computing
-          setComputingSegmentId(state.segmentId);
-          setComputeLocation(state.location);
-          setComputeProgress(Math.min((elapsedTime / COMPUTE_DURATION) * 100, 100));
-
-          // Resume the timer
-          const remainingTime = COMPUTE_DURATION - elapsedTime;
-          const progressInterval = setInterval(() => {
-            const elapsed = Date.now() - state.startTime;
-            const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
-            setComputeProgress(progress);
-
-            if (elapsed >= COMPUTE_DURATION) {
-              clearInterval(progressInterval);
-              // Generate mock customer count (4-10)
-              const mockCustomerCount = Math.floor(Math.random() * 7) + 4;
-
-              // Update segment with mock data
-              setSegments((prev) =>
-                prev.map((s) =>
-                  s.id === state.segmentId
-                    ? {
-                        ...s,
-                        size_estimate: mockCustomerCount,
-                        last_computed_at: new Date().toISOString(),
-                      }
-                    : s,
-                ),
-              );
-
-              // Clear compute state
-              setComputingSegmentId(null);
-              setComputeLocation(null);
-              setComputeProgress(0);
-              setShowComputeDialog(false);
-              localStorage.removeItem("segmentComputeState");
-
-              // Show success message
-              success("Segment computed", "Segment computation completed successfully");
-            }
-          }, 1000);
-
-          return () => clearInterval(progressInterval);
-        } else {
-          // Computation already completed
-          localStorage.removeItem("segmentComputeState");
-        }
-      } catch (err) {
-        // Failed to parse, clear the bad state
-        localStorage.removeItem("segmentComputeState");
-      }
-    }
-  }, []);
+  // COMMENTED OUT: Restore computing state from localStorage — testing real backend data
+  // useEffect(() => {
+  //   const savedComputeState = localStorage.getItem("segmentComputeState");
+  //   if (savedComputeState) {
+  //     try {
+  //       const state = JSON.parse(savedComputeState);
+  //       const now = Date.now();
+  //       const elapsedTime = now - state.startTime;
+  //       const COMPUTE_DURATION = 120000;
+  //       if (elapsedTime < COMPUTE_DURATION) {
+  //         setComputingSegmentId(state.segmentId);
+  //         setComputeLocation(state.location);
+  //         setComputeProgress(Math.min((elapsedTime / COMPUTE_DURATION) * 100, 100));
+  //         const progressInterval = setInterval(() => {
+  //           const elapsed = Date.now() - state.startTime;
+  //           const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
+  //           setComputeProgress(progress);
+  //           if (elapsed >= COMPUTE_DURATION) {
+  //             clearInterval(progressInterval);
+  //             const mockCustomerCount = Math.floor(Math.random() * 7) + 4;
+  //             setSegments((prev) =>
+  //               prev.map((s) =>
+  //                 s.id === state.segmentId
+  //                   ? { ...s, size_estimate: mockCustomerCount, last_computed_at: new Date().toISOString() }
+  //                   : s,
+  //               ),
+  //             );
+  //             setComputingSegmentId(null);
+  //             setComputeLocation(null);
+  //             setComputeProgress(0);
+  //             setShowComputeDialog(false);
+  //             localStorage.removeItem("segmentComputeState");
+  //             success("Segment computed", "Segment computation completed successfully");
+  //           }
+  //         }, 1000);
+  //         return () => clearInterval(progressInterval);
+  //       } else {
+  //         localStorage.removeItem("segmentComputeState");
+  //       }
+  //     } catch (err) {
+  //       localStorage.removeItem("segmentComputeState");
+  //     }
+  //   }
+  // }, []);
 
   const handleSearch = () => {
     loadSegments();
@@ -695,7 +679,9 @@ export default function SegmentManagementPage() {
     try {
       setDuplicatingSegment(segmentId);
 
-      const response = await segmentService.duplicateSegment(segmentId, { new_name: newName });
+      const response = await segmentService.duplicateSegment(segmentId, {
+        new_name: newName,
+      });
 
       // Add new segment to list (optimistic UI)
       if (response && response.data) {
@@ -741,29 +727,30 @@ export default function SegmentManagementPage() {
     } else {
       success(
         isCreate ? "Segment created" : "Segment updated",
-        isCreate ? "Segment has been created successfully" : "Segment has been updated successfully",
+        isCreate
+          ? "Segment has been created successfully"
+          : "Segment has been updated successfully",
       );
     }
   };
 
-  // Generate and cache mock customer count (4-10) if not available
+  // COMMENTED OUT: Mock customer count generation — testing real backend data
+  // const getMockCustomerCount = (segment: Segment): number => {
+  //   if (segment.size_estimate && segment.size_estimate > 0) {
+  //     return segment.size_estimate;
+  //   }
+  //   if (mockCustomerCounts[segment.id]) {
+  //     return mockCustomerCounts[segment.id];
+  //   }
+  //   const newMockCount = Math.floor(Math.random() * 7) + 4;
+  //   const updatedCounts = { ...mockCustomerCounts, [segment.id]: newMockCount };
+  //   setMockCustomerCounts(updatedCounts);
+  //   localStorage.setItem("segmentMockCounts", JSON.stringify(updatedCounts));
+  //   return newMockCount;
+  // };
+  // Replacement: just show real size_estimate from backend
   const getMockCustomerCount = (segment: Segment): number => {
-    if (segment.size_estimate && segment.size_estimate > 0) {
-      return segment.size_estimate;
-    }
-    // Return cached value if exists, otherwise generate and cache
-    if (mockCustomerCounts[segment.id]) {
-      return mockCustomerCounts[segment.id];
-    }
-    const newMockCount = Math.floor(Math.random() * 7) + 4;
-    const updatedCounts = {
-      ...mockCustomerCounts,
-      [segment.id]: newMockCount,
-    };
-    setMockCustomerCounts(updatedCounts);
-    // Save to localStorage for persistence across pages
-    localStorage.setItem("segmentMockCounts", JSON.stringify(updatedCounts));
-    return newMockCount;
+    return segment.size_estimate ?? 0;
   };
 
   const handleComputeSegment = async (segment: Segment) => {
@@ -784,61 +771,47 @@ export default function SegmentManagementPage() {
       setShowComputeDialog(false);
     }
 
-    // Simulate 2-minute computation (120 seconds)
-    const COMPUTE_DURATION = 120000; // 2 minutes
-    const PROGRESS_INTERVAL = 1000; // Update every second
-    const startTime = Date.now();
+    // Simulate 2-minute computation (120 seconds)\n    // const COMPUTE_DURATION = 120000;\n    // const PROGRESS_INTERVAL = 1000;\n    // const startTime = Date.now();
 
-    // Save compute state to localStorage for persistence across navigation
-    localStorage.setItem(
-      "segmentComputeState",
-      JSON.stringify({
-        segmentId: computingSegmentId,
-        location,
-        startTime,
-      })
-    );
+    // COMMENTED OUT: Mock computation timer + localStorage persistence — testing real backend
+    // localStorage.setItem(
+    //   "segmentComputeState",
+    //   JSON.stringify({ segmentId: computingSegmentId, location, startTime })
+    // );
 
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
-      setComputeProgress(progress);
+    // TODO: Replace with real backend compute call
+    // For now, just reset states immediately since mock is disabled
+    setComputingSegmentId(null);
+    setComputeLocation(null);
+    setComputeProgress(0);
+    setShowComputeDialog(false);
 
-      if (elapsed >= COMPUTE_DURATION) {
-        clearInterval(progressInterval);
-        // Generate mock customer count (4-10)
-        const mockCustomerCount = Math.floor(Math.random() * 7) + 4; // 4-10
-
-        // Update segment with mock data
-        setSegments((prev) =>
-          prev.map((s) =>
-            s.id === computingSegmentId
-              ? {
-                  ...s,
-                  size_estimate: mockCustomerCount,
-                  last_computed_at: new Date().toISOString(),
-                }
-              : s,
-          ),
-        );
-
-        // Show success message
-        const segment = segments.find((s) => s.id === computingSegmentId);
-        success(
-          "Segment computed",
-          `Segment "${segment?.name}" has been computed successfully. Target: ${mockCustomerCount} customers`,
-        );
-
-        // Reset states
-        setComputingSegmentId(null);
-        setComputeLocation(null);
-        setComputeProgress(0);
-        setShowComputeDialog(false);
-
-        // Clear localStorage when done
-        localStorage.removeItem("segmentComputeState");
-      }
-    }, PROGRESS_INTERVAL);
+    // const progressInterval = setInterval(() => {
+    //   const elapsed = Date.now() - startTime;
+    //   const progress = Math.min((elapsed / COMPUTE_DURATION) * 100, 100);
+    //   setComputeProgress(progress);
+    //   if (elapsed >= COMPUTE_DURATION) {
+    //     clearInterval(progressInterval);
+    //     const mockCustomerCount = Math.floor(Math.random() * 7) + 4;
+    //     setSegments((prev) =>
+    //       prev.map((s) =>
+    //         s.id === computingSegmentId
+    //           ? { ...s, size_estimate: mockCustomerCount, last_computed_at: new Date().toISOString() }
+    //           : s,
+    //       ),
+    //     );
+    //     const segment = segments.find((s) => s.id === computingSegmentId);
+    //     success(
+    //       "Segment computed",
+    //       `Segment "${segment?.name}" has been computed successfully. Target: ${mockCustomerCount} customers`,
+    //     );
+    //     setComputingSegmentId(null);
+    //     setComputeLocation(null);
+    //     setComputeProgress(0);
+    //     setShowComputeDialog(false);
+    //     localStorage.removeItem("segmentComputeState");
+    //   }
+    // }, PROGRESS_INTERVAL);
   };
 
   // Bulk selection handlers
@@ -1312,18 +1285,22 @@ export default function SegmentManagementPage() {
             <p className="mt-2 text-3xl font-bold text-gray-900">
               {isLoadingAnalytics ? (
                 <span className="text-gray-400">...</span>
-              ) : (() => {
-                const staleCount = analyticsData?.healthSummary?.stale_segments;
-                if (!staleCount && staleCount !== 0) {
-                  return "0";
-                }
-                const numValue = typeof staleCount === "number" ? staleCount : parseInt(String(staleCount), 10);
-                return String(numValue);
-              })()}
+              ) : (
+                (() => {
+                  const staleCount =
+                    analyticsData?.healthSummary?.stale_segments;
+                  if (!staleCount && staleCount !== 0) {
+                    return "0";
+                  }
+                  const numValue =
+                    typeof staleCount === "number"
+                      ? staleCount
+                      : parseInt(String(staleCount), 10);
+                  return String(numValue);
+                })()
+              )}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
-              need refresh
-            </p>
+            <p className="mt-1 text-sm text-gray-500">need refresh</p>
           </div>
 
           {/* Top Segment */}
@@ -1351,7 +1328,9 @@ export default function SegmentManagementPage() {
             </p>
             {stats.largestSegments.length > 0 && (
               <p className="mt-1 text-sm text-gray-500">
-                {(stats.largestSegments[0]?.size_estimate || 0).toLocaleString()}{" "}
+                {(
+                  stats.largestSegments[0]?.size_estimate || 0
+                ).toLocaleString()}{" "}
                 members
               </p>
             )}
@@ -1678,7 +1657,9 @@ export default function SegmentManagementPage() {
                               className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
                               style={{ borderTopColor: color.primary.accent }}
                             />
-                            <span className="text-xs text-gray-500">Computing...</span>
+                            <span className="text-xs text-gray-500">
+                              Computing...
+                            </span>
                           </div>
                         ) : (
                           <span className={`text-sm ${tw.textPrimary}`}>
@@ -1892,7 +1873,9 @@ export default function SegmentManagementPage() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className={`${tw.tableFirstColumn} text-gray-900 mb-1`}>
+                      <div
+                        className={`${tw.tableFirstColumn} text-gray-900 mb-1`}
+                      >
                         {segment.name}
                       </div>
                       <div className="text-sm text-gray-500 mb-2">
@@ -2094,7 +2077,11 @@ export default function SegmentManagementPage() {
                             ? `text-white`
                             : `border border-gray-200 text-gray-700 hover:bg-gray-50`
                         }`}
-                        style={filterTab === tab.value ? { backgroundColor: button.action.background } : {}}
+                        style={
+                          filterTab === tab.value
+                            ? { backgroundColor: button.action.background }
+                            : {}
+                        }
                       >
                         {tab.label}
                       </button>
@@ -2309,7 +2296,9 @@ export default function SegmentManagementPage() {
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Compute Segment</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Compute Segment
+            </h3>
             <p className="text-sm text-gray-600 mb-6">
               This may take up to 2 minutes to compute the target audience size.
             </p>
@@ -2323,12 +2312,17 @@ export default function SegmentManagementPage() {
                       className="w-4 h-4 border-2 border-gray-300 rounded-full animate-spin"
                       style={{ borderTopColor: color.primary.accent }}
                     />
-                    <span className="text-sm text-gray-600">Computing segment...</span>
+                    <span className="text-sm text-gray-600">
+                      Computing segment...
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className="h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${computeProgress}%`, backgroundColor: color.primary.accent }}
+                      style={{
+                        width: `${computeProgress}%`,
+                        backgroundColor: color.primary.accent,
+                      }}
                     />
                   </div>
                   <p className="text-xs text-gray-500 text-right">

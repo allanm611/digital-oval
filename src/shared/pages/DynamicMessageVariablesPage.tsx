@@ -187,7 +187,7 @@ export default function DynamicMessageVariablesPage() {
         <BackButton fallbackTo="/dashboard/configurations" />
         <div>
           <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-            Dynamic Message Variables
+            Dynamic Modal Generator
           </h1>
           <p className={`${tw.textSecondary} text-sm mt-1`}>
             Manage customer identity fields for message and creative variables

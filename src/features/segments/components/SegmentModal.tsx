@@ -56,7 +56,9 @@ export default function SegmentModal({
     conditions?: string;
   }>({});
   const [existingQuery, setExistingQuery] = useState<string | null>(null);
-  const [existingCountQuery, setExistingCountQuery] = useState<string | null>(null);
+  const [existingCountQuery, setExistingCountQuery] = useState<string | null>(
+    null,
+  );
   const [fieldSelectorConfig, setFieldSelectorConfig] = useState<any[]>([]);
   const isUserInteractionRef = useRef(false);
 
@@ -65,7 +67,12 @@ export default function SegmentModal({
     const loadFieldSelectorConfig = async () => {
       try {
         const response = await segmentService.getSegmentationFields(true);
-        if (response && response.success && response.data && response.data.length > 0) {
+        if (
+          response &&
+          response.success &&
+          response.data &&
+          response.data.length > 0
+        ) {
           const config = response.data[0]?.field_selector_config || [];
           setFieldSelectorConfig(config);
         }
@@ -103,25 +110,32 @@ export default function SegmentModal({
         if (segment && segment.id) {
           try {
             // Fetch full segment data from backend to ensure we have the definition
-            const fullSegmentResponse = await segmentService.getSegmentById(segment.id);
-            const fullSegment = fullSegmentResponse && "data" in fullSegmentResponse
-              ? fullSegmentResponse.data
-              : fullSegmentResponse;
+            const fullSegmentResponse = await segmentService.getSegmentById(
+              segment.id,
+            );
+            const fullSegment =
+              fullSegmentResponse && "data" in fullSegmentResponse
+                ? fullSegmentResponse.data
+                : fullSegmentResponse;
 
             // Convert the stored definition/payload back to UI conditions
-            const category = fullSegment.category ? Number(fullSegment.category) : undefined;
+            const category = fullSegment.category
+              ? Number(fullSegment.category)
+              : undefined;
             let conditions: SegmentConditionGroup[] = [];
 
             // Try to get conditions from the definition (SegmentPayload)
             if (fullSegment.definition) {
-              conditions = await convertPayloadToConditions(fullSegment.definition);
+              conditions = await convertPayloadToConditions(
+                fullSegment.definition,
+              );
             }
 
             setFormData({
               name: fullSegment.name,
               description: fullSegment.description || "",
               tags: (fullSegment.tags || []).map((tag: any) =>
-                typeof tag === "string" ? tag : (tag?.name || String(tag))
+                typeof tag === "string" ? tag : tag?.name || String(tag),
               ),
               conditions: conditions,
               type: "dynamic",
@@ -199,7 +213,9 @@ export default function SegmentModal({
   };
 
   // Convert SegmentPayload back to UI SegmentConditionGroup format for editing
-  const convertPayloadToConditions = async (payload: SegmentPayload): Promise<SegmentConditionGroup[]> => {
+  const convertPayloadToConditions = async (
+    payload: SegmentPayload,
+  ): Promise<SegmentConditionGroup[]> => {
     if (!payload.layer_filters || !payload.layer_filters.groups) {
       return [];
     }
@@ -209,7 +225,12 @@ export default function SegmentModal({
     if (config.length === 0) {
       try {
         const response = await segmentService.getSegmentationFields(true);
-        if (response && response.success && response.data && response.data.length > 0) {
+        if (
+          response &&
+          response.success &&
+          response.data &&
+          response.data.length > 0
+        ) {
           config = response.data[0]?.field_selector_config || [];
         }
       } catch (err) {
@@ -262,47 +283,56 @@ export default function SegmentModal({
         let operatorLabel = "equals";
         let operatorFromField = null;
 
-        if (matchedField && matchedField.operators && Array.isArray(matchedField.operators)) {
-          operatorFromField = matchedField.operators.find((op: any) => op.id === operatorId);
+        if (
+          matchedField &&
+          matchedField.operators &&
+          Array.isArray(matchedField.operators)
+        ) {
+          operatorFromField = matchedField.operators.find(
+            (op: any) => op.id === operatorId,
+          );
           if (operatorFromField) {
             // Normalize the label from backend (convert spaces to underscores)
-            operatorLabel = normalizeOperatorLabel(operatorFromField.label || "equals");
+            operatorLabel = normalizeOperatorLabel(
+              operatorFromField.label || "equals",
+            );
           }
         } else {
-          // Fallback to hardcoded mapping if field operators not available (using underscore format to match UI)
+          // Fallback to hardcoded mapping if field operators not available
+          // These IDs match the backend's actual operator IDs
           switch (operatorId) {
             case 1:
               operatorLabel = "equals";
               break;
             case 2:
-              operatorLabel = "not_equals";
+              operatorLabel = "not equals";
               break;
             case 3:
-              operatorLabel = "greater_than";
+              operatorLabel = "greater than";
               break;
             case 4:
-              operatorLabel = "less_than";
+              operatorLabel = "less than";
               break;
             case 5:
-              operatorLabel = "greater_than_or_equal";
+              operatorLabel = "greater than or equal";
               break;
             case 6:
-              operatorLabel = "less_than_or_equal";
+              operatorLabel = "less than or equal";
+              break;
+            case 7:
+              operatorLabel = "in list";
+              break;
+            case 8:
+              operatorLabel = "not in list";
+              break;
+            case 12:
+              operatorLabel = "between";
+              break;
+            case 13:
+              operatorLabel = "is empty";
               break;
             case 14:
-              operatorLabel = "on_date";
-              break;
-            case 15:
-              operatorLabel = "after_date";
-              break;
-            case 16:
-              operatorLabel = "before_date";
-              break;
-            case 17:
-              operatorLabel = "in_last_days";
-              break;
-            case 18:
-              operatorLabel = "between_dates";
+              operatorLabel = "is not empty";
               break;
             default:
               operatorLabel = "equals";
@@ -316,7 +346,9 @@ export default function SegmentModal({
           conditionType: "360_profile",
           field_name: matchedField?.field_name || fieldName,
           // Store the actual field_value from the matched field (this is what SegmentConditionsBuilder looks up)
-          field: matchedField?.field_value || (fieldName.startsWith("p_") ? fieldName : `p_${fieldName}`),
+          field:
+            matchedField?.field_value ||
+            (fieldName.startsWith("p_") ? fieldName : `p_${fieldName}`),
           field_id: matchedField?.id,
           category: matchedField?.category,
           operator_id: operatorId,
@@ -340,7 +372,8 @@ export default function SegmentModal({
 
     // Handle segment/quicklist layers - ADD TO THE LAST GROUP (or first group if no groups exist)
     if (payload.source_layers && payload.source_layers.length > 1) {
-      const targetGroup = conditions.length > 0 ? conditions[conditions.length - 1] : null;
+      const targetGroup =
+        conditions.length > 0 ? conditions[conditions.length - 1] : null;
 
       for (let i = 1; i < payload.source_layers.length; i++) {
         const layer = payload.source_layers[i];
@@ -351,8 +384,8 @@ export default function SegmentModal({
             conditionType: "segment",
             segment_id: Number(layer.segment_id),
             segment_name: `Segment ${layer.segment_id}`, // Name will be fetched from backend
-            operator: "in",
-            operator_id: 9, // IN operator
+            operator: "in list",
+            operator_id: 7, // IN operator (backend ID)
             value: "",
             type: "string",
           };
@@ -376,8 +409,8 @@ export default function SegmentModal({
             conditionType: "list",
             list_id: Number(layer.quicklist_id),
             list_name: `QuickList ${layer.quicklist_id}`, // Name will be fetched from backend
-            operator: "in",
-            operator_id: 9, // IN operator
+            operator: "in list",
+            operator_id: 7, // IN operator (backend ID)
             value: "",
             type: "string",
           };
@@ -457,7 +490,9 @@ export default function SegmentModal({
     return formatted;
   };
 
-  const convertConditionsToPayload = (conditions: SegmentConditionGroup[]): SegmentPayload => {
+  const convertConditionsToPayload = (
+    conditions: SegmentConditionGroup[],
+  ): SegmentPayload => {
     // Convert SegmentConditionGroup format to SegmentPayload (v2.0 format)
     // Dynamically handle all condition types except system_event
     // Layer 0 = base subscribers layer
@@ -492,7 +527,10 @@ export default function SegmentModal({
           condition.operator_id
         ) {
           // Skip conditions without values (don't send empty conditions to API)
-          const hasValue = condition.value !== "" && condition.value !== undefined && condition.value !== null;
+          const hasValue =
+            condition.value !== "" &&
+            condition.value !== undefined &&
+            condition.value !== null;
           const hasDateRange = condition.start_date || condition.end_date;
 
           if (!hasValue && !hasDateRange) {
@@ -515,7 +553,10 @@ export default function SegmentModal({
           layerConditions.push(layerCond);
         }
         // Handle segment conditions (as additional layers)
-        else if (condition.conditionType === "segment" && condition.segment_id) {
+        else if (
+          condition.conditionType === "segment" &&
+          condition.segment_id
+        ) {
           // Only add segment if not already added
           if (!addedSegments.has(condition.segment_id)) {
             sourceLayers.push({
@@ -545,9 +586,9 @@ export default function SegmentModal({
                 join_type: "INNER JOIN",
                 left_column_ref: {
                   layer_index: 0,
-                  column: "customer_id", // Standard join column
+                  column: "msisdn", // Quicklists join on msisdn per backend spec
                 },
-                right_column: "customer_id",
+                right_column: "msisdn",
               },
             });
             addedQuicklists.add(condition.list_id);
@@ -560,42 +601,23 @@ export default function SegmentModal({
     // Determine if we need to specify layer_fields
     // Required when using segments/quicklists (can't use SELECT *)
     const hasSegmentsOrQuicklists = sourceLayers.some(
-      (layer) => layer.source_type === "segment" || layer.source_type === "quicklist"
+      (layer) =>
+        layer.source_type === "segment" || layer.source_type === "quicklist",
     );
 
-    // Build layer_fields from the fields user selected in conditions
-    // Extract unique field_names from all conditions on layer 0
-    const selectedFieldsSet = new Set<string>();
-    for (const group of conditions) {
-      for (const condition of group.conditions) {
-        // Only include fields from layer 0 (360_profile, revenue_metric_kpi, usage_metric_kpi)
-        if (
-          (condition.conditionType === "360_profile" ||
-            condition.conditionType === "revenue_metric_kpi" ||
-            condition.conditionType === "usage_metric_kpi") &&
-          condition.field_name
-        ) {
-          selectedFieldsSet.add(condition.field_name);
-        }
-      }
-    }
+    // Standard layer_fields matching backend's expected columns
+    const STANDARD_LAYER_FIELDS: LayerColumnRef[] = [
+      { layer_index: 0, column: "msisdn" },
+      { layer_index: 0, column: "customer_id" },
+      { layer_index: 0, column: "first_name" },
+      { layer_index: 0, column: "last_name" },
+      { layer_index: 0, column: "customer_type" },
+      { layer_index: 0, column: "status" },
+      { layer_index: 0, column: "activation_date" },
+      { layer_index: 0, column: "city" },
+    ];
 
-    // Build layer_fields: include fields used in conditions
-    // When using segments/quicklists, must include at least customer_id to avoid SELECT *
-    const layerFields: LayerColumnRef[] | undefined =
-      selectedFieldsSet.size > 0 || hasSegmentsOrQuicklists
-        ? [
-            // Always include customer_id when using segments/quicklists (required for joins)
-            ...(hasSegmentsOrQuicklists
-              ? [{ layer_index: 0, column: "customer_id" }]
-              : []),
-            // Add all fields user selected in conditions
-            ...Array.from(selectedFieldsSet).map((fieldName) => ({
-              layer_index: 0,
-              column: fieldName,
-            })),
-          ]
-        : undefined;
+    const layerFields: LayerColumnRef[] = STANDARD_LAYER_FIELDS;
 
     // Build layer_filters with proper group structure and operators
     // Need to maintain separate groups with their own logic (OR/AND)
@@ -614,11 +636,40 @@ export default function SegmentModal({
           condition.field_id &&
           condition.operator_id
         ) {
-          const hasValue = condition.value !== "" && condition.value !== undefined && condition.value !== null;
+          const hasValue = Array.isArray(condition.value)
+            ? (condition.value as (string | number)[]).length > 0
+            : condition.value !== "" &&
+              condition.value !== undefined &&
+              condition.value !== null;
           const hasDateRange = condition.start_date || condition.end_date;
+          // IS NULL (13) and IS NOT NULL (14) operators don't need a value
+          const isNullOp =
+            condition.operator_id === 13 || condition.operator_id === 14;
 
-          if (!hasValue && !hasDateRange) {
+          if (!hasValue && !hasDateRange && !isNullOp) {
             continue;
+          }
+
+          // Determine the correct value format
+          // For IN/NOT IN operators (id 7, 8): value must be an array
+          let condValue: string | number | (string | number)[] | undefined =
+            condition.value as
+              | string
+              | number
+              | (string | number)[]
+              | undefined;
+          if (
+            (condition.operator_id === 7 || condition.operator_id === 8) &&
+            condValue
+          ) {
+            if (typeof condValue === "string") {
+              condValue = condValue
+                .split(",")
+                .map((v: string) => v.trim())
+                .filter((v: string) => v !== "");
+            } else if (!Array.isArray(condValue)) {
+              condValue = [condValue];
+            }
           }
 
           const layerCond: LayerCondition = {
@@ -627,12 +678,14 @@ export default function SegmentModal({
               column: condition.field_name || "",
             },
             operator_id: condition.operator_id,
-            ...(hasDateRange
-              ? {
-                  start_date: condition.start_date || null,
-                  end_date: condition.end_date || null,
-                }
-              : { value: condition.value || undefined }),
+            ...(isNullOp
+              ? {} // IS NULL/IS NOT NULL: no value needed
+              : hasDateRange
+                ? {
+                    start_date: condition.start_date || null,
+                    end_date: condition.end_date || null,
+                  }
+                : { value: condValue || undefined }),
           };
           groupConditions.push(layerCond);
         }
@@ -648,14 +701,14 @@ export default function SegmentModal({
     }
 
     // Determine top-level logic from groupOperator of first condition group
-    const topLevelLogic = conditions.length > 0 && conditions[0].groupOperator
-      ? (conditions[0].groupOperator).toUpperCase()
-      : "AND";
+    const topLevelLogic =
+      conditions.length > 0 && conditions[0].groupOperator
+        ? conditions[0].groupOperator.toUpperCase()
+        : "AND";
 
     const payload: SegmentPayload = {
       source_layers: sourceLayers,
-      // Include layer_fields when needed to avoid SELECT *
-      ...(layerFields !== undefined && { layer_fields: layerFields }),
+      layer_fields: layerFields,
       layer_filters:
         layerFilterGroups.length > 0
           ? {
@@ -683,7 +736,8 @@ export default function SegmentModal({
       const payload = convertConditionsToPayload(formData.conditions);
 
       // Call the query generation preview API
-      const response = await segmentService.generateSegmentQueryPreview(payload);
+      const response =
+        await segmentService.generateSegmentQueryPreview(payload);
 
       if (response.success && response.data) {
         setPreviewQuery(response.data.segment_query);
@@ -737,7 +791,8 @@ export default function SegmentModal({
       delete payload.limit;
 
       // Call the query generation API
-      const response = await segmentService.generateSegmentQueryPreview(payload);
+      const response =
+        await segmentService.generateSegmentQueryPreview(payload);
 
       if (response.success && response.data) {
         return {
@@ -750,7 +805,7 @@ export default function SegmentModal({
       }
     } catch (err) {
       throw new Error(
-        (err as Error).message || "Failed to generate query from conditions"
+        (err as Error).message || "Failed to generate query from conditions",
       );
     }
   };
@@ -829,13 +884,41 @@ export default function SegmentModal({
           definition: queries.payload, // Store the original payload for editing
         });
 
-        // Extract segment from response
-        const updateResult = updateResponse as { data?: Segment } | Segment;
-        savedSegment =
-          (typeof updateResult === "object" &&
-            "data" in updateResult &&
-            updateResult.data) ||
-          (updateResult as Segment);
+        // Extract segment from response - backend returns {success: true, data: [segment]}
+        console.log(
+          "[SegmentModal] Raw updateResponse:",
+          JSON.stringify(updateResponse),
+        );
+        const updateResult = updateResponse as
+          | { success?: boolean; data?: Segment[] | Segment }
+          | Segment;
+        if (
+          typeof updateResult === "object" &&
+          "data" in updateResult &&
+          Array.isArray(updateResult.data)
+        ) {
+          savedSegment = updateResult.data[0];
+          console.log(
+            "[SegmentModal] Extracted from array, savedSegment.id:",
+            savedSegment?.id,
+          );
+        } else if (
+          typeof updateResult === "object" &&
+          "data" in updateResult &&
+          updateResult.data
+        ) {
+          savedSegment = updateResult.data as Segment;
+          console.log(
+            "[SegmentModal] Extracted from data, savedSegment.id:",
+            savedSegment?.id,
+          );
+        } else {
+          savedSegment = updateResult as Segment;
+          console.log(
+            "[SegmentModal] Used raw result, savedSegment.id:",
+            savedSegment?.id,
+          );
+        }
       } else {
         // Create new segment with query
         const createRequest: CreateSegmentRequest = {
@@ -852,11 +935,11 @@ export default function SegmentModal({
           definition: queries.payload, // Store the original payload for editing
         };
 
-        const createResponse = await segmentService.createSegment(
-          createRequest
-        );
+        const createResponse =
+          await segmentService.createSegment(createRequest);
 
         // Extract segment from response - backend returns {success: true, data: [segment]}
+        console.log("[SegmentModal] Raw createResponse:", JSON.stringify(createResponse));
         const response = createResponse as
           | { success: boolean; data?: Segment[] | Segment }
           | Segment;
@@ -867,6 +950,7 @@ export default function SegmentModal({
           Array.isArray(response.data)
         ) {
           savedSegment = response.data[0];
+          console.log("[SegmentModal] Create: extracted from array, id:", savedSegment?.id);
         } else if (
           typeof response === "object" &&
           "data" in response &&
@@ -875,8 +959,10 @@ export default function SegmentModal({
           savedSegment = Array.isArray(response.data)
             ? response.data[0]
             : (response.data as Segment);
+          console.log("[SegmentModal] Create: extracted from data, id:", savedSegment?.id);
         } else {
           savedSegment = response as Segment;
+          console.log("[SegmentModal] Create: used raw result, id:", savedSegment?.id);
         }
       }
 
@@ -888,6 +974,32 @@ export default function SegmentModal({
         tags: savedSegment.tags || formData.tags,
         category: savedSegment.category || formData.category,
       };
+
+      // After successful create/update, call refresh to compute actual customer count
+      console.log("[SegmentModal] finalSegment:", JSON.stringify(finalSegment));
+      console.log("[SegmentModal] segment?.id:", segment?.id);
+      // Use || not ?? so that 0 falls through to segment.id
+      const segmentIdForRefresh = finalSegment.id || segment?.id;
+      console.log("[SegmentModal] segmentIdForRefresh:", segmentIdForRefresh);
+      if (segmentIdForRefresh) {
+        try {
+          console.log(
+            "[SegmentModal] Calling refreshSegment for id:",
+            segmentIdForRefresh,
+          );
+          const refreshResult = await segmentService.refreshSegment(
+            Number(segmentIdForRefresh),
+          );
+          console.log("[SegmentModal] refreshSegment result:", refreshResult);
+        } catch (refreshErr) {
+          console.warn(
+            "[SegmentModal] Segment saved but refresh failed:",
+            refreshErr,
+          );
+        }
+      } else {
+        console.warn("[SegmentModal] No segment ID found, skipping refresh");
+      }
 
       onSave(finalSegment);
       setPendingQueries(null);
@@ -909,14 +1021,22 @@ export default function SegmentModal({
 
   return isOpen
     ? createPortal(
-        <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: zIndex.modal }}>
+        <div
+          className="fixed inset-0 overflow-y-auto"
+          style={{ zIndex: zIndex.modal }}
+        >
           <div
             className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={onClose}
             style={{ zIndex: zIndex.overlay }}
           />
-          <div className="flex min-h-full items-center justify-center p-4 relative" style={{ zIndex: zIndex.modal }}>
-            <div className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}>
+          <div
+            className="flex min-h-full items-center justify-center p-4 relative"
+            style={{ zIndex: zIndex.modal }}
+          >
+            <div
+              className={`relative bg-white ${tw.rounded} shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden`}
+            >
               {/* Header */}
               <div
                 className={`flex items-center justify-between p-6 border-b border-[${tw.borderDefault}] bg-gradient-to-r from-[${color.primary.accent}]/5 to-[${color.primary.accent}]/10 flex-shrink-0`}
@@ -1074,12 +1194,12 @@ export default function SegmentModal({
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveTag(tag)}
-                                    className="ml-2 hover:opacity-80"
-                                    style={{ color: color.primary.accent }}
-                                  >
-                                    ×
-                                  </button>
-                                </span>
+                                  className="ml-2 hover:opacity-80"
+                                  style={{ color: color.primary.accent }}
+                                >
+                                  ×
+                                </button>
+                              </span>
                             ))}
                           </div>
                         )}
@@ -1232,8 +1352,8 @@ export default function SegmentModal({
                   {isLoading
                     ? "Saving..."
                     : segment
-                    ? "Update Segment"
-                    : "Create Segment"}
+                      ? "Update Segment"
+                      : "Create Segment"}
                 </button>
               </div>
             </div>
@@ -1306,7 +1426,7 @@ export default function SegmentModal({
                           type="button"
                           onClick={() => {
                             navigator.clipboard.writeText(
-                              formatSQL(previewQuery)
+                              formatSQL(previewQuery),
                             );
                           }}
                           className="text-xs px-3 py-1.5 rounded transition-colors font-medium"
@@ -1385,10 +1505,14 @@ export default function SegmentModal({
                     <h3
                       className={`text-xl font-semibold ${tw.textPrimary} mb-2`}
                     >
-                      {segment ? "Confirm Segment Update" : "Confirm Segment Creation"}
+                      {segment
+                        ? "Confirm Segment Update"
+                        : "Confirm Segment Creation"}
                     </h3>
                     <p className={`text-sm ${tw.textSecondary}`}>
-                      {segment ? "Are you sure you want to update this segment?" : "Are you sure you want to create this segment?"}
+                      {segment
+                        ? "Are you sure you want to update this segment?"
+                        : "Are you sure you want to create this segment?"}
                     </p>
                   </div>
 
@@ -1418,7 +1542,13 @@ export default function SegmentModal({
                         backgroundColor: color.primary.action,
                       }}
                     >
-                      {isLoading ? (segment ? "Updating..." : "Creating...") : (segment ? "Confirm & Update" : "Confirm & Create")}
+                      {isLoading
+                        ? segment
+                          ? "Updating..."
+                          : "Creating..."
+                        : segment
+                          ? "Confirm & Update"
+                          : "Confirm & Create"}
                     </button>
                   </div>
                 </div>
@@ -1426,7 +1556,7 @@ export default function SegmentModal({
             )}
           </div>
         </div>,
-        document.body
+        document.body,
       )
     : null;
 }

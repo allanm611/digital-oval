@@ -101,6 +101,9 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 // Using shared customer data from customerDataService - will be generated in component
 
 const generateCustomerRelatedData = (customer: CustomerRow) => {
+  // Convert customer ID to string safely for use in IDs
+  const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
+
   const segmentNames = [
     customer.segment,
     "High Value Customers",
@@ -110,12 +113,13 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
   ];
 
   const segments: CustomerSegment[] = segmentNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate);
+    const baseDate = new Date(customer.lastInteractionDate || new Date());
     const addedDate = new Date(baseDate);
     addedDate.setDate(addedDate.getDate() - index * 15);
 
+    const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
     return {
-      id: `SEG-${customer.id.slice(-3)}-${index + 1}`,
+      id: `SEG-${customerId.slice(-3)}-${index + 1}`,
       name,
       type: index < 2 ? "Dynamic" : "Static",
       addedDate: isNaN(addedDate.getTime())
@@ -148,12 +152,13 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
   ];
 
   const offers: CustomerOffer[] = offerNames.map((name, index) => {
-    const baseDate = new Date(customer.lastInteractionDate);
+    const baseDate = new Date(customer.lastInteractionDate || new Date());
     const redeemedDate = new Date(baseDate);
     redeemedDate.setDate(redeemedDate.getDate() - index * 20);
 
+    const customerId = typeof customer.id === "string" ? customer.id : (customer.id || "0").toString();
     return {
-      id: `OFF-${customer.id.slice(-3)}-${index + 1}`,
+      id: `OFF-${customerId.slice(-3)}-${index + 1}`,
       name,
       type: offerTypes[index],
       status: offerStatuses[index],
@@ -202,7 +207,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
         ];
 
         events.push({
-          id: `EVT-${customer.id.slice(-3)}-E${i}`,
+          id: `EVT-${customerId.slice(-3)}-E${i}`,
           type: "email",
           title: emailTitles[i % emailTitles.length],
           description: emailDescriptions[i % emailDescriptions.length],
@@ -227,7 +232,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
         const smsStatuses = ["Delivered", "Read", "Delivered", "Sent", "Read"];
 
         events.push({
-          id: `EVT-${customer.id.slice(-3)}-S${i}`,
+          id: `EVT-${customerId.slice(-3)}-S${i}`,
           type: "sms",
           title: smsTitles[i % smsTitles.length],
           description: smsDescriptions[i % smsDescriptions.length],
@@ -252,7 +257,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
         const pushStatuses = ["Sent", "Opened", "Sent", "Opened", "Sent"];
 
         events.push({
-          id: `EVT-${customer.id.slice(-3)}-P${i}`,
+          id: `EVT-${customerId.slice(-3)}-P${i}`,
           type: "push",
           title: pushTitles[i % pushTitles.length],
           description: pushDescriptions[i % pushDescriptions.length],
@@ -276,7 +281,7 @@ const generateCustomerRelatedData = (customer: CustomerRow) => {
     subscribedDate.setDate(subscribedDate.getDate() - index * 30); // Spread dates
 
     return {
-      id: `LIST-${customer.id.slice(-3)}-${index + 1}`,
+      id: `LIST-${customerId.slice(-3)}-${index + 1}`,
       name,
       subscribedDate: isNaN(subscribedDate.getTime())
         ? new Date().toISOString().split("T")[0]

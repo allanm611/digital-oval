@@ -41,7 +41,97 @@ export interface CampaignResponse {
 
 const BASE_URL = buildApiUrl(API_CONFIG.ENDPOINTS.CAMPAIGNS);
 
+// Default values for missing/null fields in categories
+const CATEGORY_FIELD_DEFAULTS = {
+  name: "Not specified",
+  description: "Not specified",
+};
+
+// Default values for missing/null fields in campaigns
+const CAMPAIGN_FIELD_DEFAULTS = {
+  name: "Not specified",
+  code: "Not specified",
+  description: "Not specified",
+  objective: "Not specified",
+  category: "Not specified",
+  program_id: "Not specified",
+  timezone: "Not specified",
+  budget_allocated: "Not specified",
+  budget_spent: "Not specified",
+  max_participants: "Not specified",
+  current_participants: "Not specified",
+  target_reach: "Not specified",
+  target_conversion_rate: "Not specified",
+  target_revenue: "Not specified",
+  rejection_reason: "Not specified",
+  owner_team: "Not specified",
+  campaign_uuid: "Not specified",
+};
+
 class CampaignService {
+  // Normalize category data from backend to guarantee all fields are safe
+  private normalizeCategory(data: any) {
+    return {
+      id: data?.id || 0,
+      name: data?.name || CATEGORY_FIELD_DEFAULTS.name,
+      description: data?.description || CATEGORY_FIELD_DEFAULTS.description,
+      parent_category_id: data?.parent_category_id || null,
+      display_order: data?.display_order ?? 0,
+      is_active: data?.is_active ?? true,
+      created_at: data?.created_at || new Date().toISOString(),
+      updated_at: data?.updated_at || new Date().toISOString(),
+    };
+  }
+
+  // Normalize campaign data from backend to guarantee all fields are safe
+  private normalizeCampaign(data: any) {
+    return {
+      id: data?.id || 0,
+      campaign_uuid: data?.campaign_uuid || CAMPAIGN_FIELD_DEFAULTS.campaign_uuid,
+      name: data?.name || CAMPAIGN_FIELD_DEFAULTS.name,
+      code: data?.code || CAMPAIGN_FIELD_DEFAULTS.code,
+      description: data?.description || CAMPAIGN_FIELD_DEFAULTS.description,
+      objective: data?.objective || CAMPAIGN_FIELD_DEFAULTS.objective,
+      category_id: data?.category_id || null,
+      program_id: data?.program_id || null,
+      status: data?.status || "unknown",
+      approval_status: data?.approval_status || "pending",
+      start_date: data?.start_date || null,
+      end_date: data?.end_date || null,
+      timezone: data?.timezone || CAMPAIGN_FIELD_DEFAULTS.timezone,
+      budget_allocated: data?.budget_allocated || CAMPAIGN_FIELD_DEFAULTS.budget_allocated,
+      budget_spent: data?.budget_spent || CAMPAIGN_FIELD_DEFAULTS.budget_spent,
+      max_participants: data?.max_participants ?? CAMPAIGN_FIELD_DEFAULTS.max_participants,
+      current_participants: data?.current_participants ?? CAMPAIGN_FIELD_DEFAULTS.current_participants,
+      target_reach: data?.target_reach ?? CAMPAIGN_FIELD_DEFAULTS.target_reach,
+      target_conversion_rate: data?.target_conversion_rate || CAMPAIGN_FIELD_DEFAULTS.target_conversion_rate,
+      target_revenue: data?.target_revenue || CAMPAIGN_FIELD_DEFAULTS.target_revenue,
+      owner_team: data?.owner_team || CAMPAIGN_FIELD_DEFAULTS.owner_team,
+      campaign_manager_id: data?.campaign_manager_id || null,
+      approved_by: data?.approved_by || null,
+      approved_at: data?.approved_at || null,
+      rejection_reason: data?.rejection_reason || CAMPAIGN_FIELD_DEFAULTS.rejection_reason,
+      control_group_enabled: data?.control_group_enabled ?? false,
+      control_group_percentage: data?.control_group_percentage || CAMPAIGN_FIELD_DEFAULTS.target_conversion_rate,
+      tenant_id: data?.tenant_id || null,
+      client_id: data?.client_id || null,
+      is_active: data?.is_active ?? false,
+      created_at: data?.created_at || new Date().toISOString(),
+      updated_at: data?.updated_at || new Date().toISOString(),
+      created_by: data?.created_by || null,
+      updated_by: data?.updated_by || null,
+      deleted_at: data?.deleted_at || null,
+      deleted_by: data?.deleted_by || null,
+      metadata: data?.metadata || {},
+      tags: Array.isArray(data?.tags) ? data.tags : [],
+      attribution_model_id: data?.attribution_model_id || null,
+      suppression_list_ids: Array.isArray(data?.suppression_list_ids) ? data.suppression_list_ids : [],
+      // Additional fields used in frontend
+      offers: Array.isArray(data?.offers) ? data.offers : [],
+      segments: Array.isArray(data?.segments) ? data.segments : [],
+      flows: Array.isArray(data?.flows) ? data.flows : [],
+    };
+  }
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
@@ -69,9 +159,7 @@ class CampaignService {
           params.delete("id");
           const newQuery = params.toString();
           url = newQuery ? `${baseUrl}?${newQuery}` : baseUrl;
-          console.warn(
-            `Removed 'id' parameter from campaign service URL: ${endpoint}`,
-          );
+        
         }
       }
     }
@@ -143,12 +231,21 @@ class CampaignService {
     return query ? `?${query}` : "";
   }
 
-  private getCollection(
+  private async getCollection(
     path: string,
     params?: Record<string, unknown>,
   ): Promise<CampaignCollection> {
     const query = this.buildQueryString(params);
-    return this.request<CampaignCollection>(`${path}${query}`);
+    const response = await this.request<CampaignCollection>(`${path}${query}`);
+
+    // Normalize all campaigns in the collection
+    if (response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((campaign: any) => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
   async createCampaign(
@@ -166,13 +263,15 @@ class CampaignService {
     id: number,
     request: Partial<CreateCampaignRequest>,
   ): Promise<Campaign> {
-    return this.request<Campaign>(`/${id}`, {
+    const response = await this.request<any>(`/${id}`, {
       method: "PUT",
       body: JSON.stringify(request),
     });
+    // Normalize the response data
+    return this.normalizeCampaign(response.data || response);
   }
 
-  async deleteCampaign(id: number, deletedBy: number = 1): Promise<void> {
+  async deleteCampaign(id: number, deletedBy?: number): Promise<void> {
     return this.request<void>(`/${id}`, {
       method: "DELETE",
       body: JSON.stringify({
@@ -188,7 +287,9 @@ class CampaignService {
     const params = new URLSearchParams();
     if (skipCache) params.append("skipCache", "true");
     const query = params.toString() ? `?${params.toString()}` : "";
-    return this.request<Campaign>(`/${id}${query}`);
+    const response = await this.request<any>(`/${id}${query}`);
+    // Normalize the response data
+    return this.normalizeCampaign(response.data || response);
   }
 
   /**
@@ -211,7 +312,16 @@ class CampaignService {
     queryParams.append("skipCache", String(skipCache));
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    return this.request<GetCampaignsResponse>(`/${query}`);
+    const response = await this.request<GetCampaignsResponse>(`/${query}`);
+
+    // Normalize all campaigns in the response
+    if (response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map(campaign => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
   async getAllCampaigns(params?: {
@@ -291,7 +401,16 @@ class CampaignService {
     }
 
     const query = queryParams.toString() ? `?${queryParams.toString()}` : "";
-    return this.request<CampaignResponse>(`/all${query}`);
+    const response = await this.request<CampaignResponse>(`/all${query}`);
+
+    // Normalize all campaigns in the response
+    if (response && Array.isArray(response.data)) {
+      return {
+        ...response,
+        data: response.data.map((campaign: any) => this.normalizeCampaign(campaign)),
+      };
+    }
+    return response;
   }
 
   async getCampaignStats(
@@ -461,7 +580,7 @@ class CampaignService {
 
   async submitForApproval(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/submit-approval`, {
       method: "PATCH",
@@ -527,7 +646,7 @@ class CampaignService {
 
   async activateCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/activate`, {
       method: "PATCH",
@@ -539,12 +658,12 @@ class CampaignService {
 
   async pauseCampaign(
     id: number,
-    payloadOrUpdatedBy: number | Record<string, unknown> = 1,
+    payloadOrUpdatedBy?: number | Record<string, unknown>,
   ): Promise<CampaignDetail> {
     const payload =
       typeof payloadOrUpdatedBy === "number"
         ? { updated_by: payloadOrUpdatedBy }
-        : { updated_by: 1, ...payloadOrUpdatedBy };
+        : { ...payloadOrUpdatedBy };
 
     return this.request<CampaignDetail>(`/${id}/pause`, {
       method: "PATCH",
@@ -554,7 +673,7 @@ class CampaignService {
 
   async completeCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/complete`, {
       method: "PATCH",
@@ -566,7 +685,7 @@ class CampaignService {
 
   async resumeCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     // Resume by updating status to "active" or using activate endpoint
     return this.request<CampaignDetail>(`/${id}/activate`, {
@@ -579,7 +698,7 @@ class CampaignService {
 
   async archiveCampaign(
     id: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/archive`, {
       method: "PATCH",
@@ -592,7 +711,7 @@ class CampaignService {
   async updateCampaignStatus(
     id: number,
     status: CampaignStatus,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/status`, {
       method: "PATCH",
@@ -603,7 +722,7 @@ class CampaignService {
   async updateCampaignBudget(
     id: number,
     budget_allocated: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/budget`, {
       method: "PATCH",
@@ -614,7 +733,7 @@ class CampaignService {
   async updateCampaignSpentBudget(
     id: number,
     budget_spent: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/spent-budget`, {
       method: "PATCH",
@@ -625,7 +744,7 @@ class CampaignService {
   async updateCampaignParticipants(
     id: number,
     current_participants: number,
-    updatedBy: number = 1,
+    updatedBy?: number,
   ): Promise<CampaignDetail> {
     return this.request<CampaignDetail>(`/${id}/participants`, {
       method: "PATCH",
@@ -714,7 +833,17 @@ class CampaignService {
       );
     }
 
-    return response.json();
+    const result = await response.json();
+
+    // Normalize all categories in the response
+    if (result && Array.isArray(result.data)) {
+      return {
+        ...result,
+        data: result.data.map((category: any) => this.normalizeCategory(category)),
+      };
+    }
+
+    return result;
   }
 
   async createCampaignCategory(request: {
@@ -1068,9 +1197,9 @@ class CampaignService {
   }
 
   /**
-   * Execute a campaign
+   * Run a campaign
    */
-  async executeCampaign(
+  async runCampaign(
     request: CampaignExecutionRequestPayload,
   ): Promise<CampaignExecutionResponse> {
     return this.request<CampaignExecutionResponse>("/execute", {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle, Trash2, Plus } from "lucide-react";
 import { CampaignScheduling } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
+import { buttons } from "../../../../shared/utils/tokens";
 import HeadlessSelect from "../../../../shared/components/ui/HeadlessSelect";
 import { CreateCampaignRequest } from "../../types/createCampaign";
 
@@ -56,6 +57,31 @@ export default function SchedulingStep({
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("23:59");
 
+  // For "Set specific start time for days" — day of week + time entries
+  const [dayTimeEntries, setDayTimeEntries] = useState<
+    { id: string; dayOfWeek: number; time: string }[]
+  >([{ id: crypto.randomUUID(), dayOfWeek: 0, time: "08:00" }]); // Start with Sunday
+
+  // For "Months" pattern — month + time entries
+  const [monthTimeEntries, setMonthTimeEntries] = useState<
+    { id: string; month: number; time: string }[]
+  >([{ id: crypto.randomUUID(), month: 0, time: "08:00" }]); // Start with January
+
+  const monthsOfYear = [
+    { value: 0, label: "January" },
+    { value: 1, label: "February" },
+    { value: 2, label: "March" },
+    { value: 3, label: "April" },
+    { value: 4, label: "May" },
+    { value: 5, label: "June" },
+    { value: 6, label: "July" },
+    { value: 7, label: "August" },
+    { value: 8, label: "September" },
+    { value: 9, label: "October" },
+    { value: 10, label: "November" },
+    { value: 11, label: "December" },
+  ];
+
   // Initialize formData with default scheduling if not present
   useEffect(() => {
     if (!formData.scheduling) {
@@ -82,6 +108,44 @@ export default function SchedulingStep({
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
     );
   };
+
+  // Day+Time entry handlers
+  const addDayTimeEntry = () =>
+    setDayTimeEntries((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), dayOfWeek: 0, time: "08:00" },
+    ]);
+
+  const removeDayTimeEntry = (id: string) =>
+    setDayTimeEntries((prev) => prev.filter((e) => e.id !== id));
+
+  const updateDayTimeEntry = (
+    id: string,
+    field: "dayOfWeek" | "time",
+    value: string | number
+  ) =>
+    setDayTimeEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, [field]: value } : e))
+    );
+
+  // Month+Time entry handlers
+  const addMonthTimeEntry = () =>
+    setMonthTimeEntries((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), month: 0, time: "08:00" },
+    ]);
+
+  const removeMonthTimeEntry = (id: string) =>
+    setMonthTimeEntries((prev) => prev.filter((e) => e.id !== id));
+
+  const updateMonthTimeEntry = (
+    id: string,
+    field: "month" | "time",
+    value: string | number
+  ) =>
+    setMonthTimeEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, [field]: value } : e))
+    );
 
   return (
     <div className="space-y-8">
@@ -341,27 +405,34 @@ export default function SchedulingStep({
             </div>
           </div>
 
-          {/* Days of Week */}
-          <div className="mb-6">
-            <div className="grid grid-cols-7 gap-2">
-              {daysOfWeek.map((day) => (
-                <label
-                  key={day.value}
-                  className="flex items-center justify-center"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedDays.includes(day.value)}
-                    onChange={() => toggleDayOfWeek(day.value)}
-                    className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169] mr-2"
-                  />
-                  <span className="text-sm font-medium text-gray-700">
-                    {day.label}
-                  </span>
-                </label>
-              ))}
+          {/* Days of Week - Only show when Weeks pattern is selected */}
+          {recurrencePattern === "Weeks" && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Days of Week
+              </label>
+              <div className="grid grid-cols-7 gap-2">
+                {daysOfWeek.map((day) => (
+                  <label
+                    key={day.value}
+                    className="flex items-center justify-center"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDays.includes(day.value)}
+                      onChange={() => toggleDayOfWeek(day.value)}
+                      className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169] mr-2"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      {day.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+
 
           {/* Time Zone Display */}
           <div className="mb-6">
@@ -370,17 +441,178 @@ export default function SchedulingStep({
 
           {/* Additional Options */}
           <div className="space-y-3">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={setSpecificStartTime}
-                onChange={(e) => setSetSpecificStartTime(e.target.checked)}
-                className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]"
-              />
-              <span className="ml-3 text-sm font-medium text-gray-700">
-                Set specific start time for days
-              </span>
-            </label>
+            {/* Checkbox only shows for Days and Months patterns */}
+            {(recurrencePattern === "Days" || recurrencePattern === "Months") && (
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={setSpecificStartTime}
+                  onChange={(e) => setSetSpecificStartTime(e.target.checked)}
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 rounded focus:ring-[#3b8169]"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-700">
+                  Set specific start time for {recurrencePattern.toLowerCase()}
+                </span>
+              </label>
+            )}
+
+            {/* Days Pattern - Day + Time Entries */}
+            {setSpecificStartTime && recurrencePattern === "Days" && (
+              <div className="mt-4 space-y-3">
+                {dayTimeEntries.map((entry) => {
+                  // Filter out days that are already selected in other entries
+                  const selectedDaysInEntries = dayTimeEntries
+                    .filter((e) => e.id !== entry.id)
+                    .map((e) => e.dayOfWeek);
+                  const availableDays = daysOfWeek.filter(
+                    (day) => !selectedDaysInEntries.includes(day.value)
+                  );
+
+                  return (
+                    <div key={entry.id} className="flex items-center gap-3">
+                      <HeadlessSelect
+                        value={String(entry.dayOfWeek)}
+                        onChange={(value) =>
+                          updateDayTimeEntry(
+                            entry.id,
+                            "dayOfWeek",
+                            Number(value)
+                          )
+                        }
+                        options={availableDays.map((day) => ({
+                          label: day.label,
+                          value: String(day.value),
+                        }))}
+                        placeholder="Select day"
+                        className="flex-1 max-w-xs"
+                      />
+                      <input
+                        type="time"
+                        value={entry.time}
+                        onChange={(e) =>
+                          updateDayTimeEntry(entry.id, "time", e.target.value)
+                        }
+                        className={`w-32 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
+                      />
+                      <button
+                        onClick={() => removeDayTimeEntry(entry.id)}
+                        disabled={dayTimeEntries.length === 1}
+                        className={`p-2 rounded transition-colors ${
+                          dayTimeEntries.length === 1
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-red-600 hover:bg-red-50 cursor-pointer"
+                        }`}
+                        title={
+                          dayTimeEntries.length === 1
+                            ? "Must have at least one entry"
+                            : "Delete this entry"
+                        }
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+                <button
+                  onClick={addDayTimeEntry}
+                  disabled={dayTimeEntries.length >= 7}
+                  style={{
+                    background: dayTimeEntries.length >= 7 ? "#D1D5DB" : buttons.action.background,
+                    color: buttons.action.color,
+                    padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
+                    borderRadius: buttons.action.borderRadius,
+                    fontSize: buttons.action.fontSize,
+                    fontWeight: 500,
+                    border: "none",
+                    cursor: dayTimeEntries.length >= 7 ? "not-allowed" : "pointer",
+                  }}
+                  className="flex items-center gap-2 transition-opacity hover:opacity-90"
+                  title={dayTimeEntries.length >= 7 ? "All days selected" : ""}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+            )}
+
+            {/* Months Pattern - Month + Time Entries */}
+            {setSpecificStartTime && recurrencePattern === "Months" && (
+              <div className="mt-4 space-y-3">
+                {monthTimeEntries.map((entry) => {
+                  // Filter out months that are already selected in other entries
+                  const selectedMonthsInEntries = monthTimeEntries
+                    .filter((e) => e.id !== entry.id)
+                    .map((e) => e.month);
+                  const availableMonths = monthsOfYear.filter(
+                    (month) => !selectedMonthsInEntries.includes(month.value)
+                  );
+
+                  return (
+                    <div key={entry.id} className="flex items-center gap-3">
+                      <HeadlessSelect
+                        value={String(entry.month)}
+                        onChange={(value) =>
+                          updateMonthTimeEntry(
+                            entry.id,
+                            "month",
+                            Number(value)
+                          )
+                        }
+                        options={availableMonths.map((month) => ({
+                          label: month.label,
+                          value: String(month.value),
+                        }))}
+                        placeholder="Select month"
+                        className="flex-1 max-w-xs"
+                      />
+                      <input
+                        type="time"
+                        value={entry.time}
+                        onChange={(e) =>
+                          updateMonthTimeEntry(entry.id, "time", e.target.value)
+                        }
+                        className={`w-32 px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent bg-white text-gray-900`}
+                      />
+                      <button
+                        onClick={() => removeMonthTimeEntry(entry.id)}
+                        disabled={monthTimeEntries.length === 1}
+                        className={`p-2 rounded transition-colors ${
+                          monthTimeEntries.length === 1
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-red-600 hover:bg-red-50 cursor-pointer"
+                        }`}
+                        title={
+                          monthTimeEntries.length === 1
+                            ? "Must have at least one entry"
+                            : "Delete this entry"
+                        }
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+                <button
+                  onClick={addMonthTimeEntry}
+                  disabled={monthTimeEntries.length >= 12}
+                  style={{
+                    background: monthTimeEntries.length >= 12 ? "#D1D5DB" : buttons.action.background,
+                    color: buttons.action.color,
+                    padding: `${buttons.action.paddingY} ${buttons.action.paddingX}`,
+                    borderRadius: buttons.action.borderRadius,
+                    fontSize: buttons.action.fontSize,
+                    fontWeight: 500,
+                    border: "none",
+                    cursor: monthTimeEntries.length >= 12 ? "not-allowed" : "pointer",
+                  }}
+                  className="flex items-center gap-2 transition-opacity hover:opacity-90"
+                  title={monthTimeEntries.length >= 12 ? "All months selected" : ""}
+                >
+                  <Plus className="w-4 h-4" />
+                  Add
+                </button>
+              </div>
+            )}
 
             <label className="flex items-center">
               <input

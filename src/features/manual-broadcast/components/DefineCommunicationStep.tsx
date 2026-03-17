@@ -4,7 +4,6 @@ import {
   MessageSquare,
   Phone,
   Bell,
-  AlertCircle,
   Variable,
   ChevronDown,
   Settings,
@@ -12,6 +11,7 @@ import {
   CheckCircle,
   XCircle,
   Loader,
+  AlertCircle,
 } from "lucide-react";
 import { color, tw, components } from "../../../shared/utils/utils";
 import { ManualBroadcastData } from "../pages/CreateManualBroadcastPage";
@@ -24,6 +24,7 @@ import {
   insertVariableAtCursor,
   formatVariablePlaceholder,
   validateInsertPosition,
+  validateMessageSyntax,
 } from "../../../shared/utils/variableInsertion";
 import { useConfigurationData } from "../../../shared/services/configurationDataService";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
@@ -581,6 +582,13 @@ export default function DefineCommunicationStep({
       return;
     }
 
+    // Validate message syntax (check for properly formed variables)
+    const syntaxError = validateMessageSyntax(messageBody);
+    if (syntaxError) {
+      setError(syntaxError);
+      return;
+    }
+
     // Validate selectedChannel
     if (!selectedChannel) {
       setError("Please select a communication channel");
@@ -591,6 +599,12 @@ export default function DefineCommunicationStep({
     if (selectedChannel === "EMAIL") {
       if (!messageTitle || typeof messageTitle !== "string" || !messageTitle.trim()) {
         setError(t.manualBroadcast.errorSubjectRequired);
+        return;
+      }
+      // Validate title syntax (check for properly formed variables)
+      const titleSyntaxError = validateMessageSyntax(messageTitle);
+      if (titleSyntaxError) {
+        setError(titleSyntaxError);
         return;
       }
     }
@@ -1015,98 +1029,6 @@ export default function DefineCommunicationStep({
               </div>
             </div>
 
-            {/* Test Section - Send Test Button */}
-            {getAvailableTestContacts().length > 0 && (
-              <div className="mt-8 pt-6 border-t" style={{ borderColor: color.border.default }}>
-                <h3 className={`text-sm font-semibold ${tw.textPrimary} mb-4`}>
-                  Send Test Message
-                </h3>
-
-                {/* Send Test Button */}
-                <div className="mb-4">
-                  <button
-                    onClick={handleSendTest}
-                    disabled={getSelectedTestContacts().length === 0 || isTesting}
-                    className="w-full px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                    style={{ backgroundColor: color.primary.accent }}
-                  >
-                    {isTesting ? (
-                      <>
-                        <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
-                        <span>Sending Tests...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 flex-shrink-0" />
-                        <span>Send Test</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-              {/* Test Results */}
-              {testResults.length > 0 && (
-                <div>
-                  <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
-                    Test Results
-                  </label>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {testResults.map((result, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-2 p-2 rounded-md text-sm"
-                        style={{
-                          backgroundColor:
-                            result.status === "success"
-                              ? `${color.status.success}10`
-                              : `${color.status.danger}10`,
-                        }}
-                      >
-                        {result.status === "success" ? (
-                          <CheckCircle
-                            className="w-4 h-4 flex-shrink-0 mt-0.5"
-                            style={{ color: color.status.success }}
-                          />
-                        ) : (
-                          <XCircle
-                            className="w-4 h-4 flex-shrink-0 mt-0.5"
-                            style={{ color: color.status.danger }}
-                          />
-                        )}
-                        <div className="flex-1">
-                          <p
-                            className="text-xs font-medium"
-                            style={{
-                              color:
-                                result.status === "success"
-                                  ? color.status.success
-                                  : color.status.danger,
-                            }}
-                          >
-                            {result.contact}
-                          </p>
-                          {result.message && (
-                            <p className={`text-xs ${tw.textMuted} mt-0.5`}>
-                              {result.message}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Test Error */}
-              {testError && (
-                <div className="p-3 rounded-md" style={{ backgroundColor: `${color.status.danger}10` }}>
-                  <p className="text-sm" style={{ color: color.status.danger }}>
-                    {testError}
-                  </p>
-                </div>
-              )}
-            </div>
-            )}
           </div>
 
           {/* Right Column - Preview & Test Contacts (2/5) */}
@@ -1132,7 +1054,7 @@ export default function DefineCommunicationStep({
                 <p className={`text-xs ${tw.textSecondary} mb-3`}>
                   Check the contacts you want to test ({getSelectedTestContacts().length} selected)
                 </p>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto mb-4">
                   {getAvailableTestContacts().map((contact, index) => (
                     <label
                       key={index}
@@ -1151,29 +1073,108 @@ export default function DefineCommunicationStep({
                     </label>
                   ))}
                 </div>
+
+                {/* Send Test Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={handleSendTest}
+                    disabled={getSelectedTestContacts().length === 0 || isTesting}
+                    className="w-auto px-4 py-2.5 text-white rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    style={{ backgroundColor: color.primary.accent }}
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin flex-shrink-0" />
+                        <span>Sending Tests...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 flex-shrink-0" />
+                        <span>Send Test</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Test Error */}
+                {testError && (
+                  <div
+                    className="p-3 rounded-md flex items-start gap-2 mb-4"
+                    style={{
+                      backgroundColor: `${color.status.danger}10`,
+                      border: `1px solid ${color.status.danger}30`,
+                    }}
+                  >
+                    <AlertCircle
+                      className="w-5 h-5 flex-shrink-0"
+                      style={{ color: color.status.danger }}
+                    />
+                    <p
+                      className="text-sm"
+                      style={{ color: color.status.danger }}
+                    >
+                      {testError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Test Results */}
+                {testResults.length > 0 && (
+                  <div>
+                    <label className={`block text-sm font-medium ${tw.textPrimary} mb-2`}>
+                      Test Results
+                    </label>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {testResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-2 p-2 rounded-md text-sm"
+                          style={{
+                            backgroundColor:
+                              result.status === "success"
+                                ? `${color.status.success}10`
+                                : `${color.status.danger}10`,
+                          }}
+                        >
+                          {result.status === "success" ? (
+                            <CheckCircle
+                              className="w-4 h-4 flex-shrink-0 mt-0.5"
+                              style={{ color: color.status.success }}
+                            />
+                          ) : (
+                            <XCircle
+                              className="w-4 h-4 flex-shrink-0 mt-0.5"
+                              style={{ color: color.status.danger }}
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p
+                              className="text-xs font-medium"
+                              style={{
+                                color:
+                                  result.status === "success"
+                                    ? color.status.success
+                                    : color.status.danger,
+                              }}
+                            >
+                              {result.contact}
+                            </p>
+                            {result.message && (
+                              <p className={`text-xs ${tw.textMuted} mt-0.5`}>
+                                {result.message}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        {/* Error Message */}
-        {error && (
-          <div
-            className="mt-6 p-3 rounded-md flex items-start gap-2"
-            style={{
-              backgroundColor: `${color.status.danger}10`,
-              border: `1px solid ${color.status.danger}30`,
-            }}
-          >
-            <AlertCircle
-              className="w-5 h-5 flex-shrink-0"
-              style={{ color: color.status.danger }}
-            />
-            <p className="text-sm" style={{ color: color.status.danger }}>
-              {error}
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Footer */}

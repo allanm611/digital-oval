@@ -26,6 +26,7 @@ import {
   UniversalControlGroup,
   UNIVERSAL_CONTROL_GROUPS,
 } from "../../../shared/config/universalControlGroupsConfig";
+// Import when ready: import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
 
 
 export default function ControlGroupsPage() {
@@ -40,6 +41,8 @@ export default function ControlGroupsPage() {
   const [controlGroupName, setControlGroupName] = useState("");
   const [nameError, setNameError] = useState("");
   const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
+  const [selectedCustomerBase, setSelectedCustomerBase] = useState<string>("active_subscribers");
+  const [segmentConditions, setSegmentConditions] = useState<any>(null); // For custom segments
 
   const STEPS: Step[] = [
     {
@@ -100,8 +103,8 @@ export default function ControlGroupsPage() {
         return "Active Subscribers";
       case "all_customers":
         return "All Customers";
-      case "saved_segments":
-        return "Saved Segments";
+      case "custom_segments":
+        return "Custom Segments";
       default:
         return base;
     }
@@ -552,7 +555,8 @@ export default function ControlGroupsPage() {
                               type="radio"
                               name="customerBase"
                               value="active_subscribers"
-                              defaultChecked
+                              checked={selectedCustomerBase === "active_subscribers"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -577,6 +581,8 @@ export default function ControlGroupsPage() {
                               type="radio"
                               name="customerBase"
                               value="all_customers"
+                              checked={selectedCustomerBase === "all_customers"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -600,7 +606,9 @@ export default function ControlGroupsPage() {
                             <input
                               type="radio"
                               name="customerBase"
-                              value="saved_segments"
+                              value="custom_segments"
+                              checked={selectedCustomerBase === "custom_segments"}
+                              onChange={(e) => setSelectedCustomerBase(e.target.value)}
                               className="mt-1 w-4 h-4 border-gray-300"
                               style={
                                 {
@@ -611,14 +619,15 @@ export default function ControlGroupsPage() {
                             />
                             <div className="ml-3">
                               <div className="font-medium text-sm text-gray-900">
-                                Saved Segments
+                                Custom Segments
                               </div>
                               <div className="text-xs text-gray-500">
-                                Use predefined customer segments
+                                Define custom segment conditions
                               </div>
                             </div>
                           </label>
                         </div>
+
                       </div>
                     </>
                   )}

@@ -21,11 +21,15 @@ import {
 interface UniversalControlGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelect?: (groupId: string) => void;
+  selectionMode?: boolean;
 }
 
 export default function UniversalControlGroupModal({
   isOpen,
   onClose,
+  onSelect,
+  selectionMode = false,
 }: UniversalControlGroupModalProps) {
   const [controlGroups, setControlGroups] =
     useState<UniversalControlGroup[]>(UNIVERSAL_CONTROL_GROUPS);
@@ -68,7 +72,7 @@ export default function UniversalControlGroupModal({
     >
       <div
         className={`bg-white ${tw.rounded} shadow-xl w-full max-w-6xl h-[90vh] flex flex-col`}
-        style={{ zIndex: zIndexTokens.modal }}
+        style={{ zIndex: zIndex.modal }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -134,7 +138,15 @@ export default function UniversalControlGroupModal({
               {controlGroups.map((group) => (
                 <div
                   key={group.id}
-                  className={`grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 ${tw.rounded} hover:shadow-sm transition-shadow`}
+                  onClick={() => {
+                    if (selectionMode && onSelect) {
+                      onSelect(group.id);
+                      onClose();
+                    }
+                  }}
+                  className={`grid grid-cols-12 gap-4 px-4 py-4 bg-white border border-gray-200 ${tw.rounded} ${
+                    selectionMode ? "cursor-pointer hover:bg-blue-50 hover:shadow-sm" : "hover:shadow-sm"
+                  } transition-shadow`}
                 >
                   <div className="col-span-3">
                     <div className="font-medium text-gray-900">
@@ -196,33 +208,8 @@ export default function UniversalControlGroupModal({
           )}
         </div>
       </div>
-      , document.body );
-      {/* Create/Edit Modal */}
-      {(showCreateModal || editingGroup) && (
-        <CreateControlGroupModal
-          isOpen={true}
-          onClose={() => {
-            setShowCreateModal(false);
-            setEditingGroup(null);
-          }}
-          editingGroup={editingGroup}
-          onSave={(group) => {
-            if (editingGroup) {
-              setControlGroups((prev) =>
-                prev.map((g) => (g.id === group.id ? group : g))
-              );
-            } else {
-              setControlGroups((prev) => [
-                ...prev,
-                { ...group, id: Date.now().toString() },
-              ]);
-            }
-            setShowCreateModal(false);
-            setEditingGroup(null);
-          }}
-        />
-      )}
-    </div>
+    </div>,
+    document.body
   );
 }
 

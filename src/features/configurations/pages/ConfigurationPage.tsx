@@ -198,7 +198,7 @@ export default function ConfigurationPage() {
       },
       {
         id: "dynamic-message-variables",
-        name: "Dynamic Message Variables",
+        name: "Dynamic Modal Generator",
         description:
           "Manage customer identity fields available for dynamic variable insertion in messages and creatives",
         type: "offer",
@@ -262,6 +262,16 @@ export default function ConfigurationPage() {
         category: "User Configuration",
         status: "active",
         navigationPath: "/dashboard/user-management",
+      },
+      {
+        id: "kpis",
+        name: "KPIs",
+        description:
+          "Manage Key Performance Indicators for customer profiling and segmentation including system events, usage metrics, and revenue metrics",
+        type: "user",
+        category: "User Configuration",
+        status: "active",
+        navigationPath: "/dashboard/kpis",
       },
       // Control group configs
       {

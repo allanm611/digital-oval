@@ -1035,8 +1035,8 @@ export default function OfferDetailsPage() {
 
       // Sort by created_at descending (recently created first)
       products = products.sort((a, b) => {
-        const dateA = new Date(a.created_at || 0).getTime();
-        const dateB = new Date(b.created_at || 0).getTime();
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
         return dateB - dateA;
       });
 

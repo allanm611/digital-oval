@@ -35,7 +35,7 @@ import {
   type CampaignActionParams,
 } from "../utils/campaignActions";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
-import ExecuteCampaignModal from "../components/ExecuteCampaignModal";
+import RunCampaignModal from "../components/RunCampaignModal";
 import ApproveCampaignModal from "../components/ApproveCampaignModal";
 import RejectCampaignModal from "../components/RejectCampaignModal";
 import CampaignOffersModal from "../components/CampaignOffersModal";
@@ -77,8 +77,8 @@ export default function CampaignsPage() {
     name: string;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showExecuteModal, setShowExecuteModal] = useState(false);
-  const [campaignToExecute, setCampaignToExecute] = useState<{
+  const [showRunModal, setShowRunModal] = useState(false);
+  const [campaignToRun, setCampaignToRun] = useState<{
     id: number;
     name: string;
     status?: string;
@@ -314,9 +314,8 @@ export default function CampaignsPage() {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await campaignService.getCampaignCategories();
-      const categoriesData = Array.isArray(response)
-        ? response
-        : ((response as { data?: CampaignCategory[] })?.data ?? []);
+      // Service now normalizes all categories, so we can use them directly
+      const categoriesData = response?.data ?? [];
       setCategories(categoriesData as CampaignCategory[]);
     } catch (error) {
       console.error("Failed to load campaign catalogs:", error);
@@ -398,36 +397,12 @@ export default function CampaignsPage() {
         throw new Error(errorMessage);
       }
 
-      const campaignsData: CampaignDisplay[] = response.data
-        .map((campaign) => {
-          // Null checks for critical fields
-          if (!campaign || !campaign.id || !campaign.name || !campaign.status) {
-            return null;
-          }
-          return {
-            id: campaign.id,
-            name: campaign.name,
-            description: campaign.description || undefined,
-            status: campaign.status,
-            is_active: campaign.is_active || false,
-            category_id: campaign.category_id || undefined,
-            objective: campaign.objective || undefined,
-            startDate: campaign.start_date || undefined,
-            endDate: campaign.end_date || undefined,
-            approval_status: campaign.approval_status || undefined,
-            code: campaign.code || undefined,
-            created_at: campaign.created_at || "",
-            offer_count: Array.isArray(campaign.offers)
-              ? campaign.offers.length
-              : 0,
-            segment_count: Array.isArray(campaign.segments)
-              ? campaign.segments.length
-              : 0,
-            offers: Array.isArray(campaign.offers) ? campaign.offers : [],
-            segments: Array.isArray(campaign.segments) ? campaign.segments : [],
-          };
-        })
-        .filter((c): c is CampaignDisplay => c !== null);
+      // Service now normalizes all campaigns, so we can use them directly
+      const campaignsData: CampaignDisplay[] = response.data.map((campaign) => ({
+        ...campaign,
+        offer_count: campaign.offers?.length ?? 0,
+        segment_count: campaign.segments?.length ?? 0,
+      }));
 
       // Filter out archived campaigns when showing "all" status
       let campaignsToDisplay = campaignsData;
@@ -444,7 +419,7 @@ export default function CampaignsPage() {
 
       setCampaigns(paginatedCampaigns);
       setAllCampaignsUnfiltered(campaignsData);
-      setTotalCampaigns(response.pagination?.total || 0);
+      setTotalCampaigns(campaignsToDisplay.length);
     } catch (error) {
       console.error("Failed to load campaigns list:", error);
       showToast(
@@ -1089,9 +1064,9 @@ export default function CampaignsPage() {
                     >
                       <div
                         className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                        title={campaign.name || "—"}
+                        title={campaign.name}
                       >
-                        {campaign.name || "—"}
+                        {campaign.name}
                       </div>
                     </td>
                     {/* <td
@@ -1100,9 +1075,9 @@ export default function CampaignsPage() {
                     >
                       <span
                         className={`text-sm ${tw.textPrimary} block truncate max-w-[200px] sm:max-w-none`}
-                        title={campaign.objective || "Not specified"}
+                        title={campaign.objective}
                       >
-                        {campaign.objective || "Not specified"}
+                        {campaign.objective}
                       </span>
                     </td>
                     <td
@@ -1316,33 +1291,33 @@ export default function CampaignsPage() {
                         onClick={(e) => e.stopPropagation()}
                         onMouseDown={(e) => e.stopPropagation()}
                       >
-                        <PermissionGate permission="campaigns.execute">
+                        <PermissionGate permission="campaigns.run">
                           {campaign.approval_status === "approved" &&
                           campaign.is_active === true ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCampaignToExecute({
+                                setCampaignToRun({
                                   id: campaign.id,
                                   name: campaign.name,
                                   status: campaign.status,
                                   approval_status: campaign.approval_status,
                                   is_active: campaign.is_active,
                                 });
-                                setShowExecuteModal(true);
+                                setShowRunModal(true);
                                 setShowActionMenu(null);
                               }}
                               className="w-full flex items-center px-4 py-3 text-sm text-black"
                             >
                               <Play className="w-4 h-4 mr-4 text-black" />
-                              Execute Campaign
+                              Run Campaign
                             </button>
                           ) : null}
                         </PermissionGate>
 
                         {/* Pause Campaign Button */}
                         {canShowCampaignButton(campaign, "pause") ? (
-                          <PermissionGate permission="campaigns.execute">
+                          <PermissionGate permission="campaigns.run">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1375,7 +1350,7 @@ export default function CampaignsPage() {
 
                         {/* Resume Campaign Button */}
                         {canShowCampaignButton(campaign, "resume") ? (
-                          <PermissionGate permission="campaigns.execute">
+                          <PermissionGate permission="campaigns.run">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1865,27 +1840,27 @@ export default function CampaignsPage() {
         cancelText="Cancel"
       />
 
-      {/* Execute Campaign Modal */}
-      {campaignToExecute && (
-        <ExecuteCampaignModal
-          isOpen={showExecuteModal}
+      {/* Run Campaign Modal */}
+      {campaignToRun && (
+        <RunCampaignModal
+          isOpen={showRunModal}
           onClose={() => {
-            setShowExecuteModal(false);
-            setCampaignToExecute(null);
+            setShowRunModal(false);
+            setCampaignToRun(null);
           }}
-          campaignId={campaignToExecute.id}
-          campaignName={campaignToExecute.name}
-          isActive={campaignToExecute.is_active}
-          approvalStatus={campaignToExecute.approval_status}
+          campaignId={campaignToRun.id}
+          campaignName={campaignToRun.name}
+          isActive={campaignToRun.is_active}
+          approvalStatus={campaignToRun.approval_status}
           onSuccess={async () => {
-            // Fetch fresh campaign data after execution
+            // Fetch fresh campaign data after running
             try {
               const response = await campaignService.getCampaignById(
-                campaignToExecute.id,
+                campaignToRun.id,
                 true,
               );
               if (response && response.status && response.is_active !== undefined) {
-                updateCampaignInList(campaignToExecute.id, {
+                updateCampaignInList(campaignToRun.id, {
                   status: response.status,
                   is_active: response.is_active,
                 });

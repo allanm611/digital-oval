@@ -481,7 +481,7 @@ export default function ScheduledJobDetailsPage() {
     setIsActionLoading(true);
     try {
       await scheduledJobService.createVersion(job.id, {
-        created_by: user.user_id || 1,
+        created_by: user?.user_id ?? null,
       });
       showToast(t("scheduledJob.versionCreated", "Version created"), t("scheduledJob.versionSnapshot", "Job version snapshot has been created"));
       loadVersions();
@@ -512,7 +512,7 @@ export default function ScheduledJobDetailsPage() {
         job.id,
         versionId,
         {
-          created_by: user.user_id || 1,
+          created_by: user?.user_id ?? null,
           reason: t("scheduledJob.rollbackReason", `Rollback to version ${versionId} at ${new Date().toLocaleString()}`),
         }
       );

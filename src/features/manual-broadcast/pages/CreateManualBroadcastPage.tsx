@@ -41,6 +41,7 @@ export interface ManualBroadcastData {
   inputMethod?: AudienceInputMethod;
 
   // Step 2: Communication
+  communicationId?: number; // ID of the communication definition (for editing)
   channel?: "EMAIL" | "SMS" | "WHATSAPP" | "PUSH";
   messageTitle?: string;
   messageBody?: string;
@@ -121,10 +122,10 @@ export default function CreateManualBroadcastPage() {
           setIsLoading(true);
 
           // Get execution details for recipient list and broadcast info
-          const execResponse = await communicationService.getExecutionDetails(executionId);
+          const execResponse = await communicationService.getExecutionDetails(executionId, true);
 
           if (!execResponse?.success || !execResponse?.data?.execution) {
-            showError("Failed to load broadcast details");
+            showError("Failed to load broadcast details", "", true); // bypassSilentMode
             navigate("/dashboard/manual-communications");
             return;
           }
@@ -151,6 +152,7 @@ export default function CreateManualBroadcastPage() {
 
           // Prefill form data
           const prefillData: Partial<ManualBroadcastData> = {
+            communicationId: exec?.communication_id,
             audienceName: exec?.name || exec?.source_name || `Broadcast ${exec?.id || "Unknown"}`,
             channel: (channel as "EMAIL" | "SMS" | "WHATSAPP" | "PUSH") || "EMAIL",
             messageTitle: messageTitle,
@@ -186,7 +188,7 @@ export default function CreateManualBroadcastPage() {
           setBroadcastData(prefillData);
         } catch (err) {
           console.error("Failed to load broadcast details:", err);
-          showError("Failed to load broadcast details");
+          showError("Failed to load broadcast details", "", true); // bypassSilentMode
           navigate("/dashboard/manual-communications");
         } finally {
           setIsLoading(false);
@@ -330,10 +332,35 @@ export default function CreateManualBroadcastPage() {
       // Don't set isLoading - let ScheduleStep button handle the loading state
       // This keeps the page visible while the API is processing
 
-      // In edit mode, resend the communication with updated message content
-      if (isEditMode && executionId) {
-        // For edit mode, resend the broadcast with the same audience but updated message
+      // In edit mode, update the communication definition and resend
+      if (isEditMode && executionId && broadcastData.communicationId) {
+        // Step 1: Update the communication definition using PUT endpoint
+        const updateResponse = await communicationService.updateCommunication(
+          broadcastData.communicationId,
+          {
+            name: broadcastData.audienceName || `Broadcast ${new Date().toLocaleDateString()}`,
+            description: `Manual broadcast update`,
+            source_type: broadcastData.quicklistId ? "quicklist" : "manual",
+            ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
+            channels: broadcastData.channel ? [broadcastData.channel] : [],
+            message_template: {
+              ...(broadcastData.messageTitle &&
+              broadcastData.channel === "EMAIL"
+                ? { title: broadcastData.messageTitle }
+                : {}),
+              body: broadcastData.messageBody || "",
+            },
+            created_by: user?.user_id,
+          }
+        );
+
+        if (!updateResponse.success) {
+          throw new Error("Failed to update communication definition");
+        }
+
+        // Step 2: Resend the broadcast with the updated message
         const response = await communicationService.sendCommunication({
+          communication_id: broadcastData.communicationId,
           source_type: broadcastData.quicklistId ? "quicklist" : "manual",
           ...(broadcastData.quicklistId ? { source_id: broadcastData.quicklistId } : {}),
           ...(broadcastData.audienceName ? { name: broadcastData.audienceName } : {}),
@@ -355,7 +382,7 @@ export default function CreateManualBroadcastPage() {
           // Fetch updated communications list
           await communicationService.getCommunications();
 
-          showToast(t.manualBroadcast.updatedSuccess || "Broadcast resent successfully!");
+          showToast(t.manualBroadcast.updatedSuccess || "Broadcast updated successfully!");
           clearPersistedFormData("broadcast_form_data");
           navigate("/dashboard/manual-communications");
           return;
@@ -514,11 +541,13 @@ export default function CreateManualBroadcastPage() {
         showError(
           "Failed to create manual communication",
           "The request timed out. Please try again.",
+          true // bypassSilentMode
         );
       } else {
         showError(
           t.manualBroadcast.createFailed,
           errorMessage,
+          true // bypassSilentMode
         );
       }
     }
@@ -550,6 +579,7 @@ export default function CreateManualBroadcastPage() {
             onUpdate={updateBroadcastData}
             onSubmit={handleSubmit}
             onPrevious={handlePrevious}
+            isEditMode={isEditMode}
           />
         );
       default:

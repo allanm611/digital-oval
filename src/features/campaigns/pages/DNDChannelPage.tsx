@@ -596,6 +596,7 @@ export default function DNDChannelPage() {
             isOpen={showRemoveModal}
             onClose={() => setShowRemoveModal(false)}
             onRemove={handleRemoveCustomer}
+            dndSubscriptions={dndSubscriptions}
           />
         </>
       )}

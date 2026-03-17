@@ -150,6 +150,40 @@ const dndDays = [
   { value: "custom", label: "Custom Days" },
 ];
 
+// Notification Types
+const notificationTypes = [
+  { id: "campaigns", label: "Campaigns", description: "Campaign updates and status" },
+  { id: "offers", label: "Offers", description: "Offer changes and approvals" },
+  { id: "segments", label: "Segments", description: "Segment creation and updates" },
+  { id: "products", label: "Products", description: "Product changes" },
+  { id: "jobs", label: "Jobs", description: "Job execution and workflows" },
+  { id: "users", label: "Users", description: "User management" },
+  { id: "system", label: "System", description: "System alerts and maintenance" },
+];
+
+// Notification Channels
+const notificationChannels = [
+  { id: "sms", label: "SMS" },
+  { id: "email", label: "Email" },
+  { id: "ussd", label: "USSD" },
+  { id: "push", label: "Push" },
+  { id: "ivr", label: "IVR" },
+  { id: "voice", label: "Voice" },
+  { id: "whatsapp", label: "WhatsApp" },
+];
+
+// Notification Sounds
+const notificationSounds = [
+  { value: "none", label: "None (Silent)" },
+  { value: "bell", label: "Bell" },
+  { value: "chime", label: "Chime" },
+  { value: "ding", label: "Ding" },
+  { value: "notification", label: "Notification" },
+  { value: "alert", label: "Alert" },
+  { value: "pop", label: "Pop" },
+  { value: "ping", label: "Ping" },
+];
+
 // Time options for DND hours
 const timeOptions = Array.from({ length: 24 }, (_, i) => ({
   value: `${String(i).padStart(2, "0")}:00`,
@@ -177,6 +211,7 @@ interface SettingsType {
   dnd_start_time: string;
   dnd_end_time: string;
   dnd_days: string;
+  notificationSound?: string;
   theme: "light" | "dark";
 }
 
@@ -213,6 +248,7 @@ export default function SettingsPage() {
           dnd_start_time: parsed.dnd_start_time || "21:00",
           dnd_end_time: parsed.dnd_end_time || "08:00",
           dnd_days: parsed.dnd_days || "daily",
+          notificationSound: parsed.notificationSound || "notification",
           theme: parsed.theme || "light",
         };
       }
@@ -236,6 +272,7 @@ export default function SettingsPage() {
       dnd_start_time: "21:00",
       dnd_end_time: "08:00",
       dnd_days: "daily",
+      notificationSound: "notification",
       theme: "light",
     };
   };
@@ -244,18 +281,21 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
 
-  // Notification preferences
-  const [emailNotifications, setEmailNotifications] = useState(() => {
-    const stored = localStorage.getItem("emailNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
-  });
-  const [inAppNotifications, setInAppNotifications] = useState(() => {
-    const stored = localStorage.getItem("inAppNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
-  });
-  const [browserNotifications, setBrowserNotifications] = useState(() => {
-    const stored = localStorage.getItem("browserNotifications");
-    return stored !== null ? JSON.parse(stored) : true;
+  // Notification channel preferences: { notificationType: [channels] }
+  const [notificationPreferences, setNotificationPreferences] = useState<
+    Record<string, string[]>
+  >(() => {
+    const stored = localStorage.getItem("notificationPreferences");
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    // Default: all types send to all channels
+    return Object.fromEntries(
+      notificationTypes.map((type) => [
+        type.id,
+        notificationChannels.map((ch) => ch.id),
+      ])
+    );
   });
 
   // Cross-tab synchronization: Listen for localStorage changes from other tabs
@@ -358,9 +398,10 @@ export default function SettingsPage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       // Save to localStorage
       localStorage.setItem("appSettings", JSON.stringify(settings));
-      localStorage.setItem("emailNotifications", JSON.stringify(emailNotifications));
-      localStorage.setItem("inAppNotifications", JSON.stringify(inAppNotifications));
-      localStorage.setItem("browserNotifications", JSON.stringify(browserNotifications));
+      localStorage.setItem(
+        "notificationPreferences",
+        JSON.stringify(notificationPreferences)
+      );
       // Update language if it changed
       setLanguageSettings(settings.language);
       setLanguage(settings.language);
@@ -944,68 +985,98 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="emailNotifications"
-                  checked={emailNotifications}
-                  onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="emailNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Email Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive notifications via email
-                  </p>
-                </label>
-              </div>
-            </div>
+          {/* Notification Sounds */}
+          <div className="p-4 -mt-4 hover:bg-gray-50 transition-colors rounded-lg">
+            <label className="block text-sm font-semibold text-gray-900">
+              Notification Sound
+            </label>
+            <p className="text-xs text-gray-500 mb-3">
+              Select the sound to play for notifications
+            </p>
+            <HeadlessSelect
+              options={notificationSounds}
+              value={settings.notificationSound || "notification"}
+              onChange={(value) =>
+                setSettings({
+                  ...settings,
+                  notificationSound: value,
+                })
+              }
+              placeholder="Select a sound"
+              className="w-full md:w-64"
+            />
+          </div>
 
-            {/* In-App Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="inAppNotifications"
-                  checked={inAppNotifications}
-                  onChange={(e) => setInAppNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="inAppNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    In-App Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive notifications within the application
-                  </p>
-                </label>
-              </div>
-            </div>
+          <div className="border-t border-gray-100 pt-6">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Notification Types & Channels
+            </h3>
+            <p className="text-xs text-gray-500 mb-6">
+              Select which channels to use for each notification type
+            </p>
 
-            {/* Browser Notifications */}
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors rounded-lg">
-              <div className="flex items-center flex-1">
-                <input
-                  type="checkbox"
-                  id="browserNotifications"
-                  checked={browserNotifications}
-                  onChange={(e) => setBrowserNotifications(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0"
-                />
-                <label htmlFor="browserNotifications" className="ml-3 cursor-pointer flex-1">
-                  <p className="text-sm font-semibold text-gray-900">
-                    Browser Notifications
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Receive desktop notifications from your browser
-                  </p>
-                </label>
-              </div>
+            {/* Notification Channel Preference Matrix */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left font-semibold text-gray-900 py-3 px-3 w-32">
+                      Type
+                    </th>
+                    {notificationChannels.map((channel) => (
+                      <th
+                        key={channel.id}
+                        className="text-center font-semibold text-gray-900 py-3 px-2"
+                      >
+                        <span className="text-xs">{channel.label}</span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {notificationTypes.map((type) => (
+                    <tr
+                      key={type.id}
+                      className="border-b border-gray-100 hover:bg-gray-50"
+                    >
+                      <td className="py-3 px-3">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {type.label}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {type.description}
+                          </p>
+                        </div>
+                      </td>
+                      {notificationChannels.map((channel) => (
+                        <td key={channel.id} className="text-center py-3 px-2">
+                          <input
+                            type="checkbox"
+                            checked={
+                              notificationPreferences[type.id]?.includes(
+                                channel.id
+                              ) || false
+                            }
+                            onChange={(e) => {
+                              const currentChannels =
+                                notificationPreferences[type.id] || [];
+                              const updatedChannels = e.target.checked
+                                ? [...currentChannels, channel.id]
+                                : currentChannels.filter((c) => c !== channel.id);
+                              setNotificationPreferences({
+                                ...notificationPreferences,
+                                [type.id]: updatedChannels,
+                              });
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0 cursor-pointer"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

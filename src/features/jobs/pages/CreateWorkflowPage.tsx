@@ -24,7 +24,7 @@ export default function CreateWorkflowPage() {
     description: null,
     workflow_type: null,
     is_active: true,
-    created_by: user?.user_id || null,
+    created_by: user?.user_id ?? null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
