@@ -236,17 +236,7 @@ export default function SegmentAnalyticsPage(): JSX.Element {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-        <BackButton fallbackTo="/dashboard/segments" className="self-start" />
-        <div className="sm:ml-2">
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Segment Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Comprehensive insights and metrics for your segments
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/segments" showBreadcrumb={true} currentLabel="Segment Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

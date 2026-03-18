@@ -13,6 +13,7 @@ import {
 import LoadingSpinner from "./ui/LoadingSpinner";
 import BackButton from "./ui/BackButton";
 import CreateButton from "./ui/CreateButton";
+import HeadlessSelect from "./ui/HeadlessSelect";
 
 export interface ConfigurationItem {
   id: number;
@@ -22,6 +23,15 @@ export interface ConfigurationItem {
   updated_at?: string;
   isActive?: boolean;
   metadataValue?: number | string;
+}
+
+export interface MetadataField {
+  label: string;
+  key: string;
+  type: "text" | "select" | "toggle" | "textarea";
+  required?: boolean;
+  options?: { value: string | boolean; label: string }[];
+  placeholder?: string;
 }
 
 export interface ConfigurationPageConfig {
@@ -56,6 +66,9 @@ export interface ConfigurationPageConfig {
   // Validation
   nameMaxLength: number;
   descriptionMaxLength: number;
+
+  // Metadata Fields (optional)
+  metadataFields?: MetadataField[];
 
   // Messages
   deleteConfirmTitle: string;
@@ -215,6 +228,77 @@ export function ConfigurationModal({
                 required={config.descriptionRequired}
               />
             </div>
+
+            {/* Metadata Fields */}
+            {config.metadataFields &&
+              config.metadataFields.map((field) => (
+                <div key={field.key}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {field.label} {field.required && "*"}
+                  </label>
+
+                  {field.type === "text" && (
+                    <input
+                      type="text"
+                      value={formData[field.key] || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.key]: e.target.value,
+                        }))
+                      }
+                      placeholder={field.placeholder}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      required={field.required}
+                    />
+                  )}
+
+                  {field.type === "textarea" && (
+                    <textarea
+                      value={formData[field.key] || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.key]: e.target.value,
+                        }))
+                      }
+                      placeholder={field.placeholder}
+                      className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                      rows={3}
+                      required={field.required}
+                    />
+                  )}
+
+                  {field.type === "select" && field.options && (
+                    <HeadlessSelect
+                      options={field.options}
+                      value={formData[field.key] || ""}
+                      onChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.key]: value,
+                        }))
+                      }
+                      placeholder={field.placeholder || "Select..."}
+                      className="w-full"
+                    />
+                  )}
+
+                  {field.type === "toggle" && (
+                    <input
+                      type="checkbox"
+                      checked={formData[field.key] ?? false}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          [field.key]: e.target.checked,
+                        }))
+                      }
+                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                    />
+                  )}
+                </div>
+              ))}
           </div>
 
           {error && (

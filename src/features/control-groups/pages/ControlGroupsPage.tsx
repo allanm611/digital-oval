@@ -26,7 +26,8 @@ import {
   UniversalControlGroup,
   UNIVERSAL_CONTROL_GROUPS,
 } from "../../../shared/config/universalControlGroupsConfig";
-// Import when ready: import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
+import SegmentConditionsBuilder from "../../segments/components/SegmentConditionsBuilder";
+import type { SegmentConditionGroup } from "../../segments/types/segment";
 
 
 export default function ControlGroupsPage() {
@@ -42,7 +43,7 @@ export default function ControlGroupsPage() {
   const [nameError, setNameError] = useState("");
   const [controlGroupPercentage, setControlGroupPercentage] = useState(10);
   const [selectedCustomerBase, setSelectedCustomerBase] = useState<string>("active_subscribers");
-  const [segmentConditions, setSegmentConditions] = useState<any>(null); // For custom segments
+  const [segmentConditions, setSegmentConditions] = useState<SegmentConditionGroup[]>([]);
 
   const STEPS: Step[] = [
     {
@@ -628,6 +629,17 @@ export default function ControlGroupsPage() {
                           </label>
                         </div>
 
+                        {selectedCustomerBase === "custom_segments" && (
+                          <div className="mt-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                              Define Custom Segment Conditions
+                            </label>
+                            <SegmentConditionsBuilder
+                              conditions={segmentConditions}
+                              onChange={setSegmentConditions}
+                            />
+                          </div>
+                        )}
                       </div>
                     </>
                   )}
@@ -778,39 +790,31 @@ export default function ControlGroupsPage() {
               {/* Footer */}
               <div className="flex items-center justify-between px-6 py-4 ">
                 <button
-                  onClick={handleCloseModal}
-                  className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} text-sm font-medium hover:bg-gray-50 transition-colors`}
+                  onClick={handlePrev}
+                  disabled={currentStep === 1}
+                  className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed`}
                 >
-                  Cancel
+                  Previous
                 </button>
-                <div className="flex space-x-3">
+                {currentStep === 3 ? (
                   <button
-                    onClick={handlePrev}
-                    disabled={currentStep === 1}
-                    className={`px-4 py-2 border text-sm border-gray-300 text-gray-700 ${tw.rounded} cursor-pointer disabled:text-gray-400 disabled:cursor-not-allowed`}
+                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
+                    style={{ backgroundColor: color.primary.action }}
+                    onClick={() => {
+                      handleCloseModal();
+                    }}
                   >
-                    Previous
+                    Create Control Group
                   </button>
-                  {currentStep === 3 ? (
-                    <button
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
-                      style={{ backgroundColor: color.primary.action }}
-                      onClick={() => {
-                        handleCloseModal();
-                      }}
-                    >
-                      Create Control Group
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleNext}
-                      className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
-                      style={{ backgroundColor: color.primary.action }}
-                    >
-                      Next
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    onClick={handleNext}
+                    className={`px-4 py-2 ${tw.rounded} text-sm font-medium hover:opacity-90 transition-colors text-white`}
+                    style={{ backgroundColor: color.primary.action }}
+                  >
+                    Next
+                  </button>
+                )}
               </div>
             </div>
           </div>,

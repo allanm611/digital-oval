@@ -768,20 +768,11 @@ export default function CustomerSearchResultsPage() {
     <PermissionGate permission="customer.read">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <BackButton
-            fallbackTo="/dashboard/customers"
-            className={`inline-flex items-center justify-center ${tw.rounded} border border-gray-200 p-2 text-gray-600 hover:text-gray-900`}
-          />
-          <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              {customer.name}
-            </h1>
-            <p className={`${tw.textSecondary} text-sm mt-1 font-mono`}>
-              {customer.id}
-            </p>
-          </div>
-        </div>
+        <BackButton
+          fallbackTo="/dashboard/customers"
+          showBreadcrumb={true}
+          currentLabel="Customer Details"
+        />
 
         {/* Tabs */}
         <div className="flex gap-1 border-b border-gray-200">

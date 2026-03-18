@@ -269,23 +269,12 @@ export default function EditProductPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <BackButton
-            fallbackTo="/dashboard/products"
-            onClick={navigateBack}
-            style={{ color: color.text.secondary }}
-          />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Edit Product
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              Update product information
-            </p>
-          </div>
-        </div>
-      </div>
+      <BackButton
+        fallbackTo="/dashboard/products"
+        onClick={navigateBack}
+        showBreadcrumb={true}
+        currentLabel="Edit Product"
+      />
 
       {/* Form */}
       <ProductForm

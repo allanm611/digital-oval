@@ -553,23 +553,19 @@ export default function AudienceConfigurationStep({
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Use shared control group for all segments
               </span>
-            </label>
-
-            {controlGroupMode === "shared" && (
-              <div className="ml-7">
+              {controlGroupMode === "shared" && (
                 <button
                   onClick={() => {
                     setEditingControlGroup("all");
                     setShowControlGroupModal(true);
                   }}
-                  className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
-                  style={{ backgroundColor: color.primary.action }}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  title="Configure Control Group"
                 >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Configure Control Group
+                  <Settings className="w-4 h-4" />
                 </button>
-              </div>
-            )}
+              )}
+            </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -610,23 +606,19 @@ export default function AudienceConfigurationStep({
               <span className={`text-sm font-medium ${tw.textPrimary}`}>
                 Apply seed list to all segments
               </span>
-            </label>
-
-            {seedListMode === "all" && (
-              <div className="ml-7">
+              {seedListMode === "all" && (
                 <button
                   onClick={() => {
                     setEditingSeedListSegmentId("all");
                     setShowSeedListModal(true);
                   }}
-                  className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium text-white transition-colors`}
-                  style={{ backgroundColor: color.primary.action }}
+                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  title="Select Seed Lists"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Select Seed Lists
+                  <Plus className="w-4 h-4" />
                 </button>
-              </div>
-            )}
+              )}
+            </label>
 
             <label className="flex items-center gap-3 cursor-pointer">
               <input

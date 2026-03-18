@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, AlertCircle, Trash2, Plus } from "lucide-react";
+import { Calendar, AlertCircle, Trash2, Plus, X } from "lucide-react";
 import { CampaignScheduling } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
 import { buttons } from "../../../../shared/utils/tokens";
@@ -51,11 +51,14 @@ export default function SchedulingStep({
   const [startDeliveryOnCompletion, setStartDeliveryOnCompletion] =
     useState(false);
   const [targetRenderTime, setTargetRenderTime] = useState("Real Time");
+  const [autoPreRender, setAutoPreRender] = useState(true);
+  const [preRenderHours, setPreRenderHours] = useState(24);
   const [startBroadcastBefore, setStartBroadcastBefore] = useState("Before");
   const [hoursBeforeBroadcast, setHoursBeforeBroadcast] = useState(0);
   const [atTime, setAtTime] = useState("12:00");
   const [startTime, setStartTime] = useState("08:00");
   const [endTime, setEndTime] = useState("23:59");
+  const [showPreview, setShowPreview] = useState(false);
 
   // For "Set specific start time for days" — day of week + time entries
   const [dayTimeEntries, setDayTimeEntries] = useState<
@@ -680,6 +683,40 @@ export default function SchedulingStep({
             </label>
           </div>
 
+          {targetRenderTime === "Pre-Render" && (
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={autoPreRender}
+                  onChange={(e) => setAutoPreRender(e.target.checked)}
+                  className="w-4 h-4 text-[#3b8169] border-gray-300 focus:ring-[#3b8169]"
+                />
+                <span className="ml-2 text-sm font-medium text-gray-700">
+                  Automatic
+                </span>
+              </label>
+
+              {!autoPreRender && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Pre-render hours before scheduled send time
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="168"
+                      value={preRenderHours}
+                      onChange={(e) => setPreRenderHours(Number(e.target.value))}
+                      className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:ring-2 focus:ring-[#3b8169] focus:border-transparent`}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {targetRenderTime === "Broadcast Schedule" && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -757,13 +794,65 @@ export default function SchedulingStep({
       {/* Preview Schedule Button */}
       <div className="flex justify-center">
         <button
-          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors text-white`}
+          onClick={() => setShowPreview(true)}
+          className={`inline-flex items-center px-4 py-2 ${tw.rounded} text-sm font-medium transition-colors text-white hover:opacity-90`}
           style={{ backgroundColor: color.primary.action }}
         >
           <Calendar className="w-4 h-4 mr-2" />
           Preview Schedule
         </button>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`bg-white ${tw.rounded} p-8 max-w-md w-full mx-4 shadow-lg relative`}>
+            <button
+              onClick={() => setShowPreview(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Schedule Preview</h3>
+            <div className="space-y-3 mb-6">
+              <div>
+                <p className="text-xs text-gray-600">Start Date</p>
+                <p className="text-sm font-medium text-gray-900">{scheduling.start_date || "Not set"}</p>
+              </div>
+              {scheduling.end_date && (
+                <div>
+                  <p className="text-xs text-gray-600">End Date</p>
+                  <p className="text-sm font-medium text-gray-900">{scheduling.end_date}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-gray-600">Recurrence Pattern</p>
+                <p className="text-sm font-medium text-gray-900">{recurrencePattern}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-600">Target Render Time</p>
+                <p className="text-sm font-medium text-gray-900">{targetRenderTime}</p>
+              </div>
+              {targetRenderTime === "Pre-Render" && (
+                <div>
+                  <p className="text-xs text-gray-600">Pre-Render Setting</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {autoPreRender ? "Automatic (backend will set)" : `${preRenderHours} hours before send`}
+                  </p>
+                </div>
+              )}
+              {targetRenderTime === "Broadcast Schedule" && (
+                <div>
+                  <p className="text-xs text-gray-600">Broadcast Timing</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {startBroadcastBefore === "At" ? `At ${atTime}` : `${startBroadcastBefore} ${hoursBeforeBroadcast} hours`}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Validation Warning */}
       {(!scheduling.start_date || scheduling.start_date === "") && (

@@ -146,6 +146,13 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     name: "Recharge Tracking",
     description:
       "Track recharge-based activities and transactions for offer performance",
+    isActive: true,
+    type: "recharge",
+    dataSource: "cdr_file",
+    parameters: ["amount", "datetime", "subscriber_id", "channel", "payment_method"],
+    displayMetrics: ["conversions", "conversion_rate", "avg_recharge_amount", "revenue_generated"],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "24h",
     created_at: "2025-02-01T09:00:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
@@ -154,29 +161,57 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     name: "Usage Metric Tracking",
     description:
       "Track usage-based metrics like data consumption, call duration, and SMS volume",
+    isActive: true,
+    type: "usage_metric",
+    dataSource: "usage_logs",
+    parameters: ["data_volume_mb", "voice_minutes", "sms_count", "datetime", "subscriber_id", "service_type"],
+    displayMetrics: ["active_users", "activation_rate", "avg_usage", "revenue_from_usage"],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "7d",
     created_at: "2025-02-02T11:15:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
   {
     id: 3,
-    name: "Channel Performance",
+    name: "Engagement Tracking",
     description:
-      "Track offer performance across different delivery channels (SMS, Email, USSD)",
+      "Track customer engagement metrics like delivery, opens, clicks across channels",
+    isActive: true,
+    type: "engagement",
+    dataSource: "delivery_logs",
+    parameters: ["delivered", "opened", "clicked", "datetime", "subscriber_id", "channel"],
+    displayMetrics: ["delivery_rate", "open_rate", "click_through_rate", "engagement_score"],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "24h",
     created_at: "2025-02-03T12:40:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
   {
     id: 4,
-    name: "Customer Segment Tracking",
+    name: "Redemption Tracking",
     description:
-      "Track offer performance by customer segment and demographic attributes",
+      "Track offer redemption rates and discount utilization",
+    isActive: true,
+    type: "redemption",
+    dataSource: "redemption_db",
+    parameters: ["redeemed", "redemption_date", "discount_applied", "subscriber_id", "redemption_channel"],
+    displayMetrics: ["redemption_count", "redemption_rate", "avg_discount_used", "cost_per_redemption"],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "30d",
     created_at: "2025-02-04T13:20:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
   {
     id: 5,
-    name: "Product Type Tracking",
-    description: "Track offer performance by product type and category",
+    name: "Churn Prevention Tracking",
+    description: "Track if offers successfully prevent customer churn",
+    isActive: true,
+    type: "churn_prevention",
+    dataSource: "subscriber_activity",
+    parameters: ["last_activity_date", "days_inactive", "subscriber_status", "retention_period"],
+    displayMetrics: ["customers_retained", "retention_rate", "churn_prevention_score", "ltv_impact"],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "90d",
     created_at: "2025-02-05T08:10:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
@@ -185,6 +220,13 @@ const hardcodedTrackingSources: ConfigurationItem[] = [
     name: "Custom Tracking Source",
     description:
       "Custom tracking parameters for specific business requirements",
+    isActive: false,
+    type: "custom",
+    dataSource: "custom_api",
+    parameters: [],
+    displayMetrics: [],
+    conditions: ["equals", "greater_than", "less_than", "contains", "is_any_of"],
+    lookbackPeriod: "24h",
     created_at: "2025-02-06T10:30:00Z",
     updated_at: "2025-02-06T15:00:00Z",
   },
@@ -1327,6 +1369,54 @@ export const trackingSourcesConfig: ConfigurationPageConfig = {
   descriptionRequired: false,
   nameMaxLength: 120,
   descriptionMaxLength: 600,
+  metadataFields: [
+    {
+      label: "Type",
+      key: "type",
+      type: "select",
+      required: true,
+      options: [
+        { value: "recharge", label: "Recharge" },
+        { value: "usage_metric", label: "Usage" },
+        { value: "engagement", label: "Engagement" },
+        { value: "redemption", label: "Redemption" },
+        { value: "churn_prevention", label: "Churn Prevention" },
+        { value: "custom", label: "Custom" },
+      ],
+    },
+    {
+      label: "Data Source",
+      key: "dataSource",
+      type: "select",
+      required: true,
+      options: [
+        { value: "cdr_file", label: "CDR File" },
+        { value: "usage_logs", label: "Usage Logs" },
+        { value: "delivery_logs", label: "Delivery Logs" },
+        { value: "redemption_db", label: "Redemption Database" },
+        { value: "subscriber_activity", label: "Subscriber Activity" },
+        { value: "custom_api", label: "Custom API" },
+      ],
+    },
+    {
+      label: "Lookback Period",
+      key: "lookbackPeriod",
+      type: "select",
+      required: true,
+      options: [
+        { value: "24h", label: "24 Hours" },
+        { value: "7d", label: "7 Days" },
+        { value: "30d", label: "30 Days" },
+        { value: "90d", label: "90 Days" },
+      ],
+    },
+    {
+      label: "Enabled",
+      key: "isActive",
+      type: "toggle",
+      required: false,
+    },
+  ],
   deleteConfirmTitle: "Delete Tracking Source",
   deleteConfirmMessage: (name: string) =>
     `Are you sure you want to delete "${name}"?`,
@@ -1406,6 +1496,9 @@ export const rewardTypesConfig: TypeConfigurationPageConfig = {
     placeholder: "e.g., bundle, points, discount",
   },
   statusLabel: "Status",
+  // Permissions - Reward types are backend-managed, not creatable via UI
+  disableCreate: true,
+  disableDelete: true,
   deleteConfirmTitle: "Delete Reward Type",
   deleteConfirmMessage: (name: string) =>
     `Are you sure you want to delete "${name}"?`,
@@ -2062,6 +2155,10 @@ export const offerTypesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
 
+  // Permissions - Offer types are backend-managed, not creatable via UI
+  disableCreate: true,
+  disableDelete: true,
+
   // Messages
   deleteConfirmTitle: "Delete Offer Type",
   deleteConfirmMessage: (name: string) =>
@@ -2108,6 +2205,10 @@ export const campaignTypesConfig: TypeConfigurationPageConfig = {
   // Validation
   nameMaxLength: 100,
   descriptionMaxLength: 500,
+
+  // Permissions - Campaign types are backend-managed, not creatable via UI
+  disableCreate: true,
+  disableDelete: true,
 
   // Messages
   deleteConfirmTitle: "Delete Campaign Type",
@@ -2156,6 +2257,10 @@ export const segmentTypesConfig: TypeConfigurationPageConfig = {
   nameMaxLength: 100,
   descriptionMaxLength: 500,
 
+  // Permissions - Segment types are backend-managed, not creatable via UI
+  disableCreate: true,
+  disableDelete: true,
+
   // Messages
   deleteConfirmTitle: "Delete Segment Type",
   deleteConfirmMessage: (name: string) =>
@@ -2196,6 +2301,9 @@ export const productTypesConfig: TypeConfigurationPageConfig = {
     type: "number",
     placeholder: "Enter number of products",
   },
+  // Permissions - Product types are backend-managed, not creatable via UI
+  disableCreate: true,
+  disableDelete: true,
   deleteConfirmTitle: "Delete Product Type",
   deleteConfirmMessage: (name: string) =>
     `Are you sure you want to delete "${name}"? This action cannot be undone.`,

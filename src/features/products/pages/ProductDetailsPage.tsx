@@ -218,18 +218,8 @@ export default function ProductDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/products" onClick={navigateBack} />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {t.pages.productDetails}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage product information
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-col sm:flex-row xl:flex-row lg:flex-col gap-3">
+        <BackButton fallbackTo="/dashboard/products" onClick={navigateBack} showBreadcrumb={true} currentLabel="Product Details" />
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleToggleStatus}
             disabled={isTogglingStatus}

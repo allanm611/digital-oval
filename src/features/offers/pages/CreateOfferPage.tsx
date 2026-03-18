@@ -2322,11 +2322,9 @@ export default function CreateOfferPage({
             <div className="flex items-center space-x-3">
               <BackButton
                 fallbackTo={getBackButtonFallback()}
-                className="text-gray-400 hover:text-gray-600"
+                showBreadcrumb={true}
+                currentLabel={isEditMode ? "Edit Offer" : "Create Offer"}
               />
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {isEditMode ? "Edit Offer" : "Create Offer"}
-              </h1>
             </div>
             {currentStep !== 6 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">

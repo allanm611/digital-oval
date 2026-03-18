@@ -84,18 +84,10 @@ export default function SMSRouteDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/sms-routes" />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>SMS Route Details</h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              View and manage SMS route configuration
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/sms-routes" showBreadcrumb={true} currentLabel="SMS Route Details" />
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => navigate(`/dashboard/sms-routes/${route.id}/edit`)}
             className={`px-4 py-2 text-white ${tw.rounded} font-semibold transition-all duration-200 flex items-center gap-2 text-sm w-fit`}

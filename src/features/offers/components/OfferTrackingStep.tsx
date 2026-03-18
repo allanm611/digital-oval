@@ -66,25 +66,95 @@ const CONDITIONS = [
   { value: "is_any_of", label: "Is any of" },
 ];
 
+// Pre-created Tracking Sources from Configuration
+const PRE_CREATED_TRACKING_SOURCES = [
+  {
+    id: "pre_1",
+    name: "Recharge Tracking",
+    type: "recharge",
+    rules: [
+      {
+        id: "rule_1",
+        name: "Amount > 1000",
+        priority: 1,
+        parameter: "Amount",
+        condition: "greater_than",
+        value: "1000",
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "pre_2",
+    name: "Usage Metric Tracking",
+    type: "usage_metric",
+    rules: [
+      {
+        id: "rule_2",
+        name: "Data > 500MB",
+        priority: 1,
+        parameter: "Usage_Volume",
+        condition: "greater_than",
+        value: "500",
+        enabled: true,
+      },
+      {
+        id: "rule_3",
+        name: "Within 7 days",
+        priority: 2,
+        parameter: "Time_Period",
+        condition: "less_than",
+        value: "7",
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: "pre_3",
+    name: "Engagement Tracking",
+    type: "engagement",
+    rules: [
+      {
+        id: "rule_4",
+        name: "Click Rate",
+        priority: 1,
+        parameter: "Frequency",
+        condition: "greater_than",
+        value: "0",
+        enabled: true,
+      },
+    ],
+  },
+];
+
 export default function OfferTrackingStep({
-  trackingSources,
+  trackingSources = [],
   onTrackingSourcesChange,
 }: OfferTrackingStepProps) {
   const [selectedSource, setSelectedSource] = useState<string | null>(
-    trackingSources.length > 0 ? trackingSources[0].id : null
+    trackingSources && trackingSources.length > 0 ? trackingSources[0].id : null
   );
   const [showRuleModal, setShowRuleModal] = useState(false);
   const [editingRule, setEditingRule] = useState<TrackingRule | null>(null);
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const addTrackingSource = () => {
+  const addTrackingSource = (preCreatedId: string) => {
+    const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
+      (s) => s.id === preCreatedId
+    );
+    if (!preCreated) return;
+
+    // Create a copy with new ID
     const newSource: TrackingSource = {
       id: generateId(),
-      name: "New Tracking Source",
-      type: "recharge",
+      name: preCreated.name,
+      type: preCreated.type,
       enabled: true,
-      rules: [],
+      rules: preCreated.rules.map((rule) => ({
+        ...rule,
+        id: generateId(),
+      })),
     };
 
     const updatedSources = [...trackingSources, newSource];
@@ -178,32 +248,52 @@ export default function OfferTrackingStep({
             Set up how you'll track customer engagement and measure offer
             performance
           </p>
-          <button
-            onClick={addTrackingSource}
-            className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
-            style={{ backgroundColor: color.primary.action }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Tracking Source
-          </button>
+          <div className="max-w-sm">
+            <HeadlessSelect
+              options={[
+                { value: "", label: "Select a tracking source..." },
+                ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
+                  value: source.id,
+                  label: source.name,
+                })),
+              ]}
+              value=""
+              onChange={(value) => {
+                if (value) {
+                  addTrackingSource(value);
+                }
+              }}
+              placeholder="Select a tracking source..."
+              className="w-full"
+            />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tracking Sources List */}
           <div className="lg:col-span-1">
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">
-                  Tracking Sources
+              <div className="mb-4">
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  Source Name
                 </h3>
-                <button
-                  onClick={addTrackingSource}
-                  className={`inline-flex items-center px-4 py-2 text-sm text-white ${tw.rounded} font-medium`}
-                  style={{ backgroundColor: color.primary.action }}
-                >
-                  <Plus className="w-5 h-5 mr-1.5" />
-                  Add Source
-                </button>
+                <HeadlessSelect
+                  options={[
+                    { value: "", label: "Select a tracking source..." },
+                    ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
+                      value: source.id,
+                      label: source.name,
+                    })),
+                  ]}
+                  value=""
+                  onChange={(value) => {
+                    if (value) {
+                      addTrackingSource(value);
+                    }
+                  }}
+                  placeholder="Select a tracking source..."
+                  className="w-full"
+                />
               </div>
 
               <div className="space-y-2">

@@ -16,6 +16,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
+import { useBackendConfigurationData } from "../hooks/useBackendConfigurationData";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -1055,6 +1056,12 @@ export default function TypeConfigurationPage({
       isActive: item.isActive ?? true,
     }));
 
+  // Use backend hook for campaign types
+  const isCampaignTypes = config.configType === "campaignTypes";
+  const backendConfig = useBackendConfigurationData(
+    isCampaignTypes ? "campaignTypes" : undefined,
+  );
+
   const [items, setItems] = useState<TypeConfigurationItem[]>(
     normalizeItems(config.initialData),
   );
@@ -1068,8 +1075,16 @@ export default function TypeConfigurationPage({
   // Config type checks for conditional rendering
   const isRoutes = config.configType === "routes";
 
+  // Sync backend data to local items when using backend hook
   useEffect(() => {
-    if (config.configType) {
+    if (isCampaignTypes && backendConfig?.data) {
+      setItems(normalizeItems(backendConfig.data as TypeConfigurationItem[]));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCampaignTypes, backendConfig?.data?.length]);
+
+  useEffect(() => {
+    if (!isCampaignTypes && config.configType) {
       configurationDataService.setData(
         config.configType,
         normalizeItems(config.initialData),
@@ -1085,7 +1100,7 @@ export default function TypeConfigurationPage({
       return unsubscribe;
     }
     return undefined;
-  }, [config.configType, config.initialData]);
+  }, [config.configType, config.initialData, isCampaignTypes]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -1120,7 +1135,11 @@ export default function TypeConfigurationPage({
     if (!confirmed) return;
 
     try {
-      configurationDataService.deleteItem(config.configType, item.id);
+      if (isCampaignTypes && backendConfig) {
+        await backendConfig.delete(item.id);
+      } else {
+        configurationDataService.deleteItem(config.configType, item.id);
+      }
       showToast(
         config.deleteConfirmTitle,
         config.deleteSuccessMessage(item.name),
@@ -1143,16 +1162,26 @@ export default function TypeConfigurationPage({
   }) => {
     try {
       setIsSaving(true);
-      if (editingItem) {
-        configurationDataService.updateItem(
-          config.configType,
-          editingItem.id,
-          itemData,
-        );
-        showToast(config.updateSuccessMessage);
+      if (isCampaignTypes && backendConfig) {
+        if (editingItem) {
+          await backendConfig.update(editingItem.id, itemData);
+          showToast(config.updateSuccessMessage);
+        } else {
+          await backendConfig.create(itemData);
+          showToast(config.createSuccessMessage);
+        }
       } else {
-        configurationDataService.addItem(config.configType, itemData);
-        showToast(config.createSuccessMessage);
+        if (editingItem) {
+          configurationDataService.updateItem(
+            config.configType,
+            editingItem.id,
+            itemData,
+          );
+          showToast(config.updateSuccessMessage);
+        } else {
+          configurationDataService.addItem(config.configType, itemData);
+          showToast(config.createSuccessMessage);
+        }
       }
       setIsModalOpen(false);
       setEditingItem(undefined);
@@ -1218,18 +1247,23 @@ export default function TypeConfigurationPage({
         {filteredItems.length === 0 ? (
           <div className="text-center py-12">
             <IconComponent className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className={`text-lg font-medium ${tw.textPrimary} mb-2`}>
-              {searchTerm
-                ? `No ${config.entityNamePlural} Found`
-                : `No ${config.entityNamePlural}`}
-            </h3>
-            <p className={`${tw.textMuted} mb-6`}>
-              {searchTerm
-                ? "Try adjusting your search terms."
-                : `Create your first ${config.entityName} to get started.`}
-            </p>
+            {searchTerm && (
+              <p className={`${tw.textMuted} mb-6`}>
+                No {config.entityNamePlural} found. Try adjusting your search terms.
+              </p>
+            )}
             {!searchTerm && !config.disableCreate && (
-              <CreateButton onClick={handleCreateItem} className="mx-auto" />
+              <>
+                <p className={`${tw.textMuted} mb-6`}>
+                  Create your first {config.entityName} to get started.
+                </p>
+                <CreateButton onClick={handleCreateItem} className="mx-auto" />
+              </>
+            )}
+            {!searchTerm && config.disableCreate && (
+              <p className={`${tw.textMuted} mb-6`}>
+                No {config.entityNamePlural} available.
+              </p>
             )}
           </div>
         ) : (

@@ -170,21 +170,12 @@ export default function EditSegmentPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton
-            fallbackTo="/dashboard/segments"
-            onClick={handleCancel}
-            className={`${tw.textMuted} hover:bg-gray-100`}
-          />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              Edit Segment
-            </h1>
-            <p className={`${tw.textSecondary} mt-1`}>
-              Update segment information and settings
-            </p>
-          </div>
-        </div>
+        <BackButton
+          fallbackTo="/dashboard/segments"
+          onClick={handleCancel}
+          showBreadcrumb={true}
+          currentLabel="Edit Segment"
+        />
 
         <div className="flex items-center space-x-3">
           <button

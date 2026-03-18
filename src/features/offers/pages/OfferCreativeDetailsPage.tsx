@@ -175,12 +175,9 @@ export default function OfferCreativeDetailsPage() {
           <BackButton
             fallbackTo={`/dashboard/offers/${creative?.offer_id || ""}`}
             onClick={handleBack}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-black"
-            iconSize="h-4 w-4"
+            showBreadcrumb={true}
+            currentLabel="Creative Details"
           />
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {creative.title || "Creative"}
-          </h1>
           <div className="flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm font-semibold">
               {creative.channel}

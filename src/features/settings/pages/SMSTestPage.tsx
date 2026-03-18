@@ -65,15 +65,7 @@ export default function SMSTestPage() {
     <div>
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <BackButton fallbackTo="/dashboard/manual-actions" />
-          <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>SMS Test Tool</h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Test the SMS endpoint by sending a test message to a phone number
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/manual-actions" showBreadcrumb={true} currentLabel="SMS Test Tool" />
 
         <div>
           {/* Main Form */}

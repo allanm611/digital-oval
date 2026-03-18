@@ -1571,13 +1571,6 @@ export default function CreateCampaignPage() {
                 fallbackTo="/dashboard/campaigns"
                 className="text-gray-400 hover:text-gray-600"
               />
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {isEditMode
-                  ? "Edit Campaign"
-                  : isDuplicateMode
-                    ? "Duplicate Campaign"
-                    : "Create Campaign"}
-              </h1>
             </div>
             {currentStep !== 5 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">

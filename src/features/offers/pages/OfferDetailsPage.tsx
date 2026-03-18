@@ -1589,20 +1589,13 @@ export default function OfferDetailsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton
-            fallbackTo="/dashboard/offers"
-            onClick={handleBack}
-            className="text-gray-400 hover:text-gray-600"
-          />
-          <div>
-            <h1 className={tw.mainHeading}>{t.pages.offerDetails}</h1>
-            <p className={`${tw.textSecondary} mt-1`}>
-              View and manage offer information
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-3">
+        <BackButton
+          fallbackTo="/dashboard/offers"
+          onClick={handleBack}
+          showBreadcrumb={true}
+          currentLabel="Offer Details"
+        />
+        <div className="flex flex-wrap items-center gap-2">
           {/* Draft: Submit for Approval */}
           {isDraft && (
             <button

@@ -418,9 +418,9 @@ export default function ServerDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/servers" />
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton fallbackTo="/dashboard/servers" showBreadcrumb={true} currentLabel="Server Details" />
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleActivationToggle}
             disabled={isActivationLoading}

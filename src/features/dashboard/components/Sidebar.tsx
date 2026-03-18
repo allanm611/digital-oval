@@ -126,6 +126,8 @@ const SIDEBAR_ROUTE_PRELOADERS: Record<string, () => Promise<unknown>> = {
     import("../../campaigns/pages/CampaignCategoriesPage"),
   "/dashboard/campaign-types": () =>
     import("../../campaigns/pages/CampaignTypesPage"),
+  "/dashboard/campaign-broadcasts": () =>
+    import("../../campaigns/pages/CampaignBroadcastsPage"),
   "/dashboard/offers": () => import("../../offers/pages/OffersPageWrapper"),
   "/dashboard/offer-types": () => import("../../offers/pages/OfferTypesPage"),
   "/dashboard/offer-catalogs": () =>
@@ -325,10 +327,17 @@ export default function Sidebar({
             type: "single",
             entity: "campaigns",
           },
+          // {
+          //   name: t.sidebar.navigation.programs,
+          //   href: "/dashboard/programs",
+          //   icon: GitBranch,
+          //   type: "single",
+          //   entity: "campaigns",
+          // },
           {
-            name: t.sidebar.navigation.programs,
-            href: "/dashboard/programs",
-            icon: GitBranch,
+            name: "Campaign Broadcasts",
+            href: "/dashboard/campaign-broadcasts",
+            icon: Send,
             type: "single",
             entity: "campaigns",
           },

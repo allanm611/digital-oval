@@ -108,7 +108,7 @@ export default function BackButton({
           <ArrowLeft className={iconSize || "w-5 h-5"} />
         </button>
 
-        <ol className="flex items-center gap-1 text-xs sm:text-sm flex-wrap">
+        <ol className="flex items-center gap-1 text-sm sm:text-base flex-wrap">
           <li>
             <button
               type="button"

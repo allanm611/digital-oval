@@ -353,17 +353,7 @@ export default function EtlAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-        <BackButton fallbackTo="/dashboard/etl" className="self-start" />
-        <div className="sm:ml-2">
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            {t.etl.analytics}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            ETL file processing statistics and metrics
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/etl" showBreadcrumb={true} currentLabel="ETL Analytics" />
 
       {/* Summary Cards */}
       {(() => {

@@ -838,7 +838,7 @@ export default function CampaignDetailsPage() {
           </p>
           <button
             onClick={handleBack}
-            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-base text-white`}
+            className={`px-4 py-2 ${tw.rounded} font-semibold flex items-center gap-2 mx-auto text-sm text-white`}
             style={{ backgroundColor: color.primary.action }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -851,16 +851,8 @@ export default function CampaignDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {t.pages.campaignDetails}
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            View and manage campaign information
-          </p>
-        </div>
+        <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} showBreadcrumb={true} currentLabel="Campaign Details" />
         <div className="flex flex-wrap items-center gap-2">
           {/* Step 1: Request Approval (draft status) */}
           {campaign.status === "draft" && (
@@ -924,7 +916,7 @@ export default function CampaignDetailsPage() {
                   style={{ backgroundColor: color.primary.action }}
                 >
                   <Play className="w-4 h-4" />
-                  Execute Campaign
+                  Run Now
                 </button>
               </PermissionGate>
             )}
@@ -1139,7 +1131,7 @@ export default function CampaignDetailsPage() {
         className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
         style={{ borderColor: color.border.default }}
       >
-        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+        <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
           Campaign Information
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1147,13 +1139,13 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Name
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{campaign.name}</p>
+            <p className={`text-sm ${tw.textPrimary}`}>{campaign.name}</p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Code
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>{campaign.code}</p>
+            <p className={`text-sm ${tw.textPrimary}`}>{campaign.code}</p>
           </div>
           <div>
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
@@ -1167,7 +1159,7 @@ export default function CampaignDetailsPage() {
                   ).replace(/text-\S+/, "")}`}
                   style={{
                     backgroundColor:
-                      campaign.status === "active"
+                      campaign.status === "active" || campaign.status === "approved"
                         ? "#10B981"
                         : campaign.status === "draft"
                           ? "#6B7280"
@@ -1179,6 +1171,13 @@ export default function CampaignDetailsPage() {
                   {campaign.status?.replace(/_/g, " ")}
                 </span>
               )}
+            </div>
+          </div>
+          <div>
+            <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
+              Approval Status
+            </label>
+            <div className="flex items-center flex-wrap gap-2">
               {campaign.approval_status && (
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white`}
@@ -1191,9 +1190,6 @@ export default function CampaignDetailsPage() {
                           : "#F59E0B",
                   }}
                 >
-                  {campaign.approval_status === "approved" && (
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                  )}
                   {campaign.approval_status === "rejected" && (
                     <XCircle className="w-3 h-3 mr-1" />
                   )}
@@ -1209,7 +1205,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Category
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {categoryName || "—"}
             </p>
           </div>
@@ -1217,7 +1213,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Objective
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {formatObjective(campaign.objective)}
             </p>
           </div>
@@ -1245,7 +1241,7 @@ export default function CampaignDetailsPage() {
                   );
                 })
               ) : (
-                <p className={`text-base ${tw.textPrimary}`}>—</p>
+                <p className={`text-sm ${tw.textPrimary}`}>—</p>
               )}
             </div>
           </div>
@@ -1253,7 +1249,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Program ID
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {campaign.program_id}
             </p>
           </div>
@@ -1279,7 +1275,7 @@ export default function CampaignDetailsPage() {
               >
                 Start Date
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.start_date ? (
                   <DateFormatter
                     date={campaign.start_date}
@@ -1299,7 +1295,7 @@ export default function CampaignDetailsPage() {
               >
                 End Date
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.end_date ? (
                   <DateFormatter
                     date={campaign.end_date}
@@ -1319,7 +1315,7 @@ export default function CampaignDetailsPage() {
               >
                 Timezone
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.timezone}
               </p>
             </div>
@@ -1343,7 +1339,7 @@ export default function CampaignDetailsPage() {
               >
                 Max Participants
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.max_participants ?? "—"}
               </p>
             </div>
@@ -1353,7 +1349,7 @@ export default function CampaignDetailsPage() {
               >
                 Current Participants
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.current_participants ?? "—"}
               </p>
             </div>
@@ -1363,7 +1359,7 @@ export default function CampaignDetailsPage() {
               >
                 Target Reach
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.target_reach ?? "—"}
               </p>
             </div>
@@ -1373,7 +1369,7 @@ export default function CampaignDetailsPage() {
               >
                 Target Conversion Rate
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.target_conversion_rate
                   ? `${campaign.target_conversion_rate}%`
                   : "—"}
@@ -1385,7 +1381,7 @@ export default function CampaignDetailsPage() {
               >
                 Target Revenue
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.target_revenue ? (
                   <CurrencyFormatter
                     amount={parseFloat(String(campaign.target_revenue))}
@@ -1401,7 +1397,7 @@ export default function CampaignDetailsPage() {
               >
                 Control Group Enabled
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.control_group_enabled ? "Yes" : "No"}
               </p>
             </div>
@@ -1411,7 +1407,7 @@ export default function CampaignDetailsPage() {
               >
                 Control Group Percentage
               </label>
-              <p className={`text-base ${tw.textPrimary}`}>
+              <p className={`text-sm ${tw.textPrimary}`}>
                 {campaign.control_group_percentage
                   ? `${campaign.control_group_percentage}%`
                   : "—"}
@@ -1423,7 +1419,7 @@ export default function CampaignDetailsPage() {
               >
                 Control Group UUID
               </label>
-              <p className={`text-base ${tw.textPrimary} break-all text-sm`}>
+              <p className={`text-sm ${tw.textPrimary} break-all text-sm`}>
                 {campaign.campaign_uuid}
               </p>
             </div>
@@ -1436,7 +1432,7 @@ export default function CampaignDetailsPage() {
         className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
         style={{ borderColor: color.border.default }}
       >
-        <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+        <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
           Audit Trail
         </h3>
 
@@ -1445,8 +1441,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Created Date
             </label>
-            <p className={`text-base ${tw.textPrimary} flex items-center`}>
-              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+            <p className={`text-sm ${tw.textPrimary}`}>
               <DateFormatter
                 date={campaign.created_at}
                 useLocale
@@ -1460,7 +1455,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Created By
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {createdByName || "—"}
             </p>
           </div>
@@ -1468,8 +1463,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Updated Date
             </label>
-            <p className={`text-base ${tw.textPrimary} flex items-center`}>
-              <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+            <p className={`text-sm ${tw.textPrimary}`}>
               <DateFormatter
                 date={campaign.updated_at}
                 useLocale
@@ -1483,7 +1477,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Updated By
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {updatedByName || "—"}
             </p>
           </div>
@@ -1491,7 +1485,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Approved Date
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {campaign.approved_at ? (
                 <DateFormatter
                   date={campaign.approved_at}
@@ -1509,7 +1503,7 @@ export default function CampaignDetailsPage() {
             <label className={`text-sm font-medium ${tw.textMuted} block mb-1`}>
               Approved By
             </label>
-            <p className={`text-base ${tw.textPrimary}`}>
+            <p className={`text-sm ${tw.textPrimary}`}>
               {approvedByName || "—"}
             </p>
           </div>
@@ -1562,7 +1556,7 @@ export default function CampaignDetailsPage() {
                 )}
               </div>
             </div>
-            <p className={`${tw.textSecondary} mb-2 text-base leading-relaxed`}>
+            <p className={`${tw.textSecondary} mb-2 text-sm leading-relaxed`}>
               {campaign.description || "—"}
             </p>
             {/* Rejection Reason Display */}
@@ -1605,7 +1599,7 @@ export default function CampaignDetailsPage() {
                   >
                     Campaign ID
                   </label>
-                  <p className={`text-base ${tw.textPrimary} font-mono`}>
+                  <p className={`text-sm ${tw.textPrimary} font-mono`}>
                     {campaign.id}
                   </p>
                 </div>
@@ -1615,7 +1609,7 @@ export default function CampaignDetailsPage() {
                   >
                     Objective
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {formatObjective(campaign.objective)}
                   </p>
                 </div>
@@ -1625,7 +1619,7 @@ export default function CampaignDetailsPage() {
                   >
                     Category
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {categoryName}
                   </p>
                 </div>
@@ -1635,7 +1629,7 @@ export default function CampaignDetailsPage() {
                   >
                     Campaign Manager
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.campaign_manager_id || "—"}
                   </p>
                 </div>
@@ -1659,7 +1653,7 @@ export default function CampaignDetailsPage() {
                   >
                     Start Date
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.start_date ? (
                       <DateFormatter
                         date={campaign.start_date}
@@ -1679,7 +1673,7 @@ export default function CampaignDetailsPage() {
                   >
                     End Date
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.end_date ? (
                       <DateFormatter
                         date={campaign.end_date}
@@ -1699,7 +1693,7 @@ export default function CampaignDetailsPage() {
                   >
                     Timezone
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.timezone}
                   </p>
                 </div>
@@ -1723,7 +1717,7 @@ export default function CampaignDetailsPage() {
                   >
                     Max Participants
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.max_participants ?? "—"}
                   </p>
                 </div>
@@ -1733,7 +1727,7 @@ export default function CampaignDetailsPage() {
                   >
                     Current Participants
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.current_participants ?? "—"}
                   </p>
                 </div>
@@ -1743,7 +1737,7 @@ export default function CampaignDetailsPage() {
                   >
                     Target Reach
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.target_reach ?? "—"}
                   </p>
                 </div>
@@ -1753,7 +1747,7 @@ export default function CampaignDetailsPage() {
                   >
                     Target Conversion Rate
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.target_conversion_rate
                       ? `${campaign.target_conversion_rate}%`
                       : "—"}
@@ -1765,7 +1759,7 @@ export default function CampaignDetailsPage() {
                   >
                     Target Revenue
                   </label>
-                  <p className={`text-base ${tw.textPrimary}`}>
+                  <p className={`text-sm ${tw.textPrimary}`}>
                     {campaign.target_revenue ? (
                       <CurrencyFormatter
                         amount={parseFloat(String(campaign.target_revenue))}
@@ -1823,7 +1817,7 @@ export default function CampaignDetailsPage() {
       {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
-            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+            className={`text-base font-semibold ${tw.textPrimary} flex items-center gap-2`}
           >
             <Users className="w-5 h-5" />
             Campaign Segments ({segments.length})
@@ -1904,7 +1898,7 @@ export default function CampaignDetailsPage() {
                             },
                           )
                         }
-                        className={`font-semibold text-base ${tw.textPrimary} truncate`}
+                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={segment.segment_name}
                         style={{ color: color.primary.accent }}
                       >
@@ -1929,7 +1923,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary}`}
+                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {segment.segment_type}
@@ -1974,7 +1968,7 @@ export default function CampaignDetailsPage() {
       {/* <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3
-            className={`text-lg font-semibold ${tw.textPrimary} flex items-center gap-2`}
+            className={`text-base font-semibold ${tw.textPrimary} flex items-center gap-2`}
           >
             <Package className="w-5 h-5" />
             Campaign Offers ({offers.length})
@@ -2052,7 +2046,7 @@ export default function CampaignDetailsPage() {
                             },
                           })
                         }
-                        className={`font-semibold text-base ${tw.textPrimary} truncate`}
+                        className={`font-semibold text-sm ${tw.textPrimary} truncate`}
                         title={offer.name}
                         style={{ color: color.primary.accent }}
                       >
@@ -2077,7 +2071,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 text-base ${tw.textPrimary}`}
+                      className={`px-6 py-4 text-sm ${tw.textPrimary}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.code || "—"}
@@ -2105,7 +2099,7 @@ export default function CampaignDetailsPage() {
                       )}
                     </td>
                     <td
-                      className={`px-6 py-4 hidden md:table-cell text-base ${tw.textMuted}`}
+                      className={`px-6 py-4 hidden md:table-cell text-sm ${tw.textMuted}`}
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
                       {offer.offer_type || "—"}
@@ -2134,7 +2128,7 @@ export default function CampaignDetailsPage() {
                   <XCircle className="w-6 h-6 text-red-600" />
                 </div>
                 <div>
-                  <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                  <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
                     Reject Campaign
                   </h3>
                   <p className={`text-sm ${tw.textMuted}`}>
@@ -2192,7 +2186,7 @@ export default function CampaignDetailsPage() {
           className={`bg-white ${tw.rounded} border p-6 shadow-sm mb-6`}
           style={{ borderColor: color.border.default }}
         >
-          <h3 className={`text-lg font-semibold ${tw.textPrimary} mb-4`}>
+          <h3 className={`text-base font-semibold ${tw.textPrimary} mb-4`}>
             Budget Utilization
           </h3>
           {isLoadingBudgetUtil ? (
@@ -2264,8 +2258,8 @@ export default function CampaignDetailsPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
-            <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
-              Segment-Offer Mappings
+            <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
+              Offers by Segment
             </h3>
           </div>
         </div>
@@ -2492,7 +2486,7 @@ export default function CampaignDetailsPage() {
               className={`relative bg-white ${tw.rounded} shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto`}
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className={`text-lg font-semibold ${tw.textPrimary}`}>
+                <h3 className={`text-base font-semibold ${tw.textPrimary}`}>
                   Edit Campaign Flow
                 </h3>
                 <button

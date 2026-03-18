@@ -1056,15 +1056,9 @@ export default function SegmentDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <BackButton fallbackTo="/dashboard/segments" onClick={handleBack} />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-            {segment.name}
-          </h1>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <BackButton fallbackTo="/dashboard/segments" onClick={handleBack} showBreadcrumb={true} currentLabel="Segment Details" />
+        <div className="flex flex-wrap items-center gap-2">
           <PermissionGate permission="segments.update">
             <button
               onClick={handleEdit}

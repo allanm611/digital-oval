@@ -547,21 +547,7 @@ export default function CreateScheduledJobPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/scheduled-jobs" />
-          <div>
-            <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-              {isEditMode ? "Edit Scheduled Job" : "Create Scheduled Job"}
-            </h1>
-            <p className={`${tw.textSecondary} mt-1 text-sm`}>
-              {isEditMode
-                ? "Update scheduled job configuration"
-                : "Configure a new scheduled job"}
-            </p>
-          </div>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/scheduled-jobs" showBreadcrumb={true} currentLabel={isEditMode ? "Edit Scheduled Job" : "Create Scheduled Job"} />
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">

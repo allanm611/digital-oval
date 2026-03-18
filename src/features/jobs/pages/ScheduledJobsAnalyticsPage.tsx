@@ -340,17 +340,7 @@ export default function ScheduledJobsAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <BackButton fallbackTo="/dashboard/scheduled-jobs" />
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Scheduled Jobs Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Insights and metrics for scheduled jobs performance
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/scheduled-jobs" showBreadcrumb={true} currentLabel="Scheduled Jobs Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

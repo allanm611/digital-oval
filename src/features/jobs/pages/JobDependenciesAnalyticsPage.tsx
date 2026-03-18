@@ -238,17 +238,7 @@ export default function JobDependenciesAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 sm:gap-4">
-        <BackButton fallbackTo="/dashboard/job-dependencies" />
-        <div>
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Job Dependencies Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Visual insights into job dependency relationships and patterns
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/job-dependencies" showBreadcrumb={true} currentLabel="Job Dependencies Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

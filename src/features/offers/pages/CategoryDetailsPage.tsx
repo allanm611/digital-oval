@@ -277,17 +277,7 @@ export default function CategoryDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
-          <BackButton fallbackTo="/dashboard/offer-catalogs" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-              {category.name}
-            </h1>
-            {category.description && (
-              <p className="text-sm sm:text-base text-gray-600 mt-1 line-clamp-2">
-                {category.description}
-              </p>
-            )}
-          </div>
+          <BackButton fallbackTo="/dashboard/offer-catalogs" showBreadcrumb={true} currentLabel="Category Details" />
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button

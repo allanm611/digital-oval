@@ -107,6 +107,18 @@ const CampaignPages = {
         /* webpackPrefetch: true */ "../../campaigns/pages/SeedListManagementPage"
       ),
   ),
+  CampaignBroadcastsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CampaignBroadcastsPage"
+      ),
+  ),
+  CampaignBroadcastDetailsPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../campaigns/pages/CampaignBroadcastDetailsPage"
+      ),
+  ),
 };
 
 // Offer Pages - All routes preloaded for instant access
@@ -204,7 +216,7 @@ const ProductPages = {
   ControlGroupsPage: lazy(
     () =>
       import(
-        /* webpackPrefetch: true */ "../../products/pages/ControlGroupsPage"
+        /* webpackPrefetch: true */ "../../control-groups/pages/ControlGroupsPage"
       ),
   ),
 };
@@ -679,6 +691,14 @@ export default function Dashboard() {
           <Route
             path="/programs/:id"
             element={<CampaignPages.ProgramDetailsPage />}
+          />
+          <Route
+            path="/campaign-broadcasts"
+            element={<CampaignPages.CampaignBroadcastsPage />}
+          />
+          <Route
+            path="/campaign-broadcasts/:broadcastId"
+            element={<CampaignPages.CampaignBroadcastDetailsPage />}
           />
           <Route
             path="/campaign-communication-policy"

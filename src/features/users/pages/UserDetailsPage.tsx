@@ -258,23 +258,13 @@ export default function UserDetailsPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <BackButton
-            fallbackTo="/dashboard/user-management"
-            onClick={navigateBack}
-          />
-          <div>
-            <h1
-              className={`${tw.mainHeading} ${tw.textPrimary} md:text-lg text-base`}
-            >
-              {user.display_name || `${user.first_name} ${user.last_name}`}
-            </h1>
-            <p className={`${tw.textSecondary} text-sm mt-1`}>
-              {user.email_address || user.email}
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <BackButton
+          fallbackTo="/dashboard/user-management"
+          onClick={navigateBack}
+          showBreadcrumb={true}
+          currentLabel="User Details"
+        />
         <div
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
           style={{
