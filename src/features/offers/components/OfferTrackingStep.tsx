@@ -248,25 +248,22 @@ export default function OfferTrackingStep({
             Set up how you'll track customer engagement and measure offer
             performance
           </p>
-          <div className="max-w-sm">
-            <HeadlessSelect
-              options={[
-                { value: "", label: "Select a tracking source..." },
-                ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
-                  value: source.id,
-                  label: source.name,
-                })),
-              ]}
-              value=""
-              onChange={(value) => {
-                if (value) {
-                  addTrackingSource(value);
-                }
-              }}
-              placeholder="Select a tracking source..."
-              className="w-full"
-            />
-          </div>
+          <button
+            onClick={() => addTrackingSource(PRE_CREATED_TRACKING_SOURCES[0].id)}
+            className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-colors`}
+            style={{ backgroundColor: color.primary.action }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor =
+                color.primary.hover;
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor =
+                color.primary.action;
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Tracking Source
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -274,9 +271,29 @@ export default function OfferTrackingStep({
           <div className="lg:col-span-1">
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
               <div className="mb-4">
-                <h3 className="font-semibold text-gray-900 mb-3">
-                  Source Name
-                </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-sm text-gray-900">
+                    Source Name
+                  </h3>
+                  <button
+                    onClick={() => addTrackingSource(PRE_CREATED_TRACKING_SOURCES[0].id)}
+                    className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors`}
+                    style={{ backgroundColor: color.primary.action }}
+                    onMouseEnter={(e) => {
+                      (
+                        e.target as HTMLButtonElement
+                      ).style.backgroundColor = color.primary.hover;
+                    }}
+                    onMouseLeave={(e) => {
+                      (
+                        e.target as HTMLButtonElement
+                      ).style.backgroundColor = color.primary.action;
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add
+                  </button>
+                </div>
                 <HeadlessSelect
                   options={[
                     { value: "", label: "Select a tracking source..." },
@@ -292,7 +309,7 @@ export default function OfferTrackingStep({
                     }
                   }}
                   placeholder="Select a tracking source..."
-                  className="w-full"
+                  className="w-full text-sm"
                 />
               </div>
 
@@ -324,7 +341,7 @@ export default function OfferTrackingStep({
                           <div className="font-medium text-sm text-gray-900">
                             {source.name}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-sm text-gray-500">
                             {
                               TRACKING_TYPES.find(
                                 (t) => t.value === source.type
@@ -343,7 +360,7 @@ export default function OfferTrackingStep({
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="mt-2 text-xs text-gray-600">
+                    <div className="mt-2 text-sm text-gray-600">
                       {source.rules.length} rule
                       {source.rules.length !== 1 ? "s" : ""}
                     </div>
@@ -372,7 +389,7 @@ export default function OfferTrackingStep({
                             name: e.target.value,
                           })
                         }
-                        className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                        className={`w-full px-4 py-3 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                       />
                     </div>
 
@@ -395,6 +412,7 @@ export default function OfferTrackingStep({
                           })
                         }
                         placeholder="Select tracking type"
+                        className="w-full text-sm"
                       />
                     </div>
                   </div>
@@ -422,7 +440,7 @@ export default function OfferTrackingStep({
                   {/* Rules Section */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-sm text-gray-900">
                         Tracking Rules
                       </h4>
                       <button
@@ -572,7 +590,7 @@ export default function OfferTrackingStep({
                     onChange={(e) =>
                       setEditingRule({ ...editingRule, name: e.target.value })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -590,7 +608,7 @@ export default function OfferTrackingStep({
                         priority: parseInt(e.target.value) || 1,
                       })
                     }
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
@@ -611,6 +629,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select parameter"
+                    className="w-full text-sm"
                     zIndex={zIndex.popover}
                   />
                 </div>
@@ -637,6 +656,7 @@ export default function OfferTrackingStep({
                       })
                     }
                     placeholder="Select condition"
+                    className="w-full text-sm"
                     zIndex={zIndex.popover}
                   />
                 </div>
@@ -652,7 +672,7 @@ export default function OfferTrackingStep({
                       setEditingRule({ ...editingRule, value: e.target.value })
                     }
                     placeholder="Enter value..."
-                    className={`w-full px-3 py-2 border border-gray-300 ${tw.rounded} focus:outline-none`}
+                    className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none`}
                   />
                 </div>
 
