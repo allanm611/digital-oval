@@ -281,22 +281,28 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [originalSettings] = useState<SettingsType>(loadSettings());
 
-  // Notification channel preferences: { notificationType: [channels] }
-  const [notificationPreferences, setNotificationPreferences] = useState<
-    Record<string, string[]>
+  // Notification types enabled/disabled
+  const [enabledNotificationTypes, setEnabledNotificationTypes] = useState<
+    Set<string>
   >(() => {
-    const stored = localStorage.getItem("notificationPreferences");
+    const stored = localStorage.getItem("enabledNotificationTypes");
     if (stored) {
-      return JSON.parse(stored);
+      return new Set(JSON.parse(stored));
     }
-    // Default: all types send to all channels
-    return Object.fromEntries(
-      notificationTypes.map((type) => [
-        type.id,
-        notificationChannels.map((ch) => ch.id),
-      ])
-    );
+    // Default: all types enabled
+    return new Set(notificationTypes.map((type) => type.id));
   });
+
+  // Preferred channels for notifications
+  const [preferredNotificationChannels, setPreferredNotificationChannels] =
+    useState<string[]>(() => {
+      const stored = localStorage.getItem("preferredNotificationChannels");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Default: SMS and Email
+      return ["sms", "email"];
+    });
 
   // Cross-tab synchronization: Listen for localStorage changes from other tabs
   useEffect(() => {
@@ -399,8 +405,12 @@ export default function SettingsPage() {
       // Save to localStorage
       localStorage.setItem("appSettings", JSON.stringify(settings));
       localStorage.setItem(
-        "notificationPreferences",
-        JSON.stringify(notificationPreferences)
+        "enabledNotificationTypes",
+        JSON.stringify(Array.from(enabledNotificationTypes))
+      );
+      localStorage.setItem(
+        "preferredNotificationChannels",
+        JSON.stringify(preferredNotificationChannels)
       );
       // Update language if it changed
       setLanguageSettings(settings.language);
@@ -514,7 +524,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.location}
             </h2>
@@ -565,7 +575,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Localization
             </h2>
@@ -612,7 +622,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.dateFormat}
             </h2>
@@ -649,7 +659,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               {t.settings.currency} & Formatting
             </h2>
@@ -731,7 +741,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Character Sets
             </h2>
@@ -770,7 +780,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Communication Channel
             </h2>
@@ -805,7 +815,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Sender ID
             </h2>
@@ -837,7 +847,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Default Route
             </h2>
@@ -869,7 +879,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Do Not Disturb (DND) Settings
             </h2>
@@ -976,7 +986,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Notifications
             </h2>
@@ -985,98 +995,120 @@ export default function SettingsPage() {
             </p>
           </div>
 
-          {/* Notification Sounds */}
-          <div className="p-4 -mt-4 hover:bg-gray-50 transition-colors rounded-lg">
-            <label className="block text-sm font-semibold text-gray-900">
-              Notification Sound
-            </label>
-            <p className="text-xs text-gray-500 mb-3">
-              Select the sound to play for notifications
-            </p>
-            <HeadlessSelect
-              options={notificationSounds}
-              value={settings.notificationSound || "notification"}
-              onChange={(value) =>
-                setSettings({
-                  ...settings,
-                  notificationSound: value,
-                })
-              }
-              placeholder="Select a sound"
-              className="w-full md:w-64"
-            />
+          {/* Notification Sound and Preferred Channels */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Notification Sound
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Select the sound to play
+              </p>
+              <HeadlessSelect
+                options={notificationSounds}
+                value={settings.notificationSound || "notification"}
+                onChange={(value) =>
+                  setSettings({
+                    ...settings,
+                    notificationSound: value,
+                  })
+                }
+                placeholder="Select a sound"
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Preferred Channels
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Select channels for all notifications
+              </p>
+              <HeadlessSelect
+                options={notificationChannels.map((ch) => ({
+                  value: ch.id,
+                  label: ch.label,
+                }))}
+                value={preferredNotificationChannels[0] || ""}
+                onChange={(value) => {
+                  if (!preferredNotificationChannels.includes(value)) {
+                    setPreferredNotificationChannels([
+                      ...preferredNotificationChannels,
+                      value,
+                    ]);
+                  } else {
+                    setPreferredNotificationChannels(
+                      preferredNotificationChannels.filter((c) => c !== value)
+                    );
+                  }
+                }}
+                placeholder="Select channels..."
+                className="w-full"
+              />
+              {preferredNotificationChannels.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {preferredNotificationChannels.map((ch) => (
+                    <span
+                      key={ch}
+                      className="inline-flex items-center gap-1 px-2 py-1 text-white text-xs rounded-full"
+                      style={{ backgroundColor: "#00BBCC" }}
+                    >
+                      {notificationChannels.find((c) => c.id === ch)?.label}
+                      <button
+                        onClick={() => {
+                          setPreferredNotificationChannels(
+                            preferredNotificationChannels.filter(
+                              (c) => c !== ch
+                            )
+                          );
+                        }}
+                        className="font-bold hover:opacity-80"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Notification Types & Channels
+          {/* Notification Types */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">
+              Notification Types
             </h3>
-            <p className="text-xs text-gray-500 mb-6">
-              Select which channels to use for each notification type
-            </p>
-
-            {/* Notification Channel Preference Matrix */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left font-semibold text-gray-900 py-3 px-3 w-32">
-                      Type
-                    </th>
-                    {notificationChannels.map((channel) => (
-                      <th
-                        key={channel.id}
-                        className="text-center font-semibold text-gray-900 py-3 px-2"
-                      >
-                        <span className="text-xs">{channel.label}</span>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {notificationTypes.map((type) => (
-                    <tr
-                      key={type.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-3">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {type.label}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {type.description}
-                          </p>
-                        </div>
-                      </td>
-                      {notificationChannels.map((channel) => (
-                        <td key={channel.id} className="text-center py-3 px-2">
-                          <input
-                            type="checkbox"
-                            checked={
-                              notificationPreferences[type.id]?.includes(
-                                channel.id
-                              ) || false
-                            }
-                            onChange={(e) => {
-                              const currentChannels =
-                                notificationPreferences[type.id] || [];
-                              const updatedChannels = e.target.checked
-                                ? [...currentChannels, channel.id]
-                                : currentChannels.filter((c) => c !== channel.id);
-                              setNotificationPreferences({
-                                ...notificationPreferences,
-                                [type.id]: updatedChannels,
-                              });
-                            }}
-                            className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-offset-0 cursor-pointer"
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {notificationTypes.map((type) => (
+                <label
+                  key={type.id}
+                  className="flex items-start gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={enabledNotificationTypes.has(type.id)}
+                    onChange={(e) => {
+                      const updated = new Set(enabledNotificationTypes);
+                      if (e.target.checked) {
+                        updated.add(type.id);
+                      } else {
+                        updated.delete(type.id);
+                      }
+                      setEnabledNotificationTypes(updated);
+                    }}
+                    className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-2 mt-1"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">
+                      {type.label}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {type.description}
+                    </p>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
         </div>
@@ -1085,7 +1117,7 @@ export default function SettingsPage() {
         <div
           className={`bg-white ${tw.rounded} border border-gray-200 p-5 sm:p-6 lg:p-8 lg:col-span-2`}
         >
-          <div className="mb-6 pb-4 border-b border-gray-100">
+          <div className="mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Display Theme
             </h2>
