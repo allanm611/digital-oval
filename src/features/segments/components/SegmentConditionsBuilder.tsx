@@ -23,6 +23,7 @@ import { getOperatorsForFieldType } from "../../../shared/utils/operatorMapper";
 import SegmentPickerModal from "./SegmentPickerModal";
 import QuickListPickerModal from "./QuickListPickerModal";
 import SystemEventPickerModal from "./SystemEventPickerModal";
+import FieldPickerModal from "./FieldPickerModal";
 import { quicklistService } from "../../quicklists/services/quicklistService";
 import {
   SYSTEM_EVENTS,
@@ -61,6 +62,11 @@ export default function SegmentConditionsBuilder({
   const [isQuickListModalOpen, setIsQuickListModalOpen] = useState(false);
   const [isSystemEventModalOpen, setIsSystemEventModalOpen] = useState(false);
   const [isKPIModalOpen, setIsKPIModalOpen] = useState(false);
+  const [isFieldPickerModalOpen, setIsFieldPickerModalOpen] = useState(false);
+  const [fieldPickerModalData, setFieldPickerModalData] = useState<{
+    fields: Array<{ value: string; label: string }>;
+    categoryName: string;
+  } | null>(null);
   const [currentKPIModalType, setCurrentKPIModalType] =
     useState<KPIConditionType | null>(null);
   const [currentEditingCondition, setCurrentEditingCondition] = useState<{
@@ -377,66 +383,74 @@ export default function SegmentConditionsBuilder({
     groupId: string,
     condition: SegmentCondition,
   ) => {
+    const getFieldOptions = () => {
+      if (
+        condition.category !== undefined &&
+        condition.category !== null
+      ) {
+        const categoryId = condition.category as number;
+        const categoriesArray = Array.isArray(categories)
+          ? categories
+          : [];
+        // Try to find by ID first, then by index
+        let selectedCategory = categoriesArray.find(
+          (c) => c.id === categoryId,
+        );
+        if (!selectedCategory) {
+          selectedCategory = categoriesArray[categoryId - 1];
+        }
+        const fieldsToShow = selectedCategory?.fields || [];
+        return fieldsToShow.map((field) => ({
+          value: field.field_value || "",
+          label: field.field_name || "Unknown",
+          description: field.field_description || "Unknown",
+          type: field.field_type || "Unknown",
+        }));
+      }
+      const fieldsArray = Array.isArray(allFields) ? allFields : [];
+      const fieldsToShow =
+        fieldsArray.length > 0 ? fieldsArray : SEGMENT_FIELDS;
+      return fieldsToShow.map((field) => ({
+        value: "field_value" in field ? (field.field_value || "") : (field.key || ""),
+        label: "field_name" in field ? (field.field_name || "Unknown") : (field.label || "Unknown"),
+        description: "field_description" in field ? (field.field_description || "Unknown") : "Unknown",
+        type: "field_type" in field ? (field.field_type || "Unknown") : "Unknown",
+      }));
+    };
+
+    const fieldOptions = getFieldOptions();
+    const selectedField = fieldOptions.find((f) => f.value === condition.field);
+
     return (
       <>
-        {/* Field Selection - Filtered by category */}
-        <div className="min-w-[220px] flex-1 max-w-[350px]">
-          <HeadlessSelect
-            options={(() => {
-              if (
-                condition.category !== undefined &&
-                condition.category !== null
-              ) {
-                const categoryId = condition.category as number;
-                const categoriesArray = Array.isArray(categories)
-                  ? categories
-                  : [];
-                // Try to find by ID first, then by index
-                let selectedCategory = categoriesArray.find(
-                  (c) => c.id === categoryId,
-                );
-                if (!selectedCategory) {
-                  selectedCategory = categoriesArray[categoryId - 1];
-                }
-                const fieldsToShow = selectedCategory?.fields || [];
-                return fieldsToShow.map((field) => ({
-                  value: field.field_value,
-                  label: field.field_name,
-                }));
-              }
-              const fieldsArray = Array.isArray(allFields) ? allFields : [];
-              const fieldsToShow =
-                fieldsArray.length > 0 ? fieldsArray : SEGMENT_FIELDS;
-              return fieldsToShow.map((field) => ({
-                value: "field_value" in field ? field.field_value : field.key,
-                label: "field_name" in field ? field.field_name : field.label,
-              }));
-            })()}
-            value={condition.field || ""}
-            onChange={(value) => {
-              const fieldType = getFieldType(value as string);
-              const backendField = getFieldByValue(value as string);
-
-              // Get first operator from backend field's operators array
-              const firstOp = getFirstBackendOperator(backendField);
-
-              updateCondition(groupId, condition.id, {
-                field: value as string,
-                field_name: backendField?.field_name,
-                field_id: backendField?.id,
-                operator: firstOp.label as SegmentCondition["operator"],
-                operator_id: firstOp.id,
-                type: fieldType,
-                value: fieldType === "number" ? 0 : "",
-                start_date: undefined,
-                end_date: undefined,
-              });
-            }}
-            placeholder="Select field"
-            className="text-sm"
-            zIndex={zIndex.popover}
-          />
-        </div>
+        {/* Field Selection - Modal Picker */}
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentEditingCondition({
+              groupId,
+              conditionId: condition.id,
+            });
+            const categoryId = condition.category as number;
+            const categoriesArray = Array.isArray(categories) ? categories : [];
+            let selectedCategory = categoriesArray.find(
+              (c) => c.id === categoryId,
+            );
+            if (!selectedCategory) {
+              selectedCategory = categoriesArray[categoryId - 1];
+            }
+            setFieldPickerModalData({
+              fields: fieldOptions,
+              categoryName: selectedCategory?.name || "Field",
+            });
+            setIsFieldPickerModalOpen(true);
+          }}
+          className={`min-w-[220px] flex-1 max-w-[350px] px-3 py-2 border border-gray-300 ${tw.rounded} text-sm text-left bg-white hover:bg-gray-50 transition-colors`}
+        >
+          <span className={selectedField ? "text-gray-900" : "text-gray-500"}>
+            {selectedField?.label || "Select field"}
+          </span>
+        </button>
 
         {/* Operator Selection - on same line as field (hidden for boolean fields) */}
         {(() => {
@@ -1734,6 +1748,57 @@ export default function SegmentConditionsBuilder({
                     { value: "dou_metrics", label: "DOU Metrics" },
                   ]
                 : undefined
+          }
+        />
+      )}
+
+      {/* Field Picker Modal */}
+      {fieldPickerModalData && (
+        <FieldPickerModal
+          isOpen={isFieldPickerModalOpen}
+          onClose={() => {
+            setIsFieldPickerModalOpen(false);
+            setFieldPickerModalData(null);
+            setCurrentEditingCondition(null);
+          }}
+          onSelect={(value) => {
+            if (currentEditingCondition) {
+              const fieldType = getFieldType(value as string);
+              const backendField = getFieldByValue(value as string);
+
+              // Get first operator from backend field's operators array
+              const firstOp = getFirstBackendOperator(backendField);
+
+              updateCondition(
+                currentEditingCondition.groupId,
+                currentEditingCondition.conditionId,
+                {
+                  field: value as string,
+                  field_name: backendField?.field_name,
+                  field_id: backendField?.id,
+                  operator: firstOp.label as SegmentCondition["operator"],
+                  operator_id: firstOp.id,
+                  type: fieldType,
+                  value: fieldType === "number" ? 0 : "",
+                  start_date: undefined,
+                  end_date: undefined,
+                },
+              );
+            }
+            setIsFieldPickerModalOpen(false);
+            setFieldPickerModalData(null);
+            setCurrentEditingCondition(null);
+          }}
+          fields={fieldPickerModalData.fields}
+          categoryName={fieldPickerModalData.categoryName}
+          selectedValue={
+            currentEditingCondition
+              ? conditions
+                  .find((g) => g.id === currentEditingCondition.groupId)
+                  ?.conditions.find(
+                    (c) => c.id === currentEditingCondition.conditionId,
+                  )?.field
+              : undefined
           }
         />
       )}
