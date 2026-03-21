@@ -139,9 +139,25 @@ export default function OfferTrackingStep({
 
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
-  const addTrackingSource = (preCreatedId: string) => {
+  const addTrackingSource = (sourceId: string) => {
+    // If "custom" is selected, create an empty source
+    if (sourceId === "custom") {
+      const newSource: TrackingSource = {
+        id: generateId(),
+        name: "",
+        type: "" as any,
+        enabled: true,
+        rules: [],
+      };
+      const updatedSources = [...trackingSources, newSource];
+      onTrackingSourcesChange(updatedSources);
+      setSelectedSource(newSource.id);
+      return;
+    }
+
+    // Otherwise, load pre-created source
     const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
-      (s) => s.id === preCreatedId
+      (s) => s.id === sourceId
     );
     if (!preCreated) return;
 
@@ -249,7 +265,18 @@ export default function OfferTrackingStep({
             performance
           </p>
           <button
-            onClick={() => addTrackingSource(PRE_CREATED_TRACKING_SOURCES[0].id)}
+            onClick={() => {
+              const newSource: TrackingSource = {
+                id: generateId(),
+                name: "",
+                type: "recharge",
+                enabled: true,
+                rules: [],
+              };
+              const updatedSources = [...trackingSources, newSource];
+              onTrackingSourcesChange(updatedSources);
+              setSelectedSource(newSource.id);
+            }}
             className={`inline-flex items-center px-4 py-2 text-white ${tw.rounded} transition-colors`}
             style={{ backgroundColor: color.primary.action }}
             onMouseEnter={(e) => {
@@ -270,48 +297,33 @@ export default function OfferTrackingStep({
           {/* Tracking Sources List */}
           <div className="lg:col-span-1">
             <div className={`bg-white ${tw.rounded} border border-gray-200 p-4`}>
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-sm text-gray-900">
-                    Source Name
-                  </h3>
-                  <button
-                    onClick={() => addTrackingSource(PRE_CREATED_TRACKING_SOURCES[0].id)}
-                    className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors`}
-                    style={{ backgroundColor: color.primary.action }}
-                    onMouseEnter={(e) => {
-                      (
-                        e.target as HTMLButtonElement
-                      ).style.backgroundColor = color.primary.hover;
-                    }}
-                    onMouseLeave={(e) => {
-                      (
-                        e.target as HTMLButtonElement
-                      ).style.backgroundColor = color.primary.action;
-                    }}
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add
-                  </button>
-                </div>
-                <HeadlessSelect
-                  options={[
-                    { value: "", label: "Select a tracking source..." },
-                    ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
-                      value: source.id,
-                      label: source.name,
-                    })),
-                  ]}
-                  value=""
-                  onChange={(value) => {
-                    if (value) {
-                      addTrackingSource(value);
-                    }
-                  }}
-                  placeholder="Select a tracking source..."
-                  className="w-full text-sm"
-                />
-              </div>
+              <button
+                onClick={() => {
+                  const newSource: TrackingSource = {
+                    id: generateId(),
+                    name: "",
+                    type: "" as any,
+                    enabled: true,
+                    rules: [],
+                  };
+                  const updatedSources = [...trackingSources, newSource];
+                  onTrackingSourcesChange(updatedSources);
+                  setSelectedSource(newSource.id);
+                }}
+                className={`inline-flex items-center px-3 py-1 text-sm text-white ${tw.rounded} transition-colors whitespace-nowrap mb-4`}
+                style={{ backgroundColor: color.primary.action }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor =
+                    color.primary.hover;
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLButtonElement).style.backgroundColor =
+                    color.primary.action;
+                }}
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Source
+              </button>
 
               <div className="space-y-2">
                 {trackingSources.map((source) => (
@@ -375,6 +387,49 @@ export default function OfferTrackingStep({
             {selectedSourceData ? (
               <div className={`bg-white ${tw.rounded} border border-gray-200 p-6 w-full`}>
                 <div className="space-y-6">
+                  {/* Source Selection Dropdown */}
+                  <div>
+                    <HeadlessSelect
+                      options={[
+                        { value: "", label: "Select a tracking source..." },
+                        { value: "custom", label: "Create Custom" },
+                        ...PRE_CREATED_TRACKING_SOURCES.map((source) => ({
+                          value: source.id,
+                          label: source.name,
+                        })),
+                      ]}
+                      value=""
+                      onChange={(value) => {
+                        if (value && selectedSourceData) {
+                          if (value === "custom") {
+                            // Clear current source for custom creation
+                            updateTrackingSource(selectedSourceData.id, {
+                              name: "",
+                              rules: [],
+                            });
+                          } else {
+                            // Load pre-created source into current card
+                            const preCreated = PRE_CREATED_TRACKING_SOURCES.find(
+                              (s) => s.id === value
+                            );
+                            if (preCreated) {
+                              updateTrackingSource(selectedSourceData.id, {
+                                name: preCreated.name,
+                                type: preCreated.type,
+                                rules: preCreated.rules.map((rule) => ({
+                                  ...rule,
+                                  id: generateId(),
+                                })),
+                              });
+                            }
+                          }
+                        }
+                      }}
+                      placeholder="Select a tracking source..."
+                      className="w-full text-sm"
+                    />
+                  </div>
+
                   {/* Source Settings */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
