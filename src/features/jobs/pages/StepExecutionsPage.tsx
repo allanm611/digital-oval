@@ -18,6 +18,7 @@ import {
 import { stepExecutionService } from "../services/stepExecutionService";
 import type { StepExecution } from "../types/stepExecution";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -444,14 +445,7 @@ export default function StepExecutionsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Step Executions
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Monitor and manage step execution records
-          </p>
-        </div>
+        <BackButton fallbackTo="/dashboard/jobs" showBreadcrumb={true} currentLabel="Step Executions" />
         <div className="flex gap-3">
           <button
             onClick={() => navigate("/dashboard/step-executions/analytics")}

@@ -181,17 +181,9 @@ export default function ConfigurationDetailsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 sm:gap-4 mb-4">
-          <BackButton fallbackTo="/dashboard/configuration" />
-          <div className="flex-1">
-            <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-              {config.name}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {config.description}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+          <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel="Configuration Details" />
+          <div className="flex flex-wrap items-center gap-2">
             <span
               className={`px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 ${tw.textSecondary}`}
             >

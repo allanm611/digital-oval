@@ -11,6 +11,7 @@ import {
 import { color, tw } from "../../../shared/utils/utils";
 import CreateButton from "../../../shared/components/ui/CreateButton";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Job {
@@ -68,10 +69,7 @@ export default function AllJobsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {t.jobs.allJobs}
-          </h1>
-          <p className="text-gray-600">{t.jobs.viewAndManage}</p>
+          <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel={t.jobs.allJobs} />
         </div>
 
         {/* Actions Bar */}

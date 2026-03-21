@@ -178,15 +178,11 @@ export default function CreateManualRewardPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center space-x-3">
-              <BackButton
-                fallbackTo="/dashboard/manual-rewards"
-                className="text-gray-400 hover:text-gray-600"
-              />
-              <h1 className={`text-lg font-semibold ${tw.textPrimary}`}>
-                {t.manualRewards.title}
-              </h1>
-            </div>
+            <BackButton
+              fallbackTo="/dashboard/manual-rewards"
+              showBreadcrumb={true}
+              currentLabel="Create Manual Reward"
+            />
           </div>
 
           {/* Sticky Progress Navigation */}

@@ -23,6 +23,7 @@ import { jobWorkflowStepService } from "../services/jobWorkflowStepService";
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 import type { StepType, JobWorkflowStep } from "../types/jobWorkflowStep";
 
@@ -313,29 +314,7 @@ export default function JobWorkflowStepsAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-2 sm:space-x-4">
-        <button
-          onClick={() =>
-            navigate(
-              `/dashboard/job-workflow-steps${
-                jobIdParam ? `?job_id=${jobIdParam}` : ""
-              }`
-            )
-          }
-          className={`${tw.rounded} p-2 text-gray-600 hover:text-gray-800 transition-colors`}
-          aria-label="Back"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Job Workflow Steps Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Comprehensive analytics and insights for workflow steps
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo={`/dashboard/job-workflow-steps${jobIdParam ? `?job_id=${jobIdParam}` : ""}`} showBreadcrumb={true} currentLabel="Job Workflow Steps Analytics" />
 
       {!analyticsData ? (
         <div

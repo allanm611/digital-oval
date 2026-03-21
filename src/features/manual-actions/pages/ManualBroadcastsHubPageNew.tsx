@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Mail, Gift } from "lucide-react";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 
 export default function ManualBroadcastsHubPage() {
@@ -25,12 +26,7 @@ export default function ManualBroadcastsHubPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-            Manual Broadcasts
-          </h1>
-          <p className={`${tw.textSecondary} mt-2 text-sm`}>
-            Choose an action to execute
-          </p>
+          <BackButton fallbackTo="/dashboard" showBreadcrumb={true} currentLabel="Manual Broadcasts" />
         </div>
 
         {/* Cards Grid */}

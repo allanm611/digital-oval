@@ -123,17 +123,7 @@ export default function RevenueMetricsPage() {
     <div className="space-y-6">
       {/* Header with Back Button and Create Button */}
       <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
-          <BackButton fallbackTo="/dashboard/kpis" />
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">
-              Revenue Metrics
-            </h2>
-            <p className={`text-sm ${tw.textSecondary} mt-1`}>
-              Manage revenue performance indicators and metrics tracking
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="Revenue Metrics" />
         <button
           onClick={() => navigate("/dashboard/kpis/revenue-metrics/create")}
           disabled={loading}

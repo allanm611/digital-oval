@@ -526,9 +526,7 @@ export default function CampaignsAnalyticsPage(): JSX.Element {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-        <BackButton fallbackTo="/dashboard/campaigns" className="self-start" />
-      </div>
+      <BackButton fallbackTo="/dashboard/campaigns" showBreadcrumb={true} currentLabel="Campaigns Analytics" />
 
       {isLoading ? (
         <div className="flex justify-center py-16">

@@ -183,17 +183,7 @@ export default function DynamicMessageVariablesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <BackButton fallbackTo="/dashboard/configurations" />
-        <div>
-          <h1 className={`${tw.tableFirstColumn} ${tw.textPrimary}`}>
-            Dynamic Modal Generator
-          </h1>
-          <p className={`${tw.textSecondary} text-sm mt-1`}>
-            Manage customer identity fields for message and creative variables
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/configurations" showBreadcrumb={true} currentLabel="Dynamic Modal Generator" />
 
       {/* Search Bar and Category Filter */}
       <div className="flex gap-4">

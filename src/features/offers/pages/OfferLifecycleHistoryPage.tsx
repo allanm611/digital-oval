@@ -78,15 +78,7 @@ export default function OfferLifecycleHistoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center space-x-4">
-        <BackButton fallbackTo={`/dashboard/offers/${id}`} />
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            {t.historyPages.offerLifecycleHistory}
-          </h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>{offerName}</p>
-        </div>
-      </div>
+      <BackButton fallbackTo={`/dashboard/offers/${id}`} showBreadcrumb={true} currentLabel="Offer Lifecycle History" />
 
       {/* Timeline */}
       <div className={`bg-white ${tw.rounded} border border-gray-200 p-6`}>

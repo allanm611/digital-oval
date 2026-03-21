@@ -15,6 +15,7 @@ import {
   Filter,
 } from "lucide-react";
 import CreateButton from "../../../shared/components/ui/CreateButton";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw, button } from "../../../shared/utils/utils";
 import { useToast } from "../../../contexts/ToastContext";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -354,22 +355,7 @@ export default function ProgramsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {/* <button
-            onClick={() => navigate("/dashboard/configuration")}
-            className={`p-2 text-gray-600 hover:text-gray-800 ${tw.rounded} transition-colors`}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button> */}
-          <div>
-            <h1 className={`${tw.mainHeading} ${tw.textPrimary}`}>
-              {t.programs.title}
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              {t.programs.subtitle}
-            </p>
-          </div>
-        </div>
+        <BackButton fallbackTo="/dashboard/configuration" showBreadcrumb={true} currentLabel={t.programs.title} />
         <div className="flex items-center gap-3">
           <CreateButton onClick={handleCreateProgram} />
         </div>

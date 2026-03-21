@@ -1210,8 +1210,10 @@ export default function TypeConfigurationPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          {showBackButton && <BackButton fallbackTo={config.backPath} />}
+        {showBackButton && (
+          <BackButton fallbackTo={config.backPath} showBreadcrumb={true} currentLabel={config.title} />
+        )}
+        {!showBackButton && (
           <div>
             <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
               {config.title}
@@ -1220,8 +1222,8 @@ export default function TypeConfigurationPage({
               {config.subtitle}
             </p>
           </div>
-        </div>
-        <div className="flex items-center gap-3 w-auto">
+        )}
+        <div className="flex items-center gap-3 w-auto ml-auto">
           {!config.disableCreate && <CreateButton onClick={handleCreateItem} />}
         </div>
       </div>

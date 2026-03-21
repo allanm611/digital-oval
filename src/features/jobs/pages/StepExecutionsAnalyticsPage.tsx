@@ -48,6 +48,7 @@ import {
 import { useToast } from "../../../contexts/ToastContext";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
+import BackButton from "../../../shared/components/ui/BackButton";
 import { color, tw } from "../../../shared/utils/utils";
 
 const COLORS = ["#3b8169", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6"];
@@ -332,22 +333,7 @@ export default function StepExecutionsAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate("/dashboard/step-executions")}
-          className={`p-2 ${tw.rounded} text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors`}
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            Step Executions Analytics
-          </h1>
-          <p className={`${tw.textSecondary} mt-1 text-sm`}>
-            Comprehensive analytics and insights for step executions
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/step-executions" showBreadcrumb={true} currentLabel="Step Executions Analytics" />
 
       {/* Key Metrics - All Statistics */}
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">

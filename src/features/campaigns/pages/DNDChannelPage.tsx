@@ -257,19 +257,8 @@ export default function DNDChannelPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <BackButton fallbackTo="/dashboard/dnd-management" />
-          <div>
-            <h1 className={`text-xl sm:text-2xl font-bold ${tw.textPrimary}`}>
-              {channelInfo.label} DND Management
-            </h1>
-            <p className={`${tw.textSecondary} mt-2 text-sm`}>
-              Manage Do Not Disturb subscriptions for{" "}
-              {channelInfo.label.toLowerCase()} channel
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3 w-auto">
+        <BackButton fallbackTo="/dashboard/dnd-management" showBreadcrumb={true} currentLabel="DND Management" />
+        <div className="flex flex-wrap items-center gap-2 w-auto">
           {channelValue === "SMS" && (
             <>
               <button

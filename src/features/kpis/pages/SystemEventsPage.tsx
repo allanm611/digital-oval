@@ -85,17 +85,7 @@ export default function SystemEventsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <BackButton fallbackTo="/dashboard/kpis" />
-        <div>
-          <h1 className={`text-2xl font-bold ${tw.textPrimary}`}>
-            System Events
-          </h1>
-          <p className={`text-sm ${tw.textSecondary} mt-1`}>
-            View all platform system events and interactions (read-only)
-          </p>
-        </div>
-      </div>
+      <BackButton fallbackTo="/dashboard/kpis" showBreadcrumb={true} currentLabel="System Events" />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

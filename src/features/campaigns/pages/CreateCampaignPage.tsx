@@ -1566,12 +1566,11 @@ export default function CreateCampaignPage() {
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-start md:justify-between">
-            <div className="flex items-center space-x-3">
-              <BackButton
-                fallbackTo="/dashboard/campaigns"
-                className="text-gray-400 hover:text-gray-600"
-              />
-            </div>
+            <BackButton
+              fallbackTo="/dashboard/campaigns"
+              showBreadcrumb={true}
+              currentLabel="Create Campaign"
+            />
             {currentStep !== 5 && (
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
                 <button
