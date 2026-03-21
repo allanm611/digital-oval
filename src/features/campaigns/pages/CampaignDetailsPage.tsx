@@ -44,6 +44,11 @@ import { userService } from "../../users/services/userService";
 import { PermissionGate } from "../../auth/components/PermissionGate";
 import RunCampaignModal from "../components/RunCampaignModal";
 import EditCampaignFlowModal from "../components/EditCampaignFlowModal";
+import BroadcastsModal from "../components/BroadcastsModal";
+import FailedModal from "../components/FailedModal";
+import ExecutionTimeModal from "../components/ExecutionTimeModal";
+import SuccessRateModal from "../components/SuccessRateModal";
+import ScheduledModal from "../components/ScheduledModal";
 import {
   Campaign,
   CampaignSegmentDetail,
@@ -123,6 +128,13 @@ export default function CampaignDetailsPage() {
     broadcasts_completed: number;
     execution_time_ms: number;
   } | null>(null);
+
+  // Stat card modal states
+  const [showBroadcastsModal, setShowBroadcastsModal] = useState(false);
+  const [showFailedModal, setShowFailedModal] = useState(false);
+  const [showExecutionTimeModal, setShowExecutionTimeModal] = useState(false);
+  const [showSuccessRateModal, setShowSuccessRateModal] = useState(false);
+  const [showScheduledModal, setShowScheduledModal] = useState(false);
 
   const formatObjective = (objective?: string | null) => {
     if (!objective) return "—";
@@ -854,6 +866,16 @@ export default function CampaignDetailsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <BackButton fallbackTo="/dashboard/campaigns" onClick={handleBack} showBreadcrumb={true} currentLabel="Campaign Details" />
         <div className="flex flex-wrap items-center gap-2">
+          {/* Scheduled Run Clock Button */}
+          <button
+            onClick={() => setShowScheduledModal(true)}
+            className={`flex items-center justify-center p-2 ${tw.rounded} text-white hover:opacity-80 transition-opacity`}
+            style={{ backgroundColor: color.primary.accent }}
+            title="View campaign schedule"
+          >
+            <Clock className="w-5 h-5" />
+          </button>
+
           {/* Step 1: Request Approval (draft status) */}
           {campaign.status === "draft" && (
             <button
@@ -1055,7 +1077,8 @@ export default function CampaignDetailsPage() {
 
         {/* Messages Failed Card */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          onClick={() => setShowFailedModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
         >
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5" style={{ color: "#DC2626" }} />
@@ -1068,7 +1091,8 @@ export default function CampaignDetailsPage() {
 
         {/* Success Rate Card */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          onClick={() => setShowSuccessRateModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
         >
           <div className="flex items-center gap-2">
             <CheckCircle
@@ -1094,7 +1118,8 @@ export default function CampaignDetailsPage() {
 
         {/* Broadcasts Card */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          onClick={() => setShowBroadcastsModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
         >
           <div className="flex items-center gap-2">
             <TrendingUp
@@ -1111,7 +1136,8 @@ export default function CampaignDetailsPage() {
 
         {/* Execution Time Card */}
         <div
-          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm`}
+          onClick={() => setShowExecutionTimeModal(true)}
+          className={`${tw.rounded} border border-gray-200 bg-white p-6 shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 transition-all`}
         >
           <div className="flex items-center gap-2">
             <Clock
@@ -1250,7 +1276,7 @@ export default function CampaignDetailsPage() {
               Program ID
             </label>
             <p className={`text-sm ${tw.textPrimary}`}>
-              {campaign.program_id}
+              {campaign.program_id || "—"}
             </p>
           </div>
         </div>
@@ -2878,6 +2904,57 @@ export default function CampaignDetailsPage() {
             refreshCampaignStatus();
           }}
         />
+      )}
+
+      {/* Stat Card Modals */}
+      {campaign && (
+        <>
+          <ScheduledModal
+            isOpen={showScheduledModal}
+            onClose={() => setShowScheduledModal(false)}
+            campaignName={campaign.name}
+            startDate={campaign?.start_date || null}
+            endDate={campaign?.end_date || null}
+          />
+          <BroadcastsModal
+            isOpen={showBroadcastsModal}
+            onClose={() => setShowBroadcastsModal(false)}
+            campaignName={campaign.name}
+          />
+          <FailedModal
+            isOpen={showFailedModal}
+            onClose={() => setShowFailedModal(false)}
+            campaignName={campaign.name}
+          />
+          <ExecutionTimeModal
+            isOpen={showExecutionTimeModal}
+            onClose={() => setShowExecutionTimeModal(false)}
+            campaignName={campaign.name}
+            totalExecutionTimeMs={executionMetrics?.execution_time_ms || 0}
+          />
+          <SuccessRateModal
+            isOpen={showSuccessRateModal}
+            onClose={() => setShowSuccessRateModal(false)}
+            campaignName={campaign.name}
+            totalDelivered={executionMetrics?.total_messages_sent || 0}
+            totalMessages={
+              (executionMetrics?.total_messages_sent || 0) +
+              (executionMetrics?.total_messages_failed || 0)
+            }
+            successRate={
+              (executionMetrics?.total_messages_sent || 0) +
+                (executionMetrics?.total_messages_failed || 0) >
+              0
+                ? (
+                    ((executionMetrics?.total_messages_sent || 0) /
+                      ((executionMetrics?.total_messages_sent || 0) +
+                        (executionMetrics?.total_messages_failed || 0))) *
+                    100
+                  )
+                : 0
+            }
+          />
+        </>
       )}
     </div>
   );

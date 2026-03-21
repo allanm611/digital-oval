@@ -1062,11 +1062,19 @@ export default function CampaignsPage() {
                       className="px-6 py-4"
                       style={{ backgroundColor: color.surface.tablebodybg }}
                     >
-                      <div
-                        className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
-                        title={campaign.name}
-                      >
-                        {campaign.name}
+                      <div className="flex flex-col gap-2">
+                        <div
+                          className={`${tw.tableFirstColumn} ${tw.textPrimary} truncate`}
+                          title={campaign.name}
+                        >
+                          {campaign.name}
+                        </div>
+                        {/* Status icons - to be enabled when backend provides data fields */}
+                        {/* <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" style={{ color: color.primary.accent }} title="Scheduled" />
+                          <Send className="w-4 h-4" style={{ color: color.primary.accent }} title="Broadcasts" />
+                          <AlertCircle className="w-4 h-4" style={{ color: color.primary.accent }} title="Failed" />
+                        </div> */}
                       </div>
                     </td>
                     {/* <td
