@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, AlertCircle, Trash2, Plus, X } from "lucide-react";
+import { Calendar, AlertCircle, Trash2, X } from "lucide-react";
 import { CampaignScheduling } from "../../types/campaign";
 import { color , tw} from "../../../../shared/utils/utils";
 import { buttons } from "../../../../shared/utils/tokens";
@@ -113,11 +113,16 @@ export default function SchedulingStep({
   };
 
   // Day+Time entry handlers
-  const addDayTimeEntry = () =>
+  const addDayTimeEntry = () => {
+    const selectedDaysInEntries = dayTimeEntries.map((e) => e.dayOfWeek);
+    const nextAvailableDay = daysOfWeek.find(
+      (day) => !selectedDaysInEntries.includes(day.value)
+    )?.value ?? 0;
     setDayTimeEntries((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), dayOfWeek: 0, time: "08:00" },
+      { id: crypto.randomUUID(), dayOfWeek: nextAvailableDay, time: "08:00" },
     ]);
+  };
 
   const removeDayTimeEntry = (id: string) =>
     setDayTimeEntries((prev) => prev.filter((e) => e.id !== id));
@@ -132,11 +137,16 @@ export default function SchedulingStep({
     );
 
   // Month+Time entry handlers
-  const addMonthTimeEntry = () =>
+  const addMonthTimeEntry = () => {
+    const selectedMonthsInEntries = monthTimeEntries.map((e) => e.month);
+    const nextAvailableMonth = monthsOfYear.find(
+      (month) => !selectedMonthsInEntries.includes(month.value)
+    )?.value ?? 0;
     setMonthTimeEntries((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), month: 0, time: "08:00" },
+      { id: crypto.randomUUID(), month: nextAvailableMonth, time: "08:00" },
     ]);
+  };
 
   const removeMonthTimeEntry = (id: string) =>
     setMonthTimeEntries((prev) => prev.filter((e) => e.id !== id));
@@ -529,10 +539,9 @@ export default function SchedulingStep({
                     border: "none",
                     cursor: dayTimeEntries.length >= 7 ? "not-allowed" : "pointer",
                   }}
-                  className="flex items-center gap-2 transition-opacity hover:opacity-90"
+                  className=""
                   title={dayTimeEntries.length >= 7 ? "All days selected" : ""}
                 >
-                  <Plus className="w-4 h-4" />
                   Add
                 </button>
               </div>
@@ -608,10 +617,9 @@ export default function SchedulingStep({
                     border: "none",
                     cursor: monthTimeEntries.length >= 12 ? "not-allowed" : "pointer",
                   }}
-                  className="flex items-center gap-2 transition-opacity hover:opacity-90"
+                  className=""
                   title={monthTimeEntries.length >= 12 ? "All months selected" : ""}
                 >
-                  <Plus className="w-4 h-4" />
                   Add
                 </button>
               </div>
