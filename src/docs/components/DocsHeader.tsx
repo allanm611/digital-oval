@@ -2,17 +2,19 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Search, LogOut } from "lucide-react";
 import { tw, color } from "../../shared/utils/utils";
+import logo from "../../assets/logo.png";
 
 export default function DocsHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-200 h-16">
+    <header className="sticky top-0 z-40 bg-white border-b-2 border-emerald-600 h-16">
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-8 h-full flex items-center justify-between flex-nowrap gap-2">
 
-        {/* Left: Sentra Text (Fixed Width Area) */}
+        {/* Left: Sentra Logo & Text (Fixed Width Area) */}
         <div className="flex-1 flex justify-start min-w-[100px] md:min-w-[140px]">
-          <Link to="/docs" className="flex items-center h-16">
+          <Link to="/docs" className="flex items-center gap-2 h-16 hover:opacity-80 transition-opacity">
+            {/* <img src={logo} alt="Sentra Logo" className="h-12 w-auto" /> */}
             <h1 className="text-lg md:text-xl font-bold text-black">
               Sentra
             </h1>

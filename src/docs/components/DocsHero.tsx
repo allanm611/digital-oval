@@ -1,49 +1,29 @@
 export default function DocsHero() {
   return (
-    <section className="relative py-32 overflow-hidden" style={{ backgroundColor: "#0a192f" }}>
-      {/* Background Gradients */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background: `
-            radial-gradient(
-              circle at 10% 20%,
-              rgba(8, 69, 110, 0.33) 0%,
-              transparent 40%
-            ),
-            radial-gradient(
-              circle at 80% 70%,
-              rgba(5, 150, 105, 0.28) 0%,
-              transparent 40%
-            )
-          `,
-        }}
-      ></div>
-
-      {/* Hex Pattern Overlay */}
-      <div
-        className="absolute inset-0 z-0 opacity-20"
-        style={{
-          backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M50 0L93.3 25v50L50 100L6.7 75V25L50 0z" fill="none" stroke="%23184e77" stroke-width="1" opacity="0.2"/></svg>')`,
-          backgroundSize: "100px 100px",
-          animation: "hexagonMove 60s linear infinite",
-        }}
-      ></div>
+    <section className="relative py-28 overflow-hidden" style={{ backgroundColor: "#0a192f" }}>
+      {/* Simple background */}
+      <div className="absolute inset-0 z-0" style={{ backgroundColor: "#0a192f" }}></div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-            Welcome to the{" "}
-            <span className="text-emerald-400">
-              Sentra CVM Frontend
-            </span>
-            <br />
+          <p className="text-emerald-500 font-semibold mb-6 text-sm tracking-widest uppercase">
             Documentation
-          </h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            This is your central hub for learning about all features and how to use them.
           </p>
+          <h1 className="text-6xl md:text-7xl lg:text-8xl font-black text-white mb-10 leading-none tracking-tight">
+            Sentra CVM
+          </h1>
+          <p className="text-base md:text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed mb-12 font-light">
+            Learn how to use every feature of the CVM platform. Find what you need and understand how it works.
+          </p>
+          <div className="flex justify-center">
+            <a
+              href="/docs/features/auth"
+              className="px-8 py-3 bg-emerald-600 text-white font-semibold rounded hover:bg-emerald-700 transition-colors duration-200"
+            >
+              Get Started
+            </a>
+          </div>
         </div>
       </div>
     </section>

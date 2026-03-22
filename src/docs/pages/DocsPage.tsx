@@ -1,7 +1,31 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronDown,
+  AlertCircle,
+  LogIn,
+  LayoutDashboard,
+  Megaphone,
+  MessageCircle,
+  Users,
+  Settings,
+  Layers,
+  Gift,
+  List,
+  BarChart3,
+  TrendingUp,
+  Zap,
+  Server,
+  Lock,
+  ShoppingCart,
+  Database,
+  Mail,
+  Box,
+  UserCheck,
+  UserRound,
+} from "lucide-react";
 import { color, tw } from "../../shared/utils/utils";
 import LoadingSpinner from "../../shared/components/ui/LoadingSpinner";
 import DocsHeader from "../components/DocsHeader";
@@ -14,6 +38,19 @@ interface DocContent {
   content: string;
   path: string;
 }
+
+// Icon mapping for feature categories
+const iconMap: Record<string, React.ReactNode> = {
+  "Campaign Management": <TrendingUp size={24} />,
+  "Offer Management": <Gift size={24} />,
+  "Product Management": <Box size={24} />,
+  "Segment Management": <Users size={24} />,
+  "Customer 360 Profile": <UserRound size={24} />,
+  "User Management": <UserCheck size={24} />,
+  Communications: <Mail size={24} />,
+  "Reports & Analytics": <BarChart3 size={24} />,
+  "System & Configuration": <Settings size={24} />,
+};
 
 export default function DocsPage() {
   const { "*": docPath } = useParams();
@@ -28,9 +65,9 @@ export default function DocsPage() {
       try {
         const response = await fetch("/package.json");
         const pkg = await response.json();
-        setVersion(pkg.version || "1.2.1");
+        setVersion(pkg.version);
       } catch {
-        setVersion("1.2.1");
+        setVersion("1.2.2");
       }
     };
     loadVersion();
@@ -58,14 +95,10 @@ export default function DocsPage() {
           path = `${path}/README`;
         }
 
-        const filePath = `/docs/${path}.md`;
-
-        const response = await fetch(filePath);
-        if (!response.ok) {
-          throw new Error(`Document not found: ${path}`);
-        }
-
-        const content = await response.text();
+        // Load markdown file dynamically from content folder
+        const modulePath = `../content/${path}.md`;
+        const module = await import(/* @vite-ignore */ modulePath);
+        const content = module.default;
         const title = path.split("/").pop() || "Documentation";
 
         setDocContent({
@@ -97,27 +130,40 @@ export default function DocsPage() {
             // Homepage View
             <>
               <DocsHero />
-              <div className={`flex-1 px-5 lg:px-8 py-16 ${tw.primaryBackground}`}>
+              <div id="features" className={`flex-1 px-5 lg:px-8 py-20 ${tw.primaryBackground}`}>
                 <div className="max-w-7xl mx-auto">
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
                     {docsNav.map((section, idx) => (
                       <div key={idx}>
-                        <h3 className={`text-lg font-bold ${tw.textPrimary} mb-6 flex items-center gap-2`}>
-                          {section.title}
-                        </h3>
+                        <Link
+                          to={section.path ? `/docs/${section.path}` : "#"}
+                          className="flex items-start gap-3 mb-2 p-3 rounded group inline-flex cursor-pointer relative"
+                        >
+                          <div className="text-emerald-600 flex-shrink-0 group-hover:scale-110 transition-transform duration-200 pointer-events-none">
+                            {iconMap[section.title] || <Layers size={24} />}
+                          </div>
+                          <div className="pointer-events-none">
+                            <h3 className={`text-xl font-bold ${tw.textPrimary} group-hover:text-emerald-600 transition-colors duration-200 relative`}>
+                              {section.title}
+                              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-200 group-hover:w-full"></span>
+                            </h3>
+                          </div>
+                        </Link>
+
                         {section.children && (
-                          <ul className="space-y-3">
+                          <ul className="space-y-3 pl-9">
                             {section.children.map((item, itemIdx) => (
                               <li key={itemIdx}>
                                 {item.path ? (
                                   <Link
                                     to={`/docs/${item.path}`}
-                                    className={`text-sm text-black border-b-2 border-transparent hover:text-black hover:border-emerald-600 pb-1 transition-colors duration-200 block`}
+                                    className={`text-sm font-medium text-gray-700 hover:text-emerald-600 cursor-pointer transition-colors duration-200 relative inline-block group`}
                                   >
                                     {item.title}
+                                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-emerald-600 transition-all duration-200 group-hover:w-full"></span>
                                   </Link>
                                 ) : (
-                                  <span className={`text-sm ${tw.textSecondary}`}>
+                                  <span className={`text-sm font-medium text-gray-500`}>
                                     {item.title}
                                   </span>
                                 )}
