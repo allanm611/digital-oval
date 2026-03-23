@@ -1,5 +1,5 @@
 export interface ApproveCampaignRequest {
-  comments?: string | null; // optional, max 500 chars, can be null
+  comments?: string | null;
 }
 
 export interface ApproveCampaignResponse {

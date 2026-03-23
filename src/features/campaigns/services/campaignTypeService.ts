@@ -1,25 +1,11 @@
 import { fetchWithAuthInterceptor } from "../../../shared/services/fetchInterceptor";
 import { API_CONFIG } from "../../../shared/services/api";
-import { ApiResponse } from "../../../shared/types/api";
-
-export interface CampaignType {
-  id: number;
-  name: string;
-  description?: string;
-  isActive?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreateCampaignTypeRequest {
-  name: string;
-  description?: string;
-}
-
-export interface UpdateCampaignTypeRequest {
-  name?: string;
-  description?: string;
-}
+import type {
+  CampaignType,
+  CreateCampaignTypeRequest,
+  UpdateCampaignTypeRequest,
+} from "../types/campaignType";
+import type { ApiResponse } from "../types/campaign";
 
 class CampaignTypeService {
   private baseUrl = `${API_CONFIG.BASE_URL}/campaign-types`;
@@ -47,7 +33,7 @@ class CampaignTypeService {
     return response.json();
   }
 
-  // Get all campaign types (fresh data)
+  // Get all campaign types
   async getAllCampaignTypes(): Promise<ApiResponse<CampaignType[]>> {
     return this.request<ApiResponse<CampaignType[]>>("", {
       method: "GET",

@@ -1,4 +1,3 @@
-// Campaign Objective Types
 export interface CampaignObjective {
   id: number;
   name: string;
@@ -6,7 +5,7 @@ export interface CampaignObjective {
   icon: ObjectiveIcon;
   status: 'active' | 'inactive';
   priority_level: 'low' | 'medium' | 'high' | 'critical';
-  rank: number; // 1-5
+  rank: number;
   tags: string[];
   business_rules?: string;
   associated_campaigns_count: number;
@@ -41,7 +40,6 @@ export interface ObjectiveResponse {
   };
 }
 
-// Icon options for objectives
 export type ObjectiveIcon = 
   | 'target' 
   | 'users' 
@@ -64,10 +62,9 @@ export interface ObjectiveIconOption {
   value: ObjectiveIcon;
   label: string;
   description: string;
-  icon: string; // Lucide icon name
+  icon: string;
 }
 
-// Priority level options
 export interface PriorityLevelOption {
   value: 'low' | 'medium' | 'high' | 'critical';
   label: string;
@@ -75,14 +72,12 @@ export interface PriorityLevelOption {
   color: string;
 }
 
-// Rank options (1-5)
 export interface RankOption {
   value: number;
   label: string;
   description: string;
 }
 
-// Status options
 export interface StatusOption {
   value: 'active' | 'inactive';
   label: string;

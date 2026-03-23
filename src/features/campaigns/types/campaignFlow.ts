@@ -1,5 +1,4 @@
-// Campaign Flow Types
-// Backend Campaign Flow structure for executing campaigns
+
 
 export type CampaignFlowType =
   | "STANDARD"
@@ -12,18 +11,17 @@ export interface CampaignFlowConfig {
   campaign_id: number;
   segment_id: number;
   offer_id: number;
-  offer_creative_id?: number; // OPTIONAL - backend uses default if not provided
-  template_id?: number; // OPTIONAL - derived from creative
+  offer_creative_id?: number;
+  template_id?: number;
   flow_type: CampaignFlowType;
-  step_order: number; // Sequence order (1, 2, 3...)
-  wait_interval_hours: number; // Delay before this step
-  bucket_allocation?: string; // e.g., "50-50" for A/B tests
-  condition_rule?: Record<string, unknown>; // For conditional flows
+  step_order: number;
+  wait_interval_hours: number;
+  bucket_allocation?: string;
+  condition_rule?: Record<string, unknown>;
   is_active?: boolean;
   created_by?: number;
 }
 
-// Flow object as returned from API responses - includes id and timestamps
 export interface CampaignFlowResponseData extends CampaignFlowConfig {
   id: number;
   created_at: string;
@@ -87,7 +85,6 @@ export type CreateCampaignFlowRequest = CampaignFlowConfig;
 
 export type UpdateCampaignFlowRequest = Partial<CampaignFlowConfig>;
 
-// Search Parameters
 export interface SearchCampaignFlowsParams {
   campaignId?: number;
   segmentId?: number;
@@ -99,7 +96,6 @@ export interface SearchCampaignFlowsParams {
   skipCache?: boolean;
 }
 
-// Single Flow Response
 export interface GetCampaignFlowByIdResponse {
   success: boolean;
   data: {
@@ -123,7 +119,6 @@ export interface GetCampaignFlowByIdResponse {
   source: string;
 }
 
-// Offers in Campaign
 export interface CampaignOffer {
   id: number;
   name: string;
@@ -137,7 +132,6 @@ export interface CampaignOffersResponse {
   total: number;
 }
 
-// Segments in Campaign
 export interface CampaignSegment {
   id: number;
   name: string;
@@ -151,7 +145,6 @@ export interface CampaignSegmentsResponse {
   total: number;
 }
 
-// Unique Combinations
 export interface FlowCombination {
   campaign_id: number;
   segment_id: number;
@@ -171,7 +164,6 @@ export interface UniqueCombinationsResponse {
   };
 }
 
-// Statistics
 export interface FlowStatistics {
   total_flows: number;
   active_flows: number;
@@ -192,7 +184,6 @@ export interface FlowStatisticsResponse {
   data: FlowStatistics;
 }
 
-// Relationship Statistics
 export interface RelationshipStatistics {
   campaigns_with_flows: number;
   segments_with_flows: number;
@@ -214,7 +205,6 @@ export interface RelationshipStatisticsResponse {
   data: RelationshipStatistics;
 }
 
-// Growth Trends
 export interface GrowthTrendRecord {
   date: string;
   total_flows: number;
@@ -235,7 +225,6 @@ export interface GrowthTrendsResponse {
   summary: GrowthTrendsSummary;
 }
 
-// Sync Segments
 export interface SyncSegmentsRequest {
   force_sync?: boolean;
   segment_ids?: number[];

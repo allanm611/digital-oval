@@ -1,4 +1,3 @@
-// Types pour les Communication Policies selon les spécifications
 
 export type CommunicationPolicyType =
   | "timeWindow"
@@ -8,23 +7,20 @@ export type CommunicationPolicyType =
 
 export type CommunicationChannel = "SMS" | "EMAIL" | "USSD" | "APP";
 
-// Configuration Time Window
 export interface TimeWindowConfig {
-  startTime: string; // Format HH:MM
-  endTime: string; // Format HH:MM
+  startTime: string;
+  endTime: string;
   timezone?: string;
-  days?: string[]; // Jours de la semaine
+  days?: string[];
 }
 
-// Configuration Maximum Communication
 export interface MaximumCommunicationConfig {
   type: "daily" | "weekly" | "monthly";
   maxCount: number;
-  resetTime?: string; // Heure de reset pour daily
-  resetDay?: string; // Jour de reset pour weekly/monthly
+  resetTime?: string;
+  resetDay?: string;
 }
 
-// Configuration DND (Do Not Disturb)
 export interface DNDConfig {
   categories: DNDCategory[];
 }
@@ -38,7 +34,6 @@ export interface DNDCategory {
   value?: "allowed" | "not allowed";
 }
 
-// Configuration VIP List
 export interface VIPListConfig {
   action: "include" | "exclude";
   vipLists: VIPList[];
@@ -53,12 +48,11 @@ export interface VIPList {
   status: "active" | "inactive";
 }
 
-// Interface principale pour Communication Policy
 export interface CommunicationPolicyConfiguration {
   id: number;
   name: string;
   description?: string;
-  channels: CommunicationChannel[]; // Changé en array pour multi-sélection
+  channels: CommunicationChannel[];
   type: CommunicationPolicyType;
   config:
     | TimeWindowConfig
@@ -70,11 +64,10 @@ export interface CommunicationPolicyConfiguration {
   updated_at: string;
 }
 
-// Interface pour créer une nouvelle Communication Policy
 export interface CreateCommunicationPolicyRequest {
   name: string;
   description?: string;
-  channels: CommunicationChannel[]; // Changé en array pour multi-sélection
+  channels: CommunicationChannel[];
   type: CommunicationPolicyType;
   config:
     | TimeWindowConfig
@@ -84,7 +77,6 @@ export interface CreateCommunicationPolicyRequest {
   isActive?: boolean;
 }
 
-// Options pour les types de Communication Policy
 export const COMMUNICATION_POLICY_TYPES = [
   {
     value: "timeWindow" as const,
@@ -115,7 +107,6 @@ export const COMMUNICATION_POLICY_TYPES = [
   },
 ] as const;
 
-// Types prédéfinis pour DND
 export const DND_CATEGORIES = [
   {
     type: "marketing",
@@ -144,7 +135,6 @@ export const DND_CATEGORIES = [
   },
 ] as const;
 
-// Jours de la semaine
 export const DAYS_OF_WEEK = [
   { value: "monday", label: "Monday" },
   { value: "tuesday", label: "Tuesday" },
@@ -155,7 +145,6 @@ export const DAYS_OF_WEEK = [
   { value: "sunday", label: "Sunday" },
 ] as const;
 
-// Canaux de communication
 export const COMMUNICATION_CHANNELS = [
   { value: "SMS" as const, label: "SMS", description: "Short Message Service" },
   {

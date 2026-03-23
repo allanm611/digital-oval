@@ -15,9 +15,9 @@ export interface CommunicationPolicy {
     };
     channels: CampaignChannel[];
     blackout_windows?: {
-        start_time: string; // e.g., "22:00"
-        end_time: string;   // e.g., "08:00"
-        days?: string[];    // e.g., ["Saturday", "Sunday"]
+        start_time: string;
+        end_time: string;
+        days?: string[];
     }[];
     created_at?: string;
     updated_at?: string;

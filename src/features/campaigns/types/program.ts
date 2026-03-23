@@ -6,8 +6,8 @@ export interface Program {
   program_type?: string | null;
   start_date?: string | null;
   end_date?: string | null;
-  budget_total?: string | null; // Decimal as string from backend
-  budget_spent?: string | null; // Decimal as string from backend
+  budget_total?: string | null;
+  budget_spent?: string | null;
   is_active: boolean;
   created_at: string;
   created_by?: number | null;
