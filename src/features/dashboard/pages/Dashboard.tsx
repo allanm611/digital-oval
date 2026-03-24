@@ -177,6 +177,12 @@ const OfferPages = {
         /* webpackPrefetch: true */ "../../offers/pages/CharacterSetsPage"
       ),
   ),
+  CharacterSetFormPage: lazy(
+    () =>
+      import(
+        /* webpackPrefetch: true */ "../../offers/pages/CharacterSetFormPage"
+      ),
+  ),
   OfferCreativeDetailsPage: lazy(
     () =>
       import(
@@ -889,6 +895,14 @@ export default function Dashboard() {
           <Route
             path="/character-sets"
             element={<OfferPages.CharacterSetsPage />}
+          />
+          <Route
+            path="/character-sets/create"
+            element={<OfferPages.CharacterSetFormPage />}
+          />
+          <Route
+            path="/character-sets/:id"
+            element={<OfferPages.CharacterSetFormPage />}
           />
           <Route
             path="/dynamic-message-variables"

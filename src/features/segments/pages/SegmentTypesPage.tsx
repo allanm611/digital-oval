@@ -1,5 +1,5 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getSegmentTypesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getSegmentTypesConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function SegmentTypesPage() {

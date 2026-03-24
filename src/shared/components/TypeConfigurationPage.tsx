@@ -17,6 +17,7 @@ import { configurationDataService } from "../services/configurationDataService";
 import type { ConfigurationType } from "../services/configurationDataService";
 import type { ConfigurationItem } from "./GenericConfigurationPage";
 import { useBackendConfigurationData } from "../hooks/useBackendConfigurationData";
+import { MESSAGE_TYPE_OPTIONS, CHARACTER_SET_TYPE_OPTIONS, GATEWAY_KEY_OPTIONS } from "../../features/configurations/configs/ts";
 import HeadlessSelect from "./ui/HeadlessSelect";
 import Pagination from "./ui/Pagination";
 import BackButton from "./ui/BackButton";
@@ -26,6 +27,7 @@ export interface TypeConfigurationItem extends ConfigurationItem {
   isActive?: boolean;
   metadataValue?: number | string;
   // Template content fields (for Creative Templates)
+  code?: string;
   title?: string;
   text_body?: string;
   html_body?: string;
@@ -123,6 +125,7 @@ interface TypeConfigurationModalProps {
     isActive: boolean;
     metadataValue?: number | string;
     // Template content fields (for Creative Templates)
+    code?: string;
     title?: string;
     text_body?: string;
     html_body?: string;
@@ -153,6 +156,7 @@ function TypeConfigurationModal({
   const [isActive, setIsActive] = useState(true);
   const [metadataValue, setMetadataValue] = useState<string | number>("");
   // Template content fields (for Creative Templates)
+  const [code, setCode] = useState("");
   const [title, setTitle] = useState("");
   const [textBody, setTextBody] = useState("");
   const [htmlBody, setHtmlBody] = useState("");
@@ -218,6 +222,7 @@ function TypeConfigurationModal({
         item.metadataValue !== undefined ? String(item.metadataValue) : "",
       );
       if (isCreativeTemplate) {
+        setCode(item.code || "");
         setTitle(item.title || "");
         setTextBody(item.text_body || "");
         setHtmlBody(item.html_body || "");
@@ -232,13 +237,20 @@ function TypeConfigurationModal({
       ) {
         const fields: Record<string, string> = {};
         config.customFields.forEach((field) => {
-          fields[field.fieldKey] =
-            String(
-              (item as TypeConfigurationItem)[
-                field.fieldKey as keyof TypeConfigurationItem
-              ],
-            ) || "";
+          // Try both camelCase (from form) and snake_case (from API)
+          const camelCaseValue = (item as any)[field.fieldKey];
+          const snakeCaseKey = field.fieldKey.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const snakeCaseValue = (item as any)[snakeCaseKey];
+          const value = camelCaseValue ?? snakeCaseValue ?? "";
+          fields[field.fieldKey] = String(value);
         });
+        // For character sets, also load character string fields
+        if (isCharacterSet) {
+          fields.standardChars = (item as any).standardChars ?? (item as any).standard_chars ?? "";
+          fields.doubleChars = (item as any).doubleChars ?? (item as any).double_chars ?? "";
+          fields.tripleChars = (item as any).tripleChars ?? (item as any).triple_chars ?? "";
+          fields.quadChars = (item as any).quadChars ?? (item as any).quad_chars ?? "";
+        }
         setCustomFields(fields);
       }
       if (isComboType) {
@@ -253,6 +265,7 @@ function TypeConfigurationModal({
       setIsActive(true);
       setMetadataValue("");
       if (isCreativeTemplate) {
+        setCode("");
         setTitle("");
         setTextBody("");
         setHtmlBody("");
@@ -267,6 +280,13 @@ function TypeConfigurationModal({
         config.customFields.forEach((field) => {
           fields[field.fieldKey] = "";
         });
+        // For character sets, initialize character string fields
+        if (isCharacterSet) {
+          fields.standardChars = "";
+          fields.doubleChars = "";
+          fields.tripleChars = "";
+          fields.quadChars = "";
+        }
         setCustomFields(fields);
       }
       if (isComboType) {
@@ -324,6 +344,12 @@ function TypeConfigurationModal({
       return;
     }
 
+    // Validate code field for Creative Templates
+    if (isCreativeTemplate && !code.trim()) {
+      setError("Code is required for creative templates");
+      return;
+    }
+
     setError("");
 
     // Validate variables JSON if provided
@@ -371,6 +397,7 @@ function TypeConfigurationModal({
 
     // Add template content fields for Creative Templates
     if (isCreativeTemplate) {
+      payload.code = code.trim() || undefined;
       payload.title = title.trim() || undefined;
       payload.text_body = textBody.trim() || undefined;
       payload.html_body = htmlBody.trim() || undefined;
@@ -616,6 +643,89 @@ function TypeConfigurationModal({
               </>
             )}
 
+          {/* Character String Fields (for Character Sets only) */}
+          {isCharacterSet && (
+            <>
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">
+                  Character Strings
+                </h3>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Standard Characters
+                </label>
+                <textarea
+                  value={customFields.standardChars || ""}
+                  onChange={(e) =>
+                    setCustomFields((prev) => ({
+                      ...prev,
+                      standardChars: e.target.value,
+                    }))
+                  }
+                  rows={2}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-xs`}
+                  placeholder="e.g., ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Double Characters (optional)
+                </label>
+                <textarea
+                  value={customFields.doubleChars || ""}
+                  onChange={(e) =>
+                    setCustomFields((prev) => ({
+                      ...prev,
+                      doubleChars: e.target.value,
+                    }))
+                  }
+                  rows={2}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-xs`}
+                  placeholder="Characters that take 2 positions"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Triple Characters (optional)
+                </label>
+                <textarea
+                  value={customFields.tripleChars || ""}
+                  onChange={(e) =>
+                    setCustomFields((prev) => ({
+                      ...prev,
+                      tripleChars: e.target.value,
+                    }))
+                  }
+                  rows={2}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-xs`}
+                  placeholder="Characters that take 3 positions"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quad Characters (optional)
+                </label>
+                <textarea
+                  value={customFields.quadChars || ""}
+                  onChange={(e) =>
+                    setCustomFields((prev) => ({
+                      ...prev,
+                      quadChars: e.target.value,
+                    }))
+                  }
+                  rows={2}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical font-mono text-xs`}
+                  placeholder="Characters that take 4 positions"
+                />
+              </div>
+            </>
+          )}
+
           {/* Template Content Fields (for Creative Templates only) */}
           {isCreativeTemplate && (
             <>
@@ -623,6 +733,23 @@ function TypeConfigurationModal({
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">
                   {t.genericConfig.templateContent}
                 </h3>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Code *
+                </label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className={`w-full px-3 py-2 text-sm border border-gray-300 ${tw.rounded} focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent`}
+                  placeholder="e.g., WELCOME_SMS, PROMOTION_EMAIL"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Unique identifier for this template
+                </p>
               </div>
 
               <div>
@@ -1056,10 +1183,13 @@ export default function TypeConfigurationPage({
       isActive: item.isActive ?? true,
     }));
 
-  // Use backend hook for campaign types
-  const isCampaignTypes = config.configType === "campaignTypes";
+  // Determine if this config type uses backend API
+  const backendTypes = ["campaignTypes", "senderIds", "languages", "characterSets", "creativeTemplates"];
+  const useBackendConfig = backendTypes.includes(config.configType);
+
+  // Always call hook - it returns null for unsupported types
   const backendConfig = useBackendConfigurationData(
-    isCampaignTypes ? "campaignTypes" : undefined,
+    useBackendConfig ? (config.configType as any) : undefined,
   );
 
   const [items, setItems] = useState<TypeConfigurationItem[]>(
@@ -1077,14 +1207,13 @@ export default function TypeConfigurationPage({
 
   // Sync backend data to local items when using backend hook
   useEffect(() => {
-    if (isCampaignTypes && backendConfig?.data) {
+    if (useBackendConfig && backendConfig?.data && Array.isArray(backendConfig.data)) {
       setItems(normalizeItems(backendConfig.data as TypeConfigurationItem[]));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCampaignTypes, backendConfig?.data?.length]);
+  }, [useBackendConfig, backendConfig?.data?.length]);
 
   useEffect(() => {
-    if (!isCampaignTypes && config.configType) {
+    if (!useBackendConfig && config.configType) {
       configurationDataService.setData(
         config.configType,
         normalizeItems(config.initialData),
@@ -1099,8 +1228,7 @@ export default function TypeConfigurationPage({
 
       return unsubscribe;
     }
-    return undefined;
-  }, [config.configType, config.initialData, isCampaignTypes]);
+  }, [config.configType, config.initialData, useBackendConfig]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -1135,7 +1263,7 @@ export default function TypeConfigurationPage({
     if (!confirmed) return;
 
     try {
-      if (isCampaignTypes && backendConfig) {
+      if (useBackendConfig && backendConfig) {
         await backendConfig.delete(item.id);
       } else {
         configurationDataService.deleteItem(config.configType, item.id);
@@ -1162,7 +1290,7 @@ export default function TypeConfigurationPage({
   }) => {
     try {
       setIsSaving(true);
-      if (isCampaignTypes && backendConfig) {
+      if (useBackendConfig && backendConfig) {
         if (editingItem) {
           await backendConfig.update(editingItem.id, itemData);
           showToast(config.updateSuccessMessage);

@@ -1,5 +1,5 @@
 import TypeConfigurationPage from "../../../shared/components/TypeConfigurationPage";
-import { getCreativeTemplatesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getCreativeTemplatesConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CreativeTemplatesPage() {

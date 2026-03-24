@@ -18,7 +18,7 @@ import {
   routesConfig,
   languagesConfig,
   characterSetsConfig,
-} from "../configs/configurationPageConfigs";
+} from "../../features/configurations/configs/configurationPageConfigs";
 
 // Type pour identifier les différents types de configuration
 export type ConfigurationType =

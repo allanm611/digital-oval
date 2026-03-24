@@ -1441,7 +1441,7 @@ export const creativeTemplatesConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: Palette,
   searchPlaceholder: "Search creative templates...",
-  initialData: hardcodedCreativeTemplates,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Create Creative Template",
@@ -2401,7 +2401,7 @@ export const senderIdsConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: MessageSquare,
   searchPlaceholder: "Search sender IDs...",
-  initialData: hardcodedSenderIds,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Create New Sender ID",
@@ -2727,7 +2727,7 @@ export const languagesConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: Globe,
   searchPlaceholder: "Search languages...",
-  initialData: hardcodedLanguages,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Add Language",
@@ -2793,7 +2793,7 @@ export const characterSetsConfig: TypeConfigurationPageConfig = {
   backPath: "/dashboard/configuration",
   icon: Globe,
   searchPlaceholder: "Search character sets...",
-  initialData: hardcodedCharacterSets,
+  initialData: [],
   createButtonText: "Create",
   modalTitle: {
     create: "Create Character Set",

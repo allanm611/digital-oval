@@ -8,7 +8,7 @@ import { useClickOutside } from "../../../../shared/hooks/useClickOutside";
 import {
   lineOfBusinessConfig,
   departmentsConfig,
-} from "../../../../shared/configs/configurationPageConfigs";
+} from "../../../configurations/configs/configurationPageConfigs";
 import { configurationDataService } from "../../../../shared/services/configurationDataService";
 import { CommunicationPolicyConfiguration } from "../../types/communicationPolicyConfig";
 import { tw, components, color } from "../../../../shared/utils/utils";

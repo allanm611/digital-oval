@@ -39,9 +39,9 @@ interface AvailableControlGroup {
 import SegmentSelectionModal from "./SegmentSelectionModal";
 import SeedListConfigModal from "./SeedListConfigModal";
 import SegmentModal from "../../../segments/components/SegmentModal";
-import { UNIVERSAL_CONTROL_GROUPS } from "../../../../shared/config/universalControlGroupsConfig";
+import { UNIVERSAL_CONTROL_GROUPS } from "../../../control-groups/configs/universalControlGroupsConfig";
 
-// Available seed lists in the system
+
 const AVAILABLE_SEED_LISTS = [
   { id: "marketing-staff", name: "Marketing Staff" },
   { id: "sales-staff", name: "Sales Staff" },
@@ -93,7 +93,6 @@ export default function AudienceConfigurationStep({
   const [sharedControlGroupId, setSharedControlGroupId] = useState<string | null>(null);
   const [sharedControlGroupConfig, setSharedControlGroupConfig] = useState<SegmentControlGroupConfig | null>(null);
 
-  // Seed List state - use props if provided, otherwise use local state
   const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">(propSeedListMode || "all");
   const [showSeedListModal, setShowSeedListModal] = useState(false);
   const [editingSeedListSegmentId, setEditingSeedListSegmentId] = useState<string | null>(null);
@@ -101,7 +100,6 @@ export default function AudienceConfigurationStep({
 
   const { t } = useLanguage();
 
-  // Wrapper functions to sync with parent state
   const handleSetSeedListMode = (mode: "all" | "per-segment") => {
     setSeedListMode(mode);
     if (propSetSeedListMode) {
@@ -139,7 +137,6 @@ export default function AudienceConfigurationStep({
     }
   }, [seedListMode]);
 
-  // Persist control group and seed list configuration to localStorage
   useEffect(() => {
     const audienceConfig = {
       controlGroupMode,

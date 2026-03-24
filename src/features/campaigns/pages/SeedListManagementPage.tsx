@@ -6,7 +6,7 @@ import LoadingSpinner from "../../../shared/components/ui/LoadingSpinner";
 import { color, tw } from "../../../shared/utils/utils";
 import HeadlessSelect from "../../../shared/components/ui/HeadlessSelect";
 import DateFormatter from "../../../shared/components/DateFormatter";
-import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getDepartmentsConfig, getLineOfBusinessConfig } from "../../configurations/configs/configurationPageConfigs";
 
 // Types
 export interface SeedListRecipient {

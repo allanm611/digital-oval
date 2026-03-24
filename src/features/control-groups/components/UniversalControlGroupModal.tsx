@@ -16,7 +16,7 @@ import { tw, zIndex } from "../../../../shared/utils/utils";
 import {
   UniversalControlGroup,
   UNIVERSAL_CONTROL_GROUPS,
-} from "../../../../shared/config/universalControlGroupsConfig";
+} from "../configs/universalControlGroupsConfig";
 import SegmentConditionsBuilder from "../../../segments/components/SegmentConditionsBuilder";
 import type { SegmentConditionGroup } from "../../../segments/types/segment";
 

@@ -25,7 +25,7 @@ import {
   CampaignSegment,
   CampaignOffer,
   ControlGroup,
-  CampaignScheduling,
+  // CampaignScheduling,
   BackendCampaignType,
   CampaignFormData,
   StepProps,
@@ -34,10 +34,12 @@ import {
 import { CreateCampaignRequest } from "../types/createCampaign";
 import { campaignService } from "../services/campaignService";
 import { campaignFlowService } from "../services/campaignFlowService";
-import { CampaignFlowConfig, CampaignFlowResponseData } from "../types/campaignFlow";
-import { departmentsConfig } from "../../../shared/configs/configurationPageConfigs";
+import {
+  CampaignFlowConfig,
+  CampaignFlowResponseData,
+} from "../types/campaignFlow";
+import { departmentsConfig } from "../../configurations/configs/configurationPageConfigs";
 
-// Objective options mapping
 const objectiveOptions = [
   { value: "acquisition", label: "New Customer Acquisition" },
   { value: "retention", label: "Customer Retention" },
@@ -46,16 +48,20 @@ const objectiveOptions = [
   { value: "reactivation", label: "Dormant Customer Reactivation" },
 ];
 
-// Helper function to map objective label back to value
-const mapObjectiveLabelToValue = (
-  labelOrValue: string | undefined
-): string => {
+/** Convert objective label to value or return existing value */
+const mapObjectiveLabelToValue = (labelOrValue: string | undefined): string => {
   if (!labelOrValue) return "acquisition";
-  // Check if it's already a value
-  if (["acquisition", "retention", "churn_prevention", "upsell_cross_sell", "reactivation"].includes(labelOrValue)) {
+  if (
+    [
+      "acquisition",
+      "retention",
+      "churn_prevention",
+      "upsell_cross_sell",
+      "reactivation",
+    ].includes(labelOrValue)
+  ) {
     return labelOrValue;
   }
-  // Find by label
   const found = objectiveOptions.find((o) => o.label === labelOrValue);
   return found?.value || "acquisition";
 };
@@ -110,7 +116,6 @@ export default function CreateCampaignPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
-  // isEditMode: true only when accessing via /campaigns/:id/edit route (editing existing campaign from list)
   const isEditMode = Boolean(id);
   const [isDuplicateMode, setIsDuplicateMode] = useState(false);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(false);
@@ -121,20 +126,12 @@ export default function CreateCampaignPage() {
   const [createdCampaignName, setCreatedCampaignName] = useState<string>("");
   const hasRestoredDataRef = useRef(false);
 
-  // Scroll to top when step changes
+  /** Scroll to top on step change */
   useEffect(() => {
-    // Function to perform scroll
     const performScroll = () => {
-      // Scroll window
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-      // Scroll document elements
-      if (document.documentElement) {
-        document.documentElement.scrollTop = 0;
-      }
-      if (document.body) {
-        document.body.scrollTop = 0;
-      }
-      // Scroll any scrollable containers
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
       const scrollableContainers = document.querySelectorAll(
         '[style*="overflow"], [class*="overflow"]',
       );
@@ -145,15 +142,8 @@ export default function CreateCampaignPage() {
       });
     };
 
-    // Immediate scroll
     performScroll();
-
-    // Scroll after render (using requestAnimationFrame)
-    requestAnimationFrame(() => {
-      performScroll();
-    });
-
-    // Also scroll after delays to catch any delayed renders
+    requestAnimationFrame(performScroll);
     const timeoutId1 = setTimeout(performScroll, 50);
     const timeoutId2 = setTimeout(performScroll, 150);
 
@@ -163,7 +153,6 @@ export default function CreateCampaignPage() {
     };
   }, [currentStep]);
 
-  // Get params from URL
   const categoryIdParam = searchParams.get("categoryId");
   const duplicateIdParam = searchParams.get("duplicateId");
   const preselectedCategoryId = categoryIdParam
@@ -187,30 +176,34 @@ export default function CreateCampaignPage() {
   const [segmentOfferMappings, setSegmentOfferMappings] = useState<
     SegmentOfferMapping[]
   >([]);
-  const [campaignFlows, setCampaignFlows] = useState<CampaignFlowResponseData[]>([]);
-  const [originalFlows, setOriginalFlows] = useState<CampaignFlowResponseData[]>([]); // Track original flows for edit mode
+  const [campaignFlows, setCampaignFlows] = useState<
+    CampaignFlowResponseData[]
+  >([]);
+  const [originalFlows, setOriginalFlows] = useState<
+    CampaignFlowResponseData[]
+  >([]); // Track original flows for edit mode
   const [controlGroup, setControlGroup] = useState<ControlGroup>({
     enabled: false,
     percentage: 5,
     type: "standard",
   });
 
-  // Seed list state
-  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">("all");
-  const [segmentSeedLists, setSegmentSeedLists] = useState<Record<string, string[]>>({});
-
-  // Validation errors state
+  const [seedListMode, setSeedListMode] = useState<"all" | "per-segment">(
+    "all",
+  );
+  const [segmentSeedLists, setSegmentSeedLists] = useState<
+    Record<string, string[]>
+  >({});
   const [validationErrors, setValidationErrors] = useState<{
     [key: string]: string;
   }>({});
 
-  // Persist form data to localStorage - ONLY in create mode
-  // In edit mode, pass true as 4th parameter to skip loading from localStorage
+  /** Persist campaign data to localStorage */
   useFormDataPersistence(
     "campaign_form_data",
     formData,
     setFormData,
-    isEditMode, // Skip localStorage in edit mode
+    isEditMode,
   );
   useFormDataPersistence(
     "campaign_segments",
@@ -243,28 +236,24 @@ export default function CreateCampaignPage() {
     isEditMode,
   );
 
-  // Handle campaign flows persistence - only in create mode
+  /** Load or clear campaign flows on mode change */
   useEffect(() => {
     if (isEditMode) {
-      // In edit mode: clear persisted flows to ensure fresh API data
       clearPersistedFormData("campaign_flows");
     } else {
-      // In create mode: load from localStorage if exists
-      const savedFlows = getPersistedFormData<CampaignFlowConfig[]>("campaign_flows");
-      if (savedFlows) {
-        setCampaignFlows(savedFlows);
-      }
+      const savedFlows =
+        getPersistedFormData<CampaignFlowConfig[]>("campaign_flows");
+      if (savedFlows) setCampaignFlows(savedFlows);
     }
   }, [isEditMode]);
 
-  // Auto-save flows to localStorage during create (but not edit)
+  /** Auto-save flows to localStorage during create mode */
   useEffect(() => {
     if (!isEditMode && campaignFlows.length > 0) {
       localStorage.setItem("campaign_flows", JSON.stringify(campaignFlows));
     }
   }, [campaignFlows, isEditMode]);
 
-  // Clear persisted form data when user exits the creation flow
   useFormCleanupOnExit("campaign_form_data");
   useFormCleanupOnExit("campaign_segments");
   useFormCleanupOnExit("campaign_offers");
@@ -273,6 +262,7 @@ export default function CreateCampaignPage() {
   useFormCleanupOnExit("campaign_seed_list_mode");
   useFormCleanupOnExit("campaign_segment_seed_lists");
 
+  /** Load campaign data in edit or duplicate mode */
   const loadCampaignData = useCallback(
     async (
       campaignId: string,
@@ -286,7 +276,10 @@ export default function CreateCampaignPage() {
         setIsLoadingCampaign(true);
       }
       try {
-        const response = await campaignService.getCampaignById(campaignId, true);
+        const response = await campaignService.getCampaignById(
+          campaignId,
+          true,
+        );
         const campaign =
           (response as { data?: BackendCampaignType } | BackendCampaignType)
             .data || response;
@@ -306,61 +299,46 @@ export default function CreateCampaignPage() {
             start_date: campaign?.start_date || undefined,
             end_date: campaign?.end_date || undefined,
             campaign_type: campaign?.campaign_type || "multiple_target_group",
-            // Load tags as array
+
             tags: (campaign?.tags || []).map((tag: any) =>
-              typeof tag === "string" ? tag : (tag?.name || String(tag))
+              typeof tag === "string" ? tag : tag?.name || String(tag),
             ),
-            // Load department_id if owner_team matches a department name
-            department_id: campaign?.owner_team ? undefined : undefined, // Will be set in UI selection
-            // Load budget_allocated - convert string to number for the form
+            department_id: campaign?.owner_team ? undefined : undefined,
             budget_allocated: campaign?.budget_allocated
               ? parseFloat(campaign.budget_allocated)
               : undefined,
-            // Load priority fields
             priority: campaign?.priority || undefined,
             priority_rank: campaign?.priority_rank || undefined,
           };
           setFormData(newFormData);
         }
 
-        // Load segments and offers via campaign flows service
         try {
-          // Use campaignFlowService to get segments and offers for this campaign
           const [segmentsResponse, offersResponse] = await Promise.all([
             campaignFlowService.getCampaignSegments(parseInt(campaignId), true),
             campaignFlowService.getCampaignOffers(parseInt(campaignId), true),
           ]);
 
-          // Process segments from campaign flows
-          if (segmentsResponse.success && segmentsResponse.data?.length > 0) {
+          if (segmentsResponse?.success && segmentsResponse.data?.length > 0) {
             const validSegments: CampaignSegment[] = segmentsResponse.data
-              .map((segment) => {
-                if (!segment || !segment.segment_id) {
-                  return null;
-                }
+              .map((segment: any) => {
+                if (!segment?.id) return null;
                 return {
-                  id: String(segment.segment_id),
-                  name: segment.segment_name,
-                  description: segment.description || "",
-                  customer_count: segment.customer_count || segment.size_estimate || 0,
+                  id: String(segment.id),
+                  name: segment.name || "",
+                  customer_count: segment.customer_count || 0,
                   criteria: {},
-                  created_at: segment.created_at,
+                  created_at: segment.created_at || new Date().toISOString(),
                 } as CampaignSegment;
               })
               .filter((s): s is CampaignSegment => s !== null);
-
             setSelectedSegments(validSegments);
           }
 
-          // Process offers from campaign flows
-          if (offersResponse.success && offersResponse.data?.length > 0) {
+          if (offersResponse?.success && offersResponse.data?.length > 0) {
             const validOffers: CampaignOffer[] = offersResponse.data
               .map((offer: any) => {
-                if (!offer || !offer.offer_id) {
-                  return null;
-                }
-
-                // Calculate validity period from valid_from and valid_to
+                if (!offer?.id) return null;
                 let validityPeriod = 30;
                 if (offer.valid_from && offer.valid_to) {
                   const from = new Date(offer.valid_from);
@@ -369,8 +347,6 @@ export default function CreateCampaignPage() {
                     (to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24),
                   );
                 }
-
-                // Determine reward type and value based on available fields
                 let rewardType:
                   | "bundle"
                   | "points"
@@ -388,11 +364,9 @@ export default function CreateCampaignPage() {
                   rewardType = "points";
                   rewardValue = String(offer.bonus_value);
                 }
-
                 return {
-                  id: String(offer.offer_id),
-                  name: offer.offer_name,
-                  description: offer.description || "",
+                  id: String(offer.id),
+                  name: offer.name || "",
                   offer_type: offer.offer_type || "General",
                   reward_type: rewardType,
                   reward_value: rewardValue,
@@ -403,59 +377,49 @@ export default function CreateCampaignPage() {
                 } as CampaignOffer;
               })
               .filter((o): o is CampaignOffer => o !== null);
-
             setSelectedOffers(validOffers);
           }
         } catch (campaignFlowsError) {
-          console.error("Failed to load segments/offers from campaign flows:", campaignFlowsError);
+          console.error("Failed to load segments/offers:", campaignFlowsError);
         }
 
-        // Load campaign flows if they exist
         try {
           const flowsResponse = await campaignFlowService.getCampaignFlows(
             parseInt(campaignId),
           );
-
-          if (flowsResponse.success && flowsResponse.data.length > 0) {
-            // Convert API response to CampaignFlowResponseData format (includes id)
+          if (flowsResponse?.success && flowsResponse.data?.length > 0) {
             const flows: CampaignFlowResponseData[] = flowsResponse.data
-              .map((flow) => {
-                // Null checks for critical fields
-                if (!flow || !flow.id || !flow.campaign_id || !flow.offer_id) {
-                  console.warn("Flow data invalid:", flow);
+              .map((flow: any) => {
+                if (!flow?.id || !flow.campaign_id || !flow.offer_id)
                   return null;
-                }
                 return {
                   id: flow.id,
                   campaign_id: flow.campaign_id,
                   segment_id:
-                    typeof flow.segment_id === "string" && flow.segment_id
+                    typeof flow.segment_id === "string"
                       ? parseInt(flow.segment_id)
                       : flow.segment_id || 0,
                   offer_id: flow.offer_id,
-                  offer_creative_id: flow.offer_creative_id || undefined,
-                  template_id: flow.template_id || undefined,
+                  offer_creative_id: flow.offer_creative_id,
+                  template_id: flow.template_id,
                   flow_type: flow.flow_type || "",
                   step_order: flow.step_order || 0,
                   wait_interval_hours: flow.wait_interval_hours || 0,
-                  bucket_allocation: flow.bucket_allocation || undefined,
-                  condition_rule: flow.condition_rule || undefined,
+                  bucket_allocation: flow.bucket_allocation,
+                  condition_rule: flow.condition_rule,
                   is_active: flow.is_active ?? true,
                   created_at: flow.created_at || "",
                   updated_at: flow.updated_at || "",
-                  created_by: flow.created_by || null,
-                  updated_by: flow.updated_by || null,
+                  created_by: flow.created_by,
+                  updated_by: flow.updated_by,
                 };
               })
               .filter((f): f is CampaignFlowResponseData => f !== null);
-
             setCampaignFlows(flows);
-            // Store original flows for edit mode comparison
             setOriginalFlows(JSON.parse(JSON.stringify(flows)));
           }
         } catch (flowError) {
           console.error("Failed to load campaign flows:", flowError);
-          // Non-critical error - continue anyway
         }
       } catch {
         if (!silent) {
@@ -471,16 +435,14 @@ export default function CreateCampaignPage() {
     [showToast, navigate, t],
   );
 
-  // Restore campaign data when returning from offer creation
+  /** Restore campaign data or load existing campaign */
   useEffect(() => {
-    // Prevent multiple restorations - check both ref and sessionStorage flag
-    const alreadyRestored =
-      sessionStorage.getItem("campaignDataRestored") === "true";
-    if (hasRestoredDataRef.current || alreadyRestored) {
+    if (
+      hasRestoredDataRef.current ||
+      sessionStorage.getItem("campaignDataRestored") === "true"
+    )
       return;
-    }
 
-    // First check if returning from offer creation - restore saved campaign data
     const returnFromOfferCreate = searchParams.get("returnFromOfferCreate");
     const stepParam = searchParams.get("step");
 
@@ -489,80 +451,54 @@ export default function CreateCampaignPage() {
       !id &&
       !duplicateIdParam
     ) {
-      // Mark as restored immediately to prevent loops (both ref and sessionStorage)
       hasRestoredDataRef.current = true;
       sessionStorage.setItem("campaignDataRestored", "true");
 
       const savedData = sessionStorage.getItem("campaignFormData");
-
       if (savedData) {
         try {
           const campaignData = JSON.parse(savedData);
-
-          // REMOVE saved data IMMEDIATELY to prevent loops
           sessionStorage.removeItem("campaignFormData");
 
-          // Restore all data
-          if (campaignData.formData) {
+          if (campaignData?.formData) {
             setFormData(campaignData.formData);
-            // Also restore to localStorage to persist the data
             localStorage.setItem(
               "campaign_form_data",
               JSON.stringify(campaignData.formData),
             );
           }
-          if (
-            campaignData.selectedSegments &&
-            Array.isArray(campaignData.selectedSegments)
-          ) {
+          if (Array.isArray(campaignData?.selectedSegments)) {
             setSelectedSegments(campaignData.selectedSegments);
-            // Also restore to localStorage to persist the data
             localStorage.setItem(
               "campaign_segments",
               JSON.stringify(campaignData.selectedSegments),
             );
           }
-          if (
-            campaignData.selectedOffers &&
-            Array.isArray(campaignData.selectedOffers)
-          ) {
+          if (Array.isArray(campaignData?.selectedOffers)) {
             setSelectedOffers(campaignData.selectedOffers);
-            // Also restore to localStorage to persist the data
             localStorage.setItem(
               "campaign_offers",
               JSON.stringify(campaignData.selectedOffers),
             );
           }
-          if (
-            campaignData.segmentOfferMappings &&
-            Array.isArray(campaignData.segmentOfferMappings)
-          ) {
+          if (Array.isArray(campaignData?.segmentOfferMappings)) {
             setSegmentOfferMappings(campaignData.segmentOfferMappings);
-            // Also restore to localStorage to persist the data
             localStorage.setItem(
               "campaign_mappings",
               JSON.stringify(campaignData.segmentOfferMappings),
             );
           }
-          if (campaignData.controlGroup) {
+          if (campaignData?.controlGroup)
             setControlGroup(campaignData.controlGroup);
-          }
-
           setCurrentStep(3);
-
-          // Clean up URL parameters
           const newParams = new URLSearchParams(searchParams);
           newParams.delete("returnFromOfferCreate");
           newParams.delete("step");
           setSearchParams(newParams, { replace: true });
-          return; // Exit early to prevent loading campaign data
+          return;
         } catch (error) {
           console.error("Failed to restore campaign data:", error);
-          // Remove saved data even on error to prevent loops
           sessionStorage.removeItem("campaignFormData");
-          setCurrentStep(3);
-
-          // Clean up URL parameters even on error
           const newParams = new URLSearchParams(searchParams);
           newParams.delete("returnFromOfferCreate");
           newParams.delete("step");
@@ -570,11 +506,7 @@ export default function CreateCampaignPage() {
           return;
         }
       } else {
-        // No saved data, just clean up URL and set step
-        hasRestoredDataRef.current = true;
-        sessionStorage.setItem("campaignDataRestored", "true");
         setCurrentStep(3);
-        // Clean up URL parameters
         const newParams = new URLSearchParams(searchParams);
         newParams.delete("returnFromOfferCreate");
         newParams.delete("step");
@@ -583,18 +515,10 @@ export default function CreateCampaignPage() {
       }
     }
 
-    // Then handle edit/duplicate mode (only if not returning from offer creation)
     if (id && !hasRestoredDataRef.current) {
-      // Edit mode - modifying existing campaign
-      // isEditMode already set in state initialization
       setIsDuplicateMode(false);
-
-      // Always load from API in edit mode to get COMPLETE data
-      // Don't rely on location.state as it may have incomplete campaign data
       loadCampaignData(id, false, false, false);
     } else if (duplicateIdParam && !hasRestoredDataRef.current) {
-      // Duplicate mode - creating new campaign from existing one
-      // No need to set isEditMode - state init handles it
       setIsDuplicateMode(true);
       loadCampaignData(duplicateIdParam, true);
     }
@@ -615,7 +539,7 @@ export default function CreateCampaignPage() {
     const errors: { [key: string]: string } = {};
 
     switch (currentStep) {
-      case 1: // Definition step
+      case 1:
         if (!formData.name.trim()) {
           errors.name = "Campaign name is required";
         }
@@ -625,14 +549,13 @@ export default function CreateCampaignPage() {
         if (!formData.category_id) {
           errors.category_id = "Campaign catalog is required";
         }
-        // Budget is optional - only validate if provided and must be > 0
         if (
           formData.budget_allocated &&
           Number(formData.budget_allocated) <= 0
         ) {
           errors.budget_allocated = "Budget allocated must be greater than 0";
         }
-        // Validate date range if both dates are provided
+
         if (formData.start_date && formData.end_date) {
           const startDate = new Date(formData.start_date);
           const endDate = new Date(formData.end_date);
@@ -695,43 +618,29 @@ export default function CreateCampaignPage() {
     }
   };
 
+  /** Check if user can navigate to target step */
   const canNavigateToStep = (targetStep: number) => {
-    // Can always go to previous steps
     if (targetStep < currentStep) return true;
-
-    // Can't go to future steps beyond current + 1
     if (targetStep > currentStep + 1) return false;
-
-    // Can go to next step only if current step is valid
     if (targetStep === currentStep + 1) return validateCurrentStep().isValid;
-
-    // Can stay on current step
     if (targetStep === currentStep) return true;
-
     return false;
   };
 
+  /** Move to next step after validation */
   const handleNext = () => {
     const validation = validateCurrentStep();
     setValidationErrors(validation.errors);
-
     if (validation.isValid && currentStep < steps.length) {
-      // Save campaign data before moving to next step
       saveCampaignDataToSession();
-
       setCurrentStep(currentStep + 1);
-      // Clear errors when moving to next step
       setValidationErrors({});
     }
   };
 
-  // Function to save campaign data to sessionStorage
+  /** Save campaign data to sessionStorage */
   const saveCampaignDataToSession = useCallback(() => {
-    // Don't save if we're in edit or duplicate mode
-    if (id || duplicateIdParam) {
-      return;
-    }
-
+    if (id || duplicateIdParam) return;
     try {
       const campaignData = {
         formData: JSON.parse(JSON.stringify(formData)),
@@ -740,11 +649,11 @@ export default function CreateCampaignPage() {
         segmentOfferMappings: JSON.parse(JSON.stringify(segmentOfferMappings)),
         campaignFlows: JSON.parse(JSON.stringify(campaignFlows)),
         controlGroup: JSON.parse(JSON.stringify(controlGroup)),
-        currentStep: currentStep,
+        currentStep,
       };
       sessionStorage.setItem("campaignFormData", JSON.stringify(campaignData));
     } catch (error) {
-      console.error("Error saving campaign data to session:", error);
+      console.error("Error saving campaign data:", error);
     }
   }, [
     formData,
@@ -758,9 +667,8 @@ export default function CreateCampaignPage() {
     duplicateIdParam,
   ]);
 
-  // Continuously save campaign data to sessionStorage whenever it changes
+  /** Auto-save campaign data to sessionStorage */
   useEffect(() => {
-    // Only save if we're not in edit/duplicate mode and we have some data
     if (
       !id &&
       !duplicateIdParam &&
@@ -782,86 +690,68 @@ export default function CreateCampaignPage() {
   ]);
 
   const handlePrev = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
   const handleStepClick = (stepId: number) => {
-    if (canNavigateToStep(stepId)) {
-      setCurrentStep(stepId);
-    }
+    if (canNavigateToStep(stepId)) setCurrentStep(stepId);
   };
 
-  // Generate unique campaign code from name
+  /** Generate unique campaign code from name */
   const generateCampaignCode = (name: string): string => {
-    // Remove special characters and convert to uppercase
+    if (!name?.trim())
+      return `CAMPAIGN_${new Date().getFullYear()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const sanitized = name
       .toUpperCase()
       .replace(/[^A-Z0-9\s]/g, "")
       .trim()
       .replace(/\s+/g, "_");
-
-    // Get current year
     const year = new Date().getFullYear();
-
-    // Generate random suffix for uniqueness (4 characters)
     const randomSuffix = Math.random()
       .toString(36)
       .substring(2, 6)
       .toUpperCase();
-
-    // Create code: First 3 words of name + year + random suffix
     const words = sanitized.split("_").filter((w) => w.length > 0);
     const prefix = words.slice(0, 3).join("_");
-
     return `${prefix}_${year}_${randomSuffix}`;
   };
 
+  /** Submit campaign creation or update */
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      if (!formData.name.trim()) {
-        showToast("error", t.campaigns.campaignDefinition.nameRequired);
+      if (!formData?.name?.trim()) {
+        showToast("error", "Campaign name is required");
         setIsLoading(false);
         return;
       }
 
-      if (selectedSegments.length === 0) {
-        showToast("error", t.campaigns.audienceConfiguration.requiresSegment);
+      if (!selectedSegments?.length) {
+        showToast("error", "At least one segment is required");
         setIsLoading(false);
         return;
       }
 
-      // Get objective label from value (used in both update and create paths)
       const objectiveOption = objectiveOptions.find(
-        (o: { value: string; label: string }) =>
-          o.value === formData.objective,
+        (o) => o.value === formData.objective,
       );
-      const objectiveLabel = objectiveOption
-        ? objectiveOption.label
-        : formData.objective;
-
-      // Get tags array directly from formData
+      const objectiveLabel =
+        objectiveOption?.label || formData.objective || "acquisition";
       const tagsArray = formData.tags || [];
-
-      // Get department name from formData.department_id
-      const departmentId = (formData as { department_id?: number })
-        .department_id;
-      const department = departmentId
-        ? departmentsConfig.initialData.find(
-            (d: { id: number | string; name: string }) =>
-              Number(d.id) === Number(departmentId),
-          )
-        : undefined;
-      const ownerTeam = department?.name || undefined;
+      const departmentId = (formData as any)?.department_id;
+      const department =
+        departmentId && departmentsConfig?.initialData
+          ? departmentsConfig.initialData.find(
+              (d: any) => Number(d?.id) === Number(departmentId),
+            )
+          : undefined;
+      const ownerTeam = department?.name;
 
       if (isEditMode && id) {
-        // Editing existing campaign from list - UPDATE endpoint
         const updateData: Partial<CreateCampaignRequest> = {
           name: formData.name,
-          objective: objectiveLabel, // Send label text, not value
-          updated_by: user?.user_id ?? null,
+          objective: objectiveLabel,
+          updated_by: user?.user_id ?? undefined,
           ...(formData.description && { description: formData.description }),
           ...(formData.category_id && { category_id: formData.category_id }),
           ...(formData.program_id && { program_id: formData.program_id }),
@@ -873,43 +763,36 @@ export default function CreateCampaignPage() {
             budget_allocated: String(formData.budget_allocated),
           }),
         };
-
         await campaignService.updateCampaign(parseInt(id), updateData);
 
-        // Handle campaign flows updates (create, update, delete)
-        if (campaignFlows && campaignFlows.length > 0) {
+        if (campaignFlows?.length) {
           try {
-            if (originalFlows.length > 0) {
-              // EDIT MODE: Compare and sync flows (delete/update/create)
-
-              // 1. DELETE flows that are no longer in the list
+            if (originalFlows?.length) {
               for (const originalFlow of originalFlows) {
-                const stillExists = campaignFlows.some(
+                const stillExists = campaignFlows?.some(
                   (f) =>
-                    f.segment_id === originalFlow.segment_id &&
-                    f.offer_id === originalFlow.offer_id,
+                    f?.segment_id === originalFlow?.segment_id &&
+                    f?.offer_id === originalFlow?.offer_id,
                 );
-                if (!stillExists && originalFlow.id) {
+                if (!stillExists && originalFlow?.id) {
                   try {
                     await campaignFlowService.deleteCampaignFlow(
                       originalFlow.id,
                     );
-                  } catch (deleteError) {
-                    console.error("Error deleting flow:", deleteError);
+                  } catch (err) {
+                    console.error("Error deleting flow:", err);
                   }
                 }
               }
 
-              // 2. UPDATE existing flows that changed
               for (const updatedFlow of campaignFlows) {
-                const originalFlow = originalFlows.find(
+                const originalFlow = originalFlows?.find(
                   (f) =>
-                    f.segment_id === updatedFlow.segment_id &&
-                    f.offer_id === updatedFlow.offer_id,
+                    f?.segment_id === updatedFlow?.segment_id &&
+                    f?.offer_id === updatedFlow?.offer_id,
                 );
                 if (
-                  originalFlow &&
-                  originalFlow.id &&
+                  originalFlow?.id &&
                   JSON.stringify(originalFlow) !== JSON.stringify(updatedFlow)
                 ) {
                   try {
@@ -917,28 +800,30 @@ export default function CreateCampaignPage() {
                       originalFlow.id,
                       updatedFlow,
                     );
-                  } catch (updateError) {
-                    console.error("Error updating flow:", updateError);
+                  } catch (err) {
+                    console.error("Error updating flow:", err);
                   }
                 }
               }
 
-              // 3. CREATE new flows
-              const newFlows = campaignFlows.filter(
-                (f) =>
-                  !originalFlows.some(
-                    (of) =>
-                      of.segment_id === f.segment_id &&
-                      of.offer_id === f.offer_id,
-                  ),
-              );
+              const newFlows =
+                campaignFlows?.filter(
+                  (f) =>
+                    !originalFlows?.some(
+                      (of) =>
+                        of?.segment_id === f?.segment_id &&
+                        of?.offer_id === f?.offer_id,
+                    ),
+                ) || [];
               if (newFlows.length > 0) {
-                const flowsToCreate: CampaignFlowConfig[] = newFlows.map(
-                  (flow, index) => ({
-                    ...flow,
+                const flowsToCreate = newFlows.map(
+                  (flow: any, index: number) => ({
                     campaign_id: parseInt(id),
+                    segment_id: flow?.segment_id || 0,
+                    offer_id: flow?.offer_id || 0,
+                    flow_type: flow?.flow_type || "STANDARD",
                     step_order: index + 1,
-                    created_by: user?.user_id ?? null,
+                    created_by: user?.user_id,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -952,12 +837,10 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: parseInt(id),
                   step_order: index + 1,
-                  created_by: user?.user_id ?? null,
+                  created_by: user?.user_id,
                 }),
               );
-              await campaignFlowService.createBatchCampaignFlows(
-                flowsToCreate,
-              );
+              await campaignFlowService.createBatchCampaignFlows(flowsToCreate);
             }
           } catch (flowError) {
             console.error("Error updating campaign flows:", flowError);
@@ -1048,7 +931,7 @@ export default function CreateCampaignPage() {
                     ...flow,
                     campaign_id: createdCampaignId,
                     step_order: index + 1,
-                    created_by: user?.user_id ?? null,
+                    created_by: user?.user_id,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -1062,24 +945,24 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: createdCampaignId,
                   step_order: index + 1,
-                  created_by: user?.user_id ?? null,
+                  created_by: user?.user_id,
                 }),
               );
-              await campaignFlowService.createBatchCampaignFlows(
-                flowsToCreate,
-              );
+              await campaignFlowService.createBatchCampaignFlows(flowsToCreate);
             }
           } catch (flowError) {
             console.error("Error updating campaign flows:", flowError);
           }
         }
 
-        showToast("success", `"${formData.name}" campaign created successfully!`);
+        showToast(
+          "success",
+          `"${formData.name}" campaign created successfully!`,
+        );
       } else {
         // Create new campaign first time - POST endpoint
         const campaignCode = generateCampaignCode(formData.name);
 
-        // Get objective label from value
         const objectiveOption = objectiveOptions.find(
           (o: { value: string; label: string }) =>
             o.value === formData.objective,
@@ -1088,10 +971,8 @@ export default function CreateCampaignPage() {
           ? objectiveOption.label
           : formData.objective;
 
-        // Get tags array directly from formData
         const tagsArray = formData.tags || [];
 
-        // Get department name from formData.department_id
         const departmentId = (formData as { department_id?: number })
           .department_id;
         const department = departmentId
@@ -1105,8 +986,8 @@ export default function CreateCampaignPage() {
         const campaignData: CreateCampaignRequest = {
           name: formData.name,
           code: campaignCode,
-          objective: objectiveLabel, // Send label text, not value
-          status: "draft", // New campaigns start as draft
+          objective: objectiveLabel,
+          status: "draft",
           created_by: user?.user_id ?? null,
           ...(formData.description && { description: formData.description }),
           ...(formData.category_id && { category_id: formData.category_id }),
@@ -1117,11 +998,10 @@ export default function CreateCampaignPage() {
           ...(ownerTeam && { owner_team: ownerTeam }),
           budget_allocated: String(formData.budget_allocated || 0),
         };
-        // New campaigns are created with status: 'draft' and approval_status: 'pending'
+
         const createResponse =
           await campaignService.createCampaign(campaignData);
 
-        // Check if backend returned an error
         if (
           createResponse &&
           typeof createResponse === "object" &&
@@ -1154,7 +1034,7 @@ export default function CreateCampaignPage() {
                 segment_id: parseInt(segment.id),
                 is_primary: segment.priority === 1,
                 include_exclude: segment.include_exclude || "include",
-                created_by: user?.user_id ?? null,
+                created_by: user?.user_id,
               });
             }
           } catch (segmentError) {
@@ -1225,7 +1105,7 @@ export default function CreateCampaignPage() {
                     ...flow,
                     campaign_id: createdCampaignIdValue,
                     step_order: index + 1,
-                    created_by: user?.user_id ?? null,
+                    created_by: user?.user_id,
                   }),
                 );
                 await campaignFlowService.createBatchCampaignFlows(
@@ -1241,7 +1121,7 @@ export default function CreateCampaignPage() {
                   ...flow,
                   campaign_id: createdCampaignIdValue,
                   step_order: index + 1,
-                  created_by: user?.user_id ?? null,
+                  created_by: user?.user_id,
                 }),
               );
 
@@ -1540,7 +1420,9 @@ export default function CreateCampaignPage() {
         return <AudienceConfigurationStep {...stepProps} />;
       case 3:
         // Use new CampaignFlowsStep for flows-first approach
-        return <CampaignFlowsStep {...stepProps} stepOrder={formData.step_order} />;
+        return (
+          <CampaignFlowsStep {...stepProps} stepOrder={formData.step_order} />
+        );
       case 4:
         return <SchedulingStep {...stepProps} />;
       case 5:

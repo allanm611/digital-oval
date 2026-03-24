@@ -1,6 +1,6 @@
 import React from "react";
 import GenericConfigurationPage from "../../../shared/components/GenericConfigurationPage";
-import { getCampaignObjectivesConfig } from "../../../shared/configs/configurationPageConfigs";
+import { getCampaignObjectivesConfig } from "../../configurations/configs/configurationPageConfigs";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function CampaignObjectivesPage() {
