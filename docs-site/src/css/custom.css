@@ -157,20 +157,56 @@ h6 {
   letter-spacing: 0.5px !important;
 }
 
-/* Hide heading anchor symbols */
+/* Heading anchor links with small link icon - show only on hover */
 a.hash-link {
-  display: none !important;
+  display: inline-block !important;
+  margin-left: 8px !important;
+  opacity: 0 !important;
+  transition: opacity 0.2s ease !important;
+  vertical-align: middle !important;
 }
 
+h1:hover a.hash-link,
+h2:hover a.hash-link,
+h3:hover a.hash-link,
+h4:hover a.hash-link,
+h5:hover a.hash-link,
+h6:hover a.hash-link {
+  opacity: 1 !important;
+}
+
+h1 a.hash-link::before,
+h2 a.hash-link::before,
+h3 a.hash-link::before,
+h4 a.hash-link::before,
+h5 a.hash-link::before,
+h6 a.hash-link::before {
+  content: '🔗' !important;
+  font-size: 0.75em !important;
+  margin-right: 4px !important;
+}
+
+/* Heading anchor link styling */
 h1 a.hash-link,
 h2 a.hash-link,
 h3 a.hash-link,
 h4 a.hash-link,
 h5 a.hash-link,
 h6 a.hash-link {
-  visibility: hidden !important;
-  width: 0 !important;
-  height: 0 !important;
+  color: #2e8555 !important;
+  text-decoration: none !important;
+  font-size: 0.9em !important;
+  border: none !important;
+}
+
+h1 a.hash-link:hover,
+h2 a.hash-link:hover,
+h3 a.hash-link:hover,
+h4 a.hash-link:hover,
+h5 a.hash-link:hover,
+h6 a.hash-link:hover {
+  text-decoration: none !important;
+  border: none !important;
 }
 
 /* ========================================
