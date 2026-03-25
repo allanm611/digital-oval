@@ -9,15 +9,15 @@ Welcome to the Sentra Customer Value Management (CVM) platform documentation. He
 
 ## Quick Links
 
-- **[Campaign Management](./campaigns/overview)** - Create and manage customer campaigns
-- **[Offer Management](./offers/overview)** - Design and deploy personalized offers
-- **[Product Management](./products/overview)** - Manage your product catalog
-- **[Segment Management](./segments/overview)** - Build and manage customer segments
+- **[Campaign Management](./campaigns/all-campaigns)** - Create and manage customer campaigns
+- **[Offer Management](./offers/all-offers)** - Design and deploy personalized offers
+- **[Product Management](./products/all-products)** - Manage your product catalog
+- **[Segment Management](./segments/all-segments)** - Build and manage customer segments
 - **[Customer 360 Profile](./customer-360/customers)** - View unified customer profiles
-- **[User Management](./users/overview)** - Manage users and access control
-- **[Communications](./communications/manual-broadcast)** - Send targeted communications
-- **[Reports & Analytics](./analytics/reports)** - Monitor performance and KPIs
-- **[System & Configuration](./system-config/settings)** - Configure system settings
+- **[User Management](./users/all-users)** - Manage users and access control
+- **[Communications](./communications/manual-broadcasts)** - Send targeted communications
+- **[Reports & Analytics](./analytics/overall-dashboard-performance)** - Monitor performance and KPIs
+- **[Configuration](./configuration/settings)** - Configure system settings
 
 ## Getting Started
 

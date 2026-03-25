@@ -1,64 +1,164 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
-/**
- * Creating a sidebar enables you to:
- - create an ordered group of docs
- - render a sidebar for each doc of that group
- - provide next/previous navigation
-
- The sidebars can be generated from the filesystem, or explicitly defined here.
-
- Create as many sidebars as you want.
- */
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     'intro',
     {
       type: 'category',
+      label: 'Authentication',
+      items: [
+        'authentication/login',
+        'authentication/registration',
+        'authentication/password-reset',
+      ],
+    },
+    {
+      type: 'category',
       label: 'Campaign Management',
-      items: ['campaigns/overview'],
+      items: [
+        'campaigns/all-campaigns',
+        'campaigns/campaign-objectives',
+        'campaigns/programs',
+        'campaigns/campaign-catalogs',
+        'campaigns/campaign-types',
+      ],
     },
     {
       type: 'category',
       label: 'Offer Management',
-      items: ['offers/overview'],
+      items: [
+        'offers/all-offers',
+        'offers/offer-types',
+        'offers/offer-catalogs',
+      ],
     },
     {
       type: 'category',
       label: 'Product Management',
-      items: ['products/overview'],
+      items: [
+        'products/all-products',
+        'products/product-types',
+        'products/product-catalogs',
+      ],
     },
     {
       type: 'category',
       label: 'Segment Management',
-      items: ['segments/overview', 'segments/quicklists'],
+      items: [
+        'segments/all-segments',
+        'segments/segment-types',
+        'segments/segment-catalogs',
+        'segments/quicklists',
+      ],
     },
     {
       type: 'category',
       label: 'Customer 360 Profile',
-      items: ['customer-360/customers', 'customer-360/customer-identity'],
+      items: [
+        'customer-360/customers',
+        'customer-360/customer-identity',
+      ],
     },
     {
       type: 'category',
       label: 'User Management',
-      items: ['users/overview', 'users/access-control'],
+      items: [
+        'users/all-users',
+        'users/access-control',
+      ],
     },
     {
       type: 'category',
-      label: 'Communications',
-      items: ['communications/manual-broadcast', 'communications/manual-rewards', 'communications/notifications'],
+      label: 'Manual Actions',
+      items: [
+        'manual-actions/manual-communications',
+        'manual-actions/manual-rewards',
+      ],
     },
     {
       type: 'category',
       label: 'Reports & Analytics',
-      items: ['analytics/reports', 'analytics/kpis', 'analytics/etl'],
+      items: [
+        'analytics/overall-dashboard-performance',
+        'analytics/customer-profile-reports',
+        'analytics/campaign-reports',
+        'analytics/offer-reports',
+        'analytics/delivery-sms-reports',
+        'analytics/delivery-email-reports',
+      ],
     },
     {
       type: 'category',
-      label: 'System & Configuration',
-      items: ['system-config/settings', 'system-config/configurations', 'system-config/connection-profiles', 'system-config/servers', 'system-config/jobs'],
+      label: 'Infrastructure',
+      items: [
+        'infrastructure/servers',
+        'infrastructure/connection-profiles',
+        'infrastructure/data-connectors',
+        'infrastructure/kpis',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Job Management',
+      items: [
+        'jobs/scheduled-jobs',
+        'jobs/job-executions',
+        'jobs/job-types',
+        'jobs/job-dependencies',
+        'jobs/job-workflow-steps',
+        'jobs/job-workflows',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Communications',
+      items: [
+        'communications/manual-broadcasts',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Configuration',
+      items: [
+        'configuration/line-of-business',
+        'configuration/campaign-communication-policy',
+        'configuration/communication-channels',
+        'configuration/routes',
+        'configuration/campaign-objectives',
+        'configuration/departments',
+        'configuration/programs',
+        'configuration/campaign-catalogs',
+        'configuration/campaign-types',
+        'configuration/control-groups',
+        'configuration/job-types',
+        'configuration/dnd-management',
+        'configuration/vip-list-management',
+        'configuration/seed-list-management',
+        'configuration/offer-types',
+        'configuration/offer-catalogs',
+        'configuration/offer-tracking-sources',
+        'configuration/creative-templates',
+        'configuration/reward-types',
+        'configuration/sender-ids',
+        'configuration/sms-routes',
+        'configuration/languages',
+        'configuration/character-sets',
+        'configuration/product-types',
+        'configuration/combo-types',
+        'configuration/product-categories',
+        'configuration/segment-catalogs',
+        'configuration/segment-types-config',
+        'configuration/user-management',
+        'configuration/settings',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'User Settings',
+      items: [
+        'user-settings/my-profile',
+        'user-settings/settings',
+      ],
     },
   ],
 };

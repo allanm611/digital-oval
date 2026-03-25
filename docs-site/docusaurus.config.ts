@@ -7,6 +7,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 const config: Config = {
   title: 'Sentra CVM Docs',
   tagline: 'Customer Value Management Platform',
+  favicon: 'img/favicon.png',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
@@ -91,11 +92,11 @@ const config: Config = {
             },
             {
               label: 'Campaigns',
-              to: '/docs/campaigns/overview',
+              to: '/docs/campaigns/all-campaigns',
             },
             {
               label: 'Segments',
-              to: '/docs/segments/overview',
+              to: '/docs/segments/all-segments',
             },
           ],
         },
@@ -104,7 +105,7 @@ const config: Config = {
           items: [
             {
               label: 'Offers',
-              to: '/docs/offers/overview',
+              to: '/docs/offers/all-offers',
             },
             {
               label: 'Customer 360',
@@ -112,7 +113,7 @@ const config: Config = {
             },
             {
               label: 'Analytics',
-              to: '/docs/analytics/reports',
+              to: '/docs/analytics/overall-dashboard-performance',
             },
           ],
         },
