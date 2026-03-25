@@ -1,0 +1,119 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Sidebar spacing improvements - Claude docs style */
+.sidebar {
+  padding: 16px 0;
+}
+
+.sidebar-item {
+  margin-bottom: 8px !important;
+  list-style: none;
+}
+
+.sidebar-item-link {
+  padding: 8px 12px !important;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  color: #a0aec0;
+  text-decoration: none;
+  display: block;
+}
+
+.sidebar-item-link:hover {
+  background-color: rgba(46, 133, 85, 0.1);
+  color: var(--ifm-color-primary);
+}
+
+.sidebar-item-link.active {
+  background-color: rgba(46, 133, 85, 0.15);
+  color: var(--ifm-color-primary);
+  font-weight: 500;
+}
+
+/* Category labels styling */
+.sidebar-item-category {
+  margin-bottom: 20px !important;
+  margin-top: 12px !important;
+}
+
+.sidebar-item-category-level-1 {
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+
+.sidebar-item-category > .sidebar-item-link {
+  font-weight: 600;
+  padding: 10px 12px !important;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: #f7fafc;
+}
+
+.sidebar-item-category > .sidebar-item-link:hover {
+  background-color: rgba(46, 133, 85, 0.15);
+  color: var(--ifm-color-primary);
+}
+
+/* Nested items under categories */
+.sidebar-item-category .sidebar-items {
+  margin-top: 6px;
+  padding-left: 4px;
+}
+
+.sidebar-item-category .sidebar-items .sidebar-item {
+  margin-bottom: 6px !important;
+  margin-left: 0;
+}
+
+.sidebar-item-category .sidebar-items .sidebar-item-link {
+  font-size: 0.93rem;
+  padding: 6px 12px !important;
+  color: #a0aec0;
+}
+
+/* Search bar styling */
+.DocSearch-Button {
+  padding: 8px 12px !important;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.DocSearch-Button:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.DocSearch-Button-Placeholder {
+  color: #a0aec0 !important;
+  font-size: 0.93rem;
+}
