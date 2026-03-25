@@ -16,19 +16,35 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Campaign Management',
       items: [
-        'campaigns/all-campaigns',
+        {
+          type: 'category',
+          label: 'Campaigns',
+          items: [
+            'campaigns/campaign',
+            'campaigns/create-campaign',
+            'campaigns/view-campaign-details',
+            'campaigns/campaign-reports',
+          ],
+        },
+        'campaigns/campaign-broadcasts',
         'campaigns/campaign-objectives',
-        'campaigns/programs',
         'campaigns/campaign-catalogs',
-        'campaigns/campaign-types',
       ],
     },
     {
       type: 'category',
       label: 'Offer Management',
       items: [
-        'offers/all-offers',
-        'offers/offer-types',
+        {
+          type: 'category',
+          label: 'Offers',
+          items: [
+            'offers/offer',
+            'offers/create-offer',
+            'offers/view-offer-details',
+            'offers/offer-reports',
+          ],
+        },
         'offers/offer-catalogs',
       ],
     },
@@ -36,8 +52,16 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Product Management',
       items: [
-        'products/all-products',
-        'products/product-types',
+        {
+          type: 'category',
+          label: 'Products',
+          items: [
+            'products/product',
+            'products/create-product',
+            'products/view-product-details',
+            'products/product-reports',
+          ],
+        },
         'products/product-catalogs',
       ],
     },
@@ -45,8 +69,16 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Segment Management',
       items: [
-        'segments/all-segments',
-        'segments/segment-types',
+        {
+          type: 'category',
+          label: 'Segments',
+          items: [
+            'segments/segment',
+            'segments/create-segment',
+            'segments/view-segment-details',
+            'segments/segment-reports',
+          ],
+        },
         'segments/segment-catalogs',
         'segments/quicklists',
       ],

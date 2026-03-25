@@ -4,6 +4,9 @@
  * work well for content-centric websites.
  */
 
+/* Import Inter and Roboto fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;600;700&display=swap');
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-color-primary: #2e8555;
@@ -21,9 +24,7 @@
      ======================================== */
 
   /* Font Family */
-  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  --font-family-sans: 'Inter', 'Roboto', sans-serif;
   --font-family-mono: 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas',
     'Liberation Mono', 'Courier New', monospace;
 
@@ -383,6 +384,59 @@ li.theme-doc-sidebar-item-link-level-1 {
   margin-bottom: 0px !important;
 }
 
+/* Nested Category Subsections (like Campaigns > Campaign, Offers > Offer, etc.) */
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category {
+  margin-left: 8px !important;
+  margin-bottom: 8px !important;
+  margin-top: 6px !important;
+  padding-left: 8px !important;
+  border-left: 2px solid rgba(46, 133, 85, 0.3) !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category > .menu__link {
+  font-size: 0.95rem !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  margin-bottom: 4px !important;
+  color: #d1d5db !important;
+  background-color: transparent !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category > .menu__link:hover {
+  background-color: rgba(46, 133, 85, 0.08) !important;
+  color: #e5e7eb !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category:not(.menu__list-item-collapsed) > .menu__link {
+  background-color: rgba(46, 133, 85, 0.15) !important;
+  color: #e5e7eb !important;
+  font-weight: 600 !important;
+}
+
+/* Nested category items (like Campaign, Create Campaign, etc.) */
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link {
+  margin-left: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link {
+  padding: 6px 12px !important;
+  font-size: 0.9rem !important;
+  color: #a0aec0 !important;
+  font-weight: 400 !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link:hover {
+  background-color: rgba(46, 133, 85, 0.05) !important;
+  color: #cbd5e0 !important;
+}
+
+.theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link.menu__link--active {
+  background-color: rgba(46, 133, 85, 0.2) !important;
+  color: #33925d !important;
+  font-weight: 500 !important;
+}
+
 /* Sub-items */
 .theme-doc-sidebar-item-link {
   margin-bottom: 6px !important;
@@ -392,7 +446,7 @@ li.theme-doc-sidebar-item-link-level-1 {
 .theme-doc-sidebar-item-link > .menu__link {
   padding: 10px 16px !important;
   margin-left: 0px !important;
-  font-size: 0.875rem !important;
+  font-size: 0.9rem !important;
   color: #cbd5e0 !important;
   border-radius: 4px !important;
   transition: all 0.2s ease !important;
@@ -423,9 +477,7 @@ li.theme-doc-sidebar-item-link-level-1 {
 /* Sidebar main styling */
 .sidebar {
   padding: 20px 0 20px 16px !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif !important;
+  font-family: var(--font-family-sans) !important;
   padding-right: 8px !important;
 }
 
@@ -616,4 +668,37 @@ footer a:hover {
 [data-theme='light'] th {
   background-color: rgba(46, 133, 85, 0.1) !important;
   color: #1f2937 !important;
+}
+
+/* Light mode nested categories */
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category {
+  border-left-color: rgba(46, 133, 85, 0.2) !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category > .menu__link {
+  color: #374151 !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category > .menu__link:hover {
+  background-color: rgba(46, 133, 85, 0.1) !important;
+  color: #059669 !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category:not(.menu__list-item-collapsed) > .menu__link {
+  background-color: rgba(46, 133, 85, 0.12) !important;
+  color: #059669 !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link {
+  color: #6b7280 !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link:hover {
+  background-color: rgba(46, 133, 85, 0.08) !important;
+  color: #4b5563 !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category .theme-doc-sidebar-item-category .theme-doc-sidebar-item-link > .menu__link.menu__link--active {
+  background-color: rgba(46, 133, 85, 0.15) !important;
+  color: #059669 !important;
 }

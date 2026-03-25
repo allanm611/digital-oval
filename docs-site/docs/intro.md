@@ -154,4 +154,4 @@ Manage user permissions and security.
 
 ## Need Help?
 
-Can't find what you're looking for? Use the search feature at the top of the page or browse the sidebar navigation to explore all available topics.
+Can't find what you're looking for? Use the search feature at the top of the page.
