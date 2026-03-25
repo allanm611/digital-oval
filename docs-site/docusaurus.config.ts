@@ -41,10 +41,6 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
         },
         blog: false,
         theme: {
@@ -82,56 +78,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Documentation',
-          items: [
-            {
-              label: 'Getting Started',
-              to: '/docs/intro',
-            },
-            {
-              label: 'Campaigns',
-              to: '/docs/campaigns/all-campaigns',
-            },
-            {
-              label: 'Segments',
-              to: '/docs/segments/all-segments',
-            },
-          ],
-        },
-        {
-          title: 'Features',
-          items: [
-            {
-              label: 'Offers',
-              to: '/docs/offers/all-offers',
-            },
-            {
-              label: 'Customer 360',
-              to: '/docs/customer-360/customers',
-            },
-            {
-              label: 'Analytics',
-              to: '/docs/analytics/overall-dashboard-performance',
-            },
-          ],
-        },
-        {
-          title: 'Resources',
-          items: [
-            {
-              label: 'Support',
-              href: '#',
-            },
-            {
-              label: 'Contact',
-              href: '#',
-            },
-          ],
-        },
-      ],
-      copyright: `Copyright © ${new Date().getFullYear()} Sentra CVM. All rights reserved.`,
+      copyright: `© 2026 @Sentra. All rights reserved. v1.2.2`,
     },
     prism: {
       theme: prismThemes.github,
