@@ -39,15 +39,8 @@ const sidebars: SidebarsConfig = {
         },
         'campaigns/campaign-broadcasts',
         'campaigns/campaign-objectives',
-        {
-          type: 'category',
-          label: 'Campaign Catalogs',
-          items: [
-            'campaigns/campaign-catalog',
-            'campaigns/campaign-assign-items-modal',
-            'campaigns/campaign-view-catalog-modal',
-          ],
-        },
+        'campaigns/campaign-catalog',
+       
       ],
     },
     {
