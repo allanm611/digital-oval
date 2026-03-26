@@ -155,5 +155,5 @@ Compare against:
 
 - [Create Customer](./create-customer) - Add customers
 - [View Customer Details](./view-customer-details) - Customer profiles
-- [Customer](./customer) - Overview
+- [Customer](./customers-list) - Overview
 - [Campaign Reports](/docs/campaigns/campaign-reports) - Campaign analytics

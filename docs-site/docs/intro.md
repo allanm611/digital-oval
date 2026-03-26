@@ -12,8 +12,8 @@ Welcome to the complete guide for the **Sentra Customer Value Management (CVM)**
 Get up and running quickly with these essential guides:
 
 - **[Authentication](./authentication/login)** - Log in and manage your account
-- **[Campaigns](./campaigns/all-campaigns)** - Create and launch your first campaign
-- **[Customer 360](./customer-360/customers)** - Explore unified customer profiles
+- **[Campaigns](./campaigns/campaigns-list)** - Create and launch your first campaign
+- **[Customer 360](./customer-360/customers-list)** - Explore unified customer profiles
 - **[Reports & Analytics](./analytics/overall-dashboard-performance)** - Monitor key metrics
 
 ---
@@ -37,7 +37,7 @@ Each section contains detailed guides, best practices, and step-by-step instruct
 ### Campaign Management
 Manage all aspects of customer campaigns from creation to execution.
 
-- [All Campaigns](./campaigns/all-campaigns) - View and manage your campaigns
+- [All Campaigns](./campaigns/campaigns-list) - View and manage your campaigns
 - [Campaign Objectives](./campaigns/campaign-objectives) - Define campaign goals
 - [Programs](./campaigns/programs) - Organize campaigns by programs
 - [Campaign Catalogs](./campaigns/campaign-catalogs) - Browse campaign categories
@@ -46,21 +46,21 @@ Manage all aspects of customer campaigns from creation to execution.
 ### Offer Management
 Manage and organize offers for targeted customer campaigns.
 
-- [All Offers](./offers/all-offers) - Manage your offers
+- [All Offers](./offers/offers-list) - Manage your offers
 - [Offer Types](./offers/offer-types) - Configure offer types
 - [Offer Catalogs](./offers/offer-catalogs) - Browse offer categories
 
 ### Product Management
 Organize and manage your product catalog.
 
-- [All Products](./products/all-products) - View products
+- [All Products](./products/products-list) - View products
 - [Product Types](./products/product-types) - Manage product types
 - [Product Catalogs](./products/product-catalogs) - Browse product categories
 
 ### Segment Management
 Build and manage customer segments for targeted campaigns.
 
-- [All Segments](./segments/all-segments) - View segments
+- [All Segments](./segments/segments-list) - View segments
 - [Segment Types](./segments/segment-types) - Manage segment types
 - [Segment Catalogs](./segments/segment-catalogs) - Browse segment categories
 - [Quicklists](./segments/quicklists) - Create quick reference lists
@@ -68,7 +68,7 @@ Build and manage customer segments for targeted campaigns.
 ### Customer 360 Profile
 View comprehensive, unified customer profiles.
 
-- [Customers](./customer-360/customers) - Browse customer profiles
+- [Customers](./customer-360/customers-list) - Browse customer profiles
 - [Customer Identity](./customer-360/customer-identity) - Manage customer identities
 
 ### Reports & Analytics
@@ -107,26 +107,26 @@ Configure system infrastructure and connections.
 ### System Configuration
 Configure and customize the platform to your needs.
 
-- [Line of Business](./configuration/line-of-business) - Manage business units
-- [Campaign Communication Policy](./configuration/campaign-communication-policy) - Set communication rules
-- [Communication Channels](./configuration/communication-channels) - Configure channels
-- [Routes](./configuration/routes) - Manage delivery routes
-- [Departments](./configuration/departments) - Organize by department
-- [Control Groups](./configuration/control-groups) - Set up control groups
-- [DND Management](./configuration/dnd-management) - Do Not Disturb lists
-- [VIP List Management](./configuration/vip-list-management) - VIP customer lists
-- [Seed List Management](./configuration/seed-list-management) - Seed lists
-- [Creative Templates](./configuration/creative-templates) - Message templates
-- [Reward Types](./configuration/reward-types) - Define rewards
-- [Sender IDs](./configuration/sender-ids) - Configure sender identities
-- [SMS Routes](./configuration/sms-routes) - SMS delivery routes
-- [Languages](./configuration/languages) - Supported languages
-- [Character Sets](./configuration/character-sets) - Character encoding
-- [Combo Types](./configuration/combo-types) - Product combinations
-- [Product Categories](./configuration/product-categories) - Categorize products
-- [Offer Tracking Sources](./configuration/offer-tracking-sources) - Track offer sources
-- [Settings](./configuration/settings) - General system settings
-- [User Management](./configuration/user-management) - Configure users
+- [Line of Business](./configuration/line-of-business-list) - Manage business units
+- [Campaign Communication Policy](./configuration/campaign-communication-policy-list) - Set communication rules
+- [Communication Channels](./configuration/communication-channels-list) - Configure channels
+- [Routes](./configuration/routes-list) - Manage delivery routes
+- [Departments](./configuration/departments-list) - Organize by department
+- [Control Groups](./configuration/control-groups-list) - Set up control groups
+- [DND Management](./configuration/dnd-management-list) - Do Not Disturb lists
+- [VIP List Management](./configuration/vip-list-management-list) - VIP customer lists
+- [Seed List Management](./configuration/seed-list-management-list) - Seed lists
+- [Creative Templates](./configuration/creative-templates-list) - Message templates
+- [Reward Types](./configuration/reward-types-list) - Define rewards
+- [Sender IDs](./configuration/sender-ids-list) - Configure sender identities
+- [SMS Routes](./configuration/sms-routes-list) - SMS delivery routes
+- [Languages](./configuration/languages-list) - Supported languages
+- [Character Sets](./configuration/character-sets-list) - Character encoding
+- [Combo Types](./configuration/combo-types-list) - Product combinations
+- [Product Categories](./configuration/product-categories-list) - Categorize products
+- [Offer Tracking Sources](./configuration/offer-tracking-sources-list) - Track offer sources
+- [Settings](./configuration/settings-list) - General system settings
+- [User Management](./configuration/user-management-list) - Configure users
 
 ### User Settings
 Manage your personal account settings.
@@ -137,7 +137,7 @@ Manage your personal account settings.
 ### Access Control
 Manage user permissions and security.
 
-- [All Users](./users/all-users) - Manage platform users
+- [All Users](./users/users-list) - Manage platform users
 - [Access Control](./users/access-control) - Set user permissions
 
 ---

@@ -97,4 +97,4 @@ Import multiple customers at once:
 After creating customers:
 - [View Customer Details](./view-customer-details) to manage their profiles
 - [View Customer Reports](./customer-reports) to track metrics
-- See [Customer](./customer) for overview
+- See [Customer](./customers-list) for overview

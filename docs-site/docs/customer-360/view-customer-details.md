@@ -168,5 +168,5 @@ See campaign participation:
 
 - [Create Customer](./create-customer) - Add new customers
 - [Customer Reports](./customer-reports) - Analytics
-- [Customer](./customer) - Overview
+- [Customer](./customers-list) - Overview
 - [Customer Identity](./customer-identity) - Data relationships

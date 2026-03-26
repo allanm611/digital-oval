@@ -17,7 +17,7 @@ The Customer 360 section provides a unified view of all customer information and
 ## Getting Started
 
 ### Viewing Customers
-To browse and search for customers, see the [Customers](./customer) overview.
+To browse and search for customers, see the [Customers](./customers-list) overview.
 
 ### Creating Customer Records
 To add new customers to the system, see [Create Customer](./create-customer).

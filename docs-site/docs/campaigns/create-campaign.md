@@ -144,4 +144,4 @@ Once you've created your campaign:
 
 - Having trouble with a specific step? See [View Campaign Details](./view-campaign-details)
 - Want to understand campaign objectives? See [Campaign Objectives](./campaign-objectives)
-- Need to know about campaigns in general? See [Campaign](./campaign)
+- Need to know about campaigns in general? See [Campaign](./campaigns-list)
