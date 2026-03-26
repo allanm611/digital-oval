@@ -34,7 +34,7 @@ Each campaign in the list has an action menu (three dots) with the following opt
 ### Edit Campaign
 **What it does:** Allows you to modify campaign details such as name, description, objectives, segments, offers, delivery flows, and scheduling.
 
-**When to use:** When you need to make changes to a campaign before it's executed.
+**When to use:** When you need to make changes to a campaign before it's ran.
 
 **Note:** Some campaigns may have restrictions on editing based on their current status or approval state.
 
@@ -44,7 +44,7 @@ Each campaign in the list has an action menu (three dots) with the following opt
 ---
 
 ### Pause Campaign
-**What it does:** Temporarily stops an active campaign from executing or sending messages.
+**What it does:** Temporarily stops an active campaign from running or sending messages.
 
 **When to use:** When you want to halt a campaign temporarily without deleting it (e.g., to make adjustments, pause during off-hours, or stop due to unforeseen circumstances).
 
@@ -56,7 +56,7 @@ Each campaign in the list has an action menu (three dots) with the following opt
 ---
 
 ### Resume Campaign
-**What it does:** Restarts a paused campaign so it continues executing.
+**What it does:** Restarts a paused campaign so it continues running.
 
 **When to use:** When you're ready to resume a campaign that was previously paused.
 
@@ -68,7 +68,7 @@ Each campaign in the list has an action menu (three dots) with the following opt
 ---
 
 ### Approve Campaign
-**What it does:** Approves a campaign that is pending approval before it can be executed.
+**What it does:** Approves a campaign that is pending approval before it can be ran.
 
 **When to use:** When you have permission to approve campaigns and the campaign is ready to launch after review.
 
@@ -100,7 +100,7 @@ Each campaign in the list has an action menu (three dots) with the following opt
 
 ---
 
-### Execute Campaign
+### Run Campaign
 **What it does:** Immediately launches an approved campaign to send messages to the target audience.
 
 **When to use:** When a campaign is approved and ready to go live.
@@ -110,10 +110,10 @@ Each campaign in the list has an action menu (three dots) with the following opt
 - Campaign scheduling must be configured
 - Audience segments must be selected
 
-**Note:** Once executed, the campaign begins sending messages according to its delivery flows and scheduling configuration.
+**Note:** Once ran, the campaign begins sending messages according to its delivery flows and scheduling configuration.
 
 **Screenshot:**
-[Insert screenshot of execute campaign modal]
+[Insert screenshot of Run campaign modal]
 
 ---
 
@@ -169,10 +169,10 @@ Click the **Filter** icon to access advanced filtering options:
 ## Campaign Status Explained
 
 - **Draft** - Campaign is being created and not yet submitted for approval
-- **Pending Approval** - Campaign is waiting for approval before it can be executed
-- **Approved** - Campaign has been approved and is ready to execute
+- **Pending Approval** - Campaign is waiting for approval before it can be ran
+- **Approved** - Campaign has been approved and is ready to Run
 - **Paused** - Campaign is temporarily stopped
-- **Active** - Campaign is currently executing and sending messages
+- **Active** - Campaign is currently running and sending messages
 - **Archived** - Campaign is complete and archived
 - **Rejected** - Campaign was rejected during approval process
 
@@ -261,7 +261,7 @@ The campaign creation process consists of **5 steps**:
 
 ## Troubleshooting
 
-### Campaign Won't Execute
+### Campaign Won't Run
 - Verify the campaign is in "Approved" status
 - Check that segments and offers are properly configured
 - Ensure scheduling is set correctly
