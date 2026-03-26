@@ -39,8 +39,7 @@ Manage all aspects of customer campaigns from creation to execution.
 
 - [All Campaigns](./campaigns/campaigns-list) - View and manage your campaigns
 - [Campaign Objectives](./campaigns/campaign-objectives) - Define campaign goals
-- [Programs](./campaigns/programs) - Organize campaigns by programs
-- [Campaign Catalogs](./campaigns/campaign-catalogs) - Browse campaign categories
+- [Campaign Catalog](./campaigns/campaign-catalog) - Browse campaign categories
 - [Campaign Types](./campaigns/campaign-types) - Understand different campaign types
 
 ### Offer Management
