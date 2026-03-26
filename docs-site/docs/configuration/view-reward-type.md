@@ -1,0 +1,1 @@
+# View Reward Type

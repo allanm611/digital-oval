@@ -40,29 +40,29 @@ Manage all aspects of customer campaigns from creation to execution.
 - [All Campaigns](./campaigns/all-campaigns) - View and manage your campaigns
 - [Campaign Objectives](./campaigns/campaign-objectives) - Define campaign goals
 - [Programs](./campaigns/programs) - Organize campaigns by programs
-- [Campaign Catalogs](./campaigns/campaign-catalogs) - Browse campaign templates
+- [Campaign Catalogs](./campaigns/campaign-catalogs) - Browse campaign categories
 - [Campaign Types](./campaigns/campaign-types) - Understand different campaign types
 
 ### Offer Management
-Create, deploy, and track personalized offers for your customers.
+Manage and organize offers for targeted customer campaigns.
 
 - [All Offers](./offers/all-offers) - Manage your offers
 - [Offer Types](./offers/offer-types) - Configure offer types
-- [Offer Catalogs](./offers/offer-catalogs) - Browse offer templates
+- [Offer Catalogs](./offers/offer-catalogs) - Browse offer categories
 
 ### Product Management
 Organize and manage your product catalog.
 
 - [All Products](./products/all-products) - View products
 - [Product Types](./products/product-types) - Manage product types
-- [Product Catalogs](./products/product-catalogs) - Browse product templates
+- [Product Catalogs](./products/product-catalogs) - Browse product categories
 
 ### Segment Management
 Build and manage customer segments for targeted campaigns.
 
 - [All Segments](./segments/all-segments) - View segments
 - [Segment Types](./segments/segment-types) - Manage segment types
-- [Segment Catalogs](./segments/segment-catalogs) - Browse segment templates
+- [Segment Catalogs](./segments/segment-catalogs) - Browse segment categories
 - [Quicklists](./segments/quicklists) - Create quick reference lists
 
 ### Customer 360 Profile
