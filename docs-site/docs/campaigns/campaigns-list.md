@@ -1,74 +1,105 @@
-# Campaign
+# Campaign List
 
 ## Overview
 
-The Campaign section is your central hub for managing all customer marketing campaigns. From here, you can create new campaigns, view existing ones, monitor their performance, and take actions such as pausing, resuming, approving, or archiving campaigns.
+View, search, and manage all your campaigns in one place. The Campaign List page displays all campaigns with their current status, key information, and quick actions.
 
-## Key Features
+## Stat Cards
 
-- **Campaign List** - View all campaigns with their status, objective, and key metrics
-- **Search & Filter** - Find campaigns quickly using search and advanced filters
-- **Status Monitoring** - Track campaigns at a glance with status indicators
-- **Bulk Actions** - Perform actions on multiple campaigns simultaneously
-- **Campaign Analytics** - View performance metrics (sent, delivered, opened, converted)
+At the top of the page, you'll see quick stats showing:
+- **Total Campaigns** - All campaigns in the system
+- **Active Campaigns** - Currently running campaigns
+- **Draft** - Campaigns in progress
+- **Pending Approval** - Campaigns waiting for approval
 
----
+![Campaign List Overview](/img/campaign-images/campaign-list.png)
 
-## Campaign Status Explained
+## Campaign Table
 
-- **Draft** - Campaign is being created and not yet submitted for approval
-- **Pending Approval** - Campaign is waiting for approval before it can be executed
-- **Approved** - Campaign has been approved and is ready to execute
-- **Paused** - Campaign is temporarily stopped
-- **Active** - Campaign is currently executing and sending messages
-- **Archived** - Campaign is complete and archived
-- **Rejected** - Campaign was rejected during approval process
-
----
-
-## Getting Started
-
-### Creating a Campaign
-To create a new campaign from scratch, see the [Create Campaign](./create-campaign) guide for a complete step-by-step walkthrough.
-
-### Viewing Campaign Details
-To view, manage, and take actions on individual campaigns, see [View Campaign Details](./view-campaign-details) for all available options.
-
-### Monitoring Performance
-To track campaign performance and view analytics, see [Campaign Reports](./campaign-reports).
-
-### Broadcasting Campaigns
-To learn about campaign broadcasts and execution, see [Campaign Broadcasts](./campaign-broadcasts).
-
----
+The main table shows all campaigns with:
+- **Campaign Name** - Name of the campaign
+- **Category** - Campaign category or audience segment
+- **Status** - Current status (Active, Draft, Paused, Approved, etc.)
+- **Offers** - Number of offers included in the campaign
+- **Segments** - Number of customer segments targeted
+- **Performance** - Key metrics (Conversion rate, Revenue, etc.)
+- **Actions** - Quick action buttons (View, Edit, Delete, etc.)
 
 ## Search & Filter
 
-### Search Bar
-Use the search bar to quickly find campaigns by name, description, or campaign code.
+### Search by Name
+Use the search bar to find campaigns by name.
 
-### Advanced Filters
-Click the **Filter** icon to access advanced filtering options:
-- **Category** - Filter campaigns by category
-- **Approval Status** - Filter by approval status (Pending, Approved, Rejected)
-- **Date Range** - Filter campaigns by start or end date
+### Filter Campaigns
+Click the **Filters** button to filter by:
+- **Status** - All Campaigns, Active, Paused, Completed, Draft, Archived
+- **Catalog** - Filter by catalog
+- **Approval Status** - Pending, Approved, etc.
+- **Date Range** - Filter by start/end date
 
----
+![Filter Modal](/img/campaign-images/campaign-filterbyall.png)
 
-## Tips & Best Practices
+![Filter by Status](/img/campaign-images/campaign-filterbystatus.png)
 
-1. **Use Meaningful Names** - Give campaigns clear, descriptive names for easy identification
-2. **Set Campaign Categories** - Properly categorize campaigns for better organization
-3. **Review Before Submitting** - Always review all details before submitting for approval
-4. **Test First** - Consider using a small segment to test before launching to the full audience
-5. **Monitor Performance** - Check campaign analytics regularly to measure success
-6. **Archive Completed Campaigns** - Keep your list organized by archiving old campaigns
-7. **Use Control Groups** - Include control groups to measure true campaign impact
+## Page-Level Actions
 
----
+At the top of the Campaign List page, you'll find:
+- **Create Campaign** button - [Create a new campaign](./create-campaign)
+- **Analytics** button - [View campaign analytics](./campaign-reports)
 
-## Need Help?
+## Quick Actions
 
-- For step-by-step campaign creation, see [Create Campaign](./create-campaign)
-- For managing individual campaigns, see [View Campaign Details](./view-campaign-details)
-- For performance tracking, see [Campaign Reports](./campaign-reports)
+Click the **More** button (three dots) on each campaign row to access actions. You can also click the **Eye icon** to [view campaign details](./view-campaign-details). The available actions depend on your campaign's current status and approval status.
+
+![Action Buttons](/img/campaign-images/campaignlist-actionbuttons.png)
+
+### Action Button Visibility
+
+The actions available for each campaign vary based on its **Status** and **Approval Status**:
+
+#### For Draft Campaigns (Status: Draft)
+- **Request Approval** - Submit the campaign for approval review
+
+#### For Pending Approval Campaigns (Status: Pending Approval)
+- **Approve Campaign** - Approve the campaign to make it executable (requires "Approve" permission)
+- **Reject Campaign** - Reject the campaign and return it to draft status (requires "Reject" permission)
+
+#### For Approved & Active Campaigns (Status: Any, Approval Status: Approved, Is Active: Yes)
+- **Execute Campaign** - Start running the campaign immediately (requires "Execute" permission)
+- **Pause Campaign** - Pause a running campaign (shows only if status is not already paused)
+- **Resume Campaign** - Resume a paused campaign (shows only if status is paused)
+
+#### For Approved & Inactive Campaigns (Status: Any, Approval Status: Approved, Is Active: No)
+- **Activate Campaign** - Activate a campaign to make it executable
+- **Execute Campaign** - Start running the campaign (shows only if is_active is true)
+
+#### For All Campaigns (Any Status)
+These actions are always available regardless of campaign status:
+- **[Edit Campaign](./view-campaign-details)** - Modify campaign details at any point in the campaign lifecycle
+- **Archive Campaign** - Archive the campaign when you no longer need it
+- **Delete Campaign** - Permanently delete the campaign (requires "Delete" permission)
+
+### Campaign Status Reference
+
+| Status | Meaning | Actions Available |
+|--------|---------|------------------|
+| **Draft** | Campaign is being created/edited | Request Approval, Edit, Archive, Delete |
+| **Pending Approval** | Campaign is waiting for approval | Approve, Reject, Edit, Archive, Delete |
+| **Approved** | Campaign has been approved | Execute, Pause/Resume, Edit, Archive, Delete |
+| **Paused** | Approved campaign is temporarily paused | Resume, Edit, Archive, Delete |
+| **Active** | Campaign is currently running | Pause, Edit, Archive, Delete |
+
+### Approval Status States
+
+| Approval Status | Meaning |
+|---|---|
+| **Pending** | Campaign is awaiting reviewer approval |
+| **Approved** | Campaign has been approved and can be executed |
+| **Rejected** | Campaign was rejected and returned to draft for edits |
+
+### Key Notes
+
+- **Permission Requirements**: Some actions require specific user permissions (e.g., only users with "Approve" permission can approve campaigns)
+- **Status Flow**: Campaigns flow from Draft → Pending Approval → Approved → can be paused/resumed → completed
+- **Editing**: You can edit campaigns at any point in their lifecycle
+- **Cannot Undo Delete**: Deleting a campaign is permanent

@@ -81,10 +81,11 @@ Monitor performance and gain insights into your campaigns.
 - [SMS Delivery Reports](./analytics/delivery-sms-reports) - SMS campaign metrics
 - [Email Delivery Reports](./analytics/delivery-email-reports) - Email campaign metrics
 
-### Communications
-Send and manage customer communications.
+### Manual Actions
+Execute manual customer actions and communications.
 
-- [Manual Broadcasts](./communications/manual-broadcasts) - Send manual messages
+- [Manual Rewards](./manual-actions/manual-rewards-list) - Manage manual rewards
+- [Manual Communications](./manual-actions/manual-communications-list) - Send manual communications
 
 ### Job Management
 Manage scheduled jobs and workflows.

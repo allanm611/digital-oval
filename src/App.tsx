@@ -31,8 +31,6 @@ const AuthenticatedLandingPage = lazy(
   () => import("./features/dashboard/components/AuthenticatedLandingPage"),
 );
 const Dashboard = lazy(() => import("./features/dashboard/pages/Dashboard"));
-const DocsPage = lazy(() => import("./docs/pages/DocsPage"));
-const FeatureDetailPage = lazy(() => import("./docs/pages/FeatureDetailPage"));
 
 // Loading fallback component
 function PageLoader() {
@@ -81,10 +79,6 @@ function AppRoutes() {
             path="/dashboard/*"
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
           />
-          {/* Documentation routes */}
-          <Route path="/docs" element={<DocsPage />} />
-          <Route path="/docs/features/*" element={<FeatureDetailPage />} />
-          <Route path="/docs/*" element={<DocsPage />} />
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </Suspense>
