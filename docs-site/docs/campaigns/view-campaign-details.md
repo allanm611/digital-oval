@@ -58,10 +58,10 @@ Comprehensive campaign details displayed in an organized grid:
 - **Status** - Current state (Draft, Active, Paused, Completed, Archived)
 - **Approval Status** - Review state (Pending, Approved, Rejected)
 - **Description** - Campaign purpose and details
-- **Objective** - Goal
+- **Objective** - Goal (see [Campaign Objectives](../configuration/campaign-objectives))
 
 **Audience & Targeting:**
-- **Category** - Campaign category/catalog
+- **Category** - Campaign category/catalog (see [Campaign Catalogs](../configuration/campaign-catalogs))
 - **Segments** - Number and names of target segments
 - **Total Audience Size** - Sum of all segment members
 
@@ -288,8 +288,6 @@ On the campaign details page, approval information is displayed in:
 - **Approval Status Badge** - Shows current state (Pending, Approved, Rejected)
 - **Rejection Reason** - Displayed if campaign was rejected (shows feedback from approver)
 - **Approved Date & By** - Shows when and who approved the campaign (if approved) -->
-
----
 
 <!-- ## Editing a Campaign
 

@@ -14,20 +14,7 @@ Catalogs are **organizational structures** that help you:
 
 ## Using Catalogs
 
-### Creating a Catalog
-Create a new campaign catalog to organize your campaigns.
-
-**Screenshot:**
-[Insert screenshot of create catalog form]
-
-### Assigning Campaigns to Catalogs
-When creating or editing a campaign, select the appropriate catalog to organize it.
-
-### Browsing by Catalog
-Filter and view campaigns by catalog to see related campaigns grouped together.
-
-**Screenshot:**
-[Insert screenshot of catalog filter]
+When creating or editing a campaign, select the appropriate catalog to organize it. You can also filter and view campaigns by catalog to see related campaigns grouped together.
 
 ## Tips
 

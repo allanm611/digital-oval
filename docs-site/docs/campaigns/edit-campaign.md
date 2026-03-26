@@ -88,12 +88,3 @@ When editing, you return to the same 5-step creation workflow:
 
 To edit campaigns, you need:
 - **campaigns.edit** - Permission to modify campaign details
-
----
-
-## Related Pages
-
-- [Create Campaign](./create-campaign) - Initial campaign creation process
-- [View Campaign Details](./view-campaign-details) - View and manage campaign details
-- [Campaign List](./campaigns-list) - Browse and search campaigns
-- [Campaign Objectives](./campaign-objectives) - Understand campaign goals

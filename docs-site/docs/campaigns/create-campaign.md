@@ -22,6 +22,7 @@ Configure all basic campaign details, goals, organizational structure, and timel
 **Campaign Catalog** (Required)
 - Select which catalog this campaign belongs to
 - Catalogs organize campaigns by category or type
+- See [Campaign Catalogs](../configuration/campaign-catalogs) for more information
 
 
 **Line of Business** (Optional)
@@ -46,6 +47,7 @@ Configure all basic campaign details, goals, organizational structure, and timel
 
 **Primary Objective** (Required)
 - Define the main goal of your campaign
+- See [Campaign Objectives](../configuration/campaign-objectives) for available objective types
 
 
 **Campaign Priority** (Optional)
